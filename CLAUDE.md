@@ -35,9 +35,10 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Implement standard traits (Debug, Clone, PartialEq, etc.)
 
 ### 7. Testing
-- Unit tests for all functionality
-- Property-based tests for algebraic identities
+- **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
+- Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
+- All tests run automatically via GitHub Actions CI on every push and PR
 
 ## Development Commands
 
@@ -53,3 +54,16 @@ cargo fmt             # Format code
 ## Architecture Notes
 
 (To be expanded as the library develops)
+
+## Status
+
+### Completed
+- [x] Initial project setup with Cargo.toml (edition 2024)
+- [x] GitHub Actions CI workflow (check, test, fmt, clippy)
+- [x] Strict lint configuration: deny all warnings, require docs on all items
+- [x] GitHub repository created: https://github.com/DevonMorris/clifford
+
+### Next Steps
+- [ ] Core multivector type and basic operations
+- [ ] Geometric product implementation
+- [ ] Add `proptest` dependency and property-based test infrastructure

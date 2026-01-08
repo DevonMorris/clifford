@@ -7,4 +7,13 @@ description = "A Rust library for Geometric Algebra (Clifford Algebra)"
 keywords = ["geometric-algebra", "clifford-algebra", "mathematics", "simd", "linear-algebra"]
 categories = ["mathematics", "science"]
 
+[lints.rust]
+warnings = "deny"
+missing_docs = "deny"
+
+[lints.clippy]
+all = "deny"
+missing_docs_in_private_items = "deny"
+uninlined_format_args = "allow"
+
 [dependencies]
