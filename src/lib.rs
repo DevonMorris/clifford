@@ -1,14 +1,5 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+//! Clifford - A Rust library for Geometric Algebra (Clifford Algebra).
+//!
+//! This library provides types and operations for working with geometric algebra,
+//! a mathematical framework that unifies and extends linear algebra, complex numbers,
+//! quaternions, and more.

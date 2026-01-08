@@ -12,7 +12,7 @@ warnings = "deny"
 missing_docs = "deny"
 
 [lints.clippy]
-all = "deny"
+all = { level = "deny", priority = -1 }
 missing_docs_in_private_items = "deny"
 uninlined_format_args = "allow"
 
