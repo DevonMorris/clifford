@@ -44,8 +44,7 @@ use typenum::Unsigned;
 /// # Example
 ///
 /// ```
-/// use clifford::signature::Signature;
-/// use typenum::Unsigned;
+/// use clifford::prelude::*;
 ///
 /// #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 /// struct Minkowski;
@@ -63,7 +62,7 @@ use typenum::Unsigned;
 /// }
 ///
 /// assert_eq!(Minkowski::DIM, 4);
-/// assert_eq!(<Minkowski as Signature>::NumBlades::USIZE, 16);
+/// assert_eq!(Minkowski::num_blades(), 16);
 /// assert_eq!(Minkowski::metric(0), 1);  // time-like
 /// assert_eq!(Minkowski::metric(1), -1); // space-like
 /// ```
@@ -86,6 +85,14 @@ pub trait Signature: Copy + Clone + Default + 'static {
 
     /// Total dimension of the vector space: `P + Q + R`.
     const DIM: usize = Self::P + Self::Q + Self::R;
+
+    /// Returns the number of basis blades in the algebra: `2^DIM`.
+    ///
+    /// This is a convenience method that returns `NumBlades::USIZE`.
+    #[inline]
+    fn num_blades() -> usize {
+        Self::NumBlades::USIZE
+    }
 
     /// Returns the metric coefficient for basis vector `e_i`.
     ///

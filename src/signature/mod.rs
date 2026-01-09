@@ -28,12 +28,11 @@
 //! # Example
 //!
 //! ```
-//! use clifford::signature::{Signature, Euclidean3};
-//! use typenum::Unsigned;
+//! use clifford::prelude::*;
 //!
 //! // Query the algebra structure
 //! assert_eq!(Euclidean3::DIM, 3);
-//! assert_eq!(<Euclidean3 as Signature>::NumBlades::USIZE, 8);
+//! assert_eq!(Euclidean3::num_blades(), 8);
 //!
 //! // All basis vectors in Euclidean space square to +1
 //! assert_eq!(Euclidean3::metric(0), 1);
