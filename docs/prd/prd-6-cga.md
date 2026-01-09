@@ -106,7 +106,91 @@ pub fn transform<T: Float>(
 }
 ```
 
-### 4. Documentation Polish
+### 4. nalgebra Interoperability
+
+When `nalgebra-0_33` or `nalgebra-0_34` feature is enabled, CGA types provide
+conversions to/from nalgebra types:
+
+#### Point Conversions
+
+```rust
+// CGA conformal point <-> nalgebra Point3 (via Euclidean extraction)
+impl<T: Float + na::Scalar> From<na::Point3<T>> for ConformalPoint<T> {
+    fn from(p: na::Point3<T>) -> Self {
+        point(p.x, p.y, p.z)
+    }
+}
+
+impl<T: Float + na::Scalar> TryFrom<ConformalPoint<T>> for na::Point3<T> {
+    type Error = NalgebraConversionError;
+
+    fn try_from(cp: ConformalPoint<T>) -> Result<Self, Self::Error> {
+        let [x, y, z] = to_euclidean(&cp).ok_or(NalgebraConversionError::InvalidConformalPoint)?;
+        Ok(na::Point3::new(x, y, z))
+    }
+}
+```
+
+#### Sphere Conversions
+
+```rust
+// Sphere <-> center point + radius
+impl<T: Float + na::Scalar> From<Sphere<T>> for (na::Point3<T>, T) {
+    fn from(s: Sphere<T>) -> Self {
+        let (center, radius) = s.center_radius();
+        (na::Point3::new(center[0], center[1], center[2]), radius)
+    }
+}
+
+impl<T: Float + na::Scalar> From<(na::Point3<T>, T)> for Sphere<T> {
+    fn from((center, radius): (na::Point3<T>, T)) -> Self {
+        sphere(center.x, center.y, center.z, radius)
+    }
+}
+```
+
+#### Plane Conversions
+
+```rust
+// CGA Plane <-> nalgebra normal + distance
+impl<T: Float + na::Scalar> From<CGAPlane<T>> for (na::Unit<na::Vector3<T>>, T) {
+    fn from(p: CGAPlane<T>) -> Self {
+        let (normal, dist) = p.normal_distance();
+        (na::Unit::new_normalize(na::Vector3::new(normal[0], normal[1], normal[2])), dist)
+    }
+}
+```
+
+#### Transformation Conversions
+
+```rust
+// CGA versors can produce nalgebra transformations
+impl<T: Float + na::RealField> CGATranslator<T> {
+    /// Extract as nalgebra Translation3
+    pub fn to_nalgebra(&self) -> na::Translation3<T> {
+        let [dx, dy, dz] = self.displacement();
+        na::Translation3::new(dx, dy, dz)
+    }
+}
+
+impl<T: Float + na::RealField> CGADilator<T> {
+    /// Extract as nalgebra uniform scale factor
+    pub fn scale_factor(&self) -> T { ... }
+}
+```
+
+#### Error Type Extension
+
+```rust
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NalgebraConversionError {
+    InvalidConformalPoint,  // Not a valid conformal point embedding
+    InvalidSphere,          // Imaginary radius or degenerate
+    InvalidPlane,           // Zero normal vector
+}
+```
+
+### 5. Documentation Polish
 
 - [ ] All public items have comprehensive rustdoc
 - [ ] Mathematical notation explained (∧, ·, ⟨⟩, ~, etc.)
@@ -115,7 +199,7 @@ pub fn transform<T: Float>(
 - [ ] Module-level documentation with concepts
 - [ ] Links to learning resources
 
-### 5. Optional: SIMD (`src/simd/`)
+### 6. Optional: SIMD (`src/simd/`)
 
 Feature-gated SIMD support using `portable_simd` (nightly):
 
@@ -179,6 +263,7 @@ proptest! {
 - [ ] All doc examples run
 - [ ] README updated with usage examples
 - [ ] CLAUDE.md status updated
+- [ ] nalgebra conversions tested with feature flags
 
 ## Release Checklist
 
