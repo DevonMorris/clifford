@@ -29,7 +29,7 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
   - All types use `impl<T: Float + Debug> Arbitrary for Type<T>`
   - Uses `Float::from_f64()` for range value and threshold conversion
   - Wrapper types use where clauses for inner type bounds
-  - Tests specify float type explicitly: `any::<Vec3<f64>>()`
+  - Tests specify float type explicitly: `any::<Vector<f64>>()`
 
 ### 4. Style & Idioms
 - [ ] Follows Rust API Guidelines

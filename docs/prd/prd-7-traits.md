@@ -5,7 +5,7 @@
 
 ## Background
 
-Currently, specialized types like `Rotor2`, `Rotor3`, and (future) PGA motors share
+Currently, specialized types like `Rotor`, `Rotor`, and (future) PGA motors share
 common operations but have no formal relationship. This makes it impossible to write
 generic algorithms that work across different geometric algebras.
 
@@ -145,9 +145,9 @@ pub struct Ga2d;
 
 impl GeometricAlgebra for Ga2d {
     type Scalar = f64; // or generic
-    type Vector = Vec2<f64>;
-    type Bivector = Bivec2<f64>;
-    type Rotor = Rotor2<f64>;
+    type Vector = Vector<f64>;
+    type Bivector = Bivector<f64>;
+    type Rotor = Rotor<f64>;
 
     const DIM: usize = 2;
 
@@ -159,9 +159,9 @@ pub struct Ga3d;
 
 impl GeometricAlgebra for Ga3d {
     type Scalar = f64;
-    type Vector = Vec3<f64>;
-    type Bivector = Bivec3<f64>;
-    type Rotor = Rotor3<f64>;
+    type Vector = Vector<f64>;
+    type Bivector = Bivector<f64>;
+    type Rotor = Rotor<f64>;
 
     const DIM: usize = 3;
 

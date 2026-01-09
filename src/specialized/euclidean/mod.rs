@@ -11,12 +11,12 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::euclidean::dim3::{Vec3, Rotor3, Bivec3};
+//! use clifford::specialized::euclidean::dim3::{Vector, Rotor, Bivector};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // 90° rotation around z-axis
-//! let rotor = Rotor3::from_angle_plane(FRAC_PI_2, Bivec3::unit_xy());
-//! let v = Vec3::new(1.0, 0.0, 0.0);
+//! let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+//! let v = Vector::new(1.0, 0.0, 0.0);
 //! let rotated = rotor.rotate(v);
 //!
 //! assert!((rotated.y - 1.0).abs() < 1e-10);

@@ -37,6 +37,36 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
 
+## Module Structure and Naming
+
+The `specialized` module is organized by algebra type, then dimension:
+
+```
+specialized/
+  euclidean/          # Euclidean GA (standard geometry)
+    dim2/             # 2D: Vector, Bivector, Rotor
+    dim3/             # 3D: Vector, Bivector, Trivector, Rotor, Even
+  projective/         # (future) Projective GA
+  conformal/          # (future) Conformal GA
+```
+
+**Naming conventions for specialized types:**
+- **Don't include dimension in type names** - The module path provides context:
+  - Good: `euclidean::dim3::Vector` (clear from path)
+  - Avoid: `euclidean::dim3::Vec3` (redundant "3")
+- **Use full words for clarity**:
+  - `Vector` not `Vec` (avoids confusion with `std::vec::Vec`)
+  - `Bivector` not `Bivec`
+  - `Trivector` not `Trivec`
+- **Same names across dimensions** - `dim2::Vector` and `dim3::Vector` are both just `Vector`
+- **Use module prefixes when importing from multiple dimensions**:
+  ```rust
+  use clifford::specialized::euclidean::{dim2, dim3};
+
+  let v2 = dim2::Vector::new(1.0, 2.0);
+  let v3 = dim3::Vector::new(1.0, 2.0, 3.0);
+  ```
+
 ## Adding New Types
 
 When implementing new types, also add proptest support:

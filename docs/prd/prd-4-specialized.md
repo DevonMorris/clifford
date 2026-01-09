@@ -16,7 +16,7 @@ pub struct Scalar<T: Float>(pub T);
 /// 2D vector (grade 1): e1, e2
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Vec2<T: Float> {
+pub struct Vector<T: Float> {
     pub x: T,  // e1
     pub y: T,  // e2
 }
@@ -24,22 +24,22 @@ pub struct Vec2<T: Float> {
 /// 2D bivector/pseudoscalar (grade 2): e12
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
-pub struct Bivec2<T: Float>(pub T);
+pub struct Bivector<T: Float>(pub T);
 
 /// 2D rotor: scalar + bivector
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Rotor2<T: Float> {
+pub struct Rotor<T: Float> {
     pub s: T,  // scalar
     pub xy: T, // e12
 }
 
-impl<T: Float> Rotor2<T> {
+impl<T: Float> Rotor<T> {
     /// Create from angle (radians)
     pub fn from_angle(angle: T) -> Self;
 
     /// Apply rotation to vector
-    pub fn rotate(&self, v: Vec2<T>) -> Vec2<T>;
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T>;
 
     /// Compose rotations
     pub fn compose(&self, other: &Self) -> Self;
@@ -57,7 +57,7 @@ pub struct Scalar<T: Float>(pub T);
 /// 3D vector (grade 1): e1, e2, e3
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Vec3<T: Float> {
+pub struct Vector<T: Float> {
     pub x: T,  // e1
     pub y: T,  // e2
     pub z: T,  // e3
@@ -66,7 +66,7 @@ pub struct Vec3<T: Float> {
 /// 3D bivector (grade 2): e12, e13, e23
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Bivec3<T: Float> {
+pub struct Bivector<T: Float> {
     pub xy: T,  // e12
     pub xz: T,  // e13
     pub yz: T,  // e23
@@ -75,42 +75,42 @@ pub struct Bivec3<T: Float> {
 /// 3D trivector/pseudoscalar (grade 3): e123
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
-pub struct Trivec3<T: Float>(pub T);
+pub struct Trivector<T: Float>(pub T);
 
 /// Full 3D multivector (8 components)
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct Multivector3<T: Float> {
     pub s: T,
-    pub v: Vec3<T>,
-    pub b: Bivec3<T>,
+    pub v: Vector<T>,
+    pub b: Bivector<T>,
     pub t: T,
 }
 
 /// 3D rotor: scalar + bivector (even subalgebra)
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Rotor3<T: Float> {
+pub struct Rotor<T: Float> {
     pub s: T,
-    pub b: Bivec3<T>,
+    pub b: Bivector<T>,
 }
 ```
 
 ### 3. Rotor Operations
 
 ```rust
-impl<T: Float> Rotor3<T> {
+impl<T: Float> Rotor<T> {
     /// Create from angle and axis (unit vector)
-    pub fn from_angle_axis(angle: T, axis: Vec3<T>) -> Self;
+    pub fn from_angle_axis(angle: T, axis: Vector<T>) -> Self;
 
     /// Create from angle and plane (unit bivector)
-    pub fn from_angle_plane(angle: T, plane: Bivec3<T>) -> Self;
+    pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self;
 
     /// Create rotation from vector a to vector b
-    pub fn from_vectors(a: Vec3<T>, b: Vec3<T>) -> Self;
+    pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self;
 
     /// Apply rotation: R * v * R̃
-    pub fn rotate(&self, v: Vec3<T>) -> Vec3<T>;
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T>;
 
     /// Compose rotations: R2 * R1
     pub fn compose(&self, other: &Self) -> Self;
@@ -129,25 +129,25 @@ Bidirectional conversions between specialized types and generic `Multivector`:
 
 ```rust
 // GA2D conversions
-impl<T: Float> From<Vec2<T>> for Multivector<T, Euclidean2>;
-impl<T: Float> From<Bivec2<T>> for Multivector<T, Euclidean2>;
-impl<T: Float> From<Rotor2<T>> for Multivector<T, Euclidean2>;
+impl<T: Float> From<Vector<T>> for Multivector<T, Euclidean2>;
+impl<T: Float> From<Bivector<T>> for Multivector<T, Euclidean2>;
+impl<T: Float> From<Rotor<T>> for Multivector<T, Euclidean2>;
 
-impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vec2<T>;
-impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivec2<T>;
-impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor2<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vector<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivector<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor<T>;
 
 // GA3D conversions
-impl<T: Float> From<Vec3<T>> for Multivector<T, Euclidean3>;
-impl<T: Float> From<Bivec3<T>> for Multivector<T, Euclidean3>;
-impl<T: Float> From<Trivec3<T>> for Multivector<T, Euclidean3>;
-impl<T: Float> From<Rotor3<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Vector<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Bivector<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Trivector<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Rotor<T>> for Multivector<T, Euclidean3>;
 impl<T: Float> From<Multivector3<T>> for Multivector<T, Euclidean3>;
 
-impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vec3<T>;
-impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivec3<T>;
-impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivec3<T>;
-impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor3<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vector<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivector<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivector<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor<T>;
 impl<T: Float> From<Multivector<T, Euclidean3>> for Multivector3<T>;
 ```
 
@@ -159,11 +159,11 @@ impl<T: Float> From<Multivector<T, Euclidean3>> for Multivector3<T>;
 // These must be equivalent:
 let spec_result = vec3_a.wedge(&vec3_b);
 let gen_result = Multivector::from(vec3_a).outer(&Multivector::from(vec3_b));
-assert!(Bivec3::try_from(gen_result).unwrap().approx_eq(&spec_result));
+assert!(Bivector::try_from(gen_result).unwrap().approx_eq(&spec_result));
 
 // Round-trip must preserve operations:
-let v: Vec3<f64> = /* ... */;
-let roundtrip = Vec3::try_from(Multivector::from(v)).unwrap();
+let v: Vector<f64> = /* ... */;
+let roundtrip = Vector::try_from(Multivector::from(v)).unwrap();
 assert!(v.approx_eq(&roundtrip));
 ```
 
@@ -228,21 +228,21 @@ proptest! {
     #[test]
     fn vec3_roundtrip(v in arb_vec3::<f64>()) {
         let generic = Multivector::<f64, Euclidean3>::from(v);
-        let back = Vec3::try_from(generic).unwrap();
+        let back = Vector::try_from(generic).unwrap();
         prop_assert!(v.approx_eq(&back, 1e-10));
     }
 
     #[test]
     fn bivec3_roundtrip(b in arb_bivec3::<f64>()) {
         let generic = Multivector::<f64, Euclidean3>::from(b);
-        let back = Bivec3::try_from(generic).unwrap();
+        let back = Bivector::try_from(generic).unwrap();
         prop_assert!(b.approx_eq(&back, 1e-10));
     }
 
     #[test]
     fn rotor3_roundtrip(r in arb_unit_rotor3::<f64>()) {
         let generic = Multivector::<f64, Euclidean3>::from(r);
-        let back = Rotor3::try_from(generic).unwrap();
+        let back = Rotor::try_from(generic).unwrap();
         prop_assert!(r.approx_eq(&back, 1e-10));
     }
 
@@ -256,7 +256,7 @@ proptest! {
         let gen_a = Multivector::<f64, Euclidean3>::from(a);
         let gen_b = Multivector::<f64, Euclidean3>::from(b);
         let gen_result = gen_a.outer(&gen_b);
-        let gen_as_bivec = Bivec3::try_from(gen_result).unwrap();
+        let gen_as_bivec = Bivector::try_from(gen_result).unwrap();
         prop_assert!(spec_result.approx_eq(&gen_as_bivec, 1e-10));
     }
 
@@ -298,7 +298,7 @@ proptest! {
         let gen_v = Multivector::<f64, Euclidean3>::from(v);
         let gen_r_rev = gen_r.reverse();
         let gen_result = &(&gen_r * &gen_v) * &gen_r_rev;
-        let gen_as_vec = Vec3::try_from(gen_result).unwrap();
+        let gen_as_vec = Vector::try_from(gen_result).unwrap();
 
         prop_assert!(spec_result.approx_eq(&gen_as_vec, 1e-10));
     }

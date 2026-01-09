@@ -78,7 +78,7 @@ done
 #### Benchmark File Structure
 
 - `benches/generic.rs` - Benchmarks for generic `Multivector` operations
-- `benches/specialized.rs` - Benchmarks for specialized 2D/3D types (`Vec2`, `Vec3`, `Rotor2`, `Rotor3`, etc.)
+- `benches/specialized.rs` - Benchmarks for specialized 2D/3D types (`Vector`, `Vector`, `Rotor`, `Rotor`, etc.)
 - `benches/reports/` - SVG timing distribution plots (committed to repo)
 - `benches/README.md` - Performance summary with embedded SVG plots
 
@@ -104,34 +104,64 @@ done
   - Re-export the trait in our prelude so users don't need to import the dependency directly, or
   - Add helper methods that encapsulate the foreign trait usage (preferred when feasible)
 
+#### Module Structure and Naming
+
+The `specialized` module is organized by algebra type, then dimension:
+
+```
+specialized/
+  euclidean/          # Euclidean GA (standard geometry)
+    dim2/             # 2D: Vector, Bivector, Rotor
+    dim3/             # 3D: Vector, Bivector, Trivector, Rotor, Even
+  projective/         # (future) Projective GA
+  conformal/          # (future) Conformal GA
+```
+
+**Naming conventions for specialized types:**
+- **Don't include dimension in type names** - The module path provides context:
+  - Good: `euclidean::dim3::Vector` (clear from path)
+  - Avoid: `euclidean::dim3::Vec3` (redundant "3")
+- **Use full words for clarity**:
+  - `Vector` not `Vec` (avoids confusion with `std::vec::Vec`)
+  - `Bivector` not `Bivec`
+  - `Trivector` not `Trivec`
+- **Same names across dimensions** - `dim2::Vector` and `dim3::Vector` are both just `Vector`
+- **Use module prefixes when importing from multiple dimensions**:
+  ```rust
+  use clifford::specialized::euclidean::{dim2, dim3};
+
+  let v2 = dim2::Vector::new(1.0, 2.0);
+  let v3 = dim3::Vector::new(1.0, 2.0, 3.0);
+  ```
+
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
 - **Implement `Arbitrary` trait** for types instead of writing free functions:
   ```rust
   // Good: implement Arbitrary trait, use any::<Type>()
-  impl Arbitrary for Vec3<f64> {
+  impl Arbitrary for Vector<f64> {
       type Parameters = ();
       type Strategy = BoxedStrategy<Self>;
       fn arbitrary_with(_: Self::Parameters) -> Self::Strategy { ... }
   }
-  // Then use: any::<Vec3<f64>>()
+  // Then use: any::<Vector<f64>>()
 
   // Avoid: free functions
-  fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> { ... }
+  fn arb_vec3() -> impl Strategy<Value = Vector<f64>> { ... }
   ```
 - **Arbitrary modules**: Each module with types has an `arbitrary` submodule containing:
   - Generic `Arbitrary` implementations for all types using `Float::from_f64()` for conversion
-  - Generic wrapper types for constrained values (e.g., `NonZeroVec3<T>`, `UnitVec3<T>`, `UnitRotor3<T>`)
+  - Generic wrapper types for constrained values (e.g., `NonZeroVector<T>`, `UnitVector<T>`, `UnitRotor<T>`)
   - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
   ```rust
   // Import wrapper types from the arbitrary module
-  use crate::specialized::euclidean::dim3::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
+  use crate::specialized::euclidean::dim3::arbitrary::{NonZeroVector, UnitVector, UnitRotor};
 
   // Use any::<Type<f64>>() - always specify the float type explicitly
   // Internal tests should use f64 for consistency
   proptest! {
       #[test]
-      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+      fn rotor_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
           let rotated = r.rotate(v);  // Deref allows direct method access
           prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
       }
@@ -140,20 +170,20 @@ done
 - **Generic Arbitrary pattern**: All types use generic `Arbitrary` impls with `Float::from_f64()`:
   ```rust
   // Base types generate f64 values and convert
-  impl<T: Float + Debug> Arbitrary for Vec3<T> {
+  impl<T: Float + Debug> Arbitrary for Vector<T> {
       fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
           (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-              .prop_map(|(x, y, z)| Vec3::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+              .prop_map(|(x, y, z)| Vector::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
               .boxed()
       }
   }
 
   // Wrapper types use where clauses requiring the inner type to be Arbitrary
-  impl<T> Arbitrary for NonZeroVec3<T>
+  impl<T> Arbitrary for NonZeroVector<T>
   where
       T: Float + Debug,
-      Vec3<T>: Arbitrary + Debug,
-      <Vec3<T> as Arbitrary>::Strategy: 'static,
+      Vector<T>: Arbitrary + Debug,
+      <Vector<T> as Arbitrary>::Strategy: 'static,
   { ... }
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
@@ -175,7 +205,7 @@ done
   ```rust
   proptest! {
       #[test]
-      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+      fn rotor_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
           let rotated = r.rotate(v);
           // Good: prop_assert! with standard epsilon constant
           prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
@@ -278,6 +308,6 @@ CI will reject PRs that fail any of these checks. Always run `cargo fmt` before 
 - [x] **PRD-1: Foundation** - Float trait, Signature trait, Blade type
 - [x] **PRD-2: Core Multivector** - Multivector type, geometric product
 - [x] **PRD-3: Products** - inner, outer, regressive products, grade operations
-- [x] **PRD-4: Specialized** - optimized 2D/3D types (Vec2, Vec3, Rotor2, Rotor3, etc.) with conversions to generic Multivector
+- [x] **PRD-4: Specialized** - optimized 2D/3D types (Vector, Vector, Rotor, Rotor, etc.) with conversions to generic Multivector
 - [ ] **PRD-5: PGA** - Projective GA, motors
 - [ ] **PRD-6: CGA** - Conformal GA, polish

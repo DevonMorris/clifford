@@ -10,8 +10,8 @@
 //! ```text
 //! specialized/
 //!   euclidean/
-//!     dim2/   - 2D Euclidean GA: Vec2, Bivec2, Rotor2
-//!     dim3/   - 3D Euclidean GA: Vec3, Bivec3, Trivec3, Rotor3
+//!     dim2/   - 2D Euclidean GA: Vector, Bivector, Rotor
+//!     dim3/   - 3D Euclidean GA: Vector, Bivector, Trivector, Rotor
 //!   projective/   (future)
 //!   conformal/    (future)
 //! ```
@@ -37,15 +37,15 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::euclidean::dim3::{Vec3, Bivec3, Rotor3};
+//! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //!
 //! // Create a vector
-//! let v = Vec3::new(1.0, 0.0, 0.0);
+//! let v = Vector::new(1.0, 0.0, 0.0);
 //!
 //! // Create a 90° rotation in the xy-plane
-//! let rotor = Rotor3::from_angle_plane(
+//! let rotor = Rotor::from_angle_plane(
 //!     std::f64::consts::FRAC_PI_2,
-//!     Bivec3::unit_xy(),
+//!     Bivector::unit_xy(),
 //! );
 //!
 //! // Apply rotation

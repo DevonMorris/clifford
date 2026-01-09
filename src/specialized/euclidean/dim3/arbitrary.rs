@@ -16,27 +16,27 @@
 //!
 //! | Type | Description |
 //! |------|-------------|
-//! | [`NonZeroVec3<T>`] | Vec3 with non-zero magnitude |
-//! | [`UnitVec3<T>`] | Vec3 with unit magnitude |
-//! | [`UnitBivec3<T>`] | Bivec3 with unit magnitude |
-//! | [`UnitRotor3<T>`] | Rotor3 with unit magnitude |
+//! | [`NonZeroVector<T>`] | Vector with non-zero magnitude |
+//! | [`UnitVector<T>`] | Vector with unit magnitude |
+//! | [`UnitBivector<T>`] | Bivector with unit magnitude |
+//! | [`UnitRotor<T>`] | Rotor with unit magnitude |
 //!
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::euclidean::dim3::{Vec3, arbitrary::UnitRotor3};
+//! use clifford::specialized::euclidean::dim3::{Vector, arbitrary::UnitRotor};
 //! use proptest::prelude::*;
 //!
 //! proptest! {
 //!     #[test]
-//!     fn rotation_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+//!     fn rotation_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
 //!         let rotated = r.rotate(v);
 //!         prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
 //!     }
 //! }
 //! ```
 
-use super::{Bivec3, Even3, Rotor3, Trivec3, Vec3};
+use super::{Bivector, Even, Rotor, Trivector, Vector};
 use crate::scalar::Float;
 use core::fmt::Debug;
 use core::ops::Deref;
@@ -49,47 +49,47 @@ use proptest::strategy::BoxedStrategy;
 const MIN_NORM_SQUARED: f64 = 1e-6;
 
 // ============================================================================
-// Vec3 Arbitrary implementation
+// Vector Arbitrary implementation
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Vec3<T> {
+impl<T: Float + Debug> Arbitrary for Vector<T> {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-            .prop_map(|(x, y, z)| Vec3::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+            .prop_map(|(x, y, z)| Vector::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
             .boxed()
     }
 }
 
 // ============================================================================
-// NonZeroVec3
+// NonZeroVector
 // ============================================================================
 
-/// Wrapper type for non-zero [`Vec3`].
+/// Wrapper type for non-zero [`Vector`].
 ///
 /// Use this when you need a vector guaranteed to have non-zero magnitude,
 /// for example when testing normalization or division.
 ///
 /// Generic over the scalar type `T`. The `Arbitrary` implementation is available
-/// for any `T: Float` where `Vec3<T>: Arbitrary`.
+/// for any `T: Float` where `Vector<T>: Arbitrary`.
 #[derive(Debug, Clone, Copy)]
-pub struct NonZeroVec3<T: Float>(
+pub struct NonZeroVector<T: Float>(
     /// The wrapped non-zero vector.
-    pub Vec3<T>,
+    pub Vector<T>,
 );
 
-impl<T: Float> NonZeroVec3<T> {
+impl<T: Float> NonZeroVector<T> {
     /// Unwraps and returns the inner value.
     #[inline]
-    pub fn into_inner(self) -> Vec3<T> {
+    pub fn into_inner(self) -> Vector<T> {
         self.0
     }
 }
 
-impl<T: Float> Deref for NonZeroVec3<T> {
-    type Target = Vec3<T>;
+impl<T: Float> Deref for NonZeroVector<T> {
+    type Target = Vector<T>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -97,65 +97,65 @@ impl<T: Float> Deref for NonZeroVec3<T> {
     }
 }
 
-impl<T: Float> AsRef<Vec3<T>> for NonZeroVec3<T> {
+impl<T: Float> AsRef<Vector<T>> for NonZeroVector<T> {
     #[inline]
-    fn as_ref(&self) -> &Vec3<T> {
+    fn as_ref(&self) -> &Vector<T> {
         &self.0
     }
 }
 
-impl<T: Float> From<NonZeroVec3<T>> for Vec3<T> {
+impl<T: Float> From<NonZeroVector<T>> for Vector<T> {
     #[inline]
-    fn from(v: NonZeroVec3<T>) -> Self {
+    fn from(v: NonZeroVector<T>) -> Self {
         v.0
     }
 }
 
-impl<T> Arbitrary for NonZeroVec3<T>
+impl<T> Arbitrary for NonZeroVector<T>
 where
     T: Float + Debug,
-    Vec3<T>: Arbitrary + Debug,
-    <Vec3<T> as Arbitrary>::Strategy: 'static,
+    Vector<T>: Arbitrary + Debug,
+    <Vector<T> as Arbitrary>::Strategy: 'static,
 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         let threshold = T::from_f64(MIN_NORM_SQUARED);
-        any::<Vec3<T>>()
+        any::<Vector<T>>()
             .prop_filter("non-zero vector", move |v| v.norm_squared() > threshold)
-            .prop_map(NonZeroVec3)
+            .prop_map(NonZeroVector)
             .boxed()
     }
 }
 
 // ============================================================================
-// UnitVec3
+// UnitVector
 // ============================================================================
 
-/// Wrapper type for unit [`Vec3`].
+/// Wrapper type for unit [`Vector`].
 ///
 /// Use this when you need a vector guaranteed to have unit magnitude,
 /// for example when testing rotations or reflections.
 ///
 /// Generic over the scalar type `T`. The `Arbitrary` implementation is available
-/// for any `T: Float` where `NonZeroVec3<T>: Arbitrary`.
+/// for any `T: Float` where `NonZeroVector<T>: Arbitrary`.
 #[derive(Debug, Clone, Copy)]
-pub struct UnitVec3<T: Float>(
+pub struct UnitVector<T: Float>(
     /// The wrapped unit vector.
-    pub Vec3<T>,
+    pub Vector<T>,
 );
 
-impl<T: Float> UnitVec3<T> {
+impl<T: Float> UnitVector<T> {
     /// Unwraps and returns the inner value.
     #[inline]
-    pub fn into_inner(self) -> Vec3<T> {
+    pub fn into_inner(self) -> Vector<T> {
         self.0
     }
 }
 
-impl<T: Float> Deref for UnitVec3<T> {
-    type Target = Vec3<T>;
+impl<T: Float> Deref for UnitVector<T> {
+    type Target = Vector<T>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -163,78 +163,80 @@ impl<T: Float> Deref for UnitVec3<T> {
     }
 }
 
-impl<T: Float> AsRef<Vec3<T>> for UnitVec3<T> {
+impl<T: Float> AsRef<Vector<T>> for UnitVector<T> {
     #[inline]
-    fn as_ref(&self) -> &Vec3<T> {
+    fn as_ref(&self) -> &Vector<T> {
         &self.0
     }
 }
 
-impl<T: Float> From<UnitVec3<T>> for Vec3<T> {
+impl<T: Float> From<UnitVector<T>> for Vector<T> {
     #[inline]
-    fn from(v: UnitVec3<T>) -> Self {
+    fn from(v: UnitVector<T>) -> Self {
         v.0
     }
 }
 
-impl<T> Arbitrary for UnitVec3<T>
+impl<T> Arbitrary for UnitVector<T>
 where
     T: Float + Debug,
-    NonZeroVec3<T>: Arbitrary,
-    <NonZeroVec3<T> as Arbitrary>::Strategy: 'static,
+    NonZeroVector<T>: Arbitrary,
+    <NonZeroVector<T> as Arbitrary>::Strategy: 'static,
 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        any::<NonZeroVec3<T>>()
-            .prop_map(|v| UnitVec3(v.0.normalized()))
+        any::<NonZeroVector<T>>()
+            .prop_map(|v| UnitVector(v.0.normalized()))
             .boxed()
     }
 }
 
 // ============================================================================
-// Bivec3 Arbitrary implementation
+// Bivector Arbitrary implementation
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Bivec3<T> {
+impl<T: Float + Debug> Arbitrary for Bivector<T> {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-            .prop_map(|(xy, xz, yz)| Bivec3::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)))
+            .prop_map(|(xy, xz, yz)| {
+                Bivector::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz))
+            })
             .boxed()
     }
 }
 
 // ============================================================================
-// UnitBivec3
+// UnitBivector
 // ============================================================================
 
-/// Wrapper type for unit [`Bivec3`].
+/// Wrapper type for unit [`Bivector`].
 ///
 /// Use this when you need a bivector guaranteed to have unit magnitude,
 /// for example when constructing rotors from angle-plane pairs.
 ///
 /// Generic over the scalar type `T`. The `Arbitrary` implementation is available
-/// for any `T: Float` where `Bivec3<T>: Arbitrary`.
+/// for any `T: Float` where `Bivector<T>: Arbitrary`.
 #[derive(Debug, Clone, Copy)]
-pub struct UnitBivec3<T: Float>(
+pub struct UnitBivector<T: Float>(
     /// The wrapped unit bivector.
-    pub Bivec3<T>,
+    pub Bivector<T>,
 );
 
-impl<T: Float> UnitBivec3<T> {
+impl<T: Float> UnitBivector<T> {
     /// Unwraps and returns the inner value.
     #[inline]
-    pub fn into_inner(self) -> Bivec3<T> {
+    pub fn into_inner(self) -> Bivector<T> {
         self.0
     }
 }
 
-impl<T: Float> Deref for UnitBivec3<T> {
-    type Target = Bivec3<T>;
+impl<T: Float> Deref for UnitBivector<T> {
+    type Target = Bivector<T>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -242,58 +244,58 @@ impl<T: Float> Deref for UnitBivec3<T> {
     }
 }
 
-impl<T: Float> AsRef<Bivec3<T>> for UnitBivec3<T> {
+impl<T: Float> AsRef<Bivector<T>> for UnitBivector<T> {
     #[inline]
-    fn as_ref(&self) -> &Bivec3<T> {
+    fn as_ref(&self) -> &Bivector<T> {
         &self.0
     }
 }
 
-impl<T: Float> From<UnitBivec3<T>> for Bivec3<T> {
+impl<T: Float> From<UnitBivector<T>> for Bivector<T> {
     #[inline]
-    fn from(b: UnitBivec3<T>) -> Self {
+    fn from(b: UnitBivector<T>) -> Self {
         b.0
     }
 }
 
-impl<T> Arbitrary for UnitBivec3<T>
+impl<T> Arbitrary for UnitBivector<T>
 where
     T: Float + Debug,
-    Bivec3<T>: Arbitrary + Debug,
-    <Bivec3<T> as Arbitrary>::Strategy: 'static,
+    Bivector<T>: Arbitrary + Debug,
+    <Bivector<T> as Arbitrary>::Strategy: 'static,
 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         let threshold = T::from_f64(MIN_NORM_SQUARED);
-        any::<Bivec3<T>>()
+        any::<Bivector<T>>()
             .prop_filter("non-zero bivector", move |b| b.norm_squared() > threshold)
-            .prop_map(|b| UnitBivec3(b.normalized()))
+            .prop_map(|b| UnitBivector(b.normalized()))
             .boxed()
     }
 }
 
 // ============================================================================
-// Trivec3 Arbitrary implementation
+// Trivector Arbitrary implementation
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Trivec3<T> {
+impl<T: Float + Debug> Arbitrary for Trivector<T> {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         (-100.0f64..100.0)
-            .prop_map(|val| Trivec3::new(T::from_f64(val)))
+            .prop_map(|val| Trivector::new(T::from_f64(val)))
             .boxed()
     }
 }
 
 // ============================================================================
-// Rotor3 Arbitrary implementation
+// Rotor Arbitrary implementation
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Rotor3<T> {
+impl<T: Float + Debug> Arbitrary for Rotor<T> {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
@@ -305,9 +307,9 @@ impl<T: Float + Debug> Arbitrary for Rotor3<T> {
             -100.0f64..100.0,
         )
             .prop_map(|(s, xy, xz, yz)| {
-                Rotor3::new(
+                Rotor::new(
                     T::from_f64(s),
-                    Bivec3::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
+                    Bivector::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
                 )
             })
             .boxed()
@@ -315,10 +317,10 @@ impl<T: Float + Debug> Arbitrary for Rotor3<T> {
 }
 
 // ============================================================================
-// Even3 Arbitrary implementation
+// Even Arbitrary implementation
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Even3<T> {
+impl<T: Float + Debug> Arbitrary for Even<T> {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
@@ -330,9 +332,9 @@ impl<T: Float + Debug> Arbitrary for Even3<T> {
             -100.0f64..100.0,
         )
             .prop_map(|(s, xy, xz, yz)| {
-                Even3::new(
+                Even::new(
                     T::from_f64(s),
-                    Bivec3::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
+                    Bivector::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
                 )
             })
             .boxed()
@@ -340,38 +342,38 @@ impl<T: Float + Debug> Arbitrary for Even3<T> {
 }
 
 // ============================================================================
-// UnitRotor3
+// UnitRotor
 // ============================================================================
 
-/// Wrapper type for unit [`Rotor3`].
+/// Wrapper type for unit [`Rotor`].
 ///
 /// Use this when you need a rotor guaranteed to have unit magnitude,
 /// which is required for proper rotation operations.
 ///
 /// Generic over the scalar type `T`. The `Arbitrary` implementation is available
-/// for any `T: Float + FloatConst` where `UnitBivec3<T>: Arbitrary`.
+/// for any `T: Float + FloatConst` where `UnitBivector<T>: Arbitrary`.
 #[derive(Debug, Clone, Copy)]
-pub struct UnitRotor3<T: Float>(
+pub struct UnitRotor<T: Float>(
     /// The wrapped unit rotor.
-    pub Rotor3<T>,
+    pub Rotor<T>,
 );
 
-impl<T: Float> UnitRotor3<T> {
+impl<T: Float> UnitRotor<T> {
     /// Creates a new unit rotor wrapper.
     #[inline]
-    fn new(rotor: Rotor3<T>) -> Self {
+    fn new(rotor: Rotor<T>) -> Self {
         Self(rotor)
     }
 
     /// Unwraps and returns the inner value.
     #[inline]
-    pub fn into_inner(self) -> Rotor3<T> {
+    pub fn into_inner(self) -> Rotor<T> {
         self.0
     }
 }
 
-impl<T: Float> Deref for UnitRotor3<T> {
-    type Target = Rotor3<T>;
+impl<T: Float> Deref for UnitRotor<T> {
+    type Target = Rotor<T>;
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -379,25 +381,25 @@ impl<T: Float> Deref for UnitRotor3<T> {
     }
 }
 
-impl<T: Float> AsRef<Rotor3<T>> for UnitRotor3<T> {
+impl<T: Float> AsRef<Rotor<T>> for UnitRotor<T> {
     #[inline]
-    fn as_ref(&self) -> &Rotor3<T> {
+    fn as_ref(&self) -> &Rotor<T> {
         &self.0
     }
 }
 
-impl<T: Float> From<UnitRotor3<T>> for Rotor3<T> {
+impl<T: Float> From<UnitRotor<T>> for Rotor<T> {
     #[inline]
-    fn from(r: UnitRotor3<T>) -> Self {
+    fn from(r: UnitRotor<T>) -> Self {
         r.0
     }
 }
 
-impl<T> Arbitrary for UnitRotor3<T>
+impl<T> Arbitrary for UnitRotor<T>
 where
     T: Float + Debug,
-    UnitBivec3<T>: Arbitrary,
-    <UnitBivec3<T> as Arbitrary>::Strategy: 'static,
+    UnitBivector<T>: Arbitrary,
+    <UnitBivector<T> as Arbitrary>::Strategy: 'static,
 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -405,7 +407,7 @@ where
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         // Generate angle in [0, 2π) and a unit bivector for the rotation plane
         let two_pi = T::TWO * T::PI;
-        any::<UnitBivec3<T>>()
+        any::<UnitBivector<T>>()
             .prop_flat_map(move |plane| {
                 // We need to generate the angle separately since T may not support ranges directly
                 // Use f64 range and convert
@@ -413,7 +415,7 @@ where
             })
             .prop_map(move |(plane, t)| {
                 let angle = T::from_f64(t) * two_pi;
-                UnitRotor3::new(Rotor3::from_angle_plane(angle, plane.0))
+                UnitRotor::new(Rotor::from_angle_plane(angle, plane.0))
             })
             .boxed()
     }

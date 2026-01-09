@@ -9,14 +9,14 @@ use crate::scalar::Float;
 /// Represents a direction or position in 2D space.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Vec2<T: Float> {
+pub struct Vector<T: Float> {
     /// Coefficient of `e₁` (x-direction).
     pub x: T,
     /// Coefficient of `e₂` (y-direction).
     pub y: T,
 }
 
-impl<T: Float> Vec2<T> {
+impl<T: Float> Vector<T> {
     /// Creates a new 2D vector.
     #[inline]
     pub fn new(x: T, y: T) -> Self {
@@ -70,8 +70,8 @@ impl<T: Float> Vec2<T> {
     ///
     /// In 2D, this returns a bivector (the `e₁₂` coefficient).
     #[inline]
-    pub fn wedge(self, other: Self) -> Bivec2<T> {
-        Bivec2(self.x * other.y - self.y * other.x)
+    pub fn wedge(self, other: Self) -> Bivector<T> {
+        Bivector(self.x * other.y - self.y * other.x)
     }
 
     /// Perpendicular vector (90° counterclockwise rotation).
@@ -82,15 +82,15 @@ impl<T: Float> Vec2<T> {
 
     /// Geometric product of two vectors: `ab = a·b + a∧b`.
     #[inline]
-    pub fn geometric(self, other: Self) -> Rotor2<T> {
-        Rotor2 {
+    pub fn geometric(self, other: Self) -> Rotor<T> {
+        Rotor {
             s: self.dot(other),
             xy: self.x * other.y - self.y * other.x,
         }
     }
 }
 
-impl<T: Float> Default for Vec2<T> {
+impl<T: Float> Default for Vector<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -101,12 +101,12 @@ impl<T: Float> Default for Vec2<T> {
 /// In 2D, there's only one basis bivector, so this is a single coefficient.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
-pub struct Bivec2<T: Float>(
+pub struct Bivector<T: Float>(
     /// Coefficient of `e₁₂`.
     pub T,
 );
 
-impl<T: Float> Bivec2<T> {
+impl<T: Float> Bivector<T> {
     /// Creates a new bivector.
     #[inline]
     pub fn new(value: T) -> Self {
@@ -138,7 +138,7 @@ impl<T: Float> Bivec2<T> {
     }
 }
 
-impl<T: Float> Default for Bivec2<T> {
+impl<T: Float> Default for Bivector<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -149,14 +149,14 @@ impl<T: Float> Default for Bivec2<T> {
 /// Represents a rotation in 2D. Equivalent to a complex number of unit magnitude.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Rotor2<T: Float> {
+pub struct Rotor<T: Float> {
     /// Scalar part (grade 0).
     pub s: T,
     /// Bivector coefficient of `e₁₂` (grade 2).
     pub xy: T,
 }
 
-impl<T: Float> Rotor2<T> {
+impl<T: Float> Rotor<T> {
     /// Creates a new rotor.
     #[inline]
     pub fn new(s: T, xy: T) -> Self {
@@ -186,7 +186,7 @@ impl<T: Float> Rotor2<T> {
 
     /// Creates a rotor that rotates vector `a` to vector `b`.
     #[inline]
-    pub fn from_vectors(a: Vec2<T>, b: Vec2<T>) -> Self {
+    pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
         let dot = a.dot(b);
         let wedge = a.x * b.y - a.y * b.x; // a ∧ b
 
@@ -245,12 +245,12 @@ impl<T: Float> Rotor2<T> {
     /// even subalgebra is commutative. We document `R̃ v R` for consistency
     /// with the 3D convention, which gives counterclockwise rotation.
     #[inline]
-    pub fn rotate(&self, v: Vec2<T>) -> Vec2<T> {
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
         // Simplified for 2D: equivalent to rotation matrix
         let cos_theta = self.s * self.s - self.xy * self.xy;
         let sin_theta = T::TWO * self.s * self.xy;
 
-        Vec2 {
+        Vector {
             x: cos_theta * v.x - sin_theta * v.y,
             y: sin_theta * v.x + cos_theta * v.y,
         }
@@ -312,7 +312,7 @@ impl<T: Float> Rotor2<T> {
     }
 }
 
-impl<T: Float> Default for Rotor2<T> {
+impl<T: Float> Default for Rotor<T> {
     fn default() -> Self {
         Self::identity()
     }
@@ -322,7 +322,7 @@ impl<T: Float> Default for Rotor2<T> {
 // approx trait implementations (generic over Float)
 // ============================================================================
 
-impl<T: Float> AbsDiffEq for Vec2<T> {
+impl<T: Float> AbsDiffEq for Vector<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -334,7 +334,7 @@ impl<T: Float> AbsDiffEq for Vec2<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Vec2<T> {
+impl<T: Float> RelativeEq for Vector<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -350,7 +350,7 @@ impl<T: Float> RelativeEq for Vec2<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Vec2<T> {
+impl<T: Float> UlpsEq for Vector<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
@@ -361,7 +361,7 @@ impl<T: Float> UlpsEq for Vec2<T> {
     }
 }
 
-impl<T: Float> AbsDiffEq for Bivec2<T> {
+impl<T: Float> AbsDiffEq for Bivector<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -373,7 +373,7 @@ impl<T: Float> AbsDiffEq for Bivec2<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Bivec2<T> {
+impl<T: Float> RelativeEq for Bivector<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -388,7 +388,7 @@ impl<T: Float> RelativeEq for Bivec2<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Bivec2<T> {
+impl<T: Float> UlpsEq for Bivector<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
@@ -398,7 +398,7 @@ impl<T: Float> UlpsEq for Bivec2<T> {
     }
 }
 
-impl<T: Float> AbsDiffEq for Rotor2<T> {
+impl<T: Float> AbsDiffEq for Rotor<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -410,7 +410,7 @@ impl<T: Float> AbsDiffEq for Rotor2<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Rotor2<T> {
+impl<T: Float> RelativeEq for Rotor<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -426,7 +426,7 @@ impl<T: Float> RelativeEq for Rotor2<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Rotor2<T> {
+impl<T: Float> UlpsEq for Rotor<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
