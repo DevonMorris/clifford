@@ -638,6 +638,479 @@ impl<T: Float, S: Signature> Multivector<T, S> {
 }
 
 // ============================================================================
+// Grade Operations
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Extracts the grade-k part of this multivector: `⟨M⟩ₖ`.
+    ///
+    /// Returns a multivector containing only the components of the specified grade,
+    /// with all other grades set to zero.
+    ///
+    /// # Arguments
+    ///
+    /// * `k` - The grade to extract (0 = scalar, 1 = vector, 2 = bivector, etc.)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// // Create a multivector with scalar and vector parts
+    /// let mut mv: Multivector<f64, Euclidean3> = Multivector::scalar(5.0);
+    /// mv = &mv + &Multivector::vector(&[1.0, 2.0, 3.0]);
+    ///
+    /// // Extract just the scalar part
+    /// let scalar = mv.grade_select(0);
+    /// assert!((scalar.scalar_part() - 5.0).abs() < 1e-10);
+    ///
+    /// // Extract just the vector part
+    /// let vector = mv.grade_select(1);
+    /// assert!(vector.grade_select(0).is_zero(1e-10));
+    /// ```
+    pub fn grade_select(&self, k: usize) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NumBlades::USIZE {
+            if Blade::from_index(i).grade() == k {
+                result.coeffs[i] = self.coeffs[i];
+            }
+        }
+        result
+    }
+
+    /// Extracts the even part of this multivector (grades 0, 2, 4, ...).
+    ///
+    /// The even subalgebra is closed under the geometric product and contains
+    /// important elements like rotors (in 3D, the even subalgebra is isomorphic
+    /// to quaternions).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// // A rotor is an even multivector: scalar + bivector
+    /// let rotor = &Multivector::scalar(0.5_f64.sqrt()) + &(&e1 * &e2) * 0.5_f64.sqrt();
+    /// let even = rotor.even();
+    /// assert!(even.approx_eq(&rotor, 1e-10));
+    /// ```
+    pub fn even(&self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NumBlades::USIZE {
+            if Blade::from_index(i).grade().is_multiple_of(2) {
+                result.coeffs[i] = self.coeffs[i];
+            }
+        }
+        result
+    }
+
+    /// Extracts the odd part of this multivector (grades 1, 3, 5, ...).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+    /// let odd = v.odd();
+    /// assert!(odd.approx_eq(&v, 1e-10)); // Vectors are odd
+    /// ```
+    pub fn odd(&self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NumBlades::USIZE {
+            if !Blade::from_index(i).grade().is_multiple_of(2) {
+                result.coeffs[i] = self.coeffs[i];
+            }
+        }
+        result
+    }
+
+    /// Returns the grade of this multivector if it is homogeneous (all non-zero
+    /// components have the same grade), or `None` if it contains multiple grades.
+    ///
+    /// # Arguments
+    ///
+    /// * `epsilon` - Tolerance for considering a coefficient as zero
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+    /// assert_eq!(v.grade(1e-10), Some(1)); // Pure vector
+    ///
+    /// let mixed = &v + &Multivector::scalar(1.0);
+    /// assert_eq!(mixed.grade(1e-10), None); // Mixed grades
+    /// ```
+    pub fn grade(&self, epsilon: T) -> Option<usize> {
+        let mut found_grade = None;
+        for i in 0..S::NumBlades::USIZE {
+            if self.coeffs[i].abs() > epsilon {
+                let g = Blade::from_index(i).grade();
+                match found_grade {
+                    None => found_grade = Some(g),
+                    Some(prev) if prev != g => return None,
+                    _ => {}
+                }
+            }
+        }
+        found_grade
+    }
+
+    /// Returns the unit pseudoscalar `I = e₁e₂...eₙ`.
+    ///
+    /// The pseudoscalar is the highest-grade basis blade, representing the
+    /// oriented unit volume element. In n dimensions, it has grade n.
+    ///
+    /// # Properties
+    ///
+    /// - In Euclidean 2D: `I² = -1` (behaves like imaginary unit)
+    /// - In Euclidean 3D: `I² = -1`
+    /// - In Euclidean 4D: `I² = +1`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let ps: Multivector<f64, Euclidean3> = Multivector::pseudoscalar();
+    /// assert_eq!(ps.grade(1e-10), Some(3)); // Trivector in 3D
+    ///
+    /// // I² = -1 in Euclidean 3D
+    /// let ps_sq = &ps * &ps;
+    /// assert!((ps_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+    /// ```
+    pub fn pseudoscalar() -> Self {
+        let ps_index = (1 << S::DIM) - 1;
+        Self::from_blade(Blade::from_index(ps_index))
+    }
+}
+
+// ============================================================================
+// Derived Products
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Computes the outer (wedge) product: `a ∧ b`.
+    ///
+    /// The outer product extracts the grade-raising part of the geometric product.
+    /// For a grade-k blade A and grade-j blade B, the result has grade k + j.
+    ///
+    /// # Properties
+    ///
+    /// - **Anticommutative for vectors**: `a ∧ b = -(b ∧ a)`
+    /// - **Associative**: `(a ∧ b) ∧ c = a ∧ (b ∧ c)`
+    /// - **Grade-raising**: `grade(A ∧ B) = grade(A) + grade(B)`
+    ///
+    /// # Geometric Interpretation
+    ///
+    /// The wedge product of two vectors creates a bivector representing
+    /// the oriented parallelogram spanned by those vectors. More generally,
+    /// it creates higher-grade blades representing oriented subspaces.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// // e₁ ∧ e₂ = e₁₂ (bivector)
+    /// let e12 = e1.outer(&e2);
+    /// assert_eq!(e12.grade(1e-10), Some(2));
+    ///
+    /// // Anticommutativity: e₂ ∧ e₁ = -e₁₂
+    /// let e21 = e2.outer(&e1);
+    /// assert!(e21.approx_eq(&(-&e12), 1e-10));
+    /// ```
+    pub fn outer(&self, other: &Self) -> Self {
+        let mut result = Self::zero();
+
+        for i in 0..S::NumBlades::USIZE {
+            if self.coeffs[i] == T::ZERO {
+                continue;
+            }
+            let blade_i = Blade::from_index(i);
+            let grade_i = blade_i.grade();
+
+            for j in 0..S::NumBlades::USIZE {
+                if other.coeffs[j] == T::ZERO {
+                    continue;
+                }
+                let blade_j = Blade::from_index(j);
+                let grade_j = blade_j.grade();
+
+                let (sign, result_blade) = blade_i.product(&blade_j, S::metric);
+
+                // Keep only if result grade equals sum of input grades
+                if sign != 0 && result_blade.grade() == grade_i + grade_j {
+                    let coeff = T::from_i8(sign) * self.coeffs[i] * other.coeffs[j];
+                    result.coeffs[result_blade.index()] += coeff;
+                }
+            }
+        }
+        result
+    }
+
+    /// Computes the left contraction: `A ⌋ B`.
+    ///
+    /// The left contraction extracts the grade-lowering part of the geometric
+    /// product. For a grade-k blade A and grade-j blade B where k ≤ j,
+    /// the result has grade j - k.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// `A ⌋ B` is the part of `AB` with grade `grade(B) - grade(A)`.
+    /// If `grade(A) > grade(B)`, the result is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    /// let e12 = e1.outer(&e2);
+    ///
+    /// // Vector left-contracted with bivector gives vector
+    /// let result = e1.left_contract(&e12);
+    /// assert_eq!(result.grade(1e-10), Some(1));
+    /// ```
+    pub fn left_contract(&self, other: &Self) -> Self {
+        let mut result = Self::zero();
+
+        for i in 0..S::NumBlades::USIZE {
+            if self.coeffs[i] == T::ZERO {
+                continue;
+            }
+            let blade_i = Blade::from_index(i);
+            let grade_i = blade_i.grade();
+
+            for j in 0..S::NumBlades::USIZE {
+                if other.coeffs[j] == T::ZERO {
+                    continue;
+                }
+                let blade_j = Blade::from_index(j);
+                let grade_j = blade_j.grade();
+
+                // Left contraction requires grade_i ≤ grade_j
+                if grade_i > grade_j {
+                    continue;
+                }
+
+                let (sign, result_blade) = blade_i.product(&blade_j, S::metric);
+
+                // Keep only if result grade equals grade_j - grade_i
+                if sign != 0 && result_blade.grade() == grade_j - grade_i {
+                    let coeff = T::from_i8(sign) * self.coeffs[i] * other.coeffs[j];
+                    result.coeffs[result_blade.index()] += coeff;
+                }
+            }
+        }
+        result
+    }
+
+    /// Computes the right contraction: `A ⌊ B`.
+    ///
+    /// The right contraction is the "mirror" of the left contraction.
+    /// For a grade-k blade A and grade-j blade B where j ≤ k,
+    /// the result has grade k - j.
+    ///
+    /// # Mathematical Definition
+    ///
+    /// `A ⌊ B` is the part of `AB` with grade `grade(A) - grade(B)`.
+    /// If `grade(B) > grade(A)`, the result is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    /// let e12 = e1.outer(&e2);
+    ///
+    /// // Bivector right-contracted with vector gives vector
+    /// let result = e12.right_contract(&e1);
+    /// assert_eq!(result.grade(1e-10), Some(1));
+    /// ```
+    pub fn right_contract(&self, other: &Self) -> Self {
+        let mut result = Self::zero();
+
+        for i in 0..S::NumBlades::USIZE {
+            if self.coeffs[i] == T::ZERO {
+                continue;
+            }
+            let blade_i = Blade::from_index(i);
+            let grade_i = blade_i.grade();
+
+            for j in 0..S::NumBlades::USIZE {
+                if other.coeffs[j] == T::ZERO {
+                    continue;
+                }
+                let blade_j = Blade::from_index(j);
+                let grade_j = blade_j.grade();
+
+                // Right contraction requires grade_j ≤ grade_i
+                if grade_j > grade_i {
+                    continue;
+                }
+
+                let (sign, result_blade) = blade_i.product(&blade_j, S::metric);
+
+                // Keep only if result grade equals grade_i - grade_j
+                if sign != 0 && result_blade.grade() == grade_i - grade_j {
+                    let coeff = T::from_i8(sign) * self.coeffs[i] * other.coeffs[j];
+                    result.coeffs[result_blade.index()] += coeff;
+                }
+            }
+        }
+        result
+    }
+
+    /// Computes the inner product: `a · b`.
+    ///
+    /// For vectors, this is the standard dot product, returning a scalar.
+    /// More generally, this is implemented as the left contraction.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+    /// let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
+    ///
+    /// // a · b = 1*4 + 2*5 + 3*6 = 32
+    /// let dot = a.inner(&b);
+    /// assert!((dot.scalar_part() - 32.0).abs() < 1e-10);
+    /// ```
+    pub fn inner(&self, other: &Self) -> Self {
+        self.left_contract(other)
+    }
+
+    /// Computes the Hodge dual: `A* = A ⌋ I⁻¹`.
+    ///
+    /// The dual maps a grade-k blade to a grade-(n-k) blade, where n is the
+    /// dimension. It represents the orthogonal complement of a subspace.
+    ///
+    /// # Properties
+    ///
+    /// - `dual(dual(A)) = ±A` (sign depends on dimension and signature)
+    /// - Maps vectors to pseudovectors, bivectors to vectors (in 3D), etc.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // In 3D, dual of a vector is a bivector
+    /// let e1_dual = e1.dual();
+    /// assert_eq!(e1_dual.grade(1e-10), Some(2));
+    /// ```
+    pub fn dual(&self) -> Self {
+        let ps = Self::pseudoscalar();
+        let ps_inv = ps.inverse().expect("pseudoscalar should be invertible");
+        self.left_contract(&ps_inv)
+    }
+
+    /// Computes the undual (inverse of dual): `A⁻* = A ⌋ I`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let roundtrip = e1.dual().undual();
+    /// assert!(roundtrip.approx_eq(&e1, 1e-10));
+    /// ```
+    pub fn undual(&self) -> Self {
+        let ps = Self::pseudoscalar();
+        self.left_contract(&ps)
+    }
+
+    /// Computes the regressive (vee) product: `a ∨ b = (a* ∧ b*)*⁻¹`.
+    ///
+    /// The regressive product is the dual of the outer product. While the
+    /// outer product represents the "join" (span) of subspaces, the regressive
+    /// product represents the "meet" (intersection).
+    ///
+    /// # Properties
+    ///
+    /// - Grade-lowering (opposite of wedge)
+    /// - `a ∨ b = undual(dual(a) ∧ dual(b))`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    /// let e12 = e1.outer(&e2);
+    /// let e23 = e2.outer(&Multivector::basis_vector(2));
+    ///
+    /// // Meet of two planes sharing e2 should give e2 direction
+    /// let meet = e12.regressive(&e23);
+    /// assert_eq!(meet.grade(1e-10), Some(1));
+    /// ```
+    pub fn regressive(&self, other: &Self) -> Self {
+        self.dual().outer(&other.dual()).undual()
+    }
+
+    /// Computes the sandwich product: `R x R̃`.
+    ///
+    /// The sandwich product is the fundamental operation for transformations
+    /// in geometric algebra:
+    /// - Reflections: `n x n` where n is a unit vector (reflects across plane normal to n)
+    /// - Rotations: `R x R̃` where R is a rotor
+    ///
+    /// # Properties
+    ///
+    /// - Preserves grade of the argument
+    /// - Preserves norm in Euclidean space
+    /// - Composition: `R₂(R₁ x R₁̃)R₂̃ = (R₂R₁) x (R₂R₁)̃`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// // Reflect a vector across the yz-plane (normal = e₁)
+    /// let n: Multivector<f64, Euclidean3> = Multivector::basis_vector(0); // e₁
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+    ///
+    /// let reflected = n.sandwich(&v);
+    /// // x component flips sign, y and z stay same
+    /// assert!((reflected.norm() - v.norm()).abs() < 1e-10);
+    /// ```
+    pub fn sandwich(&self, x: &Self) -> Self {
+        &(self * x) * &self.reverse()
+    }
+}
+
+// ============================================================================
 // Geometric Product
 // ============================================================================
 
@@ -975,6 +1448,23 @@ mod tests {
             .prop_map(|v| Multivector::vector(&v))
     }
 
+    /// Strategy for generating arbitrary vectors (may be zero)
+    fn arb_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
+        prop::array::uniform3(-10.0f64..10.0).prop_map(|v| Multivector::vector(&v))
+    }
+
+    /// Strategy for generating unit vectors
+    fn arb_unit_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
+        prop::array::uniform3(-10.0f64..10.0)
+            .prop_filter("must be non-zero", |v| {
+                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
+            })
+            .prop_map(|v| {
+                let mv = Multivector::<f64, Euclidean3>::vector(&v);
+                mv.normalize().unwrap()
+            })
+    }
+
     // ========================================================================
     // Constructor tests
     // ========================================================================
@@ -1164,6 +1654,137 @@ mod tests {
             let one = Multivector::<f64, Euclidean3>::one();
             prop_assert!((&a * &one).approx_eq(&a, 1e-10));
             prop_assert!((&one * &a).approx_eq(&a, 1e-10));
+        }
+
+        // ====================================================================
+        // Grade operation tests
+        // ====================================================================
+
+        #[test]
+        fn grade_decomposition_complete(a in arb_multivector_e3()) {
+            // Sum of all grade projections equals original
+            let sum = (0..=3)
+                .map(|k| a.grade_select(k))
+                .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| &acc + &x);
+            prop_assert!(sum.approx_eq(&a, 1e-10));
+        }
+
+        #[test]
+        fn even_plus_odd_equals_original(a in arb_multivector_e3()) {
+            let reconstructed = &a.even() + &a.odd();
+            prop_assert!(reconstructed.approx_eq(&a, 1e-10));
+        }
+
+        #[test]
+        fn grade_select_idempotent(a in arb_multivector_e3(), k in 0usize..4) {
+            let once = a.grade_select(k);
+            let twice = once.grade_select(k);
+            prop_assert!(once.approx_eq(&twice, 1e-10));
+        }
+
+        // ====================================================================
+        // Outer product tests
+        // ====================================================================
+
+        #[test]
+        fn outer_anticommutative_vectors(
+            a in arb_vector_e3(),
+            b in arb_vector_e3(),
+        ) {
+            let ab = a.outer(&b);
+            let ba = b.outer(&a);
+            prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
+        }
+
+        #[test]
+        fn outer_associative(
+            a in arb_multivector_e3(),
+            b in arb_multivector_e3(),
+            c in arb_multivector_e3(),
+        ) {
+            let lhs = a.outer(&b).outer(&c);
+            let rhs = a.outer(&b.outer(&c));
+            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+        }
+
+        #[test]
+        fn outer_of_vectors_is_grade_2(
+            a in arb_vector_e3(),
+            b in arb_vector_e3(),
+        ) {
+            let wedge = a.outer(&b);
+            // Result should have no scalar or vector parts
+            prop_assert!(wedge.grade_select(0).is_zero(1e-10));
+            prop_assert!(wedge.grade_select(1).is_zero(1e-10));
+        }
+
+        // ====================================================================
+        // Inner product tests
+        // ====================================================================
+
+        #[test]
+        fn inner_product_of_vectors_is_scalar(
+            a in arb_vector_e3(),
+            b in arb_vector_e3(),
+        ) {
+            let dot = a.inner(&b);
+            // Should be pure scalar
+            prop_assert!(dot.grade_select(1).is_zero(1e-10));
+            prop_assert!(dot.grade_select(2).is_zero(1e-10));
+            prop_assert!(dot.grade_select(3).is_zero(1e-10));
+        }
+
+        #[test]
+        fn inner_product_symmetric_for_vectors(
+            a in arb_vector_e3(),
+            b in arb_vector_e3(),
+        ) {
+            // For vectors, a·b = b·a
+            let ab = a.inner(&b);
+            let ba = b.inner(&a);
+            prop_assert!(ab.approx_eq(&ba, 1e-10));
+        }
+
+        // ====================================================================
+        // Dual tests
+        // ====================================================================
+
+        #[test]
+        fn dual_undual_roundtrip(a in arb_multivector_e3()) {
+            let roundtrip = a.dual().undual();
+            prop_assert!(roundtrip.approx_eq(&a, 1e-8));
+        }
+
+        #[test]
+        fn dual_changes_grade(a in arb_nonzero_vector_e3()) {
+            // Vector (grade 1) dualizes to bivector (grade 2) in 3D
+            let dual = a.dual();
+            prop_assert_eq!(dual.grade(1e-10), Some(2));
+        }
+
+        // ====================================================================
+        // Sandwich product tests
+        // ====================================================================
+
+        #[test]
+        fn sandwich_by_unit_vector_preserves_norm(
+            n in arb_unit_vector_e3(),
+            v in arb_nonzero_vector_e3(),
+        ) {
+            let reflected = n.sandwich(&v);
+            // Reflection preserves norm
+            prop_assert!((reflected.norm() - v.norm()).abs() < 1e-8);
+        }
+
+        #[test]
+        fn sandwich_by_unit_vector_is_reflection(
+            n in arb_unit_vector_e3(),
+            v in arb_vector_e3(),
+        ) {
+            let reflected = n.sandwich(&v);
+            // Double reflection returns original
+            let double_reflected = n.sandwich(&reflected);
+            prop_assert!(double_reflected.approx_eq(&v, 1e-8));
         }
     }
 
