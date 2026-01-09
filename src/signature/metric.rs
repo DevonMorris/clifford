@@ -25,6 +25,9 @@
 //! | PGA 3D | `Cl(3,0,1)` | Projective geometry |
 //! | CGA 3D | `Cl(4,1,0)` | Conformal geometry |
 
+use generic_array::ArrayLength;
+use typenum::Unsigned;
+
 /// Trait defining the metric signature of a Clifford algebra.
 ///
 /// The signature determines how basis vectors square under the geometric product:
@@ -35,7 +38,8 @@
 /// # Type-Level Constants
 ///
 /// The signature is encoded as compile-time constants, enabling the compiler
-/// to optimize based on the specific algebra being used.
+/// to optimize based on the specific algebra being used. The [`NumBlades`](Self::NumBlades)
+/// associated type enables zero-overhead generic array sizing.
 ///
 /// # Example
 ///
@@ -46,6 +50,8 @@
 /// struct Minkowski;
 ///
 /// impl Signature for Minkowski {
+///     type NumBlades = typenum::U16; // 2^4 = 16 blades
+///
 ///     const P: usize = 1;
 ///     const Q: usize = 3;
 ///     const R: usize = 0;
@@ -61,6 +67,13 @@
 /// assert_eq!(Minkowski::metric(1), -1); // space-like
 /// ```
 pub trait Signature: Copy + Clone + Default + 'static {
+    /// Type-level number of basis blades for generic array sizing.
+    ///
+    /// This should be `typenum::U{2^DIM}`, e.g., `U4` for 2D, `U8` for 3D, `U16` for 4D.
+    /// This enables [`Multivector`](crate::algebra::Multivector) to allocate exactly
+    /// the right amount of space at compile time.
+    type NumBlades: ArrayLength + Unsigned;
+
     /// Number of basis vectors squaring to `+1`.
     const P: usize;
 

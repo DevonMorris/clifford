@@ -26,6 +26,7 @@
 //! | 7 | `111` | `e₁₂₃` | 3 | Pseudoscalar |
 
 use super::Signature;
+use typenum::{U4, U8, U16};
 
 /// 2D Euclidean signature: `Cl(2,0,0)`.
 ///
@@ -60,6 +61,8 @@ use super::Signature;
 pub struct Euclidean2;
 
 impl Signature for Euclidean2 {
+    type NumBlades = U4; // 2^2 = 4
+
     const P: usize = 2;
     const Q: usize = 0;
     const R: usize = 0;
@@ -117,6 +120,8 @@ impl Signature for Euclidean2 {
 pub struct Euclidean3;
 
 impl Signature for Euclidean3 {
+    type NumBlades = U8; // 2^3 = 8
+
     const P: usize = 3;
     const Q: usize = 0;
     const R: usize = 0;
@@ -161,6 +166,8 @@ impl Signature for Euclidean3 {
 pub struct Euclidean4;
 
 impl Signature for Euclidean4 {
+    type NumBlades = U16; // 2^4 = 16
+
     const P: usize = 4;
     const Q: usize = 0;
     const R: usize = 0;

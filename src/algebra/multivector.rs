@@ -67,16 +67,14 @@ use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use generic_array::{GenericArray, sequence::GenericSequence};
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::basis::Blade;
 use crate::scalar::Float;
 use crate::signature::Signature;
-
-/// Maximum number of basis blades supported.
-///
-/// This limits the algebra to at most 6 dimensions (2⁶ = 64 blades).
-/// This is sufficient for most practical applications including
-/// 3D Euclidean, PGA (4D), and CGA (5D).
-pub const MAX_BLADES: usize = 64;
 
 /// A multivector in a Clifford algebra with signature `S` and scalar type `T`.
 ///
@@ -114,9 +112,10 @@ pub const MAX_BLADES: usize = 64;
 /// assert!((e12_squared.scalar_part() - (-1.0)).abs() < 1e-10);
 /// ```
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Multivector<T: Float, S: Signature> {
     /// Coefficients for each basis blade, indexed by blade bitmask.
-    coeffs: [T; MAX_BLADES],
+    coeffs: GenericArray<T, S::NumBlades>,
     /// Marker for the signature type.
     _signature: PhantomData<S>,
 }
@@ -143,7 +142,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     #[inline]
     pub fn zero() -> Self {
         Self {
-            coeffs: [T::ZERO; MAX_BLADES],
+            coeffs: GenericArray::generate(|_| T::ZERO),
             _signature: PhantomData,
         }
     }
@@ -1186,5 +1185,24 @@ mod tests {
         let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
         let norm_sq = (&z * &z.reverse()).scalar_part();
         assert!((norm_sq - 25.0).abs() < 1e-10); // |z|² = 3² + 4² = 25
+    }
+
+    // ========================================================================
+    // Serde tests (feature-gated)
+    // ========================================================================
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde_roundtrip() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+
+        // Serialize to JSON
+        let json = serde_json::to_string(&v).expect("serialization failed");
+
+        // Deserialize back
+        let v2: Multivector<f64, Euclidean3> =
+            serde_json::from_str(&json).expect("deserialization failed");
+
+        assert!(v.approx_eq(&v2, 1e-10));
     }
 }
