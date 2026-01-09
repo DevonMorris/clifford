@@ -1,0 +1,50 @@
+# cargo-deny configuration
+# See: https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+version = 2
+ignore = [
+    # paste crate unmaintained - transitive dependency from nalgebra -> simba
+    # No action available since it's not a direct dependency
+    "RUSTSEC-2024-0436",
+]
+
+[licenses]
+version = 2
+# Confidence threshold for license detection
+confidence-threshold = 0.8
+
+# List of allowed licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "Unlicense",
+    "MPL-2.0",  # Weak copyleft, file-level only
+]
+
+# Deny all GPL/LGPL licenses (copyleft)
+deny = [
+    "GPL-1.0",
+    "GPL-2.0",
+    "GPL-3.0",
+    "LGPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+    "AGPL-1.0",
+    "AGPL-3.0",
+]
+
+[bans]
+version = 2
+# Warn on multiple versions of same crate
+multiple-versions = "warn"
+
+[sources]
+version = 2
+# Allow crates from crates.io
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
