@@ -41,6 +41,9 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Document why each dependency is needed
 
 ### 6. Rust API Guidelines
+
+**NOTE:** When updating style rules in this section, also update the corresponding agents in `.claude/agents/` (especially `implement.md` and `review.md`).
+
 - Follow the official Rust API Guidelines (https://rust-lang.github.io/api-guidelines/)
 - Ergonomic builder patterns where appropriate
 - Implement standard traits (Debug, Clone, PartialEq, etc.)
@@ -49,6 +52,10 @@ A Rust library for Geometric Algebra (Clifford Algebra).
   - Encapsulate internal details; don't leak implementation (e.g., bitmask indices)
   - Methods on types are more discoverable and provide better IDE support
   - Example: `blade.grade()` is better than `grade_of_blade(index)`
+- **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()` when possible. Add helper methods or type aliases to make simpler syntax work.
+- **Don't expose foreign traits in public API** - When our public API depends on a foreign trait (e.g., `typenum::Unsigned`), either:
+  - Re-export the trait in our prelude so users don't need to import the dependency directly, or
+  - Add helper methods that encapsulate the foreign trait usage (preferred when feasible)
 
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
@@ -59,7 +66,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 ### 8. Code Review
 - PRs are reviewed by Greptile (AI-powered review)
 - Address or acknowledge Greptile feedback before merging
-- **Retrigger Greptile after pushing new commits**: Comment `@greptileai` on the PR to request a new review
+- **IMPORTANT: After pushing commits that address Greptile feedback**, always comment `@greptileai review` on the PR to request a re-review. This ensures the fixes are verified before merging.
 
 ## Development Commands
 

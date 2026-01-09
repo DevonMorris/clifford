@@ -45,4 +45,4 @@
 
 mod multivector;
 
-pub use multivector::{MAX_BLADES, Multivector};
+pub use multivector::Multivector;

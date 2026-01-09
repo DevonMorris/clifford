@@ -26,6 +26,7 @@
 //! | 7 | `111` | `e₁₂₃` | 3 | Pseudoscalar |
 
 use super::Signature;
+use typenum::{U4, U8, U16};
 
 /// 2D Euclidean signature: `Cl(2,0,0)`.
 ///
@@ -49,10 +50,10 @@ use super::Signature;
 /// # Example
 ///
 /// ```
-/// use clifford::signature::{Euclidean2, Signature};
+/// use clifford::prelude::*;
 ///
 /// assert_eq!(Euclidean2::DIM, 2);
-/// assert_eq!(Euclidean2::NUM_BLADES, 4);
+/// assert_eq!(Euclidean2::num_blades(), 4);
 /// assert_eq!(Euclidean2::metric(0), 1);
 /// assert_eq!(Euclidean2::metric(1), 1);
 /// ```
@@ -60,6 +61,8 @@ use super::Signature;
 pub struct Euclidean2;
 
 impl Signature for Euclidean2 {
+    type NumBlades = U4; // 2^2 = 4
+
     const P: usize = 2;
     const Q: usize = 0;
     const R: usize = 0;
@@ -103,10 +106,10 @@ impl Signature for Euclidean2 {
 /// # Example
 ///
 /// ```
-/// use clifford::signature::{Euclidean3, Signature};
+/// use clifford::prelude::*;
 ///
 /// assert_eq!(Euclidean3::DIM, 3);
-/// assert_eq!(Euclidean3::NUM_BLADES, 8);
+/// assert_eq!(Euclidean3::num_blades(), 8);
 ///
 /// // All basis vectors square to +1
 /// for i in 0..3 {
@@ -117,6 +120,8 @@ impl Signature for Euclidean2 {
 pub struct Euclidean3;
 
 impl Signature for Euclidean3 {
+    type NumBlades = U8; // 2^3 = 8
+
     const P: usize = 3;
     const Q: usize = 0;
     const R: usize = 0;
@@ -152,15 +157,17 @@ impl Signature for Euclidean3 {
 /// # Example
 ///
 /// ```
-/// use clifford::signature::{Euclidean4, Signature};
+/// use clifford::prelude::*;
 ///
 /// assert_eq!(Euclidean4::DIM, 4);
-/// assert_eq!(Euclidean4::NUM_BLADES, 16);
+/// assert_eq!(Euclidean4::num_blades(), 16);
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Euclidean4;
 
 impl Signature for Euclidean4 {
+    type NumBlades = U16; // 2^4 = 16
+
     const P: usize = 4;
     const Q: usize = 0;
     const R: usize = 0;
@@ -197,13 +204,13 @@ mod tests {
     #[test]
     fn euclidean_dimensions() {
         assert_eq!(Euclidean2::DIM, 2);
-        assert_eq!(Euclidean2::NUM_BLADES, 4);
+        assert_eq!(Euclidean2::num_blades(), 4);
 
         assert_eq!(Euclidean3::DIM, 3);
-        assert_eq!(Euclidean3::NUM_BLADES, 8);
+        assert_eq!(Euclidean3::num_blades(), 8);
 
         assert_eq!(Euclidean4::DIM, 4);
-        assert_eq!(Euclidean4::NUM_BLADES, 16);
+        assert_eq!(Euclidean4::num_blades(), 16);
     }
 
     #[test]
