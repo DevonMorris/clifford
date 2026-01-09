@@ -35,6 +35,12 @@
 //! assert!((ab.scalar_part() - 2.0).abs() < 1e-10);
 //! ```
 
+// Ensure nalgebra feature flags are mutually exclusive
+#[cfg(all(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
+compile_error!(
+    "Features `nalgebra-0_33` and `nalgebra-0_34` are mutually exclusive. Enable only one."
+);
+
 pub mod algebra;
 pub mod basis;
 pub mod prelude;
