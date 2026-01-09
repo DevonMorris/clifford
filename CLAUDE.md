@@ -54,6 +54,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 ### 8. Code Review
 - PRs are reviewed by Greptile (AI-powered review)
 - Address or acknowledge Greptile feedback before merging
+- **Retrigger Greptile after pushing new commits**: Comment `@greptileai` on the PR to request a new review
 
 ## Development Commands
 
@@ -83,8 +84,12 @@ cargo fmt             # Format code
 - [x] Greptile AI code review integration
 - [x] proptest dependency for property-based testing
 - [x] crates.io publish workflow (triggered by version tags)
+- [x] Implementation PRDs (see `docs/prd/`)
 
 ### Next Steps
-- [ ] **Plan geometric algebra implementation** - design types, operations, and API
-- [ ] Core multivector type and basic operations
-- [ ] Geometric product implementation
+- [ ] **PRD-1: Foundation** - Float trait, Signature trait, basis utilities
+- [ ] **PRD-2: Core Multivector** - Multivector type, geometric product
+- [ ] **PRD-3: Products** - inner, outer, regressive products, grade operations
+- [ ] **PRD-4: Specialized** - optimized 2D/3D types
+- [ ] **PRD-5: PGA** - Projective GA, motors
+- [ ] **PRD-6: CGA** - Conformal GA, polish
