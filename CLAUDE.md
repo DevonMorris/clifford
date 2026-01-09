@@ -15,6 +15,8 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Explain the geometric intuition, not just the code
 
 ### 3. Clean Git History
+- **Never push directly to `main`** - all changes go through pull requests
+- Work in feature branches, e.g. `feat/multivector`, `fix/product-sign`
 - Atomic commits with clear messages
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
@@ -62,6 +64,7 @@ cargo fmt             # Format code
 - [x] GitHub Actions CI workflow (check, test, fmt, clippy)
 - [x] Strict lint configuration: deny all warnings, require docs on all items
 - [x] GitHub repository created: https://github.com/DevonMorris/clifford
+- [x] Branch protection: PRs required, CI must pass, no direct pushes to main
 
 ### Next Steps
 - [ ] Core multivector type and basic operations
