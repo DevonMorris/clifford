@@ -54,8 +54,32 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 - **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
 - **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
-- **Add new features to benchmarks** - When adding new operations (especially products, transformations), add corresponding benchmarks in `benches/multivector.rs`
+- **Add new features to benchmarks** - When adding new operations:
+  - Add generic `Multivector` operations to `benches/generic.rs`
+  - Add specialized 2D/3D operations to `benches/specialized.rs`
 - Benchmarks use criterion; see existing benchmarks for patterns
+
+### Capturing Benchmark Reports
+
+After running benchmarks, capture SVG plots and update documentation:
+
+```bash
+# Run all benchmarks
+cargo bench
+
+# Copy SVG reports to benches/reports/
+for bench in generic_vector_dot generic_vector_wedge generic_vector_geometric \
+             generic_rotor_sandwich generic_vector_add generic_full_geometric \
+             ga2d_vector_dot ga2d_vector_wedge ga2d_vector_add \
+             ga2d_rotor_rotate ga2d_rotor_compose ga2d_rotor_slerp \
+             ga3d_vector_dot ga3d_vector_wedge ga3d_vector_cross ga3d_vector_add \
+             ga3d_rotor_rotate ga3d_rotor_compose ga3d_rotor_slerp ga3d_rotor_from_vectors; do
+  cp "target/criterion/$bench/report/pdf.svg" "benches/reports/${bench}_pdf.svg"
+done
+
+# Update benches/README.md with new timing data if significant changes
+# Commit the updated SVGs and README
+```
 
 ## Mathematical Notation
 
