@@ -23,7 +23,7 @@
 //! proptest! {
 //!     #[test]
 //!     fn unit_vec_has_unit_length(v in any::<UnitVec2>()) {
-//!         prop_assert!((v.0.norm() - 1.0).abs() < 1e-10);
+//!         prop_assert!((v.norm() - 1.0).abs() < 1e-10);
 //!     }
 //! }
 //! ```

@@ -307,7 +307,7 @@ mod tests {
 
         #[test]
         fn vec3_normalized_has_unit_length(v in any::<NonZeroVec3>()) {
-            let n = v.0.normalized();
+            let n = v.normalized();
             prop_assert!((n.norm() - 1.0).abs() < 1e-10);
         }
     }
@@ -319,7 +319,7 @@ mod tests {
     proptest! {
         #[test]
         fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
-            let rotated = r.0.rotate(v);
+            let rotated = r.rotate(v);
             prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
         }
 
@@ -329,8 +329,8 @@ mod tests {
             r2 in any::<UnitRotor3>(),
             v in any::<Vec3<f64>>()
         ) {
-            let sequential = r2.0.rotate(r1.0.rotate(v));
-            let composed = r2.0.compose(r1.0).rotate(v);
+            let sequential = r2.rotate(r1.rotate(v));
+            let composed = r2.compose(*r1).rotate(v);
             prop_assert!((sequential.x - composed.x).abs() < 1e-8);
             prop_assert!((sequential.y - composed.y).abs() < 1e-8);
             prop_assert!((sequential.z - composed.z).abs() < 1e-8);
@@ -338,7 +338,7 @@ mod tests {
 
         #[test]
         fn rotor_inverse(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
-            let roundtrip = r.0.inverse().rotate(r.0.rotate(v));
+            let roundtrip = r.inverse().rotate(r.rotate(v));
             prop_assert!((roundtrip.x - v.x).abs() < 1e-8);
             prop_assert!((roundtrip.y - v.y).abs() < 1e-8);
             prop_assert!((roundtrip.z - v.z).abs() < 1e-8);
@@ -354,11 +354,11 @@ mod tests {
 
         #[test]
         fn rotor_from_vectors(a in any::<UnitVec3>(), b in any::<UnitVec3>()) {
-            let r = Rotor3::from_vectors(a.0, b.0);
-            let rotated = r.rotate(a.0);
-            prop_assert!((rotated.x - b.0.x).abs() < 1e-8);
-            prop_assert!((rotated.y - b.0.y).abs() < 1e-8);
-            prop_assert!((rotated.z - b.0.z).abs() < 1e-8);
+            let r = Rotor3::from_vectors(*a, *b);
+            let rotated = r.rotate(*a);
+            prop_assert!((rotated.x - b.x).abs() < 1e-8);
+            prop_assert!((rotated.y - b.y).abs() < 1e-8);
+            prop_assert!((rotated.z - b.z).abs() < 1e-8);
         }
     }
 

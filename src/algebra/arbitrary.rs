@@ -28,8 +28,8 @@
 //!         a in any::<VectorE3>(),
 //!         b in any::<VectorE3>()
 //!     ) {
-//!         let ab = a.0.outer(&b.0);
-//!         let ba = b.0.outer(&a.0);
+//!         let ab = a.outer(&*b);
+//!         let ba = b.outer(&*a);
 //!         prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
 //!     }
 //! }

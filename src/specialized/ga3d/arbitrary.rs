@@ -24,7 +24,7 @@
 //! proptest! {
 //!     #[test]
 //!     fn rotation_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
-//!         let rotated = r.0.rotate(v);
+//!         let rotated = r.rotate(v);
 //!         prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
 //!     }
 //! }

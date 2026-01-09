@@ -30,19 +30,19 @@ proptest! {
     #[test]
     fn vector_e3_arbitrary_accessible(v in any::<VectorE3>()) {
         // Verify VectorE3 wrapper is accessible and usable
-        let _ = v.0.scalar_part();
+        let _ = v.scalar_part();
     }
 
     #[test]
     fn non_zero_vector_e3_arbitrary_accessible(v in any::<NonZeroVectorE3>()) {
         // Verify NonZeroVectorE3 wrapper is accessible and has non-zero norm
-        assert!(v.0.norm_squared() > 0.01);
+        assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vector_e3_arbitrary_accessible(v in any::<UnitVectorE3>()) {
         // Verify UnitVectorE3 wrapper is accessible and has unit norm
-        assert!((v.0.norm() - 1.0).abs() < 1e-9);
+        assert!((v.norm() - 1.0).abs() < 1e-9);
     }
 }
 
@@ -60,19 +60,19 @@ proptest! {
     #[test]
     fn non_zero_vec2_arbitrary_accessible(v in any::<NonZeroVec2>()) {
         // Verify NonZeroVec2 wrapper is accessible and has non-zero norm
-        assert!(v.0.norm_squared() > 0.01);
+        assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vec2_arbitrary_accessible(v in any::<UnitVec2>()) {
         // Verify UnitVec2 wrapper is accessible and has unit norm
-        assert!((v.0.norm() - 1.0).abs() < 1e-9);
+        assert!((v.norm() - 1.0).abs() < 1e-9);
     }
 
     #[test]
     fn unit_rotor2_arbitrary_accessible(r in any::<UnitRotor2>()) {
         // Verify UnitRotor2 wrapper is accessible and has unit norm
-        assert!((r.0.norm() - 1.0).abs() < 1e-9);
+        assert!((r.norm() - 1.0).abs() < 1e-9);
     }
 }
 
@@ -96,18 +96,18 @@ proptest! {
     #[test]
     fn non_zero_vec3_arbitrary_accessible(v in any::<NonZeroVec3>()) {
         // Verify NonZeroVec3 wrapper is accessible and has non-zero norm
-        assert!(v.0.norm_squared() > 0.01);
+        assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vec3_arbitrary_accessible(v in any::<UnitVec3>()) {
         // Verify UnitVec3 wrapper is accessible and has unit norm
-        assert!((v.0.norm() - 1.0).abs() < 1e-9);
+        assert!((v.norm() - 1.0).abs() < 1e-9);
     }
 
     #[test]
     fn unit_rotor3_arbitrary_accessible(r in any::<UnitRotor3>()) {
         // Verify UnitRotor3 wrapper is accessible and has unit norm
-        assert!((r.0.norm() - 1.0).abs() < 1e-9);
+        assert!((r.norm() - 1.0).abs() < 1e-9);
     }
 }
