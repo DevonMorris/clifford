@@ -3,6 +3,7 @@
 //! This module provides the [`Float`] trait which abstracts over floating-point
 //! types like `f32` and `f64`, allowing the library to be generic over precision.
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use core::fmt::{Debug, Display};
 use core::iter::{Product, Sum};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -51,6 +52,9 @@ pub trait Float:
     + DivAssign
     + Sum
     + Product
+    + AbsDiffEq<Epsilon = Self>
+    + RelativeEq
+    + UlpsEq
     + 'static
 {
     /// The additive identity (zero).

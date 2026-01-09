@@ -517,26 +517,26 @@ impl<T: Float> Default for Even3<T> {
 }
 
 // ============================================================================
-// approx trait implementations for f32
+// approx trait implementations (generic over Float)
 // ============================================================================
 
-impl AbsDiffEq for Vec3<f32> {
-    type Epsilon = f32;
+impl<T: Float> AbsDiffEq for Vec3<T> {
+    type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
-        f32::EPSILON
+        T::default_epsilon()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f32::abs_diff_eq(&self.x, &other.x, epsilon)
-            && f32::abs_diff_eq(&self.y, &other.y, epsilon)
-            && f32::abs_diff_eq(&self.z, &other.z, epsilon)
+        T::abs_diff_eq(&self.x, &other.x, epsilon)
+            && T::abs_diff_eq(&self.y, &other.y, epsilon)
+            && T::abs_diff_eq(&self.z, &other.z, epsilon)
     }
 }
 
-impl RelativeEq for Vec3<f32> {
+impl<T: Float> RelativeEq for Vec3<T> {
     fn default_max_relative() -> Self::Epsilon {
-        f32::default_max_relative()
+        T::default_max_relative()
     }
 
     fn relative_eq(
@@ -545,41 +545,41 @@ impl RelativeEq for Vec3<f32> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        f32::relative_eq(&self.x, &other.x, epsilon, max_relative)
-            && f32::relative_eq(&self.y, &other.y, epsilon, max_relative)
-            && f32::relative_eq(&self.z, &other.z, epsilon, max_relative)
+        T::relative_eq(&self.x, &other.x, epsilon, max_relative)
+            && T::relative_eq(&self.y, &other.y, epsilon, max_relative)
+            && T::relative_eq(&self.z, &other.z, epsilon, max_relative)
     }
 }
 
-impl UlpsEq for Vec3<f32> {
+impl<T: Float> UlpsEq for Vec3<T> {
     fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f32::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
-            && f32::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
-            && f32::ulps_eq(&self.z, &other.z, epsilon, max_ulps)
+        T::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
+            && T::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
+            && T::ulps_eq(&self.z, &other.z, epsilon, max_ulps)
     }
 }
 
-impl AbsDiffEq for Bivec3<f32> {
-    type Epsilon = f32;
+impl<T: Float> AbsDiffEq for Bivec3<T> {
+    type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
-        f32::EPSILON
+        T::default_epsilon()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f32::abs_diff_eq(&self.xy, &other.xy, epsilon)
-            && f32::abs_diff_eq(&self.xz, &other.xz, epsilon)
-            && f32::abs_diff_eq(&self.yz, &other.yz, epsilon)
+        T::abs_diff_eq(&self.xy, &other.xy, epsilon)
+            && T::abs_diff_eq(&self.xz, &other.xz, epsilon)
+            && T::abs_diff_eq(&self.yz, &other.yz, epsilon)
     }
 }
 
-impl RelativeEq for Bivec3<f32> {
+impl<T: Float> RelativeEq for Bivec3<T> {
     fn default_max_relative() -> Self::Epsilon {
-        f32::default_max_relative()
+        T::default_max_relative()
     }
 
     fn relative_eq(
@@ -588,39 +588,39 @@ impl RelativeEq for Bivec3<f32> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        f32::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
-            && f32::relative_eq(&self.xz, &other.xz, epsilon, max_relative)
-            && f32::relative_eq(&self.yz, &other.yz, epsilon, max_relative)
+        T::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
+            && T::relative_eq(&self.xz, &other.xz, epsilon, max_relative)
+            && T::relative_eq(&self.yz, &other.yz, epsilon, max_relative)
     }
 }
 
-impl UlpsEq for Bivec3<f32> {
+impl<T: Float> UlpsEq for Bivec3<T> {
     fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f32::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
-            && f32::ulps_eq(&self.xz, &other.xz, epsilon, max_ulps)
-            && f32::ulps_eq(&self.yz, &other.yz, epsilon, max_ulps)
+        T::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
+            && T::ulps_eq(&self.xz, &other.xz, epsilon, max_ulps)
+            && T::ulps_eq(&self.yz, &other.yz, epsilon, max_ulps)
     }
 }
 
-impl AbsDiffEq for Trivec3<f32> {
-    type Epsilon = f32;
+impl<T: Float> AbsDiffEq for Trivec3<T> {
+    type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
-        f32::EPSILON
+        T::default_epsilon()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f32::abs_diff_eq(&self.0, &other.0, epsilon)
+        T::abs_diff_eq(&self.0, &other.0, epsilon)
     }
 }
 
-impl RelativeEq for Trivec3<f32> {
+impl<T: Float> RelativeEq for Trivec3<T> {
     fn default_max_relative() -> Self::Epsilon {
-        f32::default_max_relative()
+        T::default_max_relative()
     }
 
     fn relative_eq(
@@ -629,36 +629,36 @@ impl RelativeEq for Trivec3<f32> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        f32::relative_eq(&self.0, &other.0, epsilon, max_relative)
+        T::relative_eq(&self.0, &other.0, epsilon, max_relative)
     }
 }
 
-impl UlpsEq for Trivec3<f32> {
+impl<T: Float> UlpsEq for Trivec3<T> {
     fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f32::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
+        T::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
     }
 }
 
-impl AbsDiffEq for Rotor3<f32> {
-    type Epsilon = f32;
+impl<T: Float> AbsDiffEq for Rotor3<T> {
+    type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
-        f32::EPSILON
+        T::default_epsilon()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f32::abs_diff_eq(&self.s, &other.s, epsilon)
+        T::abs_diff_eq(&self.s, &other.s, epsilon)
             && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
     }
 }
 
-impl RelativeEq for Rotor3<f32> {
+impl<T: Float> RelativeEq for Rotor3<T> {
     fn default_max_relative() -> Self::Epsilon {
-        f32::default_max_relative()
+        T::default_max_relative()
     }
 
     fn relative_eq(
@@ -667,38 +667,38 @@ impl RelativeEq for Rotor3<f32> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        f32::relative_eq(&self.s, &other.s, epsilon, max_relative)
+        T::relative_eq(&self.s, &other.s, epsilon, max_relative)
             && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
     }
 }
 
-impl UlpsEq for Rotor3<f32> {
+impl<T: Float> UlpsEq for Rotor3<T> {
     fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f32::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
+        T::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
             && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
     }
 }
 
-impl AbsDiffEq for Even3<f32> {
-    type Epsilon = f32;
+impl<T: Float> AbsDiffEq for Even3<T> {
+    type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
-        f32::EPSILON
+        T::default_epsilon()
     }
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f32::abs_diff_eq(&self.s, &other.s, epsilon)
+        T::abs_diff_eq(&self.s, &other.s, epsilon)
             && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
     }
 }
 
-impl RelativeEq for Even3<f32> {
+impl<T: Float> RelativeEq for Even3<T> {
     fn default_max_relative() -> Self::Epsilon {
-        f32::default_max_relative()
+        T::default_max_relative()
     }
 
     fn relative_eq(
@@ -707,225 +707,18 @@ impl RelativeEq for Even3<f32> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        f32::relative_eq(&self.s, &other.s, epsilon, max_relative)
+        T::relative_eq(&self.s, &other.s, epsilon, max_relative)
             && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
     }
 }
 
-impl UlpsEq for Even3<f32> {
+impl<T: Float> UlpsEq for Even3<T> {
     fn default_max_ulps() -> u32 {
-        f32::default_max_ulps()
+        T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f32::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
-            && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
-    }
-}
-
-// ============================================================================
-// approx trait implementations for f64
-// ============================================================================
-
-impl AbsDiffEq for Vec3<f64> {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        f64::EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f64::abs_diff_eq(&self.x, &other.x, epsilon)
-            && f64::abs_diff_eq(&self.y, &other.y, epsilon)
-            && f64::abs_diff_eq(&self.z, &other.z, epsilon)
-    }
-}
-
-impl RelativeEq for Vec3<f64> {
-    fn default_max_relative() -> Self::Epsilon {
-        f64::default_max_relative()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        f64::relative_eq(&self.x, &other.x, epsilon, max_relative)
-            && f64::relative_eq(&self.y, &other.y, epsilon, max_relative)
-            && f64::relative_eq(&self.z, &other.z, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Vec3<f64> {
-    fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f64::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
-            && f64::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
-            && f64::ulps_eq(&self.z, &other.z, epsilon, max_ulps)
-    }
-}
-
-impl AbsDiffEq for Bivec3<f64> {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        f64::EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f64::abs_diff_eq(&self.xy, &other.xy, epsilon)
-            && f64::abs_diff_eq(&self.xz, &other.xz, epsilon)
-            && f64::abs_diff_eq(&self.yz, &other.yz, epsilon)
-    }
-}
-
-impl RelativeEq for Bivec3<f64> {
-    fn default_max_relative() -> Self::Epsilon {
-        f64::default_max_relative()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        f64::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
-            && f64::relative_eq(&self.xz, &other.xz, epsilon, max_relative)
-            && f64::relative_eq(&self.yz, &other.yz, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Bivec3<f64> {
-    fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f64::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
-            && f64::ulps_eq(&self.xz, &other.xz, epsilon, max_ulps)
-            && f64::ulps_eq(&self.yz, &other.yz, epsilon, max_ulps)
-    }
-}
-
-impl AbsDiffEq for Trivec3<f64> {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        f64::EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f64::abs_diff_eq(&self.0, &other.0, epsilon)
-    }
-}
-
-impl RelativeEq for Trivec3<f64> {
-    fn default_max_relative() -> Self::Epsilon {
-        f64::default_max_relative()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        f64::relative_eq(&self.0, &other.0, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Trivec3<f64> {
-    fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f64::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
-    }
-}
-
-impl AbsDiffEq for Rotor3<f64> {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        f64::EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f64::abs_diff_eq(&self.s, &other.s, epsilon)
-            && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
-    }
-}
-
-impl RelativeEq for Rotor3<f64> {
-    fn default_max_relative() -> Self::Epsilon {
-        f64::default_max_relative()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        f64::relative_eq(&self.s, &other.s, epsilon, max_relative)
-            && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Rotor3<f64> {
-    fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f64::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
-            && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
-    }
-}
-
-impl AbsDiffEq for Even3<f64> {
-    type Epsilon = f64;
-
-    fn default_epsilon() -> Self::Epsilon {
-        f64::EPSILON
-    }
-
-    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        f64::abs_diff_eq(&self.s, &other.s, epsilon)
-            && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
-    }
-}
-
-impl RelativeEq for Even3<f64> {
-    fn default_max_relative() -> Self::Epsilon {
-        f64::default_max_relative()
-    }
-
-    fn relative_eq(
-        &self,
-        other: &Self,
-        epsilon: Self::Epsilon,
-        max_relative: Self::Epsilon,
-    ) -> bool {
-        f64::relative_eq(&self.s, &other.s, epsilon, max_relative)
-            && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
-    }
-}
-
-impl UlpsEq for Even3<f64> {
-    fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
-    }
-
-    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        f64::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
+        T::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
             && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
     }
 }
