@@ -1528,6 +1528,7 @@ mod tests {
     use super::*;
     use crate::algebra::arbitrary::{NonZeroVectorE3, UnitVectorE3, VectorE3};
     use crate::signature::{Euclidean2, Euclidean3};
+    use approx::abs_diff_eq;
     use proptest::prelude::*;
 
     // ========================================================================
@@ -1543,21 +1544,37 @@ mod tests {
     #[test]
     fn test_one() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
-        assert!((one.scalar_part() - 1.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(one.scalar_part(), 1.0, epsilon = 1e-10));
     }
 
     #[test]
     fn test_basis_vector() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!((e1.get(Blade::basis_vector(0)) - 1.0).abs() < 1e-10);
-        assert!((e1.get(Blade::basis_vector(1))).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            e1.get(Blade::basis_vector(0)),
+            1.0,
+            epsilon = 1e-10
+        ));
+        assert!(abs_diff_eq!(
+            e1.get(Blade::basis_vector(1)),
+            0.0,
+            epsilon = 1e-10
+        ));
     }
 
     #[test]
     fn test_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.get(Blade::basis_vector(0)) - 3.0).abs() < 1e-10);
-        assert!((v.get(Blade::basis_vector(1)) - 4.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            v.get(Blade::basis_vector(0)),
+            3.0,
+            epsilon = 1e-10
+        ));
+        assert!(abs_diff_eq!(
+            v.get(Blade::basis_vector(1)),
+            4.0,
+            epsilon = 1e-10
+        ));
     }
 
     // ========================================================================
@@ -1568,8 +1585,8 @@ mod tests {
     fn test_vector_squares_to_scalar() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e1_sq = &e1 * &e1;
-        assert!((e1_sq.scalar_part() - 1.0).abs() < 1e-10);
-        assert!((&e1_sq - &Multivector::one()).is_zero(1e-10));
+        assert!(abs_diff_eq!(e1_sq.scalar_part(), 1.0, epsilon = 1e-10));
+        assert!(abs_diff_eq!(e1_sq, Multivector::one(), epsilon = 1e-10));
     }
 
     #[test]
@@ -1578,7 +1595,7 @@ mod tests {
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
         let e12_sq = &e12 * &e12;
-        assert!((e12_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+        assert!(abs_diff_eq!(e12_sq.scalar_part(), -1.0, epsilon = 1e-10));
     }
 
     #[test]
@@ -1620,13 +1637,13 @@ mod tests {
     #[test]
     fn test_norm_squared_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.norm_squared() - 25.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(v.norm_squared(), 25.0, epsilon = 1e-10));
     }
 
     #[test]
     fn test_norm_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.norm() - 5.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(v.norm(), 5.0, epsilon = 1e-10));
     }
 
     #[test]
@@ -1844,7 +1861,7 @@ mod tests {
         ) {
             let reflected = n.sandwich(&*v);
             // Reflection preserves norm
-            prop_assert!((reflected.norm() - v.norm()).abs() < 1e-8);
+            prop_assert!(abs_diff_eq!(reflected.norm(), v.norm(), epsilon = 1e-8));
         }
 
         #[test]
@@ -1872,12 +1889,12 @@ mod tests {
 
         // i² = -1
         let i_sq = &i * &i;
-        assert!((i_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+        assert!(abs_diff_eq!(i_sq.scalar_part(), -1.0, epsilon = 1e-10));
 
         // We can represent complex numbers as a + b*e₁₂
         let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
         let norm_sq = (&z * &z.reverse()).scalar_part();
-        assert!((norm_sq - 25.0).abs() < 1e-10); // |z|² = 3² + 4² = 25
+        assert!(abs_diff_eq!(norm_sq, 25.0, epsilon = 1e-10)); // |z|² = 3² + 4² = 25
     }
 
     // ========================================================================
@@ -1892,11 +1909,15 @@ mod tests {
         let v2 = v;
 
         // Original is still usable (proves Copy, not just Clone)
-        assert!(v.approx_eq(&v2, 1e-10));
+        assert!(abs_diff_eq!(v, v2, epsilon = 1e-10));
 
         // Can use both independently
         let sum = v + v2;
-        assert!((sum.get(Blade::basis_vector(0)) - 2.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            sum.get(Blade::basis_vector(0)),
+            2.0,
+            epsilon = 1e-10
+        ));
     }
 
     // ========================================================================
