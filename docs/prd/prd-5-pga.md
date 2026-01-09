@@ -286,6 +286,175 @@ pub enum NalgebraConversionError {
 }
 ```
 
+## Benchmarks
+
+PGA operations should be benchmarked against both:
+1. Generic `Multivector` implementation
+2. nalgebra equivalents (when feature enabled)
+
+### Benchmark File (`benches/pga.rs`)
+
+```rust
+//! Benchmarks for PGA operations.
+//!
+//! Run with: `cargo bench --bench pga`
+
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
+
+use clifford::specialized::pga3d::{Point, Line, Plane, Motor};
+
+// Motor operations
+fn bench_motor_transform_point(c: &mut Criterion) {
+    let motor = Motor::from_translation(1.0, 2.0, 3.0);
+    let point = Point::new(1.0, 0.0, 0.0);
+
+    c.bench_function("pga3d/motor_transform_point", |bencher| {
+        bencher.iter(|| black_box(motor).transform_point(&black_box(point)))
+    });
+}
+
+fn bench_motor_compose(c: &mut Criterion) {
+    let m1 = Motor::from_translation(1.0, 0.0, 0.0);
+    let m2 = Motor::from_rotor(0.5, [0.0, 0.0, 1.0]);
+
+    c.bench_function("pga3d/motor_compose", |bencher| {
+        bencher.iter(|| black_box(m1).compose(&black_box(m2)))
+    });
+}
+
+// Meet and join operations
+fn bench_point_join(c: &mut Criterion) {
+    let p1 = Point::new(0.0, 0.0, 0.0);
+    let p2 = Point::new(1.0, 1.0, 1.0);
+
+    c.bench_function("pga3d/point_join_line", |bencher| {
+        bencher.iter(|| black_box(p1).join(&black_box(p2)))
+    });
+}
+
+fn bench_plane_meet(c: &mut Criterion) {
+    let plane1 = Plane::new(0.0, 1.0, 0.0, 0.0); // y = 0
+    let plane2 = Plane::new(0.0, 0.0, 1.0, 0.0); // z = 0
+
+    c.bench_function("pga3d/plane_meet_line", |bencher| {
+        bencher.iter(|| black_box(plane1).meet(&black_box(plane2)))
+    });
+}
+
+fn bench_plane_meet_line(c: &mut Criterion) {
+    let plane = Plane::new(0.0, 0.0, 1.0, -1.0); // z = 1
+    let line = Line::through_points(
+        &Point::new(0.0, 0.0, 0.0),
+        &Point::new(0.0, 0.0, 2.0),
+    );
+
+    c.bench_function("pga3d/plane_meet_line_point", |bencher| {
+        bencher.iter(|| black_box(plane).meet_line(&black_box(line)))
+    });
+}
+
+criterion_group!(
+    benches,
+    bench_motor_transform_point,
+    bench_motor_compose,
+    bench_point_join,
+    bench_plane_meet,
+    bench_plane_meet_line,
+);
+criterion_main!(benches);
+```
+
+### nalgebra Comparison (`benches/pga_nalgebra.rs`)
+
+When `nalgebra-0_33` or `nalgebra-0_34` is enabled, compare PGA motors with `na::Isometry3`:
+
+```rust
+#![cfg(any(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
+
+// Motor vs Isometry3 for rigid transforms
+fn bench_motor_transform_clifford(c: &mut Criterion) {
+    let motor = Motor::from_translation(1.0, 2.0, 3.0)
+        .compose(&Motor::from_rotor(0.5, [0.0, 0.0, 1.0]));
+    let point = Point::new(1.0, 0.0, 0.0);
+
+    c.bench_function("comparison/rigid_transform/pga_motor", |bencher| {
+        bencher.iter(|| black_box(motor).transform_point(&black_box(point)))
+    });
+}
+
+fn bench_isometry_transform_nalgebra(c: &mut Criterion) {
+    let iso = na::Isometry3::new(
+        na::Vector3::new(1.0, 2.0, 3.0),
+        na::Vector3::z() * 0.5,
+    );
+    let point = na::Point3::new(1.0, 0.0, 0.0);
+
+    c.bench_function("comparison/rigid_transform/nalgebra_isometry", |bencher| {
+        bencher.iter(|| black_box(iso) * black_box(point))
+    });
+}
+
+// Motor composition vs Isometry composition
+fn bench_motor_chain(c: &mut Criterion) {
+    let m1 = Motor::from_translation(1.0, 0.0, 0.0);
+    let m2 = Motor::from_rotor(0.3, [1.0, 0.0, 0.0]);
+    let m3 = Motor::from_translation(0.0, 1.0, 0.0);
+
+    c.bench_function("comparison/compose_3/pga_motor", |bencher| {
+        bencher.iter(|| {
+            black_box(m1).compose(&black_box(m2)).compose(&black_box(m3))
+        })
+    });
+}
+
+fn bench_isometry_chain(c: &mut Criterion) {
+    let i1 = na::Isometry3::translation(1.0, 0.0, 0.0);
+    let i2 = na::Isometry3::rotation(na::Vector3::x() * 0.3);
+    let i3 = na::Isometry3::translation(0.0, 1.0, 0.0);
+
+    c.bench_function("comparison/compose_3/nalgebra_isometry", |bencher| {
+        bencher.iter(|| {
+            black_box(i1) * black_box(i2) * black_box(i3)
+        })
+    });
+}
+```
+
+### Expected Performance Targets
+
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| Motor transform point | < 10 ns | Sandwich product optimization |
+| Motor compose | < 15 ns | Even subalgebra product |
+| Point join (line) | < 5 ns | Regressive product |
+| Plane meet (line) | < 5 ns | Outer product |
+| Motor vs Isometry3 | Comparable | Similar underlying math |
+
+### Benchmark README Section
+
+Add to `benches/README.md`:
+
+```markdown
+## PGA Benchmarks
+
+Operations on specialized PGA types.
+
+### Motor Operations
+![pga3d_motor_transform_point](reports/pga3d_motor_transform_point_pdf.svg)
+![pga3d_motor_compose](reports/pga3d_motor_compose_pdf.svg)
+
+### Meet/Join Operations
+![pga3d_point_join_line](reports/pga3d_point_join_line_pdf.svg)
+![pga3d_plane_meet_line](reports/pga3d_plane_meet_line_pdf.svg)
+
+### Comparison with nalgebra (with nalgebra-0_34 feature)
+| Operation | PGA Motor | nalgebra Isometry3 |
+|-----------|-----------|-------------------|
+| Transform point | ~X ns | ~Y ns |
+| Compose 3 | ~X ns | ~Y ns |
+```
+
 ## Verification
 
 - [ ] `cargo check` passes
@@ -293,3 +462,4 @@ pub enum NalgebraConversionError {
 - [ ] `cargo clippy` - no warnings
 - [ ] Comprehensive geometric documentation
 - [ ] nalgebra conversions tested with feature flags
+- [ ] Benchmarks run and documented

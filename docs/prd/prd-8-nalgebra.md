@@ -1,6 +1,6 @@
 # PRD-8: nalgebra Interoperability
 
-**Status**: Draft
+**Status**: Complete
 **Goal**: Seamless conversions between clifford types and nalgebra vectors/matrices
 
 ## Motivation
