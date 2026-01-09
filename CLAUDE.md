@@ -30,10 +30,16 @@ A Rust library for Geometric Algebra (Clifford Algebra).
   Do not auto-merge. Always review Greptile feedback before merging.
 - **Wait for PRs to merge before starting new work** - don't begin the next task until the current PR has merged. This prevents cascading issues if a PR fails.
 
-### 4. Performance
+### 4. Performance & Benchmarking
+
+**NOTE:** When updating benchmarking rules in this section, also update the corresponding agents in `.claude/agents/` (especially `implement.md` and `review.md`).
+
 - Use SIMD instructions where beneficial (via `std::arch` or `portable_simd`)
 - Benchmark critical paths
 - Profile before optimizing
+- **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
+- **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
+- **Add new features to benchmarks** - When adding new operations (especially products, transformations), add corresponding benchmarks in `benches/multivector.rs`
 
 ### 5. Minimal Dependencies
 - Prefer std library where possible

@@ -50,6 +50,13 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
    ```
 5. Create a PR to main (never push directly)
 
+## Benchmarking
+
+- **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
+- **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
+- **Add new features to benchmarks** - When adding new operations (especially products, transformations), add corresponding benchmarks in `benches/multivector.rs`
+- Benchmarks use criterion; see existing benchmarks for patterns
+
 ## Mathematical Notation
 
 When documenting GA operations, use standard notation:
