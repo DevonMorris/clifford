@@ -1480,47 +1480,77 @@ impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
 mod tests {
     use super::*;
     use crate::signature::{Euclidean2, Euclidean3};
+    use proptest::arbitrary::Arbitrary;
     use proptest::prelude::*;
+    use proptest::strategy::BoxedStrategy;
 
     // ========================================================================
-    // Test helpers
+    // Arbitrary implementations
     // ========================================================================
 
-    /// Strategy for generating multivectors with bounded coefficients
-    fn arb_multivector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform8(-10.0f64..10.0).prop_map(|coeffs| {
-            let mut mv = Multivector::zero();
-            for (i, &c) in coeffs.iter().enumerate() {
-                mv.coeffs[i] = c;
-            }
-            mv
-        })
+    impl Arbitrary for Multivector<f64, Euclidean3> {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            prop::array::uniform8(-10.0f64..10.0)
+                .prop_map(|coeffs| {
+                    let mut mv = Multivector::zero();
+                    for (i, &c) in coeffs.iter().enumerate() {
+                        mv.coeffs[i] = c;
+                    }
+                    mv
+                })
+                .boxed()
+        }
     }
 
-    /// Strategy for generating non-zero vectors (always invertible in Euclidean space)
-    fn arb_nonzero_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0)
-            .prop_filter("must be non-zero", |v| {
-                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
-            })
-            .prop_map(|v| Multivector::vector(&v))
+    /// Wrapper type for vectors (grade-1 multivectors).
+    #[derive(Debug, Clone)]
+    struct VectorE3(Multivector<f64, Euclidean3>);
+
+    impl Arbitrary for VectorE3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            prop::array::uniform3(-10.0f64..10.0)
+                .prop_map(|v| VectorE3(Multivector::vector(&v)))
+                .boxed()
+        }
     }
 
-    /// Strategy for generating arbitrary vectors (may be zero)
-    fn arb_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0).prop_map(|v| Multivector::vector(&v))
+    /// Wrapper type for non-zero vectors (always invertible in Euclidean space).
+    #[derive(Debug, Clone)]
+    struct NonZeroVectorE3(Multivector<f64, Euclidean3>);
+
+    impl Arbitrary for NonZeroVectorE3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            prop::array::uniform3(-10.0f64..10.0)
+                .prop_filter("must be non-zero", |v| {
+                    v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
+                })
+                .prop_map(|v| NonZeroVectorE3(Multivector::vector(&v)))
+                .boxed()
+        }
     }
 
-    /// Strategy for generating unit vectors
-    fn arb_unit_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0)
-            .prop_filter("must be non-zero", |v| {
-                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
-            })
-            .prop_map(|v| {
-                let mv = Multivector::<f64, Euclidean3>::vector(&v);
-                mv.normalize().unwrap()
-            })
+    /// Wrapper type for unit vectors.
+    #[derive(Debug, Clone)]
+    struct UnitVectorE3(Multivector<f64, Euclidean3>);
+
+    impl Arbitrary for UnitVectorE3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<NonZeroVectorE3>()
+                .prop_map(|v| UnitVectorE3(v.0.normalize().unwrap()))
+                .boxed()
+        }
     }
 
     // ========================================================================
@@ -1637,9 +1667,9 @@ mod tests {
     proptest! {
         #[test]
         fn geometric_product_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
@@ -1648,9 +1678,9 @@ mod tests {
 
         #[test]
         fn geometric_product_distributive(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
@@ -1658,14 +1688,14 @@ mod tests {
         }
 
         #[test]
-        fn reverse_involutory(a in arb_multivector_e3()) {
+        fn reverse_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
             prop_assert!(a.reverse().reverse().approx_eq(&a, 1e-10));
         }
 
         #[test]
         fn reverse_antimorphism(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
@@ -1673,28 +1703,31 @@ mod tests {
         }
 
         #[test]
-        fn involute_involutory(a in arb_multivector_e3()) {
+        fn involute_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
             prop_assert!(a.involute().involute().approx_eq(&a, 1e-10));
         }
 
         #[test]
-        fn inverse_property(a in arb_nonzero_vector_e3()) {
+        fn inverse_property(a in any::<NonZeroVectorE3>()) {
             // Vectors are always invertible in Euclidean space
-            let inv = a.inverse().expect("non-zero vector should be invertible");
-            let product = &a * &inv;
+            let inv = a.0.inverse().expect("non-zero vector should be invertible");
+            let product = &a.0 * &inv;
             prop_assert!(product.approx_eq(&Multivector::one(), 1e-8));
         }
 
         #[test]
-        fn add_commutative(a in arb_multivector_e3(), b in arb_multivector_e3()) {
+        fn add_commutative(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>()
+        ) {
             prop_assert!((&a + &b).approx_eq(&(&b + &a), 1e-10));
         }
 
         #[test]
         fn add_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &(&a + &b) + &c;
             let rhs = &a + &(&b + &c);
@@ -1702,13 +1735,13 @@ mod tests {
         }
 
         #[test]
-        fn zero_is_additive_identity(a in arb_multivector_e3()) {
+        fn zero_is_additive_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let zero = Multivector::<f64, Euclidean3>::zero();
             prop_assert!((&a + &zero).approx_eq(&a, 1e-10));
         }
 
         #[test]
-        fn one_is_multiplicative_identity(a in arb_multivector_e3()) {
+        fn one_is_multiplicative_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let one = Multivector::<f64, Euclidean3>::one();
             prop_assert!((&a * &one).approx_eq(&a, 1e-10));
             prop_assert!((&one * &a).approx_eq(&a, 1e-10));
@@ -1719,7 +1752,7 @@ mod tests {
         // ====================================================================
 
         #[test]
-        fn grade_decomposition_complete(a in arb_multivector_e3()) {
+        fn grade_decomposition_complete(a in any::<Multivector<f64, Euclidean3>>()) {
             // Sum of all grade projections equals original
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
@@ -1728,13 +1761,16 @@ mod tests {
         }
 
         #[test]
-        fn even_plus_odd_equals_original(a in arb_multivector_e3()) {
+        fn even_plus_odd_equals_original(a in any::<Multivector<f64, Euclidean3>>()) {
             let reconstructed = &a.even() + &a.odd();
             prop_assert!(reconstructed.approx_eq(&a, 1e-10));
         }
 
         #[test]
-        fn grade_select_idempotent(a in arb_multivector_e3(), k in 0usize..4) {
+        fn grade_select_idempotent(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            k in 0usize..4
+        ) {
             let once = a.grade_select(k);
             let twice = once.grade_select(k);
             prop_assert!(once.approx_eq(&twice, 1e-10));
@@ -1746,19 +1782,19 @@ mod tests {
 
         #[test]
         fn outer_anticommutative_vectors(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let ab = a.outer(&b);
-            let ba = b.outer(&a);
+            let ab = a.0.outer(&b.0);
+            let ba = b.0.outer(&a.0);
             prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
         }
 
         #[test]
         fn outer_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = a.outer(&b).outer(&c);
             let rhs = a.outer(&b.outer(&c));
@@ -1767,10 +1803,10 @@ mod tests {
 
         #[test]
         fn outer_of_vectors_is_grade_2(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let wedge = a.outer(&b);
+            let wedge = a.0.outer(&b.0);
             // Result should have no scalar or vector parts
             prop_assert!(wedge.grade_select(0).is_zero(1e-10));
             prop_assert!(wedge.grade_select(1).is_zero(1e-10));
@@ -1782,10 +1818,10 @@ mod tests {
 
         #[test]
         fn inner_product_of_vectors_is_scalar(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let dot = a.inner(&b);
+            let dot = a.0.inner(&b.0);
             // Should be pure scalar
             prop_assert!(dot.grade_select(1).is_zero(1e-10));
             prop_assert!(dot.grade_select(2).is_zero(1e-10));
@@ -1794,12 +1830,12 @@ mod tests {
 
         #[test]
         fn inner_product_symmetric_for_vectors(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
             // For vectors, a·b = b·a
-            let ab = a.inner(&b);
-            let ba = b.inner(&a);
+            let ab = a.0.inner(&b.0);
+            let ba = b.0.inner(&a.0);
             prop_assert!(ab.approx_eq(&ba, 1e-10));
         }
 
@@ -1808,15 +1844,15 @@ mod tests {
         // ====================================================================
 
         #[test]
-        fn dual_undual_roundtrip(a in arb_multivector_e3()) {
+        fn dual_undual_roundtrip(a in any::<Multivector<f64, Euclidean3>>()) {
             let roundtrip = a.dual().undual();
             prop_assert!(roundtrip.approx_eq(&a, 1e-8));
         }
 
         #[test]
-        fn dual_changes_grade(a in arb_nonzero_vector_e3()) {
+        fn dual_changes_grade(a in any::<NonZeroVectorE3>()) {
             // Vector (grade 1) dualizes to bivector (grade 2) in 3D
-            let dual = a.dual();
+            let dual = a.0.dual();
             prop_assert_eq!(dual.grade(1e-10), Some(2));
         }
 
@@ -1826,23 +1862,23 @@ mod tests {
 
         #[test]
         fn sandwich_by_unit_vector_preserves_norm(
-            n in arb_unit_vector_e3(),
-            v in arb_nonzero_vector_e3(),
+            n in any::<UnitVectorE3>(),
+            v in any::<NonZeroVectorE3>(),
         ) {
-            let reflected = n.sandwich(&v);
+            let reflected = n.0.sandwich(&v.0);
             // Reflection preserves norm
-            prop_assert!((reflected.norm() - v.norm()).abs() < 1e-8);
+            prop_assert!((reflected.norm() - v.0.norm()).abs() < 1e-8);
         }
 
         #[test]
         fn sandwich_by_unit_vector_is_reflection(
-            n in arb_unit_vector_e3(),
-            v in arb_vector_e3(),
+            n in any::<UnitVectorE3>(),
+            v in any::<VectorE3>(),
         ) {
-            let reflected = n.sandwich(&v);
+            let reflected = n.0.sandwich(&v.0);
             // Double reflection returns original
-            let double_reflected = n.sandwich(&reflected);
-            prop_assert!(double_reflected.approx_eq(&v, 1e-8));
+            let double_reflected = n.0.sandwich(&reflected);
+            prop_assert!(double_reflected.approx_eq(&v.0, 1e-8));
         }
     }
 
