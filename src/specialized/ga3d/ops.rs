@@ -264,98 +264,9 @@ impl<T: Float> Sub for Even3<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::arbitrary::Arbitrary;
+    use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
     use proptest::prelude::*;
-    use proptest::strategy::BoxedStrategy;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
-
-    // ========================================================================
-    // Arbitrary implementations
-    // ========================================================================
-
-    impl Arbitrary for Vec3<f64> {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (-100.0..100.0, -100.0..100.0, -100.0..100.0)
-                .prop_map(|(x, y, z)| Vec3::new(x, y, z))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for non-zero Vec3.
-    #[derive(Debug, Clone, Copy)]
-    struct NonZeroVec3(Vec3<f64>);
-
-    impl Arbitrary for NonZeroVec3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<Vec3<f64>>()
-                .prop_filter("non-zero vector", |v| v.norm_squared() > 1e-10)
-                .prop_map(NonZeroVec3)
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit Vec3.
-    #[derive(Debug, Clone, Copy)]
-    struct UnitVec3(Vec3<f64>);
-
-    impl Arbitrary for UnitVec3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<NonZeroVec3>()
-                .prop_map(|v| UnitVec3(v.0.normalized()))
-                .boxed()
-        }
-    }
-
-    impl Arbitrary for Bivec3<f64> {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (-100.0..100.0, -100.0..100.0, -100.0..100.0)
-                .prop_map(|(xy, xz, yz)| Bivec3::new(xy, xz, yz))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit Bivec3.
-    #[derive(Debug, Clone, Copy)]
-    struct UnitBivec3(Bivec3<f64>);
-
-    impl Arbitrary for UnitBivec3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<Bivec3<f64>>()
-                .prop_filter("non-zero bivector", |b| b.norm_squared() > 1e-10)
-                .prop_map(|b| UnitBivec3(b.normalized()))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit Rotor3.
-    #[derive(Debug, Clone, Copy)]
-    struct UnitRotor3(Rotor3<f64>);
-
-    impl Arbitrary for UnitRotor3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (0.0..2.0 * PI, any::<UnitBivec3>())
-                .prop_map(|(angle, plane)| UnitRotor3(Rotor3::from_angle_plane(angle, plane.0)))
-                .boxed()
-        }
-    }
 
     // ========================================================================
     // Vec3 tests
