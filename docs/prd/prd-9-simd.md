@@ -40,42 +40,46 @@ simba = ["dep:simba"]
 
 # Direct SIMD (pick backend)
 simd-wide = ["dep:wide"]           # Stable, recommended
-simd-portable = []                  # Nightly, uses std::simd
+simd-portable = []                  # Nightly only, uses std::simd (no runtime check)
 
 [dependencies]
 simba = { version = "0.9", optional = true }
 wide = { version = "0.7", optional = true }
 ```
 
+**Note on feature exclusivity**: `simd-wide` and `simd-portable` should be mutually exclusive. Add a compile-time check:
+```rust
+#[cfg(all(feature = "simd-wide", feature = "simd-portable"))]
+compile_error!("Features `simd-wide` and `simd-portable` are mutually exclusive");
+```
+
+### 1b. Test Utilities
+
+Add f32-specific epsilon constant for SIMD tests:
+
+```rust
+// src/lib.rs in test_utils module
+/// Epsilon for f32 approximate equality (larger than f64 due to reduced precision).
+pub const ABS_DIFF_EQ_EPS_F32: f32 = 1e-5;
+```
+
 ### 2. simba Trait Compatibility
 
-Make our `Float` trait interoperable with simba:
+Make our `Float` trait interoperable with simba. See "Integration Strategy" section below for the recommended approach.
 
 ```rust
 // src/scalar/simba.rs
 #[cfg(feature = "simba")]
-use simba::scalar::{RealField, SubsetOf};
+use simba::scalar::RealField;
 
-/// When simba is enabled, Float is implemented for any type
-/// that satisfies simba's RealField requirements.
+/// Marker trait for Float types that are also simba-compatible.
+/// This allows generic code to require both clifford and simba capabilities.
 #[cfg(feature = "simba")]
-impl<T> Float for T
-where
-    T: RealField + Copy + Default + 'static,
-{
-    // Delegate to simba's methods
-}
-```
+pub trait SimbaCompatible: Float + RealField {}
 
-Alternatively, provide bridging traits:
-
-```rust
-/// Bridge trait for using simba types with clifford.
+// Implement for types that satisfy both traits
 #[cfg(feature = "simba")]
-pub trait SimbaFloat: simba::scalar::RealField + Float {}
-
-#[cfg(feature = "simba")]
-impl<T: simba::scalar::RealField + Float> SimbaFloat for T {}
+impl<T: Float + RealField> SimbaCompatible for T {}
 ```
 
 ### 3. SIMD Multivector Operations
@@ -137,6 +141,11 @@ impl Vector4 {
     }
 
     /// Normalize all 4 vectors.
+    ///
+    /// # Panics
+    ///
+    /// Returns NaN/Inf for zero-length vectors. Use `try_normalized()` for
+    /// fallible normalization, or pre-filter with `norm_squared() > threshold`.
     pub fn normalized(&self) -> Self {
         let norm = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         Self {
@@ -323,37 +332,40 @@ clifford::scalar::Float
 
 ### Integration Strategy
 
-Option A: **Blanket impl Float for RealField types**
+Option A: **Blanket impl Float for RealField types** (Not recommended)
 ```rust
 #[cfg(feature = "simba")]
 impl<T> Float for T where T: RealField + Copy + Default + ... { }
 ```
 - Pro: Automatic support for all simba-compatible types
-- Con: May conflict with existing f32/f64 impls, orphan rules
+- Con: Conflicts with existing f32/f64 impls due to orphan rules; won't compile
 
 Option B: **Wrapper types**
 ```rust
 #[cfg(feature = "simba")]
 pub struct SimbaScalar<T>(pub T);
 
-impl<T: RealField> Float for SimbaScalar<T> { }
+impl<T: RealField + Copy + Default + 'static> Float for SimbaScalar<T> { }
 ```
 - Pro: No conflicts, explicit opt-in
 - Con: Extra wrapper, less ergonomic
 
-Option C: **Separate trait hierarchy** (Recommended)
+Option C: **Blanket impl for marker trait** (Recommended)
 ```rust
-/// Marker trait for simba-compatible Float types.
+/// Marker trait for Float types that are also simba-compatible.
 #[cfg(feature = "simba")]
 pub trait SimbaCompatible: Float + simba::scalar::RealField {}
 
+/// Blanket impl: any type implementing both Float and RealField is SimbaCompatible.
 #[cfg(feature = "simba")]
-impl SimbaCompatible for f32 {}
-#[cfg(feature = "simba")]
-impl SimbaCompatible for f64 {}
+impl<T: Float + simba::scalar::RealField> SimbaCompatible for T {}
+
+// f32 and f64 automatically satisfy this since:
+// - We implement Float for f32/f64
+// - simba implements RealField for f32/f64
 ```
-- Pro: Clear separation, no orphan issues
-- Con: Users must import additional trait
+- Pro: Clear separation, no orphan issues, automatic for f32/f64
+- Con: Users must use `SimbaCompatible` bound for generic SIMD code
 
 ## Documentation
 
@@ -405,6 +417,9 @@ pub struct Vector4 { ... }
 - [ ] `cargo bench --features simd-wide` shows expected speedups
 - [ ] SIMD results match scalar results (property tests)
 - [ ] All SIMD types have comprehensive rustdoc
+- [ ] Features `simd-wide` and `simd-portable` are mutually exclusive (compile error if both enabled)
+- [ ] `simd-portable` feature only compiles on nightly (documented, not enforced at compile time)
+- [ ] `ABS_DIFF_EQ_EPS_F32` constant added to `test_utils` module
 
 ## Future Considerations
 
