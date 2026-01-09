@@ -20,6 +20,12 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Atomic commits with clear messages
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
+- **Auto-merge PRs** - after creating a PR, immediately queue it for auto-merge:
+  ```bash
+  gh pr create --title "..." --body "..."
+  gh pr merge --auto --squash --delete-branch
+  ```
+  This ensures PRs merge automatically once CI passes and prevents forgotten PRs.
 
 ### 4. Performance
 - Use SIMD instructions where beneficial (via `std::arch` or `portable_simd`)
@@ -66,6 +72,7 @@ cargo fmt             # Format code
 - [x] GitHub repository created: https://github.com/DevonMorris/clifford
 - [x] Branch protection: PRs required, CI must pass, no direct pushes to main
 - [x] Minimal README
+- [x] Claude Code agents for specialized workflows (implement, test, document, review, explain)
 
 ### Next Steps
 - [ ] **Plan geometric algebra implementation** - design types, operations, and API
