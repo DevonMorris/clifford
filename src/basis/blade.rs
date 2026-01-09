@@ -300,7 +300,12 @@ impl Blade {
     {
         let result_index = self.index ^ other.index;
         let sign = compute_sign(self.index, other.index, metric);
-        (sign, Self { index: result_index })
+        (
+            sign,
+            Self {
+                index: result_index,
+            },
+        )
     }
 
     /// Checks if this blade anticommutes with another.
@@ -365,39 +370,6 @@ impl fmt::Display for Blade {
             Ok(())
         }
     }
-}
-
-// ============================================================================
-// Legacy free function API for backwards compatibility
-// ============================================================================
-
-/// Computes the product of two basis blades by index.
-///
-/// This is a convenience function equivalent to creating `Blade` objects
-/// and calling [`Blade::product`]. See that method for full documentation.
-///
-/// # Returns
-///
-/// A tuple `(sign, result_index)` where sign is -1, 0, or +1.
-#[inline]
-pub fn basis_product<F>(a: usize, b: usize, metric: F) -> (i8, usize)
-where
-    F: Fn(usize) -> i8,
-{
-    let blade_a = Blade::from_index(a);
-    let blade_b = Blade::from_index(b);
-    let (sign, result) = blade_a.product(&blade_b, metric);
-    (sign, result.index())
-}
-
-/// Checks if two basis blades (by index) anticommute.
-///
-/// This is a convenience function. See [`Blade::anticommutes_with`].
-#[inline]
-pub const fn anticommutes(a: usize, b: usize) -> bool {
-    let blade_a = Blade::from_index(a);
-    let blade_b = Blade::from_index(b);
-    blade_a.anticommutes_with(&blade_b)
 }
 
 // ============================================================================

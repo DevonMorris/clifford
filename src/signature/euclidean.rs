@@ -208,8 +208,17 @@ mod tests {
 
     #[test]
     fn euclidean_pqr_consistency() {
-        assert_eq!(Euclidean2::P + Euclidean2::Q + Euclidean2::R, Euclidean2::DIM);
-        assert_eq!(Euclidean3::P + Euclidean3::Q + Euclidean3::R, Euclidean3::DIM);
-        assert_eq!(Euclidean4::P + Euclidean4::Q + Euclidean4::R, Euclidean4::DIM);
+        assert_eq!(
+            Euclidean2::P + Euclidean2::Q + Euclidean2::R,
+            Euclidean2::DIM
+        );
+        assert_eq!(
+            Euclidean3::P + Euclidean3::Q + Euclidean3::R,
+            Euclidean3::DIM
+        );
+        assert_eq!(
+            Euclidean4::P + Euclidean4::Q + Euclidean4::R,
+            Euclidean4::DIM
+        );
     }
 }

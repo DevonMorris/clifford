@@ -35,7 +35,12 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 1. Create a feature branch: `feat/<feature-name>`
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
-4. Ensure `cargo clippy` and `cargo test` pass
+4. **Run verification before committing**:
+   ```bash
+   cargo fmt             # Format code (CI checks this!)
+   cargo clippy          # Lint check
+   cargo test            # Run all tests
+   ```
 5. Create a PR to main (never push directly)
 
 ## Mathematical Notation

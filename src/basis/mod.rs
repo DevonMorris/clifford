@@ -87,5 +87,5 @@
 mod blade;
 mod index;
 
-pub use blade::{anticommutes, basis_product, Blade};
+pub use blade::Blade;
 pub use index::{binomial, blades_of_grade, grade_of_blade, grade_start_index};
