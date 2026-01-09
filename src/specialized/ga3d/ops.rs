@@ -302,7 +302,7 @@ mod tests {
         }
 
         #[test]
-        fn vec3_normalized_has_unit_length(v in any::<NonZeroVec3>()) {
+        fn vec3_normalized_has_unit_length(v in any::<NonZeroVec3<f64>>()) {
             let n = v.normalized();
             prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -314,15 +314,15 @@ mod tests {
 
     proptest! {
         #[test]
-        fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+        fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
             let rotated = r.rotate(v);
             prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor_composition(
-            r1 in any::<UnitRotor3>(),
-            r2 in any::<UnitRotor3>(),
+            r1 in any::<UnitRotor3<f64>>(),
+            r2 in any::<UnitRotor3<f64>>(),
             v in any::<Vec3<f64>>()
         ) {
             let sequential = r2.rotate(r1.rotate(v));
@@ -331,7 +331,7 @@ mod tests {
         }
 
         #[test]
-        fn rotor_inverse(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+        fn rotor_inverse(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
             let roundtrip = r.inverse().rotate(r.rotate(v));
             prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -343,7 +343,7 @@ mod tests {
         }
 
         #[test]
-        fn rotor_from_vectors(a in any::<UnitVec3>(), b in any::<UnitVec3>()) {
+        fn rotor_from_vectors(a in any::<UnitVec3<f64>>(), b in any::<UnitVec3<f64>>()) {
             let r = Rotor3::from_vectors(*a, *b);
             let rotated = r.rotate(*a);
             prop_assert!(abs_diff_eq!(rotated, *b, epsilon = ABS_DIFF_EQ_EPS));

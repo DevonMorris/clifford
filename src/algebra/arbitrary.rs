@@ -4,6 +4,12 @@
 //! with [`proptest`]. It is available when either running tests or when the
 //! `proptest-support` feature is enabled.
 //!
+//! # Generic Implementation
+//!
+//! The `Arbitrary` trait is implemented generically for `Multivector<T, S>` where
+//! `T: Float` and `S: Signature`. This works for any float type and any signature,
+//! generating random coefficients for all basis blades.
+//!
 //! # Wrapper Types
 //!
 //! For constrained values (vectors, non-zero vectors, unit vectors), wrapper types
@@ -36,19 +42,31 @@
 //! ```
 
 use super::Multivector;
-use crate::signature::Euclidean3;
+use crate::scalar::Float;
+use crate::signature::{Euclidean3, Signature};
+use core::fmt::Debug;
 use core::ops::Deref;
+use generic_array::ArrayLength;
 use proptest::arbitrary::Arbitrary;
 use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
 
-impl Arbitrary for Multivector<f64, Euclidean3> {
+impl<T, S> Arbitrary for Multivector<T, S>
+where
+    T: Float + Debug,
+    S: Signature,
+    S::NumBlades: ArrayLength,
+{
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        prop::array::uniform8(-10.0f64..10.0)
-            .prop_map(|coeffs| Multivector::from_coeffs(&coeffs))
+        let num_blades = S::num_blades();
+        prop::collection::vec(-10.0f64..10.0, num_blades)
+            .prop_map(|coeffs| {
+                let t_coeffs: Vec<T> = coeffs.into_iter().map(|c| T::from_f64(c)).collect();
+                Multivector::from_coeffs(&t_coeffs)
+            })
             .boxed()
     }
 }

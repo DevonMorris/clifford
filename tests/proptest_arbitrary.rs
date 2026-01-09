@@ -63,19 +63,19 @@ proptest! {
     }
 
     #[test]
-    fn non_zero_vec2_arbitrary_accessible(v in any::<NonZeroVec2>()) {
+    fn non_zero_vec2_arbitrary_accessible(v in any::<NonZeroVec2<f64>>()) {
         // Verify NonZeroVec2 wrapper is accessible and has non-zero norm
         prop_assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
-    fn unit_vec2_arbitrary_accessible(v in any::<UnitVec2>()) {
+    fn unit_vec2_arbitrary_accessible(v in any::<UnitVec2<f64>>()) {
         // Verify UnitVec2 wrapper is accessible and has unit norm
         prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
-    fn unit_rotor2_arbitrary_accessible(r in any::<UnitRotor2>()) {
+    fn unit_rotor2_arbitrary_accessible(r in any::<UnitRotor2<f64>>()) {
         // Verify UnitRotor2 wrapper is accessible and has unit norm
         prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
@@ -99,19 +99,19 @@ proptest! {
     }
 
     #[test]
-    fn non_zero_vec3_arbitrary_accessible(v in any::<NonZeroVec3>()) {
+    fn non_zero_vec3_arbitrary_accessible(v in any::<NonZeroVec3<f64>>()) {
         // Verify NonZeroVec3 wrapper is accessible and has non-zero norm
         prop_assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
-    fn unit_vec3_arbitrary_accessible(v in any::<UnitVec3>()) {
+    fn unit_vec3_arbitrary_accessible(v in any::<UnitVec3<f64>>()) {
         // Verify UnitVec3 wrapper is accessible and has unit norm
         prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
-    fn unit_rotor3_arbitrary_accessible(r in any::<UnitRotor3>()) {
+    fn unit_rotor3_arbitrary_accessible(r in any::<UnitRotor3<f64>>()) {
         // Verify UnitRotor3 wrapper is accessible and has unit norm
         prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }

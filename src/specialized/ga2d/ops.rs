@@ -206,13 +206,13 @@ mod tests {
         }
 
         #[test]
-        fn vec2_normalized_has_unit_length(v in any::<NonZeroVec2>()) {
+        fn vec2_normalized_has_unit_length(v in any::<NonZeroVec2<f64>>()) {
             let n = v.normalized();
             prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_perp_is_perpendicular(v in any::<NonZeroVec2>()) {
+        fn vec2_perp_is_perpendicular(v in any::<NonZeroVec2<f64>>()) {
             let p = v.perp();
             prop_assert!(abs_diff_eq!(v.dot(p), 0.0, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -224,15 +224,15 @@ mod tests {
 
     proptest! {
         #[test]
-        fn rotor2_preserves_norm(r in any::<UnitRotor2>(), v in any::<Vec2<f64>>()) {
+        fn rotor2_preserves_norm(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
             let rotated = r.rotate(v);
             prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor2_composition(
-            r1 in any::<UnitRotor2>(),
-            r2 in any::<UnitRotor2>(),
+            r1 in any::<UnitRotor2<f64>>(),
+            r2 in any::<UnitRotor2<f64>>(),
             v in any::<Vec2<f64>>()
         ) {
             let sequential = r2.rotate(r1.rotate(v));
@@ -241,13 +241,13 @@ mod tests {
         }
 
         #[test]
-        fn rotor2_inverse(r in any::<UnitRotor2>(), v in any::<Vec2<f64>>()) {
+        fn rotor2_inverse(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
             let roundtrip = r.inverse().rotate(r.rotate(v));
             prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn rotor2_from_vectors(a in any::<UnitVec2>(), b in any::<UnitVec2>()) {
+        fn rotor2_from_vectors(a in any::<UnitVec2<f64>>(), b in any::<UnitVec2<f64>>()) {
             let r = Rotor2::from_vectors(*a, *b);
             let rotated = r.rotate(*a);
             prop_assert!(abs_diff_eq!(rotated, *b, epsilon = ABS_DIFF_EQ_EPS));

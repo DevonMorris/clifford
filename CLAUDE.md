@@ -120,21 +120,41 @@ done
   fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> { ... }
   ```
 - **Arbitrary modules**: Each module with types has an `arbitrary` submodule containing:
-  - `Arbitrary` implementations for the main types (e.g., `Vec3<f64>`, `Bivec3<f64>`)
-  - Wrapper types for constrained values (e.g., `NonZeroVec3`, `UnitVec3`, `UnitRotor3`)
+  - Generic `Arbitrary` implementations for all types using `Float::from_f64()` for conversion
+  - Generic wrapper types for constrained values (e.g., `NonZeroVec3<T>`, `UnitVec3<T>`, `UnitRotor3<T>`)
   - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
   ```rust
   // Import wrapper types from the arbitrary module
   use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
 
-  // Use any::<Type>() for types with Arbitrary impl
+  // Use any::<Type<f64>>() - always specify the float type explicitly
+  // Internal tests should use f64 for consistency
   proptest! {
       #[test]
-      fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
-          let rotated = r.0.rotate(v);
-          prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
+      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+          let rotated = r.rotate(v);  // Deref allows direct method access
+          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
       }
   }
+  ```
+- **Generic Arbitrary pattern**: All types use generic `Arbitrary` impls with `Float::from_f64()`:
+  ```rust
+  // Base types generate f64 values and convert
+  impl<T: Float + Debug> Arbitrary for Vec3<T> {
+      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+          (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
+              .prop_map(|(x, y, z)| Vec3::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+              .boxed()
+      }
+  }
+
+  // Wrapper types use where clauses requiring the inner type to be Arbitrary
+  impl<T> Arbitrary for NonZeroVec3<T>
+  where
+      T: Float + Debug,
+      Vec3<T>: Arbitrary + Debug,
+      <Vec3<T> as Arbitrary>::Strategy: 'static,
+  { ... }
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
@@ -155,7 +175,7 @@ done
   ```rust
   proptest! {
       #[test]
-      fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
           let rotated = r.rotate(v);
           // Good: prop_assert! with standard epsilon constant
           prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));

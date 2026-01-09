@@ -41,18 +41,50 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 When implementing new types, also add proptest support:
 
-1. **Implement `Arbitrary` trait** in the module's `arbitrary.rs` file
-2. **Add wrapper types** for constrained variants (NonZero*, Unit*, etc.)
-3. **Feature gate** with `#[cfg(any(test, feature = "proptest-support"))]`
-4. **Make wrapper types public** so external consumers can use them
+1. **Implement generic `Arbitrary`** for base types using `Float::from_f64()` for conversion
+2. **Add generic wrapper types** for constrained variants (`NonZero*<T>`, `Unit*<T>`, etc.)
+3. **Use where clauses** for wrapper Arbitrary impls to require inner type is Arbitrary
+4. **Feature gate** with `#[cfg(any(test, feature = "proptest-support"))]`
+5. **Make wrapper types public** so external consumers can use them
 
 Example for a new type `Motor3`:
 ```rust
 // In specialized/ga3d/arbitrary.rs
-impl Arbitrary for Motor3<f64> { ... }
 
-pub struct UnitMotor3(pub Motor3<f64>);
-impl Arbitrary for UnitMotor3 { ... }
+// Generic impl for base type - generate f64 values and convert
+impl<T: Float + Debug> Arbitrary for Motor3<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        // Generate components as f64 and convert to T
+        prop::collection::vec(-10.0f64..10.0, 8)
+            .prop_map(|coeffs| {
+                Motor3::from_coeffs(coeffs.iter().map(|&c| T::from_f64(c)))
+            })
+            .boxed()
+    }
+}
+
+// Generic wrapper type with where clause
+pub struct UnitMotor3<T: Float>(pub Motor3<T>);
+
+impl<T> Arbitrary for UnitMotor3<T>
+where
+    T: Float + Debug,
+    Motor3<T>: Arbitrary + Debug,
+    <Motor3<T> as Arbitrary>::Strategy: 'static,
+{
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        let threshold = T::from_f64(1e-6);  // Use Float::from_f64
+        any::<Motor3<T>>()
+            .prop_filter("non-zero", move |m| m.norm_squared() > threshold)
+            .prop_map(|m| UnitMotor3(m.normalized()))
+            .boxed()
+    }
+}
+
+// Usage: any::<Motor3<f64>>() or any::<UnitMotor3<f64>>() - always specify float type
 ```
 
 ## Workflow
