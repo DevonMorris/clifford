@@ -1479,79 +1479,9 @@ impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::algebra::arbitrary::{NonZeroVectorE3, UnitVectorE3, VectorE3};
     use crate::signature::{Euclidean2, Euclidean3};
-    use proptest::arbitrary::Arbitrary;
     use proptest::prelude::*;
-    use proptest::strategy::BoxedStrategy;
-
-    // ========================================================================
-    // Arbitrary implementations
-    // ========================================================================
-
-    impl Arbitrary for Multivector<f64, Euclidean3> {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            prop::array::uniform8(-10.0f64..10.0)
-                .prop_map(|coeffs| {
-                    let mut mv = Multivector::zero();
-                    for (i, &c) in coeffs.iter().enumerate() {
-                        mv.coeffs[i] = c;
-                    }
-                    mv
-                })
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for vectors (grade-1 multivectors).
-    #[derive(Debug, Clone)]
-    struct VectorE3(Multivector<f64, Euclidean3>);
-
-    impl Arbitrary for VectorE3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            prop::array::uniform3(-10.0f64..10.0)
-                .prop_map(|v| VectorE3(Multivector::vector(&v)))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for non-zero vectors (always invertible in Euclidean space).
-    #[derive(Debug, Clone)]
-    struct NonZeroVectorE3(Multivector<f64, Euclidean3>);
-
-    impl Arbitrary for NonZeroVectorE3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            prop::array::uniform3(-10.0f64..10.0)
-                .prop_filter("must be non-zero", |v| {
-                    v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
-                })
-                .prop_map(|v| NonZeroVectorE3(Multivector::vector(&v)))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit vectors.
-    #[derive(Debug, Clone)]
-    struct UnitVectorE3(Multivector<f64, Euclidean3>);
-
-    impl Arbitrary for UnitVectorE3 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<NonZeroVectorE3>()
-                .prop_map(|v| UnitVectorE3(v.0.normalize().unwrap()))
-                .boxed()
-        }
-    }
 
     // ========================================================================
     // Constructor tests
