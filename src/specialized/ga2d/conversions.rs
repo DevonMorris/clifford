@@ -39,6 +39,12 @@ use crate::signature::Euclidean2;
 
 use super::{Bivec2, Rotor2, Vec2};
 
+/// Tuple type for decomposed 2D multivector components.
+///
+/// Contains `(scalar, vector, bivector)` as Options. Each component is `Some`
+/// if that grade has non-zero coefficients (above tolerance), `None` otherwise.
+pub type Specialized2<T> = (Option<T>, Option<Vec2<T>>, Option<Bivec2<T>>);
+
 /// Error type for conversion from `Multivector` to specialized types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConversionError {
@@ -408,6 +414,99 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor2<T> {
     }
 }
 
+// ============================================================================
+// Multivector to_specialized decomposition
+// ============================================================================
+
+impl<T: Float> Multivector<T, Euclidean2> {
+    /// Decomposes a 2D multivector into its specialized grade components.
+    ///
+    /// Returns a tuple `(scalar, vector, bivector)` where each component is `Some`
+    /// if that grade has non-zero coefficients (above tolerance), `None` otherwise.
+    ///
+    /// This method is branch-free in extraction (uses `from_multivector_unchecked`)
+    /// but branches on the tolerance check to determine `Some` vs `None`.
+    ///
+    /// # Arguments
+    ///
+    /// * `tolerance` - Threshold below which coefficients are considered zero
+    ///
+    /// # Returns
+    ///
+    /// A [`Specialized2`] tuple containing:
+    /// - `Option<T>`: Scalar (grade 0) if non-zero
+    /// - `Option<Vec2<T>>`: Vector (grade 1) if non-zero
+    /// - `Option<Bivec2<T>>`: Bivector (grade 2) if non-zero
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean2;
+    /// use clifford::specialized::ga2d::Vec2;
+    ///
+    /// // Create a pure vector multivector
+    /// let v = Vec2::new(3.0_f64, 4.0);
+    /// let mv: Multivector<f64, Euclidean2> = v.into();
+    ///
+    /// let (scalar, vector, bivector) = mv.to_specialized(1e-10);
+    ///
+    /// assert!(scalar.is_none()); // No scalar part
+    /// assert!(vector.is_some()); // Has vector part
+    /// assert!(bivector.is_none()); // No bivector part
+    ///
+    /// let vec = vector.unwrap();
+    /// assert!((vec.x - 3.0).abs() < 1e-10);
+    /// assert!((vec.y - 4.0).abs() < 1e-10);
+    /// ```
+    ///
+    /// # Example: Mixed multivector
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean2;
+    /// use clifford::specialized::ga2d::{Vec2, Bivec2};
+    ///
+    /// // Create a mixed multivector: 2 + 3e₁ + 4e₂ + 5e₁₂
+    /// let mut mv: Multivector<f64, Euclidean2> = Multivector::scalar(2.0);
+    /// mv = &mv + &Multivector::from(Vec2::new(3.0, 4.0));
+    /// mv = &mv + &Multivector::from(Bivec2::new(5.0));
+    ///
+    /// let (scalar, vector, bivector) = mv.to_specialized(1e-10);
+    ///
+    /// assert_eq!(scalar, Some(2.0));
+    /// assert_eq!(vector.map(|v| (v.x, v.y)), Some((3.0, 4.0)));
+    /// assert_eq!(bivector.map(|b| b.value()), Some(5.0));
+    /// ```
+    pub fn to_specialized(&self, tolerance: T) -> Specialized2<T> {
+        // Extract scalar (grade 0)
+        let scalar_val = self.get(Blade::from_index(SCALAR_IDX));
+        let scalar = if scalar_val.abs() > tolerance {
+            Some(scalar_val)
+        } else {
+            None
+        };
+
+        // Extract vector (grade 1)
+        let vec = Vec2::from_multivector_unchecked(self);
+        let vector = if vec.x.abs() > tolerance || vec.y.abs() > tolerance {
+            Some(vec)
+        } else {
+            None
+        };
+
+        // Extract bivector (grade 2)
+        let biv = Bivec2::from_multivector_unchecked(self);
+        let bivector = if biv.0.abs() > tolerance {
+            Some(biv)
+        } else {
+            None
+        };
+
+        (scalar, vector, bivector)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -665,5 +764,145 @@ mod tests {
             prop_assert!(abs_diff_eq!(rotor.s, expected_s, epsilon = ABS_DIFF_EQ_EPS));
             prop_assert!(abs_diff_eq!(rotor.xy, expected_xy, epsilon = ABS_DIFF_EQ_EPS));
         }
+    }
+
+    // ========================================================================
+    // to_specialized tests
+    // ========================================================================
+
+    proptest! {
+        /// Test that to_specialized correctly identifies pure vectors.
+        #[test]
+        fn to_specialized_pure_vector(v in any::<Vec2<f64>>()) {
+            let mv: Multivector<f64, Euclidean2> = v.into();
+            let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+            prop_assert!(scalar.is_none());
+            prop_assert!(bivector.is_none());
+
+            if v.x.abs().max(v.y.abs()) > ABS_DIFF_EQ_EPS {
+                prop_assert!(vector.is_some());
+                let vec = vector.unwrap();
+                prop_assert!(abs_diff_eq!(vec, v, epsilon = ABS_DIFF_EQ_EPS));
+            }
+        }
+
+        /// Test that to_specialized correctly identifies pure bivectors.
+        #[test]
+        fn to_specialized_pure_bivector(xy in -100.0f64..100.0) {
+            let b = Bivec2::new(xy);
+            let mv: Multivector<f64, Euclidean2> = b.into();
+            let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+            prop_assert!(scalar.is_none());
+            prop_assert!(vector.is_none());
+
+            if xy.abs() > ABS_DIFF_EQ_EPS {
+                prop_assert!(bivector.is_some());
+                let biv = bivector.unwrap();
+                prop_assert!(abs_diff_eq!(biv, b, epsilon = ABS_DIFF_EQ_EPS));
+            }
+        }
+
+        /// Test that to_specialized correctly identifies pure scalars.
+        #[test]
+        fn to_specialized_pure_scalar(s in -100.0f64..100.0) {
+            let mv: Multivector<f64, Euclidean2> = Multivector::scalar(s);
+            let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+            prop_assert!(vector.is_none());
+            prop_assert!(bivector.is_none());
+
+            if s.abs() > ABS_DIFF_EQ_EPS {
+                prop_assert!(scalar.is_some());
+                prop_assert!(abs_diff_eq!(scalar.unwrap(), s, epsilon = ABS_DIFF_EQ_EPS));
+            }
+        }
+
+        /// Test that to_specialized correctly identifies rotors (even multivectors).
+        #[test]
+        fn to_specialized_rotor(r in any::<UnitRotor2<f64>>()) {
+            let mv: Multivector<f64, Euclidean2> = (*r).into();
+            let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+            // Rotor has scalar and bivector, no vector
+            prop_assert!(vector.is_none());
+
+            // Check scalar part
+            if r.s.abs() > ABS_DIFF_EQ_EPS {
+                prop_assert!(scalar.is_some());
+                prop_assert!(abs_diff_eq!(scalar.unwrap(), r.s, epsilon = ABS_DIFF_EQ_EPS));
+            }
+
+            // Check bivector part
+            if r.xy.abs() > ABS_DIFF_EQ_EPS {
+                prop_assert!(bivector.is_some());
+                prop_assert!(abs_diff_eq!(bivector.unwrap().value(), r.xy, epsilon = ABS_DIFF_EQ_EPS));
+            }
+        }
+
+        /// Test that to_specialized handles arbitrary multivectors correctly.
+        #[test]
+        fn to_specialized_arbitrary(mv in any::<Multivector<f64, Euclidean2>>()) {
+            let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+            // Reconstruct from components and verify
+            let mut reconstructed: Multivector<f64, Euclidean2> = Multivector::zero();
+
+            if let Some(s) = scalar {
+                reconstructed = &reconstructed + &Multivector::scalar(s);
+            }
+            if let Some(v) = vector {
+                reconstructed = &reconstructed + &Multivector::from(v);
+            }
+            if let Some(b) = bivector {
+                reconstructed = &reconstructed + &Multivector::from(b);
+            }
+
+            // Reconstructed should be approximately equal to original (within tolerance)
+            // Note: small values below tolerance are zeroed out, so we check equivalence
+            for i in 0..4 {
+                let orig = mv.get(Blade::from_index(i));
+                let recon = reconstructed.get(Blade::from_index(i));
+                if orig.abs() > ABS_DIFF_EQ_EPS {
+                    prop_assert!(abs_diff_eq!(orig, recon, epsilon = ABS_DIFF_EQ_EPS));
+                } else {
+                    // Original was below tolerance, reconstructed should be zero
+                    prop_assert!(abs_diff_eq!(recon, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn to_specialized_zero_multivector() {
+        let mv: Multivector<f64, Euclidean2> = Multivector::zero();
+        let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+        assert!(scalar.is_none());
+        assert!(vector.is_none());
+        assert!(bivector.is_none());
+    }
+
+    #[test]
+    fn to_specialized_full_multivector() {
+        // Create a multivector with all grades non-zero
+        let mut mv: Multivector<f64, Euclidean2> = Multivector::scalar(2.0);
+        mv = &mv + &Multivector::from(Vec2::new(3.0, 4.0));
+        mv = &mv + &Multivector::from(Bivec2::new(5.0));
+
+        let (scalar, vector, bivector) = mv.to_specialized(ABS_DIFF_EQ_EPS);
+
+        assert_eq!(scalar, Some(2.0));
+        assert!(vector.is_some());
+        let v = vector.unwrap();
+        assert!(abs_diff_eq!(v.x, 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.y, 4.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(bivector.is_some());
+        assert!(abs_diff_eq!(
+            bivector.unwrap().value(),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 }

@@ -37,5 +37,5 @@ mod types;
 #[cfg(any(test, feature = "proptest-support"))]
 pub mod arbitrary;
 
-pub use conversions::ConversionError;
+pub use conversions::{ConversionError, Specialized3};
 pub use types::*;
