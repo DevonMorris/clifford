@@ -13,24 +13,29 @@
 //!
 //! # Module Structure
 //!
+//! - [`algebra`] - Core algebraic types ([`Multivector`](algebra::Multivector))
 //! - [`scalar`] - Floating-point scalar type abstraction
 //! - [`signature`] - Metric signatures defining the algebra
-//! - [`basis`] - Basis blade indexing and grade utilities
+//! - [`basis`] - Basis blade representation and utilities
 //!
 //! # Getting Started
 //!
 //! ```
-//! use clifford::scalar::Float;
+//! use clifford::algebra::Multivector;
+//! use clifford::signature::Euclidean3;
 //!
-//! // The Float trait provides generic floating-point operations
-//! fn magnitude<T: Float>(x: T, y: T) -> T {
-//!     (x * x + y * y).sqrt()
-//! }
+//! // Create two vectors
+//! let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 0.0]);
+//! let b: Multivector<f64, Euclidean3> = Multivector::vector(&[0.0, 1.0, 0.0]);
 //!
-//! let m: f64 = magnitude(3.0, 4.0);
-//! assert!((m - 5.0).abs() < f64::EPSILON);
+//! // Geometric product combines dot and wedge products
+//! let ab = &a * &b;
+//!
+//! // Dot product is the scalar part: a·b = 1*0 + 2*1 + 0*0 = 2
+//! assert!((ab.scalar_part() - 2.0).abs() < 1e-10);
 //! ```
 
+pub mod algebra;
 pub mod basis;
 pub mod scalar;
 pub mod signature;
