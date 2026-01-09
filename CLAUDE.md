@@ -148,6 +148,20 @@ done
   // Avoid: hand-rolled comparisons
   assert!((a.norm() - 1.0).abs() < 1e-10);
   ```
+- **Use `prop_assert!` in proptest blocks**: Inside `proptest!` blocks, always use `prop_assert!` instead of `assert!`. This provides better error reporting with counterexamples:
+  ```rust
+  proptest! {
+      #[test]
+      fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+          let rotated = r.rotate(v);
+          // Good: prop_assert! for better proptest integration
+          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+
+          // Avoid: assert! loses proptest's shrinking and reporting benefits
+          assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+      }
+  }
+  ```
 - All types implement `AbsDiffEq`, `RelativeEq`, and `UlpsEq` traits for f32 and f64 variants
 - The `approx` traits are re-exported from `clifford::prelude`
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible

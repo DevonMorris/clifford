@@ -78,6 +78,7 @@ impl Arbitrary for UnitVec3 {
 
 ```rust
 use proptest::prelude::*;
+use approx::abs_diff_eq;
 
 proptest! {
     #[test]
@@ -88,7 +89,25 @@ proptest! {
     ) {
         let left = (a.clone() * b.clone()) * c.clone();
         let right = a * (b * c);
-        prop_assert!((left - right).norm() < 1e-10);
+        prop_assert!(abs_diff_eq!(left, right, epsilon = 1e-10));
+    }
+}
+```
+
+## Use `prop_assert!` in Proptest Blocks
+
+**Always use `prop_assert!` instead of `assert!`** inside `proptest!` blocks. This provides better error reporting with counterexamples and enables proptest's shrinking behavior.
+
+```rust
+proptest! {
+    #[test]
+    fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+        let rotated = r.rotate(v);
+        // Good: prop_assert! for better proptest integration
+        prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+
+        // Avoid: assert! loses proptest's shrinking and reporting benefits
+        // assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
     }
 }
 ```

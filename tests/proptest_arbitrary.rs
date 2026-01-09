@@ -16,6 +16,7 @@ use clifford::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
 use clifford::specialized::ga3d::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
 use clifford::specialized::ga3d::{Bivec3, Vec3};
 use proptest::prelude::*;
+use proptest::prop_assert;
 
 // ============================================================================
 // Generic Multivector Arbitrary accessibility
@@ -37,13 +38,13 @@ proptest! {
     #[test]
     fn non_zero_vector_e3_arbitrary_accessible(v in any::<NonZeroVectorE3>()) {
         // Verify NonZeroVectorE3 wrapper is accessible and has non-zero norm
-        assert!(v.norm_squared() > 0.01);
+        prop_assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vector_e3_arbitrary_accessible(v in any::<UnitVectorE3>()) {
         // Verify UnitVectorE3 wrapper is accessible and has unit norm
-        assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
+        prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
     }
 }
 
@@ -61,19 +62,19 @@ proptest! {
     #[test]
     fn non_zero_vec2_arbitrary_accessible(v in any::<NonZeroVec2>()) {
         // Verify NonZeroVec2 wrapper is accessible and has non-zero norm
-        assert!(v.norm_squared() > 0.01);
+        prop_assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vec2_arbitrary_accessible(v in any::<UnitVec2>()) {
         // Verify UnitVec2 wrapper is accessible and has unit norm
-        assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
+        prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
     }
 
     #[test]
     fn unit_rotor2_arbitrary_accessible(r in any::<UnitRotor2>()) {
         // Verify UnitRotor2 wrapper is accessible and has unit norm
-        assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = 1e-9));
+        prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = 1e-9));
     }
 }
 
@@ -97,18 +98,18 @@ proptest! {
     #[test]
     fn non_zero_vec3_arbitrary_accessible(v in any::<NonZeroVec3>()) {
         // Verify NonZeroVec3 wrapper is accessible and has non-zero norm
-        assert!(v.norm_squared() > 0.01);
+        prop_assert!(v.norm_squared() > 0.01);
     }
 
     #[test]
     fn unit_vec3_arbitrary_accessible(v in any::<UnitVec3>()) {
         // Verify UnitVec3 wrapper is accessible and has unit norm
-        assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
+        prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = 1e-9));
     }
 
     #[test]
     fn unit_rotor3_arbitrary_accessible(r in any::<UnitRotor3>()) {
         // Verify UnitRotor3 wrapper is accessible and has unit norm
-        assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = 1e-9));
+        prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = 1e-9));
     }
 }

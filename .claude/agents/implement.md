@@ -64,6 +64,8 @@ impl Arbitrary for UnitMotor3 { ... }
    ```
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
+   - Use `prop_assert!` instead of `assert!` inside `proptest!` blocks for better error reporting
+   - Use `abs_diff_eq!` from `approx` crate for floating-point comparisons
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
