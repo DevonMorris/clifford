@@ -1,5 +1,7 @@
 //! Type definitions for 2D geometric algebra.
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
 use crate::scalar::Float;
 
 /// 2D vector (grade 1): `e₁`, `e₂`.
@@ -313,5 +315,124 @@ impl<T: Float> Rotor2<T> {
 impl<T: Float> Default for Rotor2<T> {
     fn default() -> Self {
         Self::identity()
+    }
+}
+
+// ============================================================================
+// approx trait implementations (generic over Float)
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Vec2<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.x, &other.x, epsilon) && T::abs_diff_eq(&self.y, &other.y, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Vec2<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.x, &other.x, epsilon, max_relative)
+            && T::relative_eq(&self.y, &other.y, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Vec2<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
+            && T::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Bivec2<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.0, &other.0, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Bivec2<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.0, &other.0, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Bivec2<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Rotor2<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.s, &other.s, epsilon) && T::abs_diff_eq(&self.xy, &other.xy, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Rotor2<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.s, &other.s, epsilon, max_relative)
+            && T::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Rotor2<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
+            && T::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
     }
 }

@@ -175,28 +175,11 @@ impl<T: Float> Mul<Vec2<T>> for Rotor2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
+    use crate::test_utils::ABS_DIFF_EQ_EPS;
+    use approx::abs_diff_eq;
     use proptest::prelude::*;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
-
-    /// Arbitrary Vec2 for property testing.
-    fn arb_vec2() -> impl Strategy<Value = Vec2<f64>> {
-        (-100.0..100.0, -100.0..100.0).prop_map(|(x, y)| Vec2::new(x, y))
-    }
-
-    /// Arbitrary non-zero Vec2.
-    fn arb_nonzero_vec2() -> impl Strategy<Value = Vec2<f64>> {
-        arb_vec2().prop_filter("non-zero vector", |v| v.norm_squared() > 1e-10)
-    }
-
-    /// Arbitrary unit Vec2.
-    fn arb_unit_vec2() -> impl Strategy<Value = Vec2<f64>> {
-        arb_nonzero_vec2().prop_map(|v| v.normalized())
-    }
-
-    /// Arbitrary unit Rotor2.
-    fn arb_unit_rotor2() -> impl Strategy<Value = Rotor2<f64>> {
-        (0.0..2.0 * PI).prop_map(|angle| Rotor2::from_angle(angle))
-    }
 
     // ========================================================================
     // Vec2 tests
@@ -204,35 +187,34 @@ mod tests {
 
     proptest! {
         #[test]
-        fn vec2_add_commutative(a in arb_vec2(), b in arb_vec2()) {
+        fn vec2_add_commutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
             let ab = a + b;
             let ba = b + a;
-            prop_assert!((ab.x - ba.x).abs() < 1e-10);
-            prop_assert!((ab.y - ba.y).abs() < 1e-10);
+            prop_assert!(abs_diff_eq!(ab, ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_dot_commutative(a in arb_vec2(), b in arb_vec2()) {
-            prop_assert!((a.dot(b) - b.dot(a)).abs() < 1e-10);
+        fn vec2_dot_commutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
+            prop_assert!(abs_diff_eq!(a.dot(b), b.dot(a), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_wedge_anticommutative(a in arb_vec2(), b in arb_vec2()) {
+        fn vec2_wedge_anticommutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
             let ab = a.wedge(b);
             let ba = b.wedge(a);
-            prop_assert!((ab.0 + ba.0).abs() < 1e-10);
+            prop_assert!(abs_diff_eq!(ab.0, -ba.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_normalized_has_unit_length(v in arb_nonzero_vec2()) {
+        fn vec2_normalized_has_unit_length(v in any::<NonZeroVec2<f64>>()) {
             let n = v.normalized();
-            prop_assert!((n.norm() - 1.0).abs() < 1e-10);
+            prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_perp_is_perpendicular(v in arb_nonzero_vec2()) {
+        fn vec2_perp_is_perpendicular(v in any::<NonZeroVec2<f64>>()) {
             let p = v.perp();
-            prop_assert!(v.dot(p).abs() < 1e-10);
+            prop_assert!(abs_diff_eq!(v.dot(p), 0.0, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -242,36 +224,33 @@ mod tests {
 
     proptest! {
         #[test]
-        fn rotor2_preserves_norm(r in arb_unit_rotor2(), v in arb_vec2()) {
+        fn rotor2_preserves_norm(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
             let rotated = r.rotate(v);
-            prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
+            prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor2_composition(
-            r1 in arb_unit_rotor2(),
-            r2 in arb_unit_rotor2(),
-            v in arb_vec2()
+            r1 in any::<UnitRotor2<f64>>(),
+            r2 in any::<UnitRotor2<f64>>(),
+            v in any::<Vec2<f64>>()
         ) {
             let sequential = r2.rotate(r1.rotate(v));
-            let composed = r2.compose(r1).rotate(v);
-            prop_assert!((sequential.x - composed.x).abs() < 1e-8);
-            prop_assert!((sequential.y - composed.y).abs() < 1e-8);
+            let composed = r2.compose(*r1).rotate(v);
+            prop_assert!(abs_diff_eq!(sequential, composed, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn rotor2_inverse(r in arb_unit_rotor2(), v in arb_vec2()) {
+        fn rotor2_inverse(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
             let roundtrip = r.inverse().rotate(r.rotate(v));
-            prop_assert!((roundtrip.x - v.x).abs() < 1e-8);
-            prop_assert!((roundtrip.y - v.y).abs() < 1e-8);
+            prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn rotor2_from_vectors(a in arb_unit_vec2(), b in arb_unit_vec2()) {
-            let r = Rotor2::from_vectors(a, b);
-            let rotated = r.rotate(a);
-            prop_assert!((rotated.x - b.x).abs() < 1e-8);
-            prop_assert!((rotated.y - b.y).abs() < 1e-8);
+        fn rotor2_from_vectors(a in any::<UnitVec2<f64>>(), b in any::<UnitVec2<f64>>()) {
+            let r = Rotor2::from_vectors(*a, *b);
+            let rotated = r.rotate(*a);
+            prop_assert!(abs_diff_eq!(rotated, *b, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -285,8 +264,11 @@ mod tests {
         let v = Vec2::unit_x();
         let rotated = rotor.rotate(v);
 
-        assert!(rotated.x.abs() < 1e-10);
-        assert!((rotated.y - 1.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            rotated,
+            Vec2::unit_y(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -295,8 +277,11 @@ mod tests {
         let v = Vec2::unit_x();
         let rotated = rotor.rotate(v);
 
-        assert!((rotated.x + 1.0).abs() < 1e-10);
-        assert!(rotated.y.abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            rotated,
+            -Vec2::unit_x(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -306,14 +291,21 @@ mod tests {
         let v = Vec2::unit_x();
         let rotated = r90.rotate(v);
 
-        assert!(rotated.x.abs() < 1e-10);
-        assert!((rotated.y - 1.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            rotated,
+            Vec2::unit_y(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
     fn rotor2_angle_roundtrip() {
         let angle = 1.234;
         let rotor = Rotor2::from_angle(angle);
-        assert!((rotor.angle() - angle).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            rotor.angle(),
+            angle,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 }

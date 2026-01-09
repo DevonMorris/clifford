@@ -17,3 +17,7 @@ pub use crate::algebra::Multivector;
 pub use crate::basis::Blade;
 pub use crate::scalar::Float;
 pub use crate::signature::{Euclidean2, Euclidean3, Euclidean4, Signature};
+
+// Re-export approx traits for approximate comparisons
+pub use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+pub use approx::{abs_diff_eq, abs_diff_ne, relative_eq, relative_ne, ulps_eq, ulps_ne};

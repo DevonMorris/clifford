@@ -3,6 +3,7 @@
 //! This module provides the [`Float`] trait which abstracts over floating-point
 //! types like `f32` and `f64`, allowing the library to be generic over precision.
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use core::fmt::{Debug, Display};
 use core::iter::{Product, Sum};
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -51,6 +52,9 @@ pub trait Float:
     + DivAssign
     + Sum
     + Product
+    + AbsDiffEq<Epsilon = Self>
+    + RelativeEq
+    + UlpsEq
     + 'static
 {
     /// The additive identity (zero).
@@ -123,6 +127,12 @@ pub trait Float:
     ///
     /// Used for various index-based computations.
     fn from_usize(value: usize) -> Self;
+
+    /// Converts an `f64` to this float type.
+    ///
+    /// Used for converting constants and test thresholds to the appropriate precision.
+    /// Note: Converting from f64 to f32 may lose precision.
+    fn from_f64(value: f64) -> Self;
 }
 
 impl Float for f32 {
@@ -174,6 +184,11 @@ impl Float for f32 {
 
     #[inline]
     fn from_usize(value: usize) -> Self {
+        value as Self
+    }
+
+    #[inline]
+    fn from_f64(value: f64) -> Self {
         value as Self
     }
 }
@@ -228,6 +243,11 @@ impl Float for f64 {
     #[inline]
     fn from_usize(value: usize) -> Self {
         value as Self
+    }
+
+    #[inline]
+    fn from_f64(value: f64) -> Self {
+        value
     }
 }
 

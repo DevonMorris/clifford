@@ -19,9 +19,17 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 
 ### 3. Testing
 - [ ] Property-based tests with `proptest`
+- [ ] Uses `prop_assert!` (not `assert!`) inside `proptest!` blocks
+- [ ] Uses `abs_diff_eq!` for floating-point comparisons (not hand-rolled)
+- [ ] Uses `ABS_DIFF_EQ_EPS` constant (not magic numbers like `1e-10`)
 - [ ] Key algebraic properties verified
 - [ ] Edge cases tested
 - [ ] Doc tests present and passing
+- [ ] Arbitrary impls follow generic pattern:
+  - All types use `impl<T: Float + Debug> Arbitrary for Type<T>`
+  - Uses `Float::from_f64()` for range value and threshold conversion
+  - Wrapper types use where clauses for inner type bounds
+  - Tests specify float type explicitly: `any::<Vec3<f64>>()`
 
 ### 4. Style & Idioms
 - [ ] Follows Rust API Guidelines

@@ -63,6 +63,7 @@
 //! assert!((v_squared.scalar_part() - 25.0).abs() < 1e-10); // 3² + 4² = 25
 //! ```
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, BitXor, Div, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -1432,6 +1433,52 @@ impl<T: Float, S: Signature> PartialEq for Multivector<T, S> {
     }
 }
 
+impl<T: Float, S: Signature> AbsDiffEq for Multivector<T, S> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::abs_diff_eq(a, b, epsilon))
+    }
+}
+
+impl<T: Float, S: Signature> RelativeEq for Multivector<T, S> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::relative_eq(a, b, epsilon, max_relative))
+    }
+}
+
+impl<T: Float, S: Signature> UlpsEq for Multivector<T, S> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::ulps_eq(a, b, epsilon, max_ulps))
+    }
+}
+
 impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Multivector(")?;
@@ -1479,49 +1526,11 @@ impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::algebra::arbitrary::{NonZeroVectorE3, UnitVectorE3, VectorE3};
     use crate::signature::{Euclidean2, Euclidean3};
+    use crate::test_utils::ABS_DIFF_EQ_EPS;
+    use approx::abs_diff_eq;
     use proptest::prelude::*;
-
-    // ========================================================================
-    // Test helpers
-    // ========================================================================
-
-    /// Strategy for generating multivectors with bounded coefficients
-    fn arb_multivector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform8(-10.0f64..10.0).prop_map(|coeffs| {
-            let mut mv = Multivector::zero();
-            for (i, &c) in coeffs.iter().enumerate() {
-                mv.coeffs[i] = c;
-            }
-            mv
-        })
-    }
-
-    /// Strategy for generating non-zero vectors (always invertible in Euclidean space)
-    fn arb_nonzero_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0)
-            .prop_filter("must be non-zero", |v| {
-                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
-            })
-            .prop_map(|v| Multivector::vector(&v))
-    }
-
-    /// Strategy for generating arbitrary vectors (may be zero)
-    fn arb_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0).prop_map(|v| Multivector::vector(&v))
-    }
-
-    /// Strategy for generating unit vectors
-    fn arb_unit_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
-        prop::array::uniform3(-10.0f64..10.0)
-            .prop_filter("must be non-zero", |v| {
-                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
-            })
-            .prop_map(|v| {
-                let mv = Multivector::<f64, Euclidean3>::vector(&v);
-                mv.normalize().unwrap()
-            })
-    }
 
     // ========================================================================
     // Constructor tests
@@ -1530,27 +1539,47 @@ mod tests {
     #[test]
     fn test_zero() {
         let zero: Multivector<f64, Euclidean3> = Multivector::zero();
-        assert!(zero.is_zero(1e-10));
+        assert!(zero.is_zero(ABS_DIFF_EQ_EPS));
     }
 
     #[test]
     fn test_one() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
-        assert!((one.scalar_part() - 1.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            one.scalar_part(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
     fn test_basis_vector() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!((e1.get(Blade::basis_vector(0)) - 1.0).abs() < 1e-10);
-        assert!((e1.get(Blade::basis_vector(1))).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            e1.get(Blade::basis_vector(0)),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            e1.get(Blade::basis_vector(1)),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
     fn test_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.get(Blade::basis_vector(0)) - 3.0).abs() < 1e-10);
-        assert!((v.get(Blade::basis_vector(1)) - 4.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            v.get(Blade::basis_vector(0)),
+            3.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            v.get(Blade::basis_vector(1)),
+            4.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1561,8 +1590,16 @@ mod tests {
     fn test_vector_squares_to_scalar() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e1_sq = &e1 * &e1;
-        assert!((e1_sq.scalar_part() - 1.0).abs() < 1e-10);
-        assert!((&e1_sq - &Multivector::one()).is_zero(1e-10));
+        assert!(abs_diff_eq!(
+            e1_sq.scalar_part(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            e1_sq,
+            Multivector::one(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1571,15 +1608,19 @@ mod tests {
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
         let e12_sq = &e12 * &e12;
-        assert!((e12_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            e12_sq.scalar_part(),
+            -1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
     fn test_scalar_is_identity() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
-        assert!((&one * &v).approx_eq(&v, 1e-10));
-        assert!((&v * &one).approx_eq(&v, 1e-10));
+        assert!((&one * &v).approx_eq(&v, ABS_DIFF_EQ_EPS));
+        assert!((&v * &one).approx_eq(&v, ABS_DIFF_EQ_EPS));
     }
 
     // ========================================================================
@@ -1589,7 +1630,7 @@ mod tests {
     #[test]
     fn test_reverse_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(v.reverse().approx_eq(&v, 1e-10)); // Vectors unchanged
+        assert!(v.reverse().approx_eq(&v, ABS_DIFF_EQ_EPS)); // Vectors unchanged
     }
 
     #[test]
@@ -1597,13 +1638,13 @@ mod tests {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
-        assert!(e12.reverse().approx_eq(&(-&e12), 1e-10)); // Bivectors negate
+        assert!(e12.reverse().approx_eq(&(-&e12), ABS_DIFF_EQ_EPS)); // Bivectors negate
     }
 
     #[test]
     fn test_involute_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(v.involute().approx_eq(&(-&v), 1e-10)); // Vectors negate
+        assert!(v.involute().approx_eq(&(-&v), ABS_DIFF_EQ_EPS)); // Vectors negate
     }
 
     // ========================================================================
@@ -1613,13 +1654,17 @@ mod tests {
     #[test]
     fn test_norm_squared_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.norm_squared() - 25.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            v.norm_squared(),
+            25.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
     fn test_norm_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!((v.norm() - 5.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(v.norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1627,7 +1672,7 @@ mod tests {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[2.0, 0.0, 0.0]);
         let v_inv = v.inverse().unwrap();
         let product = &v * &v_inv;
-        assert!(product.approx_eq(&Multivector::one(), 1e-10));
+        assert!(product.approx_eq(&Multivector::one(), ABS_DIFF_EQ_EPS));
     }
 
     // ========================================================================
@@ -1637,81 +1682,84 @@ mod tests {
     proptest! {
         #[test]
         fn geometric_product_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn geometric_product_distributive(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn reverse_involutory(a in arb_multivector_e3()) {
-            prop_assert!(a.reverse().reverse().approx_eq(&a, 1e-10));
+        fn reverse_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
+            prop_assert!(a.reverse().reverse().approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn reverse_antimorphism(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn involute_involutory(a in arb_multivector_e3()) {
-            prop_assert!(a.involute().involute().approx_eq(&a, 1e-10));
+        fn involute_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
+            prop_assert!(a.involute().involute().approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn inverse_property(a in arb_nonzero_vector_e3()) {
+        fn inverse_property(a in any::<NonZeroVectorE3>()) {
             // Vectors are always invertible in Euclidean space
             let inv = a.inverse().expect("non-zero vector should be invertible");
-            let product = &a * &inv;
-            prop_assert!(product.approx_eq(&Multivector::one(), 1e-8));
+            let product = &*a * &inv;
+            prop_assert!(product.approx_eq(&Multivector::one(), ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn add_commutative(a in arb_multivector_e3(), b in arb_multivector_e3()) {
-            prop_assert!((&a + &b).approx_eq(&(&b + &a), 1e-10));
+        fn add_commutative(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>()
+        ) {
+            prop_assert!((&a + &b).approx_eq(&(&b + &a), ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn add_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = &(&a + &b) + &c;
             let rhs = &a + &(&b + &c);
-            prop_assert!(lhs.approx_eq(&rhs, 1e-10));
+            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn zero_is_additive_identity(a in arb_multivector_e3()) {
+        fn zero_is_additive_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let zero = Multivector::<f64, Euclidean3>::zero();
-            prop_assert!((&a + &zero).approx_eq(&a, 1e-10));
+            prop_assert!((&a + &zero).approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn one_is_multiplicative_identity(a in arb_multivector_e3()) {
+        fn one_is_multiplicative_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let one = Multivector::<f64, Euclidean3>::one();
-            prop_assert!((&a * &one).approx_eq(&a, 1e-10));
-            prop_assert!((&one * &a).approx_eq(&a, 1e-10));
+            prop_assert!((&a * &one).approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!((&one * &a).approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1719,25 +1767,28 @@ mod tests {
         // ====================================================================
 
         #[test]
-        fn grade_decomposition_complete(a in arb_multivector_e3()) {
+        fn grade_decomposition_complete(a in any::<Multivector<f64, Euclidean3>>()) {
             // Sum of all grade projections equals original
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
                 .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| &acc + &x);
-            prop_assert!(sum.approx_eq(&a, 1e-10));
+            prop_assert!(sum.approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn even_plus_odd_equals_original(a in arb_multivector_e3()) {
+        fn even_plus_odd_equals_original(a in any::<Multivector<f64, Euclidean3>>()) {
             let reconstructed = &a.even() + &a.odd();
-            prop_assert!(reconstructed.approx_eq(&a, 1e-10));
+            prop_assert!(reconstructed.approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn grade_select_idempotent(a in arb_multivector_e3(), k in 0usize..4) {
+        fn grade_select_idempotent(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            k in 0usize..4
+        ) {
             let once = a.grade_select(k);
             let twice = once.grade_select(k);
-            prop_assert!(once.approx_eq(&twice, 1e-10));
+            prop_assert!(once.approx_eq(&twice, ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1746,34 +1797,34 @@ mod tests {
 
         #[test]
         fn outer_anticommutative_vectors(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let ab = a.outer(&b);
-            let ba = b.outer(&a);
-            prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
+            let ab = a.outer(&*b);
+            let ba = b.outer(&*a);
+            prop_assert!(ab.approx_eq(&(-&ba), ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn outer_associative(
-            a in arb_multivector_e3(),
-            b in arb_multivector_e3(),
-            c in arb_multivector_e3(),
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+            c in any::<Multivector<f64, Euclidean3>>(),
         ) {
             let lhs = a.outer(&b).outer(&c);
             let rhs = a.outer(&b.outer(&c));
-            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn outer_of_vectors_is_grade_2(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let wedge = a.outer(&b);
+            let wedge = a.outer(&*b);
             // Result should have no scalar or vector parts
-            prop_assert!(wedge.grade_select(0).is_zero(1e-10));
-            prop_assert!(wedge.grade_select(1).is_zero(1e-10));
+            prop_assert!(wedge.grade_select(0).is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(wedge.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1782,25 +1833,25 @@ mod tests {
 
         #[test]
         fn inner_product_of_vectors_is_scalar(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
-            let dot = a.inner(&b);
+            let dot = a.inner(&*b);
             // Should be pure scalar
-            prop_assert!(dot.grade_select(1).is_zero(1e-10));
-            prop_assert!(dot.grade_select(2).is_zero(1e-10));
-            prop_assert!(dot.grade_select(3).is_zero(1e-10));
+            prop_assert!(dot.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(dot.grade_select(2).is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(dot.grade_select(3).is_zero(ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn inner_product_symmetric_for_vectors(
-            a in arb_vector_e3(),
-            b in arb_vector_e3(),
+            a in any::<VectorE3>(),
+            b in any::<VectorE3>(),
         ) {
             // For vectors, a·b = b·a
-            let ab = a.inner(&b);
-            let ba = b.inner(&a);
-            prop_assert!(ab.approx_eq(&ba, 1e-10));
+            let ab = a.inner(&*b);
+            let ba = b.inner(&*a);
+            prop_assert!(ab.approx_eq(&ba, ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1808,16 +1859,16 @@ mod tests {
         // ====================================================================
 
         #[test]
-        fn dual_undual_roundtrip(a in arb_multivector_e3()) {
+        fn dual_undual_roundtrip(a in any::<Multivector<f64, Euclidean3>>()) {
             let roundtrip = a.dual().undual();
-            prop_assert!(roundtrip.approx_eq(&a, 1e-8));
+            prop_assert!(roundtrip.approx_eq(&a, ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn dual_changes_grade(a in arb_nonzero_vector_e3()) {
+        fn dual_changes_grade(a in any::<NonZeroVectorE3>()) {
             // Vector (grade 1) dualizes to bivector (grade 2) in 3D
             let dual = a.dual();
-            prop_assert_eq!(dual.grade(1e-10), Some(2));
+            prop_assert_eq!(dual.grade(ABS_DIFF_EQ_EPS), Some(2));
         }
 
         // ====================================================================
@@ -1826,23 +1877,23 @@ mod tests {
 
         #[test]
         fn sandwich_by_unit_vector_preserves_norm(
-            n in arb_unit_vector_e3(),
-            v in arb_nonzero_vector_e3(),
+            n in any::<UnitVectorE3>(),
+            v in any::<NonZeroVectorE3>(),
         ) {
-            let reflected = n.sandwich(&v);
+            let reflected = n.sandwich(&*v);
             // Reflection preserves norm
-            prop_assert!((reflected.norm() - v.norm()).abs() < 1e-8);
+            prop_assert!(abs_diff_eq!(reflected.norm(), v.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn sandwich_by_unit_vector_is_reflection(
-            n in arb_unit_vector_e3(),
-            v in arb_vector_e3(),
+            n in any::<UnitVectorE3>(),
+            v in any::<VectorE3>(),
         ) {
-            let reflected = n.sandwich(&v);
+            let reflected = n.sandwich(&*v);
             // Double reflection returns original
             let double_reflected = n.sandwich(&reflected);
-            prop_assert!(double_reflected.approx_eq(&v, 1e-8));
+            prop_assert!(double_reflected.approx_eq(&*v, ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -1859,12 +1910,16 @@ mod tests {
 
         // i² = -1
         let i_sq = &i * &i;
-        assert!((i_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            i_sq.scalar_part(),
+            -1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
 
         // We can represent complex numbers as a + b*e₁₂
         let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
         let norm_sq = (&z * &z.reverse()).scalar_part();
-        assert!((norm_sq - 25.0).abs() < 1e-10); // |z|² = 3² + 4² = 25
+        assert!(abs_diff_eq!(norm_sq, 25.0, epsilon = ABS_DIFF_EQ_EPS)); // |z|² = 3² + 4² = 25
     }
 
     // ========================================================================
@@ -1879,11 +1934,15 @@ mod tests {
         let v2 = v;
 
         // Original is still usable (proves Copy, not just Clone)
-        assert!(v.approx_eq(&v2, 1e-10));
+        assert!(abs_diff_eq!(v, v2, epsilon = ABS_DIFF_EQ_EPS));
 
         // Can use both independently
         let sum = v + v2;
-        assert!((sum.get(Blade::basis_vector(0)) - 2.0).abs() < 1e-10);
+        assert!(abs_diff_eq!(
+            sum.get(Blade::basis_vector(0)),
+            2.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1902,6 +1961,6 @@ mod tests {
         let v2: Multivector<f64, Euclidean3> =
             serde_json::from_str(&json).expect("deserialization failed");
 
-        assert!(v.approx_eq(&v2, 1e-10));
+        assert!(v.approx_eq(&v2, ABS_DIFF_EQ_EPS));
     }
 }

@@ -21,11 +21,14 @@ uninlined_format_args = "allow"
 [features]
 default = []
 serde = ["dep:serde", "generic-array/serde"]
+proptest-support = ["dep:proptest"]
 
 [dependencies]
+approx = "0.5"
 generic-array = "1"
 typenum = "1"
 serde = { version = "1", features = ["derive"], optional = true }
+proptest = { version = "1", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }

@@ -45,4 +45,7 @@
 
 mod multivector;
 
+#[cfg(any(test, feature = "proptest-support"))]
+pub mod arbitrary;
+
 pub use multivector::Multivector;

@@ -30,6 +30,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
   - Each commit should be independently reviewable
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
+- **Confirm before creating PRs** - always ask for user confirmation before running `gh pr create`. This minimizes churn on GitHub and ensures the user has reviewed the changes.
 - **Review before merging** - after creating a PR:
   ```bash
   gh pr create --title "..." --body "..."
@@ -105,6 +106,87 @@ done
 
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
+- **Implement `Arbitrary` trait** for types instead of writing free functions:
+  ```rust
+  // Good: implement Arbitrary trait, use any::<Type>()
+  impl Arbitrary for Vec3<f64> {
+      type Parameters = ();
+      type Strategy = BoxedStrategy<Self>;
+      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy { ... }
+  }
+  // Then use: any::<Vec3<f64>>()
+
+  // Avoid: free functions
+  fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> { ... }
+  ```
+- **Arbitrary modules**: Each module with types has an `arbitrary` submodule containing:
+  - Generic `Arbitrary` implementations for all types using `Float::from_f64()` for conversion
+  - Generic wrapper types for constrained values (e.g., `NonZeroVec3<T>`, `UnitVec3<T>`, `UnitRotor3<T>`)
+  - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
+  ```rust
+  // Import wrapper types from the arbitrary module
+  use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
+
+  // Use any::<Type<f64>>() - always specify the float type explicitly
+  // Internal tests should use f64 for consistency
+  proptest! {
+      #[test]
+      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+          let rotated = r.rotate(v);  // Deref allows direct method access
+          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
+      }
+  }
+  ```
+- **Generic Arbitrary pattern**: All types use generic `Arbitrary` impls with `Float::from_f64()`:
+  ```rust
+  // Base types generate f64 values and convert
+  impl<T: Float + Debug> Arbitrary for Vec3<T> {
+      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+          (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
+              .prop_map(|(x, y, z)| Vec3::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+              .boxed()
+      }
+  }
+
+  // Wrapper types use where clauses requiring the inner type to be Arbitrary
+  impl<T> Arbitrary for NonZeroVec3<T>
+  where
+      T: Float + Debug,
+      Vec3<T>: Arbitrary + Debug,
+      <Vec3<T> as Arbitrary>::Strategy: 'static,
+  { ... }
+  ```
+- **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
+- **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
+- **Use `approx` crate for comparisons**: Never hand-roll floating-point comparisons. Use `abs_diff_eq!`, `relative_eq!`, or `ulps_eq!` macros from the `approx` crate.
+- **Use `ABS_DIFF_EQ_EPS` constant**: Don't use magic numbers like `1e-10` for epsilon values. Use the standard constant `ABS_DIFF_EQ_EPS` defined in `src/lib.rs::test_utils`:
+  ```rust
+  use crate::test_utils::ABS_DIFF_EQ_EPS;
+  use approx::abs_diff_eq;
+
+  // Good: use the standard constant
+  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+
+  // Avoid: magic numbers
+  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = 1e-10));
+  ```
+  For integration tests (`tests/` directory), define the constant locally since `test_utils` is `pub(crate)`.
+- **Use `prop_assert!` in proptest blocks**: Inside `proptest!` blocks, always use `prop_assert!` instead of `assert!`. This provides better error reporting with counterexamples:
+  ```rust
+  proptest! {
+      #[test]
+      fn rotor_preserves_norm(r in any::<UnitRotor3<f64>>(), v in any::<Vec3<f64>>()) {
+          let rotated = r.rotate(v);
+          // Good: prop_assert! with standard epsilon constant
+          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
+
+          // Avoid: assert! loses proptest's shrinking and reporting benefits
+          // Avoid: magic numbers like 1e-9
+      }
+  }
+  ```
+- All types implement `AbsDiffEq`, `RelativeEq`, and `UlpsEq` traits for f32 and f64 variants
+- The `approx` traits are re-exported from `clifford::prelude`
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR
@@ -151,12 +233,12 @@ Use the review agent to check this PR before merging
 ## Development Commands
 
 ```bash
-cargo build           # Build the library
-cargo test            # Run all tests
-cargo doc --open      # Generate and view documentation
-cargo bench           # Run benchmarks
-cargo clippy          # Run linter
-cargo fmt             # Format code
+cargo build --all-features    # Build the library with all features
+cargo test --all-features     # Run all tests
+cargo doc --open              # Generate and view documentation
+cargo bench                   # Run benchmarks
+cargo clippy --all-features   # Run linter
+cargo fmt                     # Format code
 ```
 
 ## Verification Workflow
@@ -164,12 +246,14 @@ cargo fmt             # Format code
 **Before every commit**, run these commands to ensure CI will pass:
 
 ```bash
-cargo fmt             # Format code (CI checks this!)
-cargo clippy          # Lint check
-cargo test            # Run all tests including doc tests
+cargo fmt                         # Format code (CI checks this!)
+cargo clippy --all-features       # Lint check
+cargo test --all-features         # Run all tests including doc tests
 ```
 
 CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
+
+**Important**: Always use `--all-features` to ensure all code paths are tested, including feature-gated modules like `proptest-support`.
 
 ## Architecture Notes
 
