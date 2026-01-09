@@ -104,6 +104,40 @@ done
 - Address or acknowledge Greptile feedback before merging
 - **IMPORTANT: After pushing commits that address Greptile feedback**, always comment `@greptileai review` on the PR to request a re-review. This ensures the fixes are verified before merging.
 
+### 9. Claude Code Agents
+
+This project has specialized agents in `.claude/agents/` for different tasks. **Use these agents proactively** when your work matches their purpose:
+
+| Agent | When to Use |
+|-------|-------------|
+| **implement** | Implementing new features or making code changes. Use when adding functionality, writing new modules, or modifying existing code. |
+| **test** | Writing or improving tests. Use when adding property-based tests, creating test strategies, or verifying algebraic properties. |
+| **document** | Writing or improving documentation. Use when adding rustdoc, writing module docs, or improving mathematical explanations. |
+| **review** | Reviewing code before merging. Use to check code against the project's quality checklist (docs, correctness, tests, style, performance). |
+| **explain** | Teaching GA concepts. Use when explaining geometric algebra ideas, bridging from linear algebra, or helping users understand the math. |
+| **optimize** | Performance optimization. Use when profiling, benchmarking, adding SIMD, or improving algorithmic efficiency. |
+| **devops** | CI/CD and infrastructure tasks. Use for GitHub Actions, publishing, branch protection, or build/release automation. |
+
+#### How to Invoke Agents
+
+Run agents using the Task tool with the appropriate agent file:
+
+```
+Use the implement agent to add the new rotor type
+Use the test agent to write property-based tests for the geometric product
+Use the review agent to check this PR before merging
+```
+
+#### Agent Selection Guide
+
+- **Writing code?** → `implement`
+- **Writing tests?** → `test`
+- **Writing docs?** → `document`
+- **Checking quality?** → `review`
+- **Teaching/explaining?** → `explain`
+- **Improving speed?** → `optimize`
+- **CI/CD/infra?** → `devops`
+
 ## Development Commands
 
 ```bash
