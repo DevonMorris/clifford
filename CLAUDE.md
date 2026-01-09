@@ -49,6 +49,10 @@ A Rust library for Geometric Algebra (Clifford Algebra).
   - Encapsulate internal details; don't leak implementation (e.g., bitmask indices)
   - Methods on types are more discoverable and provide better IDE support
   - Example: `blade.grade()` is better than `grade_of_blade(index)`
+- **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()` when possible. Add helper methods or type aliases to make simpler syntax work.
+- **Don't expose foreign traits in public API** - When our public API depends on a foreign trait (e.g., `typenum::Unsigned`), either:
+  - Re-export the trait in our prelude so users don't need to import the dependency directly, or
+  - Add helper methods that encapsulate the foreign trait usage (preferred when feasible)
 
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.

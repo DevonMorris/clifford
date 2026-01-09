@@ -17,7 +17,3 @@ pub use crate::algebra::Multivector;
 pub use crate::basis::Blade;
 pub use crate::scalar::Float;
 pub use crate::signature::{Euclidean2, Euclidean3, Euclidean4, Signature};
-
-// Re-export Unsigned trait from typenum so users can access NumBlades::USIZE
-// without importing typenum directly.
-pub use typenum::Unsigned;
