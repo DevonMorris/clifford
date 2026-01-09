@@ -29,6 +29,11 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 - Use SIMD via `std::arch` or `portable_simd` for performance-critical code
 - Keep implementations simple and readable
 - **Generic over floating point types** - Use generics with trait bounds (e.g., `Float` trait or `num-traits`) rather than hardcoding `f32` or `f64`. Users should be able to choose their precision.
+- **Prefer structs with associated methods over free functions**
+  - Avoid primitive obsession (don't use `usize` when you mean `Blade`)
+  - Encapsulate internal details; don't leak implementation
+  - Methods are more discoverable and provide better IDE support
+  - Bad: `grade_of_blade(index: usize)` / Good: `blade.grade()`
 
 ## Workflow
 

@@ -44,6 +44,11 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Follow the official Rust API Guidelines (https://rust-lang.github.io/api-guidelines/)
 - Ergonomic builder patterns where appropriate
 - Implement standard traits (Debug, Clone, PartialEq, etc.)
+- **Prefer structs with associated methods over free functions**
+  - Avoid primitive obsession (e.g., using `usize` instead of a proper `Blade` type)
+  - Encapsulate internal details; don't leak implementation (e.g., bitmask indices)
+  - Methods on types are more discoverable and provide better IDE support
+  - Example: `blade.grade()` is better than `grade_of_blade(index)`
 
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
@@ -99,7 +104,7 @@ CI will reject PRs that fail any of these checks. Always run `cargo fmt` before 
 - [x] Implementation PRDs (see `docs/prd/`)
 
 ### Next Steps
-- [ ] **PRD-1: Foundation** - Float trait, Signature trait, basis utilities
+- [x] **PRD-1: Foundation** - Float trait, Signature trait, Blade type
 - [ ] **PRD-2: Core Multivector** - Multivector type, geometric product
 - [ ] **PRD-3: Products** - inner, outer, regressive products, grade operations
 - [ ] **PRD-4: Specialized** - optimized 2D/3D types
