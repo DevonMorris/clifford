@@ -32,11 +32,14 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] No fully-qualified syntax (`<Type as Trait>::`) when simpler syntax works
 - [ ] Foreign traits not exposed in public API (use helper methods or re-export in prelude)
 
-### 5. Performance
+### 5. Performance & Benchmarking
 - [ ] No unnecessary allocations
 - [ ] SIMD used where beneficial
 - [ ] No premature optimization
 - [ ] Benchmarks for critical paths
+- [ ] New operations have corresponding benchmarks in `benches/multivector.rs`
+- [ ] Modified operations checked for performance regression (run `cargo bench` before/after)
+- [ ] Benchmark results documented if significant changes
 
 ### 6. Dependencies
 - [ ] Minimal external dependencies
