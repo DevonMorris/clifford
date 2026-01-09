@@ -6,6 +6,8 @@ license = "MIT"
 description = "A Rust library for Geometric Algebra (Clifford Algebra)"
 keywords = ["geometric-algebra", "clifford-algebra", "mathematics", "simd", "linear-algebra"]
 categories = ["mathematics", "science"]
+repository = "https://github.com/DevonMorris/clifford"
+readme = "README.md"
 
 [lints.rust]
 warnings = "deny"
@@ -17,3 +19,6 @@ missing_docs_in_private_items = "deny"
 uninlined_format_args = "allow"
 
 [dependencies]
+
+[dev-dependencies]
+proptest = "1"
