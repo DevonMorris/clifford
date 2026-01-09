@@ -24,7 +24,7 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::ga3d::{Vec3, arbitrary::UnitRotor3};
+//! use clifford::specialized::euclidean::dim3::{Vec3, arbitrary::UnitRotor3};
 //! use proptest::prelude::*;
 //!
 //! proptest! {

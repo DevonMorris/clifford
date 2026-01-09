@@ -49,7 +49,7 @@ When implementing new types, also add proptest support:
 
 Example for a new type `Motor3`:
 ```rust
-// In specialized/ga3d/arbitrary.rs
+// In specialized/euclidean::dim3/arbitrary.rs
 
 // Generic impl for base type - generate f64 values and convert
 impl<T: Float + Debug> Arbitrary for Motor3<T> {
@@ -108,7 +108,7 @@ where
    ```
 6. **Make small, logical commits**:
    - Separate documentation updates from implementation
-   - Separate different modules (e.g., ga2d and ga3d in different commits)
+   - Separate different modules (e.g., euclidean::dim2 and euclidean::dim3 in different commits)
    - Separate refactoring from new features
    - Each commit should be independently reviewable and pass CI
 7. **Confirm before creating PR** - always ask for user confirmation before running `gh pr create`

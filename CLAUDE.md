@@ -25,7 +25,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Work in feature branches, e.g. `feat/multivector`, `fix/product-sign`
 - **Small, logical commits** - each commit should be a single logical change:
   - Separate documentation updates from implementation
-  - Separate different modules (e.g., ga2d and ga3d in different commits)
+  - Separate different modules (e.g., euclidean::dim2 and euclidean::dim3 in different commits)
   - Separate refactoring from new features
   - Each commit should be independently reviewable
 - Each commit should be buildable and pass tests
@@ -125,7 +125,7 @@ done
   - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
   ```rust
   // Import wrapper types from the arbitrary module
-  use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
+  use crate::specialized::euclidean::dim3::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
 
   // Use any::<Type<f64>>() - always specify the float type explicitly
   // Internal tests should use f64 for consistency

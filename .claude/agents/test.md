@@ -139,7 +139,7 @@ proptest! {
 Each module has an `arbitrary` submodule with Arbitrary implementations and wrapper types:
 
 ```
-src/specialized/ga3d/
+src/specialized/euclidean::dim3/
 ├── mod.rs
 ├── types.rs
 ├── ops.rs
@@ -149,7 +149,7 @@ src/specialized/ga3d/
 ### Key Points
 
 1. **Feature gating**: Arbitrary modules use `#[cfg(any(test, feature = "proptest-support"))]`
-2. **Import path**: Use `crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3}`
+2. **Import path**: Use `crate::specialized::euclidean::dim3::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3}`
 3. **All types are generic**: All Arbitrary impls use `impl<T: Float + Debug> Arbitrary for Type<T>`
 4. **New types need Arbitrary**: When adding new types, add generic `impl Arbitrary` in the module's `arbitrary.rs`
 5. **Use `Float::from_f64()`**: For converting f64 range values and threshold constants
@@ -158,8 +158,8 @@ src/specialized/ga3d/
 
 | Module | Base Types | Wrapper Types |
 |--------|-----------|---------------|
-| `ga2d::arbitrary` | `Vec2<T>` | `NonZeroVec2<T>`, `UnitVec2<T>`, `UnitRotor2<T>` |
-| `ga3d::arbitrary` | `Vec3<T>`, `Bivec3<T>` | `NonZeroVec3<T>`, `UnitVec3<T>`, `UnitBivec3<T>`, `UnitRotor3<T>` |
+| `euclidean::dim2::arbitrary` | `Vec2<T>` | `NonZeroVec2<T>`, `UnitVec2<T>`, `UnitRotor2<T>` |
+| `euclidean::dim3::arbitrary` | `Vec3<T>`, `Bivec3<T>` | `NonZeroVec3<T>`, `UnitVec3<T>`, `UnitBivec3<T>`, `UnitRotor3<T>` |
 | `algebra::arbitrary` | `Multivector<T, S>` | `VectorE3`, `NonZeroVectorE3`, `UnitVectorE3` (f64 only) |
 
 ## Approximate Comparisons

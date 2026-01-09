@@ -21,7 +21,7 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::ga2d::{Vec2, Rotor2};
+//! use clifford::specialized::euclidean::dim2::{Vec2, Rotor2};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // 90° rotation

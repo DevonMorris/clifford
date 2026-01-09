@@ -11,10 +11,10 @@ use clifford::algebra::Multivector;
 use clifford::algebra::arbitrary::{NonZeroVectorE3, UnitVectorE3, VectorE3};
 use clifford::prelude::abs_diff_eq;
 use clifford::signature::Euclidean3;
-use clifford::specialized::ga2d::Vec2;
-use clifford::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
-use clifford::specialized::ga3d::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
-use clifford::specialized::ga3d::{Bivec3, Vec3};
+use clifford::specialized::euclidean::dim2::Vec2;
+use clifford::specialized::euclidean::dim2::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
+use clifford::specialized::euclidean::dim3::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
+use clifford::specialized::euclidean::dim3::{Bivec3, Vec3};
 use proptest::prelude::*;
 use proptest::prop_assert;
 

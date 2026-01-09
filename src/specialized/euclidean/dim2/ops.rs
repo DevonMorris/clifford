@@ -175,7 +175,7 @@ impl<T: Float> Mul<Vec2<T>> for Rotor2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
+    use crate::specialized::euclidean::dim2::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
     use proptest::prelude::*;

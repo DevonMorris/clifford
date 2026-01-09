@@ -119,7 +119,7 @@ impl<T: Float> From<Vec3<T>> for Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Vec3;
+    /// use clifford::specialized::euclidean::dim3::Vec3;
     ///
     /// let v = Vec3::new(1.0_f64, 2.0, 3.0);
     /// let mv: Multivector<f64, Euclidean3> = v.into();
@@ -147,7 +147,7 @@ impl<T: Float> Vec3<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Vec3;
+    /// use clifford::specialized::euclidean::dim3::Vec3;
     ///
     /// let mv: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let v = Vec3::from_multivector_unchecked(&mv);
@@ -188,7 +188,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vec3<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Vec3;
+    /// use clifford::specialized::euclidean::dim3::Vec3;
     ///
     /// let mv: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let v = Vec3::try_from(mv).unwrap();
@@ -237,7 +237,7 @@ impl<T: Float> From<Bivec3<T>> for Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Bivec3;
+    /// use clifford::specialized::euclidean::dim3::Bivec3;
     ///
     /// let b = Bivec3::new(1.0_f64, 2.0, 3.0);
     /// let mv: Multivector<f64, Euclidean3> = b.into();
@@ -266,7 +266,7 @@ impl<T: Float> Bivec3<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Bivec3;
+    /// use clifford::specialized::euclidean::dim3::Bivec3;
     ///
     /// let mut mv: Multivector<f64, Euclidean3> = Multivector::zero();
     /// mv.set(Blade::from_index(3), 1.0); // e12
@@ -310,7 +310,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivec3<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Bivec3;
+    /// use clifford::specialized::euclidean::dim3::Bivec3;
     ///
     /// let b = Bivec3::new(1.0_f64, 2.0, 3.0);
     /// let mv: Multivector<f64, Euclidean3> = b.into();
@@ -358,7 +358,7 @@ impl<T: Float> From<Trivec3<T>> for Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Trivec3;
+    /// use clifford::specialized::euclidean::dim3::Trivec3;
     ///
     /// let t = Trivec3::new(5.0_f64);
     /// let mv: Multivector<f64, Euclidean3> = t.into();
@@ -385,7 +385,7 @@ impl<T: Float> Trivec3<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Trivec3;
+    /// use clifford::specialized::euclidean::dim3::Trivec3;
     ///
     /// let mut mv: Multivector<f64, Euclidean3> = Multivector::zero();
     /// mv.set(Blade::from_index(7), 5.0); // e123
@@ -421,7 +421,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivec3<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Trivec3;
+    /// use clifford::specialized::euclidean::dim3::Trivec3;
     ///
     /// let t = Trivec3::new(5.0_f64);
     /// let mv: Multivector<f64, Euclidean3> = t.into();
@@ -473,7 +473,7 @@ impl<T: Float> From<Rotor3<T>> for Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::{Bivec3, Rotor3};
+    /// use clifford::specialized::euclidean::dim3::{Bivec3, Rotor3};
     /// use std::f64::consts::FRAC_PI_4;
     ///
     /// let r = Rotor3::from_angle_plane(FRAC_PI_4, Bivec3::unit_xy());
@@ -506,7 +506,7 @@ impl<T: Float> Rotor3<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Rotor3;
+    /// use clifford::specialized::euclidean::dim3::Rotor3;
     ///
     /// let mut mv: Multivector<f64, Euclidean3> = Multivector::zero();
     /// mv.set(Blade::from_index(0), 0.9238); // scalar (cos(π/8))
@@ -550,7 +550,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor3<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::{Bivec3, Rotor3};
+    /// use clifford::specialized::euclidean::dim3::{Bivec3, Rotor3};
     /// use std::f64::consts::FRAC_PI_4;
     ///
     /// let original = Rotor3::from_angle_plane(FRAC_PI_4, Bivec3::unit_xy());
@@ -614,7 +614,7 @@ impl<T: Float> Even3<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Even3;
+    /// use clifford::specialized::euclidean::dim3::Even3;
     ///
     /// let mut mv: Multivector<f64, Euclidean3> = Multivector::zero();
     /// mv.set(Blade::from_index(0), 1.0);  // scalar
@@ -704,7 +704,7 @@ impl<T: Float> Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::Vec3;
+    /// use clifford::specialized::euclidean::dim3::Vec3;
     ///
     /// // Create a pure vector multivector
     /// let v = Vec3::new(1.0_f64, 2.0, 3.0);
@@ -728,7 +728,7 @@ impl<T: Float> Multivector<T, Euclidean3> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use clifford::specialized::ga3d::{Vec3, Bivec3, Trivec3};
+    /// use clifford::specialized::euclidean::dim3::{Vec3, Bivec3, Trivec3};
     ///
     /// // Create a mixed multivector: 2 + 1e₁ + 2e₂ + 3e₃ + e₁₂ + 5e₁₂₃
     /// let mut mv: Multivector<f64, Euclidean3> = Multivector::scalar(2.0);

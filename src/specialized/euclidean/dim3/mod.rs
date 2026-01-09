@@ -18,7 +18,7 @@
 //! to unit quaternions but expressed in the geometric algebra framework:
 //!
 //! ```
-//! use clifford::specialized::ga3d::{Vec3, Bivec3, Rotor3};
+//! use clifford::specialized::euclidean::dim3::{Vec3, Bivec3, Rotor3};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // Rotate 90° around the z-axis (in the xy-plane)

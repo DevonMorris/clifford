@@ -169,10 +169,10 @@ impl GeometricAlgebra for Ga3d {
 }
 
 // 3D PGA (after PRD-5)
-pub struct Pga3d;
+pub struct Peuclidean::dim3;
 
-impl GeometricAlgebra for Pga3d { ... }
-impl MotorAlgebra for Pga3d {
+impl GeometricAlgebra for Peuclidean::dim3 { ... }
+impl MotorAlgebra for Peuclidean::dim3 {
     type Point = Point<f64>;
     type Motor = Motor<f64>;
 }

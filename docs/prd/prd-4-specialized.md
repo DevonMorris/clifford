@@ -5,7 +5,7 @@
 
 ## Deliverables
 
-### 1. GA2D Module (`src/specialized/ga2d/`)
+### 1. GA2D Module (`src/specialized/euclidean::dim2/`)
 
 ```rust
 /// 2D scalar (grade 0)
@@ -46,7 +46,7 @@ impl<T: Float> Rotor2<T> {
 }
 ```
 
-### 2. GA3D Module (`src/specialized/ga3d/`)
+### 2. GA3D Module (`src/specialized/euclidean::dim3/`)
 
 ```rust
 /// 3D scalar (grade 0)
@@ -176,12 +176,12 @@ assert!(v.approx_eq(&roundtrip));
 ## Files to Create
 
 - `src/specialized/mod.rs`
-- `src/specialized/ga2d/mod.rs`
-- `src/specialized/ga2d/types.rs`
-- `src/specialized/ga2d/ops.rs`
-- `src/specialized/ga3d/mod.rs`
-- `src/specialized/ga3d/types.rs`
-- `src/specialized/ga3d/ops.rs`
+- `src/specialized/euclidean::dim2/mod.rs`
+- `src/specialized/euclidean::dim2/types.rs`
+- `src/specialized/euclidean::dim2/ops.rs`
+- `src/specialized/euclidean::dim3/mod.rs`
+- `src/specialized/euclidean::dim3/types.rs`
+- `src/specialized/euclidean::dim3/ops.rs`
 - `src/transforms/mod.rs`
 - `src/transforms/rotor.rs`
 

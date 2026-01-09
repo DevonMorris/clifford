@@ -53,7 +53,7 @@ impl Signature for CGA3D {
 }
 ```
 
-### 2. CGA Utilities (`src/specialized/cga3d/`)
+### 2. CGA Utilities (`src/specialized/ceuclidean::dim3/`)
 
 ```rust
 /// Null basis vectors
@@ -132,9 +132,9 @@ pub mod simd {
 ## Files to Create
 
 - `src/signature/cga.rs`
-- `src/specialized/cga3d/mod.rs`
-- `src/specialized/cga3d/embed.rs`
-- `src/specialized/cga3d/objects.rs`
+- `src/specialized/ceuclidean::dim3/mod.rs`
+- `src/specialized/ceuclidean::dim3/embed.rs`
+- `src/specialized/ceuclidean::dim3/objects.rs`
 - `src/simd/mod.rs` (optional)
 
 ## Testing (proptest)

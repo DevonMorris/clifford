@@ -264,7 +264,7 @@ impl<T: Float> Sub for Even3<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
+    use crate::specialized::euclidean::dim3::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
     use proptest::prelude::*;

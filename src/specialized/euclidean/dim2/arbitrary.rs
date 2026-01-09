@@ -23,7 +23,7 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::ga2d::{Vec2, arbitrary::UnitVec2};
+//! use clifford::specialized::euclidean::dim2::{Vec2, arbitrary::UnitVec2};
 //! use proptest::prelude::*;
 //!
 //! proptest! {

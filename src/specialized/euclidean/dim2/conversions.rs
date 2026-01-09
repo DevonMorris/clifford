@@ -105,7 +105,7 @@ impl<T: Float> From<Vec2<T>> for Multivector<T, Euclidean2> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Vec2;
+    /// use clifford::specialized::euclidean::dim2::Vec2;
     ///
     /// let v = Vec2::new(3.0_f64, 4.0);
     /// let mv: Multivector<f64, Euclidean2> = v.into();
@@ -138,7 +138,7 @@ impl<T: Float> Vec2<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Vec2;
+    /// use clifford::specialized::euclidean::dim2::Vec2;
     ///
     /// let mv: Multivector<f64, Euclidean2> = Multivector::vector(&[3.0, 4.0]);
     /// let v = Vec2::from_multivector_unchecked(&mv);
@@ -177,7 +177,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vec2<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Vec2;
+    /// use clifford::specialized::euclidean::dim2::Vec2;
     ///
     /// let mv: Multivector<f64, Euclidean2> = Multivector::vector(&[3.0, 4.0]);
     /// let v = Vec2::try_from(mv).unwrap();
@@ -214,7 +214,7 @@ impl<T: Float> From<Bivec2<T>> for Multivector<T, Euclidean2> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Bivec2;
+    /// use clifford::specialized::euclidean::dim2::Bivec2;
     ///
     /// let b = Bivec2::new(5.0_f64);
     /// let mv: Multivector<f64, Euclidean2> = b.into();
@@ -241,7 +241,7 @@ impl<T: Float> Bivec2<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Bivec2;
+    /// use clifford::specialized::euclidean::dim2::Bivec2;
     ///
     /// let mut mv: Multivector<f64, Euclidean2> = Multivector::zero();
     /// mv.set(Blade::from_index(3), 5.0); // e₁₂
@@ -278,7 +278,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivec2<T> {
     /// use clifford::algebra::Multivector;
     /// use clifford::basis::Blade;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Bivec2;
+    /// use clifford::specialized::euclidean::dim2::Bivec2;
     ///
     /// let mut mv: Multivector<f64, Euclidean2> = Multivector::zero();
     /// mv.set(Blade::from_index(3), 5.0); // e₁₂
@@ -319,7 +319,7 @@ impl<T: Float> From<Rotor2<T>> for Multivector<T, Euclidean2> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Rotor2;
+    /// use clifford::specialized::euclidean::dim2::Rotor2;
     /// use std::f64::consts::FRAC_PI_4;
     ///
     /// let r = Rotor2::from_angle(FRAC_PI_4);
@@ -348,7 +348,7 @@ impl<T: Float> Rotor2<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Rotor2;
+    /// use clifford::specialized::euclidean::dim2::Rotor2;
     /// use std::f64::consts::FRAC_PI_4;
     ///
     /// let original = Rotor2::from_angle(FRAC_PI_4);
@@ -389,7 +389,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor2<T> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Rotor2;
+    /// use clifford::specialized::euclidean::dim2::Rotor2;
     /// use std::f64::consts::FRAC_PI_4;
     ///
     /// let original = Rotor2::from_angle(FRAC_PI_4);
@@ -443,7 +443,7 @@ impl<T: Float> Multivector<T, Euclidean2> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::Vec2;
+    /// use clifford::specialized::euclidean::dim2::Vec2;
     ///
     /// // Create a pure vector multivector
     /// let v = Vec2::new(3.0_f64, 4.0);
@@ -465,7 +465,7 @@ impl<T: Float> Multivector<T, Euclidean2> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean2;
-    /// use clifford::specialized::ga2d::{Vec2, Bivec2};
+    /// use clifford::specialized::euclidean::dim2::{Vec2, Bivec2};
     ///
     /// // Create a mixed multivector: 2 + 3e₁ + 4e₂ + 5e₁₂
     /// let mut mv: Multivector<f64, Euclidean2> = Multivector::scalar(2.0);

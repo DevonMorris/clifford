@@ -17,7 +17,7 @@ use crate::scalar::Float;
 /// # Example
 ///
 /// ```
-/// use clifford::specialized::ga3d::Vec3;
+/// use clifford::specialized::euclidean::dim3::Vec3;
 ///
 /// let v = Vec3::new(1.0, 2.0, 3.0);
 /// assert_eq!(v.x, 1.0);
