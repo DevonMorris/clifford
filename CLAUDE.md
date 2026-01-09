@@ -65,8 +65,10 @@ cargo fmt             # Format code
 - [x] Strict lint configuration: deny all warnings, require docs on all items
 - [x] GitHub repository created: https://github.com/DevonMorris/clifford
 - [x] Branch protection: PRs required, CI must pass, no direct pushes to main
+- [x] Minimal README
 
 ### Next Steps
+- [ ] **Plan geometric algebra implementation** - design types, operations, and API
+- [ ] Add `proptest` dependency and property-based test infrastructure
 - [ ] Core multivector type and basic operations
 - [ ] Geometric product implementation
-- [ ] Add `proptest` dependency and property-based test infrastructure
