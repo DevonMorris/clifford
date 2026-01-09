@@ -20,12 +20,15 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Atomic commits with clear messages
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
-- **Auto-merge PRs** - after creating a PR, immediately queue it for auto-merge:
+- **Review before merging** - after creating a PR:
   ```bash
   gh pr create --title "..." --body "..."
-  gh pr merge --auto --squash --delete-branch
+  gh pr checks <PR_NUMBER> --watch  # Wait for CI and Greptile
+  # Review and address Greptile comments
+  gh pr merge <PR_NUMBER> --squash --delete-branch
   ```
-  This ensures PRs merge automatically once CI passes and prevents forgotten PRs.
+  Do not auto-merge. Always review Greptile feedback before merging.
+- **Wait for PRs to merge before starting new work** - don't begin the next task until the current PR has merged. This prevents cascading issues if a PR fails.
 
 ### 4. Performance
 - Use SIMD instructions where beneficial (via `std::arch` or `portable_simd`)
@@ -71,15 +74,17 @@ cargo fmt             # Format code
 
 ### Completed
 - [x] Initial project setup with Cargo.toml (edition 2024)
-- [x] GitHub Actions CI workflow (check, test, fmt, clippy)
+- [x] GitHub Actions CI workflow (check, test, fmt, clippy, audit)
 - [x] Strict lint configuration: deny all warnings, require docs on all items
 - [x] GitHub repository created: https://github.com/DevonMorris/clifford
 - [x] Branch protection: PRs required, CI must pass, no direct pushes to main
 - [x] Minimal README
-- [x] Claude Code agents for specialized workflows (implement, test, document, review, explain)
+- [x] Claude Code agents for specialized workflows (implement, test, document, review, explain, devops)
+- [x] Greptile AI code review integration
+- [x] proptest dependency for property-based testing
+- [x] crates.io publish workflow (triggered by version tags)
 
 ### Next Steps
 - [ ] **Plan geometric algebra implementation** - design types, operations, and API
-- [ ] Add `proptest` dependency and property-based test infrastructure
 - [ ] Core multivector type and basic operations
 - [ ] Geometric product implementation
