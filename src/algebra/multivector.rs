@@ -380,9 +380,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     #[inline]
     pub fn is_zero(&self, epsilon: T) -> bool {
-        self.coeffs[..S::NUM_BLADES]
-            .iter()
-            .all(|&c| c.abs() < epsilon)
+        self.coeffs.iter().all(|&c| c.abs() < epsilon)
     }
 
     /// Checks if this multivector is approximately equal to another.
@@ -399,9 +397,9 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     #[inline]
     pub fn approx_eq(&self, other: &Self, epsilon: T) -> bool {
-        self.coeffs[..S::NUM_BLADES]
+        self.coeffs
             .iter()
-            .zip(other.coeffs[..S::NUM_BLADES].iter())
+            .zip(other.coeffs.iter())
             .all(|(&a, &b)| (a - b).abs() < epsilon)
     }
 }
@@ -896,7 +894,7 @@ impl<T: Float, S: Signature> Default for Multivector<T, S> {
 
 impl<T: Float, S: Signature> PartialEq for Multivector<T, S> {
     fn eq(&self, other: &Self) -> bool {
-        self.coeffs[..S::NUM_BLADES] == other.coeffs[..S::NUM_BLADES]
+        self.coeffs == other.coeffs
     }
 }
 
