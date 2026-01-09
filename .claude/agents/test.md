@@ -37,6 +37,43 @@ For geometric algebra, focus on these mathematical properties:
 - `a * a.inverse() == 1` for invertible elements
 - `a.reverse().reverse() == a`
 
+## Implementing Arbitrary
+
+**Always implement the `Arbitrary` trait** for types instead of free functions. This enables using `any::<Type>()` which is cleaner and more idiomatic.
+
+```rust
+use proptest::prelude::*;
+use proptest::arbitrary::{Arbitrary, StrategyFor};
+use proptest::strategy::{BoxedStrategy, Strategy};
+
+impl Arbitrary for Vec3<f64> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-1e10..1e10, -1e10..1e10, -1e10..1e10)
+            .prop_map(|(x, y, z)| Vec3::new(x, y, z))
+            .boxed()
+    }
+}
+
+// For constrained variants, create wrapper types:
+#[derive(Debug, Clone)]
+struct UnitVec3(Vec3<f64>);
+
+impl Arbitrary for UnitVec3 {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        any::<Vec3<f64>>()
+            .prop_filter("non-zero", |v| v.norm_squared() > 1e-10)
+            .prop_map(|v| UnitVec3(v.normalized()))
+            .boxed()
+    }
+}
+```
+
 ## Test Structure
 
 ```rust
@@ -45,9 +82,9 @@ use proptest::prelude::*;
 proptest! {
     #[test]
     fn geometric_product_associative(
-        a in any_multivector(),
-        b in any_multivector(),
-        c in any_multivector(),
+        a in any::<Multivector<f64, Euclidean3>>(),
+        b in any::<Multivector<f64, Euclidean3>>(),
+        c in any::<Multivector<f64, Euclidean3>>(),
     ) {
         let left = (a.clone() * b.clone()) * c.clone();
         let right = a * (b * c);
@@ -56,12 +93,12 @@ proptest! {
 }
 ```
 
-## Custom Strategies
+## Strategy Guidelines
 
-Create `Arbitrary` implementations or custom strategies for:
-- Multivectors with bounded coefficients
-- Unit multivectors (for rotation tests)
-- Specific grades (vectors, bivectors, etc.)
+- Implement `Arbitrary` for base types (`Vec3<f64>`, `Bivec3<f64>`, etc.)
+- Use wrapper types for constrained values (`UnitVec3`, `NonZeroVec3`)
+- Chain with `.prop_filter()` and `.prop_map()` for derived strategies
+- Use `any::<Type>()` in tests, not free functions
 
 ## Documentation
 
