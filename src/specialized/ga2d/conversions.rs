@@ -618,15 +618,12 @@ mod tests {
                 || mv.get(Blade::from_index(E2_IDX)).abs() > ABS_DIFF_EQ_EPS;
             let has_bivec = mv.get(Blade::from_index(E12_IDX)).abs() > ABS_DIFF_EQ_EPS;
 
-            // Count how many grade types are present
-            let grade_count = [has_scalar, has_vec, has_bivec].iter().filter(|&&x| x).count();
-
             if has_vec && (has_scalar || has_bivec) {
                 // Has vector and something else - should fail vec conversion
-                prop_assert!(Vec2::try_from(mv).is_err());
+                prop_assert!(Vec2::try_from(mv.clone()).is_err());
             }
-            if has_bivec && (has_scalar || has_vec) && grade_count > 2 {
-                // Has bivector and scalar and vector - should fail bivec conversion
+            if has_bivec && (has_scalar || has_vec) {
+                // Has bivector and scalar or vector - should fail bivec conversion
                 prop_assert!(Bivec2::try_from(mv).is_err());
             }
         }
