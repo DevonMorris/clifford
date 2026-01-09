@@ -17,7 +17,7 @@ Geometric algebra operations (geometric product, rotations, etc.) are inherently
 [simba](https://lib.rs/crates/simba) provides SIMD algebra abstractions for Rust. Key features:
 - Traits like `SimdValue`, `SimdRealField`, `SimdComplexField`
 - SIMD type wrappers (`WideF32x4`, `WideF64x2`) via the `wide` feature
-- Works on stable Rust (with `wide` feature) or nightly (with `packed_simd`)
+- Works on stable Rust (with `wide` feature) or nightly (with `portable_simd`)
 
 ### SIMD Options in Rust (2025)
 
@@ -234,40 +234,54 @@ Speedups may be less than 4x due to:
 ### Property-Based Tests
 
 ```rust
-#[cfg(feature = "simd-wide")]
-proptest! {
-    #[test]
-    fn simd_dot_matches_scalar(
-        v1 in any::<[dim3::Vector<f32>; 4]>(),
-        v2 in any::<[dim3::Vector<f32>; 4]>(),
-    ) {
-        let simd_v1 = Vector4::from(v1);
-        let simd_v2 = Vector4::from(v2);
-        let simd_result: [f32; 4] = simd_v1.dot(&simd_v2).into();
+#[cfg(all(test, feature = "simd-wide"))]
+mod simd_tests {
+    use super::*;
+    use crate::test_utils::ABS_DIFF_EQ_EPS_F32;
+    use proptest::prelude::*;
 
-        for i in 0..4 {
-            let scalar_result = v1[i].dot(v2[i]);
-            prop_assert!(abs_diff_eq!(simd_result[i], scalar_result, epsilon = 1e-6));
+    proptest! {
+        #[test]
+        fn simd_dot_matches_scalar(
+            v1 in any::<[dim3::Vector<f32>; 4]>(),
+            v2 in any::<[dim3::Vector<f32>; 4]>(),
+        ) {
+            let simd_v1 = Vector4::from(v1);
+            let simd_v2 = Vector4::from(v2);
+            let simd_result: [f32; 4] = simd_v1.dot(&simd_v2).into();
+
+            for i in 0..4 {
+                let scalar_result = v1[i].dot(v2[i]);
+                prop_assert!(abs_diff_eq!(
+                    simd_result[i], scalar_result,
+                    epsilon = ABS_DIFF_EQ_EPS_F32
+                ));
+            }
         }
-    }
 
-    #[test]
-    fn simd_rotate_matches_scalar(
-        r in any::<[dim3::arbitrary::UnitRotor<f32>; 4]>(),
-        v in any::<[dim3::Vector<f32>; 4]>(),
-    ) {
-        let simd_r = Rotor4::from(r.map(|x| *x));
-        let simd_v = Vector4::from(v);
-        let simd_result = simd_r.rotate(&simd_v);
-        let result_arr: [dim3::Vector<f32>; 4] = simd_result.into();
+        #[test]
+        fn simd_rotate_matches_scalar(
+            r in any::<[dim3::arbitrary::UnitRotor<f32>; 4]>(),
+            v in any::<[dim3::Vector<f32>; 4]>(),
+        ) {
+            let simd_r = Rotor4::from(r.map(|x| *x));
+            let simd_v = Vector4::from(v);
+            let simd_result = simd_r.rotate(&simd_v);
+            let result_arr: [dim3::Vector<f32>; 4] = simd_result.into();
 
-        for i in 0..4 {
-            let scalar_result = r[i].rotate(v[i]);
-            prop_assert!(abs_diff_eq!(result_arr[i], scalar_result, epsilon = 1e-5));
+            for i in 0..4 {
+                let scalar_result = r[i].rotate(v[i]);
+                prop_assert!(abs_diff_eq!(
+                    result_arr[i], scalar_result,
+                    epsilon = ABS_DIFF_EQ_EPS_F32
+                ));
+            }
         }
     }
 }
 ```
+
+Note: `ABS_DIFF_EQ_EPS_F32` would be a new constant for f32 precision (larger than the f64 `ABS_DIFF_EQ_EPS` due to reduced precision).
 
 ### Benchmarks
 
