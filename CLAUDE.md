@@ -59,7 +59,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 ### 8. Code Review
 - PRs are reviewed by Greptile (AI-powered review)
 - Address or acknowledge Greptile feedback before merging
-- **Retrigger Greptile after pushing new commits**: Comment `@greptileai` on the PR to request a new review
+- **IMPORTANT: After pushing commits that address Greptile feedback**, always comment `@greptileai review` on the PR to request a re-review. This ensures the fixes are verified before merging.
 
 ## Development Commands
 
