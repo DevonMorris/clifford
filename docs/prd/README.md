@@ -22,6 +22,7 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-6](prd-6-cga.md) | Pending | Conformal GA, documentation polish |
 | [PRD-7](prd-7-traits.md) | Pending | Trait abstractions for generic algorithms |
 | [PRD-8](prd-8-nalgebra.md) | Draft | nalgebra interoperability (feature-gated) |
+| [PRD-9](prd-9-simd.md) | Draft | SIMD and simba integration (feature-gated) |
 
 ## Implementation Order
 
@@ -33,6 +34,7 @@ Implementation plan for the Clifford Geometric Algebra library.
 6. PRD-6: CGA + Polish
 7. PRD-7: Trait Abstractions (can be done in parallel with PRD-5/6)
 8. PRD-8: nalgebra Interop (can be done anytime, independent of other PRDs)
+9. PRD-9: SIMD/simba (can be done anytime, independent of other PRDs)
 
 ## Verification
 
