@@ -21,6 +21,7 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Property-based tests with `proptest`
 - [ ] Uses `prop_assert!` (not `assert!`) inside `proptest!` blocks
 - [ ] Uses `abs_diff_eq!` for floating-point comparisons (not hand-rolled)
+- [ ] Uses `ABS_DIFF_EQ_EPS` constant (not magic numbers like `1e-10`)
 - [ ] Key algebraic properties verified
 - [ ] Edge cases tested
 - [ ] Doc tests present and passing

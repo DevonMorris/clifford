@@ -265,6 +265,7 @@ impl<T: Float> Sub for Even3<T> {
 mod tests {
     use super::*;
     use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitRotor3, UnitVec3};
+    use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
     use proptest::prelude::*;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
@@ -278,32 +279,32 @@ mod tests {
         fn vec3_add_commutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a + b;
             let ba = b + a;
-            prop_assert!(abs_diff_eq!(ab, ba, epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(ab, ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn vec3_dot_commutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
-            prop_assert!(abs_diff_eq!(a.dot(b), b.dot(a), epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(a.dot(b), b.dot(a), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn vec3_wedge_anticommutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a.wedge(b);
             let ba = b.wedge(a);
-            prop_assert!(abs_diff_eq!(ab, -ba, epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(ab, -ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn vec3_cross_anticommutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a.cross(b);
             let ba = b.cross(a);
-            prop_assert!(abs_diff_eq!(ab, -ba, epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(ab, -ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn vec3_normalized_has_unit_length(v in any::<NonZeroVec3>()) {
             let n = v.normalized();
-            prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -315,7 +316,7 @@ mod tests {
         #[test]
         fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
             let rotated = r.rotate(v);
-            prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+            prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -326,26 +327,26 @@ mod tests {
         ) {
             let sequential = r2.rotate(r1.rotate(v));
             let composed = r2.compose(*r1).rotate(v);
-            prop_assert!(abs_diff_eq!(sequential, composed, epsilon = 1e-8));
+            prop_assert!(abs_diff_eq!(sequential, composed, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor_inverse(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
             let roundtrip = r.inverse().rotate(r.rotate(v));
-            prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = 1e-8));
+            prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor_identity_is_noop(v in any::<Vec3<f64>>()) {
             let rotated = Rotor3::identity().rotate(v);
-            prop_assert!(abs_diff_eq!(rotated, v, epsilon = 1e-10));
+            prop_assert!(abs_diff_eq!(rotated, v, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor_from_vectors(a in any::<UnitVec3>(), b in any::<UnitVec3>()) {
             let r = Rotor3::from_vectors(*a, *b);
             let rotated = r.rotate(*a);
-            prop_assert!(abs_diff_eq!(rotated, *b, epsilon = 1e-8));
+            prop_assert!(abs_diff_eq!(rotated, *b, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -359,7 +360,11 @@ mod tests {
         let v = Vec3::unit_x();
         let rotated = rotor.rotate(v);
 
-        assert!(abs_diff_eq!(rotated, Vec3::unit_y(), epsilon = 1e-10));
+        assert!(abs_diff_eq!(
+            rotated,
+            Vec3::unit_y(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -368,7 +373,11 @@ mod tests {
         let v = Vec3::unit_x();
         let rotated = rotor.rotate(v);
 
-        assert!(abs_diff_eq!(rotated, -Vec3::unit_x(), epsilon = 1e-10));
+        assert!(abs_diff_eq!(
+            rotated,
+            -Vec3::unit_x(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -378,7 +387,11 @@ mod tests {
         let v = Vec3::unit_x();
         let rotated = r90.rotate(v);
 
-        assert!(abs_diff_eq!(rotated, Vec3::unit_y(), epsilon = 1e-10));
+        assert!(abs_diff_eq!(
+            rotated,
+            Vec3::unit_y(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -389,8 +402,8 @@ mod tests {
         let at_0 = r1.slerp(r2, 0.0);
         let at_1 = r1.slerp(r2, 1.0);
 
-        assert!(abs_diff_eq!(at_0.s, r1.s, epsilon = 1e-10));
-        assert!(abs_diff_eq!(at_1.s, r2.s, epsilon = 1e-10));
+        assert!(abs_diff_eq!(at_0.s, r1.s, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(at_1.s, r2.s, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -404,7 +417,7 @@ mod tests {
 
         // 45° rotation should give (√2/2, √2/2, 0)
         let expected = std::f64::consts::FRAC_1_SQRT_2;
-        assert!(abs_diff_eq!(rotated.x, expected, epsilon = 1e-10));
-        assert!(abs_diff_eq!(rotated.y, expected, epsilon = 1e-10));
+        assert!(abs_diff_eq!(rotated.x, expected, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotated.y, expected, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

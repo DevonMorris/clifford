@@ -138,27 +138,30 @@ done
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
-- **Use `approx` crate for comparisons**: Never hand-roll floating-point comparisons. Use `abs_diff_eq!`, `relative_eq!`, or `ulps_eq!` macros from the `approx` crate:
+- **Use `approx` crate for comparisons**: Never hand-roll floating-point comparisons. Use `abs_diff_eq!`, `relative_eq!`, or `ulps_eq!` macros from the `approx` crate.
+- **Use `ABS_DIFF_EQ_EPS` constant**: Don't use magic numbers like `1e-10` for epsilon values. Use the standard constant `ABS_DIFF_EQ_EPS` defined in `src/lib.rs::test_utils`:
   ```rust
+  use crate::test_utils::ABS_DIFF_EQ_EPS;
   use approx::abs_diff_eq;
 
-  // Good: use approx macros
-  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = 1e-10));
+  // Good: use the standard constant
+  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
 
-  // Avoid: hand-rolled comparisons
-  assert!((a.norm() - 1.0).abs() < 1e-10);
+  // Avoid: magic numbers
+  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = 1e-10));
   ```
+  For integration tests (`tests/` directory), define the constant locally since `test_utils` is `pub(crate)`.
 - **Use `prop_assert!` in proptest blocks**: Inside `proptest!` blocks, always use `prop_assert!` instead of `assert!`. This provides better error reporting with counterexamples:
   ```rust
   proptest! {
       #[test]
       fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
           let rotated = r.rotate(v);
-          // Good: prop_assert! for better proptest integration
-          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+          // Good: prop_assert! with standard epsilon constant
+          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
 
           // Avoid: assert! loses proptest's shrinking and reporting benefits
-          assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = 1e-9));
+          // Avoid: magic numbers like 1e-9
       }
   }
   ```

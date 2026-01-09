@@ -150,15 +150,23 @@ src/specialized/ga3d/
 
 **Always use the `approx` crate** for floating-point comparisons. Never hand-roll comparisons.
 
+**Always use `ABS_DIFF_EQ_EPS` constant** instead of magic numbers. The constant is defined in `src/lib.rs::test_utils`:
+
 ```rust
+use crate::test_utils::ABS_DIFF_EQ_EPS;
 use approx::abs_diff_eq;
 
-// Good: use approx macros
+// Good: use approx macros with standard constant
+prop_assert!(abs_diff_eq!(rotated.norm(), v.norm(), epsilon = ABS_DIFF_EQ_EPS));
+
+// Avoid: magic numbers
 prop_assert!(abs_diff_eq!(rotated.norm(), v.norm(), epsilon = 1e-9));
 
 // Avoid: hand-rolled comparisons
 prop_assert!((rotated.norm() - v.norm()).abs() < 1e-9);
 ```
+
+For integration tests (`tests/` directory), define the constant locally since `test_utils` is `pub(crate)`.
 
 Available comparison methods:
 - `abs_diff_eq!` - absolute difference comparison
