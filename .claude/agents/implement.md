@@ -151,7 +151,7 @@ where
 - **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
 - **Add new features to benchmarks** - When adding new operations:
   - Add generic `Multivector` operations to `benches/generic.rs`
-  - Add specialized 2D/3D operations to `benches/specialized.rs`
+  - Add specialized 2D/3D euclidean operations to `benches/specialized.rs`
 - Benchmarks use criterion; see existing benchmarks for patterns
 
 ### Capturing Benchmark Reports
@@ -162,10 +162,25 @@ After running benchmarks, capture SVG plots and update documentation:
 # Run all benchmarks
 cargo bench
 
-# Copy all SVG reports to benches/reports/
-for svg in target/criterion/*/report/pdf.svg; do
+# Copy generic benchmarks
+for svg in target/criterion/generic_*/report/pdf.svg; do
   bench=$(basename $(dirname $(dirname "$svg")))
-  cp "$svg" "benches/reports/${bench}_pdf.svg"
+  name=${bench#generic_}
+  cp "$svg" "benches/reports/generic/${name}.svg"
+done
+
+# Copy euclidean/dim2 benchmarks
+for svg in target/criterion/euclidean_dim2_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim2_}
+  cp "$svg" "benches/reports/euclidean/dim2/${name}.svg"
+done
+
+# Copy euclidean/dim3 benchmarks
+for svg in target/criterion/euclidean_dim3_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim3_}
+  cp "$svg" "benches/reports/euclidean/dim3/${name}.svg"
 done
 
 # Update benches/README.md with new timing data if significant changes

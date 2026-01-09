@@ -67,16 +67,33 @@ cargo bench -- --baseline before
 
 # If improved, capture new reports
 cargo bench
-for svg in target/criterion/*/report/pdf.svg; do
+
+# Copy generic benchmarks
+for svg in target/criterion/generic_*/report/pdf.svg; do
   bench=$(basename $(dirname $(dirname "$svg")))
-  cp "$svg" "benches/reports/${bench}_pdf.svg"
+  name=${bench#generic_}
+  cp "$svg" "benches/reports/generic/${name}.svg"
+done
+
+# Copy euclidean/dim2 benchmarks
+for svg in target/criterion/euclidean_dim2_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim2_}
+  cp "$svg" "benches/reports/euclidean/dim2/${name}.svg"
+done
+
+# Copy euclidean/dim3 benchmarks
+for svg in target/criterion/euclidean_dim3_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim3_}
+  cp "$svg" "benches/reports/euclidean/dim3/${name}.svg"
 done
 ```
 
 ### Adding New Benchmarks
 
 - Generic operations go in `benches/generic.rs`
-- Specialized 2D/3D operations go in `benches/specialized.rs`
+- Specialized 2D/3D euclidean operations go in `benches/specialized.rs`
 
 ```rust
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

@@ -22,6 +22,8 @@ jobs:
       # Check each nalgebra version separately (mutually exclusive)
       - run: cargo check --features nalgebra-0_33
       - run: cargo check --features nalgebra-0_34
+      # Verify benchmarks compile
+      - run: cargo build --benches
 
   test:
     name: Test
