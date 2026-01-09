@@ -237,7 +237,11 @@ impl<T: Float> Rotor2<T> {
         }
     }
 
-    /// Applies this rotation to a vector: `v' = R v R̃`.
+    /// Applies this rotation to a vector: `v' = R̃ v R`.
+    ///
+    /// In 2D, both `R v R̃` and `R̃ v R` give the same result since the
+    /// even subalgebra is commutative. We document `R̃ v R` for consistency
+    /// with the 3D convention, which gives counterclockwise rotation.
     #[inline]
     pub fn rotate(&self, v: Vec2<T>) -> Vec2<T> {
         // Simplified for 2D: equivalent to rotation matrix

@@ -257,7 +257,8 @@ impl<T: Float> Default for Trivec3<T> {
 /// 3D rotor: scalar + bivector (even subalgebra).
 ///
 /// Rotors represent rotations in geometric algebra. A unit rotor `R` with
-/// `R R̃ = 1` rotates a vector `v` via the sandwich product: `v' = R v R̃`.
+/// `R R̃ = 1` rotates a vector `v` via the sandwich product: `v' = R̃ v R`.
+/// This gives counterclockwise rotation when looking along the rotation axis.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct Rotor3<T: Float> {
