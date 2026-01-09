@@ -17,8 +17,23 @@
 //! - [`scalar`] - Floating-point scalar type abstraction
 //! - [`signature`] - Metric signatures defining the algebra
 //! - [`basis`] - Basis blade representation and utilities
+//! - [`specialized`] - Optimized types for 2D and 3D Euclidean geometry
+//!
+//! # Features
+//!
+//! - `proptest-support` - Enable [`proptest`](https://docs.rs/proptest) strategies
+//!   for property-based testing
+//! - `serde` - Enable serialization/deserialization via [`serde`](https://docs.rs/serde)
+//! - `nalgebra-0_33` - Enable conversions to/from [`nalgebra`](https://docs.rs/nalgebra) 0.33.x types
+//! - `nalgebra-0_34` - Enable conversions to/from [`nalgebra`](https://docs.rs/nalgebra) 0.34.x types
+//!
+//! Note: `nalgebra-0_33` and `nalgebra-0_34` are mutually exclusive.
 //!
 //! # Getting Started
+//!
+//! ## Generic Multivector API
+//!
+//! The generic API works with any metric signature:
 //!
 //! ```
 //! use clifford::algebra::Multivector;
@@ -33,6 +48,31 @@
 //!
 //! // Dot product is the scalar part: a·b = 1*0 + 2*1 + 0*0 = 2
 //! assert!((ab.scalar_part() - 2.0).abs() < 1e-10);
+//! ```
+//!
+//! ## Specialized 2D/3D Types
+//!
+//! For common 2D and 3D Euclidean geometry, use the optimized specialized types:
+//!
+//! ```
+//! use clifford::specialized::euclidean::{dim2, dim3};
+//! use std::f64::consts::FRAC_PI_2;
+//!
+//! // 2D: Rotate a vector by 90 degrees
+//! let v = dim2::Vector::new(1.0, 0.0);
+//! let rotor = dim2::Rotor::from_angle(FRAC_PI_2);
+//! let rotated = rotor.rotate(v);
+//! assert!((rotated.x).abs() < 1e-10);
+//! assert!((rotated.y - 1.0).abs() < 1e-10);
+//!
+//! // 3D: Rotate around an axis
+//! let v = dim3::Vector::new(1.0, 0.0, 0.0);
+//! let plane = dim3::Bivector::unit_xy(); // rotation in xy-plane (around z-axis)
+//! let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_2, plane);
+//! let rotated = rotor.rotate(v);
+//! assert!((rotated.x).abs() < 1e-10);
+//! assert!((rotated.y - 1.0).abs() < 1e-10);
+//! assert!((rotated.z).abs() < 1e-10);
 //! ```
 
 // Ensure nalgebra feature flags are mutually exclusive
