@@ -264,41 +264,97 @@ impl<T: Float> Sub for Even3<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::arbitrary::Arbitrary;
     use proptest::prelude::*;
+    use proptest::strategy::BoxedStrategy;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 
-    /// Arbitrary Vec3 for property testing.
-    fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> {
-        (-100.0..100.0, -100.0..100.0, -100.0..100.0).prop_map(|(x, y, z)| Vec3::new(x, y, z))
+    // ========================================================================
+    // Arbitrary implementations
+    // ========================================================================
+
+    impl Arbitrary for Vec3<f64> {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            (-100.0..100.0, -100.0..100.0, -100.0..100.0)
+                .prop_map(|(x, y, z)| Vec3::new(x, y, z))
+                .boxed()
+        }
     }
 
-    /// Arbitrary non-zero Vec3.
-    fn arb_nonzero_vec3() -> impl Strategy<Value = Vec3<f64>> {
-        arb_vec3().prop_filter("non-zero vector", |v| v.norm_squared() > 1e-10)
+    /// Wrapper type for non-zero Vec3.
+    #[derive(Debug, Clone, Copy)]
+    struct NonZeroVec3(Vec3<f64>);
+
+    impl Arbitrary for NonZeroVec3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<Vec3<f64>>()
+                .prop_filter("non-zero vector", |v| v.norm_squared() > 1e-10)
+                .prop_map(NonZeroVec3)
+                .boxed()
+        }
     }
 
-    /// Arbitrary unit Vec3.
-    fn arb_unit_vec3() -> impl Strategy<Value = Vec3<f64>> {
-        arb_nonzero_vec3().prop_map(|v| v.normalized())
+    /// Wrapper type for unit Vec3.
+    #[derive(Debug, Clone, Copy)]
+    struct UnitVec3(Vec3<f64>);
+
+    impl Arbitrary for UnitVec3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<NonZeroVec3>()
+                .prop_map(|v| UnitVec3(v.0.normalized()))
+                .boxed()
+        }
     }
 
-    /// Arbitrary Bivec3 for property testing.
-    fn arb_bivec3() -> impl Strategy<Value = Bivec3<f64>> {
-        (-100.0..100.0, -100.0..100.0, -100.0..100.0)
-            .prop_map(|(xy, xz, yz)| Bivec3::new(xy, xz, yz))
+    impl Arbitrary for Bivec3<f64> {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            (-100.0..100.0, -100.0..100.0, -100.0..100.0)
+                .prop_map(|(xy, xz, yz)| Bivec3::new(xy, xz, yz))
+                .boxed()
+        }
     }
 
-    /// Arbitrary unit Bivec3.
-    fn arb_unit_bivec3() -> impl Strategy<Value = Bivec3<f64>> {
-        arb_bivec3()
-            .prop_filter("non-zero bivector", |b| b.norm_squared() > 1e-10)
-            .prop_map(|b| b.normalized())
+    /// Wrapper type for unit Bivec3.
+    #[derive(Debug, Clone, Copy)]
+    struct UnitBivec3(Bivec3<f64>);
+
+    impl Arbitrary for UnitBivec3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<Bivec3<f64>>()
+                .prop_filter("non-zero bivector", |b| b.norm_squared() > 1e-10)
+                .prop_map(|b| UnitBivec3(b.normalized()))
+                .boxed()
+        }
     }
 
-    /// Arbitrary unit Rotor3.
-    fn arb_unit_rotor3() -> impl Strategy<Value = Rotor3<f64>> {
-        (0.0..2.0 * PI, arb_unit_bivec3())
-            .prop_map(|(angle, plane)| Rotor3::from_angle_plane(angle, plane))
+    /// Wrapper type for unit Rotor3.
+    #[derive(Debug, Clone, Copy)]
+    struct UnitRotor3(Rotor3<f64>);
+
+    impl Arbitrary for UnitRotor3 {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            (0.0..2.0 * PI, any::<UnitBivec3>())
+                .prop_map(|(angle, plane)| UnitRotor3(Rotor3::from_angle_plane(angle, plane.0)))
+                .boxed()
+        }
     }
 
     // ========================================================================
@@ -307,7 +363,7 @@ mod tests {
 
     proptest! {
         #[test]
-        fn vec3_add_commutative(a in arb_vec3(), b in arb_vec3()) {
+        fn vec3_add_commutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a + b;
             let ba = b + a;
             prop_assert!((ab.x - ba.x).abs() < 1e-10);
@@ -316,12 +372,12 @@ mod tests {
         }
 
         #[test]
-        fn vec3_dot_commutative(a in arb_vec3(), b in arb_vec3()) {
+        fn vec3_dot_commutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             prop_assert!((a.dot(b) - b.dot(a)).abs() < 1e-10);
         }
 
         #[test]
-        fn vec3_wedge_anticommutative(a in arb_vec3(), b in arb_vec3()) {
+        fn vec3_wedge_anticommutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a.wedge(b);
             let ba = b.wedge(a);
             prop_assert!((ab.xy + ba.xy).abs() < 1e-10);
@@ -330,7 +386,7 @@ mod tests {
         }
 
         #[test]
-        fn vec3_cross_anticommutative(a in arb_vec3(), b in arb_vec3()) {
+        fn vec3_cross_anticommutative(a in any::<Vec3<f64>>(), b in any::<Vec3<f64>>()) {
             let ab = a.cross(b);
             let ba = b.cross(a);
             prop_assert!((ab.x + ba.x).abs() < 1e-10);
@@ -339,8 +395,8 @@ mod tests {
         }
 
         #[test]
-        fn vec3_normalized_has_unit_length(v in arb_nonzero_vec3()) {
-            let n = v.normalized();
+        fn vec3_normalized_has_unit_length(v in any::<NonZeroVec3>()) {
+            let n = v.0.normalized();
             prop_assert!((n.norm() - 1.0).abs() < 1e-10);
         }
     }
@@ -351,34 +407,34 @@ mod tests {
 
     proptest! {
         #[test]
-        fn rotor_preserves_norm(r in arb_unit_rotor3(), v in arb_vec3()) {
-            let rotated = r.rotate(v);
+        fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+            let rotated = r.0.rotate(v);
             prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
         }
 
         #[test]
         fn rotor_composition(
-            r1 in arb_unit_rotor3(),
-            r2 in arb_unit_rotor3(),
-            v in arb_vec3()
+            r1 in any::<UnitRotor3>(),
+            r2 in any::<UnitRotor3>(),
+            v in any::<Vec3<f64>>()
         ) {
-            let sequential = r2.rotate(r1.rotate(v));
-            let composed = r2.compose(r1).rotate(v);
+            let sequential = r2.0.rotate(r1.0.rotate(v));
+            let composed = r2.0.compose(r1.0).rotate(v);
             prop_assert!((sequential.x - composed.x).abs() < 1e-8);
             prop_assert!((sequential.y - composed.y).abs() < 1e-8);
             prop_assert!((sequential.z - composed.z).abs() < 1e-8);
         }
 
         #[test]
-        fn rotor_inverse(r in arb_unit_rotor3(), v in arb_vec3()) {
-            let roundtrip = r.inverse().rotate(r.rotate(v));
+        fn rotor_inverse(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+            let roundtrip = r.0.inverse().rotate(r.0.rotate(v));
             prop_assert!((roundtrip.x - v.x).abs() < 1e-8);
             prop_assert!((roundtrip.y - v.y).abs() < 1e-8);
             prop_assert!((roundtrip.z - v.z).abs() < 1e-8);
         }
 
         #[test]
-        fn rotor_identity_is_noop(v in arb_vec3()) {
+        fn rotor_identity_is_noop(v in any::<Vec3<f64>>()) {
             let rotated = Rotor3::identity().rotate(v);
             prop_assert!((rotated.x - v.x).abs() < 1e-10);
             prop_assert!((rotated.y - v.y).abs() < 1e-10);
@@ -386,12 +442,12 @@ mod tests {
         }
 
         #[test]
-        fn rotor_from_vectors(a in arb_unit_vec3(), b in arb_unit_vec3()) {
-            let r = Rotor3::from_vectors(a, b);
-            let rotated = r.rotate(a);
-            prop_assert!((rotated.x - b.x).abs() < 1e-8);
-            prop_assert!((rotated.y - b.y).abs() < 1e-8);
-            prop_assert!((rotated.z - b.z).abs() < 1e-8);
+        fn rotor_from_vectors(a in any::<UnitVec3>(), b in any::<UnitVec3>()) {
+            let r = Rotor3::from_vectors(a.0, b.0);
+            let rotated = r.rotate(a.0);
+            prop_assert!((rotated.x - b.0.x).abs() < 1e-8);
+            prop_assert!((rotated.y - b.0.y).abs() < 1e-8);
+            prop_assert!((rotated.z - b.0.z).abs() < 1e-8);
         }
     }
 
