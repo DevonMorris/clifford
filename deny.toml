@@ -40,11 +40,9 @@ deny = [
 ]
 
 [bans]
-version = 2
 # Warn on multiple versions of same crate
 multiple-versions = "warn"
 
 [sources]
-version = 2
 # Allow crates from crates.io
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
