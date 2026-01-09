@@ -67,14 +67,10 @@ After running benchmarks, capture SVG plots and update documentation:
 # Run all benchmarks
 cargo bench
 
-# Copy SVG reports to benches/reports/
-for bench in generic_vector_dot generic_vector_wedge generic_vector_geometric \
-             generic_rotor_sandwich generic_vector_add generic_full_geometric \
-             ga2d_vector_dot ga2d_vector_wedge ga2d_vector_add \
-             ga2d_rotor_rotate ga2d_rotor_compose ga2d_rotor_slerp \
-             ga3d_vector_dot ga3d_vector_wedge ga3d_vector_cross ga3d_vector_add \
-             ga3d_rotor_rotate ga3d_rotor_compose ga3d_rotor_slerp ga3d_rotor_from_vectors; do
-  cp "target/criterion/$bench/report/pdf.svg" "benches/reports/${bench}_pdf.svg"
+# Copy all SVG reports to benches/reports/
+for svg in target/criterion/*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  cp "$svg" "benches/reports/${bench}_pdf.svg"
 done
 
 # Update benches/README.md with new timing data if significant changes
