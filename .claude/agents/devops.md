@@ -18,6 +18,7 @@ Workflows live in `.github/workflows/`. Current CI runs:
 - `cargo test`
 - `cargo fmt --check`
 - `cargo clippy`
+- `cargo audit` (security scanning)
 
 ### Adding New Workflows
 
@@ -110,10 +111,13 @@ Store benchmark results for regression tracking.
 
 ## PR Workflow
 
-This project uses auto-merge:
+PRs require CI + Greptile Review to pass before merging.
+
 ```bash
 gh pr create --title "..." --body "..."
-gh pr merge --auto --squash --delete-branch
+gh pr checks <PR_NUMBER> --watch  # Wait for CI and Greptile
+# Review Greptile comments and address feedback
+gh pr merge <PR_NUMBER> --squash --delete-branch
 ```
 
-PRs require CI + Greptile Review to pass before merging.
+**Important**: Do not auto-merge. Review Greptile comments before merging.
