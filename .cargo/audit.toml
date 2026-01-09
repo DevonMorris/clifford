@@ -1,0 +1,9 @@
+# cargo-audit configuration
+# See: https://github.com/rustsec/rustsec/tree/main/cargo-audit
+
+[advisories]
+ignore = [
+    # paste crate unmaintained - transitive dependency from nalgebra -> simba
+    # No action available since it's not a direct dependency
+    "RUSTSEC-2024-0436",
+]
