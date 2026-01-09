@@ -67,6 +67,9 @@ pub trait Float:
     /// Two - useful for half-angle formulas in rotors.
     const TWO: Self;
 
+    /// Pi constant (π ≈ 3.14159...).
+    const PI: Self;
+
     /// Returns the absolute value of `self`.
     fn abs(self) -> Self;
 
@@ -87,6 +90,11 @@ pub trait Float:
     ///
     /// This is useful for converting between Cartesian and polar coordinates.
     fn atan2(self, x: Self) -> Self;
+
+    /// Returns the arc cosine of `self` (in radians).
+    ///
+    /// The result is in the range `[0, π]`.
+    fn acos(self) -> Self;
 
     /// Checks if `self` is approximately equal to `other` within `epsilon`.
     ///
@@ -122,6 +130,7 @@ impl Float for f32 {
     const ONE: Self = 1.0;
     const EPSILON: Self = f32::EPSILON;
     const TWO: Self = 2.0;
+    const PI: Self = std::f32::consts::PI;
 
     #[inline]
     fn abs(self) -> Self {
@@ -149,6 +158,11 @@ impl Float for f32 {
     }
 
     #[inline]
+    fn acos(self) -> Self {
+        f32::acos(self)
+    }
+
+    #[inline]
     fn approx_eq(self, other: Self, epsilon: Self) -> bool {
         (self - other).abs() <= epsilon
     }
@@ -169,6 +183,7 @@ impl Float for f64 {
     const ONE: Self = 1.0;
     const EPSILON: Self = f64::EPSILON;
     const TWO: Self = 2.0;
+    const PI: Self = std::f64::consts::PI;
 
     #[inline]
     fn abs(self) -> Self {
@@ -193,6 +208,11 @@ impl Float for f64 {
     #[inline]
     fn atan2(self, x: Self) -> Self {
         f64::atan2(self, x)
+    }
+
+    #[inline]
+    fn acos(self) -> Self {
+        f64::acos(self)
     }
 
     #[inline]

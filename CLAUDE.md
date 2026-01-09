@@ -37,9 +37,39 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Use SIMD instructions where beneficial (via `std::arch` or `portable_simd`)
 - Benchmark critical paths
 - Profile before optimizing
-- **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
-- **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
-- **Add new features to benchmarks** - When adding new operations (especially products, transformations), add corresponding benchmarks in `benches/multivector.rs`
+
+#### Benchmark Workflow
+
+1. **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
+2. **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
+3. **Add new features to benchmarks** - When adding new operations:
+   - Add generic operations to `benches/generic.rs`
+   - Add specialized 2D/3D operations to `benches/specialized.rs`
+
+#### Capturing Benchmark Reports
+
+After running `cargo bench`, capture and commit SVG plots:
+
+```bash
+# Run all benchmarks
+cargo bench
+
+# Copy all SVG reports to benches/reports/
+for svg in target/criterion/*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  cp "$svg" "benches/reports/${bench}_pdf.svg"
+done
+
+# Update benches/README.md with new timing data if needed
+# Commit the updated SVGs and README
+```
+
+#### Benchmark File Structure
+
+- `benches/generic.rs` - Benchmarks for generic `Multivector` operations
+- `benches/specialized.rs` - Benchmarks for specialized 2D/3D types (`Vec2`, `Vec3`, `Rotor2`, `Rotor3`, etc.)
+- `benches/reports/` - SVG timing distribution plots (committed to repo)
+- `benches/README.md` - Performance summary with embedded SVG plots
 
 ### 5. Minimal Dependencies
 - Prefer std library where possible
@@ -118,8 +148,8 @@ CI will reject PRs that fail any of these checks. Always run `cargo fmt` before 
 
 ### Next Steps
 - [x] **PRD-1: Foundation** - Float trait, Signature trait, Blade type
-- [ ] **PRD-2: Core Multivector** - Multivector type, geometric product
-- [ ] **PRD-3: Products** - inner, outer, regressive products, grade operations
-- [ ] **PRD-4: Specialized** - optimized 2D/3D types
+- [x] **PRD-2: Core Multivector** - Multivector type, geometric product
+- [x] **PRD-3: Products** - inner, outer, regressive products, grade operations
+- [x] **PRD-4: Specialized** - optimized 2D/3D types (Vec2, Vec3, Rotor2, Rotor3, etc.)
 - [ ] **PRD-5: PGA** - Projective GA, motors
 - [ ] **PRD-6: CGA** - Conformal GA, polish

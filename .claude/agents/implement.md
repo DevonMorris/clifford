@@ -54,8 +54,28 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 - **Run benchmarks regularly** - Run `cargo bench` to verify performance hasn't regressed
 - **Update benchmarks when changing code** - If you modify an operation that's benchmarked, run benchmarks before and after to check for regressions
-- **Add new features to benchmarks** - When adding new operations (especially products, transformations), add corresponding benchmarks in `benches/multivector.rs`
+- **Add new features to benchmarks** - When adding new operations:
+  - Add generic `Multivector` operations to `benches/generic.rs`
+  - Add specialized 2D/3D operations to `benches/specialized.rs`
 - Benchmarks use criterion; see existing benchmarks for patterns
+
+### Capturing Benchmark Reports
+
+After running benchmarks, capture SVG plots and update documentation:
+
+```bash
+# Run all benchmarks
+cargo bench
+
+# Copy all SVG reports to benches/reports/
+for svg in target/criterion/*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  cp "$svg" "benches/reports/${bench}_pdf.svg"
+done
+
+# Update benches/README.md with new timing data if significant changes
+# Commit the updated SVGs and README
+```
 
 ## Mathematical Notation
 

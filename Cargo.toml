@@ -33,5 +33,9 @@ proptest = "1"
 serde_json = "1"
 
 [[bench]]
-name = "multivector"
+name = "generic"
+harness = false
+
+[[bench]]
+name = "specialized"
 harness = false

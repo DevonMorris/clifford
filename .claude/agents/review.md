@@ -37,9 +37,11 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] SIMD used where beneficial
 - [ ] No premature optimization
 - [ ] Benchmarks for critical paths
-- [ ] New operations have corresponding benchmarks in `benches/multivector.rs`
+- [ ] New generic operations have benchmarks in `benches/generic.rs`
+- [ ] New specialized 2D/3D operations have benchmarks in `benches/specialized.rs`
 - [ ] Modified operations checked for performance regression (run `cargo bench` before/after)
-- [ ] Benchmark results documented if significant changes
+- [ ] Benchmark SVG reports captured in `benches/reports/`
+- [ ] `benches/README.md` updated if significant timing changes
 
 ### 6. Dependencies
 - [ ] Minimal external dependencies

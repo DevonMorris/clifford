@@ -1,6 +1,6 @@
 # PRD-4: Specialized 2D/3D Types
 
-**Status**: Pending
+**Status**: In Progress (PR #20 - conversions pending)
 **Goal**: Optimized implementations for common dimensions
 
 ## Deliverables

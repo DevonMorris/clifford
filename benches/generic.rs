@@ -1,6 +1,6 @@
-//! Benchmarks for Multivector operations.
+//! Benchmarks for generic Multivector operations.
 //!
-//! Run with: `cargo bench`
+//! Run with: `cargo bench --bench generic`
 
 #![allow(missing_docs)]
 
@@ -14,7 +14,7 @@ fn bench_vector_dot(c: &mut Criterion) {
     let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
 
-    c.bench_function("vector_dot_generic", |bencher| {
+    c.bench_function("generic/vector_dot", |bencher| {
         bencher.iter(|| black_box(&a).inner(black_box(&b)).scalar_part())
     });
 }
@@ -23,7 +23,7 @@ fn bench_vector_wedge(c: &mut Criterion) {
     let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
 
-    c.bench_function("vector_wedge_generic", |bencher| {
+    c.bench_function("generic/vector_wedge", |bencher| {
         bencher.iter(|| black_box(&a).outer(black_box(&b)))
     });
 }
@@ -32,7 +32,7 @@ fn bench_geometric_product(c: &mut Criterion) {
     let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
 
-    c.bench_function("vector_geometric_generic", |bencher| {
+    c.bench_function("generic/vector_geometric", |bencher| {
         bencher.iter(|| black_box(&a) * black_box(&b))
     });
 }
@@ -49,7 +49,7 @@ fn bench_rotor_rotation(c: &mut Criterion) {
 
     let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 0.0, 0.0]);
 
-    c.bench_function("rotor_sandwich_generic", |bencher| {
+    c.bench_function("generic/rotor_sandwich", |bencher| {
         bencher.iter(|| black_box(&rotor).sandwich(black_box(&v)))
     });
 }
@@ -58,7 +58,7 @@ fn bench_multivector_add(c: &mut Criterion) {
     let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
 
-    c.bench_function("multivector_add", |bencher| {
+    c.bench_function("generic/vector_add", |bencher| {
         bencher.iter(|| black_box(&a) + black_box(&b))
     });
 }
@@ -72,7 +72,7 @@ fn bench_full_multivector_product(c: &mut Criterion) {
         b.set(clifford::basis::Blade::from_index(i), (8 - i) as f64);
     }
 
-    c.bench_function("full_multivector_geometric", |bencher| {
+    c.bench_function("generic/full_geometric", |bencher| {
         bencher.iter(|| black_box(&a) * black_box(&b))
     });
 }
