@@ -121,6 +121,8 @@ pub struct Multivector<T: Float, S: Signature> {
     _signature: PhantomData<S>,
 }
 
+impl<T: Float, S: Signature> Copy for Multivector<T, S> where GenericArray<T, S::NumBlades>: Copy {}
+
 // ============================================================================
 // Constructors
 // ============================================================================
@@ -1184,6 +1186,25 @@ mod tests {
         let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
         let norm_sq = (&z * &z.reverse()).scalar_part();
         assert!((norm_sq - 25.0).abs() < 1e-10); // |z|² = 3² + 4² = 25
+    }
+
+    // ========================================================================
+    // Copy semantics test
+    // ========================================================================
+
+    #[test]
+    fn test_copy_semantics() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+
+        // Copy the value (not move)
+        let v2 = v;
+
+        // Original is still usable (proves Copy, not just Clone)
+        assert!(v.approx_eq(&v2, 1e-10));
+
+        // Can use both independently
+        let sum = v + v2;
+        assert!((sum.get(Blade::basis_vector(0)) - 2.0).abs() < 1e-10);
     }
 
     // ========================================================================
