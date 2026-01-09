@@ -34,6 +34,8 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
   - Encapsulate internal details; don't leak implementation
   - Methods are more discoverable and provide better IDE support
   - Bad: `grade_of_blade(index: usize)` / Good: `blade.grade()`
+- **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
+- **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
 
 ## Workflow
 

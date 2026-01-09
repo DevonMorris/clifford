@@ -29,6 +29,8 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] No clippy warnings
 - [ ] No compiler warnings
 - [ ] Consistent naming
+- [ ] No fully-qualified syntax (`<Type as Trait>::`) when simpler syntax works
+- [ ] Foreign traits not exposed in public API (use helper methods or re-export in prelude)
 
 ### 5. Performance
 - [ ] No unnecessary allocations

@@ -41,6 +41,9 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Document why each dependency is needed
 
 ### 6. Rust API Guidelines
+
+**NOTE:** When updating style rules in this section, also update the corresponding agents in `.claude/agents/` (especially `implement.md` and `review.md`).
+
 - Follow the official Rust API Guidelines (https://rust-lang.github.io/api-guidelines/)
 - Ergonomic builder patterns where appropriate
 - Implement standard traits (Debug, Clone, PartialEq, etc.)
