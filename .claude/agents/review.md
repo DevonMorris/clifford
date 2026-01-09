@@ -47,9 +47,9 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] No premature optimization
 - [ ] Benchmarks for critical paths
 - [ ] New generic operations have benchmarks in `benches/generic.rs`
-- [ ] New specialized 2D/3D operations have benchmarks in `benches/specialized.rs`
+- [ ] New specialized 2D/3D euclidean operations have benchmarks in `benches/specialized.rs`
 - [ ] Modified operations checked for performance regression (run `cargo bench` before/after)
-- [ ] Benchmark SVG reports captured in `benches/reports/`
+- [ ] Benchmark SVG reports captured in `benches/reports/` (organized by `generic/`, `euclidean/dim2/`, `euclidean/dim3/`)
 - [ ] `benches/README.md` updated if significant timing changes
 
 ### 6. Dependencies

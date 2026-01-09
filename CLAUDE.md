@@ -65,10 +65,25 @@ After running `cargo bench`, capture and commit SVG plots:
 # Run all benchmarks
 cargo bench
 
-# Copy all SVG reports to benches/reports/
-for svg in target/criterion/*/report/pdf.svg; do
+# Copy generic benchmarks
+for svg in target/criterion/generic_*/report/pdf.svg; do
   bench=$(basename $(dirname $(dirname "$svg")))
-  cp "$svg" "benches/reports/${bench}_pdf.svg"
+  name=${bench#generic_}
+  cp "$svg" "benches/reports/generic/${name}.svg"
+done
+
+# Copy euclidean/dim2 benchmarks
+for svg in target/criterion/euclidean_dim2_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim2_}
+  cp "$svg" "benches/reports/euclidean/dim2/${name}.svg"
+done
+
+# Copy euclidean/dim3 benchmarks
+for svg in target/criterion/euclidean_dim3_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#euclidean_dim3_}
+  cp "$svg" "benches/reports/euclidean/dim3/${name}.svg"
 done
 
 # Update benches/README.md with new timing data if needed
@@ -78,8 +93,11 @@ done
 #### Benchmark File Structure
 
 - `benches/generic.rs` - Benchmarks for generic `Multivector` operations
-- `benches/specialized.rs` - Benchmarks for specialized 2D/3D types (`Vector`, `Vector`, `Rotor`, `Rotor`, etc.)
+- `benches/specialized.rs` - Benchmarks for specialized 2D/3D euclidean types
 - `benches/reports/` - SVG timing distribution plots (committed to repo)
+  - `generic/` - Generic multivector benchmarks
+  - `euclidean/dim2/` - Specialized 2D benchmarks
+  - `euclidean/dim3/` - Specialized 3D benchmarks
 - `benches/README.md` - Performance summary with embedded SVG plots
 
 ### 5. Minimal Dependencies
