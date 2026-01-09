@@ -16,8 +16,18 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 
 ### 3. Clean Git History
 - **Never push directly to `main`** - all changes go through pull requests
+- **Always branch from latest `origin/main`**:
+  ```bash
+  git fetch origin main
+  git checkout -b feat/your-feature origin/main
+  ```
+  This prevents merge conflicts and rebase issues.
 - Work in feature branches, e.g. `feat/multivector`, `fix/product-sign`
-- Atomic commits with clear messages
+- **Small, logical commits** - each commit should be a single logical change:
+  - Separate documentation updates from implementation
+  - Separate different modules (e.g., ga2d and ga3d in different commits)
+  - Separate refactoring from new features
+  - Each commit should be independently reviewable
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
 - **Review before merging** - after creating a PR:

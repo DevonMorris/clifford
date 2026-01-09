@@ -125,15 +125,53 @@ impl<T: Float> Rotor3<T> {
 
 ### 4. Conversions
 
+Bidirectional conversions between specialized types and generic `Multivector`:
+
 ```rust
-// Generic to specialized
-impl<T: Float> From<Multivector<T, Euclidean3>> for Multivector3<T>;
+// GA2D conversions
+impl<T: Float> From<Vec2<T>> for Multivector<T, Euclidean2>;
+impl<T: Float> From<Bivec2<T>> for Multivector<T, Euclidean2>;
+impl<T: Float> From<Rotor2<T>> for Multivector<T, Euclidean2>;
+
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vec2<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivec2<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor2<T>;
+
+// GA3D conversions
+impl<T: Float> From<Vec3<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Bivec3<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Trivec3<T>> for Multivector<T, Euclidean3>;
+impl<T: Float> From<Rotor3<T>> for Multivector<T, Euclidean3>;
 impl<T: Float> From<Multivector3<T>> for Multivector<T, Euclidean3>;
 
-// Component extraction
 impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vec3<T>;
 impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivec3<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivec3<T>;
+impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor3<T>;
+impl<T: Float> From<Multivector<T, Euclidean3>> for Multivector3<T>;
 ```
+
+### 5. Conversion Consistency
+
+**Critical requirement**: Operations must produce identical results regardless of whether performed on specialized or generic types. Round-trip conversions must preserve mathematical behavior.
+
+```rust
+// These must be equivalent:
+let spec_result = vec3_a.wedge(&vec3_b);
+let gen_result = Multivector::from(vec3_a).outer(&Multivector::from(vec3_b));
+assert!(Bivec3::try_from(gen_result).unwrap().approx_eq(&spec_result));
+
+// Round-trip must preserve operations:
+let v: Vec3<f64> = /* ... */;
+let roundtrip = Vec3::try_from(Multivector::from(v)).unwrap();
+assert!(v.approx_eq(&roundtrip));
+```
+
+**Consistency properties to verify**:
+- `specialized.op(other) ≈ Specialized::from(Generic::from(specialized).op(Generic::from(other)))`
+- Round-trip conversions are identity (within floating-point tolerance)
+- Grade extraction after conversion matches original specialized type
+- Normalization is preserved through conversions
 
 ## Files to Create
 
@@ -149,20 +187,9 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivec3<T>;
 
 ## Testing (proptest)
 
+### Rotor Properties
 ```rust
 proptest! {
-    #[test]
-    fn specialized_matches_generic(
-        a in arb_vec3::<f64>(),
-        b in arb_vec3::<f64>(),
-    ) {
-        let spec = a.geometric(b);
-        let gen_a = Multivector::<f64, Euclidean3>::from(a);
-        let gen_b = Multivector::<f64, Euclidean3>::from(b);
-        let gen = gen_a * gen_b;
-        prop_assert!(Multivector3::from(gen).approx_eq(&spec, 1e-10));
-    }
-
     #[test]
     fn rotor_preserves_norm(
         rotor in arb_unit_rotor3::<f64>(),
@@ -190,6 +217,90 @@ proptest! {
     ) {
         let roundtrip = r.inverse().rotate(r.rotate(v));
         prop_assert!(roundtrip.approx_eq(&v, 1e-10));
+    }
+}
+```
+
+### Conversion Consistency (Critical)
+```rust
+proptest! {
+    // Round-trip conversions
+    #[test]
+    fn vec3_roundtrip(v in arb_vec3::<f64>()) {
+        let generic = Multivector::<f64, Euclidean3>::from(v);
+        let back = Vec3::try_from(generic).unwrap();
+        prop_assert!(v.approx_eq(&back, 1e-10));
+    }
+
+    #[test]
+    fn bivec3_roundtrip(b in arb_bivec3::<f64>()) {
+        let generic = Multivector::<f64, Euclidean3>::from(b);
+        let back = Bivec3::try_from(generic).unwrap();
+        prop_assert!(b.approx_eq(&back, 1e-10));
+    }
+
+    #[test]
+    fn rotor3_roundtrip(r in arb_unit_rotor3::<f64>()) {
+        let generic = Multivector::<f64, Euclidean3>::from(r);
+        let back = Rotor3::try_from(generic).unwrap();
+        prop_assert!(r.approx_eq(&back, 1e-10));
+    }
+
+    // Operation consistency: specialized vs generic
+    #[test]
+    fn wedge_consistency(
+        a in arb_vec3::<f64>(),
+        b in arb_vec3::<f64>(),
+    ) {
+        let spec_result = a.wedge(&b);
+        let gen_a = Multivector::<f64, Euclidean3>::from(a);
+        let gen_b = Multivector::<f64, Euclidean3>::from(b);
+        let gen_result = gen_a.outer(&gen_b);
+        let gen_as_bivec = Bivec3::try_from(gen_result).unwrap();
+        prop_assert!(spec_result.approx_eq(&gen_as_bivec, 1e-10));
+    }
+
+    #[test]
+    fn dot_consistency(
+        a in arb_vec3::<f64>(),
+        b in arb_vec3::<f64>(),
+    ) {
+        let spec_result = a.dot(&b);
+        let gen_a = Multivector::<f64, Euclidean3>::from(a);
+        let gen_b = Multivector::<f64, Euclidean3>::from(b);
+        let gen_result = gen_a.inner(&gen_b).scalar();
+        prop_assert!((spec_result - gen_result).abs() < 1e-10);
+    }
+
+    #[test]
+    fn geometric_consistency(
+        a in arb_vec3::<f64>(),
+        b in arb_vec3::<f64>(),
+    ) {
+        let spec_result = a.geometric(&b);
+        let gen_a = Multivector::<f64, Euclidean3>::from(a);
+        let gen_b = Multivector::<f64, Euclidean3>::from(b);
+        let gen_result = gen_a * gen_b;
+        let gen_as_mv3 = Multivector3::from(gen_result);
+        prop_assert!(spec_result.approx_eq(&gen_as_mv3, 1e-10));
+    }
+
+    #[test]
+    fn rotor_rotation_consistency(
+        r in arb_unit_rotor3::<f64>(),
+        v in arb_vec3::<f64>(),
+    ) {
+        // Specialized rotation
+        let spec_result = r.rotate(v);
+
+        // Generic sandwich product: R * v * R̃
+        let gen_r = Multivector::<f64, Euclidean3>::from(r);
+        let gen_v = Multivector::<f64, Euclidean3>::from(v);
+        let gen_r_rev = gen_r.reverse();
+        let gen_result = &(&gen_r * &gen_v) * &gen_r_rev;
+        let gen_as_vec = Vec3::try_from(gen_result).unwrap();
+
+        prop_assert!(spec_result.approx_eq(&gen_as_vec, 1e-10));
     }
 }
 ```

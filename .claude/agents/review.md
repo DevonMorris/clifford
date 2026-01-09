@@ -49,9 +49,10 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Prefer std library
 
 ### 7. Git Hygiene
-- [ ] Atomic commits with clear messages
+- [ ] Branch created from latest `origin/main`
+- [ ] Small, logical commits (docs separate from impl, modules separate)
 - [ ] Conventional commit format: `type(scope): description`
-- [ ] Each commit builds and passes tests
+- [ ] Each commit builds and passes tests independently
 - [ ] PR targets main via feature branch
 
 ## Review Output Format

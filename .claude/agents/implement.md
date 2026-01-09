@@ -39,7 +39,11 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 ## Workflow
 
-1. Create a feature branch: `feat/<feature-name>`
+1. **Always branch from latest `origin/main`**:
+   ```bash
+   git fetch origin main
+   git checkout -b feat/<feature-name> origin/main
+   ```
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
 4. **Run verification before committing**:
@@ -48,7 +52,12 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
    cargo clippy          # Lint check
    cargo test            # Run all tests
    ```
-5. Create a PR to main (never push directly)
+5. **Make small, logical commits**:
+   - Separate documentation updates from implementation
+   - Separate different modules (e.g., ga2d and ga3d in different commits)
+   - Separate refactoring from new features
+   - Each commit should be independently reviewable and pass CI
+6. Create a PR to main (never push directly)
 
 ## Benchmarking
 
