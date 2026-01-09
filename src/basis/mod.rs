@@ -1,64 +1,91 @@
-//! Basis blade representation and operations.
+//! Basis blades and grade utilities for geometric algebra.
 //!
-//! This module provides utilities for working with basis blades, the fundamental
-//! building blocks of geometric algebra. Every multivector can be expressed as
-//! a linear combination of basis blades.
+//! This module provides the [`Blade`] type and utilities for working with
+//! basis blades, the fundamental building blocks of geometric algebra.
 //!
-//! # Blade Indexing
+//! # What is a Blade?
 //!
-//! Basis blades are indexed using a bitmask representation. For a blade index `k`,
-//! bit `i` is set if and only if basis vector `e_i` is part of the blade.
+//! A **blade** is a geometric object that represents an oriented subspace.
+//! Every multivector (the general elements of geometric algebra) can be
+//! written as a sum of blades.
 //!
-//! For example, in 3D:
-//! - `0b000 = 0` → scalar `1`
-//! - `0b001 = 1` → `e₁`
-//! - `0b010 = 2` → `e₂`
-//! - `0b011 = 3` → `e₁₂`
-//! - `0b100 = 4` → `e₃`
-//! - `0b101 = 5` → `e₁₃`
-//! - `0b110 = 6` → `e₂₃`
-//! - `0b111 = 7` → `e₁₂₃`
+//! | Grade | Name | Represents | Example |
+//! |-------|------|------------|---------|
+//! | 0 | Scalar | Pure magnitude | `1`, `2.5` |
+//! | 1 | Vector | Directed line | `e₁`, `3e₂` |
+//! | 2 | Bivector | Oriented plane | `e₁₂`, `e₁∧e₂` |
+//! | 3 | Trivector | Oriented volume | `e₁₂₃` |
+//! | k | k-vector | k-dimensional subspace | ... |
 //!
-//! # Grade
+//! # The Geometric Product
 //!
-//! The grade of a blade is the number of basis vectors it contains. This equals
-//! the population count (number of set bits) of its index.
+//! Blades multiply using the **geometric product**, which unifies:
 //!
-//! | Grade | Name | Example (3D) |
-//! |-------|------|--------------|
-//! | 0 | Scalar | `1` |
-//! | 1 | Vector | `e₁`, `e₂`, `e₃` |
-//! | 2 | Bivector | `e₁₂`, `e₂₃`, `e₁₃` |
-//! | 3 | Trivector | `e₁₂₃` |
+//! - **Dot product** (contraction): Measures alignment, reduces grade
+//! - **Wedge product** (extension): Measures perpendicularity, increases grade
 //!
-//! # Blade Products
+//! For two vectors `a` and `b`:
+//! ```text
+//! ab = a·b + a∧b
+//!    = |a||b|cos(θ) + |a||b|sin(θ)·B
+//! ```
+//! where `B` is the unit bivector of the plane containing `a` and `b`.
 //!
-//! The [`basis_product`] function computes the geometric product of two basis blades,
-//! returning both the result index and the sign. The sign accounts for:
+//! # Key Insight: Why This Matters
 //!
-//! 1. **Swaps**: Reordering basis vectors to canonical order introduces `-1` for each swap
-//! 2. **Metric**: Contracting matching vectors applies the metric coefficient
+//! The geometric product encodes both "how parallel" (dot) and "how perpendicular"
+//! (wedge) two vectors are in a single algebraic operation. This is why geometric
+//! algebra is so powerful for geometry—rotations, reflections, and projections
+//! all emerge naturally from this single product.
+//!
+//! # Representation
+//!
+//! We represent basis blades using a bitmask index. For a blade index `k`,
+//! bit `i` is set if and only if basis vector `eᵢ` is present in the blade.
+//!
+//! ```text
+//! Index  Binary  Blade   Grade   Meaning
+//! ─────  ──────  ──────  ─────   ────────────────
+//!   0    000     1       0       Scalar
+//!   1    001     e₁      1       x-direction
+//!   2    010     e₂      1       y-direction
+//!   3    011     e₁₂     2       xy-plane
+//!   4    100     e₃      1       z-direction
+//!   5    101     e₁₃     2       xz-plane
+//!   6    110     e₂₃     2       yz-plane
+//!   7    111     e₁₂₃    3       Pseudoscalar (volume)
+//! ```
 //!
 //! # Example
 //!
 //! ```
-//! use clifford::basis::{grade_of_blade, basis_product, blades_of_grade};
+//! use clifford::basis::Blade;
 //!
-//! // Grade is population count
-//! assert_eq!(grade_of_blade(0b111), 3); // e₁₂₃ has grade 3
+//! // Create basis vectors
+//! let e1 = Blade::basis_vector(0);
+//! let e2 = Blade::basis_vector(1);
 //!
-//! // Blade count by grade in 3D
-//! assert_eq!(blades_of_grade(3, 2), 3); // 3 bivectors
+//! // Euclidean metric: all basis vectors square to +1
+//! let euclidean = |_: usize| 1i8;
 //!
-//! // Geometric product with Euclidean metric
-//! let euclidean = |_| 1i8;
-//! let (sign, result) = basis_product(0b001, 0b010, euclidean);
-//! assert_eq!(sign, 1);   // e₁ * e₂ = +e₁₂
-//! assert_eq!(result, 0b011);
+//! // Vector squared gives a scalar: e₁² = 1
+//! let (sign, result) = e1.product(&e1, euclidean);
+//! assert_eq!(sign, 1);
+//! assert_eq!(result, Blade::scalar());
+//!
+//! // Different vectors give a bivector: e₁e₂ = e₁₂
+//! let (sign, result) = e1.product(&e2, euclidean);
+//! assert_eq!(sign, 1);
+//! assert_eq!(result.grade(), 2);
+//!
+//! // Order matters! e₂e₁ = -e₁₂
+//! let (sign, result) = e2.product(&e1, euclidean);
+//! assert_eq!(sign, -1);
+//! println!("e₂e₁ = -{}", result); // prints: e₂e₁ = -e₁₂
 //! ```
 
 mod blade;
 mod index;
 
-pub use blade::{anticommutes, basis_product};
+pub use blade::{anticommutes, basis_product, Blade};
 pub use index::{binomial, blades_of_grade, grade_of_blade, grade_start_index};
