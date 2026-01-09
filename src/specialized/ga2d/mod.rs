@@ -35,4 +35,7 @@
 mod ops;
 mod types;
 
+#[cfg(any(test, feature = "proptest-support"))]
+pub mod arbitrary;
+
 pub use types::*;

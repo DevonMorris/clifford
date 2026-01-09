@@ -175,71 +175,9 @@ impl<T: Float> Mul<Vec2<T>> for Rotor2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::arbitrary::Arbitrary;
+    use crate::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
     use proptest::prelude::*;
-    use proptest::strategy::BoxedStrategy;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
-
-    // ========================================================================
-    // Arbitrary implementations
-    // ========================================================================
-
-    impl Arbitrary for Vec2<f64> {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (-100.0..100.0, -100.0..100.0)
-                .prop_map(|(x, y)| Vec2::new(x, y))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for non-zero Vec2.
-    #[derive(Debug, Clone, Copy)]
-    struct NonZeroVec2(Vec2<f64>);
-
-    impl Arbitrary for NonZeroVec2 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<Vec2<f64>>()
-                .prop_filter("non-zero vector", |v| v.norm_squared() > 1e-10)
-                .prop_map(NonZeroVec2)
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit Vec2.
-    #[derive(Debug, Clone, Copy)]
-    struct UnitVec2(Vec2<f64>);
-
-    impl Arbitrary for UnitVec2 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            any::<NonZeroVec2>()
-                .prop_map(|v| UnitVec2(v.0.normalized()))
-                .boxed()
-        }
-    }
-
-    /// Wrapper type for unit Rotor2.
-    #[derive(Debug, Clone, Copy)]
-    struct UnitRotor2(Rotor2<f64>);
-
-    impl Arbitrary for UnitRotor2 {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (0.0..2.0 * PI)
-                .prop_map(|angle| UnitRotor2(Rotor2::from_angle(angle)))
-                .boxed()
-        }
-    }
 
     // ========================================================================
     // Vec2 tests
