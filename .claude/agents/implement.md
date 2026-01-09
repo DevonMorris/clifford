@@ -37,6 +37,24 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
 
+## Adding New Types
+
+When implementing new types, also add proptest support:
+
+1. **Implement `Arbitrary` trait** in the module's `arbitrary.rs` file
+2. **Add wrapper types** for constrained variants (NonZero*, Unit*, etc.)
+3. **Feature gate** with `#[cfg(any(test, feature = "proptest-support"))]`
+4. **Make wrapper types public** so external consumers can use them
+
+Example for a new type `Motor3`:
+```rust
+// In specialized/ga3d/arbitrary.rs
+impl Arbitrary for Motor3<f64> { ... }
+
+pub struct UnitMotor3(pub Motor3<f64>);
+impl Arbitrary for UnitMotor3 { ... }
+```
+
 ## Workflow
 
 1. **Always branch from latest `origin/main`**:
@@ -46,19 +64,20 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
    ```
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
-4. **Run verification before committing**:
+4. Add `Arbitrary` implementations for new types
+5. **Run verification before committing**:
    ```bash
    cargo fmt             # Format code (CI checks this!)
    cargo clippy          # Lint check
    cargo test            # Run all tests
    ```
-5. **Make small, logical commits**:
+6. **Make small, logical commits**:
    - Separate documentation updates from implementation
    - Separate different modules (e.g., ga2d and ga3d in different commits)
    - Separate refactoring from new features
    - Each commit should be independently reviewable and pass CI
-6. **Confirm before creating PR** - always ask for user confirmation before running `gh pr create`
-7. Create a PR to main (never push directly)
+7. **Confirm before creating PR** - always ask for user confirmation before running `gh pr create`
+8. Create a PR to main (never push directly)
 
 ## Benchmarking
 

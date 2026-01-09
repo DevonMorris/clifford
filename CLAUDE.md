@@ -119,6 +119,24 @@ done
   // Avoid: free functions
   fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> { ... }
   ```
+- **Arbitrary modules**: Each module with types has an `arbitrary` submodule containing:
+  - `Arbitrary` implementations for the main types (e.g., `Vec3<f64>`, `Bivec3<f64>`)
+  - Wrapper types for constrained values (e.g., `NonZeroVec3`, `UnitVec3`, `UnitRotor3`)
+  - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
+  ```rust
+  // Import wrapper types from the arbitrary module
+  use crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3};
+
+  // Use any::<Type>() for types with Arbitrary impl
+  proptest! {
+      #[test]
+      fn rotor_preserves_norm(r in any::<UnitRotor3>(), v in any::<Vec3<f64>>()) {
+          let rotated = r.0.rotate(v);
+          prop_assert!((v.norm() - rotated.norm()).abs() < 1e-9);
+      }
+  }
+  ```
+- **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR

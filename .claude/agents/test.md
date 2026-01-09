@@ -100,6 +100,33 @@ proptest! {
 - Chain with `.prop_filter()` and `.prop_map()` for derived strategies
 - Use `any::<Type>()` in tests, not free functions
 
+## Arbitrary Module Structure
+
+Each module has an `arbitrary` submodule with Arbitrary implementations and wrapper types:
+
+```
+src/specialized/ga3d/
+├── mod.rs
+├── types.rs
+├── ops.rs
+└── arbitrary.rs  # Contains Arbitrary impls and wrapper types
+```
+
+### Key Points
+
+1. **Feature gating**: Arbitrary modules use `#[cfg(any(test, feature = "proptest-support"))]`
+2. **Import path**: Use `crate::specialized::ga3d::arbitrary::{NonZeroVec3, UnitVec3, UnitRotor3}`
+3. **Wrapper types are public**: All wrapper types (NonZeroVec3, UnitVec3, etc.) have `pub` visibility
+4. **New types need Arbitrary**: When adding new types, add `impl Arbitrary` in the module's `arbitrary.rs`
+
+### Available Wrapper Types
+
+| Module | Types |
+|--------|-------|
+| `ga2d::arbitrary` | `NonZeroVec2`, `UnitVec2`, `UnitRotor2` |
+| `ga3d::arbitrary` | `NonZeroVec3`, `UnitVec3`, `UnitBivec3`, `UnitRotor3` |
+| `algebra::arbitrary` | `VectorE3`, `NonZeroVectorE3`, `UnitVectorE3` |
+
 ## Documentation
 
 All test functions need doc comments explaining:
