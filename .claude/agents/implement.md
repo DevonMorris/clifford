@@ -57,7 +57,8 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
    - Separate different modules (e.g., ga2d and ga3d in different commits)
    - Separate refactoring from new features
    - Each commit should be independently reviewable and pass CI
-6. Create a PR to main (never push directly)
+6. **Confirm before creating PR** - always ask for user confirmation before running `gh pr create`
+7. Create a PR to main (never push directly)
 
 ## Benchmarking
 

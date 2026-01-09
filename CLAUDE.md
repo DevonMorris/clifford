@@ -30,6 +30,7 @@ A Rust library for Geometric Algebra (Clifford Algebra).
   - Each commit should be independently reviewable
 - Each commit should be buildable and pass tests
 - Use conventional commit format: `type(scope): description`
+- **Confirm before creating PRs** - always ask for user confirmation before running `gh pr create`. This minimizes churn on GitHub and ensures the user has reviewed the changes.
 - **Review before merging** - after creating a PR:
   ```bash
   gh pr create --title "..." --body "..."
