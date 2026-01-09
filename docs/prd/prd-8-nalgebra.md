@@ -100,23 +100,28 @@ impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for dim3::Rotor<T>;
 
 ```rust
 impl<T: Float + na::Scalar> From<dim3::Bivector<T>> for na::Matrix3<T> {
-    /// Convert bivector to antisymmetric matrix.
+    /// Convert bivector to antisymmetric matrix (cross-product matrix of dual vector).
     ///
-    /// The bivector (xy, xz, yz) maps to:
+    /// The bivector `B = xy·e₁₂ + xz·e₁₃ + yz·e₂₃` has dual vector
+    /// `ω = dual(B) = (yz, -xz, xy)` (matching `Bivector::dual()`).
+    ///
+    /// The resulting matrix is the cross-product matrix `[ω]×`:
     /// ```text
     /// [  0  -xy -xz ]
     /// [ xy   0  -yz ]
     /// [ xz  yz   0  ]
     /// ```
-    fn from(b: Bivector<T>) -> Self;
+    ///
+    /// This satisfies `[ω]× · v = ω × v` for any vector `v`.
+    fn from(b: dim3::Bivector<T>) -> Self;
 }
 
 impl<T: Float + na::Scalar> TryFrom<na::Matrix3<T>> for dim3::Bivector<T> {
-    type Error = ConversionError;
+    type Error = NalgebraConversionError;
 
     /// Extract bivector from antisymmetric matrix.
     /// Fails if matrix is not antisymmetric within tolerance.
-    fn try_from(m: Matrix3<T>) -> Result<Self, Self::Error>;
+    fn try_from(m: na::Matrix3<T>) -> Result<Self, Self::Error>;
 }
 ```
 
@@ -224,18 +229,23 @@ Example:
 /// # Mathematical Correspondence
 ///
 /// A rotor `R = s + xy·e₁₂ + xz·e₁₃ + yz·e₂₃` maps to quaternion
-/// `q = s + xz·i + yz·j + xy·k`.
+/// `q = s + yz·i - xz·j + xy·k`.
 ///
-/// Note the component reordering: GA bivector components use lexicographic
-/// basis ordering (e₁₂, e₁₃, e₂₃), while quaternions use (i, j, k) which
-/// corresponds to (e₂₃, e₃₁, e₁₂) in GA.
+/// This follows from the correspondence between bivector basis elements
+/// and quaternion imaginaries via the Hodge dual:
+/// - `e₂₃` ↔ `i` (rotation in yz-plane, around x-axis)
+/// - `e₁₃` ↔ `-j` (rotation in xz-plane, around y-axis, note sign)
+/// - `e₁₂` ↔ `k` (rotation in xy-plane, around z-axis)
+///
+/// In nalgebra's `Quaternion::new(w, i, j, k)` convention:
+/// `(w, i, j, k) = (s, yz, -xz, xy)`
 ///
 /// # Normalization
 ///
 /// This conversion preserves the rotor's normalization. A unit rotor
 /// produces a unit quaternion.
-impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
-    fn from(r: Rotor<T>) -> Self { ... }
+impl<T: Float + na::RealField> From<dim3::Rotor<T>> for na::UnitQuaternion<T> {
+    fn from(r: dim3::Rotor<T>) -> Self { ... }
 }
 ```
 
