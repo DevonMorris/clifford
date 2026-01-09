@@ -137,6 +137,26 @@ impl<T: Float, S: Signature> Multivector<T, S> {
 - `src/algebra/unary.rs`
 - `src/algebra/norms.rs`
 
+## Proptest Strategies
+
+Define these helper strategies in a test utilities module:
+
+```rust
+use proptest::prelude::*;
+
+/// Generate arbitrary multivector with bounded coefficients
+fn arb_multivector<T: Float + Arbitrary, S: Signature>() -> impl Strategy<Value = Multivector<T, S>> {
+    prop::array::uniform::<_, S::NUM_BLADES>(any::<T>())
+        .prop_map(|coeffs| Multivector::from_coeffs(&coeffs))
+}
+
+/// Generate multivector likely to be invertible (non-zero scalar part)
+fn arb_invertible<T: Float + Arbitrary, S: Signature>() -> impl Strategy<Value = Multivector<T, S>> {
+    arb_multivector::<T, S>()
+        .prop_filter("must be invertible", |m| m.norm_squared().abs() > T::EPSILON)
+}
+```
+
 ## Testing (proptest)
 
 ```rust

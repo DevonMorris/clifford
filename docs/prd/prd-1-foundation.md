@@ -25,6 +25,7 @@ pub trait Float:
     fn cos(self) -> Self;
     fn atan2(y: Self, x: Self) -> Self;
     fn approx_eq(self, other: Self, epsilon: Self) -> bool;
+    fn from_i8(value: i8) -> Self;
 }
 ```
 
