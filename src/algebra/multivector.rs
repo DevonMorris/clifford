@@ -65,7 +65,7 @@
 
 use core::fmt;
 use core::marker::PhantomData;
-use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, BitXor, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use generic_array::{GenericArray, sequence::GenericSequence};
 use typenum::Unsigned;
@@ -1219,6 +1219,64 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 
     fn div(self, scalar: T) -> Self::Output {
         &self / scalar
+    }
+}
+
+// ============================================================================
+// Wedge Product (BitXor)
+// ============================================================================
+
+/// Wedge (outer) product via `^` operator.
+///
+/// The `^` operator provides ergonomic syntax for the wedge product:
+/// `a ^ b` is equivalent to `a.outer(&b)`.
+///
+/// # Example
+///
+/// ```
+/// use clifford::algebra::Multivector;
+/// use clifford::signature::Euclidean3;
+///
+/// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+/// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+///
+/// // e₁ ^ e₂ = e₁₂ (bivector)
+/// let e12 = &e1 ^ &e2;
+/// assert_eq!(e12.grade(1e-10), Some(2));
+///
+/// // Anticommutativity: e₂ ^ e₁ = -e₁₂
+/// let e21 = &e2 ^ &e1;
+/// assert!(e21.approx_eq(&(-&e12), 1e-10));
+/// ```
+impl<T: Float, S: Signature> BitXor for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        self.outer(rhs)
+    }
+}
+
+impl<T: Float, S: Signature> BitXor for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        self.outer(&rhs)
+    }
+}
+
+impl<T: Float, S: Signature> BitXor<&Multivector<T, S>> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn bitxor(self, rhs: &Multivector<T, S>) -> Self::Output {
+        self.outer(rhs)
+    }
+}
+
+impl<T: Float, S: Signature> BitXor<Multivector<T, S>> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn bitxor(self, rhs: Multivector<T, S>) -> Self::Output {
+        self.outer(&rhs)
     }
 }
 
