@@ -32,6 +32,7 @@
 
 use super::{Bivec3, Rotor3, Vec3};
 use core::f64::consts::PI;
+use core::ops::Deref;
 use proptest::arbitrary::Arbitrary;
 use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
@@ -57,6 +58,37 @@ pub struct NonZeroVec3(
     pub Vec3<f64>,
 );
 
+impl NonZeroVec3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Vec3<f64> {
+        self.0
+    }
+}
+
+impl Deref for NonZeroVec3 {
+    type Target = Vec3<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Vec3<f64>> for NonZeroVec3 {
+    #[inline]
+    fn as_ref(&self) -> &Vec3<f64> {
+        &self.0
+    }
+}
+
+impl From<NonZeroVec3> for Vec3<f64> {
+    #[inline]
+    fn from(v: NonZeroVec3) -> Self {
+        v.0
+    }
+}
+
 impl Arbitrary for NonZeroVec3 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -78,6 +110,37 @@ pub struct UnitVec3(
     /// The wrapped unit vector.
     pub Vec3<f64>,
 );
+
+impl UnitVec3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Vec3<f64> {
+        self.0
+    }
+}
+
+impl Deref for UnitVec3 {
+    type Target = Vec3<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Vec3<f64>> for UnitVec3 {
+    #[inline]
+    fn as_ref(&self) -> &Vec3<f64> {
+        &self.0
+    }
+}
+
+impl From<UnitVec3> for Vec3<f64> {
+    #[inline]
+    fn from(v: UnitVec3) -> Self {
+        v.0
+    }
+}
 
 impl Arbitrary for UnitVec3 {
     type Parameters = ();
@@ -111,6 +174,37 @@ pub struct UnitBivec3(
     pub Bivec3<f64>,
 );
 
+impl UnitBivec3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Bivec3<f64> {
+        self.0
+    }
+}
+
+impl Deref for UnitBivec3 {
+    type Target = Bivec3<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Bivec3<f64>> for UnitBivec3 {
+    #[inline]
+    fn as_ref(&self) -> &Bivec3<f64> {
+        &self.0
+    }
+}
+
+impl From<UnitBivec3> for Bivec3<f64> {
+    #[inline]
+    fn from(b: UnitBivec3) -> Self {
+        b.0
+    }
+}
+
 impl Arbitrary for UnitBivec3 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -132,6 +226,37 @@ pub struct UnitRotor3(
     /// The wrapped unit rotor.
     pub Rotor3<f64>,
 );
+
+impl UnitRotor3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Rotor3<f64> {
+        self.0
+    }
+}
+
+impl Deref for UnitRotor3 {
+    type Target = Rotor3<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Rotor3<f64>> for UnitRotor3 {
+    #[inline]
+    fn as_ref(&self) -> &Rotor3<f64> {
+        &self.0
+    }
+}
+
+impl From<UnitRotor3> for Rotor3<f64> {
+    #[inline]
+    fn from(r: UnitRotor3) -> Self {
+        r.0
+    }
+}
 
 impl Arbitrary for UnitRotor3 {
     type Parameters = ();

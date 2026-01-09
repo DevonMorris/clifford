@@ -137,6 +137,19 @@ done
   }
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
+- **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
+- **Use `approx` crate for comparisons**: Never hand-roll floating-point comparisons. Use `abs_diff_eq!`, `relative_eq!`, or `ulps_eq!` macros from the `approx` crate:
+  ```rust
+  use approx::abs_diff_eq;
+
+  // Good: use approx macros
+  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = 1e-10));
+
+  // Avoid: hand-rolled comparisons
+  assert!((a.norm() - 1.0).abs() < 1e-10);
+  ```
+- All types implement `AbsDiffEq`, `RelativeEq`, and `UlpsEq` traits for f32 and f64 variants
+- The `approx` traits are re-exported from `clifford::prelude`
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR
@@ -183,12 +196,12 @@ Use the review agent to check this PR before merging
 ## Development Commands
 
 ```bash
-cargo build           # Build the library
-cargo test            # Run all tests
-cargo doc --open      # Generate and view documentation
-cargo bench           # Run benchmarks
-cargo clippy          # Run linter
-cargo fmt             # Format code
+cargo build --all-features    # Build the library with all features
+cargo test --all-features     # Run all tests
+cargo doc --open              # Generate and view documentation
+cargo bench                   # Run benchmarks
+cargo clippy --all-features   # Run linter
+cargo fmt                     # Format code
 ```
 
 ## Verification Workflow
@@ -196,12 +209,14 @@ cargo fmt             # Format code
 **Before every commit**, run these commands to ensure CI will pass:
 
 ```bash
-cargo fmt             # Format code (CI checks this!)
-cargo clippy          # Lint check
-cargo test            # Run all tests including doc tests
+cargo fmt                         # Format code (CI checks this!)
+cargo clippy --all-features       # Lint check
+cargo test --all-features         # Run all tests including doc tests
 ```
 
 CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
+
+**Important**: Always use `--all-features` to ensure all code paths are tested, including feature-gated modules like `proptest-support`.
 
 ## Architecture Notes
 

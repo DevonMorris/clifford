@@ -30,6 +30,7 @@
 
 use super::{Rotor2, Vec2};
 use core::f64::consts::PI;
+use core::ops::Deref;
 use proptest::arbitrary::Arbitrary;
 use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
@@ -55,6 +56,37 @@ pub struct NonZeroVec2(
     pub Vec2<f64>,
 );
 
+impl NonZeroVec2 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Vec2<f64> {
+        self.0
+    }
+}
+
+impl Deref for NonZeroVec2 {
+    type Target = Vec2<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Vec2<f64>> for NonZeroVec2 {
+    #[inline]
+    fn as_ref(&self) -> &Vec2<f64> {
+        &self.0
+    }
+}
+
+impl From<NonZeroVec2> for Vec2<f64> {
+    #[inline]
+    fn from(v: NonZeroVec2) -> Self {
+        v.0
+    }
+}
+
 impl Arbitrary for NonZeroVec2 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -77,6 +109,37 @@ pub struct UnitVec2(
     pub Vec2<f64>,
 );
 
+impl UnitVec2 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Vec2<f64> {
+        self.0
+    }
+}
+
+impl Deref for UnitVec2 {
+    type Target = Vec2<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Vec2<f64>> for UnitVec2 {
+    #[inline]
+    fn as_ref(&self) -> &Vec2<f64> {
+        &self.0
+    }
+}
+
+impl From<UnitVec2> for Vec2<f64> {
+    #[inline]
+    fn from(v: UnitVec2) -> Self {
+        v.0
+    }
+}
+
 impl Arbitrary for UnitVec2 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -97,6 +160,37 @@ pub struct UnitRotor2(
     /// The wrapped unit rotor.
     pub Rotor2<f64>,
 );
+
+impl UnitRotor2 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Rotor2<f64> {
+        self.0
+    }
+}
+
+impl Deref for UnitRotor2 {
+    type Target = Rotor2<f64>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Rotor2<f64>> for UnitRotor2 {
+    #[inline]
+    fn as_ref(&self) -> &Rotor2<f64> {
+        &self.0
+    }
+}
+
+impl From<UnitRotor2> for Rotor2<f64> {
+    #[inline]
+    fn from(r: UnitRotor2) -> Self {
+        r.0
+    }
+}
 
 impl Arbitrary for UnitRotor2 {
     type Parameters = ();

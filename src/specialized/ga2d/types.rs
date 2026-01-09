@@ -1,5 +1,7 @@
 //! Type definitions for 2D geometric algebra.
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
+
 use crate::scalar::Float;
 
 /// 2D vector (grade 1): `e₁`, `e₂`.
@@ -313,5 +315,245 @@ impl<T: Float> Rotor2<T> {
 impl<T: Float> Default for Rotor2<T> {
     fn default() -> Self {
         Self::identity()
+    }
+}
+
+// ============================================================================
+// approx trait implementations for f32
+// ============================================================================
+
+impl AbsDiffEq for Vec2<f32> {
+    type Epsilon = f32;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f32::abs_diff_eq(&self.x, &other.x, epsilon) && f32::abs_diff_eq(&self.y, &other.y, epsilon)
+    }
+}
+
+impl RelativeEq for Vec2<f32> {
+    fn default_max_relative() -> Self::Epsilon {
+        f32::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f32::relative_eq(&self.x, &other.x, epsilon, max_relative)
+            && f32::relative_eq(&self.y, &other.y, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Vec2<f32> {
+    fn default_max_ulps() -> u32 {
+        f32::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f32::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
+            && f32::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
+    }
+}
+
+impl AbsDiffEq for Bivec2<f32> {
+    type Epsilon = f32;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f32::abs_diff_eq(&self.0, &other.0, epsilon)
+    }
+}
+
+impl RelativeEq for Bivec2<f32> {
+    fn default_max_relative() -> Self::Epsilon {
+        f32::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f32::relative_eq(&self.0, &other.0, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Bivec2<f32> {
+    fn default_max_ulps() -> u32 {
+        f32::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f32::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
+    }
+}
+
+impl AbsDiffEq for Rotor2<f32> {
+    type Epsilon = f32;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f32::abs_diff_eq(&self.s, &other.s, epsilon)
+            && f32::abs_diff_eq(&self.xy, &other.xy, epsilon)
+    }
+}
+
+impl RelativeEq for Rotor2<f32> {
+    fn default_max_relative() -> Self::Epsilon {
+        f32::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f32::relative_eq(&self.s, &other.s, epsilon, max_relative)
+            && f32::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Rotor2<f32> {
+    fn default_max_ulps() -> u32 {
+        f32::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f32::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
+            && f32::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
+    }
+}
+
+// ============================================================================
+// approx trait implementations for f64
+// ============================================================================
+
+impl AbsDiffEq for Vec2<f64> {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f64::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f64::abs_diff_eq(&self.x, &other.x, epsilon) && f64::abs_diff_eq(&self.y, &other.y, epsilon)
+    }
+}
+
+impl RelativeEq for Vec2<f64> {
+    fn default_max_relative() -> Self::Epsilon {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f64::relative_eq(&self.x, &other.x, epsilon, max_relative)
+            && f64::relative_eq(&self.y, &other.y, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Vec2<f64> {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f64::ulps_eq(&self.x, &other.x, epsilon, max_ulps)
+            && f64::ulps_eq(&self.y, &other.y, epsilon, max_ulps)
+    }
+}
+
+impl AbsDiffEq for Bivec2<f64> {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f64::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f64::abs_diff_eq(&self.0, &other.0, epsilon)
+    }
+}
+
+impl RelativeEq for Bivec2<f64> {
+    fn default_max_relative() -> Self::Epsilon {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f64::relative_eq(&self.0, &other.0, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Bivec2<f64> {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f64::ulps_eq(&self.0, &other.0, epsilon, max_ulps)
+    }
+}
+
+impl AbsDiffEq for Rotor2<f64> {
+    type Epsilon = f64;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f64::EPSILON
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        f64::abs_diff_eq(&self.s, &other.s, epsilon)
+            && f64::abs_diff_eq(&self.xy, &other.xy, epsilon)
+    }
+}
+
+impl RelativeEq for Rotor2<f64> {
+    fn default_max_relative() -> Self::Epsilon {
+        f64::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        f64::relative_eq(&self.s, &other.s, epsilon, max_relative)
+            && f64::relative_eq(&self.xy, &other.xy, epsilon, max_relative)
+    }
+}
+
+impl UlpsEq for Rotor2<f64> {
+    fn default_max_ulps() -> u32 {
+        f64::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        f64::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
+            && f64::ulps_eq(&self.xy, &other.xy, epsilon, max_ulps)
     }
 }

@@ -37,6 +37,7 @@
 
 use super::Multivector;
 use crate::signature::Euclidean3;
+use core::ops::Deref;
 use proptest::arbitrary::Arbitrary;
 use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
@@ -61,6 +62,37 @@ pub struct VectorE3(
     pub Multivector<f64, Euclidean3>,
 );
 
+impl VectorE3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Multivector<f64, Euclidean3> {
+        self.0
+    }
+}
+
+impl Deref for VectorE3 {
+    type Target = Multivector<f64, Euclidean3>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Multivector<f64, Euclidean3>> for VectorE3 {
+    #[inline]
+    fn as_ref(&self) -> &Multivector<f64, Euclidean3> {
+        &self.0
+    }
+}
+
+impl From<VectorE3> for Multivector<f64, Euclidean3> {
+    #[inline]
+    fn from(v: VectorE3) -> Self {
+        v.0
+    }
+}
+
 impl Arbitrary for VectorE3 {
     type Parameters = ();
     type Strategy = BoxedStrategy<Self>;
@@ -81,6 +113,37 @@ pub struct NonZeroVectorE3(
     /// The wrapped non-zero vector multivector.
     pub Multivector<f64, Euclidean3>,
 );
+
+impl NonZeroVectorE3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Multivector<f64, Euclidean3> {
+        self.0
+    }
+}
+
+impl Deref for NonZeroVectorE3 {
+    type Target = Multivector<f64, Euclidean3>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Multivector<f64, Euclidean3>> for NonZeroVectorE3 {
+    #[inline]
+    fn as_ref(&self) -> &Multivector<f64, Euclidean3> {
+        &self.0
+    }
+}
+
+impl From<NonZeroVectorE3> for Multivector<f64, Euclidean3> {
+    #[inline]
+    fn from(v: NonZeroVectorE3) -> Self {
+        v.0
+    }
+}
 
 impl Arbitrary for NonZeroVectorE3 {
     type Parameters = ();
@@ -105,6 +168,37 @@ pub struct UnitVectorE3(
     /// The wrapped unit vector multivector.
     pub Multivector<f64, Euclidean3>,
 );
+
+impl UnitVectorE3 {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Multivector<f64, Euclidean3> {
+        self.0
+    }
+}
+
+impl Deref for UnitVectorE3 {
+    type Target = Multivector<f64, Euclidean3>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl AsRef<Multivector<f64, Euclidean3>> for UnitVectorE3 {
+    #[inline]
+    fn as_ref(&self) -> &Multivector<f64, Euclidean3> {
+        &self.0
+    }
+}
+
+impl From<UnitVectorE3> for Multivector<f64, Euclidean3> {
+    #[inline]
+    fn from(v: UnitVectorE3) -> Self {
+        v.0
+    }
+}
 
 impl Arbitrary for UnitVectorE3 {
     type Parameters = ();

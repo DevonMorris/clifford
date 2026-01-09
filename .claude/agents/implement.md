@@ -67,9 +67,9 @@ impl Arbitrary for UnitMotor3 { ... }
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
-   cargo fmt             # Format code (CI checks this!)
-   cargo clippy          # Lint check
-   cargo test            # Run all tests
+   cargo fmt                         # Format code (CI checks this!)
+   cargo clippy --all-features       # Lint check
+   cargo test --all-features         # Run all tests
    ```
 6. **Make small, logical commits**:
    - Separate documentation updates from implementation

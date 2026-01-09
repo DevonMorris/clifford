@@ -127,6 +127,35 @@ src/specialized/ga3d/
 | `ga3d::arbitrary` | `NonZeroVec3`, `UnitVec3`, `UnitBivec3`, `UnitRotor3` |
 | `algebra::arbitrary` | `VectorE3`, `NonZeroVectorE3`, `UnitVectorE3` |
 
+## Approximate Comparisons
+
+**Always use the `approx` crate** for floating-point comparisons. Never hand-roll comparisons.
+
+```rust
+use approx::abs_diff_eq;
+
+// Good: use approx macros
+prop_assert!(abs_diff_eq!(rotated.norm(), v.norm(), epsilon = 1e-9));
+
+// Avoid: hand-rolled comparisons
+prop_assert!((rotated.norm() - v.norm()).abs() < 1e-9);
+```
+
+Available comparison methods:
+- `abs_diff_eq!` - absolute difference comparison
+- `relative_eq!` - relative difference comparison
+- `ulps_eq!` - units in last place comparison
+
+All types (`Vec3`, `Bivec3`, `Rotor3`, etc.) implement `AbsDiffEq`, `RelativeEq`, and `UlpsEq` for both f32 and f64.
+
+## Wrapper Type Ergonomics
+
+Wrapper types (`UnitVec3`, `NonZeroVec3`, etc.) implement:
+- `Deref` - auto-dereference to inner type: `wrapper.method()` works directly
+- `AsRef` - borrow as inner type: `wrapper.as_ref()`
+- `From` - convert to inner type: `Vec3::from(wrapper)` or `wrapper.into()`
+- `into_inner()` - consume and return inner: `wrapper.into_inner()`
+
 ## Documentation
 
 All test functions need doc comments explaining:
