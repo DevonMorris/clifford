@@ -4,9 +4,9 @@
 
 #![allow(missing_docs)]
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use clifford::algebra::Multivector;
 use clifford::signature::Euclidean3;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_vector_dot(c: &mut Criterion) {
     let a: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
