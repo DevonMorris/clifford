@@ -67,6 +67,18 @@ cargo clippy          # Run linter
 cargo fmt             # Format code
 ```
 
+## Verification Workflow
+
+**Before every commit**, run these commands to ensure CI will pass:
+
+```bash
+cargo fmt             # Format code (CI checks this!)
+cargo clippy          # Lint check
+cargo test            # Run all tests including doc tests
+```
+
+CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
+
 ## Architecture Notes
 
 (To be expanded as the library develops)
