@@ -48,6 +48,10 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR
 
+### 8. Code Review
+- PRs are reviewed by Greptile (AI-powered review)
+- Address or acknowledge Greptile feedback before merging
+
 ## Development Commands
 
 ```bash
