@@ -212,9 +212,84 @@ proptest! {
 }
 ```
 
+## nalgebra Interoperability
+
+When the `nalgebra-0_33` or `nalgebra-0_34` feature is enabled, PGA types should provide
+conversions to/from nalgebra equivalents:
+
+### Point Conversions
+
+```rust
+// PGA Point <-> nalgebra Point3 (homogeneous <-> Cartesian)
+impl<T: Float + na::Scalar> From<na::Point3<T>> for Point<T> {
+    fn from(p: na::Point3<T>) -> Self {
+        Point { x: p.x, y: p.y, z: p.z, w: T::ONE }
+    }
+}
+
+impl<T: Float + na::Scalar> TryFrom<Point<T>> for na::Point3<T> {
+    type Error = NalgebraConversionError;
+
+    fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
+        if p.w.abs() < T::EPSILON {
+            return Err(NalgebraConversionError::PointAtInfinity);
+        }
+        Ok(na::Point3::new(p.x / p.w, p.y / p.w, p.z / p.w))
+    }
+}
+```
+
+### Plane Conversions
+
+```rust
+// Plane normal + distance representation
+impl<T: Float + na::Scalar> From<Plane<T>> for (na::Unit<na::Vector3<T>>, T) {
+    fn from(p: Plane<T>) -> Self {
+        let normal = na::Unit::new_normalize(na::Vector3::new(p.a, p.b, p.c));
+        let n = (p.a * p.a + p.b * p.b + p.c * p.c).sqrt();
+        (normal, p.d / n)
+    }
+}
+```
+
+### Motor <-> Isometry3
+
+```rust
+// Motor represents rigid transform, equivalent to nalgebra's Isometry3
+impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
+    fn from(m: Motor<T>) -> Self {
+        let rotation: na::UnitQuaternion<T> = m.rotation_part().into();
+        let translation = m.translation_part();
+        na::Isometry3::from_parts(
+            na::Translation3::new(translation[0], translation[1], translation[2]),
+            rotation,
+        )
+    }
+}
+
+impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
+    fn from(iso: na::Isometry3<T>) -> Self {
+        let rotor = Rotor::from(iso.rotation);
+        let t = iso.translation.vector;
+        Motor::from_rotation_translation(rotor, [t.x, t.y, t.z])
+    }
+}
+```
+
+### Error Type Extension
+
+```rust
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NalgebraConversionError {
+    PointAtInfinity,  // PGA point has w ≈ 0
+    InvalidLine,      // Line is ideal (at infinity)
+}
+```
+
 ## Verification
 
 - [ ] `cargo check` passes
 - [ ] `cargo test` - all proptest properties pass
 - [ ] `cargo clippy` - no warnings
 - [ ] Comprehensive geometric documentation
+- [ ] nalgebra conversions tested with feature flags

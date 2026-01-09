@@ -22,6 +22,8 @@ uninlined_format_args = "allow"
 default = []
 serde = ["dep:serde", "generic-array/serde"]
 proptest-support = ["dep:proptest"]
+nalgebra-0_33 = ["dep:nalgebra-0-33"]
+nalgebra-0_34 = ["dep:nalgebra-0-34"]
 
 [dependencies]
 approx = "0.5"
@@ -29,6 +31,8 @@ generic-array = "1"
 typenum = "1"
 serde = { version = "1", features = ["derive"], optional = true }
 proptest = { version = "1", optional = true }
+nalgebra-0-33 = { package = "nalgebra", version = "0.33", optional = true }
+nalgebra-0-34 = { package = "nalgebra", version = "0.34", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
