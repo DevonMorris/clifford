@@ -1,0 +1,1190 @@
+//! The multivector: the fundamental element of geometric algebra.
+//!
+//! # What is a Multivector?
+//!
+//! A **multivector** is the most general element of a geometric algebra. While
+//! a blade represents a single oriented subspace (scalar, vector, bivector, etc.),
+//! a multivector is a **linear combination of blades** of potentially different grades.
+//!
+//! Think of it this way:
+//! - A **scalar** is a number: `5`
+//! - A **vector** is a direction with magnitude: `3e₁ + 4e₂`
+//! - A **bivector** is an oriented plane: `2e₁₂`
+//! - A **multivector** can mix all of these: `5 + 3e₁ + 4e₂ + 2e₁₂`
+//!
+//! # Why Multivectors?
+//!
+//! When we multiply geometric objects, we often get mixed-grade results.
+//! For example, the geometric product of two vectors gives:
+//!
+//! ```text
+//! ab = a·b + a∧b
+//!    = (scalar) + (bivector)
+//! ```
+//!
+//! The dot product `a·b` is a scalar (grade 0), and the wedge product `a∧b`
+//! is a bivector (grade 2). The result is a multivector with both grades.
+//!
+//! # The Geometric Product
+//!
+//! The geometric product is the fundamental operation in GA. For multivectors
+//! A and B, the product AB is computed by:
+//!
+//! 1. Distributing over all blade pairs
+//! 2. Using the basis blade multiplication rules
+//! 3. Collecting terms by grade
+//!
+//! Key properties:
+//! - **Associative**: (AB)C = A(BC)
+//! - **Distributive**: A(B + C) = AB + AC
+//! - **NOT commutative**: AB ≠ BA in general
+//!
+//! # Representation
+//!
+//! We store multivectors as a dense array of coefficients, one for each
+//! basis blade. In an n-dimensional space, there are 2ⁿ basis blades,
+//! so a 3D multivector has 8 coefficients:
+//!
+//! ```text
+//! M = c₀·1 + c₁·e₁ + c₂·e₂ + c₃·e₁₂ + c₄·e₃ + c₅·e₁₃ + c₆·e₂₃ + c₇·e₁₂₃
+//! ```
+//!
+//! # Example
+//!
+//! ```
+//! use clifford::algebra::Multivector;
+//! use clifford::signature::Euclidean3;
+//!
+//! // Create a vector: 3e₁ + 4e₂
+//! let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+//!
+//! // The geometric product of a vector with itself gives a scalar
+//! let v_squared = &v * &v;
+//! assert!((v_squared.scalar_part() - 25.0).abs() < 1e-10); // 3² + 4² = 25
+//! ```
+
+use core::fmt;
+use core::marker::PhantomData;
+use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+
+use crate::basis::Blade;
+use crate::scalar::Float;
+use crate::signature::Signature;
+
+/// Maximum number of basis blades supported.
+///
+/// This limits the algebra to at most 6 dimensions (2⁶ = 64 blades).
+/// This is sufficient for most practical applications including
+/// 3D Euclidean, PGA (4D), and CGA (5D).
+pub const MAX_BLADES: usize = 64;
+
+/// A multivector in a Clifford algebra with signature `S` and scalar type `T`.
+///
+/// A multivector is a linear combination of basis blades. It is the most
+/// general element of a geometric algebra, capable of representing scalars,
+/// vectors, bivectors, and arbitrary combinations thereof.
+///
+/// # Type Parameters
+///
+/// - `T`: The scalar type (e.g., `f32`, `f64`). Must implement [`Float`].
+/// - `S`: The metric signature (e.g., [`Euclidean3`](crate::signature::Euclidean3)).
+///   Defines how basis vectors square and thus the algebra's geometry.
+///
+/// # Storage
+///
+/// Coefficients are stored in a dense array indexed by blade index.
+/// The blade index is a bitmask where bit `i` indicates the presence of
+/// basis vector `eᵢ`. See [`Blade`] for details.
+///
+/// # Example
+///
+/// ```
+/// use clifford::algebra::Multivector;
+/// use clifford::signature::Euclidean2;
+///
+/// // Create basis vectors
+/// let e1: Multivector<f64, Euclidean2> = Multivector::basis_vector(0);
+/// let e2: Multivector<f64, Euclidean2> = Multivector::basis_vector(1);
+///
+/// // Geometric product: e₁e₂ = e₁₂ (a bivector)
+/// let e12 = &e1 * &e2;
+///
+/// // e₁₂ squares to -1 in Euclidean space!
+/// let e12_squared = &e12 * &e12;
+/// assert!((e12_squared.scalar_part() - (-1.0)).abs() < 1e-10);
+/// ```
+#[derive(Clone)]
+pub struct Multivector<T: Float, S: Signature> {
+    /// Coefficients for each basis blade, indexed by blade bitmask.
+    coeffs: [T; MAX_BLADES],
+    /// Marker for the signature type.
+    _signature: PhantomData<S>,
+}
+
+// ============================================================================
+// Constructors
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Creates the zero multivector (additive identity).
+    ///
+    /// All coefficients are zero. This is the identity element for addition:
+    /// `M + 0 = M` for any multivector M.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let zero: Multivector<f64, Euclidean3> = Multivector::zero();
+    /// assert!(zero.is_zero(1e-10));
+    /// ```
+    #[inline]
+    pub fn zero() -> Self {
+        Self {
+            coeffs: [T::ZERO; MAX_BLADES],
+            _signature: PhantomData,
+        }
+    }
+
+    /// Creates the unit scalar (multiplicative identity).
+    ///
+    /// This is the scalar `1`, which is the identity for the geometric product:
+    /// `M * 1 = 1 * M = M` for any multivector M.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let one: Multivector<f64, Euclidean3> = Multivector::one();
+    /// assert!((one.scalar_part() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn one() -> Self {
+        Self::scalar(T::ONE)
+    }
+
+    /// Creates a scalar multivector (grade 0 only).
+    ///
+    /// A scalar is a multivector with only the grade-0 component nonzero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let five: Multivector<f64, Euclidean3> = Multivector::scalar(5.0);
+    /// assert!((five.scalar_part() - 5.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn scalar(value: T) -> Self {
+        let mut mv = Self::zero();
+        mv.coeffs[0] = value;
+        mv
+    }
+
+    /// Creates a multivector with a single basis blade.
+    ///
+    /// The coefficient of the specified blade is set to 1, all others to 0.
+    ///
+    /// # Arguments
+    ///
+    /// * `blade` - The basis blade to create
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::basis::Blade;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// // Create the bivector e₁₂
+    /// let e12_blade = Blade::from_index(0b011);
+    /// let e12: Multivector<f64, Euclidean3> = Multivector::from_blade(e12_blade);
+    ///
+    /// assert!((e12.get(e12_blade) - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn from_blade(blade: Blade) -> Self {
+        let mut mv = Self::zero();
+        mv.coeffs[blade.index()] = T::ONE;
+        mv
+    }
+
+    /// Creates a basis vector multivector (grade 1).
+    ///
+    /// Basis vector `eᵢ` is the fundamental directional unit along axis `i`.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index of the basis vector (0-indexed)
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i >= S::DIM`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// // Vectors square to their metric value (1 for Euclidean)
+    /// let e1_sq = &e1 * &e1;
+    /// assert!((e1_sq.scalar_part() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn basis_vector(i: usize) -> Self {
+        assert!(
+            i < S::DIM,
+            "basis vector index {i} out of range for dimension {}",
+            S::DIM
+        );
+        Self::from_blade(Blade::basis_vector(i))
+    }
+
+    /// Creates a vector multivector from components.
+    ///
+    /// The components are the coefficients of the basis vectors e₁, e₂, etc.
+    ///
+    /// # Arguments
+    ///
+    /// * `components` - Slice of coefficients for each basis vector
+    ///
+    /// # Panics
+    ///
+    /// Panics if `components.len() > S::DIM`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// // Create vector v = 3e₁ + 4e₂ + 0e₃
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+    ///
+    /// // |v|² = 3² + 4² = 25
+    /// let v_sq = &v * &v;
+    /// assert!((v_sq.scalar_part() - 25.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn vector(components: &[T]) -> Self {
+        assert!(
+            components.len() <= S::DIM,
+            "too many components ({}) for dimension {}",
+            components.len(),
+            S::DIM
+        );
+        let mut mv = Self::zero();
+        for (i, &c) in components.iter().enumerate() {
+            mv.coeffs[1 << i] = c;
+        }
+        mv
+    }
+
+    /// Creates a multivector from a full array of coefficients.
+    ///
+    /// # Arguments
+    ///
+    /// * `coeffs` - Coefficients for all basis blades (only first `S::NUM_BLADES` are used)
+    #[inline]
+    pub fn from_coeffs(coeffs: &[T]) -> Self {
+        let mut mv = Self::zero();
+        let n = coeffs.len().min(S::NUM_BLADES);
+        mv.coeffs[..n].copy_from_slice(&coeffs[..n]);
+        mv
+    }
+}
+
+// ============================================================================
+// Accessors
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Returns the coefficient of the given basis blade.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::basis::Blade;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 5.0]);
+    /// assert!((v.get(Blade::basis_vector(0)) - 3.0).abs() < 1e-10);
+    /// assert!((v.get(Blade::basis_vector(1)) - 4.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn get(&self, blade: Blade) -> T {
+        self.coeffs[blade.index()]
+    }
+
+    /// Sets the coefficient of the given basis blade.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::basis::Blade;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let mut mv: Multivector<f64, Euclidean3> = Multivector::zero();
+    /// mv.set(Blade::basis_vector(0), 5.0);
+    /// assert!((mv.get(Blade::basis_vector(0)) - 5.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn set(&mut self, blade: Blade, value: T) {
+        self.coeffs[blade.index()] = value;
+    }
+
+    /// Returns the scalar part (grade 0 coefficient).
+    ///
+    /// This is the coefficient of the unit scalar blade.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let mv: Multivector<f64, Euclidean3> = Multivector::scalar(42.0);
+    /// assert!((mv.scalar_part() - 42.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn scalar_part(&self) -> T {
+        self.coeffs[0]
+    }
+
+    /// Checks if this multivector is approximately zero.
+    ///
+    /// Returns true if all coefficients have absolute value less than epsilon.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let zero: Multivector<f64, Euclidean3> = Multivector::zero();
+    /// assert!(zero.is_zero(1e-10));
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// assert!(!v.is_zero(1e-10));
+    /// ```
+    #[inline]
+    pub fn is_zero(&self, epsilon: T) -> bool {
+        self.coeffs[..S::NUM_BLADES]
+            .iter()
+            .all(|&c| c.abs() < epsilon)
+    }
+
+    /// Checks if this multivector is approximately equal to another.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let a: Multivector<f64, Euclidean3> = Multivector::scalar(1.0);
+    /// let b: Multivector<f64, Euclidean3> = Multivector::scalar(1.0 + 1e-12);
+    /// assert!(a.approx_eq(&b, 1e-10));
+    /// ```
+    #[inline]
+    pub fn approx_eq(&self, other: &Self, epsilon: T) -> bool {
+        self.coeffs[..S::NUM_BLADES]
+            .iter()
+            .zip(other.coeffs[..S::NUM_BLADES].iter())
+            .all(|(&a, &b)| (a - b).abs() < epsilon)
+    }
+}
+
+// ============================================================================
+// Unary Operations
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Returns the reverse of this multivector.
+    ///
+    /// The reverse operation reverses the order of basis vectors in each blade.
+    /// For a blade of grade k, the sign change is `(-1)^(k(k-1)/2)`:
+    ///
+    /// | Grade | Sign | Example |
+    /// |-------|------|---------|
+    /// | 0 | +1 | 1̃ = 1 |
+    /// | 1 | +1 | ẽ₁ = e₁ |
+    /// | 2 | -1 | ẽ₁₂ = e₂₁ = -e₁₂ |
+    /// | 3 | -1 | ẽ₁₂₃ = e₃₂₁ = -e₁₂₃ |
+    /// | 4 | +1 | ... |
+    ///
+    /// The reverse is important for computing norms and inverses:
+    /// `|M|² = ⟨M M̃⟩₀` (scalar part of M times its reverse)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    /// let e12 = &e1 * &e2;
+    ///
+    /// // Reverse of a bivector negates it
+    /// let e12_rev = e12.reverse();
+    /// assert!((&e12 + &e12_rev).is_zero(1e-10));
+    /// ```
+    pub fn reverse(&self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NUM_BLADES {
+            let grade = Blade::from_index(i).grade();
+            // Sign is (-1)^(k(k-1)/2)
+            // For grade 0 and 1: sign = +1
+            // For grade 2 and 3: sign = -1
+            // For grade 4 and 5: sign = +1
+            // Pattern repeats every 4 grades
+            let sign = if grade < 2 || (grade / 2).is_multiple_of(2) {
+                T::ONE
+            } else {
+                -T::ONE
+            };
+            result.coeffs[i] = sign * self.coeffs[i];
+        }
+        result
+    }
+
+    /// Returns the grade involution of this multivector.
+    ///
+    /// Grade involution negates all odd-grade components.
+    /// For a blade of grade k, the sign is `(-1)^k`:
+    ///
+    /// | Grade | Sign |
+    /// |-------|------|
+    /// | 0 (scalar) | +1 |
+    /// | 1 (vector) | -1 |
+    /// | 2 (bivector) | +1 |
+    /// | 3 (trivector) | -1 |
+    ///
+    /// This operation is also called the "main involution" or "grade automorphism".
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // Involute of a vector negates it
+    /// let v_inv = v.involute();
+    /// assert!((&v + &v_inv).is_zero(1e-10));
+    /// ```
+    pub fn involute(&self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NUM_BLADES {
+            let grade = Blade::from_index(i).grade();
+            // Sign is (-1)^k
+            let sign = if grade.is_multiple_of(2) {
+                T::ONE
+            } else {
+                -T::ONE
+            };
+            result.coeffs[i] = sign * self.coeffs[i];
+        }
+        result
+    }
+
+    /// Returns the Clifford conjugate of this multivector.
+    ///
+    /// The Clifford conjugate is the composition of reverse and grade involution.
+    /// For a blade of grade k, the sign is `(-1)^(k(k+1)/2)`:
+    ///
+    /// | Grade | Sign |
+    /// |-------|------|
+    /// | 0 | +1 |
+    /// | 1 | -1 |
+    /// | 2 | -1 |
+    /// | 3 | +1 |
+    /// | 4 | +1 |
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let v_conj = v.conjugate();
+    ///
+    /// // Conjugate of a vector negates it
+    /// assert!((&v + &v_conj).is_zero(1e-10));
+    /// ```
+    pub fn conjugate(&self) -> Self {
+        let mut result = Self::zero();
+        for i in 0..S::NUM_BLADES {
+            let grade = Blade::from_index(i).grade();
+            // Sign is (-1)^(k(k+1)/2)
+            let sign = if (grade * (grade + 1) / 2).is_multiple_of(2) {
+                T::ONE
+            } else {
+                -T::ONE
+            };
+            result.coeffs[i] = sign * self.coeffs[i];
+        }
+        result
+    }
+}
+
+// ============================================================================
+// Norms and Inverse
+// ============================================================================
+
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Returns the squared norm of this multivector.
+    ///
+    /// The squared norm is the scalar part of `M * M̃` (M times its reverse).
+    /// For vectors in Euclidean space, this equals the sum of squared components.
+    ///
+    /// Note: The squared norm can be negative in non-Euclidean signatures!
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+    /// assert!((v.norm_squared() - 25.0).abs() < 1e-10); // 3² + 4² = 25
+    /// ```
+    pub fn norm_squared(&self) -> T {
+        (self * &self.reverse()).scalar_part()
+    }
+
+    /// Returns the norm of this multivector.
+    ///
+    /// The norm is `sqrt(|norm_squared|)`. We take the absolute value because
+    /// the squared norm can be negative in non-Euclidean signatures.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+    /// assert!((v.norm() - 5.0).abs() < 1e-10); // sqrt(25) = 5
+    /// ```
+    pub fn norm(&self) -> T {
+        self.norm_squared().abs().sqrt()
+    }
+
+    /// Returns the normalized multivector (unit norm), or None if norm is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+    /// let v_hat = v.normalize().unwrap();
+    /// assert!((v_hat.norm() - 1.0).abs() < 1e-10);
+    /// ```
+    pub fn normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::EPSILON { None } else { Some(self / n) }
+    }
+
+    /// Returns the multiplicative inverse, or None if not invertible.
+    ///
+    /// For a multivector M with non-zero squared norm:
+    /// `M⁻¹ = M̃ / |M|²`
+    ///
+    /// This satisfies `M * M⁻¹ = M⁻¹ * M = 1`.
+    ///
+    /// Note: Not all multivectors are invertible! The inverse exists only
+    /// when the squared norm is non-zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 0.0, 0.0]);
+    /// let v_inv = v.inverse().unwrap();
+    ///
+    /// // v * v⁻¹ = 1
+    /// let product = &v * &v_inv;
+    /// assert!((product.scalar_part() - 1.0).abs() < 1e-10);
+    /// assert!((&product - &Multivector::one()).is_zero(1e-10));
+    /// ```
+    pub fn inverse(&self) -> Option<Self> {
+        let norm_sq = self.norm_squared();
+        if norm_sq.abs() < T::EPSILON {
+            None
+        } else {
+            Some(&self.reverse() / norm_sq)
+        }
+    }
+}
+
+// ============================================================================
+// Geometric Product
+// ============================================================================
+
+impl<T: Float, S: Signature> Mul for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    /// Computes the geometric product of two multivectors.
+    ///
+    /// The geometric product is the fundamental operation in geometric algebra.
+    /// It is computed by distributing over all pairs of basis blades and using
+    /// the blade multiplication rules defined by the metric signature.
+    ///
+    /// # Complexity
+    ///
+    /// O(4^n) where n is the dimension of the algebra.
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut result = Multivector::zero();
+
+        for i in 0..S::NUM_BLADES {
+            if self.coeffs[i] == T::ZERO {
+                continue;
+            }
+            for j in 0..S::NUM_BLADES {
+                if rhs.coeffs[j] == T::ZERO {
+                    continue;
+                }
+
+                let blade_i = Blade::from_index(i);
+                let blade_j = Blade::from_index(j);
+                let (sign, result_blade) = blade_i.product(&blade_j, S::metric);
+
+                if sign != 0 {
+                    let coeff = T::from_i8(sign) * self.coeffs[i] * rhs.coeffs[j];
+                    result.coeffs[result_blade.index()] += coeff;
+                }
+            }
+        }
+
+        result
+    }
+}
+
+// Implement Mul for owned values by delegating to reference implementation
+impl<T: Float, S: Signature> Mul for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        &self * &rhs
+    }
+}
+
+impl<T: Float, S: Signature> Mul<&Multivector<T, S>> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn mul(self, rhs: &Self) -> Self::Output {
+        &self * rhs
+    }
+}
+
+impl<T: Float, S: Signature> Mul<Multivector<T, S>> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn mul(self, rhs: Multivector<T, S>) -> Self::Output {
+        self * &rhs
+    }
+}
+
+// ============================================================================
+// Scalar multiplication and division
+// ============================================================================
+
+impl<T: Float, S: Signature> Mul<T> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn mul(self, scalar: T) -> Self::Output {
+        let mut result = Multivector::zero();
+        for i in 0..S::NUM_BLADES {
+            result.coeffs[i] = self.coeffs[i] * scalar;
+        }
+        result
+    }
+}
+
+impl<T: Float, S: Signature> Mul<T> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn mul(self, scalar: T) -> Self::Output {
+        &self * scalar
+    }
+}
+
+impl<T: Float, S: Signature> Div<T> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn div(self, scalar: T) -> Self::Output {
+        let mut result = Multivector::zero();
+        for i in 0..S::NUM_BLADES {
+            result.coeffs[i] = self.coeffs[i] / scalar;
+        }
+        result
+    }
+}
+
+impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn div(self, scalar: T) -> Self::Output {
+        &self / scalar
+    }
+}
+
+// ============================================================================
+// Addition and Subtraction
+// ============================================================================
+
+impl<T: Float, S: Signature> Add for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut result = Multivector::zero();
+        for i in 0..S::NUM_BLADES {
+            result.coeffs[i] = self.coeffs[i] + rhs.coeffs[i];
+        }
+        result
+    }
+}
+
+impl<T: Float, S: Signature> Add for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        &self + &rhs
+    }
+}
+
+impl<T: Float, S: Signature> Add<&Multivector<T, S>> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn add(self, rhs: &Self) -> Self::Output {
+        &self + rhs
+    }
+}
+
+impl<T: Float, S: Signature> Add<Multivector<T, S>> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn add(self, rhs: Multivector<T, S>) -> Self::Output {
+        self + &rhs
+    }
+}
+
+impl<T: Float, S: Signature> Sub for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut result = Multivector::zero();
+        for i in 0..S::NUM_BLADES {
+            result.coeffs[i] = self.coeffs[i] - rhs.coeffs[i];
+        }
+        result
+    }
+}
+
+impl<T: Float, S: Signature> Sub for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        &self - &rhs
+    }
+}
+
+impl<T: Float, S: Signature> Sub<&Multivector<T, S>> for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn sub(self, rhs: &Self) -> Self::Output {
+        &self - rhs
+    }
+}
+
+impl<T: Float, S: Signature> Sub<Multivector<T, S>> for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn sub(self, rhs: Multivector<T, S>) -> Self::Output {
+        self - &rhs
+    }
+}
+
+impl<T: Float, S: Signature> Neg for &Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn neg(self) -> Self::Output {
+        let mut result = Multivector::zero();
+        for i in 0..S::NUM_BLADES {
+            result.coeffs[i] = -self.coeffs[i];
+        }
+        result
+    }
+}
+
+impl<T: Float, S: Signature> Neg for Multivector<T, S> {
+    type Output = Multivector<T, S>;
+
+    fn neg(self) -> Self::Output {
+        -&self
+    }
+}
+
+// ============================================================================
+// Assignment operators
+// ============================================================================
+
+impl<T: Float, S: Signature> AddAssign<&Multivector<T, S>> for Multivector<T, S> {
+    fn add_assign(&mut self, rhs: &Self) {
+        for i in 0..S::NUM_BLADES {
+            self.coeffs[i] += rhs.coeffs[i];
+        }
+    }
+}
+
+impl<T: Float, S: Signature> AddAssign for Multivector<T, S> {
+    fn add_assign(&mut self, rhs: Self) {
+        *self += &rhs;
+    }
+}
+
+impl<T: Float, S: Signature> SubAssign<&Multivector<T, S>> for Multivector<T, S> {
+    fn sub_assign(&mut self, rhs: &Self) {
+        for i in 0..S::NUM_BLADES {
+            self.coeffs[i] -= rhs.coeffs[i];
+        }
+    }
+}
+
+impl<T: Float, S: Signature> SubAssign for Multivector<T, S> {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self -= &rhs;
+    }
+}
+
+impl<T: Float, S: Signature> MulAssign<T> for Multivector<T, S> {
+    fn mul_assign(&mut self, scalar: T) {
+        for i in 0..S::NUM_BLADES {
+            self.coeffs[i] *= scalar;
+        }
+    }
+}
+
+// ============================================================================
+// Standard Traits
+// ============================================================================
+
+impl<T: Float, S: Signature> Default for Multivector<T, S> {
+    fn default() -> Self {
+        Self::zero()
+    }
+}
+
+impl<T: Float, S: Signature> PartialEq for Multivector<T, S> {
+    fn eq(&self, other: &Self) -> bool {
+        self.coeffs[..S::NUM_BLADES] == other.coeffs[..S::NUM_BLADES]
+    }
+}
+
+impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Multivector(")?;
+        let mut first = true;
+        for i in 0..S::NUM_BLADES {
+            if self.coeffs[i] != T::ZERO {
+                if !first {
+                    write!(f, " + ")?;
+                }
+                write!(f, "{:?}*{}", self.coeffs[i], Blade::from_index(i))?;
+                first = false;
+            }
+        }
+        if first {
+            write!(f, "0")?;
+        }
+        write!(f, ")")
+    }
+}
+
+impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut first = true;
+        for i in 0..S::NUM_BLADES {
+            if self.coeffs[i] != T::ZERO {
+                if !first {
+                    write!(f, " + ")?;
+                }
+                let blade = Blade::from_index(i);
+                if i == 0 {
+                    write!(f, "{}", self.coeffs[i])?;
+                } else {
+                    write!(f, "{}{}", self.coeffs[i], blade)?;
+                }
+                first = false;
+            }
+        }
+        if first {
+            write!(f, "0")?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::signature::{Euclidean2, Euclidean3};
+    use proptest::prelude::*;
+
+    // ========================================================================
+    // Test helpers
+    // ========================================================================
+
+    /// Strategy for generating multivectors with bounded coefficients
+    fn arb_multivector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
+        prop::array::uniform8(-10.0f64..10.0).prop_map(|coeffs| {
+            let mut mv = Multivector::zero();
+            for (i, &c) in coeffs.iter().enumerate() {
+                mv.coeffs[i] = c;
+            }
+            mv
+        })
+    }
+
+    /// Strategy for generating non-zero vectors (always invertible in Euclidean space)
+    fn arb_nonzero_vector_e3() -> impl Strategy<Value = Multivector<f64, Euclidean3>> {
+        prop::array::uniform3(-10.0f64..10.0)
+            .prop_filter("must be non-zero", |v| {
+                v[0] * v[0] + v[1] * v[1] + v[2] * v[2] > 0.1
+            })
+            .prop_map(|v| Multivector::vector(&v))
+    }
+
+    // ========================================================================
+    // Constructor tests
+    // ========================================================================
+
+    #[test]
+    fn test_zero() {
+        let zero: Multivector<f64, Euclidean3> = Multivector::zero();
+        assert!(zero.is_zero(1e-10));
+    }
+
+    #[test]
+    fn test_one() {
+        let one: Multivector<f64, Euclidean3> = Multivector::one();
+        assert!((one.scalar_part() - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_basis_vector() {
+        let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        assert!((e1.get(Blade::basis_vector(0)) - 1.0).abs() < 1e-10);
+        assert!((e1.get(Blade::basis_vector(1))).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+        assert!((v.get(Blade::basis_vector(0)) - 3.0).abs() < 1e-10);
+        assert!((v.get(Blade::basis_vector(1)) - 4.0).abs() < 1e-10);
+    }
+
+    // ========================================================================
+    // Geometric product tests
+    // ========================================================================
+
+    #[test]
+    fn test_vector_squares_to_scalar() {
+        let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        let e1_sq = &e1 * &e1;
+        assert!((e1_sq.scalar_part() - 1.0).abs() < 1e-10);
+        assert!((&e1_sq - &Multivector::one()).is_zero(1e-10));
+    }
+
+    #[test]
+    fn test_bivector_squares_to_minus_one() {
+        let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+        let e12 = &e1 * &e2;
+        let e12_sq = &e12 * &e12;
+        assert!((e12_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_scalar_is_identity() {
+        let one: Multivector<f64, Euclidean3> = Multivector::one();
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
+        assert!((&one * &v).approx_eq(&v, 1e-10));
+        assert!((&v * &one).approx_eq(&v, 1e-10));
+    }
+
+    // ========================================================================
+    // Unary operation tests
+    // ========================================================================
+
+    #[test]
+    fn test_reverse_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        assert!(v.reverse().approx_eq(&v, 1e-10)); // Vectors unchanged
+    }
+
+    #[test]
+    fn test_reverse_bivector() {
+        let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+        let e12 = &e1 * &e2;
+        assert!(e12.reverse().approx_eq(&(-&e12), 1e-10)); // Bivectors negate
+    }
+
+    #[test]
+    fn test_involute_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+        assert!(v.involute().approx_eq(&(-&v), 1e-10)); // Vectors negate
+    }
+
+    // ========================================================================
+    // Norm and inverse tests
+    // ========================================================================
+
+    #[test]
+    fn test_norm_squared_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+        assert!((v.norm_squared() - 25.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_norm_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
+        assert!((v.norm() - 5.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_inverse_vector() {
+        let v: Multivector<f64, Euclidean3> = Multivector::vector(&[2.0, 0.0, 0.0]);
+        let v_inv = v.inverse().unwrap();
+        let product = &v * &v_inv;
+        assert!(product.approx_eq(&Multivector::one(), 1e-10));
+    }
+
+    // ========================================================================
+    // Property-based tests
+    // ========================================================================
+
+    proptest! {
+        #[test]
+        fn geometric_product_associative(
+            a in arb_multivector_e3(),
+            b in arb_multivector_e3(),
+            c in arb_multivector_e3(),
+        ) {
+            let lhs = &(&a * &b) * &c;
+            let rhs = &a * &(&b * &c);
+            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+        }
+
+        #[test]
+        fn geometric_product_distributive(
+            a in arb_multivector_e3(),
+            b in arb_multivector_e3(),
+            c in arb_multivector_e3(),
+        ) {
+            let lhs = &a * &(&b + &c);
+            let rhs = &(&a * &b) + &(&a * &c);
+            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+        }
+
+        #[test]
+        fn reverse_involutory(a in arb_multivector_e3()) {
+            prop_assert!(a.reverse().reverse().approx_eq(&a, 1e-10));
+        }
+
+        #[test]
+        fn reverse_antimorphism(
+            a in arb_multivector_e3(),
+            b in arb_multivector_e3(),
+        ) {
+            let lhs = (&a * &b).reverse();
+            let rhs = &b.reverse() * &a.reverse();
+            prop_assert!(lhs.approx_eq(&rhs, 1e-8));
+        }
+
+        #[test]
+        fn involute_involutory(a in arb_multivector_e3()) {
+            prop_assert!(a.involute().involute().approx_eq(&a, 1e-10));
+        }
+
+        #[test]
+        fn inverse_property(a in arb_nonzero_vector_e3()) {
+            // Vectors are always invertible in Euclidean space
+            let inv = a.inverse().expect("non-zero vector should be invertible");
+            let product = &a * &inv;
+            prop_assert!(product.approx_eq(&Multivector::one(), 1e-8));
+        }
+
+        #[test]
+        fn add_commutative(a in arb_multivector_e3(), b in arb_multivector_e3()) {
+            prop_assert!((&a + &b).approx_eq(&(&b + &a), 1e-10));
+        }
+
+        #[test]
+        fn add_associative(
+            a in arb_multivector_e3(),
+            b in arb_multivector_e3(),
+            c in arb_multivector_e3(),
+        ) {
+            let lhs = &(&a + &b) + &c;
+            let rhs = &a + &(&b + &c);
+            prop_assert!(lhs.approx_eq(&rhs, 1e-10));
+        }
+
+        #[test]
+        fn zero_is_additive_identity(a in arb_multivector_e3()) {
+            let zero = Multivector::<f64, Euclidean3>::zero();
+            prop_assert!((&a + &zero).approx_eq(&a, 1e-10));
+        }
+
+        #[test]
+        fn one_is_multiplicative_identity(a in arb_multivector_e3()) {
+            let one = Multivector::<f64, Euclidean3>::one();
+            prop_assert!((&a * &one).approx_eq(&a, 1e-10));
+            prop_assert!((&one * &a).approx_eq(&a, 1e-10));
+        }
+    }
+
+    // ========================================================================
+    // 2D specific tests
+    // ========================================================================
+
+    #[test]
+    fn test_2d_complex_number_behavior() {
+        // In 2D Euclidean GA, the bivector e₁₂ behaves like the imaginary unit i
+        let e1: Multivector<f64, Euclidean2> = Multivector::basis_vector(0);
+        let e2: Multivector<f64, Euclidean2> = Multivector::basis_vector(1);
+        let i = &e1 * &e2; // e₁₂ = "i"
+
+        // i² = -1
+        let i_sq = &i * &i;
+        assert!((i_sq.scalar_part() - (-1.0)).abs() < 1e-10);
+
+        // We can represent complex numbers as a + b*e₁₂
+        let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
+        let norm_sq = (&z * &z.reverse()).scalar_part();
+        assert!((norm_sq - 25.0).abs() < 1e-10); // |z|² = 3² + 4² = 25
+    }
+}
