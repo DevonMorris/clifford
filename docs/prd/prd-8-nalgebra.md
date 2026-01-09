@@ -1,6 +1,6 @@
 # PRD-8: nalgebra Interoperability
 
-**Status**: Draft
+**Status**: Complete
 **Goal**: Seamless conversions between clifford types and nalgebra vectors/matrices
 
 ## Motivation
@@ -17,8 +17,8 @@ Support multiple nalgebra versions via feature flags to accommodate users who ca
 
 | Feature Flag | nalgebra Version | Notes |
 |--------------|------------------|-------|
-| `nalgebra-0-33` | 0.33.x | LTS - many projects still use this |
-| `nalgebra-0-34` | 0.34.x | Current stable (default if any nalgebra feature enabled) |
+| `nalgebra-0_33` | 0.33.x | LTS - many projects still use this |
+| `nalgebra-0_34` | 0.34.x | Current stable (default if any nalgebra feature enabled) |
 
 **Rationale**:
 - Supporting 2 minor versions covers ~18 months of releases
@@ -34,12 +34,12 @@ Support multiple nalgebra versions via feature flags to accommodate users who ca
 default = []
 
 # nalgebra interop (pick one)
-nalgebra-0-33 = ["dep:nalgebra-0-33"]
-nalgebra-0-34 = ["dep:nalgebra-0-34"]
+nalgebra-0_33 = ["dep:nalgebra-0_33"]
+nalgebra-0_34 = ["dep:nalgebra-0_34"]
 
 [dependencies]
-nalgebra-0-33 = { package = "nalgebra", version = "0.33", optional = true }
-nalgebra-0-34 = { package = "nalgebra", version = "0.34", optional = true }
+nalgebra-0_33 = { package = "nalgebra", version = "0.33", optional = true }
+nalgebra-0_34 = { package = "nalgebra", version = "0.34", optional = true }
 ```
 
 ### 2. Conversion Traits
@@ -48,13 +48,13 @@ Define internal traits to abstract over nalgebra versions:
 
 ```rust
 // src/interop/mod.rs
-#[cfg(any(feature = "nalgebra-0-33", feature = "nalgebra-0-34"))]
+#[cfg(any(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
 pub mod nalgebra;
 
 // src/interop/nalgebra/mod.rs
 //! Conversions between clifford and nalgebra types.
 //!
-//! Enable with feature `nalgebra-0-33` or `nalgebra-0-34`.
+//! Enable with feature `nalgebra-0_33` or `nalgebra-0_34`.
 ```
 
 ### 3. Vector Conversions
@@ -204,12 +204,12 @@ proptest! {
 ### Version-Specific Tests
 
 ```rust
-#[cfg(feature = "nalgebra-0-33")]
+#[cfg(feature = "nalgebra-0_33")]
 mod tests_v0_33 {
     // Any 0.33-specific behavior tests
 }
 
-#[cfg(feature = "nalgebra-0-34")]
+#[cfg(feature = "nalgebra-0_34")]
 mod tests_v0_34 {
     // Any 0.34-specific behavior tests
 }
@@ -274,17 +274,17 @@ jobs:
   test-nalgebra:
     strategy:
       matrix:
-        nalgebra: [nalgebra-0-33, nalgebra-0-34]
+        nalgebra: [nalgebra-0_33, nalgebra-0_34]
     steps:
       - run: cargo test --features ${{ matrix.nalgebra }}
 ```
 
 ## Verification
 
-- [ ] `cargo check --features nalgebra-0-33` passes
-- [ ] `cargo check --features nalgebra-0-34` passes
-- [ ] `cargo test --features nalgebra-0-33` passes
-- [ ] `cargo test --features nalgebra-0-34` passes
+- [ ] `cargo check --features nalgebra-0_33` passes
+- [ ] `cargo check --features nalgebra-0_34` passes
+- [ ] `cargo test --features nalgebra-0_33` passes
+- [ ] `cargo test --features nalgebra-0_34` passes
 - [ ] Enabling both features simultaneously produces compile error (mutually exclusive)
 - [ ] All conversions have comprehensive rustdoc
 - [ ] Property tests verify mathematical equivalence

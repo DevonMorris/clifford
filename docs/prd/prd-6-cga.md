@@ -254,6 +254,237 @@ proptest! {
 }
 ```
 
+## Benchmarks
+
+CGA operations should be benchmarked against:
+1. Generic `Multivector` implementation
+2. nalgebra equivalents where applicable
+3. Traditional approaches (e.g., sphere intersection via algebraic methods)
+
+### Benchmark File (`benches/cga.rs`)
+
+```rust
+//! Benchmarks for CGA operations.
+//!
+//! Run with: `cargo bench --bench cga`
+
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
+
+use clifford::specialized::cga3d::{point, sphere, plane, translator, dilator, transform, to_euclidean};
+
+// Point embedding/extraction
+fn bench_point_embed(c: &mut Criterion) {
+    c.bench_function("cga3d/point_embed", |bencher| {
+        bencher.iter(|| point(black_box(1.0), black_box(2.0), black_box(3.0)))
+    });
+}
+
+fn bench_point_extract(c: &mut Criterion) {
+    let p = point(1.0, 2.0, 3.0);
+
+    c.bench_function("cga3d/point_extract", |bencher| {
+        bencher.iter(|| to_euclidean(&black_box(p)))
+    });
+}
+
+// Transformation versors
+fn bench_translator_create(c: &mut Criterion) {
+    c.bench_function("cga3d/translator_create", |bencher| {
+        bencher.iter(|| translator(black_box(1.0), black_box(2.0), black_box(3.0)))
+    });
+}
+
+fn bench_translator_apply(c: &mut Criterion) {
+    let t = translator(1.0, 2.0, 3.0);
+    let p = point(0.0, 0.0, 0.0);
+
+    c.bench_function("cga3d/translator_apply", |bencher| {
+        bencher.iter(|| transform(&black_box(t), &black_box(p)))
+    });
+}
+
+fn bench_dilator_apply(c: &mut Criterion) {
+    let d = dilator(2.0);
+    let p = point(1.0, 1.0, 1.0);
+
+    c.bench_function("cga3d/dilator_apply", |bencher| {
+        bencher.iter(|| transform(&black_box(d), &black_box(p)))
+    });
+}
+
+// Geometric object operations
+fn bench_sphere_create(c: &mut Criterion) {
+    c.bench_function("cga3d/sphere_create", |bencher| {
+        bencher.iter(|| sphere(black_box(0.0), black_box(0.0), black_box(0.0), black_box(1.0)))
+    });
+}
+
+fn bench_sphere_intersect(c: &mut Criterion) {
+    let s1 = sphere(0.0, 0.0, 0.0, 2.0);
+    let s2 = sphere(1.0, 0.0, 0.0, 2.0);
+
+    c.bench_function("cga3d/sphere_intersect_circle", |bencher| {
+        bencher.iter(|| black_box(s1).meet(&black_box(s2)))
+    });
+}
+
+fn bench_plane_sphere_intersect(c: &mut Criterion) {
+    let plane = plane(0.0, 0.0, 1.0, 0.0); // z = 0
+    let s = sphere(0.0, 0.0, 0.0, 1.0);
+
+    c.bench_function("cga3d/plane_sphere_intersect", |bencher| {
+        bencher.iter(|| black_box(plane).meet(&black_box(s)))
+    });
+}
+
+criterion_group!(
+    benches,
+    bench_point_embed,
+    bench_point_extract,
+    bench_translator_create,
+    bench_translator_apply,
+    bench_dilator_apply,
+    bench_sphere_create,
+    bench_sphere_intersect,
+    bench_plane_sphere_intersect,
+);
+criterion_main!(benches);
+```
+
+### nalgebra Comparison (`benches/cga_nalgebra.rs`)
+
+Compare CGA operations with traditional nalgebra approaches:
+
+```rust
+#![cfg(any(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
+
+use clifford::specialized::cga3d::*;
+
+// Translation: CGA translator vs nalgebra Translation3
+fn bench_translate_cga(c: &mut Criterion) {
+    let t = translator(1.0, 2.0, 3.0);
+    let p = point(0.0, 0.0, 0.0);
+
+    c.bench_function("comparison/translate/cga", |bencher| {
+        bencher.iter(|| {
+            let tp = transform(&black_box(t), &black_box(p));
+            to_euclidean(&tp)
+        })
+    });
+}
+
+fn bench_translate_nalgebra(c: &mut Criterion) {
+    let t = na::Translation3::new(1.0, 2.0, 3.0);
+    let p = na::Point3::new(0.0, 0.0, 0.0);
+
+    c.bench_function("comparison/translate/nalgebra", |bencher| {
+        bencher.iter(|| black_box(t) * black_box(p))
+    });
+}
+
+// Sphere-sphere intersection: CGA meet vs algebraic
+fn bench_sphere_intersect_cga(c: &mut Criterion) {
+    let s1 = sphere(0.0, 0.0, 0.0, 2.0);
+    let s2 = sphere(1.0, 0.0, 0.0, 2.0);
+
+    c.bench_function("comparison/sphere_intersect/cga", |bencher| {
+        bencher.iter(|| black_box(s1).meet(&black_box(s2)))
+    });
+}
+
+fn bench_sphere_intersect_algebraic(c: &mut Criterion) {
+    // Traditional approach: solve quadratic system
+    let c1 = na::Point3::new(0.0, 0.0, 0.0);
+    let r1 = 2.0f64;
+    let c2 = na::Point3::new(1.0, 0.0, 0.0);
+    let r2 = 2.0f64;
+
+    c.bench_function("comparison/sphere_intersect/algebraic", |bencher| {
+        bencher.iter(|| {
+            // Compute intersection circle center and radius
+            let d = (black_box(c2) - black_box(c1)).norm();
+            let a = (r1 * r1 - r2 * r2 + d * d) / (2.0 * d);
+            let h = (r1 * r1 - a * a).sqrt();
+            let center = c1 + (c2 - c1).normalize() * a;
+            (center, h) // circle center and radius
+        })
+    });
+}
+
+// Point-on-sphere test: CGA inner product vs distance check
+fn bench_point_on_sphere_cga(c: &mut Criterion) {
+    let s = sphere(0.0, 0.0, 0.0, 1.0);
+    let p = point(1.0, 0.0, 0.0);
+
+    c.bench_function("comparison/point_on_sphere/cga", |bencher| {
+        bencher.iter(|| {
+            // In CGA, point lies on sphere if inner product is zero
+            black_box(p).inner(&black_box(s)).norm() < 1e-10
+        })
+    });
+}
+
+fn bench_point_on_sphere_algebraic(c: &mut Criterion) {
+    let center = na::Point3::new(0.0, 0.0, 0.0);
+    let radius = 1.0f64;
+    let p = na::Point3::new(1.0, 0.0, 0.0);
+
+    c.bench_function("comparison/point_on_sphere/algebraic", |bencher| {
+        bencher.iter(|| {
+            ((black_box(p) - black_box(center)).norm() - radius).abs() < 1e-10
+        })
+    });
+}
+```
+
+### Expected Performance Targets
+
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| Point embed | < 5 ns | Simple arithmetic |
+| Point extract | < 5 ns | Division + extraction |
+| Translator create | < 5 ns | Vector + scalar construction |
+| Translator apply | < 20 ns | Sandwich product |
+| Dilator apply | < 20 ns | Sandwich product |
+| Sphere intersect | < 15 ns | Meet operation |
+| CGA vs algebraic | Comparable | CGA may have overhead but more uniform |
+
+### Key Insights
+
+CGA benchmarks should reveal:
+1. **Embedding overhead**: Cost of moving between Euclidean and conformal representations
+2. **Uniformity benefit**: Single meet/join vs case-by-case geometric algorithms
+3. **Composition advantage**: Chaining CGA versors vs composing affine transforms
+
+### Benchmark README Section
+
+Add to `benches/README.md`:
+
+```markdown
+## CGA Benchmarks
+
+Operations on specialized CGA types.
+
+### Point Operations
+![cga3d_point_embed](reports/cga3d_point_embed_pdf.svg)
+![cga3d_point_extract](reports/cga3d_point_extract_pdf.svg)
+
+### Transformation Versors
+![cga3d_translator_apply](reports/cga3d_translator_apply_pdf.svg)
+![cga3d_dilator_apply](reports/cga3d_dilator_apply_pdf.svg)
+
+### Geometric Intersections
+![cga3d_sphere_intersect](reports/cga3d_sphere_intersect_circle_pdf.svg)
+
+### Comparison with Traditional Methods
+| Operation | CGA | Traditional | Notes |
+|-----------|-----|-------------|-------|
+| Translate point | ~X ns | ~Y ns | CGA has embed/extract overhead |
+| Sphere intersect | ~X ns | ~Y ns | CGA is uniform, traditional is specialized |
+| Point-on-sphere | ~X ns | ~Y ns | CGA uses inner product |
+```
+
 ## Final Verification
 
 - [ ] `cargo check` passes
@@ -264,6 +495,7 @@ proptest! {
 - [ ] README updated with usage examples
 - [ ] CLAUDE.md status updated
 - [ ] nalgebra conversions tested with feature flags
+- [ ] Benchmarks run and documented
 
 ## Release Checklist
 
