@@ -81,11 +81,9 @@ jobs:
       # Doc with nalgebra-0_34 (latest) plus other features
       - run: cargo doc --features proptest-support,serde,nalgebra-0_34 --no-deps
 
-  audit:
-    name: Security Audit
+  deny:
+    name: Cargo Deny
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rustsec/audit-check@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: EmbarkStudios/cargo-deny-action@v2

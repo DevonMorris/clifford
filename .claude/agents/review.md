@@ -56,6 +56,8 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Minimal external dependencies
 - [ ] Any new dependency is justified
 - [ ] Prefer std library
+- [ ] New dependencies use allowed licenses (run `cargo deny check`)
+- [ ] No GPL/LGPL/AGPL dependencies
 
 ### 7. Git Hygiene
 - [ ] Branch created from latest `origin/main`

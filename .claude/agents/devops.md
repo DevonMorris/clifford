@@ -19,7 +19,7 @@ Workflows live in `.github/workflows/`. Current CI runs:
 - `cargo fmt --check`
 - `cargo clippy`
 - `cargo doc --all-features --no-deps` (documentation build)
-- `cargo audit` (security scanning)
+- `cargo deny check` (license and security audit)
 
 ### Adding New Workflows
 
@@ -87,8 +87,16 @@ gh api repos/OWNER/REPO/branches/main/protection/required_status_checks \
 - Minimize external dependencies
 - Document why each dependency is needed
 - Use `cargo update` periodically
-- Consider `cargo audit` for security
+- Run `cargo deny check` for license and security audit
 - Pin versions appropriately for stability
+
+### License Policy
+
+Dependencies must use permissive licenses. Configuration in `deny.toml`:
+- **Allowed**: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Zlib, CC0-1.0, Unlicense, MPL-2.0, Unicode-3.0
+- **Denied**: GPL, LGPL, AGPL (copyleft licenses)
+
+Run `cargo deny check` before adding new dependencies.
 
 ## Benchmarking
 
@@ -108,8 +116,9 @@ Store benchmark results for regression tracking.
 
 - Never commit secrets or tokens
 - Use GitHub repository secrets for sensitive values
-- Run `cargo audit` in CI for vulnerability scanning
+- Run `cargo deny check` in CI for vulnerability scanning and license compliance
 - Keep dependencies updated
+- Advisories can be ignored in `deny.toml` with documented justification
 
 ## PR Workflow
 
