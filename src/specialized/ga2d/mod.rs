@@ -32,10 +32,12 @@
 //! assert!((rotated.y - 1.0).abs() < 1e-10);
 //! ```
 
+mod conversions;
 mod ops;
 mod types;
 
 #[cfg(any(test, feature = "proptest-support"))]
 pub mod arbitrary;
 
+pub use conversions::ConversionError;
 pub use types::*;

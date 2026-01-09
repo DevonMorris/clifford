@@ -278,6 +278,6 @@ CI will reject PRs that fail any of these checks. Always run `cargo fmt` before 
 - [x] **PRD-1: Foundation** - Float trait, Signature trait, Blade type
 - [x] **PRD-2: Core Multivector** - Multivector type, geometric product
 - [x] **PRD-3: Products** - inner, outer, regressive products, grade operations
-- [x] **PRD-4: Specialized** - optimized 2D/3D types (Vec2, Vec3, Rotor2, Rotor3, etc.)
+- [x] **PRD-4: Specialized** - optimized 2D/3D types (Vec2, Vec3, Rotor2, Rotor3, etc.) with conversions to generic Multivector
 - [ ] **PRD-5: PGA** - Projective GA, motors
 - [ ] **PRD-6: CGA** - Conformal GA, polish

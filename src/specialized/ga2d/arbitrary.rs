@@ -34,7 +34,7 @@
 //! }
 //! ```
 
-use super::{Rotor2, Vec2};
+use super::{Bivec2, Rotor2, Vec2};
 use crate::scalar::Float;
 use core::fmt::Debug;
 use core::ops::Deref;
@@ -57,6 +57,36 @@ impl<T: Float + Debug> Arbitrary for Vec2<T> {
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         (-100.0f64..100.0, -100.0f64..100.0)
             .prop_map(|(x, y)| Vec2::new(T::from_f64(x), T::from_f64(y)))
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Bivec2 Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Bivec2<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0)
+            .prop_map(|val| Bivec2::new(T::from_f64(val)))
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Rotor2 Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Rotor2<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0, -100.0f64..100.0)
+            .prop_map(|(s, xy)| Rotor2::new(T::from_f64(s), T::from_f64(xy)))
             .boxed()
     }
 }

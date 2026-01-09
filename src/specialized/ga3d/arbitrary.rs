@@ -36,7 +36,7 @@
 //! }
 //! ```
 
-use super::{Bivec3, Rotor3, Vec3};
+use super::{Bivec3, Even3, Rotor3, Trivec3, Vec3};
 use crate::scalar::Float;
 use core::fmt::Debug;
 use core::ops::Deref;
@@ -270,6 +270,71 @@ where
         any::<Bivec3<T>>()
             .prop_filter("non-zero bivector", move |b| b.norm_squared() > threshold)
             .prop_map(|b| UnitBivec3(b.normalized()))
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Trivec3 Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Trivec3<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0)
+            .prop_map(|val| Trivec3::new(T::from_f64(val)))
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Rotor3 Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Rotor3<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+        )
+            .prop_map(|(s, xy, xz, yz)| {
+                Rotor3::new(
+                    T::from_f64(s),
+                    Bivec3::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
+                )
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Even3 Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Even3<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+        )
+            .prop_map(|(s, xy, xz, yz)| {
+                Even3::new(
+                    T::from_f64(s),
+                    Bivec3::new(T::from_f64(xy), T::from_f64(xz), T::from_f64(yz)),
+                )
+            })
             .boxed()
     }
 }
