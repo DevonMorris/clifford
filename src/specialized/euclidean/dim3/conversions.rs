@@ -26,7 +26,7 @@
 //!
 //! # Tolerance
 //!
-//! The `TryFrom` implementations use [`CONVERSION_TOLERANCE`] (1e-10) rather than
+//! The `TryFrom` implementations use `CONVERSION_TOLERANCE` (1e-10) rather than
 //! machine epsilon to account for accumulated floating-point errors in computed
 //! results. This is intentionally more lenient than `T::EPSILON`.
 
@@ -171,7 +171,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vector<T> {
     /// Attempts to convert a generic multivector to a 3D vector.
     ///
     /// Succeeds only if the multivector is a pure vector (grade 1 only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -181,7 +181,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vector<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// scalar, bivector, or trivector components (above [`CONVERSION_TOLERANCE`]).
+    /// scalar, bivector, or trivector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -293,7 +293,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivector<T> {
     /// Attempts to convert a generic multivector to a 3D bivector.
     ///
     /// Succeeds only if the multivector is a pure bivector (grade 2 only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -303,7 +303,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivector<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// scalar, vector, or trivector components (above [`CONVERSION_TOLERANCE`]).
+    /// scalar, vector, or trivector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -404,7 +404,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivector<T> {
     /// Attempts to convert a generic multivector to a 3D trivector.
     ///
     /// Succeeds only if the multivector is a pure trivector (grade 3 only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -414,7 +414,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Trivector<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// scalar, vector, or bivector components (above [`CONVERSION_TOLERANCE`]).
+    /// scalar, vector, or bivector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -533,7 +533,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor<T> {
     /// Attempts to convert a generic multivector to a 3D rotor.
     ///
     /// Succeeds only if the multivector is an even element (scalar + bivector only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -543,7 +543,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// vector or trivector components (above [`CONVERSION_TOLERANCE`]).
+    /// vector or trivector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -642,7 +642,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Even<T> {
     /// Attempts to convert a generic multivector to a 3D even multivector.
     ///
     /// Succeeds only if the multivector is an even element (scalar + bivector only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -652,7 +652,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Even<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// vector or trivector components (above [`CONVERSION_TOLERANCE`]).
+    /// vector or trivector components (above `CONVERSION_TOLERANCE`).
     fn try_from(mv: Multivector<T, Euclidean3>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
 

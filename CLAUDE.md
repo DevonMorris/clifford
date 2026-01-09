@@ -278,6 +278,7 @@ cargo fmt                     # Format code
 ```bash
 cargo fmt                         # Format code (CI checks this!)
 cargo clippy --all-features       # Lint check
+cargo doc --all-features --no-deps # Documentation build (CI checks this!)
 cargo test --all-features         # Run all tests including doc tests
 ```
 

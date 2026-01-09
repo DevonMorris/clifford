@@ -18,6 +18,7 @@ Workflows live in `.github/workflows/`. Current CI runs:
 - `cargo test`
 - `cargo fmt --check`
 - `cargo clippy`
+- `cargo doc --all-features --no-deps` (documentation build)
 - `cargo audit` (security scanning)
 
 ### Adding New Workflows
@@ -71,6 +72,7 @@ Current required checks:
 - Test
 - Format
 - Clippy
+- Documentation
 - Greptile Review
 
 To modify via CLI:

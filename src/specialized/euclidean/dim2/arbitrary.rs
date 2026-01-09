@@ -1,7 +1,7 @@
 //! Proptest `Arbitrary` implementations for 2D GA types.
 //!
 //! This module provides [`Arbitrary`] implementations for property-based testing
-//! with [`proptest`]. It is available when either running tests or when the
+//! with [`mod@proptest`]. It is available when either running tests or when the
 //! `proptest-support` feature is enabled.
 //!
 //! # Generic Over Float Type

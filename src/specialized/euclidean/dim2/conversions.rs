@@ -26,7 +26,7 @@
 //!
 //! # Tolerance
 //!
-//! The `TryFrom` implementations use [`CONVERSION_TOLERANCE`] (1e-10) rather than
+//! The `TryFrom` implementations use `CONVERSION_TOLERANCE` (1e-10) rather than
 //! machine epsilon to account for accumulated floating-point errors in computed
 //! results. This is intentionally more lenient than `T::EPSILON`.
 
@@ -160,7 +160,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vector<T> {
     /// Attempts to convert a generic multivector to a 2D vector.
     ///
     /// Succeeds only if the multivector is a pure vector (grade 1 only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -170,7 +170,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vector<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// scalar or bivector components (above [`CONVERSION_TOLERANCE`]).
+    /// scalar or bivector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -260,7 +260,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivector<T> {
     /// Attempts to convert a generic multivector to a 2D bivector.
     ///
     /// Succeeds only if the multivector is a pure bivector (grade 2 only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -270,7 +270,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Bivector<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// scalar or vector components (above [`CONVERSION_TOLERANCE`]).
+    /// scalar or vector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///
@@ -372,7 +372,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor<T> {
     /// Attempts to convert a generic multivector to a 2D rotor.
     ///
     /// Succeeds only if the multivector is an even element (scalar + bivector only),
-    /// using [`CONVERSION_TOLERANCE`] to check for near-zero components.
+    /// using `CONVERSION_TOLERANCE` to check for near-zero components.
     ///
     /// # Note on Automatic Differentiation
     ///
@@ -382,7 +382,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor<T> {
     /// # Errors
     ///
     /// Returns `ConversionError::InvalidGrade` if the multivector has non-zero
-    /// vector components (above [`CONVERSION_TOLERANCE`]).
+    /// vector components (above `CONVERSION_TOLERANCE`).
     ///
     /// # Example
     ///

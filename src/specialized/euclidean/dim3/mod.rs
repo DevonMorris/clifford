@@ -7,7 +7,7 @@
 //!
 //! | Grade | Type | Components | Geometric Meaning |
 //! |-------|------|------------|-------------------|
-//! | 0 | [`Scalar`] | 1 | Magnitude/weight |
+//! | 0 | Scalar | 1 | Magnitude/weight |
 //! | 1 | [`Vector`] | e₁, e₂, e₃ | Direction/position |
 //! | 2 | [`Bivector`] | e₁₂, e₁₃, e₂₃ | Oriented plane/rotation axis |
 //! | 3 | [`Trivector`] | e₁₂₃ | Oriented volume |
