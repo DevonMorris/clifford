@@ -287,6 +287,7 @@ cargo doc --open              # Generate and view documentation
 cargo bench                   # Run benchmarks
 cargo clippy --all-features   # Run linter
 cargo fmt                     # Format code
+cargo deny check              # Check licenses and advisories
 ```
 
 ## Verification Workflow
@@ -298,11 +299,20 @@ cargo fmt                         # Format code (CI checks this!)
 cargo clippy --all-features       # Lint check
 cargo doc --all-features --no-deps # Documentation build (CI checks this!)
 cargo test --all-features         # Run all tests including doc tests
+cargo deny check                  # License and security audit (CI checks this!)
 ```
 
 CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
 
 **Important**: Always use `--all-features` to ensure all code paths are tested, including feature-gated modules like `proptest-support`.
+
+### License Policy
+
+Dependencies must use permissive licenses. The `deny.toml` configuration:
+- **Allowed**: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Zlib, CC0-1.0, Unlicense, MPL-2.0, Unicode-3.0
+- **Denied**: GPL, LGPL, AGPL (copyleft licenses)
+
+Run `cargo deny check` to verify license compliance before adding new dependencies.
 
 ## Architecture Notes
 
@@ -312,7 +322,7 @@ CI will reject PRs that fail any of these checks. Always run `cargo fmt` before 
 
 ### Completed
 - [x] Initial project setup with Cargo.toml (edition 2024)
-- [x] GitHub Actions CI workflow (check, test, fmt, clippy, audit)
+- [x] GitHub Actions CI workflow (check, test, fmt, clippy, cargo-deny)
 - [x] Strict lint configuration: deny all warnings, require docs on all items
 - [x] GitHub repository created: https://github.com/DevonMorris/clifford
 - [x] Branch protection: PRs required, CI must pass, no direct pushes to main

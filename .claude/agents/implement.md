@@ -136,6 +136,7 @@ where
    cargo clippy --all-features       # Lint check
    cargo doc --all-features --no-deps # Documentation build (CI checks this!)
    cargo test --all-features         # Run all tests
+   cargo deny check                  # License and security audit (CI checks this!)
    ```
 6. **Make small, logical commits**:
    - Separate documentation updates from implementation

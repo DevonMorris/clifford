@@ -2,7 +2,6 @@
 # See: https://embarkstudios.github.io/cargo-deny/
 
 [advisories]
-version = 2
 ignore = [
     # paste crate unmaintained - transitive dependency from nalgebra -> simba
     # No action available since it's not a direct dependency
@@ -10,11 +9,11 @@ ignore = [
 ]
 
 [licenses]
-version = 2
 # Confidence threshold for license detection
 confidence-threshold = 0.8
 
-# List of allowed licenses
+# List of allowed licenses (non-copyleft)
+# Any license not in this list will be denied, including GPL/LGPL/AGPL
 allow = [
     "MIT",
     "Apache-2.0",
@@ -24,19 +23,8 @@ allow = [
     "Zlib",
     "CC0-1.0",
     "Unlicense",
-    "MPL-2.0",  # Weak copyleft, file-level only
-]
-
-# Deny all GPL/LGPL licenses (copyleft)
-deny = [
-    "GPL-1.0",
-    "GPL-2.0",
-    "GPL-3.0",
-    "LGPL-2.0",
-    "LGPL-2.1",
-    "LGPL-3.0",
-    "AGPL-1.0",
-    "AGPL-3.0",
+    "MPL-2.0",      # Weak copyleft, file-level only
+    "Unicode-3.0",  # Required by unicode-ident
 ]
 
 [bans]
