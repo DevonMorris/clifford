@@ -63,6 +63,7 @@
 //! assert!((v_squared.scalar_part() - 25.0).abs() < 1e-10); // 3² + 4² = 25
 //! ```
 
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use core::fmt;
 use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, BitXor, Div, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -1432,6 +1433,52 @@ impl<T: Float, S: Signature> PartialEq for Multivector<T, S> {
     }
 }
 
+impl<T: Float, S: Signature> AbsDiffEq for Multivector<T, S> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::abs_diff_eq(a, b, epsilon))
+    }
+}
+
+impl<T: Float, S: Signature> RelativeEq for Multivector<T, S> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::relative_eq(a, b, epsilon, max_relative))
+    }
+}
+
+impl<T: Float, S: Signature> UlpsEq for Multivector<T, S> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.coeffs
+            .iter()
+            .zip(other.coeffs.iter())
+            .all(|(a, b)| T::ulps_eq(a, b, epsilon, max_ulps))
+    }
+}
+
 impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Multivector(")?;
@@ -1640,8 +1687,8 @@ mod tests {
         #[test]
         fn inverse_property(a in any::<NonZeroVectorE3>()) {
             // Vectors are always invertible in Euclidean space
-            let inv = a.0.inverse().expect("non-zero vector should be invertible");
-            let product = &a.0 * &inv;
+            let inv = a.inverse().expect("non-zero vector should be invertible");
+            let product = &*a * &inv;
             prop_assert!(product.approx_eq(&Multivector::one(), 1e-8));
         }
 
@@ -1715,8 +1762,8 @@ mod tests {
             a in any::<VectorE3>(),
             b in any::<VectorE3>(),
         ) {
-            let ab = a.0.outer(&b.0);
-            let ba = b.0.outer(&a.0);
+            let ab = a.outer(&*b);
+            let ba = b.outer(&*a);
             prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
         }
 
@@ -1736,7 +1783,7 @@ mod tests {
             a in any::<VectorE3>(),
             b in any::<VectorE3>(),
         ) {
-            let wedge = a.0.outer(&b.0);
+            let wedge = a.outer(&*b);
             // Result should have no scalar or vector parts
             prop_assert!(wedge.grade_select(0).is_zero(1e-10));
             prop_assert!(wedge.grade_select(1).is_zero(1e-10));
@@ -1751,7 +1798,7 @@ mod tests {
             a in any::<VectorE3>(),
             b in any::<VectorE3>(),
         ) {
-            let dot = a.0.inner(&b.0);
+            let dot = a.inner(&*b);
             // Should be pure scalar
             prop_assert!(dot.grade_select(1).is_zero(1e-10));
             prop_assert!(dot.grade_select(2).is_zero(1e-10));
@@ -1764,8 +1811,8 @@ mod tests {
             b in any::<VectorE3>(),
         ) {
             // For vectors, a·b = b·a
-            let ab = a.0.inner(&b.0);
-            let ba = b.0.inner(&a.0);
+            let ab = a.inner(&*b);
+            let ba = b.inner(&*a);
             prop_assert!(ab.approx_eq(&ba, 1e-10));
         }
 
@@ -1782,7 +1829,7 @@ mod tests {
         #[test]
         fn dual_changes_grade(a in any::<NonZeroVectorE3>()) {
             // Vector (grade 1) dualizes to bivector (grade 2) in 3D
-            let dual = a.0.dual();
+            let dual = a.dual();
             prop_assert_eq!(dual.grade(1e-10), Some(2));
         }
 
@@ -1795,9 +1842,9 @@ mod tests {
             n in any::<UnitVectorE3>(),
             v in any::<NonZeroVectorE3>(),
         ) {
-            let reflected = n.0.sandwich(&v.0);
+            let reflected = n.sandwich(&*v);
             // Reflection preserves norm
-            prop_assert!((reflected.norm() - v.0.norm()).abs() < 1e-8);
+            prop_assert!((reflected.norm() - v.norm()).abs() < 1e-8);
         }
 
         #[test]
@@ -1805,10 +1852,10 @@ mod tests {
             n in any::<UnitVectorE3>(),
             v in any::<VectorE3>(),
         ) {
-            let reflected = n.0.sandwich(&v.0);
+            let reflected = n.sandwich(&*v);
             // Double reflection returns original
-            let double_reflected = n.0.sandwich(&reflected);
-            prop_assert!(double_reflected.approx_eq(&v.0, 1e-8));
+            let double_reflected = n.sandwich(&reflected);
+            prop_assert!(double_reflected.approx_eq(&*v, 1e-8));
         }
     }
 
