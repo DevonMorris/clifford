@@ -40,3 +40,4 @@ pub mod basis;
 pub mod prelude;
 pub mod scalar;
 pub mod signature;
+pub mod specialized;
