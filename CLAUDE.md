@@ -105,6 +105,19 @@ done
 
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
+- **Implement `Arbitrary` trait** for types instead of writing free functions:
+  ```rust
+  // Good: implement Arbitrary trait, use any::<Type>()
+  impl Arbitrary for Vec3<f64> {
+      type Parameters = ();
+      type Strategy = BoxedStrategy<Self>;
+      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy { ... }
+  }
+  // Then use: any::<Vec3<f64>>()
+
+  // Avoid: free functions
+  fn arb_vec3() -> impl Strategy<Value = Vec3<f64>> { ... }
+  ```
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR
