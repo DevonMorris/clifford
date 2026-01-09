@@ -1,7 +1,22 @@
-//! Specialized types for common dimensions.
+//! Specialized types for common geometric algebras.
 //!
-//! This module provides optimized, ergonomic types for 2D and 3D geometric algebra.
-//! These types offer:
+//! This module provides optimized, ergonomic types organized by algebra type
+//! and dimension. Currently supported:
+//!
+//! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
+//!
+//! # Type Organization
+//!
+//! ```text
+//! specialized/
+//!   euclidean/
+//!     dim2/   - 2D Euclidean GA: Vector, Bivector, Rotor
+//!     dim3/   - 3D Euclidean GA: Vector, Bivector, Trivector, Rotor
+//!   projective/   (future)
+//!   conformal/    (future)
+//! ```
+//!
+//! # Benefits of Specialized Types
 //!
 //! - **Named fields**: Access components as `x`, `y`, `z` instead of indices
 //! - **Type safety**: Vectors, bivectors, and rotors are distinct types
@@ -22,15 +37,15 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::ga3d::{Vec3, Rotor3};
+//! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //!
 //! // Create a vector
-//! let v = Vec3::new(1.0, 0.0, 0.0);
+//! let v = Vector::new(1.0, 0.0, 0.0);
 //!
 //! // Create a 90° rotation in the xy-plane
-//! let rotor = Rotor3::from_angle_plane(
+//! let rotor = Rotor::from_angle_plane(
 //!     std::f64::consts::FRAC_PI_2,
-//!     clifford::specialized::ga3d::Bivec3::unit_xy(),
+//!     Bivector::unit_xy(),
 //! );
 //!
 //! // Apply rotation
@@ -39,5 +54,4 @@
 //! assert!((rotated.y - 1.0).abs() < 1e-10);
 //! ```
 
-pub mod ga2d;
-pub mod ga3d;
+pub mod euclidean;

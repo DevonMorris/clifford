@@ -1,14 +1,14 @@
 //! Operator implementations for 2D geometric algebra types.
 
-use super::types::{Bivec2, Rotor2, Vec2};
+use super::types::{Bivector, Rotor, Vector};
 use crate::scalar::Float;
 use std::ops::{Add, BitXor, Mul, Neg, Sub};
 
 // ============================================================================
-// Vec2 operations
+// Vector operations
 // ============================================================================
 
-impl<T: Float> Neg for Vec2<T> {
+impl<T: Float> Neg for Vector<T> {
     type Output = Self;
 
     #[inline]
@@ -17,7 +17,7 @@ impl<T: Float> Neg for Vec2<T> {
     }
 }
 
-impl<T: Float> Add for Vec2<T> {
+impl<T: Float> Add for Vector<T> {
     type Output = Self;
 
     #[inline]
@@ -26,7 +26,7 @@ impl<T: Float> Add for Vec2<T> {
     }
 }
 
-impl<T: Float> Sub for Vec2<T> {
+impl<T: Float> Sub for Vector<T> {
     type Output = Self;
 
     #[inline]
@@ -35,7 +35,7 @@ impl<T: Float> Sub for Vec2<T> {
     }
 }
 
-impl<T: Float> Mul<T> for Vec2<T> {
+impl<T: Float> Mul<T> for Vector<T> {
     type Output = Self;
 
     #[inline]
@@ -44,27 +44,27 @@ impl<T: Float> Mul<T> for Vec2<T> {
     }
 }
 
-impl Mul<Vec2<f32>> for f32 {
-    type Output = Vec2<f32>;
+impl Mul<Vector<f32>> for f32 {
+    type Output = Vector<f32>;
 
     #[inline]
-    fn mul(self, v: Vec2<f32>) -> Self::Output {
-        Vec2::new(self * v.x, self * v.y)
+    fn mul(self, v: Vector<f32>) -> Self::Output {
+        Vector::new(self * v.x, self * v.y)
     }
 }
 
-impl Mul<Vec2<f64>> for f64 {
-    type Output = Vec2<f64>;
+impl Mul<Vector<f64>> for f64 {
+    type Output = Vector<f64>;
 
     #[inline]
-    fn mul(self, v: Vec2<f64>) -> Self::Output {
-        Vec2::new(self * v.x, self * v.y)
+    fn mul(self, v: Vector<f64>) -> Self::Output {
+        Vector::new(self * v.x, self * v.y)
     }
 }
 
 /// Wedge product operator: `a ^ b`.
-impl<T: Float> BitXor for Vec2<T> {
-    type Output = Bivec2<T>;
+impl<T: Float> BitXor for Vector<T> {
+    type Output = Bivector<T>;
 
     #[inline]
     fn bitxor(self, other: Self) -> Self::Output {
@@ -73,10 +73,10 @@ impl<T: Float> BitXor for Vec2<T> {
 }
 
 // ============================================================================
-// Bivec2 operations
+// Bivector operations
 // ============================================================================
 
-impl<T: Float> Neg for Bivec2<T> {
+impl<T: Float> Neg for Bivector<T> {
     type Output = Self;
 
     #[inline]
@@ -85,7 +85,7 @@ impl<T: Float> Neg for Bivec2<T> {
     }
 }
 
-impl<T: Float> Add for Bivec2<T> {
+impl<T: Float> Add for Bivector<T> {
     type Output = Self;
 
     #[inline]
@@ -94,7 +94,7 @@ impl<T: Float> Add for Bivec2<T> {
     }
 }
 
-impl<T: Float> Sub for Bivec2<T> {
+impl<T: Float> Sub for Bivector<T> {
     type Output = Self;
 
     #[inline]
@@ -103,7 +103,7 @@ impl<T: Float> Sub for Bivec2<T> {
     }
 }
 
-impl<T: Float> Mul<T> for Bivec2<T> {
+impl<T: Float> Mul<T> for Bivector<T> {
     type Output = Self;
 
     #[inline]
@@ -113,10 +113,10 @@ impl<T: Float> Mul<T> for Bivec2<T> {
 }
 
 // ============================================================================
-// Rotor2 operations
+// Rotor operations
 // ============================================================================
 
-impl<T: Float> Neg for Rotor2<T> {
+impl<T: Float> Neg for Rotor<T> {
     type Output = Self;
 
     #[inline]
@@ -125,7 +125,7 @@ impl<T: Float> Neg for Rotor2<T> {
     }
 }
 
-impl<T: Float> Add for Rotor2<T> {
+impl<T: Float> Add for Rotor<T> {
     type Output = Self;
 
     #[inline]
@@ -134,7 +134,7 @@ impl<T: Float> Add for Rotor2<T> {
     }
 }
 
-impl<T: Float> Sub for Rotor2<T> {
+impl<T: Float> Sub for Rotor<T> {
     type Output = Self;
 
     #[inline]
@@ -144,7 +144,7 @@ impl<T: Float> Sub for Rotor2<T> {
 }
 
 /// Rotor multiplication (composition).
-impl<T: Float> Mul for Rotor2<T> {
+impl<T: Float> Mul for Rotor<T> {
     type Output = Self;
 
     #[inline]
@@ -153,7 +153,7 @@ impl<T: Float> Mul for Rotor2<T> {
     }
 }
 
-impl<T: Float> Mul<T> for Rotor2<T> {
+impl<T: Float> Mul<T> for Rotor<T> {
     type Output = Self;
 
     #[inline]
@@ -163,11 +163,11 @@ impl<T: Float> Mul<T> for Rotor2<T> {
 }
 
 /// Rotor applied to vector.
-impl<T: Float> Mul<Vec2<T>> for Rotor2<T> {
-    type Output = Vec2<T>;
+impl<T: Float> Mul<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
 
     #[inline]
-    fn mul(self, v: Vec2<T>) -> Self::Output {
+    fn mul(self, v: Vector<T>) -> Self::Output {
         self.rotate(v)
     }
 }
@@ -175,44 +175,44 @@ impl<T: Float> Mul<Vec2<T>> for Rotor2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::specialized::ga2d::arbitrary::{NonZeroVec2, UnitRotor2, UnitVec2};
+    use crate::specialized::euclidean::dim2::arbitrary::{NonZeroVector, UnitRotor, UnitVector};
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
     use proptest::prelude::*;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 
     // ========================================================================
-    // Vec2 tests
+    // Vector tests
     // ========================================================================
 
     proptest! {
         #[test]
-        fn vec2_add_commutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
+        fn vec2_add_commutative(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
             let ab = a + b;
             let ba = b + a;
             prop_assert!(abs_diff_eq!(ab, ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_dot_commutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
+        fn vec2_dot_commutative(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
             prop_assert!(abs_diff_eq!(a.dot(b), b.dot(a), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_wedge_anticommutative(a in any::<Vec2<f64>>(), b in any::<Vec2<f64>>()) {
+        fn vec2_wedge_anticommutative(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
             let ab = a.wedge(b);
             let ba = b.wedge(a);
             prop_assert!(abs_diff_eq!(ab.0, -ba.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_normalized_has_unit_length(v in any::<NonZeroVec2<f64>>()) {
+        fn vec2_normalized_has_unit_length(v in any::<NonZeroVector<f64>>()) {
             let n = v.normalized();
             prop_assert!(abs_diff_eq!(n.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn vec2_perp_is_perpendicular(v in any::<NonZeroVec2<f64>>()) {
+        fn vec2_perp_is_perpendicular(v in any::<NonZeroVector<f64>>()) {
             let p = v.perp();
             prop_assert!(abs_diff_eq!(v.dot(p), 0.0, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -224,16 +224,16 @@ mod tests {
 
     proptest! {
         #[test]
-        fn rotor2_preserves_norm(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
+        fn rotor2_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
             let rotated = r.rotate(v);
             prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn rotor2_composition(
-            r1 in any::<UnitRotor2<f64>>(),
-            r2 in any::<UnitRotor2<f64>>(),
-            v in any::<Vec2<f64>>()
+            r1 in any::<UnitRotor<f64>>(),
+            r2 in any::<UnitRotor<f64>>(),
+            v in any::<Vector<f64>>()
         ) {
             let sequential = r2.rotate(r1.rotate(v));
             let composed = r2.compose(*r1).rotate(v);
@@ -241,14 +241,14 @@ mod tests {
         }
 
         #[test]
-        fn rotor2_inverse(r in any::<UnitRotor2<f64>>(), v in any::<Vec2<f64>>()) {
+        fn rotor2_inverse(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
             let roundtrip = r.inverse().rotate(r.rotate(v));
             prop_assert!(abs_diff_eq!(roundtrip, v, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn rotor2_from_vectors(a in any::<UnitVec2<f64>>(), b in any::<UnitVec2<f64>>()) {
-            let r = Rotor2::from_vectors(*a, *b);
+        fn rotor2_from_vectors(a in any::<UnitVector<f64>>(), b in any::<UnitVector<f64>>()) {
+            let r = Rotor::from_vectors(*a, *b);
             let rotated = r.rotate(*a);
             prop_assert!(abs_diff_eq!(rotated, *b, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -260,40 +260,40 @@ mod tests {
 
     #[test]
     fn rotor2_90_deg_rotation() {
-        let rotor = Rotor2::from_angle(FRAC_PI_2);
-        let v = Vec2::unit_x();
+        let rotor = Rotor::from_angle(FRAC_PI_2);
+        let v = Vector::unit_x();
         let rotated = rotor.rotate(v);
 
         assert!(abs_diff_eq!(
             rotated,
-            Vec2::unit_y(),
+            Vector::unit_y(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
 
     #[test]
     fn rotor2_180_deg_rotation() {
-        let rotor = Rotor2::from_angle(PI);
-        let v = Vec2::unit_x();
+        let rotor = Rotor::from_angle(PI);
+        let v = Vector::unit_x();
         let rotated = rotor.rotate(v);
 
         assert!(abs_diff_eq!(
             rotated,
-            -Vec2::unit_x(),
+            -Vector::unit_x(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
 
     #[test]
     fn rotor2_45_plus_45_equals_90() {
-        let r45 = Rotor2::from_angle(FRAC_PI_4);
+        let r45 = Rotor::from_angle(FRAC_PI_4);
         let r90 = r45.compose(r45);
-        let v = Vec2::unit_x();
+        let v = Vector::unit_x();
         let rotated = r90.rotate(v);
 
         assert!(abs_diff_eq!(
             rotated,
-            Vec2::unit_y(),
+            Vector::unit_y(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn rotor2_angle_roundtrip() {
         let angle = 1.234;
-        let rotor = Rotor2::from_angle(angle);
+        let rotor = Rotor::from_angle(angle);
         assert!(abs_diff_eq!(
             rotor.angle(),
             angle,

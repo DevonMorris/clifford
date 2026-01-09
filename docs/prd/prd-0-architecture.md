@@ -59,10 +59,10 @@ src/
 │
 ├── specialized/              # Dimension-specific optimizations
 │   ├── mod.rs
-│   ├── ga2d/                 # 2D Euclidean GA
-│   ├── ga3d/                 # 3D Euclidean GA
-│   ├── pga3d/                # 3D Projective GA
-│   └── cga3d/                # 3D Conformal GA
+│   ├── euclidean::dim2/                 # 2D Euclidean GA
+│   ├── euclidean::dim3/                 # 3D Euclidean GA
+│   ├── peuclidean::dim3/                # 3D Projective GA
+│   └── ceuclidean::dim3/                # 3D Conformal GA
 │
 └── transforms/               # High-level geometric types
     ├── mod.rs

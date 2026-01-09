@@ -17,16 +17,16 @@ use crate::scalar::Float;
 /// # Example
 ///
 /// ```
-/// use clifford::specialized::ga3d::Vec3;
+/// use clifford::specialized::euclidean::dim3::Vector;
 ///
-/// let v = Vec3::new(1.0, 2.0, 3.0);
+/// let v = Vector::new(1.0, 2.0, 3.0);
 /// assert_eq!(v.x, 1.0);
 /// assert_eq!(v.y, 2.0);
 /// assert_eq!(v.z, 3.0);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Vec3<T: Float> {
+pub struct Vector<T: Float> {
     /// Coefficient of `e₁` (x-direction).
     pub x: T,
     /// Coefficient of `e₂` (y-direction).
@@ -35,7 +35,7 @@ pub struct Vec3<T: Float> {
     pub z: T,
 }
 
-impl<T: Float> Vec3<T> {
+impl<T: Float> Vector<T> {
     /// Creates a new 3D vector.
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
@@ -93,8 +93,8 @@ impl<T: Float> Vec3<T> {
 
     /// Wedge product (outer product): `a ∧ b`.
     #[inline]
-    pub fn wedge(self, other: Self) -> Bivec3<T> {
-        Bivec3 {
+    pub fn wedge(self, other: Self) -> Bivector<T> {
+        Bivector {
             xy: self.x * other.y - self.y * other.x,
             xz: self.x * other.z - self.z * other.x,
             yz: self.y * other.z - self.z * other.y,
@@ -113,15 +113,15 @@ impl<T: Float> Vec3<T> {
 
     /// Geometric product of two vectors: `ab = a·b + a∧b`.
     #[inline]
-    pub fn geometric(self, other: Self) -> Even3<T> {
-        Even3 {
+    pub fn geometric(self, other: Self) -> Even<T> {
+        Even {
             s: self.dot(other),
             b: self.wedge(other),
         }
     }
 }
 
-impl<T: Float> Default for Vec3<T> {
+impl<T: Float> Default for Vector<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -132,7 +132,7 @@ impl<T: Float> Default for Vec3<T> {
 /// Represents an oriented plane or rotation generator in 3D space.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Bivec3<T: Float> {
+pub struct Bivector<T: Float> {
     /// Coefficient of `e₁₂` (xy-plane).
     pub xy: T,
     /// Coefficient of `e₁₃` (xz-plane).
@@ -141,7 +141,7 @@ pub struct Bivec3<T: Float> {
     pub yz: T,
 }
 
-impl<T: Float> Bivec3<T> {
+impl<T: Float> Bivector<T> {
     /// Creates a new bivector.
     #[inline]
     pub fn new(xy: T, xz: T, yz: T) -> Self {
@@ -199,12 +199,12 @@ impl<T: Float> Bivec3<T> {
 
     /// Computes the dual vector (Hodge star): `*B`.
     #[inline]
-    pub fn dual(&self) -> Vec3<T> {
-        Vec3::new(self.yz, -self.xz, self.xy)
+    pub fn dual(&self) -> Vector<T> {
+        Vector::new(self.yz, -self.xz, self.xy)
     }
 }
 
-impl<T: Float> Default for Bivec3<T> {
+impl<T: Float> Default for Bivector<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -213,12 +213,12 @@ impl<T: Float> Default for Bivec3<T> {
 /// 3D trivector/pseudoscalar (grade 3): `e₁₂₃`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(transparent)]
-pub struct Trivec3<T: Float>(
+pub struct Trivector<T: Float>(
     /// Coefficient of `e₁₂₃`.
     pub T,
 );
 
-impl<T: Float> Trivec3<T> {
+impl<T: Float> Trivector<T> {
     /// Creates a new trivector.
     #[inline]
     pub fn new(value: T) -> Self {
@@ -250,7 +250,7 @@ impl<T: Float> Trivec3<T> {
     }
 }
 
-impl<T: Float> Default for Trivec3<T> {
+impl<T: Float> Default for Trivector<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -263,17 +263,17 @@ impl<T: Float> Default for Trivec3<T> {
 /// This gives counterclockwise rotation when looking along the rotation axis.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Rotor3<T: Float> {
+pub struct Rotor<T: Float> {
     /// Scalar part (grade 0).
     pub s: T,
     /// Bivector part (grade 2).
-    pub b: Bivec3<T>,
+    pub b: Bivector<T>,
 }
 
-impl<T: Float> Rotor3<T> {
+impl<T: Float> Rotor<T> {
     /// Creates a new rotor from scalar and bivector parts.
     #[inline]
-    pub fn new(s: T, b: Bivec3<T>) -> Self {
+    pub fn new(s: T, b: Bivector<T>) -> Self {
         Self { s, b }
     }
 
@@ -282,7 +282,7 @@ impl<T: Float> Rotor3<T> {
     pub fn identity() -> Self {
         Self {
             s: T::ONE,
-            b: Bivec3::zero(),
+            b: Bivector::zero(),
         }
     }
 
@@ -290,13 +290,13 @@ impl<T: Float> Rotor3<T> {
     ///
     /// The rotor `R = cos(θ/2) + sin(θ/2)B` rotates by angle `θ` in plane `B`.
     #[inline]
-    pub fn from_angle_plane(angle: T, plane: Bivec3<T>) -> Self {
+    pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self {
         let half = angle / T::TWO;
         let cos_half = half.cos();
         let sin_half = half.sin();
         Self {
             s: cos_half,
-            b: Bivec3::new(
+            b: Bivector::new(
                 plane.xy * sin_half,
                 plane.xz * sin_half,
                 plane.yz * sin_half,
@@ -306,7 +306,7 @@ impl<T: Float> Rotor3<T> {
 
     /// Creates a rotor that rotates vector `a` to vector `b`.
     #[inline]
-    pub fn from_vectors(a: Vec3<T>, b: Vec3<T>) -> Self {
+    pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
         let dot = a.dot(b);
         let wedge = a.wedge(b); // a ∧ b
 
@@ -315,11 +315,11 @@ impl<T: Float> Rotor3<T> {
         if sum_sq < T::EPSILON {
             // Vectors are anti-parallel, need to find perpendicular axis
             let perp = if a.x.abs() < a.y.abs() && a.x.abs() < a.z.abs() {
-                Vec3::unit_x()
+                Vector::unit_x()
             } else if a.y.abs() < a.z.abs() {
-                Vec3::unit_y()
+                Vector::unit_y()
             } else {
-                Vec3::unit_z()
+                Vector::unit_z()
             };
             let axis = a.cross(perp).normalized();
             let plane = a.wedge(axis).normalized();
@@ -329,7 +329,7 @@ impl<T: Float> Rotor3<T> {
         let norm = sum_sq.sqrt();
         Self {
             s: (T::ONE + dot) / norm,
-            b: Bivec3::new(wedge.xy / norm, wedge.xz / norm, wedge.yz / norm),
+            b: Bivector::new(wedge.xy / norm, wedge.xz / norm, wedge.yz / norm),
         }
     }
 
@@ -351,7 +351,7 @@ impl<T: Float> Rotor3<T> {
         let n = self.norm();
         Self {
             s: self.s / n,
-            b: Bivec3::new(self.b.xy / n, self.b.xz / n, self.b.yz / n),
+            b: Bivector::new(self.b.xy / n, self.b.xz / n, self.b.yz / n),
         }
     }
 
@@ -370,7 +370,7 @@ impl<T: Float> Rotor3<T> {
         let norm_sq = self.norm_squared();
         Self {
             s: self.s / norm_sq,
-            b: Bivec3::new(
+            b: Bivector::new(
                 -self.b.xy / norm_sq,
                 -self.b.xz / norm_sq,
                 -self.b.yz / norm_sq,
@@ -383,7 +383,7 @@ impl<T: Float> Rotor3<T> {
     /// Note: Some sources use `R v R̃`. We use `R̃ v R` which gives counterclockwise
     /// rotation when looking along the rotation axis.
     #[inline]
-    pub fn rotate(&self, v: Vec3<T>) -> Vec3<T> {
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
         let s = self.s;
         let bxy = self.b.xy;
         let bxz = self.b.xz;
@@ -396,7 +396,7 @@ impl<T: Float> Rotor3<T> {
         let qt = -bxy * v.z + bxz * v.y - byz * v.x;
 
         // Result: q R (only vector part survives)
-        Vec3 {
+        Vector {
             x: s * qx - bxy * qy - bxz * qz - byz * qt,
             y: s * qy + bxy * qx + bxz * qt - byz * qz,
             z: s * qz - bxy * qt + bxz * qx + byz * qy,
@@ -419,7 +419,7 @@ impl<T: Float> Rotor3<T> {
 
         Self {
             s,
-            b: Bivec3::new(bxy, bxz, byz),
+            b: Bivector::new(bxy, bxz, byz),
         }
     }
 
@@ -444,7 +444,7 @@ impl<T: Float> Rotor3<T> {
         if theta.abs() < T::EPSILON {
             return Self {
                 s: self.s * (T::ONE - t) + other.s * t,
-                b: Bivec3::new(
+                b: Bivector::new(
                     self.b.xy * (T::ONE - t) + other.b.xy * t,
                     self.b.xz * (T::ONE - t) + other.b.xz * t,
                     self.b.yz * (T::ONE - t) + other.b.yz * t,
@@ -459,7 +459,7 @@ impl<T: Float> Rotor3<T> {
 
         Self {
             s: self.s * s1 + other.s * s2,
-            b: Bivec3::new(
+            b: Bivector::new(
                 self.b.xy * s1 + other.b.xy * s2,
                 self.b.xz * s1 + other.b.xz * s2,
                 self.b.yz * s1 + other.b.yz * s2,
@@ -468,7 +468,7 @@ impl<T: Float> Rotor3<T> {
     }
 }
 
-impl<T: Float> Default for Rotor3<T> {
+impl<T: Float> Default for Rotor<T> {
     fn default() -> Self {
         Self::identity()
     }
@@ -477,17 +477,17 @@ impl<T: Float> Default for Rotor3<T> {
 /// Even subalgebra element (scalar + bivector).
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
-pub struct Even3<T: Float> {
+pub struct Even<T: Float> {
     /// Scalar part (grade 0).
     pub s: T,
     /// Bivector part (grade 2).
-    pub b: Bivec3<T>,
+    pub b: Bivector<T>,
 }
 
-impl<T: Float> Even3<T> {
+impl<T: Float> Even<T> {
     /// Creates a new even multivector.
     #[inline]
-    pub fn new(s: T, b: Bivec3<T>) -> Self {
+    pub fn new(s: T, b: Bivector<T>) -> Self {
         Self { s, b }
     }
 
@@ -496,21 +496,21 @@ impl<T: Float> Even3<T> {
     pub fn zero() -> Self {
         Self {
             s: T::ZERO,
-            b: Bivec3::zero(),
+            b: Bivector::zero(),
         }
     }
 
     /// Converts to a rotor (same representation).
     #[inline]
-    pub fn to_rotor(self) -> Rotor3<T> {
-        Rotor3 {
+    pub fn to_rotor(self) -> Rotor<T> {
+        Rotor {
             s: self.s,
             b: self.b,
         }
     }
 }
 
-impl<T: Float> Default for Even3<T> {
+impl<T: Float> Default for Even<T> {
     fn default() -> Self {
         Self::zero()
     }
@@ -520,7 +520,7 @@ impl<T: Float> Default for Even3<T> {
 // approx trait implementations (generic over Float)
 // ============================================================================
 
-impl<T: Float> AbsDiffEq for Vec3<T> {
+impl<T: Float> AbsDiffEq for Vector<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -534,7 +534,7 @@ impl<T: Float> AbsDiffEq for Vec3<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Vec3<T> {
+impl<T: Float> RelativeEq for Vector<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -551,7 +551,7 @@ impl<T: Float> RelativeEq for Vec3<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Vec3<T> {
+impl<T: Float> UlpsEq for Vector<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
@@ -563,7 +563,7 @@ impl<T: Float> UlpsEq for Vec3<T> {
     }
 }
 
-impl<T: Float> AbsDiffEq for Bivec3<T> {
+impl<T: Float> AbsDiffEq for Bivector<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -577,7 +577,7 @@ impl<T: Float> AbsDiffEq for Bivec3<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Bivec3<T> {
+impl<T: Float> RelativeEq for Bivector<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -594,7 +594,7 @@ impl<T: Float> RelativeEq for Bivec3<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Bivec3<T> {
+impl<T: Float> UlpsEq for Bivector<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
@@ -606,7 +606,7 @@ impl<T: Float> UlpsEq for Bivec3<T> {
     }
 }
 
-impl<T: Float> AbsDiffEq for Trivec3<T> {
+impl<T: Float> AbsDiffEq for Trivector<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -618,7 +618,7 @@ impl<T: Float> AbsDiffEq for Trivec3<T> {
     }
 }
 
-impl<T: Float> RelativeEq for Trivec3<T> {
+impl<T: Float> RelativeEq for Trivector<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -633,7 +633,7 @@ impl<T: Float> RelativeEq for Trivec3<T> {
     }
 }
 
-impl<T: Float> UlpsEq for Trivec3<T> {
+impl<T: Float> UlpsEq for Trivector<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
@@ -643,7 +643,7 @@ impl<T: Float> UlpsEq for Trivec3<T> {
     }
 }
 
-impl<T: Float> AbsDiffEq for Rotor3<T> {
+impl<T: Float> AbsDiffEq for Rotor<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -652,11 +652,11 @@ impl<T: Float> AbsDiffEq for Rotor3<T> {
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         T::abs_diff_eq(&self.s, &other.s, epsilon)
-            && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
+            && Bivector::abs_diff_eq(&self.b, &other.b, epsilon)
     }
 }
 
-impl<T: Float> RelativeEq for Rotor3<T> {
+impl<T: Float> RelativeEq for Rotor<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -668,22 +668,22 @@ impl<T: Float> RelativeEq for Rotor3<T> {
         max_relative: Self::Epsilon,
     ) -> bool {
         T::relative_eq(&self.s, &other.s, epsilon, max_relative)
-            && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
+            && Bivector::relative_eq(&self.b, &other.b, epsilon, max_relative)
     }
 }
 
-impl<T: Float> UlpsEq for Rotor3<T> {
+impl<T: Float> UlpsEq for Rotor<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         T::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
-            && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
+            && Bivector::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
     }
 }
 
-impl<T: Float> AbsDiffEq for Even3<T> {
+impl<T: Float> AbsDiffEq for Even<T> {
     type Epsilon = T;
 
     fn default_epsilon() -> Self::Epsilon {
@@ -692,11 +692,11 @@ impl<T: Float> AbsDiffEq for Even3<T> {
 
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         T::abs_diff_eq(&self.s, &other.s, epsilon)
-            && Bivec3::abs_diff_eq(&self.b, &other.b, epsilon)
+            && Bivector::abs_diff_eq(&self.b, &other.b, epsilon)
     }
 }
 
-impl<T: Float> RelativeEq for Even3<T> {
+impl<T: Float> RelativeEq for Even<T> {
     fn default_max_relative() -> Self::Epsilon {
         T::default_max_relative()
     }
@@ -708,17 +708,17 @@ impl<T: Float> RelativeEq for Even3<T> {
         max_relative: Self::Epsilon,
     ) -> bool {
         T::relative_eq(&self.s, &other.s, epsilon, max_relative)
-            && Bivec3::relative_eq(&self.b, &other.b, epsilon, max_relative)
+            && Bivector::relative_eq(&self.b, &other.b, epsilon, max_relative)
     }
 }
 
-impl<T: Float> UlpsEq for Even3<T> {
+impl<T: Float> UlpsEq for Even<T> {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()
     }
 
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         T::ulps_eq(&self.s, &other.s, epsilon, max_ulps)
-            && Bivec3::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
+            && Bivector::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
     }
 }

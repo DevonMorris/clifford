@@ -51,7 +51,7 @@ impl Signature for PGA3D {
 }
 ```
 
-### 2. PGA3D Types (`src/specialized/pga3d/`)
+### 2. PGA3D Types (`src/specialized/peuclidean::dim3/`)
 
 ```rust
 /// A point in 3D PGA (grade 3 trivector)
@@ -167,9 +167,9 @@ impl<T: Float> Plane<T> {
 ## Files to Create
 
 - `src/signature/pga.rs`
-- `src/specialized/pga3d/mod.rs`
-- `src/specialized/pga3d/types.rs`
-- `src/specialized/pga3d/ops.rs`
+- `src/specialized/peuclidean::dim3/mod.rs`
+- `src/specialized/peuclidean::dim3/types.rs`
+- `src/specialized/peuclidean::dim3/ops.rs`
 - `src/transforms/motor.rs`
 
 ## Testing (proptest)

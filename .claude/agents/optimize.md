@@ -127,8 +127,8 @@ For reference, these are typical performance expectations:
 
 | Operation | Target (ns) | Notes |
 |-----------|-------------|-------|
-| Vec3 geometric product | < 10 | SIMD-optimized |
-| Rotor3 sandwich product | < 20 | Most common transform |
+| Vector geometric product | < 10 | SIMD-optimized |
+| Rotor sandwich product | < 20 | Most common transform |
 | Generic Cl(3,0) product | < 100 | Sparse representation |
 
 These are guidelines, not hard requirements. Actual targets depend on hardware and use case.

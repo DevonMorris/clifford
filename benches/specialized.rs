@@ -7,8 +7,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
-use clifford::specialized::ga2d::{Rotor2, Vec2};
-use clifford::specialized::ga3d::{Bivec3, Rotor3, Vec3};
+use clifford::specialized::euclidean::{dim2, dim3};
 use criterion::{Criterion, criterion_group, criterion_main};
 
 // ============================================================================
@@ -16,55 +15,55 @@ use criterion::{Criterion, criterion_group, criterion_main};
 // ============================================================================
 
 fn bench_vec2_dot(c: &mut Criterion) {
-    let a: Vec2<f64> = Vec2::new(1.0, 2.0);
-    let b: Vec2<f64> = Vec2::new(3.0, 4.0);
+    let a: dim2::Vector<f64> = dim2::Vector::new(1.0, 2.0);
+    let b: dim2::Vector<f64> = dim2::Vector::new(3.0, 4.0);
 
-    c.bench_function("ga2d/vector_dot", |bencher| {
+    c.bench_function("euclidean/dim2/vector_dot", |bencher| {
         bencher.iter(|| black_box(a).dot(black_box(b)))
     });
 }
 
 fn bench_vec2_wedge(c: &mut Criterion) {
-    let a: Vec2<f64> = Vec2::new(1.0, 2.0);
-    let b: Vec2<f64> = Vec2::new(3.0, 4.0);
+    let a: dim2::Vector<f64> = dim2::Vector::new(1.0, 2.0);
+    let b: dim2::Vector<f64> = dim2::Vector::new(3.0, 4.0);
 
-    c.bench_function("ga2d/vector_wedge", |bencher| {
+    c.bench_function("euclidean/dim2/vector_wedge", |bencher| {
         bencher.iter(|| black_box(a).wedge(black_box(b)))
     });
 }
 
 fn bench_vec2_add(c: &mut Criterion) {
-    let a: Vec2<f64> = Vec2::new(1.0, 2.0);
-    let b: Vec2<f64> = Vec2::new(3.0, 4.0);
+    let a: dim2::Vector<f64> = dim2::Vector::new(1.0, 2.0);
+    let b: dim2::Vector<f64> = dim2::Vector::new(3.0, 4.0);
 
-    c.bench_function("ga2d/vector_add", |bencher| {
+    c.bench_function("euclidean/dim2/vector_add", |bencher| {
         bencher.iter(|| black_box(a) + black_box(b))
     });
 }
 
 fn bench_rotor2_rotation(c: &mut Criterion) {
-    let rotor = Rotor2::<f64>::from_angle(FRAC_PI_4);
-    let v = Vec2::new(1.0, 0.0);
+    let rotor = dim2::Rotor::<f64>::from_angle(FRAC_PI_4);
+    let v = dim2::Vector::new(1.0, 0.0);
 
-    c.bench_function("ga2d/rotor_rotate", |bencher| {
+    c.bench_function("euclidean/dim2/rotor_rotate", |bencher| {
         bencher.iter(|| black_box(rotor).rotate(black_box(v)))
     });
 }
 
 fn bench_rotor2_compose(c: &mut Criterion) {
-    let r1 = Rotor2::<f64>::from_angle(FRAC_PI_4);
-    let r2 = Rotor2::<f64>::from_angle(FRAC_PI_4 / 2.0);
+    let r1 = dim2::Rotor::<f64>::from_angle(FRAC_PI_4);
+    let r2 = dim2::Rotor::<f64>::from_angle(FRAC_PI_4 / 2.0);
 
-    c.bench_function("ga2d/rotor_compose", |bencher| {
+    c.bench_function("euclidean/dim2/rotor_compose", |bencher| {
         bencher.iter(|| black_box(r1).compose(black_box(r2)))
     });
 }
 
 fn bench_rotor2_slerp(c: &mut Criterion) {
-    let r1 = Rotor2::<f64>::identity();
-    let r2 = Rotor2::<f64>::from_angle(FRAC_PI_4);
+    let r1 = dim2::Rotor::<f64>::identity();
+    let r2 = dim2::Rotor::<f64>::from_angle(FRAC_PI_4);
 
-    c.bench_function("ga2d/rotor_slerp", |bencher| {
+    c.bench_function("euclidean/dim2/rotor_slerp", |bencher| {
         bencher.iter(|| black_box(r1).slerp(black_box(r2), black_box(0.5)))
     });
 }
@@ -74,74 +73,74 @@ fn bench_rotor2_slerp(c: &mut Criterion) {
 // ============================================================================
 
 fn bench_vec3_dot(c: &mut Criterion) {
-    let a: Vec3<f64> = Vec3::new(1.0, 2.0, 3.0);
-    let b: Vec3<f64> = Vec3::new(4.0, 5.0, 6.0);
+    let a: dim3::Vector<f64> = dim3::Vector::new(1.0, 2.0, 3.0);
+    let b: dim3::Vector<f64> = dim3::Vector::new(4.0, 5.0, 6.0);
 
-    c.bench_function("ga3d/vector_dot", |bencher| {
+    c.bench_function("euclidean/dim3/vector_dot", |bencher| {
         bencher.iter(|| black_box(a).dot(black_box(b)))
     });
 }
 
 fn bench_vec3_wedge(c: &mut Criterion) {
-    let a: Vec3<f64> = Vec3::new(1.0, 2.0, 3.0);
-    let b: Vec3<f64> = Vec3::new(4.0, 5.0, 6.0);
+    let a: dim3::Vector<f64> = dim3::Vector::new(1.0, 2.0, 3.0);
+    let b: dim3::Vector<f64> = dim3::Vector::new(4.0, 5.0, 6.0);
 
-    c.bench_function("ga3d/vector_wedge", |bencher| {
+    c.bench_function("euclidean/dim3/vector_wedge", |bencher| {
         bencher.iter(|| black_box(a).wedge(black_box(b)))
     });
 }
 
 fn bench_vec3_cross(c: &mut Criterion) {
-    let a: Vec3<f64> = Vec3::new(1.0, 2.0, 3.0);
-    let b: Vec3<f64> = Vec3::new(4.0, 5.0, 6.0);
+    let a: dim3::Vector<f64> = dim3::Vector::new(1.0, 2.0, 3.0);
+    let b: dim3::Vector<f64> = dim3::Vector::new(4.0, 5.0, 6.0);
 
-    c.bench_function("ga3d/vector_cross", |bencher| {
+    c.bench_function("euclidean/dim3/vector_cross", |bencher| {
         bencher.iter(|| black_box(a).cross(black_box(b)))
     });
 }
 
 fn bench_vec3_add(c: &mut Criterion) {
-    let a: Vec3<f64> = Vec3::new(1.0, 2.0, 3.0);
-    let b: Vec3<f64> = Vec3::new(4.0, 5.0, 6.0);
+    let a: dim3::Vector<f64> = dim3::Vector::new(1.0, 2.0, 3.0);
+    let b: dim3::Vector<f64> = dim3::Vector::new(4.0, 5.0, 6.0);
 
-    c.bench_function("ga3d/vector_add", |bencher| {
+    c.bench_function("euclidean/dim3/vector_add", |bencher| {
         bencher.iter(|| black_box(a) + black_box(b))
     });
 }
 
 fn bench_rotor3_rotation(c: &mut Criterion) {
-    let rotor = Rotor3::from_angle_plane(FRAC_PI_4, Bivec3::unit_xy());
-    let v = Vec3::new(1.0, 0.0, 0.0);
+    let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
+    let v = dim3::Vector::new(1.0, 0.0, 0.0);
 
-    c.bench_function("ga3d/rotor_rotate", |bencher| {
+    c.bench_function("euclidean/dim3/rotor_rotate", |bencher| {
         bencher.iter(|| black_box(rotor).rotate(black_box(v)))
     });
 }
 
 fn bench_rotor3_compose(c: &mut Criterion) {
-    let r1 = Rotor3::from_angle_plane(FRAC_PI_4, Bivec3::unit_xy());
-    let r2 = Rotor3::from_angle_plane(FRAC_PI_4 / 2.0, Bivec3::unit_xz());
+    let r1 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
+    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4 / 2.0, dim3::Bivector::unit_xz());
 
-    c.bench_function("ga3d/rotor_compose", |bencher| {
+    c.bench_function("euclidean/dim3/rotor_compose", |bencher| {
         bencher.iter(|| black_box(r1).compose(black_box(r2)))
     });
 }
 
 fn bench_rotor3_slerp(c: &mut Criterion) {
-    let r1 = Rotor3::<f64>::identity();
-    let r2 = Rotor3::from_angle_plane(FRAC_PI_4, Bivec3::unit_xy());
+    let r1 = dim3::Rotor::<f64>::identity();
+    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
 
-    c.bench_function("ga3d/rotor_slerp", |bencher| {
+    c.bench_function("euclidean/dim3/rotor_slerp", |bencher| {
         bencher.iter(|| black_box(r1).slerp(black_box(r2), black_box(0.5)))
     });
 }
 
 fn bench_rotor3_from_vectors(c: &mut Criterion) {
-    let a = Vec3::<f64>::unit_x();
-    let b = Vec3::new(0.707, 0.707, 0.0).normalized();
+    let a = dim3::Vector::<f64>::unit_x();
+    let b = dim3::Vector::new(0.707, 0.707, 0.0).normalized();
 
-    c.bench_function("ga3d/rotor_from_vectors", |bencher| {
-        bencher.iter(|| Rotor3::from_vectors(black_box(a), black_box(b)))
+    c.bench_function("euclidean/dim3/rotor_from_vectors", |bencher| {
+        bencher.iter(|| dim3::Rotor::from_vectors(black_box(a), black_box(b)))
     });
 }
 

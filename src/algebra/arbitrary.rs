@@ -1,7 +1,7 @@
 //! Proptest `Arbitrary` implementations for generic [`Multivector`] types.
 //!
 //! This module provides [`Arbitrary`] implementations for property-based testing
-//! with [`proptest`]. It is available when either running tests or when the
+//! with [`mod@proptest`]. It is available when either running tests or when the
 //! `proptest-support` feature is enabled.
 //!
 //! # Generic Implementation

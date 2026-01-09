@@ -41,50 +41,50 @@ Operations on the sparse `Multivector<T, S>` type.
 Operations on fixed-size `Vec2`, `Rotor2` types.
 
 ### Vector Dot (~0.8 ns)
-![ga2d_vector_dot](reports/ga2d_vector_dot_pdf.svg)
+![euclidean/dim2_vector_dot](reports/euclidean/dim2_vector_dot_pdf.svg)
 
 ### Vector Wedge (~0.9 ns)
-![ga2d_vector_wedge](reports/ga2d_vector_wedge_pdf.svg)
+![euclidean/dim2_vector_wedge](reports/euclidean/dim2_vector_wedge_pdf.svg)
 
 ### Vector Add (~0.8 ns)
-![ga2d_vector_add](reports/ga2d_vector_add_pdf.svg)
+![euclidean/dim2_vector_add](reports/euclidean/dim2_vector_add_pdf.svg)
 
 ### Rotor Rotate (~1.5 ns)
-![ga2d_rotor_rotate](reports/ga2d_rotor_rotate_pdf.svg)
+![euclidean/dim2_rotor_rotate](reports/euclidean/dim2_rotor_rotate_pdf.svg)
 
 ### Rotor Compose (~1.0 ns)
-![ga2d_rotor_compose](reports/ga2d_rotor_compose_pdf.svg)
+![euclidean/dim2_rotor_compose](reports/euclidean/dim2_rotor_compose_pdf.svg)
 
 ### Rotor Slerp (~34 ns)
-![ga2d_rotor_slerp](reports/ga2d_rotor_slerp_pdf.svg)
+![euclidean/dim2_rotor_slerp](reports/euclidean/dim2_rotor_slerp_pdf.svg)
 
 ## Specialized 3D Benchmarks
 
 Operations on fixed-size `Vec3`, `Bivec3`, `Rotor3` types.
 
 ### Vector Dot (~1.3 ns)
-![ga3d_vector_dot](reports/ga3d_vector_dot_pdf.svg)
+![euclidean/dim3_vector_dot](reports/euclidean/dim3_vector_dot_pdf.svg)
 
 ### Vector Wedge (~1.5 ns)
-![ga3d_vector_wedge](reports/ga3d_vector_wedge_pdf.svg)
+![euclidean/dim3_vector_wedge](reports/euclidean/dim3_vector_wedge_pdf.svg)
 
 ### Vector Cross (~1.5 ns)
-![ga3d_vector_cross](reports/ga3d_vector_cross_pdf.svg)
+![euclidean/dim3_vector_cross](reports/euclidean/dim3_vector_cross_pdf.svg)
 
 ### Vector Add (~1.3 ns)
-![ga3d_vector_add](reports/ga3d_vector_add_pdf.svg)
+![euclidean/dim3_vector_add](reports/euclidean/dim3_vector_add_pdf.svg)
 
 ### Rotor Rotate (~5.5 ns)
-![ga3d_rotor_rotate](reports/ga3d_rotor_rotate_pdf.svg)
+![euclidean/dim3_rotor_rotate](reports/euclidean/dim3_rotor_rotate_pdf.svg)
 
 ### Rotor Compose (~10.7 ns)
-![ga3d_rotor_compose](reports/ga3d_rotor_compose_pdf.svg)
+![euclidean/dim3_rotor_compose](reports/euclidean/dim3_rotor_compose_pdf.svg)
 
 ### Rotor Slerp (~35 ns)
-![ga3d_rotor_slerp](reports/ga3d_rotor_slerp_pdf.svg)
+![euclidean/dim3_rotor_slerp](reports/euclidean/dim3_rotor_slerp_pdf.svg)
 
 ### Rotor from Vectors (~23 ns)
-![ga3d_rotor_from_vectors](reports/ga3d_rotor_from_vectors_pdf.svg)
+![euclidean/dim3_rotor_from_vectors](reports/euclidean/dim3_rotor_from_vectors_pdf.svg)
 
 ## Running Benchmarks
 
@@ -124,7 +124,7 @@ done
 fn bench_new_operation(c: &mut Criterion) {
     let a = Vec3::new(1.0, 2.0, 3.0);
 
-    c.bench_function("ga3d/new_operation", |bencher| {
+    c.bench_function("euclidean/dim3/new_operation", |bencher| {
         bencher.iter(|| black_box(a).some_operation())
     });
 }
