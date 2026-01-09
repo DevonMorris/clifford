@@ -51,9 +51,10 @@ use typenum::{U4, U8, U16};
 ///
 /// ```
 /// use clifford::signature::{Euclidean2, Signature};
+/// use typenum::Unsigned;
 ///
 /// assert_eq!(Euclidean2::DIM, 2);
-/// assert_eq!(Euclidean2::NUM_BLADES, 4);
+/// assert_eq!(<Euclidean2 as Signature>::NumBlades::USIZE, 4);
 /// assert_eq!(Euclidean2::metric(0), 1);
 /// assert_eq!(Euclidean2::metric(1), 1);
 /// ```
@@ -107,9 +108,10 @@ impl Signature for Euclidean2 {
 ///
 /// ```
 /// use clifford::signature::{Euclidean3, Signature};
+/// use typenum::Unsigned;
 ///
 /// assert_eq!(Euclidean3::DIM, 3);
-/// assert_eq!(Euclidean3::NUM_BLADES, 8);
+/// assert_eq!(<Euclidean3 as Signature>::NumBlades::USIZE, 8);
 ///
 /// // All basis vectors square to +1
 /// for i in 0..3 {
@@ -158,9 +160,10 @@ impl Signature for Euclidean3 {
 ///
 /// ```
 /// use clifford::signature::{Euclidean4, Signature};
+/// use typenum::Unsigned;
 ///
 /// assert_eq!(Euclidean4::DIM, 4);
-/// assert_eq!(Euclidean4::NUM_BLADES, 16);
+/// assert_eq!(<Euclidean4 as Signature>::NumBlades::USIZE, 16);
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Euclidean4;
@@ -183,6 +186,7 @@ impl Signature for Euclidean4 {
 mod tests {
     use super::*;
     use proptest::prelude::*;
+    use typenum::Unsigned;
 
     proptest! {
         #[test]
@@ -204,13 +208,13 @@ mod tests {
     #[test]
     fn euclidean_dimensions() {
         assert_eq!(Euclidean2::DIM, 2);
-        assert_eq!(Euclidean2::NUM_BLADES, 4);
+        assert_eq!(<Euclidean2 as Signature>::NumBlades::USIZE, 4);
 
         assert_eq!(Euclidean3::DIM, 3);
-        assert_eq!(Euclidean3::NUM_BLADES, 8);
+        assert_eq!(<Euclidean3 as Signature>::NumBlades::USIZE, 8);
 
         assert_eq!(Euclidean4::DIM, 4);
-        assert_eq!(Euclidean4::NUM_BLADES, 16);
+        assert_eq!(<Euclidean4 as Signature>::NumBlades::USIZE, 16);
     }
 
     #[test]

@@ -68,6 +68,7 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use generic_array::{GenericArray, sequence::GenericSequence};
+use typenum::Unsigned;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -293,11 +294,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// # Arguments
     ///
-    /// * `coeffs` - Coefficients for all basis blades (only first `S::NUM_BLADES` are used)
+    /// * `coeffs` - Coefficients for all basis blades (only first `S::NumBlades::USIZE` are used)
     #[inline]
     pub fn from_coeffs(coeffs: &[T]) -> Self {
         let mut mv = Self::zero();
-        let n = coeffs.len().min(S::NUM_BLADES);
+        let n = coeffs.len().min(S::NumBlades::USIZE);
         mv.coeffs[..n].copy_from_slice(&coeffs[..n]);
         mv
     }
@@ -441,7 +442,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     pub fn reverse(&self) -> Self {
         let mut result = Self::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             let grade = Blade::from_index(i).grade();
             // Sign is (-1)^(k(k-1)/2)
             // For grade 0 and 1: sign = +1
@@ -486,7 +487,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     pub fn involute(&self) -> Self {
         let mut result = Self::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             let grade = Blade::from_index(i).grade();
             // Sign is (-1)^k
             let sign = if grade.is_multiple_of(2) {
@@ -526,7 +527,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     pub fn conjugate(&self) -> Self {
         let mut result = Self::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             let grade = Blade::from_index(i).grade();
             // Sign is (-1)^(k(k+1)/2)
             let sign = if (grade * (grade + 1) / 2).is_multiple_of(2) {
@@ -653,11 +654,11 @@ impl<T: Float, S: Signature> Mul for &Multivector<T, S> {
     fn mul(self, rhs: Self) -> Self::Output {
         let mut result = Multivector::zero();
 
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             if self.coeffs[i] == T::ZERO {
                 continue;
             }
-            for j in 0..S::NUM_BLADES {
+            for j in 0..S::NumBlades::USIZE {
                 if rhs.coeffs[j] == T::ZERO {
                     continue;
                 }
@@ -711,7 +712,7 @@ impl<T: Float, S: Signature> Mul<T> for &Multivector<T, S> {
 
     fn mul(self, scalar: T) -> Self::Output {
         let mut result = Multivector::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             result.coeffs[i] = self.coeffs[i] * scalar;
         }
         result
@@ -731,7 +732,7 @@ impl<T: Float, S: Signature> Div<T> for &Multivector<T, S> {
 
     fn div(self, scalar: T) -> Self::Output {
         let mut result = Multivector::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             result.coeffs[i] = self.coeffs[i] / scalar;
         }
         result
@@ -755,7 +756,7 @@ impl<T: Float, S: Signature> Add for &Multivector<T, S> {
 
     fn add(self, rhs: Self) -> Self::Output {
         let mut result = Multivector::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             result.coeffs[i] = self.coeffs[i] + rhs.coeffs[i];
         }
         result
@@ -791,7 +792,7 @@ impl<T: Float, S: Signature> Sub for &Multivector<T, S> {
 
     fn sub(self, rhs: Self) -> Self::Output {
         let mut result = Multivector::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             result.coeffs[i] = self.coeffs[i] - rhs.coeffs[i];
         }
         result
@@ -827,7 +828,7 @@ impl<T: Float, S: Signature> Neg for &Multivector<T, S> {
 
     fn neg(self) -> Self::Output {
         let mut result = Multivector::zero();
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             result.coeffs[i] = -self.coeffs[i];
         }
         result
@@ -848,7 +849,7 @@ impl<T: Float, S: Signature> Neg for Multivector<T, S> {
 
 impl<T: Float, S: Signature> AddAssign<&Multivector<T, S>> for Multivector<T, S> {
     fn add_assign(&mut self, rhs: &Self) {
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             self.coeffs[i] += rhs.coeffs[i];
         }
     }
@@ -862,7 +863,7 @@ impl<T: Float, S: Signature> AddAssign for Multivector<T, S> {
 
 impl<T: Float, S: Signature> SubAssign<&Multivector<T, S>> for Multivector<T, S> {
     fn sub_assign(&mut self, rhs: &Self) {
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             self.coeffs[i] -= rhs.coeffs[i];
         }
     }
@@ -876,7 +877,7 @@ impl<T: Float, S: Signature> SubAssign for Multivector<T, S> {
 
 impl<T: Float, S: Signature> MulAssign<T> for Multivector<T, S> {
     fn mul_assign(&mut self, scalar: T) {
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             self.coeffs[i] *= scalar;
         }
     }
@@ -902,7 +903,7 @@ impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Multivector(")?;
         let mut first = true;
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             if self.coeffs[i] != T::ZERO {
                 if !first {
                     write!(f, " + ")?;
@@ -921,7 +922,7 @@ impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
 impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut first = true;
-        for i in 0..S::NUM_BLADES {
+        for i in 0..S::NumBlades::USIZE {
             if self.coeffs[i] != T::ZERO {
                 if !first {
                     write!(f, " + ")?;
