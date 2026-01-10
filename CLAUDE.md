@@ -420,3 +420,9 @@ Run `cargo deny check` to verify license compliance before adding new dependenci
 - [x] **PRD-4: Specialized** - optimized 2D/3D types (Vector, Vector, Rotor, Rotor, etc.) with conversions to generic Multivector
 - [ ] **PRD-5: PGA** - Projective GA, motors
 - [ ] **PRD-6: CGA** - Conformal GA, polish
+
+## Resources
+
+### Projective Geometric Algebra (PGA)
+- [Rigid Geometric Algebra Wiki](https://rigidgeometricalgebra.org/wiki/index.php?title=Main_Page) - Comprehensive reference for 3D PGA formulas, motor transformations, and the geometric antiproduct
+- [Look, Ma, No Matrices!](https://enkimute.github.io/LookMaNoMatrices/) - Optimized PGA formulas with shader implementations

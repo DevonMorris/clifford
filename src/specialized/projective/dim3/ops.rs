@@ -208,9 +208,15 @@ impl<T: Float> Motor<T> {
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
         // Sandwich product: M P M̃
-        // Using the unified formula from Rigid Geometric Algebra:
-        // a = v × p + pw * m
-        // p' = p + 2(s * a + v × a + e0123 * pw * v)
+        //
+        // For composed motors (e.g., rotation + translation), the e0123 component
+        // encodes the translation along the rotation axis. This arises because
+        // the geometric product e12 * e03 = e0123, so translation parallel to the
+        // rotation axis "moves into" the pseudoscalar.
+        //
+        // The formula is:
+        //   a = v × p + pw * m
+        //   p' = p + 2(s * a + v × a + e0123 * pw * v)
         //
         // where v = (e23, e31, e12) is the rotation bivector,
         // m = (e01, e02, e03) is the translation bivector.
@@ -222,7 +228,6 @@ impl<T: Float> Motor<T> {
         let b01 = self.e01;
         let b02 = self.e02;
         let b03 = self.e03;
-        let i = self.e0123;
 
         let px = p.e1;
         let py = p.e2;
@@ -242,7 +247,11 @@ impl<T: Float> Motor<T> {
         let vxa_z = b23 * ay - b31 * ax;
 
         // Final transformation: p' = p + 2(s * a + v × a + e0123 * pw * v)
-        // Note: sign of e0123 term depends on convention; we use + here
+        //
+        // The e0123 term is needed for composed motors (T*R) to give the correct
+        // forward transformation. For motors satisfying the study condition
+        // (s*e0123 + v·m = 0), the roundtrip with inverse also works correctly.
+        let i = self.e0123;
         Point {
             e1: px + two * (s * ax + vxa_x + i * pw * b23),
             e2: py + two * (s * ay + vxa_y + i * pw * b31),

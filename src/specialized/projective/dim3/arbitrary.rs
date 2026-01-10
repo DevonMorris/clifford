@@ -163,39 +163,39 @@ impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate valid rigid transformations: either pure rotations or pure translations
-        // We avoid composing them because composed motors have non-zero e0123 (screw component)
-        // which has more complex inverse behavior.
-        prop_oneof![
-            // Pure rotation around arbitrary axis
-            (
-                -1.0f64..1.0,
-                -1.0f64..1.0,
-                -1.0f64..1.0,
-                -std::f64::consts::PI..std::f64::consts::PI,
-            )
-                .prop_filter("axis must be non-zero", |(ax, ay, az, _)| {
-                    ax * ax + ay * ay + az * az > 0.01
-                })
-                .prop_map(|(ax, ay, az, angle)| {
-                    let len = (ax * ax + ay * ay + az * az).sqrt();
-                    let axis = EuclideanVector::new(
-                        T::from_f64(ax / len),
-                        T::from_f64(ay / len),
-                        T::from_f64(az / len),
-                    );
-                    UnitMotor(Motor::from_axis_angle(&axis, T::from_f64(angle)))
-                }),
-            // Pure translation
-            (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0).prop_map(|(tx, ty, tz)| {
-                UnitMotor(Motor::from_translation(
-                    T::from_f64(tx),
-                    T::from_f64(ty),
-                    T::from_f64(tz),
-                ))
-            }),
-        ]
-        .boxed()
+        // Generate a valid rigid transformation: rotation around arbitrary axis + translation
+        // This produces motors with non-zero e0123 (screw component) from the
+        // geometric product of rotation and translation components.
+        (
+            // Rotation axis (will be normalized)
+            -1.0f64..1.0,
+            -1.0f64..1.0,
+            -1.0f64..1.0,
+            // Rotation angle
+            -std::f64::consts::PI..std::f64::consts::PI,
+            // Translation
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+        )
+            .prop_filter("axis must be non-zero", |(ax, ay, az, _, _, _, _)| {
+                ax * ax + ay * ay + az * az > 0.01
+            })
+            .prop_map(|(ax, ay, az, angle, tx, ty, tz)| {
+                // Normalize axis
+                let len = (ax * ax + ay * ay + az * az).sqrt();
+                let axis = EuclideanVector::new(
+                    T::from_f64(ax / len),
+                    T::from_f64(ay / len),
+                    T::from_f64(az / len),
+                );
+
+                let rotation = Motor::from_axis_angle(&axis, T::from_f64(angle));
+                let translation =
+                    Motor::from_translation(T::from_f64(tx), T::from_f64(ty), T::from_f64(tz));
+                UnitMotor(translation.compose(&rotation))
+            })
+            .boxed()
     }
 }
 
@@ -485,10 +485,37 @@ mod tests {
         }
 
         #[test]
-        fn motor_inverse_roundtrip(
-            motor in any::<UnitMotor<f64>>(),
+        fn pure_rotation_inverse_roundtrip(
+            // Pure rotation: e0123 = 0
+            axis_x in -1.0f64..1.0,
+            axis_y in -1.0f64..1.0,
+            axis_z in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
             point in any::<Point<f64>>(),
         ) {
+            let axis_len = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
+            prop_assume!(axis_len > 0.01);
+            let axis = EuclideanVector::new(axis_x / axis_len, axis_y / axis_len, axis_z / axis_len);
+            let motor = Motor::from_axis_angle(&axis, angle);
+
+            let transformed = motor.transform_point(&point);
+            let back = motor.inverse().transform_point(&transformed);
+
+            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn pure_translation_inverse_roundtrip(
+            // Pure translation: e0123 = 0
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+            tz in -100.0f64..100.0,
+            point in any::<Point<f64>>(),
+        ) {
+            let motor = Motor::from_translation(tx, ty, tz);
+
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
