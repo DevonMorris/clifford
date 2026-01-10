@@ -348,6 +348,52 @@ impl<T: Float> Line<T> {
         (nx * nx + ny * ny + nz * nz).sqrt() / (d_norm * pw.abs())
     }
 
+    /// Computes the angle between two lines.
+    ///
+    /// Returns the acute angle in radians, in the range `[0, π/2]`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Line;
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let x_axis: Line<f64> = Line::x_axis();
+    /// let y_axis: Line<f64> = Line::y_axis();
+    ///
+    /// // Perpendicular lines have angle π/2
+    /// assert!(abs_diff_eq!(x_axis.angle(&y_axis), FRAC_PI_2, epsilon = 1e-10));
+    ///
+    /// // Parallel lines have angle 0
+    /// assert!(abs_diff_eq!(x_axis.angle(&x_axis), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn angle(&self, other: &Line<T>) -> T {
+        // Use direction vectors: cos(θ) = |d₁·d₂| / (|d₁||d₂|)
+        let d1 = self.direction();
+        let d2 = other.direction();
+
+        let dot = d1.x * d2.x + d1.y * d2.y + d1.z * d2.z;
+        let norm1 = (d1.x * d1.x + d1.y * d1.y + d1.z * d1.z).sqrt();
+        let norm2 = (d2.x * d2.x + d2.y * d2.y + d2.z * d2.z).sqrt();
+
+        let denom = norm1 * norm2;
+        if denom < T::epsilon() {
+            return T::zero();
+        }
+
+        // Use absolute value for acute angle
+        let cos_theta = (dot / denom).abs();
+        // Clamp to [0, 1] to handle numerical errors
+        let clamped = if cos_theta > T::one() {
+            T::one()
+        } else {
+            cos_theta
+        };
+        clamped.acos()
+    }
+
     /// Computes the closest point on this line to a given point.
     ///
     /// # Example
@@ -435,6 +481,102 @@ impl<T: Float> Plane<T> {
     #[inline]
     pub fn contains_point(&self, p: &Point<T>, epsilon: T) -> bool {
         self.signed_distance(p).abs() < epsilon
+    }
+
+    /// Computes the dihedral angle between two planes.
+    ///
+    /// Returns the angle in radians, in the range `[0, π]`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Plane;
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let xy_plane: Plane<f64> = Plane::xy();
+    /// let xz_plane: Plane<f64> = Plane::xz();
+    ///
+    /// // XY and XZ planes are perpendicular
+    /// assert!(abs_diff_eq!(xy_plane.angle(&xz_plane), FRAC_PI_2, epsilon = 1e-10));
+    ///
+    /// // Same plane has angle 0
+    /// assert!(abs_diff_eq!(xy_plane.angle(&xy_plane), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn angle(&self, other: &Plane<T>) -> T {
+        // Use normal vectors: cos(θ) = (n₁·n₂) / (|n₁||n₂|)
+        let n1 = self.normal();
+        let n2 = other.normal();
+
+        let dot = n1.x * n2.x + n1.y * n2.y + n1.z * n2.z;
+        let norm1 = (n1.x * n1.x + n1.y * n1.y + n1.z * n1.z).sqrt();
+        let norm2 = (n2.x * n2.x + n2.y * n2.y + n2.z * n2.z).sqrt();
+
+        let denom = norm1 * norm2;
+        if denom < T::epsilon() {
+            return T::zero();
+        }
+
+        let cos_theta = dot / denom;
+        // Clamp to [-1, 1] to handle numerical errors
+        let clamped = if cos_theta > T::one() {
+            T::one()
+        } else if cos_theta < -T::one() {
+            -T::one()
+        } else {
+            cos_theta
+        };
+        clamped.acos()
+    }
+
+    /// Computes the angle between this plane and a line.
+    ///
+    /// Returns the angle in radians, in the range `[0, π/2]`.
+    /// This is the angle between the line and the plane surface,
+    /// not the angle between the line and the normal.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Plane, Line};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let xy_plane: Plane<f64> = Plane::xy();
+    /// let z_axis: Line<f64> = Line::z_axis();
+    /// let x_axis: Line<f64> = Line::x_axis();
+    ///
+    /// // Z axis is perpendicular to XY plane (angle π/2)
+    /// assert!(abs_diff_eq!(xy_plane.angle_to_line(&z_axis), FRAC_PI_2, epsilon = 1e-10));
+    ///
+    /// // X axis lies in XY plane (angle 0)
+    /// assert!(abs_diff_eq!(xy_plane.angle_to_line(&x_axis), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn angle_to_line(&self, line: &Line<T>) -> T {
+        // sin(θ) = |n·d| / (|n||d|)
+        // where θ is the angle between line and plane surface
+        let n = self.normal();
+        let d = line.direction();
+
+        let dot = (n.x * d.x + n.y * d.y + n.z * d.z).abs();
+        let norm_n = (n.x * n.x + n.y * n.y + n.z * n.z).sqrt();
+        let norm_d = (d.x * d.x + d.y * d.y + d.z * d.z).sqrt();
+
+        let denom = norm_n * norm_d;
+        if denom < T::epsilon() {
+            return T::zero();
+        }
+
+        let sin_theta = dot / denom;
+        // Clamp to [0, 1] to handle numerical errors
+        let clamped = if sin_theta > T::one() {
+            T::one()
+        } else {
+            sin_theta
+        };
+        clamped.asin()
     }
 
     /// Computes the meet (intersection) of this plane with another plane.
@@ -1250,5 +1392,99 @@ mod tests {
 
         let identity = Motor::identity();
         assert!(identity.is_unitized(ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Angle tests
+    // ========================================================================
+
+    #[test]
+    fn line_angle_perpendicular() {
+        let x_axis: Line<f64> = Line::x_axis();
+        let y_axis: Line<f64> = Line::y_axis();
+        assert!(abs_diff_eq!(
+            x_axis.angle(&y_axis),
+            std::f64::consts::FRAC_PI_2,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_angle_parallel() {
+        let z_axis: Line<f64> = Line::z_axis();
+        let parallel = Line::from_point_and_direction(
+            &Point::new(1.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 0.0, 1.0),
+        );
+        assert!(abs_diff_eq!(
+            z_axis.angle(&parallel),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_angle_symmetric() {
+        let x_axis: Line<f64> = Line::x_axis();
+        let y_axis: Line<f64> = Line::y_axis();
+        assert!(abs_diff_eq!(
+            x_axis.angle(&y_axis),
+            y_axis.angle(&x_axis),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_angle_perpendicular() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        let xz_plane: Plane<f64> = Plane::xz();
+        assert!(abs_diff_eq!(
+            xy_plane.angle(&xz_plane),
+            std::f64::consts::FRAC_PI_2,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_angle_same() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        assert!(abs_diff_eq!(
+            xy_plane.angle(&xy_plane),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_angle_symmetric() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        let xz_plane: Plane<f64> = Plane::xz();
+        assert!(abs_diff_eq!(
+            xy_plane.angle(&xz_plane),
+            xz_plane.angle(&xy_plane),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_angle_to_line_perpendicular() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        let z_axis: Line<f64> = Line::z_axis();
+        assert!(abs_diff_eq!(
+            xy_plane.angle_to_line(&z_axis),
+            std::f64::consts::FRAC_PI_2,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_angle_to_line_parallel() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        let x_axis: Line<f64> = Line::x_axis();
+        assert!(abs_diff_eq!(
+            xy_plane.angle_to_line(&x_axis),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 }
