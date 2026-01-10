@@ -163,6 +163,7 @@ dependencies = [
  "generic-array",
  "nalgebra 0.33.2",
  "nalgebra 0.34.1",
+ "num-traits",
  "proptest",
  "serde",
  "serde_json",

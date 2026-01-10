@@ -45,25 +45,25 @@ impl<T: Float> Vector<T> {
     /// Creates the zero vector.
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::ZERO, T::ZERO, T::ZERO)
+        Self::new(T::zero(), T::zero(), T::zero())
     }
 
     /// Creates the unit x-vector `e₁`.
     #[inline]
     pub fn unit_x() -> Self {
-        Self::new(T::ONE, T::ZERO, T::ZERO)
+        Self::new(T::one(), T::zero(), T::zero())
     }
 
     /// Creates the unit y-vector `e₂`.
     #[inline]
     pub fn unit_y() -> Self {
-        Self::new(T::ZERO, T::ONE, T::ZERO)
+        Self::new(T::zero(), T::one(), T::zero())
     }
 
     /// Creates the unit z-vector `e₃`.
     #[inline]
     pub fn unit_z() -> Self {
-        Self::new(T::ZERO, T::ZERO, T::ONE)
+        Self::new(T::zero(), T::zero(), T::one())
     }
 
     /// Returns the squared magnitude: `x² + y² + z²`.
@@ -151,25 +151,25 @@ impl<T: Float> Bivector<T> {
     /// Creates the zero bivector.
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::ZERO, T::ZERO, T::ZERO)
+        Self::new(T::zero(), T::zero(), T::zero())
     }
 
     /// Creates the unit xy-plane bivector `e₁₂`.
     #[inline]
     pub fn unit_xy() -> Self {
-        Self::new(T::ONE, T::ZERO, T::ZERO)
+        Self::new(T::one(), T::zero(), T::zero())
     }
 
     /// Creates the unit xz-plane bivector `e₁₃`.
     #[inline]
     pub fn unit_xz() -> Self {
-        Self::new(T::ZERO, T::ONE, T::ZERO)
+        Self::new(T::zero(), T::one(), T::zero())
     }
 
     /// Creates the unit yz-plane bivector `e₂₃`.
     #[inline]
     pub fn unit_yz() -> Self {
-        Self::new(T::ZERO, T::ZERO, T::ONE)
+        Self::new(T::zero(), T::zero(), T::one())
     }
 
     /// Returns the squared magnitude.
@@ -228,13 +228,13 @@ impl<T: Float> Trivector<T> {
     /// Creates the zero trivector.
     #[inline]
     pub fn zero() -> Self {
-        Self(T::ZERO)
+        Self(T::zero())
     }
 
     /// Creates the unit pseudoscalar `e₁₂₃`.
     #[inline]
     pub fn unit() -> Self {
-        Self(T::ONE)
+        Self(T::one())
     }
 
     /// Returns the coefficient.
@@ -281,7 +281,7 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn identity() -> Self {
         Self {
-            s: T::ONE,
+            s: T::one(),
             b: Bivector::zero(),
         }
     }
@@ -310,9 +310,9 @@ impl<T: Float> Rotor<T> {
         let dot = a.dot(b);
         let wedge = a.wedge(b); // a ∧ b
 
-        let sum_sq = (T::ONE + dot) * (T::ONE + dot) + wedge.norm_squared();
+        let sum_sq = (T::one() + dot) * (T::one() + dot) + wedge.norm_squared();
 
-        if sum_sq < T::EPSILON {
+        if sum_sq < T::epsilon() {
             // Vectors are anti-parallel, need to find perpendicular axis
             let perp = if a.x.abs() < a.y.abs() && a.x.abs() < a.z.abs() {
                 Vector::unit_x()
@@ -328,7 +328,7 @@ impl<T: Float> Rotor<T> {
 
         let norm = sum_sq.sqrt();
         Self {
-            s: (T::ONE + dot) / norm,
+            s: (T::one() + dot) / norm,
             b: Bivector::new(wedge.xy / norm, wedge.xz / norm, wedge.yz / norm),
         }
     }
@@ -431,30 +431,30 @@ impl<T: Float> Rotor<T> {
             + self.b.xz * other.b.xz
             + self.b.yz * other.b.yz;
 
-        let dot = if dot > T::ONE {
-            T::ONE
-        } else if dot < -T::ONE {
-            -T::ONE
+        let dot = if dot > T::one() {
+            T::one()
+        } else if dot < -T::one() {
+            -T::one()
         } else {
             dot
         };
 
         let theta = dot.acos();
 
-        if theta.abs() < T::EPSILON {
+        if theta.abs() < T::epsilon() {
             return Self {
-                s: self.s * (T::ONE - t) + other.s * t,
+                s: self.s * (T::one() - t) + other.s * t,
                 b: Bivector::new(
-                    self.b.xy * (T::ONE - t) + other.b.xy * t,
-                    self.b.xz * (T::ONE - t) + other.b.xz * t,
-                    self.b.yz * (T::ONE - t) + other.b.yz * t,
+                    self.b.xy * (T::one() - t) + other.b.xy * t,
+                    self.b.xz * (T::one() - t) + other.b.xz * t,
+                    self.b.yz * (T::one() - t) + other.b.yz * t,
                 ),
             }
             .normalized();
         }
 
         let sin_theta = theta.sin();
-        let s1 = ((T::ONE - t) * theta).sin() / sin_theta;
+        let s1 = ((T::one() - t) * theta).sin() / sin_theta;
         let s2 = (t * theta).sin() / sin_theta;
 
         Self {
@@ -495,7 +495,7 @@ impl<T: Float> Even<T> {
     #[inline]
     pub fn zero() -> Self {
         Self {
-            s: T::ZERO,
+            s: T::zero(),
             b: Bivector::zero(),
         }
     }

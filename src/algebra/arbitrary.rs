@@ -26,6 +26,7 @@
 //! ```
 //! use clifford::algebra::{Multivector, arbitrary::VectorE3};
 //! use clifford::signature::Euclidean3;
+//! use approx::abs_diff_eq;
 //! use proptest::prelude::*;
 //!
 //! proptest! {
@@ -36,7 +37,7 @@
 //!     ) {
 //!         let ab = a.outer(&*b);
 //!         let ba = b.outer(&*a);
-//!         prop_assert!(ab.approx_eq(&(-&ba), 1e-10));
+//!         prop_assert!(abs_diff_eq!(ab, -&ba, epsilon = 1e-10));
 //!     }
 //! }
 //! ```

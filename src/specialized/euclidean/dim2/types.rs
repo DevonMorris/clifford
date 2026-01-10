@@ -26,19 +26,19 @@ impl<T: Float> Vector<T> {
     /// Creates the zero vector.
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::ZERO, T::ZERO)
+        Self::new(T::zero(), T::zero())
     }
 
     /// Creates the unit x-vector `e₁`.
     #[inline]
     pub fn unit_x() -> Self {
-        Self::new(T::ONE, T::ZERO)
+        Self::new(T::one(), T::zero())
     }
 
     /// Creates the unit y-vector `e₂`.
     #[inline]
     pub fn unit_y() -> Self {
-        Self::new(T::ZERO, T::ONE)
+        Self::new(T::zero(), T::one())
     }
 
     /// Returns the squared magnitude.
@@ -116,13 +116,13 @@ impl<T: Float> Bivector<T> {
     /// Creates the zero bivector.
     #[inline]
     pub fn zero() -> Self {
-        Self(T::ZERO)
+        Self(T::zero())
     }
 
     /// Creates the unit bivector `e₁₂`.
     #[inline]
     pub fn unit() -> Self {
-        Self(T::ONE)
+        Self(T::one())
     }
 
     /// Returns the coefficient.
@@ -167,8 +167,8 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn identity() -> Self {
         Self {
-            s: T::ONE,
-            xy: T::ZERO,
+            s: T::one(),
+            xy: T::zero(),
         }
     }
 
@@ -190,10 +190,10 @@ impl<T: Float> Rotor<T> {
         let dot = a.dot(b);
         let wedge = a.x * b.y - a.y * b.x; // a ∧ b
 
-        let norm = ((T::ONE + dot) * (T::ONE + dot) + wedge * wedge).sqrt();
+        let norm = ((T::one() + dot) * (T::one() + dot) + wedge * wedge).sqrt();
 
         Self {
-            s: (T::ONE + dot) / norm,
+            s: (T::one() + dot) / norm,
             xy: wedge / norm,
         }
     }
@@ -270,8 +270,8 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn lerp(&self, other: Self, t: T) -> Self {
         Self {
-            s: self.s * (T::ONE - t) + other.s * t,
-            xy: self.xy * (T::ONE - t) + other.xy * t,
+            s: self.s * (T::one() - t) + other.s * t,
+            xy: self.xy * (T::one() - t) + other.xy * t,
         }
         .normalized()
     }
@@ -281,22 +281,22 @@ impl<T: Float> Rotor<T> {
     pub fn slerp(&self, other: Self, t: T) -> Self {
         let dot = self.s * other.s + self.xy * other.xy;
 
-        let dot = if dot > T::ONE {
-            T::ONE
-        } else if dot < -T::ONE {
-            -T::ONE
+        let dot = if dot > T::one() {
+            T::one()
+        } else if dot < -T::one() {
+            -T::one()
         } else {
             dot
         };
 
         let theta = dot.acos();
 
-        if theta.abs() < T::EPSILON {
+        if theta.abs() < T::epsilon() {
             return self.lerp(other, t);
         }
 
         let sin_theta = theta.sin();
-        let s1 = ((T::ONE - t) * theta).sin() / sin_theta;
+        let s1 = ((T::one() - t) * theta).sin() / sin_theta;
         let s2 = (t * theta).sin() / sin_theta;
 
         Self {

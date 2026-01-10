@@ -192,15 +192,15 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Matrix3<T> {
     #[inline]
     fn from(b: Bivector<T>) -> Self {
         na::Matrix3::new(
-            T::ZERO,
+            T::zero(),
             -b.xy,
             -b.xz, // row 0
             b.xy,
-            T::ZERO,
+            T::zero(),
             -b.yz, // row 1
             b.xz,
             b.yz,
-            T::ZERO, // row 2
+            T::zero(), // row 2
         )
     }
 }
