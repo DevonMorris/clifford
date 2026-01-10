@@ -19,7 +19,7 @@ missing_docs_in_private_items = "deny"
 uninlined_format_args = "allow"
 
 [features]
-default = []
+default = ["serde", "proptest-support", "nalgebra-0_33"]
 serde = ["dep:serde", "generic-array/serde"]
 proptest-support = ["dep:proptest"]
 nalgebra-0_33 = ["dep:nalgebra-0-33"]

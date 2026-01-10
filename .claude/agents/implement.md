@@ -132,12 +132,13 @@ where
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
-   cargo fmt                         # Format code (CI checks this!)
-   cargo clippy --all-features       # Lint check
-   cargo doc --all-features --no-deps # Documentation build (CI checks this!)
-   cargo test --all-features         # Run all tests
-   cargo deny check                  # License and security audit (CI checks this!)
+   cargo fmt             # Format code (CI checks this!)
+   cargo clippy          # Lint check
+   cargo doc --no-deps   # Documentation build (CI checks this!)
+   cargo test            # Run all tests
+   cargo deny check      # License and security audit (CI checks this!)
    ```
+   Note: Default features include `serde`, `proptest-support`, and `nalgebra-0_33`. CI runs the full feature matrix.
 6. **Make small, logical commits**:
    - Separate documentation updates from implementation
    - Separate different modules (e.g., euclidean::dim2 and euclidean::dim3 in different commits)

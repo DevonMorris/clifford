@@ -320,13 +320,13 @@ Use the review agent to check this PR before merging
 ## Development Commands
 
 ```bash
-cargo build --all-features    # Build the library with all features
-cargo test --all-features     # Run all tests
-cargo doc --open              # Generate and view documentation
-cargo bench                   # Run benchmarks
-cargo clippy --all-features   # Run linter
-cargo fmt                     # Format code
-cargo deny check              # Check licenses and advisories
+cargo build           # Build the library (default features include serde, proptest-support, nalgebra-0_33)
+cargo test            # Run all tests
+cargo doc --open      # Generate and view documentation
+cargo bench           # Run benchmarks
+cargo clippy          # Run linter
+cargo fmt             # Format code
+cargo deny check      # Check licenses and advisories
 ```
 
 ## Verification Workflow
@@ -334,16 +334,16 @@ cargo deny check              # Check licenses and advisories
 **Before every commit**, run these commands to ensure CI will pass:
 
 ```bash
-cargo fmt                         # Format code (CI checks this!)
-cargo clippy --all-features       # Lint check
-cargo doc --all-features --no-deps # Documentation build (CI checks this!)
-cargo test --all-features         # Run all tests including doc tests
-cargo deny check                  # License and security audit (CI checks this!)
+cargo fmt             # Format code (CI checks this!)
+cargo clippy          # Lint check
+cargo doc --no-deps   # Documentation build (CI checks this!)
+cargo test            # Run all tests including doc tests
+cargo deny check      # License and security audit (CI checks this!)
 ```
 
 CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
 
-**Important**: Always use `--all-features` to ensure all code paths are tested, including feature-gated modules like `proptest-support`.
+**Note on features**: Default features include `serde`, `proptest-support`, and `nalgebra-0_33`. CI runs the full feature matrix (including `nalgebra-0_34`). The `nalgebra-0_33` and `nalgebra-0_34` features are mutually exclusive.
 
 ### License Policy
 

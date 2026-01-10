@@ -10,7 +10,7 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Mathematical concepts are explained
 - [ ] Examples are provided and work
 - [ ] Notation is consistent
-- [ ] `cargo doc --all-features --no-deps` builds without warnings
+- [ ] `cargo doc --no-deps` builds without warnings
 
 ### 2. Correctness
 - [ ] Mathematical operations are correct
