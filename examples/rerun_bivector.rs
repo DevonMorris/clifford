@@ -54,6 +54,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // The Hodge dual is a vector perpendicular to the plane
         let dual = bivector.dual();
 
+        // Determine bivector sign/orientation for coloring
+        // When the bivector flips sign, the orientation reverses
+        // We use the z-component of the dual (or xy component of bivector)
+        let positive_orientation = dual.z() >= 0.0;
+        let (color_primary, color_secondary) = if positive_orientation {
+            ([255_u8, 150, 50, 180], [255_u8, 100, 100]) // Orange/red for positive
+        } else {
+            ([100_u8, 150, 255, 180], [100_u8, 100, 255]) // Blue/purple for negative
+        };
+
         // =====================================================================
         // Draw the parallelogram (bivector visualization)
         // =====================================================================
@@ -64,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let p2 = u + v; // origin + u + v
         let p3 = v; // origin + v
 
-        // Draw the parallelogram edges
+        // Draw the parallelogram edges (color changes with orientation)
         rec.log(
             "bivector/edges",
             &rerun::LineStrips3D::new([[
@@ -74,13 +84,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 [p3.x(), p3.y(), p3.z()],
                 [p0.x(), p0.y(), p0.z()], // close the loop
             ]])
-            .with_colors([[255, 200, 100]])
+            .with_colors([color_secondary])
             .with_radii([0.02]),
         )?;
 
         // Draw the filled parallelogram as two triangles
         // Triangle 1: p0, p1, p2
         // Triangle 2: p0, p2, p3
+        // Color indicates orientation (orange = positive, blue = negative)
         rec.log(
             "bivector/surface",
             &rerun::Mesh3D::new([
@@ -90,12 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 [p3.x(), p3.y(), p3.z()],
             ])
             .with_triangle_indices([[0_u32, 1, 2], [0, 2, 3]])
-            .with_vertex_colors([
-                [255, 150, 50, 180],
-                [255, 150, 50, 180],
-                [255, 150, 50, 180],
-                [255, 150, 50, 180],
-            ]),
+            .with_vertex_colors([color_primary, color_primary, color_primary, color_primary]),
         )?;
 
         // Draw the spanning vectors u and v
@@ -204,10 +210,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Watch how the bivector changes as v rotates around fixed u:");
     println!("- Red arrow (u): fixed vector along x-axis");
     println!("- Green arrow (v): rotating vector");
-    println!("- Orange parallelogram: bivector u ∧ v (oriented area)");
+    println!("- Orange surface: positive orientation (u ∧ v > 0)");
+    println!("- Blue surface: negative orientation (u ∧ v < 0)");
     println!("- Blue arrow: Hodge dual (perpendicular to plane)");
     println!();
-    println!("Notice: when u and v align, the bivector collapses to zero!");
+    println!("Notice:");
+    println!("  - When u and v align, the bivector collapses to zero!");
+    println!("  - When v crosses u, the orientation (color) flips!");
 
     Ok(())
 }
