@@ -258,6 +258,84 @@ impl<T: Float> Motor<T> {
             e12: m3_rot + two * txd_z,
         }
     }
+
+    /// Computes the commutator of two motors.
+    ///
+    /// `[M₁, M₂] = M₁M₂ - M₂M₁`
+    ///
+    /// The commutator measures the non-commutativity of two transformations.
+    /// For rotations around the same axis, the commutator is zero.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use std::f64::consts::FRAC_PI_4;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Rotations around the same axis commute
+    /// let r1 = Motor::from_rotation_z(FRAC_PI_4);
+    /// let r2 = Motor::from_rotation_z(FRAC_PI_4 / 2.0);
+    /// let comm = r1.commutator(&r2);
+    ///
+    /// // Result should be close to zero
+    /// assert!(abs_diff_eq!(comm.s, 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn commutator(&self, other: &Motor<T>) -> Motor<T> {
+        // [M₁, M₂] = M₁M₂ - M₂M₁
+        let m1m2 = self.compose(other);
+        let m2m1 = other.compose(self);
+
+        Motor {
+            s: m1m2.s - m2m1.s,
+            e23: m1m2.e23 - m2m1.e23,
+            e31: m1m2.e31 - m2m1.e31,
+            e12: m1m2.e12 - m2m1.e12,
+            e01: m1m2.e01 - m2m1.e01,
+            e02: m1m2.e02 - m2m1.e02,
+            e03: m1m2.e03 - m2m1.e03,
+            e0123: m1m2.e0123 - m2m1.e0123,
+        }
+    }
+
+    /// Computes the anticommutator of two motors.
+    ///
+    /// `{M₁, M₂} = M₁M₂ + M₂M₁`
+    ///
+    /// The anticommutator extracts the symmetric part of the product.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use std::f64::consts::FRAC_PI_4;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Same motor anticommuted with itself = 2 * M²
+    /// let m = Motor::from_rotation_z(FRAC_PI_4);
+    /// let anti = m.anticommutator(&m);
+    /// let m_sq = m.compose(&m);
+    ///
+    /// assert!(abs_diff_eq!(anti.s, 2.0 * m_sq.s, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn anticommutator(&self, other: &Motor<T>) -> Motor<T> {
+        // {M₁, M₂} = M₁M₂ + M₂M₁
+        let m1m2 = self.compose(other);
+        let m2m1 = other.compose(self);
+
+        Motor {
+            s: m1m2.s + m2m1.s,
+            e23: m1m2.e23 + m2m1.e23,
+            e31: m1m2.e31 + m2m1.e31,
+            e12: m1m2.e12 + m2m1.e12,
+            e01: m1m2.e01 + m2m1.e01,
+            e02: m1m2.e02 + m2m1.e02,
+            e03: m1m2.e03 + m2m1.e03,
+            e0123: m1m2.e0123 + m2m1.e0123,
+        }
+    }
 }
 
 // ============================================================================
@@ -2224,5 +2302,128 @@ mod tests {
             p2.dot(&p1),
             epsilon = ABS_DIFF_EQ_EPS
         ));
+    }
+
+    // ========================================================================
+    // Motor commutator/anticommutator tests
+    // ========================================================================
+
+    #[test]
+    fn motor_commutator_same_axis() {
+        // Rotations around the same axis commute
+        let r1 = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
+        let r2 = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4 / 2.0);
+        let comm = r1.commutator(&r2);
+
+        // All components should be approximately zero
+        assert!(abs_diff_eq!(comm.s, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e23, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e31, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn motor_commutator_different_axes() {
+        // Rotations around different axes don't commute
+        let rx = Motor::from_rotation_x(std::f64::consts::FRAC_PI_4);
+        let ry = Motor::from_rotation_y(std::f64::consts::FRAC_PI_4);
+        let comm = rx.commutator(&ry);
+
+        // Commutator should be non-zero
+        let norm =
+            comm.s * comm.s + comm.e23 * comm.e23 + comm.e31 * comm.e31 + comm.e12 * comm.e12;
+        assert!(norm > ABS_DIFF_EQ_EPS);
+    }
+
+    #[test]
+    fn motor_commutator_antisymmetric() {
+        // [A, B] = -[B, A]
+        let m1 = Motor::from_rotation_x(0.3);
+        let m2 = Motor::from_rotation_y(0.5);
+        let comm_ab = m1.commutator(&m2);
+        let comm_ba = m2.commutator(&m1);
+
+        assert!(abs_diff_eq!(
+            comm_ab.s,
+            -comm_ba.s,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            comm_ab.e23,
+            -comm_ba.e23,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            comm_ab.e31,
+            -comm_ba.e31,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            comm_ab.e12,
+            -comm_ba.e12,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_anticommutator_self() {
+        // {M, M} = 2 * M²
+        let m = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
+        let anti = m.anticommutator(&m);
+        let m_sq = m.compose(&m);
+
+        assert!(abs_diff_eq!(
+            anti.s,
+            2.0 * m_sq.s,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            anti.e12,
+            2.0 * m_sq.e12,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_anticommutator_symmetric() {
+        // {A, B} = {B, A}
+        let m1 = Motor::from_rotation_x(0.3);
+        let m2 = Motor::from_rotation_y(0.5);
+        let anti_ab = m1.anticommutator(&m2);
+        let anti_ba = m2.anticommutator(&m1);
+
+        assert!(abs_diff_eq!(
+            anti_ab.s,
+            anti_ba.s,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            anti_ab.e23,
+            anti_ba.e23,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            anti_ab.e31,
+            anti_ba.e31,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            anti_ab.e12,
+            anti_ba.e12,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_translations_commute() {
+        // Pure translations commute
+        let t1 = Motor::from_translation(1.0, 0.0, 0.0);
+        let t2 = Motor::from_translation(0.0, 1.0, 0.0);
+        let comm = t1.commutator(&t2);
+
+        assert!(abs_diff_eq!(comm.s, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }
