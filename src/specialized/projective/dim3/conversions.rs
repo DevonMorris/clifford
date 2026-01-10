@@ -1,13 +1,19 @@
-//! Conversions between specialized 3D PGA types and generic [`Multivector`].
+//! Conversions between specialized 3D PGA types and other representations.
 //!
-//! This module provides bidirectional conversions between the ergonomic
-//! specialized types ([`Point`], [`Motor`]) and the generic
-//! [`Multivector<T, Projective3>`] type.
+//! This module provides:
+//!
+//! - Bidirectional conversions between specialized types ([`Point`], [`Motor`])
+//!   and generic [`Multivector<T, Projective3>`]
+//! - Conversions from Euclidean [`Vector`](crate::specialized::euclidean::dim3::Vector)
+//!   to projective [`Point`] (embedding with w=1)
+//! - Extraction from projective [`Point`] back to Euclidean
+//!   [`Vector`](crate::specialized::euclidean::dim3::Vector)
 
 use crate::algebra::Multivector;
 use crate::basis::Blade;
 use crate::scalar::Float;
 use crate::signature::Projective3;
+use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
 use super::types::{Motor, Point};
 
@@ -221,10 +227,108 @@ impl<T: Float> TryFrom<Multivector<T, Projective3>> for Motor<T> {
 }
 
 // ============================================================================
+// Euclidean conversions
+// ============================================================================
+
+impl<T: Float> From<EuclideanVector<T>> for Point<T> {
+    /// Embeds a Euclidean 3D vector as a projective point with weight w=1.
+    ///
+    /// This creates a finite point at the Cartesian coordinates (x, y, z).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::Vector as EucVec;
+    /// use clifford::specialized::projective::dim3::Point;
+    ///
+    /// let v = EucVec::new(3.0, 4.0, 5.0);
+    /// let p: Point<f64> = v.into();
+    ///
+    /// assert_eq!(p.x(), 3.0);
+    /// assert_eq!(p.y(), 4.0);
+    /// assert_eq!(p.z(), 5.0);
+    /// assert_eq!(p.w(), 1.0);
+    /// ```
+    #[inline]
+    fn from(v: EuclideanVector<T>) -> Self {
+        Point::new(v.x, v.y, v.z)
+    }
+}
+
+impl<T: Float> TryFrom<Point<T>> for EuclideanVector<T> {
+    type Error = ConversionError;
+
+    /// Extracts a Euclidean 3D vector from a projective point.
+    ///
+    /// Returns an error if the point is ideal (w ≈ 0).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::Vector as EucVec;
+    /// use clifford::specialized::projective::dim3::Point;
+    ///
+    /// let p = Point::new(3.0, 4.0, 5.0);
+    /// let v: EucVec<f64> = p.try_into().unwrap();
+    ///
+    /// assert_eq!(v.x, 3.0);
+    /// assert_eq!(v.y, 4.0);
+    /// assert_eq!(v.z, 5.0);
+    /// ```
+    fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
+        if p.e0.abs() < T::epsilon() {
+            return Err(ConversionError::IdealPoint);
+        }
+        Ok(EuclideanVector::new(p.e1 / p.e0, p.e2 / p.e0, p.e3 / p.e0))
+    }
+}
+
+impl<T: Float> Motor<T> {
+    /// Transforms a Euclidean 3D vector using this motor.
+    ///
+    /// This is a convenience method that:
+    /// 1. Embeds the vector as a projective point (w=1)
+    /// 2. Applies the motor transformation
+    /// 3. Extracts the Euclidean coordinates
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::Vector as EucVec;
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let v = EucVec::new(1.0, 0.0, 0.0);
+    ///
+    /// // Rotate 90° around Z then translate
+    /// let rotation = Motor::from_rotation_z(FRAC_PI_2);
+    /// let translation = Motor::from_translation(1.0, 2.0, 3.0);
+    /// let motor = rotation.compose(&translation);
+    ///
+    /// let result = motor.transform_euclidean(&v);
+    /// assert!(abs_diff_eq!(result.x, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.y, 3.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.z, 3.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn transform_euclidean(&self, v: &EuclideanVector<T>) -> EuclideanVector<T> {
+        let p = Point::new(v.x, v.y, v.z);
+        let transformed = self.transform_point(&p);
+        // Safe because motor preserves weight of finite points
+        EuclideanVector::new(
+            transformed.e1 / transformed.e0,
+            transformed.e2 / transformed.e0,
+            transformed.e3 / transformed.e0,
+        )
+    }
+}
+
+// ============================================================================
 // ConversionError
 // ============================================================================
 
-/// Error type for conversions from [`Multivector`] to specialized types.
+/// Error type for conversions from [`Multivector`] or specialized types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub enum ConversionError {
@@ -238,6 +342,8 @@ pub enum ConversionError {
     NonZeroTrivector,
     /// Multivector has non-zero pseudoscalar component where not expected.
     NonZeroPseudoscalar,
+    /// Projective point is ideal (at infinity) and cannot be converted to Euclidean.
+    IdealPoint,
 }
 
 impl core::fmt::Display for ConversionError {
@@ -249,6 +355,9 @@ impl core::fmt::Display for ConversionError {
             Self::NonZeroTrivector => write!(f, "multivector has non-zero trivector components"),
             Self::NonZeroPseudoscalar => {
                 write!(f, "multivector has non-zero pseudoscalar component")
+            }
+            Self::IdealPoint => {
+                write!(f, "projective point is ideal (at infinity)")
             }
         }
     }
