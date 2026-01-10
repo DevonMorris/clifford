@@ -1,6 +1,6 @@
 # PRD-5: Projective Geometric Algebra (PGA)
 
-**Status**: Pending
+**Status**: In Progress (Phases 1-3 Complete)
 **Goal**: Point-based PGA for representing points, lines, planes, and rigid transformations
 
 ## Background
@@ -295,11 +295,11 @@ mod nalgebra_consistency {
 
 ### Phase 1 Verification
 
-- [ ] `cargo fmt` passes
-- [ ] `cargo clippy --all-features` passes
-- [ ] `cargo doc --all-features --no-deps` passes
-- [ ] `cargo test --all-features` - all property tests pass
-- [ ] `cargo deny check` passes
+- [x] `cargo fmt` passes
+- [x] `cargo clippy --all-features` passes
+- [x] `cargo doc --all-features --no-deps` passes
+- [x] `cargo test --all-features` - all property tests pass
+- [x] `cargo deny check` passes
 
 ---
 
@@ -798,13 +798,13 @@ mod nalgebra_tests {
 
 ### Phase 2 Verification
 
-- [ ] `cargo fmt` passes
-- [ ] `cargo clippy --all-features` passes
-- [ ] `cargo doc --all-features --no-deps` passes
-- [ ] `cargo test --all-features` - all property tests pass
-- [ ] `cargo deny check` passes
-- [ ] Operations match generic Multivector
-- [ ] Operations match nalgebra equivalents
+- [x] `cargo fmt` passes
+- [x] `cargo clippy --all-features` passes
+- [x] `cargo doc --all-features --no-deps` passes
+- [x] `cargo test --all-features` - all property tests pass
+- [x] `cargo deny check` passes
+- [x] Operations match generic Multivector
+- [x] Operations match nalgebra equivalents
 
 ---
 
@@ -1133,13 +1133,13 @@ proptest! {
 
 ### Phase 3 Verification
 
-- [ ] `cargo fmt` passes
-- [ ] `cargo clippy --all-features` passes
-- [ ] `cargo doc --all-features --no-deps` passes
-- [ ] `cargo test --all-features` - all property tests pass
-- [ ] `cargo deny check` passes
-- [ ] Operations match generic Multivector
-- [ ] Operations match nalgebra equivalents
+- [x] `cargo fmt` passes
+- [x] `cargo clippy --all-features` passes
+- [x] `cargo doc --all-features --no-deps` passes
+- [x] `cargo test --all-features` - all property tests pass
+- [x] `cargo deny check` passes
+- [x] Operations match generic Multivector
+- [x] Operations match nalgebra equivalents
 
 ---
 
@@ -1216,10 +1216,77 @@ fn bench_motor_vs_isometry(c: &mut Criterion);
 
 ## Summary
 
-| Phase | Scope | Key Deliverables |
-|-------|-------|------------------|
-| 1 | Generic PGA | Signatures, property tests |
-| 2 | 2D Specialized | Point, Line, Motor, nalgebra tests |
-| 3 | 3D Specialized | Point, Line, Plane, Motor, nalgebra tests |
+| Phase | Scope | Key Deliverables | Status |
+|-------|-------|------------------|--------|
+| 1 | Generic PGA | Signatures, property tests | ✅ Complete |
+| 2 | 2D Specialized | Point, Line, Motor, nalgebra tests | ✅ Complete |
+| 3 | 3D Specialized | Point, Line, Plane, Motor, nalgebra tests | ✅ Complete |
+| 4 | Geometric Constraints | Study condition, Plücker condition, invariants | Pending |
 
 Each phase must pass all verification checks before proceeding to the next. Commits happen at the end of each phase after tests pass.
+
+---
+
+## Phase 4: Enforce Geometric Constraints as Invariants
+
+**Status**: Pending
+
+**Reference**: https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint
+
+### Background
+
+PGA elements must satisfy geometric constraints to represent valid geometric objects. These constraints should be enforced as type-level invariants where possible, and verified via property tests.
+
+### Key Constraints
+
+| Element | Constraint | Meaning |
+|---------|------------|---------|
+| **Motor** | `s·e0123 - e23·e01 - e31·e02 - e12·e03 = 0` | Study condition: proper rigid transformation |
+| **Unit Motor** | `s² + e23² + e31² + e12² = 1` | Normalized rotation part |
+| **Line** | `e23·e01 + e31·e02 + e12·e03 = 0` | Plücker condition: valid 3D line |
+| **Unit Line** | `e23² + e31² + e12² = 1` | Normalized direction |
+| **Flector** | (depends on form) | Valid reflection/glide |
+
+### Implementation Approach
+
+1. **Wrapper Types for Constrained Elements**
+   - `UnitMotor<T>` - Motor satisfying study condition + unit norm
+   - `UnitLine<T>` - Line satisfying Plücker condition + unit direction
+   - Constructors verify constraints, unsafe constructors for trusted input
+
+2. **Property Tests for Invariants**
+   - Verify constraints hold after construction
+   - Verify constraints preserved by operations (composition, inverse)
+   - Test constraint satisfaction in `Arbitrary` implementations
+
+3. **Constraint Verification Methods**
+   ```rust
+   impl<T: Float> Motor<T> {
+       /// Returns true if this motor satisfies the study condition.
+       pub fn satisfies_study_condition(&self, epsilon: T) -> bool;
+
+       /// Returns true if the rotation part is normalized.
+       pub fn is_normalized(&self, epsilon: T) -> bool;
+   }
+
+   impl<T: Float> Line<T> {
+       /// Returns true if this line satisfies the Plücker condition.
+       pub fn satisfies_plucker_condition(&self, epsilon: T) -> bool;
+   }
+   ```
+
+### Deliverables
+
+- [ ] Add `satisfies_study_condition()` to Motor
+- [ ] Add `satisfies_plucker_condition()` to Line
+- [ ] Add property tests verifying constraints preserved by operations
+- [ ] Document constraints in rustdoc with references to wiki
+- [ ] Consider `UnitMotor` and `UnitLine` wrapper types (if ergonomic)
+
+### Phase 4 Verification
+
+- [ ] `cargo fmt` passes
+- [ ] `cargo clippy --all-features` passes
+- [ ] `cargo doc --all-features --no-deps` passes
+- [ ] `cargo test --all-features` - constraint property tests pass
+- [ ] `cargo deny check` passes
