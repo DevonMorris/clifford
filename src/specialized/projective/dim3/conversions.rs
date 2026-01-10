@@ -466,6 +466,9 @@ impl std::error::Error for ConversionError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::euclidean::dim3::Bivector as EucBivector;
+    use crate::specialized::euclidean::dim3::Vector;
+    use crate::specialized::euclidean::dim3::arbitrary::UnitRotor;
     use crate::specialized::projective::dim3::arbitrary::UnitMotor;
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
@@ -633,6 +636,143 @@ mod tests {
             prop_assert!(abs_diff_eq!(m.e0123, back.e0123, epsilon = ABS_DIFF_EQ_EPS));
         }
 
+        // ====================================================================
+        // Rotor <-> Motor interop tests
+        // ====================================================================
+
+        /// Tests Rotor -> Motor -> Rotor roundtrip preserves rotation behavior.
+        #[test]
+        fn rotor_motor_roundtrip(
+            r in any::<UnitRotor<f64>>(),
+            vx in -10.0f64..10.0, vy in -10.0f64..10.0, vz in -10.0f64..10.0,
+        ) {
+            let motor: Motor<f64> = (*r).into();
+            let back: EuclideanRotor<f64> = motor.into();
+
+            // Compare by rotating a vector
+            let v = Vector::new(vx, vy, vz);
+            let result_orig = r.rotate(v);
+            let result_back = back.rotate(v);
+
+            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z, result_back.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests Motor -> Rotor -> Motor roundtrip preserves rotation behavior.
+        #[test]
+        fn motor_rotor_roundtrip(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let axis = (ax / len, ay / len, az / len);
+
+            // Create a pure rotation motor
+            let motor = Motor::from_axis_angle(axis, angle);
+            let rotor: EuclideanRotor<f64> = motor.into();
+            let back: Motor<f64> = rotor.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py, pz);
+            let result_orig = motor.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Rotor rotation matches Motor rotation.
+        #[test]
+        fn rotor_motor_rotation_equivalence(
+            r in any::<UnitRotor<f64>>(),
+            x in -10.0f64..10.0, y in -10.0f64..10.0, z in -10.0f64..10.0,
+        ) {
+            let motor: Motor<f64> = (*r).into();
+
+            // Rotate with Euclidean rotor
+            let v = Vector::new(x, y, z);
+            let rotated_euc = r.rotate(v);
+
+            // Transform with PGA motor
+            let p = Point::new(x, y, z);
+            let rotated_pga = motor.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(rotated_euc.x, rotated_pga.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_euc.y, rotated_pga.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_euc.z, rotated_pga.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Motor -> Rotor extracts correct rotation from composed motor.
+        #[test]
+        fn motor_to_rotor_extracts_rotation(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -10.0f64..10.0, ty in -10.0f64..10.0, tz in -10.0f64..10.0,
+            vx in -10.0f64..10.0, vy in -10.0f64..10.0, vz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let axis = (ax / len, ay / len, az / len);
+
+            // Create a motor with both rotation and translation
+            let rotation = Motor::from_axis_angle(axis, angle);
+            let translation = Motor::from_translation(tx, ty, tz);
+            let composed = rotation.compose(&translation);
+
+            // Extract just the rotation
+            let rotor: EuclideanRotor<f64> = composed.into();
+
+            // The extracted rotor should match the original rotation
+            let expected_rotor = EuclideanRotor::from_angle_plane(
+                angle,
+                EucBivector::new(axis.2, -axis.1, axis.0)  // Map axis to bivector
+            );
+            let v = Vector::new(vx, vy, vz);
+
+            let result = rotor.rotate(v);
+            let expected = expected_rotor.rotate(v);
+
+            prop_assert!(abs_diff_eq!(result.x, expected.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result.y, expected.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result.z, expected.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    #[test]
+    fn identity_rotor_to_motor() {
+        let rotor = EuclideanRotor::<f64>::identity();
+        let motor: Motor<f64> = rotor.into();
+
+        // Should be identity motor (no rotation, no translation)
+        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e23, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e31, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_motor_to_rotor() {
+        let motor = Motor::<f64>::identity();
+        let rotor: EuclideanRotor<f64> = motor.into();
+
+        // Should be identity rotor
+        assert!(abs_diff_eq!(rotor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotor.b.xy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotor.b.xz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotor.b.yz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }
 
