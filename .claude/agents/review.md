@@ -44,6 +44,32 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
   - Returns `Vector` instead of `(T, T, T)`
   - Accepts `&Vector` instead of `(T, T, T)`
 
+#### Style Consistency (Critical - Check Carefully)
+**New code MUST match existing codebase patterns.** Review for:
+
+- [ ] **Method organization matches existing modules**:
+  - Constructors first (`new()`, `from_*()`, `identity()`, `origin()`)
+  - Then core operations
+  - Then conversions/accessors last
+- [ ] **Naming matches existing conventions**:
+  - `transform_point`, `transform_line` (not `apply_to_*`, `move_*`)
+  - `x()`, `y()`, `z()` accessors (not `get_x()`, `x_coord()`)
+  - `normalize()` returns `Option<Self>`, not `Result` or panic
+- [ ] **File organization matches sibling modules**:
+  - Same module split: `types.rs`, `ops.rs`, `conversions.rs`, `nalgebra.rs`, `arbitrary.rs`
+  - Same section comment style: `// ============` banners
+  - Same import ordering: std, external crates, crate-internal
+- [ ] **Documentation format matches existing docs**:
+  - Brief summary first line
+  - `# Example` section with working code
+  - Same level of mathematical detail as similar types
+- [ ] **Test organization matches existing tests**:
+  - Same proptest patterns
+  - Same edge case coverage style
+- [ ] **Benchmark organization matches existing benchmarks**:
+  - Same naming convention: `bench_pga3_motor_transform_point`
+  - Same grouping patterns
+
 ### 5. Performance & Benchmarking
 - [ ] No unnecessary allocations
 - [ ] SIMD used where beneficial
