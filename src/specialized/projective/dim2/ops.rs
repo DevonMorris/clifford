@@ -418,4 +418,110 @@ mod tests {
         assert!(abs_diff_eq!(back.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(back.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS));
     }
+
+    // ========================================================================
+    // Unary operation tests
+    // ========================================================================
+
+    #[test]
+    fn point_geometric_norm() {
+        // Point at (3, 4) has distance 5 from origin
+        let p = Point::new(3.0, 4.0);
+        assert!(abs_diff_eq!(
+            p.geometric_norm(),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Origin has geometric norm 0
+        let origin: Point<f64> = Point::origin();
+        assert!(abs_diff_eq!(
+            origin.geometric_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn point_bulk_weight_norm() {
+        let p = Point::new(3.0, 4.0);
+        assert!(abs_diff_eq!(p.bulk_norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            p.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(p.attitude(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_geometric_norm() {
+        // X axis at y=0 has distance 0 from origin
+        let x_axis: Line<f64> = Line::x_axis();
+        assert!(abs_diff_eq!(
+            x_axis.geometric_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Line y = 3 has distance 3 from origin
+        let offset_line = Line::from_implicit(0.0, 1.0, -3.0);
+        let unitized = offset_line.unitized();
+        assert!(abs_diff_eq!(
+            unitized.geometric_norm(),
+            3.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_bulk_weight_norm() {
+        // Y axis: normal (1, 0), distance 0
+        let y_axis: Line<f64> = Line::y_axis();
+        assert!(abs_diff_eq!(
+            y_axis.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            y_axis.bulk_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Attitude should be the normal direction
+        let (ax, ay) = y_axis.attitude();
+        assert!(abs_diff_eq!(ax, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(ay, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_reverse() {
+        let line = Line::new(1.0, 2.0, 3.0);
+        let rev = line.reverse();
+
+        // Reverse negates all components
+        assert!(abs_diff_eq!(rev.e12, -1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e20, -2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e01, -3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_unitized() {
+        // Non-unit line
+        let line: Line<f64> = Line::from_implicit(3.0, 4.0, 5.0);
+        let unitized = line.unitized();
+
+        // Weight norm should be 1
+        assert!(abs_diff_eq!(
+            unitized.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Normal should be unit length
+        let (nx, ny) = unitized.normal();
+        let norm = (nx * nx + ny * ny).sqrt();
+        assert!(abs_diff_eq!(norm, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
 }

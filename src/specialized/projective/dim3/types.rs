@@ -163,6 +163,51 @@ impl<T: Float> Point<T> {
             Some((self.e1 / self.e0, self.e2 / self.e0, self.e3 / self.e0))
         }
     }
+
+    /// Returns the attitude of the point.
+    ///
+    /// For a point, the attitude is the weight (e₀ component).
+    /// This indicates whether the point is finite (non-zero) or ideal (zero).
+    #[inline]
+    pub fn attitude(&self) -> T {
+        self.e0
+    }
+
+    /// Returns the squared bulk norm of the point.
+    ///
+    /// The bulk norm is the length of the spatial part: `e1² + e2² + e3²`.
+    #[inline]
+    pub fn bulk_norm_squared(&self) -> T {
+        self.e1 * self.e1 + self.e2 * self.e2 + self.e3 * self.e3
+    }
+
+    /// Returns the bulk norm of the point.
+    #[inline]
+    pub fn bulk_norm(&self) -> T {
+        self.bulk_norm_squared().sqrt()
+    }
+
+    /// Returns the weight norm of the point.
+    ///
+    /// For a point, the weight is the absolute value of the e₀ component.
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.e0.abs()
+    }
+
+    /// Returns the geometric norm (distance from origin).
+    ///
+    /// For a unitized point (w = ±1), this equals the distance from the origin.
+    /// For non-unitized points, this is `bulk_norm / weight_norm`.
+    #[inline]
+    pub fn geometric_norm(&self) -> T {
+        let weight = self.weight_norm();
+        if weight < T::epsilon() {
+            T::zero()
+        } else {
+            self.bulk_norm() / weight
+        }
+    }
 }
 
 impl<T: Float> Default for Point<T> {
@@ -377,6 +422,15 @@ impl<T: Float> Line<T> {
         (self.e23, self.e31, self.e12)
     }
 
+    /// Returns the attitude of the line.
+    ///
+    /// For a line, the attitude is the direction vector.
+    /// This is equivalent to calling [`direction()`](Self::direction).
+    #[inline]
+    pub fn attitude(&self) -> (T, T, T) {
+        self.direction()
+    }
+
     /// Returns the squared norm of the direction (weight).
     #[inline]
     pub fn weight_norm_squared(&self) -> T {
@@ -457,6 +511,34 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn intersects(&self, other: &Line<T>, epsilon: T) -> bool {
         self.plucker_inner(other).abs() < epsilon
+    }
+
+    /// Returns the squared bulk norm of the line.
+    ///
+    /// The bulk norm is the length of the moment vector (e₂₃, e₃₁, e₁₂).
+    #[inline]
+    pub fn bulk_norm_squared(&self) -> T {
+        self.e23 * self.e23 + self.e31 * self.e31 + self.e12 * self.e12
+    }
+
+    /// Returns the bulk norm of the line.
+    #[inline]
+    pub fn bulk_norm(&self) -> T {
+        self.bulk_norm_squared().sqrt()
+    }
+
+    /// Returns the geometric norm (unitized distance from origin).
+    ///
+    /// For a unitized line, this is the perpendicular distance from
+    /// the origin to the line.
+    #[inline]
+    pub fn geometric_norm(&self) -> T {
+        let weight = self.weight_norm();
+        if weight.abs() < T::epsilon() {
+            T::zero()
+        } else {
+            self.bulk_norm() / weight
+        }
     }
 
     /// Returns the reverse of this line.
@@ -890,6 +972,72 @@ impl<T: Float> Motor<T> {
             e0123: -self.e0123,
         }
     }
+
+    /// Returns the squared norm of the motor's weight (rotor part).
+    ///
+    /// The weight norm measures the rotation component: `s² + e23² + e31² + e12²`.
+    /// For a unitized motor, this equals 1.
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        self.s * self.s + self.e23 * self.e23 + self.e31 * self.e31 + self.e12 * self.e12
+    }
+
+    /// Returns the norm of the motor's weight (rotor part).
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
+    }
+
+    /// Returns a unitized motor (weight norm = 1).
+    ///
+    /// This normalizes the rotor part while preserving the relative
+    /// translation component.
+    pub fn unitized(&self) -> Self {
+        let n = self.weight_norm();
+        if n.abs() < T::epsilon() {
+            return *self;
+        }
+        Self {
+            s: self.s / n,
+            e23: self.e23 / n,
+            e31: self.e31 / n,
+            e12: self.e12 / n,
+            e01: self.e01 / n,
+            e02: self.e02 / n,
+            e03: self.e03 / n,
+            e0123: self.e0123 / n,
+        }
+    }
+
+    /// Returns the inverse of the motor: `M⁻¹`.
+    ///
+    /// For a unitized motor, `M⁻¹ = M̃` (the reverse).
+    /// For non-unitized motors, `M⁻¹ = M̃ / |M|²`.
+    ///
+    /// The inverse satisfies: `M * M⁻¹ = M⁻¹ * M = 1`.
+    pub fn inverse(&self) -> Self {
+        let norm_sq = self.weight_norm_squared();
+        if norm_sq.abs() < T::epsilon() {
+            return *self;
+        }
+        let rev = self.reverse();
+        Self {
+            s: rev.s / norm_sq,
+            e23: rev.e23 / norm_sq,
+            e31: rev.e31 / norm_sq,
+            e12: rev.e12 / norm_sq,
+            e01: rev.e01 / norm_sq,
+            e02: rev.e02 / norm_sq,
+            e03: rev.e03 / norm_sq,
+            e0123: rev.e0123 / norm_sq,
+        }
+    }
+
+    /// Returns true if this motor is unitized (weight norm ≈ 1).
+    #[inline]
+    pub fn is_unitized(&self, epsilon: T) -> bool {
+        (self.weight_norm_squared() - T::one()).abs() < epsilon
+    }
 }
 
 impl<T: Float> Default for Motor<T> {
@@ -1098,6 +1246,15 @@ impl<T: Float> Plane<T> {
         self.e123
     }
 
+    /// Returns the attitude of the plane.
+    ///
+    /// For a plane, the attitude is the normal direction.
+    /// This is equivalent to calling [`normal()`](Self::normal).
+    #[inline]
+    pub fn attitude(&self) -> (T, T, T) {
+        self.normal()
+    }
+
     /// Returns the squared norm of the plane's weight (normal direction).
     #[inline]
     pub fn weight_norm_squared(&self) -> T {
@@ -1122,6 +1279,49 @@ impl<T: Float> Plane<T> {
                 e012: self.e012 / n,
                 e123: self.e123 / n,
             }
+        }
+    }
+
+    /// Returns the reverse of the plane.
+    ///
+    /// For a grade-3 element, reverse negates all components.
+    /// This is because `reverse = (-1)^(k(k-1)/2)` where k=3 gives -1.
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self {
+            e023: -self.e023,
+            e031: -self.e031,
+            e012: -self.e012,
+            e123: -self.e123,
+        }
+    }
+
+    /// Returns the squared bulk norm of the plane.
+    ///
+    /// The bulk norm is the absolute value of the e₁₂₃ component,
+    /// which represents the plane's distance from the origin (scaled by normal length).
+    #[inline]
+    pub fn bulk_norm_squared(&self) -> T {
+        self.e123 * self.e123
+    }
+
+    /// Returns the bulk norm of the plane.
+    #[inline]
+    pub fn bulk_norm(&self) -> T {
+        self.e123.abs()
+    }
+
+    /// Returns the geometric norm (unitized distance from origin).
+    ///
+    /// For a unitized plane, this is the perpendicular distance from
+    /// the origin to the plane.
+    #[inline]
+    pub fn geometric_norm(&self) -> T {
+        let weight = self.weight_norm();
+        if weight.abs() < T::epsilon() {
+            T::zero()
+        } else {
+            self.e123.abs() / weight
         }
     }
 }

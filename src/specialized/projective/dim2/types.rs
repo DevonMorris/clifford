@@ -145,6 +145,51 @@ impl<T: Float> Point<T> {
             Some((self.e1 / self.e0, self.e2 / self.e0))
         }
     }
+
+    /// Returns the attitude of the point.
+    ///
+    /// For a point, the attitude is the weight (e₀ component).
+    /// This indicates whether the point is finite (non-zero) or ideal (zero).
+    #[inline]
+    pub fn attitude(&self) -> T {
+        self.e0
+    }
+
+    /// Returns the squared bulk norm of the point.
+    ///
+    /// The bulk norm is the length of the spatial part: `e1² + e2²`.
+    #[inline]
+    pub fn bulk_norm_squared(&self) -> T {
+        self.e1 * self.e1 + self.e2 * self.e2
+    }
+
+    /// Returns the bulk norm of the point.
+    #[inline]
+    pub fn bulk_norm(&self) -> T {
+        self.bulk_norm_squared().sqrt()
+    }
+
+    /// Returns the weight norm of the point.
+    ///
+    /// For a point, the weight is the absolute value of the e₀ component.
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.e0.abs()
+    }
+
+    /// Returns the geometric norm (distance from origin).
+    ///
+    /// For a unitized point (w = ±1), this equals the distance from the origin.
+    /// For non-unitized points, this is `bulk_norm / weight_norm`.
+    #[inline]
+    pub fn geometric_norm(&self) -> T {
+        let weight = self.weight_norm();
+        if weight < T::epsilon() {
+            T::zero()
+        } else {
+            self.bulk_norm() / weight
+        }
+    }
 }
 
 impl<T: Float> Default for Point<T> {
@@ -228,6 +273,15 @@ impl<T: Float> Line<T> {
         (self.e20, self.e01)
     }
 
+    /// Returns the attitude of the line.
+    ///
+    /// For a 2D line, the attitude is the normal direction.
+    /// This is equivalent to calling [`normal()`](Self::normal).
+    #[inline]
+    pub fn attitude(&self) -> (T, T) {
+        self.normal()
+    }
+
     /// Returns the signed distance from the origin (scaled by normal length).
     #[inline]
     pub fn distance_from_origin(&self) -> T {
@@ -264,6 +318,75 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn is_zero(&self, epsilon: T) -> bool {
         self.e12.abs() < epsilon && self.e20.abs() < epsilon && self.e01.abs() < epsilon
+    }
+
+    /// Returns the reverse of the line.
+    ///
+    /// For a grade-2 element, reverse negates all components.
+    /// This is because `reverse = (-1)^(k(k-1)/2)` where k=2 gives -1.
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self {
+            e12: -self.e12,
+            e20: -self.e20,
+            e01: -self.e01,
+        }
+    }
+
+    /// Returns the squared weight norm of the line.
+    ///
+    /// The weight norm is the length of the normal direction: `e20² + e01²`.
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        self.e20 * self.e20 + self.e01 * self.e01
+    }
+
+    /// Returns the weight norm of the line.
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
+    }
+
+    /// Returns the squared bulk norm of the line.
+    ///
+    /// The bulk norm is the absolute value of the e₁₂ component.
+    #[inline]
+    pub fn bulk_norm_squared(&self) -> T {
+        self.e12 * self.e12
+    }
+
+    /// Returns the bulk norm of the line.
+    #[inline]
+    pub fn bulk_norm(&self) -> T {
+        self.e12.abs()
+    }
+
+    /// Returns a unitized line (unit weight norm).
+    pub fn unitized(&self) -> Self {
+        let n = self.weight_norm();
+        if n.abs() < T::epsilon() {
+            *self
+        } else {
+            Self {
+                e12: self.e12 / n,
+                e20: self.e20 / n,
+                e01: self.e01 / n,
+            }
+        }
+    }
+
+    /// Returns the geometric norm (unitized distance from origin).
+    ///
+    /// For a unitized line, this is the perpendicular distance from
+    /// the origin to the line.
+    #[inline]
+    pub fn geometric_norm(&self) -> T {
+        let weight = self.weight_norm();
+        if weight.abs() < T::epsilon() {
+            T::zero()
+        } else {
+            self.e12.abs() / weight
+        }
     }
 }
 

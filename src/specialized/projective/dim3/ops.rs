@@ -1064,4 +1064,182 @@ mod tests {
         assert!(!line1.is_parallel(&line2, ABS_DIFF_EQ_EPS));
         assert!(!line1.intersects(&line2, ABS_DIFF_EQ_EPS));
     }
+
+    // ========================================================================
+    // Unary operation tests
+    // ========================================================================
+
+    #[test]
+    fn point_geometric_norm() {
+        // Point at (3, 4, 0) has distance 5 from origin
+        let p = Point::new(3.0, 4.0, 0.0);
+        assert!(abs_diff_eq!(
+            p.geometric_norm(),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Origin has geometric norm 0
+        let origin: Point<f64> = Point::origin();
+        assert!(abs_diff_eq!(
+            origin.geometric_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn point_bulk_weight_norm() {
+        let p = Point::new(3.0, 4.0, 0.0);
+        assert!(abs_diff_eq!(p.bulk_norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            p.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(p.attitude(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_geometric_norm() {
+        // Z axis through origin has geometric norm 0
+        let z_axis: Line<f64> = Line::z_axis();
+        assert!(abs_diff_eq!(
+            z_axis.geometric_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Line at x=3, parallel to z has geometric norm 3
+        let offset_line =
+            Line::from_point_and_direction(&Point::new(3.0, 0.0, 0.0), (0.0, 0.0, 1.0));
+        let unitized = offset_line.unitized();
+        assert!(abs_diff_eq!(
+            unitized.geometric_norm(),
+            3.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_bulk_weight_norm() {
+        // Z axis: direction (0,0,1), moment (0,0,0)
+        let z_axis: Line<f64> = Line::z_axis();
+        assert!(abs_diff_eq!(
+            z_axis.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            z_axis.bulk_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Attitude should be the direction
+        let (ax, ay, az) = z_axis.attitude();
+        assert!(abs_diff_eq!(ax, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(ay, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(az, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_reverse() {
+        let line = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+        let rev = line.reverse();
+
+        // Reverse negates all components
+        assert!(abs_diff_eq!(rev.e01, -1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e02, -2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e03, -3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e23, -4.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e31, -5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e12, -6.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_geometric_norm() {
+        // XY plane at z=0 has distance 0 from origin
+        let xy: Plane<f64> = Plane::xy();
+        assert!(abs_diff_eq!(
+            xy.geometric_norm(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Plane z=5 has distance 5 from origin
+        let offset = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+        assert!(abs_diff_eq!(
+            offset.geometric_norm(),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_reverse() {
+        let plane = Plane::new(1.0, 2.0, 3.0, 4.0);
+        let rev = plane.reverse();
+
+        // Reverse negates all components
+        assert!(abs_diff_eq!(rev.e023, -1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e031, -2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e012, -3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e123, -4.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_attitude() {
+        let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+        let (nx, ny, nz) = plane.attitude();
+
+        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(nz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn motor_inverse() {
+        // Rotation motor
+        let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
+        let inv = rotation.inverse();
+        let identity = rotation.compose(&inv);
+
+        // Should give identity
+        assert!(abs_diff_eq!(identity.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(identity.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn motor_unitized() {
+        // Create non-unit motor by scaling
+        let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
+        let scaled = Motor::new(
+            rotation.s * 2.0,
+            rotation.e23 * 2.0,
+            rotation.e31 * 2.0,
+            rotation.e12 * 2.0,
+            rotation.e01 * 2.0,
+            rotation.e02 * 2.0,
+            rotation.e03 * 2.0,
+            rotation.e0123 * 2.0,
+        );
+
+        // Unitize and check norm
+        let unitized = scaled.unitized();
+        assert!(abs_diff_eq!(
+            unitized.weight_norm(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_is_unitized() {
+        let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
+        assert!(rotation.is_unitized(ABS_DIFF_EQ_EPS));
+
+        let identity = Motor::identity();
+        assert!(identity.is_unitized(ABS_DIFF_EQ_EPS));
+    }
 }
