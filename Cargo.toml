@@ -54,3 +54,12 @@ harness = false
 name = "nalgebra_comparison"
 harness = false
 required-features = ["nalgebra-0_34"]
+
+[[bench]]
+name = "projective"
+harness = false
+
+[[bench]]
+name = "pga_nalgebra_comparison"
+harness = false
+required-features = ["nalgebra-0_34"]

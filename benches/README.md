@@ -86,7 +86,233 @@ Operations on fixed-size `dim3::Vector`, `dim3::Bivector`, `dim3::Rotor` types.
 ### Rotor from Vectors (~23 ns)
 ![euclidean/dim3/rotor_from_vectors](reports/euclidean/dim3/rotor_from_vectors.svg)
 
-## nalgebra Comparison Benchmarks
+## Projective Geometric Algebra (PGA) Benchmarks
+
+Operations on specialized PGA types for rigid body transformations.
+
+### 2D PGA Performance Summary
+
+| Operation | Time | Description |
+|-----------|------|-------------|
+| Point join | ~8 ns | Join two points to get a line |
+| Line meet | ~2 ns | Meet two lines to get intersection |
+| Motor transform point | ~3 ns | Apply rigid transform to point |
+| Motor compose | ~10 ns | Compose two motors |
+| Motor inverse | ~3 ns | Compute motor inverse |
+
+### 3D PGA Performance Summary
+
+| Operation | Time | Description |
+|-----------|------|-------------|
+| Motor transform point | ~16 ns | Apply rigid transform to point |
+| Motor transform line | ~24 ns | Apply rigid transform to line |
+| Motor compose | ~15 ns | Compose two motors |
+| Motor inverse | ~11 ns | Compute motor inverse |
+| Line meet plane | ~10 ns | Intersection point |
+| Line join point | ~10 ns | Plane through line and point |
+| Motor commutator | ~20 ns | [M₁, M₂] = M₁M₂ - M₂M₁ |
+
+### 2D PGA Benchmarks
+
+#### Point Join (~8 ns)
+![projective/dim2/point_join](reports/projective/dim2/point_join.svg)
+
+#### Line Meet (~2 ns)
+![projective/dim2/line_meet](reports/projective/dim2/line_meet.svg)
+
+#### Motor Transform Point (~3 ns)
+![projective/dim2/motor_transform_point](reports/projective/dim2/motor_transform_point.svg)
+
+#### Motor Transform Line (~3 ns)
+![projective/dim2/motor_transform_line](reports/projective/dim2/motor_transform_line.svg)
+
+#### Motor Compose (~10 ns)
+![projective/dim2/motor_compose](reports/projective/dim2/motor_compose.svg)
+
+#### Motor Inverse (~3 ns)
+![projective/dim2/motor_inverse](reports/projective/dim2/motor_inverse.svg)
+
+#### Point Distance (~3 ns)
+![projective/dim2/point_distance](reports/projective/dim2/point_distance.svg)
+
+#### Line Distance to Point (~7 ns)
+![projective/dim2/line_distance_to_point](reports/projective/dim2/line_distance_to_point.svg)
+
+#### Batch Transform 100 Points (~330 ns)
+![projective/dim2/batch_transform_100_points](reports/projective/dim2/batch_transform_100_points.svg)
+
+### 3D PGA Benchmarks
+
+#### Motor Transform Point (~16 ns)
+![projective/dim3/motor_transform_point](reports/projective/dim3/motor_transform_point.svg)
+
+#### Motor Transform Line (~24 ns)
+![projective/dim3/motor_transform_line](reports/projective/dim3/motor_transform_line.svg)
+
+#### Motor Compose (~15 ns)
+![projective/dim3/motor_compose](reports/projective/dim3/motor_compose.svg)
+
+#### Motor Inverse (~11 ns)
+![projective/dim3/motor_inverse](reports/projective/dim3/motor_inverse.svg)
+
+#### Motor Commutator (~20 ns)
+![projective/dim3/motor_commutator](reports/projective/dim3/motor_commutator.svg)
+
+#### Line Meet Plane (~10 ns)
+![projective/dim3/line_meet_plane](reports/projective/dim3/line_meet_plane.svg)
+
+#### Line Join Point (~10 ns)
+![projective/dim3/line_join_point](reports/projective/dim3/line_join_point.svg)
+
+#### Line Distance to Point (~14 ns)
+![projective/dim3/line_distance_to_point](reports/projective/dim3/line_distance_to_point.svg)
+
+#### Line Closest Point (~15 ns)
+![projective/dim3/line_closest_point](reports/projective/dim3/line_closest_point.svg)
+
+#### Point Distance (~4 ns)
+![projective/dim3/point_distance](reports/projective/dim3/point_distance.svg)
+
+#### Point Dot Product (~2 ns)
+![projective/dim3/point_dot](reports/projective/dim3/point_dot.svg)
+
+#### Line Dot Product (~12 ns)
+![projective/dim3/line_dot](reports/projective/dim3/line_dot.svg)
+
+#### Line Distance (~21 ns)
+![projective/dim3/line_distance](reports/projective/dim3/line_distance.svg)
+
+#### Point Left Contract Line (~9 ns)
+![projective/dim3/point_left_contract_line](reports/projective/dim3/point_left_contract_line.svg)
+
+#### Point Left Contract Plane (~9 ns)
+![projective/dim3/point_left_contract_plane](reports/projective/dim3/point_left_contract_plane.svg)
+
+#### Line Left Contract Plane (~10 ns)
+![projective/dim3/line_left_contract_plane](reports/projective/dim3/line_left_contract_plane.svg)
+
+#### Batch Transform 100 Points (~1.6 µs)
+![projective/dim3/batch_transform_100_points](reports/projective/dim3/batch_transform_100_points.svg)
+
+## PGA vs nalgebra Comparison
+
+Head-to-head comparison of PGA Motor operations vs nalgebra Isometry.
+
+### Performance Summary
+
+| Operation | clifford PGA | nalgebra | Notes |
+|-----------|-------------|----------|-------|
+| **2D transform point** | 3.3 ns | 9.1 ns | **PGA 3x faster** |
+| **2D compose** | 10.4 ns | 8.9 ns | nalgebra ~1.2x faster |
+| **2D inverse** | 2.8 ns | 1.4 ns | nalgebra 2x faster |
+| **3D transform point** | 16 ns | 15 ns | Comparable |
+| **3D compose** | 15.4 ns | 15.6 ns | Comparable |
+| **3D inverse** | 11.5 ns | 13.2 ns | **PGA 15% faster** |
+| **3D batch 100** | 1.6 µs | 1.5 µs | Comparable |
+
+### Key Findings
+
+1. **2D transform is PGA's strength**: 3x faster than nalgebra Isometry2
+2. **3D operations are comparable**: Similar performance to quaternion-based approach
+3. **PGA inverse is faster in 3D**: Motor inverse is simpler than Isometry inverse
+4. **PGA provides unique operations**: meet, join, contraction have no nalgebra equivalent
+
+### 2D Comparisons
+
+#### 2D Transform Point - clifford (~3.3 ns)
+![pga_comparison_2d_transform_point_clifford](reports/pga_comparison/pga_comparison_2d_transform_point_clifford.svg)
+
+#### 2D Transform Point - nalgebra (~9.1 ns)
+![pga_comparison_2d_transform_point_nalgebra](reports/pga_comparison/pga_comparison_2d_transform_point_nalgebra.svg)
+
+#### 2D Compose - clifford (~10.4 ns)
+![pga_comparison_2d_compose_clifford](reports/pga_comparison/pga_comparison_2d_compose_clifford.svg)
+
+#### 2D Compose - nalgebra (~8.9 ns)
+![pga_comparison_2d_compose_nalgebra](reports/pga_comparison/pga_comparison_2d_compose_nalgebra.svg)
+
+#### 2D Inverse - clifford (~2.8 ns)
+![pga_comparison_2d_inverse_clifford](reports/pga_comparison/pga_comparison_2d_inverse_clifford.svg)
+
+#### 2D Inverse - nalgebra (~1.4 ns)
+![pga_comparison_2d_inverse_nalgebra](reports/pga_comparison/pga_comparison_2d_inverse_nalgebra.svg)
+
+#### 2D Batch 100 - clifford (~380 ns)
+![pga_comparison_2d_batch_100_clifford](reports/pga_comparison/pga_comparison_2d_batch_100_clifford.svg)
+
+#### 2D Batch 100 - nalgebra (~920 ns)
+![pga_comparison_2d_batch_100_nalgebra](reports/pga_comparison/pga_comparison_2d_batch_100_nalgebra.svg)
+
+### 3D Comparisons
+
+#### 3D Transform Point - clifford (~16 ns)
+![pga_comparison_3d_transform_point_clifford](reports/pga_comparison/pga_comparison_3d_transform_point_clifford.svg)
+
+#### 3D Transform Point - nalgebra (~15 ns)
+![pga_comparison_3d_transform_point_nalgebra](reports/pga_comparison/pga_comparison_3d_transform_point_nalgebra.svg)
+
+#### 3D Compose - clifford (~15.4 ns)
+![pga_comparison_3d_compose_clifford](reports/pga_comparison/pga_comparison_3d_compose_clifford.svg)
+
+#### 3D Compose - nalgebra (~15.6 ns)
+![pga_comparison_3d_compose_nalgebra](reports/pga_comparison/pga_comparison_3d_compose_nalgebra.svg)
+
+#### 3D Inverse - clifford (~11.5 ns)
+![pga_comparison_3d_inverse_clifford](reports/pga_comparison/pga_comparison_3d_inverse_clifford.svg)
+
+#### 3D Inverse - nalgebra (~13.2 ns)
+![pga_comparison_3d_inverse_nalgebra](reports/pga_comparison/pga_comparison_3d_inverse_nalgebra.svg)
+
+#### 3D Batch 100 - clifford (~1.6 µs)
+![pga_comparison_3d_batch_100_clifford](reports/pga_comparison/pga_comparison_3d_batch_100_clifford.svg)
+
+#### 3D Batch 100 - nalgebra (~1.5 µs)
+![pga_comparison_3d_batch_100_nalgebra](reports/pga_comparison/pga_comparison_3d_batch_100_nalgebra.svg)
+
+#### 3D Point Distance - clifford (~4 ns)
+![pga_comparison_3d_point_distance_clifford](reports/pga_comparison/pga_comparison_3d_point_distance_clifford.svg)
+
+#### 3D Point Distance - nalgebra (~3 ns)
+![pga_comparison_3d_point_distance_nalgebra](reports/pga_comparison/pga_comparison_3d_point_distance_nalgebra.svg)
+
+### PGA Conversions
+
+| Conversion | Time |
+|------------|------|
+| Motor → Isometry3 | ~6 ns |
+| Isometry3 → Motor | ~19 ns |
+| Point → nalgebra | ~2.6 ns |
+| nalgebra → Point | ~2.2 ns |
+
+#### Motor to Isometry3 (~6 ns)
+![pga_conversion_motor_to_isometry3](reports/pga_comparison/pga_conversion_motor_to_isometry3.svg)
+
+#### Isometry3 to Motor (~19 ns)
+![pga_conversion_isometry3_to_motor](reports/pga_comparison/pga_conversion_isometry3_to_motor.svg)
+
+#### Point to nalgebra (~2.6 ns)
+![pga_conversion_point3_to_nalgebra](reports/pga_comparison/pga_conversion_point3_to_nalgebra.svg)
+
+#### Point from nalgebra (~2.2 ns)
+![pga_conversion_point3_from_nalgebra](reports/pga_comparison/pga_conversion_point3_from_nalgebra.svg)
+
+### PGA-Only Operations (no nalgebra equivalent)
+
+These operations demonstrate PGA capabilities unique to geometric algebra.
+
+#### Line Meet Plane (~10 ns)
+![pga_only_3d_line_meet_plane](reports/pga_comparison/pga_only_3d_line_meet_plane.svg)
+
+#### Line Join Point (~10 ns)
+![pga_only_3d_line_join_point](reports/pga_comparison/pga_only_3d_line_join_point.svg)
+
+#### Motor Commutator (~20 ns)
+![pga_only_3d_motor_commutator](reports/pga_comparison/pga_only_3d_motor_commutator.svg)
+
+#### Point Left Contract Line (~9 ns)
+![pga_only_3d_point_left_contract_line](reports/pga_comparison/pga_only_3d_point_left_contract_line.svg)
+
+## Euclidean GA vs nalgebra Comparison
 
 Head-to-head comparison of clifford specialized types vs nalgebra equivalents.
 
@@ -216,20 +442,26 @@ These operations demonstrate geometric algebra capabilities unique to clifford.
 ## Running Benchmarks
 
 ```bash
-# Run all benchmarks (excluding nalgebra comparison)
+# Run all benchmarks (excluding nalgebra comparisons)
 cargo bench
 
 # Run only generic benchmarks
 cargo bench --bench generic
 
-# Run only specialized benchmarks
+# Run only specialized (Euclidean) benchmarks
 cargo bench --bench specialized
 
-# Run nalgebra comparison benchmarks (requires feature flag)
-cargo bench --bench nalgebra_comparison --features nalgebra-0_34
+# Run only PGA benchmarks
+cargo bench --bench projective
+
+# Run Euclidean vs nalgebra comparison benchmarks
+cargo bench --bench nalgebra_comparison --no-default-features --features "proptest-support,nalgebra-0_34"
+
+# Run PGA vs nalgebra comparison benchmarks
+cargo bench --bench pga_nalgebra_comparison --no-default-features --features "proptest-support,nalgebra-0_34"
 
 # Run specific benchmark by name
-cargo bench -- "rotor"
+cargo bench -- "motor"
 ```
 
 After running, detailed HTML reports are generated at `target/criterion/report/index.html`.
@@ -260,12 +492,35 @@ for svg in target/criterion/euclidean_dim3_*/report/pdf.svg; do
   cp "$svg" "benches/reports/euclidean/dim3/${name}.svg"
 done
 
-# Copy nalgebra comparison benchmarks
+# Copy Euclidean nalgebra comparison benchmarks
 for dir in target/criterion/comparison_* target/criterion/conversion_* \
            target/criterion/workflow_* target/criterion/ga_only_*; do
   if [ -d "$dir" ]; then
     bench=$(basename "$dir")
     cp "$dir/report/pdf.svg" "benches/reports/comparison/${bench}.svg"
+  fi
+done
+
+# Copy projective/dim2 benchmarks
+for svg in target/criterion/projective_dim2_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#projective_dim2_}
+  cp "$svg" "benches/reports/projective/dim2/${name}.svg"
+done
+
+# Copy projective/dim3 benchmarks
+for svg in target/criterion/projective_dim3_*/report/pdf.svg; do
+  bench=$(basename $(dirname $(dirname "$svg")))
+  name=${bench#projective_dim3_}
+  cp "$svg" "benches/reports/projective/dim3/${name}.svg"
+done
+
+# Copy PGA nalgebra comparison benchmarks
+for dir in target/criterion/pga_comparison_* target/criterion/pga_conversion_* \
+           target/criterion/pga_only_*; do
+  if [ -d "$dir" ]; then
+    bench=$(basename "$dir")
+    cp "$dir/report/pdf.svg" "benches/reports/pga_comparison/${bench}.svg"
   fi
 done
 ```
