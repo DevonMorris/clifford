@@ -146,7 +146,7 @@ where
    cargo test            # Run all tests
    cargo deny check      # License and security audit (CI checks this!)
    ```
-   Note: Default features include `serde`, `proptest-support`, and `nalgebra-0_33`. CI runs the full feature matrix.
+   Use default features for local development. CI handles testing the full feature matrix. The nalgebra features are mutually exclusive - do not use `--all-features`.
 6. **Make small, logical commits**:
    - Separate documentation updates from implementation
    - Separate different modules (e.g., euclidean::dim2 and euclidean::dim3 in different commits)

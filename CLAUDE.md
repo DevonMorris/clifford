@@ -351,7 +351,10 @@ cargo deny check      # License and security audit (CI checks this!)
 
 CI will reject PRs that fail any of these checks. Always run `cargo fmt` before committing.
 
-**Note on features**: Default features include `serde`, `proptest-support`, and `nalgebra-0_33`. CI runs the full feature matrix (including `nalgebra-0_34`). The `nalgebra-0_33` and `nalgebra-0_34` features are mutually exclusive.
+**Note on features**: Use default features for local development. CI handles testing the full feature matrix:
+- Default features: `serde`, `proptest-support`, `nalgebra-0_33`
+- CI tests each nalgebra version separately (`nalgebra-0_32`, `nalgebra-0_33`, `nalgebra-0_34`)
+- The nalgebra features are **mutually exclusive** - do not use `--all-features`
 
 ### License Policy
 

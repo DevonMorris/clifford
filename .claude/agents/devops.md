@@ -14,12 +14,14 @@ You are handling infrastructure, CI/CD, and tooling tasks for Clifford, a Rust g
 ## GitHub Actions
 
 Workflows live in `.github/workflows/`. Current CI runs:
-- `cargo check`
-- `cargo test`
+- `cargo check` (with each nalgebra version separately)
+- `cargo test` (default features + each nalgebra version matrix)
 - `cargo fmt --check`
-- `cargo clippy`
-- `cargo doc --all-features --no-deps` (documentation build)
+- `cargo clippy` (with each nalgebra version separately)
+- `cargo doc --no-deps` (with nalgebra-0_34)
 - `cargo deny check` (license and security audit)
+
+**Important**: The nalgebra features (`nalgebra-0_32`, `nalgebra-0_33`, `nalgebra-0_34`) are mutually exclusive. CI tests each version separately - never use `--all-features`.
 
 ### Adding New Workflows
 
