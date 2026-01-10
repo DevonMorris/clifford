@@ -47,3 +47,8 @@ harness = false
 [[bench]]
 name = "specialized"
 harness = false
+
+[[bench]]
+name = "nalgebra_comparison"
+harness = false
+required-features = ["nalgebra-0_34"]
