@@ -118,17 +118,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         // =====================================================================
-        // Draw the Hodge dual vector
+        // Draw the Hodge dual vector (scaled by bivector area)
         // =====================================================================
 
-        // Scale the dual for visibility (normalize and scale)
-        let dual_norm = dual.norm();
-        let dual_scaled = if dual_norm > 1e-6 {
-            let scale = 2.0 / dual_norm;
-            Vector::new(dual.x() * scale, dual.y() * scale, dual.z() * scale)
-        } else {
-            dual
-        };
+        // The dual's magnitude equals the bivector's magnitude (area)
+        // Scale for visibility but preserve proportionality
+        let scale = 0.5; // Adjust for nice visual size
+        let dual_scaled = Vector::new(dual.x() * scale, dual.y() * scale, dual.z() * scale);
 
         // Draw from center of parallelogram
         let center = (u + v) * 0.5;
@@ -137,18 +133,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &rerun::Arrows3D::from_vectors([[dual_scaled.x(), dual_scaled.y(), dual_scaled.z()]])
                 .with_origins([[center.x(), center.y(), center.z()]])
                 .with_colors([[100, 150, 255]]),
-        )?;
-
-        // Also draw in opposite direction (bivectors are oriented, dual can point either way)
-        rec.log(
-            "dual/vector_neg",
-            &rerun::Arrows3D::from_vectors([[
-                -dual_scaled.x(),
-                -dual_scaled.y(),
-                -dual_scaled.z(),
-            ]])
-            .with_origins([[center.x(), center.y(), center.z()]])
-            .with_colors([[100, 150, 255, 100]]),
         )?;
 
         // =====================================================================
@@ -210,11 +194,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("- Green arrow (v): rotating vector");
     println!("- Orange surface: positive orientation (u ∧ v > 0)");
     println!("- Blue surface: negative orientation (u ∧ v < 0)");
-    println!("- Blue arrow: Hodge dual (perpendicular to plane)");
+    println!("- Blue arrow: Hodge dual (length = area!)");
     println!();
     println!("Notice:");
-    println!("  - When u and v align, the bivector collapses to zero!");
-    println!("  - When v crosses u, the orientation (color) flips!");
+    println!("  - When u ∥ v: bivector and dual collapse to zero!");
+    println!("  - When u ⊥ v: bivector and dual are maximum!");
+    println!("  - When v crosses u: orientation (color) flips!");
 
     Ok(())
 }
