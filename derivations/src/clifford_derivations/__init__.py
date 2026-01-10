@@ -26,7 +26,14 @@ from .motor import (
     gp_bivectors,
 )
 
+from .transform import (
+    derive_transform_point,
+    verify_special_cases,
+    generate_rust_transform_point,
+)
+
 __all__ = [
+    # Motor composition and inverse
     "derive_composition",
     "derive_inverse",
     "generate_rust_compose",
@@ -35,4 +42,8 @@ __all__ = [
     "with_timeout",
     "TimeoutError",
     "gp_bivectors",
+    # Transform point
+    "derive_transform_point",
+    "verify_special_cases",
+    "generate_rust_transform_point",
 ]

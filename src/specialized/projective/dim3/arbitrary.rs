@@ -607,5 +607,28 @@ mod tests {
             // For now, just verify we get a valid plane
             let _ = plane.normal();
         }
+
+        /// Verify that unit motors satisfy the study condition.
+        ///
+        /// The study condition for a proper motor is:
+        ///   s*e0123 - e23*e01 - e31*e02 - e12*e03 = 0
+        ///
+        /// Equivalently: s*e0123 = v·m where v = (e23, e31, e12) and m = (e01, e02, e03).
+        ///
+        /// This condition ensures the motor represents a valid rigid transformation.
+        /// It arises naturally when a motor is constructed as T*R (translation composed
+        /// with rotation), and is preserved under motor composition and inversion.
+        ///
+        /// Reference: https://rigidgeometricalgebra.org/wiki/index.php?title=Motor
+        #[test]
+        fn unit_motor_satisfies_study_condition(motor in any::<UnitMotor<f64>>()) {
+            // Study condition: s*e0123 = v·m
+            // where v = (e23, e31, e12) and m = (e01, e02, e03)
+            let study = motor.s * motor.e0123
+                - motor.e23 * motor.e01
+                - motor.e31 * motor.e02
+                - motor.e12 * motor.e03;
+            prop_assert!(abs_diff_eq!(study, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        }
     }
 }

@@ -224,8 +224,7 @@ impl<T: Float> Motor<T> {
         // where v = (e23, e31, e12) is the rotation bivector,
         // m = (e01, e02, e03) is the translation bivector.
         //
-        // TODO: Add sympy derivation in derivations/src/clifford_derivations/transform.py
-        // to verify this formula symbolically.
+        // Derivation: `derivations/src/clifford_derivations/transform.py`
 
         let s = self.s;
         let b23 = self.e23;
