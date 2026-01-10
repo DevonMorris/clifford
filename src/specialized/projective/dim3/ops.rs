@@ -479,6 +479,72 @@ impl<T: Float> Line<T> {
         clamped.acos()
     }
 
+    /// Computes the plane containing this line and a point.
+    ///
+    /// This is the join (exterior product) `L ∧ P`, giving the unique plane
+    /// that contains both the line and the point.
+    ///
+    /// If the point lies on the line, returns a degenerate plane.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Plane, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Z axis
+    /// let line: Line<f64> = Line::z_axis();
+    ///
+    /// // Point at (1, 0, 0) - not on the line
+    /// let p = Point::new(1.0, 0.0, 0.0);
+    /// let plane = line.join_point(&p);
+    ///
+    /// // Plane should be the XZ plane (normal in Y direction)
+    /// let n = plane.normal();
+    /// assert!(abs_diff_eq!(n.x, 0.0, epsilon = 1e-10));
+    /// assert!(n.y.abs() > 0.9); // ny = ±1
+    /// assert!(abs_diff_eq!(n.z, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn join_point(&self, p: &Point<T>) -> Plane<T> {
+        // L ∧ P: line (bivector) ∧ point (vector) = trivector (plane)
+        //
+        // Line L = d₁e₀₁ + d₂e₀₂ + d₃e₀₃ + m₁e₂₃ + m₂e₃₁ + m₃e₁₂
+        // Point P = p₁e₁ + p₂e₂ + p₃e₃ + p₀e₀
+        //
+        // Computing each exterior product term:
+        // e₀₁ ∧ e₂ = e₀₁₂,  e₀₁ ∧ e₃ = -e₀₃₁
+        // e₀₂ ∧ e₁ = -e₀₁₂, e₀₂ ∧ e₃ = e₀₂₃
+        // e₀₃ ∧ e₁ = e₀₃₁,  e₀₃ ∧ e₂ = -e₀₂₃
+        // e₂₃ ∧ e₀ = e₀₂₃,  e₂₃ ∧ e₁ = e₁₂₃
+        // e₃₁ ∧ e₀ = -e₀₃₁, e₃₁ ∧ e₂ = -e₁₂₃
+        // e₁₂ ∧ e₀ = e₀₁₂,  e₁₂ ∧ e₃ = e₁₂₃
+        //
+        // Collecting terms:
+        // e₀₂₃: d₂p₃ - d₃p₂ + m₁p₀
+        // e₀₃₁: d₃p₁ - d₁p₃ - m₂p₀
+        // e₀₁₂: d₁p₂ - d₂p₁ + m₃p₀
+        // e₁₂₃: m₁p₁ - m₂p₂ + m₃p₃
+
+        let d1 = self.e01;
+        let d2 = self.e02;
+        let d3 = self.e03;
+        let m1 = self.e23;
+        let m2 = self.e31;
+        let m3 = self.e12;
+
+        let p0 = p.e0;
+        let p1 = p.e1;
+        let p2 = p.e2;
+        let p3 = p.e3;
+
+        Plane {
+            e023: d2 * p3 - d3 * p2 + m1 * p0,
+            e031: d3 * p1 - d1 * p3 - m2 * p0,
+            e012: d1 * p2 - d2 * p1 + m3 * p0,
+            e123: m1 * p1 - m2 * p2 + m3 * p3,
+        }
+    }
+
     /// Computes the closest point on this line to a given point.
     ///
     /// # Example
@@ -1652,5 +1718,73 @@ mod tests {
             1.0,
             epsilon = ABS_DIFF_EQ_EPS
         ));
+    }
+
+    // ========================================================================
+    // Line::join_point tests
+    // ========================================================================
+
+    #[test]
+    fn line_join_point_z_axis() {
+        // Z axis joined with point (1, 0, 0) gives XZ plane (y = 0)
+        let z_axis: Line<f64> = Line::z_axis();
+        let p = Point::new(1.0, 0.0, 0.0);
+        let plane = z_axis.join_point(&p);
+
+        // Normal should be in Y direction
+        let n = plane.normal();
+        assert!(abs_diff_eq!(n.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(n.y.abs() > 0.9);
+        assert!(abs_diff_eq!(n.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_join_point_x_axis() {
+        // X axis joined with point (0, 0, 1) gives XZ plane (y = 0)
+        let x_axis: Line<f64> = Line::x_axis();
+        let p = Point::new(0.0, 0.0, 1.0);
+        let plane = x_axis.join_point(&p);
+
+        // Normal should be in Y direction
+        let n = plane.normal();
+        assert!(abs_diff_eq!(n.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(n.y.abs() > 0.9);
+        assert!(abs_diff_eq!(n.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_join_point_contains_line() {
+        // The resulting plane should contain the original line
+        let z_axis: Line<f64> = Line::z_axis();
+        let p = Point::new(1.0, 0.0, 0.0);
+        let plane = z_axis.join_point(&p);
+
+        // Points on Z axis should lie in the plane
+        let p_on_line = Point::new(0.0, 0.0, 5.0);
+        assert!(plane.contains_point(&p_on_line, ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_join_point_contains_point() {
+        // The resulting plane should contain the given point
+        let z_axis: Line<f64> = Line::z_axis();
+        let p = Point::new(1.0, 2.0, 0.0);
+        let plane = z_axis.join_point(&p);
+
+        // The point itself should lie in the plane
+        assert!(plane.contains_point(&p, ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_join_point_on_line_degenerate() {
+        // Joining a line with a point on the line gives degenerate plane
+        let z_axis: Line<f64> = Line::z_axis();
+        let p = Point::new(0.0, 0.0, 5.0); // On the line
+        let plane = z_axis.join_point(&p);
+
+        // Normal should be degenerate (zero or very small)
+        let n = plane.normal();
+        let norm = (n.x * n.x + n.y * n.y + n.z * n.z).sqrt();
+        assert!(norm < ABS_DIFF_EQ_EPS);
     }
 }
