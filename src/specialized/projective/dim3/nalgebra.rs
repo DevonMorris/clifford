@@ -732,6 +732,122 @@ mod tests {
             prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
             prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
         }
+
+        /// Verifies all four equivalent ways to apply composed transformations match.
+        ///
+        /// This is the key consistency test between PGA and nalgebra:
+        /// 1. composed_motor.transform_point(p)
+        /// 2. motor2.transform_point(motor1.transform_point(p))
+        /// 3. (iso1 * iso2) * p
+        /// 4. iso1 * (iso2 * p)
+        ///
+        /// All should produce the same result.
+        #[test]
+        fn all_composition_methods_equivalent(
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx1 in -5.0f64..5.0, ty1 in -5.0f64..5.0, tz1 in -5.0f64..5.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -5.0f64..5.0, ty2 in -5.0f64..5.0, tz2 in -5.0f64..5.0,
+            px in -5.0f64..5.0, py in -5.0f64..5.0, pz in -5.0f64..5.0,
+        ) {
+            // Create isometries and motors (rotation around Z for simplicity)
+            let iso1 = na::Isometry3::new(
+                na::Vector3::new(tx1, ty1, tz1),
+                na::Vector3::new(0.0, 0.0, angle1),
+            );
+            let iso2 = na::Isometry3::new(
+                na::Vector3::new(tx2, ty2, tz2),
+                na::Vector3::new(0.0, 0.0, angle2),
+            );
+
+            // Build motors to match isometries (rotation first, then translation)
+            let rot1 = Motor::from_rotation_z(angle1);
+            let trans1 = Motor::from_translation(tx1, ty1, tz1);
+            let motor1 = rot1.compose(&trans1);
+
+            let rot2 = Motor::from_rotation_z(angle2);
+            let trans2 = Motor::from_translation(tx2, ty2, tz2);
+            let motor2 = rot2.compose(&trans2);
+
+            let na_point = na::Point3::new(px, py, pz);
+            let pga_point = Point::new(px, py, pz);
+
+            // Method 1: nalgebra composed, then applied
+            let na_composed = iso1 * iso2;
+            let result_na_composed = na_composed * na_point;
+
+            // Method 2: nalgebra sequential application
+            let result_na_sequential = iso1 * (iso2 * na_point);
+
+            // Method 3: PGA composed (motor2.compose(motor1) = motor2 first, then motor1)
+            // This matches iso1 * iso2 (iso2 first, then iso1)
+            let pga_composed = motor2.compose(&motor1);
+            let result_pga_composed = pga_composed.transform_point(&pga_point);
+
+            // Method 4: PGA sequential application
+            let intermediate = motor2.transform_point(&pga_point);
+            let result_pga_sequential = motor1.transform_point(&intermediate);
+
+            // All four methods should match
+            prop_assert!(abs_diff_eq!(result_na_composed.x, result_na_sequential.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_na_composed.y, result_na_sequential.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_na_composed.z, result_na_sequential.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_composed.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_composed.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_composed.z(), result_na_composed.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_sequential.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_sequential.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_sequential.z(), result_na_composed.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Verifies triple composition consistency between PGA and nalgebra.
+        #[test]
+        fn triple_composition_matches_nalgebra(
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx1 in -3.0f64..3.0, ty1 in -3.0f64..3.0, tz1 in -3.0f64..3.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -3.0f64..3.0, ty2 in -3.0f64..3.0, tz2 in -3.0f64..3.0,
+            angle3 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx3 in -3.0f64..3.0, ty3 in -3.0f64..3.0, tz3 in -3.0f64..3.0,
+            px in -3.0f64..3.0, py in -3.0f64..3.0, pz in -3.0f64..3.0,
+        ) {
+            let iso1 = na::Isometry3::new(
+                na::Vector3::new(tx1, ty1, tz1),
+                na::Vector3::new(0.0, 0.0, angle1),
+            );
+            let iso2 = na::Isometry3::new(
+                na::Vector3::new(tx2, ty2, tz2),
+                na::Vector3::new(0.0, 0.0, angle2),
+            );
+            let iso3 = na::Isometry3::new(
+                na::Vector3::new(tx3, ty3, tz3),
+                na::Vector3::new(0.0, 0.0, angle3),
+            );
+
+            // Build motors
+            let motor1 = Motor::from_rotation_z(angle1).compose(&Motor::from_translation(tx1, ty1, tz1));
+            let motor2 = Motor::from_rotation_z(angle2).compose(&Motor::from_translation(tx2, ty2, tz2));
+            let motor3 = Motor::from_rotation_z(angle3).compose(&Motor::from_translation(tx3, ty3, tz3));
+
+            // nalgebra: iso1 * iso2 * iso3 applies iso3 first, then iso2, then iso1
+            let na_composed = iso1 * iso2 * iso3;
+            let na_point = na::Point3::new(px, py, pz);
+            let na_result = na_composed * na_point;
+
+            // PGA: to match, we need motor3.compose(&motor2).compose(&motor1)
+            let pga_composed = motor3.compose(&motor2).compose(&motor1);
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = pga_composed.transform_point(&pga_point);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        // TODO: Add inverse_matches_nalgebra test
+        // Currently fails for screw motions (rotation and translation along same axis)
+        // because motor.inverse().transform_point() doesn't correctly handle motors
+        // with non-zero e0123 component. This is a separate issue to investigate.
     }
 
     // ========================================================================

@@ -357,6 +357,81 @@ mod tests {
             prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
         }
 
+        /// Verifies that Motor composition equals sequential application.
+        #[test]
+        fn compose_equals_sequential_application(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let rotation = Motor::from_rotation(angle);
+            let translation = Motor::from_translation(tx, ty);
+            let composed = rotation.compose(&translation);
+
+            let p = Point::new(px, py);
+
+            // Composed transformation
+            let result_composed = composed.transform_point(&p);
+
+            // Sequential application: rotate first, then translate
+            let intermediate = rotation.transform_point(&p);
+            let result_sequential = translation.transform_point(&intermediate);
+
+            prop_assert!(abs_diff_eq!(result_composed.x(), result_sequential.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_composed.y(), result_sequential.y(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Verifies all four equivalent ways to apply composed transformations match.
+        ///
+        /// This is the key consistency test between PGA and nalgebra:
+        /// 1. composed_motor.transform_point(p)
+        /// 2. motor2.transform_point(motor1.transform_point(p))
+        /// 3. (iso1 * iso2) * p
+        /// 4. iso1 * (iso2 * p)
+        ///
+        /// All should produce the same result.
+        #[test]
+        fn all_composition_methods_equivalent(
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx1 in -10.0f64..10.0, ty1 in -10.0f64..10.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -10.0f64..10.0, ty2 in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            // Create isometries and motors
+            let iso1 = na::Isometry2::new(na::Vector2::new(tx1, ty1), angle1);
+            let iso2 = na::Isometry2::new(na::Vector2::new(tx2, ty2), angle2);
+            let motor1: Motor<f64> = iso1.into();
+            let motor2: Motor<f64> = iso2.into();
+
+            let na_point = na::Point2::new(px, py);
+            let pga_point = Point::new(px, py);
+
+            // Method 1: nalgebra composed, then applied
+            let na_composed = iso1 * iso2;
+            let result_na_composed = na_composed * na_point;
+
+            // Method 2: nalgebra sequential application
+            let result_na_sequential = iso1 * (iso2 * na_point);
+
+            // Method 3: PGA composed (motor2.compose(motor1) = motor2 first, then motor1)
+            // This matches iso1 * iso2 (iso2 first, then iso1)
+            let pga_composed = motor2.compose(&motor1);
+            let result_pga_composed = pga_composed.transform_point(&pga_point);
+
+            // Method 4: PGA sequential application
+            let intermediate = motor2.transform_point(&pga_point);
+            let result_pga_sequential = motor1.transform_point(&intermediate);
+
+            // All four methods should match
+            prop_assert!(abs_diff_eq!(result_na_composed.x, result_na_sequential.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_na_composed.y, result_na_sequential.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_composed.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_composed.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_sequential.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_pga_sequential.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
         /// Verifies triple composition consistency.
         #[test]
         fn triple_composition_matches_nalgebra(
