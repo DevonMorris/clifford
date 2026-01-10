@@ -235,3 +235,82 @@ When documenting GA operations, use standard notation:
 - Inner product: `a · b` or `a.inner(b)`
 - Outer product: `a ∧ b` or `a.outer(b)`
 - Grade selection: `⟨M⟩ₖ` or `m.grade(k)`
+
+## Algebraic Derivations with SymPy
+
+**Use SymPy to derive and verify complex formulas before implementing them in Rust.** Manual algebraic derivations are error-prone, especially for:
+
+- Motor composition (`M₁ * M₂`)
+- Sandwich products (`M x M̃`)
+- Product expansions (geometric, inner, outer)
+- Normalization formulas
+- Any formula with more than 3-4 terms
+
+### Derivations Package
+
+The `derivations/` folder contains a Python package managed by `uv`:
+
+```bash
+# Run a derivation
+cd derivations
+uv run python -m clifford_derivations.motor
+
+# Interactive session
+uv run python
+>>> from clifford_derivations import *
+```
+
+### Critical Rule: Generate Rust from SymPy
+
+**Never hardcode algebraic formulas.** We cannot trust manual algebra—we can trust SymPy.
+
+- **Always generate Rust code from SymPy expressions** using `sympy.printing.rust.rust_code()`
+- **Never write formulas by hand** and claim they came from derivation
+- **The derivation script must produce the actual Rust code** that goes into the implementation
+
+```python
+from sympy import symbols, expand, rust_code
+
+# CORRECT: Generate Rust from sympy expression
+x, y = symbols('x y')
+expr = x**2 + 2*x*y + y**2
+rust_output = rust_code(expand(expr))  # Produces actual Rust code
+
+# WRONG: Hardcoded string - DO NOT DO THIS
+rust_output = "x*x + 2*x*y + y*y"
+```
+
+### Workflow
+
+1. **Derive symbolically** - Use SymPy to compute the exact formula
+2. **Simplify** - Let SymPy simplify and collect terms
+3. **Generate Rust code** - Use `rust_code()` from `sympy.printing.rust` to convert expressions
+4. **Test against SymPy** - Property tests can compare against SymPy for random inputs
+5. **Commit the derivation** - Keep scripts in `derivations/` for future reference
+
+### Simplification and Timeouts
+
+SymPy can hang on complex expressions. Follow these rules:
+
+- **Use `expand()` over `simplify()`** - `expand()` is fast; `simplify()` can hang
+- **Simplify incrementally** - Simplify sub-expressions before combining
+- **Set timeouts** - Use `@with_timeout(30)` decorator for slow operations
+- **Break up complex derivations** - If > 60 seconds, split into smaller steps
+
+```python
+from clifford_derivations import with_timeout
+
+@with_timeout(30)  # Timeout after 30 seconds
+def derive_formula():
+    result = expand(expr)  # Use expand(), not simplify()
+    return collect(result, x)  # Collect for readability
+```
+
+### When Implementing Complex Operations
+
+Before writing Rust code for operations like `Motor::compose` or `Motor::transform_point`:
+
+1. Check if a derivation already exists in `derivations/src/clifford_derivations/`
+2. If not, create one and verify the formula symbolically
+3. Use the verified formula in your Rust implementation
+4. Reference the derivation script in your code comments

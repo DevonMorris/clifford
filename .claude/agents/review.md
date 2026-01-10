@@ -126,3 +126,32 @@ Pay special attention to:
 - Product implementations (geometric, inner, outer)
 - Inverse and normalization
 - Sign conventions (especially for reversion, duals)
+
+### Algebraic Derivations
+
+For complex operations (motor composition, sandwich products, multi-term formulas):
+
+- [ ] **Derivation exists** - Check `derivations/src/clifford_derivations/` for a SymPy derivation
+- [ ] **Formula verified** - If no derivation exists, request one be created before approving
+- [ ] **Code matches derivation** - Compare Rust implementation against the symbolic derivation
+- [ ] **Derivation referenced** - Code comments should reference the derivation script
+
+**Red flags** (request derivation before approving):
+- Motor composition (`M₁ * M₂`) without derivation
+- Sandwich products (`M x M̃`) with more than 3-4 terms
+- Manual sign corrections or "magic" coefficients
+- Copy-pasted formulas without cited source
+- Hardcoded Rust formulas that claim to be "derived" but aren't generated from SymPy
+
+**Critical: Rust code must be generated from SymPy**:
+- **Never accept hardcoded algebraic formulas** - we cannot trust manual algebra
+- **Derivation scripts must use `sympy.printing.rust.rust_code()`** to generate Rust
+- **The derivation must produce the actual Rust code** that goes into the implementation
+- If code claims to be derived but the derivation script uses hardcoded strings, reject it
+
+**Derivation quality checks**:
+- Derivation uses `expand()` not `simplify()` (avoids hangs)
+- Derivation has timeout protection (`@with_timeout(30)`)
+- Complex derivations are broken into steps (no single function > 60s)
+- Intermediate results are simplified before combining
+- **Rust code is generated via `rust_code()` from `sympy.printing.rust`**, not hardcoded

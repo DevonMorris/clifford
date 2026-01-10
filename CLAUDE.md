@@ -355,6 +355,132 @@ Use the review agent to check this PR before merging
 - **Improving speed?** → `optimize`
 - **CI/CD/infra?** → `devops`
 
+### 10. Algebraic Derivations with SymPy
+
+**NOTE:** When updating derivation rules in this section, also update the corresponding agents in `.claude/agents/` (especially `implement.md` and `review.md`).
+
+Complex algebraic operations in geometric algebra (products, motor compositions, transformations) are error-prone. Use SymPy to derive and verify formulas before implementing them in Rust.
+
+#### Derivations Package
+
+The `derivations/` folder contains a Python package managed by `uv` for symbolic algebra:
+
+```
+derivations/
+  pyproject.toml        # uv package configuration
+  src/
+    clifford_derivations/
+      __init__.py       # Package exports
+      motor.py          # Motor composition derivation via matrix conversion
+```
+
+#### Usage
+
+```bash
+# Run a derivation script
+cd derivations
+uv run python -m clifford_derivations.motor
+
+# Or run interactively
+uv run python
+>>> from clifford_derivations import derive_composition, to_rust
+>>> # Derive motor composition formula...
+```
+
+#### When to Use SymPy
+
+- **Motor composition**: Deriving the formula for `M₁ * M₂`
+- **Sandwich products**: `M x M̃` for transformations
+- **Product expansions**: Geometric, inner, outer products
+- **Normalization formulas**: Computing `||M||` for various types
+- **Any formula with more than 3-4 terms**: Manual derivation is error-prone
+
+#### Critical Rule: Generate Rust from SymPy
+
+**Never hardcode algebraic formulas.** We cannot trust manual algebra—we can trust SymPy.
+
+- **Always generate Rust code from SymPy expressions** using `sympy.printing.rust.rust_code()`
+- **Never write formulas by hand** and claim they came from derivation
+- **The derivation script must produce the actual Rust code** that goes into the implementation
+- **Code generation functions must call sympy's rust_code printer**, not use string templates with placeholder values
+
+```python
+from sympy import symbols, expand, rust_code
+
+# CORRECT: Generate Rust from sympy expression
+x, y = symbols('x y')
+expr = x**2 + 2*x*y + y**2
+rust_output = rust_code(expand(expr))  # -> "x.powi(2) + 2*x*y + y.powi(2)"
+
+# WRONG: Hardcoded string that claims to be derived
+rust_output = "x*x + 2*x*y + y*y"  # DO NOT DO THIS
+```
+
+#### Workflow
+
+1. **Derive symbolically** - Use SymPy to compute the exact formula
+2. **Simplify** - Let SymPy simplify and collect terms
+3. **Generate Rust code** - Use `rust_code()` from `sympy.printing.rust` to convert expressions
+4. **Test against SymPy** - Property tests can compare against SymPy for random inputs
+5. **Commit the derivation** - Keep derivation scripts for future reference
+
+#### Simplification Guidelines
+
+SymPy can hang on complex expressions. Follow these guidelines:
+
+- **Use `expand()` over `simplify()`** - `expand()` is fast and deterministic; `simplify()` can be slow
+- **Simplify incrementally** - Simplify sub-expressions before combining them
+- **Use `collect()` for readability** - Group terms by variable for cleaner output
+- **Avoid nested simplification** - Don't call `simplify(simplify(expr))`
+- **Set timeouts** - Use the `with_timeout(seconds)` decorator for potentially slow operations
+
+```python
+from clifford_derivations.pga import with_timeout
+
+@with_timeout(30)  # 30 second timeout
+def derive_complex_formula():
+    # Use expand() instead of simplify()
+    result = expand(expr)
+    # Collect by a variable for readability
+    result = collect(result, x)
+    return result
+```
+
+#### Timeout Handling
+
+The derivations package includes a `with_timeout` decorator to prevent hanging:
+
+```python
+from clifford_derivations import with_timeout, TimeoutError
+
+@with_timeout(30)
+def slow_derivation():
+    ...
+
+try:
+    result = slow_derivation()
+except TimeoutError:
+    print("Derivation timed out - try simplifying sub-expressions first")
+```
+
+Default timeout is 30 seconds. Increase for complex derivations, but if a derivation takes > 60 seconds, consider breaking it into smaller steps.
+
+#### Example: Motor Transform Point
+
+```python
+# In derivations/src/clifford_derivations/motor.py
+from sympy import symbols, expand, collect
+
+# Define motor components
+s, e01, e02, e03, e12, e31, e23, e0123 = symbols('s e01 e02 e03 e12 e31 e23 e0123')
+
+# Define point components
+x, y, z = symbols('x y z')
+
+# Compute M * P * M̃ symbolically...
+# Result gives exact formula for transform_point()
+```
+
 ## Development Commands
 
 ```bash

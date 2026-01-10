@@ -947,13 +947,21 @@ impl<T: Float> Motor<T> {
         }
     }
 
-    /// Composes two motors via geometric product: `self * other`.
+    /// Composes two motors via geometric product: `other * self`.
     ///
     /// The composition order follows PGA convention where `self` is applied first,
     /// then `other`. So `a.compose(&b)` means "first apply transformation `a`, then `b`".
     ///
     /// **nalgebra correspondence**: nalgebra's `iso1 * iso2` applies `iso2` first, then `iso1`.
     /// So `motor2.compose(&motor1)` is equivalent to `iso1 * iso2`.
+    ///
+    /// # Derivation
+    ///
+    /// Uses the direct geometric product of PGA even-grade elements.
+    /// The rotation part follows bivector multiplication rules (NOT quaternion rules,
+    /// which have opposite signs on cross terms).
+    ///
+    /// See: `derivations/src/clifford_derivations/motor.py`
     ///
     /// # Example
     ///
@@ -977,93 +985,69 @@ impl<T: Float> Motor<T> {
     /// ```
     #[inline]
     pub fn compose(&self, other: &Self) -> Self {
-        // Motor multiplication in 3D PGA
-        // M1 = s1 + B1 + I1 (scalar + bivector + pseudoscalar)
-        // M2 = s2 + B2 + I2
+        // Compose: `self` applied first, then `other` → GP result = `self * other`
         //
-        // The even subalgebra multiplication follows specific rules.
-        // We need to compute all grade-0, grade-2, and grade-4 parts.
-
-        let s1 = self.s;
-        let b23_1 = self.e23;
-        let b31_1 = self.e31;
-        let b12_1 = self.e12;
-        let b01_1 = self.e01;
-        let b02_1 = self.e02;
-        let b03_1 = self.e03;
-        let i1 = self.e0123;
-
-        let s2 = other.s;
-        let b23_2 = other.e23;
-        let b31_2 = other.e31;
-        let b12_2 = other.e12;
-        let b01_2 = other.e01;
-        let b02_2 = other.e02;
-        let b03_2 = other.e03;
-        let i2 = other.e0123;
-
-        // Scalar part: s1*s2 - B1·B2
-        // The Euclidean bivectors e23, e31, e12 square to -1, so their product contributes negatively
-        // The null bivectors e01, e02, e03 square to 0 and don't contribute to scalar
-        let s = s1 * s2 - b23_1 * b23_2 - b31_1 * b31_2 - b12_1 * b12_2;
-
-        // Euclidean bivector parts: scalar*bivector + bivector*scalar + bivector×bivector
+        // In PGA, the sandwich product (A * B) * p * (A * B)̃ applies A first, then B.
+        // So for compose(self, other) to apply self first, we compute self * other.
         //
-        // The bivector multiplication rules in Cl(3,0,1) are:
-        //   e23*e31 = -e12,  e31*e23 = +e12
-        //   e31*e12 = -e23,  e12*e31 = +e23
-        //   e12*e23 = -e31,  e23*e12 = +e31
-        //
-        // Therefore:
-        //   e23 = s1*b23_2 + b23_1*s2 + b12_1*b31_2 - b31_1*b12_2
-        //   e31 = s1*b31_2 + b31_1*s2 + b23_1*b12_2 - b12_1*b23_2
-        //   e12 = s1*b12_2 + b12_1*s2 + b31_1*b23_2 - b23_1*b31_2
-        let e23 = s1 * b23_2 + b23_1 * s2 + b12_1 * b31_2 - b31_1 * b12_2;
-        let e31 = s1 * b31_2 + b31_1 * s2 + b23_1 * b12_2 - b12_1 * b23_2;
-        let e12 = s1 * b12_2 + b12_1 * s2 + b31_1 * b23_2 - b23_1 * b31_2;
+        // The sympy derivation in motor.py computes M2 * M1, so we assign:
+        //   M1 = other, M2 = self → result = self * other
+        let s1 = other.s;
+        let b23_1 = other.e23;
+        let b31_1 = other.e31;
+        let b12_1 = other.e12;
+        let d01_1 = other.e01;
+        let d02_1 = other.e02;
+        let d03_1 = other.e03;
+        let i1 = other.e0123;
 
-        // Combining all contributions for e01:
-        // Note: e23*e0123 = e0123*e23 = -e01, so the pseudoscalar terms are negated
-        let e01_new = s1 * b01_2 + b01_1 * s2 - b23_1 * i2 - i1 * b23_2 + b12_1 * b02_2
-            - b02_1 * b12_2
-            - b31_1 * b03_2
-            + b03_1 * b31_2;
+        let s2 = self.s;
+        let b23_2 = self.e23;
+        let b31_2 = self.e31;
+        let b12_2 = self.e12;
+        let d01_2 = self.e01;
+        let d02_2 = self.e02;
+        let d03_2 = self.e03;
+        let i2 = self.e0123;
 
-        // e02: similar pattern
-        // Note: e31*e0123 = e0123*e31 = -e02, so the pseudoscalar terms are negated
-        let e02_new = s1 * b02_2 + b02_1 * s2 - b31_1 * i2 - i1 * b31_2 + b23_1 * b03_2
-            - b03_1 * b23_2
-            - b12_1 * b01_2
-            + b01_1 * b12_2;
-
-        // e03: similar pattern
-        // Note: e12*e0123 = e0123*e12 = -e03, so the pseudoscalar terms are negated
-        let e03_new = s1 * b03_2 + b03_1 * s2 - b12_1 * i2 - i1 * b12_2 + b31_1 * b01_2
-            - b01_1 * b31_2
-            - b23_1 * b02_2
-            + b02_1 * b23_2;
-
-        // Pseudoscalar part: from bivector*bivector products that give grade 4
-        // e23*e01 + e31*e02 + e12*e03 = e0123 (wedge contributions)
-        // Plus s*I terms
-        let e0123_new = s1 * i2
-            + i1 * s2
-            + b23_1 * b01_2
-            + b01_1 * b23_2
-            + b31_1 * b02_2
-            + b02_1 * b31_2
-            + b12_1 * b03_2
-            + b03_1 * b12_2;
+        // Geometric product: self * other = M2 * M1
+        // Generated by sympy from: derivations/src/clifford_derivations/motor.py
+        let s = -b12_1 * b12_2 - b23_1 * b23_2 - b31_1 * b31_2 + s1 * s2;
+        let e23 = -b12_1 * b31_2 + b12_2 * b31_1 + b23_1 * s2 + b23_2 * s1;
+        let e31 = b12_1 * b23_2 - b12_2 * b23_1 + b31_1 * s2 + b31_2 * s1;
+        let e12 = b12_1 * s2 + b12_2 * s1 + b23_1 * b31_2 - b23_2 * b31_1;
+        let e01 = -i1 * b23_2 - i2 * b23_1 + d01_1 * s2 + d01_2 * s1 + d02_1 * b12_2
+            - d02_2 * b12_1
+            - d03_1 * b31_2
+            + d03_2 * b31_1;
+        let e02 = -i1 * b31_2 - i2 * b31_1 - d01_1 * b12_2
+            + d01_2 * b12_1
+            + d02_1 * s2
+            + d02_2 * s1
+            + d03_1 * b23_2
+            - d03_2 * b23_1;
+        let e03 = -i1 * b12_2 - i2 * b12_1 + d01_1 * b31_2 - d01_2 * b31_1 - d02_1 * b23_2
+            + d02_2 * b23_1
+            + d03_1 * s2
+            + d03_2 * s1;
+        let e0123 = i1 * s2
+            + i2 * s1
+            + d01_1 * b23_2
+            + d01_2 * b23_1
+            + d02_1 * b31_2
+            + d02_2 * b31_1
+            + d03_1 * b12_2
+            + d03_2 * b12_1;
 
         Self {
             s,
             e23,
             e31,
             e12,
-            e01: e01_new,
-            e02: e02_new,
-            e03: e03_new,
-            e0123: e0123_new,
+            e01,
+            e02,
+            e03,
+            e0123,
         }
     }
 
@@ -1120,27 +1104,36 @@ impl<T: Float> Motor<T> {
         }
     }
 
-    /// Returns the inverse of the motor: `M⁻¹`.
+    /// Returns the inverse of the motor: `M⁻¹ = M̃ / ||M||²`.
     ///
-    /// For a unitized motor, `M⁻¹ = M̃` (the reverse).
-    /// For non-unitized motors, `M⁻¹ = M̃ / |M|²`.
+    /// The inverse satisfies `M * M⁻¹ = M⁻¹ * M = 1`.
     ///
-    /// The inverse satisfies: `M * M⁻¹ = M⁻¹ * M = 1`.
+    /// # Derivation
+    ///
+    /// For a motor M, the inverse is: `M⁻¹ = M̃ / ||M||²`
+    /// where `M̃` is the reverse and `||M||² = s² + e23² + e31² + e12²`.
+    ///
+    /// See: `derivations/src/clifford_derivations/motor.py`
+    ///
+    /// # Panics
+    ///
+    /// Panics (via division by zero) if the motor has zero weight norm.
     pub fn inverse(&self) -> Self {
-        let norm_sq = self.weight_norm_squared();
-        if norm_sq.abs() < T::epsilon() {
-            return *self;
-        }
-        let rev = self.reverse();
+        let norm_sq =
+            self.s * self.s + self.e23 * self.e23 + self.e31 * self.e31 + self.e12 * self.e12;
+        let inv_norm_sq = T::one() / norm_sq;
+
+        // Inverse = reverse / norm_sq
+        // Reverse negates bivector and pseudoscalar parts
         Self {
-            s: rev.s / norm_sq,
-            e23: rev.e23 / norm_sq,
-            e31: rev.e31 / norm_sq,
-            e12: rev.e12 / norm_sq,
-            e01: rev.e01 / norm_sq,
-            e02: rev.e02 / norm_sq,
-            e03: rev.e03 / norm_sq,
-            e0123: rev.e0123 / norm_sq,
+            s: self.s * inv_norm_sq,
+            e23: -self.e23 * inv_norm_sq,
+            e31: -self.e31 * inv_norm_sq,
+            e12: -self.e12 * inv_norm_sq,
+            e01: -self.e01 * inv_norm_sq,
+            e02: -self.e02 * inv_norm_sq,
+            e03: -self.e03 * inv_norm_sq,
+            e0123: -self.e0123 * inv_norm_sq,
         }
     }
 
