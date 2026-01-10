@@ -947,7 +947,7 @@ impl<T: Float> Motor<T> {
         }
     }
 
-    /// Composes two motors via geometric product: `other * self`.
+    /// Composes two motors via geometric product: `self * other`.
     ///
     /// The composition order follows PGA convention where `self` is applied first,
     /// then `other`. So `a.compose(&b)` means "first apply transformation `a`, then `b`".

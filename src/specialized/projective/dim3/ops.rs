@@ -209,6 +209,9 @@ impl<T: Float> Motor<T> {
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
         // Sandwich product: M P M̃
         //
+        // Reference: https://rigidgeometricalgebra.org/wiki/index.php?title=Motor
+        // See "Application to Points" section.
+        //
         // For composed motors (e.g., rotation + translation), the e0123 component
         // encodes the translation along the rotation axis. This arises because
         // the geometric product e12 * e03 = e0123, so translation parallel to the
@@ -220,6 +223,9 @@ impl<T: Float> Motor<T> {
         //
         // where v = (e23, e31, e12) is the rotation bivector,
         // m = (e01, e02, e03) is the translation bivector.
+        //
+        // TODO: Add sympy derivation in derivations/src/clifford_derivations/transform.py
+        // to verify this formula symbolically.
 
         let s = self.s;
         let b23 = self.e23;
