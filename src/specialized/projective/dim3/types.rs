@@ -171,6 +171,369 @@ impl<T: Float> Default for Point<T> {
     }
 }
 
+/// A line in 3D PGA (grade-2 bivector).
+///
+/// In point-based PGA, a line is represented using Plücker coordinates:
+/// - Direction: `(e₀₁, e₀₂, e₀₃)` — the line's direction vector
+/// - Moment: `(e₂₃, e₃₁, e₁₂)` — the line's moment about the origin
+///
+/// The direction and moment satisfy the Plücker constraint:
+/// `direction · moment = 0`
+///
+/// # Construction
+///
+/// - [`Line::join`]: Line through two points
+/// - [`Line::from_point_and_direction`]: Line through a point in a direction
+/// - [`Line::from_plucker`]: Direct Plücker coordinates
+/// - [`Line::x_axis`], [`Line::y_axis`], [`Line::z_axis`]: Coordinate axes
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::projective::dim3::{Point, Line};
+/// use approx::abs_diff_eq;
+///
+/// // Line through two points
+/// let p1 = Point::new(0.0, 0.0, 0.0);
+/// let p2 = Point::new(1.0, 0.0, 0.0);
+/// let line = Line::join(&p1, &p2);
+///
+/// // Direction should be (1, 0, 0)
+/// let (dx, dy, dz) = line.direction();
+/// assert!(abs_diff_eq!(dx, 1.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(dy, 0.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Line<T: Float> {
+    /// Coefficient of e₀₁ (x-component of direction).
+    pub e01: T,
+    /// Coefficient of e₀₂ (y-component of direction).
+    pub e02: T,
+    /// Coefficient of e₀₃ (z-component of direction).
+    pub e03: T,
+    /// Coefficient of e₂₃ (x-component of moment).
+    pub e23: T,
+    /// Coefficient of e₃₁ (y-component of moment).
+    pub e31: T,
+    /// Coefficient of e₁₂ (z-component of moment).
+    pub e12: T,
+}
+
+impl<T: Float> Line<T> {
+    /// Creates a line from bivector coefficients.
+    #[inline]
+    pub fn new(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
+        Self {
+            e01,
+            e02,
+            e03,
+            e23,
+            e31,
+            e12,
+        }
+    }
+
+    /// Creates a line from Plücker coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `direction` - The line's direction vector `(dx, dy, dz)`
+    /// * `moment` - The line's moment vector `(mx, my, mz)`
+    ///
+    /// # Note
+    ///
+    /// For a valid line, `direction · moment = 0`.
+    #[inline]
+    pub fn from_plucker(direction: (T, T, T), moment: (T, T, T)) -> Self {
+        Self {
+            e01: direction.0,
+            e02: direction.1,
+            e03: direction.2,
+            e23: moment.0,
+            e31: moment.1,
+            e12: moment.2,
+        }
+    }
+
+    /// Creates the line through two points (their join/wedge product).
+    ///
+    /// The resulting line goes from `p` toward `q`.
+    ///
+    /// # Formula
+    ///
+    /// `L = P ∧ Q` (exterior product)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let origin = Point::origin();
+    /// let p = Point::new(3.0, 4.0, 0.0);
+    /// let line = Line::join(&origin, &p);
+    ///
+    /// // Direction is (3, 4, 0), normalized
+    /// let (dx, dy, dz) = line.direction();
+    /// assert!(abs_diff_eq!(dx, 3.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(dy, 4.0, epsilon = 1e-10));
+    /// ```
+    pub fn join(p: &Point<T>, q: &Point<T>) -> Self {
+        // P ∧ Q for P = (px, py, pz, pw) and Q = (qx, qy, qz, qw)
+        // e01: pw*qx - px*qw
+        // e02: pw*qy - py*qw
+        // e03: pw*qz - pz*qw
+        // e23: py*qz - pz*qy
+        // e31: pz*qx - px*qz
+        // e12: px*qy - py*qx
+        Self {
+            e01: p.e0 * q.e1 - p.e1 * q.e0,
+            e02: p.e0 * q.e2 - p.e2 * q.e0,
+            e03: p.e0 * q.e3 - p.e3 * q.e0,
+            e23: p.e2 * q.e3 - p.e3 * q.e2,
+            e31: p.e3 * q.e1 - p.e1 * q.e3,
+            e12: p.e1 * q.e2 - p.e2 * q.e1,
+        }
+    }
+
+    /// Creates a line through a point in the given direction.
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - A point on the line
+    /// * `direction` - The direction vector `(dx, dy, dz)`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let p = Point::new(1.0, 2.0, 3.0);
+    /// let line = Line::from_point_and_direction(&p, (0.0, 0.0, 1.0));
+    ///
+    /// // Line through (1,2,3) in Z direction
+    /// let (dx, dy, dz) = line.direction();
+    /// assert!(abs_diff_eq!(dz, 1.0, epsilon = 1e-10));
+    /// ```
+    pub fn from_point_and_direction(point: &Point<T>, direction: (T, T, T)) -> Self {
+        // Create an ideal point (point at infinity) in the direction
+        let ideal = Point::ideal(direction.0, direction.1, direction.2);
+        // Line is the join of the finite point and the ideal point
+        Self::join(point, &ideal)
+    }
+
+    /// Creates the X axis (line through origin in X direction).
+    #[inline]
+    pub fn x_axis() -> Self {
+        Self::from_plucker(
+            (T::one(), T::zero(), T::zero()),
+            (T::zero(), T::zero(), T::zero()),
+        )
+    }
+
+    /// Creates the Y axis (line through origin in Y direction).
+    #[inline]
+    pub fn y_axis() -> Self {
+        Self::from_plucker(
+            (T::zero(), T::one(), T::zero()),
+            (T::zero(), T::zero(), T::zero()),
+        )
+    }
+
+    /// Creates the Z axis (line through origin in Z direction).
+    #[inline]
+    pub fn z_axis() -> Self {
+        Self::from_plucker(
+            (T::zero(), T::zero(), T::one()),
+            (T::zero(), T::zero(), T::zero()),
+        )
+    }
+
+    /// Creates the zero line (degenerate).
+    #[inline]
+    pub fn zero() -> Self {
+        Self::new(
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+        )
+    }
+
+    /// Returns the direction vector `(dx, dy, dz)`.
+    #[inline]
+    pub fn direction(&self) -> (T, T, T) {
+        (self.e01, self.e02, self.e03)
+    }
+
+    /// Returns the moment vector `(mx, my, mz)`.
+    #[inline]
+    pub fn moment(&self) -> (T, T, T) {
+        (self.e23, self.e31, self.e12)
+    }
+
+    /// Returns the squared norm of the direction (weight).
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        self.e01 * self.e01 + self.e02 * self.e02 + self.e03 * self.e03
+    }
+
+    /// Returns the norm of the direction (weight).
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
+    }
+
+    /// Returns a unitized version of this line (direction has unit length).
+    ///
+    /// Returns the zero line if the direction is zero.
+    pub fn unitized(&self) -> Self {
+        let norm = self.weight_norm();
+        if norm < T::epsilon() {
+            Self::zero()
+        } else {
+            Self {
+                e01: self.e01 / norm,
+                e02: self.e02 / norm,
+                e03: self.e03 / norm,
+                e23: self.e23 / norm,
+                e31: self.e31 / norm,
+                e12: self.e12 / norm,
+            }
+        }
+    }
+
+    /// Returns true if the direction is zero (degenerate line).
+    #[inline]
+    pub fn is_zero(&self, epsilon: T) -> bool {
+        self.weight_norm_squared() < epsilon * epsilon
+    }
+
+    /// Returns true if this is a line through the origin.
+    ///
+    /// A line through the origin has zero moment.
+    #[inline]
+    pub fn through_origin(&self, epsilon: T) -> bool {
+        let moment_sq = self.e23 * self.e23 + self.e31 * self.e31 + self.e12 * self.e12;
+        moment_sq < epsilon * epsilon
+    }
+
+    /// Computes the Plücker inner product (used for testing intersection/parallelism).
+    ///
+    /// Two lines are:
+    /// - Parallel or identical if the result is zero and they have parallel directions
+    /// - Intersecting if the result is zero and they have non-parallel directions
+    /// - Skew if the result is non-zero
+    #[inline]
+    pub fn plucker_inner(&self, other: &Line<T>) -> T {
+        // direction1 · moment2 + direction2 · moment1
+        self.e01 * other.e23
+            + self.e02 * other.e31
+            + self.e03 * other.e12
+            + other.e01 * self.e23
+            + other.e02 * self.e31
+            + other.e03 * self.e12
+    }
+
+    /// Returns true if this line is parallel to another.
+    ///
+    /// Two lines are parallel if their directions are parallel (cross product is zero).
+    pub fn is_parallel(&self, other: &Line<T>, epsilon: T) -> bool {
+        // Cross product of directions
+        let cx = self.e02 * other.e03 - self.e03 * other.e02;
+        let cy = self.e03 * other.e01 - self.e01 * other.e03;
+        let cz = self.e01 * other.e02 - self.e02 * other.e01;
+        cx * cx + cy * cy + cz * cz < epsilon * epsilon
+    }
+
+    /// Returns true if this line intersects another (including parallel/coincident).
+    ///
+    /// Uses the Plücker inner product: lines intersect iff the product is zero.
+    #[inline]
+    pub fn intersects(&self, other: &Line<T>, epsilon: T) -> bool {
+        self.plucker_inner(other).abs() < epsilon
+    }
+
+    /// Returns the reverse of this line.
+    ///
+    /// For a bivector, the reverse negates all components.
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self {
+            e01: -self.e01,
+            e02: -self.e02,
+            e03: -self.e03,
+            e23: -self.e23,
+            e31: -self.e31,
+            e12: -self.e12,
+        }
+    }
+}
+
+impl<T: Float> Default for Line<T> {
+    fn default() -> Self {
+        Self::zero()
+    }
+}
+
+// Approximate equality implementations for Line
+impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Line<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.e01, &other.e01, epsilon)
+            && T::abs_diff_eq(&self.e02, &other.e02, epsilon)
+            && T::abs_diff_eq(&self.e03, &other.e03, epsilon)
+            && T::abs_diff_eq(&self.e23, &other.e23, epsilon)
+            && T::abs_diff_eq(&self.e31, &other.e31, epsilon)
+            && T::abs_diff_eq(&self.e12, &other.e12, epsilon)
+    }
+}
+
+impl<T: Float + RelativeEq<Epsilon = T>> RelativeEq for Line<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.e01, &other.e01, epsilon, max_relative)
+            && T::relative_eq(&self.e02, &other.e02, epsilon, max_relative)
+            && T::relative_eq(&self.e03, &other.e03, epsilon, max_relative)
+            && T::relative_eq(&self.e23, &other.e23, epsilon, max_relative)
+            && T::relative_eq(&self.e31, &other.e31, epsilon, max_relative)
+            && T::relative_eq(&self.e12, &other.e12, epsilon, max_relative)
+    }
+}
+
+impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Line<T> {
+    fn default_max_ulps() -> u32 {
+        4
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.e01, &other.e01, epsilon, max_ulps)
+            && T::ulps_eq(&self.e02, &other.e02, epsilon, max_ulps)
+            && T::ulps_eq(&self.e03, &other.e03, epsilon, max_ulps)
+            && T::ulps_eq(&self.e23, &other.e23, epsilon, max_ulps)
+            && T::ulps_eq(&self.e31, &other.e31, epsilon, max_ulps)
+            && T::ulps_eq(&self.e12, &other.e12, epsilon, max_ulps)
+    }
+}
+
 /// A motor (rigid transformation) in 3D PGA.
 ///
 /// Motors represent rigid body transformations (rotation + translation).

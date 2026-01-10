@@ -1,6 +1,6 @@
 //! Operations for 3D Projective Geometric Algebra types.
 
-use super::types::{Flector, Motor, Plane, Point};
+use super::types::{Flector, Line, Motor, Plane, Point};
 use crate::scalar::Float;
 
 // ============================================================================
@@ -124,6 +124,283 @@ impl<T: Float> Motor<T> {
             e0: pw,
         }
     }
+
+    /// Transforms a line: `L' = M L M̃`.
+    ///
+    /// This applies the rigid transformation represented by the motor to the line.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Motor};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // X axis
+    /// let line = Line::x_axis();
+    ///
+    /// // 90° rotation around Z axis
+    /// let rotation = Motor::from_rotation_z(FRAC_PI_2);
+    /// let rotated = rotation.transform_line(&line);
+    ///
+    /// // X axis rotated 90° around Z becomes Y axis
+    /// let (dx, dy, dz) = rotated.direction();
+    /// assert!(abs_diff_eq!(dx, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(dy, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
+        // For a line L = d + m (direction bivector + moment bivector)
+        // The transformation is L' = M L M̃
+        //
+        // For a pure rotation R, both direction and moment transform as vectors:
+        // d' = R d R̃ (rotate direction)
+        // m' = R m R̃ (rotate moment)
+        //
+        // For translation, the direction is unchanged but the moment changes.
+
+        let s = self.s;
+        let b23 = self.e23;
+        let b31 = self.e31;
+        let b12 = self.e12;
+        let b01 = self.e01;
+        let b02 = self.e02;
+        let b03 = self.e03;
+
+        // Line components
+        let d1 = l.e01; // direction x
+        let d2 = l.e02; // direction y
+        let d3 = l.e03; // direction z
+        let m1 = l.e23; // moment x
+        let m2 = l.e31; // moment y
+        let m3 = l.e12; // moment z
+
+        let two = T::TWO;
+
+        // Rotate the direction (like a vector): d' = R d R̃
+        // Using Rodrigues formula: d' = d + 2s(v × d) + 2(v × (v × d))
+        // where v = (b23, b31, b12) is the rotation bivector
+
+        // v × d
+        let vxd_x = b31 * d3 - b12 * d2;
+        let vxd_y = b12 * d1 - b23 * d3;
+        let vxd_z = b23 * d2 - b31 * d1;
+
+        // v × (v × d)
+        let vxvxd_x = b31 * vxd_z - b12 * vxd_y;
+        let vxvxd_y = b12 * vxd_x - b23 * vxd_z;
+        let vxvxd_z = b23 * vxd_y - b31 * vxd_x;
+
+        let d1_new = d1 + two * (s * vxd_x + vxvxd_x);
+        let d2_new = d2 + two * (s * vxd_y + vxvxd_y);
+        let d3_new = d3 + two * (s * vxd_z + vxvxd_z);
+
+        // Rotate the moment: m' = R m R̃
+        let vxm_x = b31 * m3 - b12 * m2;
+        let vxm_y = b12 * m1 - b23 * m3;
+        let vxm_z = b23 * m2 - b31 * m1;
+
+        let vxvxm_x = b31 * vxm_z - b12 * vxm_y;
+        let vxvxm_y = b12 * vxm_x - b23 * vxm_z;
+        let vxvxm_z = b23 * vxm_y - b31 * vxm_x;
+
+        let m1_rot = m1 + two * (s * vxm_x + vxvxm_x);
+        let m2_rot = m2 + two * (s * vxm_y + vxvxm_y);
+        let m3_rot = m3 + two * (s * vxm_z + vxvxm_z);
+
+        // Translation contribution to moment: m' += t × d'
+        // where t = (b01, b02, b03) is the translation
+        let txd_x = b02 * d3_new - b03 * d2_new;
+        let txd_y = b03 * d1_new - b01 * d3_new;
+        let txd_z = b01 * d2_new - b02 * d1_new;
+
+        Line {
+            e01: d1_new,
+            e02: d2_new,
+            e03: d3_new,
+            e23: m1_rot + two * txd_x,
+            e31: m2_rot + two * txd_y,
+            e12: m3_rot + two * txd_z,
+        }
+    }
+}
+
+// ============================================================================
+// Line operations
+// ============================================================================
+
+impl<T: Float> Line<T> {
+    /// Computes the meet of this line with a plane.
+    ///
+    /// Returns the point where the line intersects the plane.
+    /// If the line is parallel to the plane, returns an ideal point (point at infinity).
+    ///
+    /// # Formula
+    ///
+    /// The meet is computed as the regressive product: `P = L ∨ G`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Plane, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Line along Z axis through origin
+    /// let line = Line::z_axis();
+    ///
+    /// // XY plane at z = 5
+    /// let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+    ///
+    /// let intersection = line.meet(&plane);
+    ///
+    /// // Should intersect at (0, 0, 5)
+    /// assert!(abs_diff_eq!(intersection.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(intersection.y(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(intersection.z(), 5.0, epsilon = 1e-10));
+    /// ```
+    pub fn meet(&self, plane: &Plane<T>) -> Point<T> {
+        // The meet/regressive product L ∨ G gives a point where the line
+        // intersects the plane.
+        //
+        // Using the Plücker coordinate formula for line-plane intersection:
+        // P = (s·d + n×m, n·d)
+        //
+        // Where:
+        // - d = line direction (e₀₁, e₀₂, e₀₃)
+        // - m = line moment (e₂₃, e₃₁, e₁₂)
+        // - n = plane normal (e₀₂₃, e₀₃₁, e₀₁₂)
+        // - s = plane signed distance = -e₁₂₃ (our convention uses n·x + d = 0)
+        //
+        // For our basis, this gives:
+        // e₁: -g₄·d₁ + g₂·m₃ - g₃·m₂
+        // e₂: -g₄·d₂ + g₃·m₁ - g₁·m₃
+        // e₃: -g₄·d₃ + g₁·m₂ - g₂·m₁
+        // e₀: g₁·d₁ + g₂·d₂ + g₃·d₃
+
+        let d1 = self.e01;
+        let d2 = self.e02;
+        let d3 = self.e03;
+        let m1 = self.e23;
+        let m2 = self.e31;
+        let m3 = self.e12;
+
+        let g1 = plane.e023; // nx
+        let g2 = plane.e031; // ny
+        let g3 = plane.e012; // nz
+        let g4 = plane.e123; // -s (plane distance in our convention)
+
+        Point {
+            e1: -g4 * d1 + g2 * m3 - g3 * m2,
+            e2: -g4 * d2 + g3 * m1 - g1 * m3,
+            e3: -g4 * d3 + g1 * m2 - g2 * m1,
+            e0: g1 * d1 + g2 * d2 + g3 * d3,
+        }
+    }
+
+    /// Computes the signed distance from a point to this line.
+    ///
+    /// The line should be unitized for correct distance values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Z axis (unitized)
+    /// let line = Line::z_axis();
+    ///
+    /// // Point at (3, 4, 0) - distance 5 from Z axis
+    /// let p = Point::new(3.0, 4.0, 0.0);
+    /// assert!(abs_diff_eq!(line.distance_to_point(&p), 5.0, epsilon = 1e-10));
+    /// ```
+    pub fn distance_to_point(&self, p: &Point<T>) -> T {
+        // For a unitized line L and point P:
+        // distance = |L ∨ P| / |d|
+        // where L ∨ P gives a plane and we take its weight norm
+
+        let d1 = self.e01;
+        let d2 = self.e02;
+        let d3 = self.e03;
+        let m1 = self.e23;
+        let m2 = self.e31;
+        let m3 = self.e12;
+
+        let px = p.e1;
+        let py = p.e2;
+        let pz = p.e3;
+        let pw = p.e0;
+
+        // The regressive product L ∨ P gives a plane
+        // We compute the weight norm of this plane divided by |d| and |pw|
+
+        // Cross product of direction and point position
+        let cx = d2 * pz - d3 * py;
+        let cy = d3 * px - d1 * pz;
+        let cz = d1 * py - d2 * px;
+
+        // Add moment contribution
+        let nx = cx + m1 * pw;
+        let ny = cy + m2 * pw;
+        let nz = cz + m3 * pw;
+
+        let d_norm = self.weight_norm();
+        (nx * nx + ny * ny + nz * nz).sqrt() / (d_norm * pw.abs())
+    }
+
+    /// Computes the closest point on this line to a given point.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Z axis
+    /// let line = Line::z_axis();
+    ///
+    /// // Point at (3, 4, 5)
+    /// let p = Point::new(3.0, 4.0, 5.0);
+    /// let closest = line.closest_point(&p);
+    ///
+    /// // Closest point on Z axis should be (0, 0, 5)
+    /// assert!(abs_diff_eq!(closest.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(closest.y(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(closest.z(), 5.0, epsilon = 1e-10));
+    /// ```
+    pub fn closest_point(&self, p: &Point<T>) -> Point<T> {
+        // Project point onto line
+        // P_closest = P_line + ((P - P_line) · d) * d / |d|²
+        // where P_line is any point on the line
+
+        let d = self.direction();
+        let m = self.moment();
+        let d_sq = d.0 * d.0 + d.1 * d.1 + d.2 * d.2;
+
+        if d_sq < T::epsilon() {
+            return Point::origin();
+        }
+
+        // A point on the line: P_line = d × m / |d|² (when line doesn't pass through origin)
+        // For line through origin (m = 0), use origin
+        let line_pt_x = (d.1 * m.2 - d.2 * m.1) / d_sq;
+        let line_pt_y = (d.2 * m.0 - d.0 * m.2) / d_sq;
+        let line_pt_z = (d.0 * m.1 - d.1 * m.0) / d_sq;
+
+        // Vector from line point to given point
+        let px = p.x() - line_pt_x;
+        let py = p.y() - line_pt_y;
+        let pz = p.z() - line_pt_z;
+
+        // Project onto direction
+        let t = (px * d.0 + py * d.1 + pz * d.2) / d_sq;
+
+        Point::new(
+            line_pt_x + t * d.0,
+            line_pt_y + t * d.1,
+            line_pt_z + t * d.2,
+        )
+    }
 }
 
 // ============================================================================
@@ -158,6 +435,72 @@ impl<T: Float> Plane<T> {
     #[inline]
     pub fn contains_point(&self, p: &Point<T>, epsilon: T) -> bool {
         self.signed_distance(p).abs() < epsilon
+    }
+
+    /// Computes the meet (intersection) of this plane with another plane.
+    ///
+    /// Returns the line where the two planes intersect.
+    /// If the planes are parallel, returns a degenerate line (zero direction).
+    ///
+    /// # Formula
+    ///
+    /// The meet is computed as the regressive product: `L = G₁ ∨ G₂`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Plane, Line};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // XY plane (z = 0) and XZ plane (y = 0) intersect along X axis
+    /// let xy_plane: Plane<f64> = Plane::xy();
+    /// let xz_plane: Plane<f64> = Plane::xz();
+    ///
+    /// let line = xy_plane.meet(&xz_plane);
+    ///
+    /// // Direction should be along X axis (or its negative)
+    /// let (dx, dy, dz) = line.direction();
+    /// assert!(abs_diff_eq!(dy, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
+    /// assert!(dx.abs() > 0.9); // dx = ±1
+    /// ```
+    pub fn meet(&self, other: &Plane<T>) -> Line<T> {
+        // The regressive product of two planes gives a line
+        // G₁ = n₁e₀₂₃ + n₂e₀₃₁ + n₃e₀₁₂ + d₁e₁₂₃
+        // G₂ = m₁e₀₂₃ + m₂e₀₃₁ + m₃e₀₁₂ + d₂e₁₂₃
+        //
+        // The result is the cross product of normals (direction) and
+        // a moment computed from the distance terms.
+
+        let n1 = self.e023;
+        let n2 = self.e031;
+        let n3 = self.e012;
+        let d1 = self.e123;
+
+        let m1 = other.e023;
+        let m2 = other.e031;
+        let m3 = other.e012;
+        let d2 = other.e123;
+
+        // Direction is n × m (cross product of normals)
+        let dir_x = n2 * m3 - n3 * m2;
+        let dir_y = n3 * m1 - n1 * m3;
+        let dir_z = n1 * m2 - n2 * m1;
+
+        // Moment encodes the position of the line
+        // m = d₁ * n₂ - d₂ * n₁ (for each component pair)
+        let mom_x = d1 * m1 - d2 * n1;
+        let mom_y = d1 * m2 - d2 * n2;
+        let mom_z = d1 * m3 - d2 * n3;
+
+        Line {
+            e01: dir_x,
+            e02: dir_y,
+            e03: dir_z,
+            e23: mom_x,
+            e31: mom_y,
+            e12: mom_z,
+        }
     }
 }
 
@@ -506,5 +849,219 @@ mod tests {
             0.0,
             epsilon = ABS_DIFF_EQ_EPS
         ));
+    }
+
+    // ========================================================================
+    // Line tests
+    // ========================================================================
+
+    #[test]
+    fn line_join_two_points() {
+        let p1 = Point::new(0.0, 0.0, 0.0);
+        let p2 = Point::new(1.0, 0.0, 0.0);
+        let line = Line::join(&p1, &p2);
+
+        // Direction should be (1, 0, 0)
+        let (dx, dy, dz) = line.direction();
+        assert!(abs_diff_eq!(dx, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+
+        // Moment should be zero (line through origin)
+        let (mx, my, mz) = line.moment();
+        assert!(abs_diff_eq!(mx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(my, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(mz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_join_offset_points() {
+        // Line through (0, 1, 0) and (1, 1, 0) - parallel to X axis at y=1
+        let p1 = Point::new(0.0, 1.0, 0.0);
+        let p2 = Point::new(1.0, 1.0, 0.0);
+        let line = Line::join(&p1, &p2);
+
+        // Direction should be (1, 0, 0)
+        let (dx, dy, dz) = line.direction();
+        assert!(abs_diff_eq!(dx, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+
+        // Moment should be non-zero (line not through origin)
+        // For this line, moment = direction × point_on_line = (1,0,0) × (0,1,0) = (0,0,1)
+        // But we need to check the actual formula
+        assert!(!line.through_origin(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_from_point_and_direction() {
+        let p = Point::new(1.0, 2.0, 3.0);
+        let line = Line::from_point_and_direction(&p, (0.0, 0.0, 1.0));
+
+        // Direction should be (0, 0, 1)
+        let (dx, dy, dz) = line.direction();
+        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_axis_through_origin() {
+        let x_axis = Line::x_axis();
+        let y_axis = Line::y_axis();
+        let z_axis = Line::z_axis();
+
+        assert!(x_axis.through_origin(ABS_DIFF_EQ_EPS));
+        assert!(y_axis.through_origin(ABS_DIFF_EQ_EPS));
+        assert!(z_axis.through_origin(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_meet_plane() {
+        // Z axis meets XY plane at z=5 at point (0, 0, 5)
+        let line = Line::z_axis();
+        let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+
+        let intersection = line.meet(&plane);
+        assert!(abs_diff_eq!(
+            intersection.x(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            intersection.y(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            intersection.z(),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_meet_plane_origin() {
+        // Z axis meets XY plane at origin
+        let line: Line<f64> = Line::z_axis();
+        let plane: Plane<f64> = Plane::xy();
+
+        let intersection = line.meet(&plane);
+        assert!(abs_diff_eq!(
+            intersection.x(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            intersection.y(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            intersection.z(),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_meet_plane() {
+        // XY plane meets XZ plane along X axis
+        let xy_plane: Plane<f64> = Plane::xy();
+        let xz_plane: Plane<f64> = Plane::xz();
+
+        let line = xy_plane.meet(&xz_plane);
+
+        // Direction should be along X axis
+        let (dx, dy, dz) = line.direction();
+        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(dx.abs() > 0.9); // dx = ±1
+
+        // Line should pass through origin
+        assert!(line.through_origin(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_distance_to_point() {
+        // Z axis, point at (3, 4, 0) - distance 5
+        let line: Line<f64> = Line::z_axis();
+        let p = Point::new(3.0, 4.0, 0.0);
+
+        assert!(abs_diff_eq!(
+            line.distance_to_point(&p),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_closest_point() {
+        // Z axis, closest point to (3, 4, 5) is (0, 0, 5)
+        let line: Line<f64> = Line::z_axis();
+        let p = Point::new(3.0, 4.0, 5.0);
+        let closest = line.closest_point(&p);
+
+        assert!(abs_diff_eq!(closest.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(closest.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(closest.z(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn motor_transform_line_rotation() {
+        // Rotate X axis 90° around Z to get Y axis
+        let line: Line<f64> = Line::x_axis();
+        let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_2);
+        let rotated = rotation.transform_line(&line);
+
+        let (dx, dy, dz) = rotated.direction();
+        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dy, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn motor_transform_line_translation() {
+        // Translate Z axis by (1, 0, 0)
+        let line: Line<f64> = Line::z_axis();
+        let translation = Motor::from_translation(1.0, 0.0, 0.0);
+        let translated = translation.transform_line(&line);
+
+        // Direction should still be (0, 0, 1)
+        let (dx, dy, dz) = translated.direction();
+        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(dz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+
+        // But line should no longer pass through origin
+        assert!(!translated.through_origin(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_parallel_check() {
+        let line1: Line<f64> = Line::z_axis();
+        let line2 = Line::from_point_and_direction(&Point::new(1.0, 0.0, 0.0), (0.0, 0.0, 1.0));
+
+        // These lines are parallel (both in Z direction)
+        assert!(line1.is_parallel(&line2, ABS_DIFF_EQ_EPS));
+
+        // But they should intersect (Plücker inner = 0 for parallel lines)
+        assert!(line1.intersects(&line2, ABS_DIFF_EQ_EPS));
+
+        // X and Y axes are not parallel
+        let x_axis = Line::x_axis();
+        let y_axis = Line::y_axis();
+        assert!(!x_axis.is_parallel(&y_axis, ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_skew_check() {
+        // Create two skew lines
+        let line1 = Line::z_axis(); // Z axis through origin
+        let line2 = Line::from_point_and_direction(&Point::new(1.0, 0.0, 0.0), (0.0, 1.0, 0.0)); // Y direction at x=1
+
+        // These lines are skew (non-parallel, non-intersecting)
+        assert!(!line1.is_parallel(&line2, ABS_DIFF_EQ_EPS));
+        assert!(!line1.intersects(&line2, ABS_DIFF_EQ_EPS));
     }
 }

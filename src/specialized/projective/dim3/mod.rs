@@ -9,7 +9,7 @@
 //! | Grade | Type | Components | Geometric Meaning |
 //! |-------|------|------------|-------------------|
 //! | 1 | [`Point`] | e₁, e₂, e₃, e₀ | Point (homogeneous) |
-//! | 2 | Line | 6 components | Line (Plücker coords) |
+//! | 2 | [`Line`] | 6 components | Line (Plücker coords) |
 //! | 3 | [`Plane`] | 4 components | Plane |
 //! | 0+2+4 | [`Motor`] | 8 components | Rigid transformation (proper isometry) |
 //! | 1+3 | [`Flector`] | 8 components | Reflection (improper isometry) |
@@ -69,4 +69,4 @@ mod nalgebra;
 ))]
 pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
 
-pub use types::{Flector, Motor, Plane, Point};
+pub use types::{Flector, Line, Motor, Plane, Point};
