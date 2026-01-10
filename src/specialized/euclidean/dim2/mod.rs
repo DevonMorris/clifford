@@ -39,7 +39,11 @@ mod types;
 #[cfg(any(test, feature = "proptest-support"))]
 pub mod arbitrary;
 
-#[cfg(any(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
 mod nalgebra;
 
 pub use conversions::{ConversionError, Specialized};

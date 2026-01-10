@@ -4,6 +4,7 @@
 //! and dimension. Currently supported:
 //!
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
+//! - **[`projective`]**: Projective geometric algebra (PGA) for 2D
 //!
 //! # Type Organization
 //!
@@ -12,7 +13,8 @@
 //!   euclidean/
 //!     dim2/   - 2D Euclidean GA: Vector, Bivector, Rotor
 //!     dim3/   - 3D Euclidean GA: Vector, Bivector, Trivector, Rotor
-//!   projective/   (future)
+//!   projective/
+//!     dim2/   - 2D PGA: Point, Line, Motor
 //!   conformal/    (future)
 //! ```
 //!
@@ -55,3 +57,4 @@
 //! ```
 
 pub mod euclidean;
+pub mod projective;

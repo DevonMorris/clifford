@@ -19,9 +19,10 @@ missing_docs_in_private_items = "deny"
 uninlined_format_args = "allow"
 
 [features]
-default = []
+default = ["serde", "proptest-support", "nalgebra-0_33"]
 serde = ["dep:serde", "generic-array/serde"]
 proptest-support = ["dep:proptest"]
+nalgebra-0_32 = ["dep:nalgebra-0-32"]
 nalgebra-0_33 = ["dep:nalgebra-0-33"]
 nalgebra-0_34 = ["dep:nalgebra-0-34"]
 
@@ -29,9 +30,11 @@ nalgebra-0_34 = ["dep:nalgebra-0-34"]
 approx = "0.5"
 generic-array = "1"
 num-traits = "0.2"
+thiserror = "2"
 typenum = "1"
 serde = { version = "1", features = ["derive"], optional = true }
 proptest = { version = "1", optional = true }
+nalgebra-0-32 = { package = "nalgebra", version = "0.32", optional = true }
 nalgebra-0-33 = { package = "nalgebra", version = "0.33", optional = true }
 nalgebra-0-34 = { package = "nalgebra", version = "0.34", optional = true }
 
@@ -50,5 +53,14 @@ harness = false
 
 [[bench]]
 name = "nalgebra_comparison"
+harness = false
+required-features = ["nalgebra-0_34"]
+
+[[bench]]
+name = "projective"
+harness = false
+
+[[bench]]
+name = "pga_nalgebra_comparison"
 harness = false
 required-features = ["nalgebra-0_34"]

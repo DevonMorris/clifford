@@ -204,17 +204,16 @@ impl<T: Float> Rotor<T> {
     }
 
     /// Creates a rotor that rotates vector `a` to vector `b`.
+    ///
+    /// Uses `atan2` for numerical stability, especially when vectors are
+    /// nearly parallel or anti-parallel.
     #[inline]
     pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
-        let dot = a.dot(b);
-        let wedge = a.x * b.y - a.y * b.x; // a ∧ b
-
-        let norm = ((T::one() + dot) * (T::one() + dot) + wedge * wedge).sqrt();
-
-        Self {
-            s: (T::one() + dot) / norm,
-            xy: wedge / norm,
-        }
+        // Compute signed angle from a to b using atan2 for stability
+        let angle_a = a.y.atan2(a.x);
+        let angle_b = b.y.atan2(b.x);
+        let angle = angle_b - angle_a;
+        Self::from_angle(angle)
     }
 
     /// Returns the squared magnitude.
