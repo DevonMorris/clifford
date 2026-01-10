@@ -795,6 +795,129 @@ impl<T: Float> Plane<T> {
             e12: mom_z,
         }
     }
+
+    /// Projects a point onto this plane.
+    ///
+    /// Returns the closest point on the plane to the given point.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Plane, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // XY plane (z = 0)
+    /// let plane: Plane<f64> = Plane::xy();
+    ///
+    /// // Point at (1, 2, 5)
+    /// let p = Point::new(1.0, 2.0, 5.0);
+    /// let projected = plane.project_point(&p);
+    ///
+    /// // Projected point should be (1, 2, 0)
+    /// assert!(abs_diff_eq!(projected.x(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(projected.y(), 2.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(projected.z(), 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn project_point(&self, p: &Point<T>) -> Point<T> {
+        // P' = P - (signed_distance) * n
+        // where n is the unit normal and signed_distance is the distance from P to plane
+        let n = self.normal();
+        let n_norm_sq = n.x * n.x + n.y * n.y + n.z * n.z;
+
+        if n_norm_sq < T::epsilon() {
+            return *p;
+        }
+
+        // Signed distance = (n·p + d) / |n| where p is the point position
+        // For our representation: (e023*p1 + e031*p2 + e012*p3 + e123*p0) / (p0 * |n|)
+        let numerator = self.e023 * p.e1 + self.e031 * p.e2 + self.e012 * p.e3 + self.e123 * p.e0;
+        let dist = numerator / (p.e0 * n_norm_sq.sqrt());
+
+        Point::new(
+            p.x() - dist * n.x / n_norm_sq.sqrt(),
+            p.y() - dist * n.y / n_norm_sq.sqrt(),
+            p.z() - dist * n.z / n_norm_sq.sqrt(),
+        )
+    }
+
+    /// Projects a line onto this plane.
+    ///
+    /// Returns the orthogonal projection of the line onto the plane.
+    /// If the line is perpendicular to the plane, returns a degenerate line.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Plane, Line, Point};
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // XY plane (z = 0)
+    /// let plane: Plane<f64> = Plane::xy();
+    ///
+    /// // Line through (0, 0, 1) in direction (1, 1, 1) - diagonal line
+    /// let line = Line::from_point_and_direction(
+    ///     &Point::new(0.0, 0.0, 1.0),
+    ///     &Vector::new(1.0, 1.0, 1.0),
+    /// );
+    /// let projected = plane.project_line(&line);
+    ///
+    /// // Projected direction should be (1, 1, 0) (normalized)
+    /// let d = projected.direction();
+    /// // Z component should be 0
+    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn project_line(&self, line: &Line<T>) -> Line<T> {
+        // Project both the direction and a point on the line
+        // Then construct the projected line from the projected point and direction
+
+        let n = self.normal();
+        let n_norm_sq = n.x * n.x + n.y * n.y + n.z * n.z;
+
+        if n_norm_sq < T::epsilon() {
+            return *line;
+        }
+
+        let n_norm = n_norm_sq.sqrt();
+
+        // Get direction and project onto plane
+        let d = line.direction();
+        let d_dot_n = d.x * n.x + d.y * n.y + d.z * n.z;
+        let projected_dx = d.x - d_dot_n * n.x / n_norm_sq;
+        let projected_dy = d.y - d_dot_n * n.y / n_norm_sq;
+        let projected_dz = d.z - d_dot_n * n.z / n_norm_sq;
+
+        // Get a point on the line and project it
+        let m = line.moment();
+        let d_sq = d.x * d.x + d.y * d.y + d.z * d.z;
+        if d_sq < T::epsilon() {
+            return Line::zero();
+        }
+
+        // Point on line: d × m / |d|²
+        let pt_x = (d.y * m.z - d.z * m.y) / d_sq;
+        let pt_y = (d.z * m.x - d.x * m.z) / d_sq;
+        let pt_z = (d.x * m.y - d.y * m.x) / d_sq;
+
+        // Project point onto plane
+        let pt_dot_n = pt_x * n.x + pt_y * n.y + pt_z * n.z;
+        let plane_dist = self.e123 / n_norm;
+        let signed_dist = (pt_dot_n + plane_dist) / n_norm;
+
+        let proj_pt_x = pt_x - signed_dist * n.x / n_norm;
+        let proj_pt_y = pt_y - signed_dist * n.y / n_norm;
+        let proj_pt_z = pt_z - signed_dist * n.z / n_norm;
+
+        // Construct projected line from point and direction
+        let proj_point = Point::new(proj_pt_x, proj_pt_y, proj_pt_z);
+        let proj_direction = crate::specialized::euclidean::dim3::Vector::new(
+            projected_dx,
+            projected_dy,
+            projected_dz,
+        );
+
+        Line::from_point_and_direction(&proj_point, &proj_direction)
+    }
 }
 
 // ============================================================================
@@ -1786,5 +1909,112 @@ mod tests {
         let n = plane.normal();
         let norm = (n.x * n.x + n.y * n.y + n.z * n.z).sqrt();
         assert!(norm < ABS_DIFF_EQ_EPS);
+    }
+
+    // ========================================================================
+    // Plane projection tests
+    // ========================================================================
+
+    #[test]
+    fn plane_project_point_xy() {
+        // XY plane (z = 0)
+        let plane: Plane<f64> = Plane::xy();
+        let p = Point::new(1.0, 2.0, 5.0);
+        let projected = plane.project_point(&p);
+
+        assert!(abs_diff_eq!(projected.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_project_point_xz() {
+        // XZ plane (y = 0)
+        let plane: Plane<f64> = Plane::xz();
+        let p = Point::new(1.0, 5.0, 3.0);
+        let projected = plane.project_point(&p);
+
+        assert!(abs_diff_eq!(projected.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_project_point_offset() {
+        // Plane z = 2
+        let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -2.0);
+        let p = Point::new(1.0, 2.0, 5.0);
+        let projected = plane.project_point(&p);
+
+        assert!(abs_diff_eq!(projected.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(projected.z(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_project_point_on_plane() {
+        // Point already on plane should not move
+        let plane: Plane<f64> = Plane::xy();
+        let p = Point::new(3.0, 4.0, 0.0);
+        let projected = plane.project_point(&p);
+
+        assert!(abs_diff_eq!(
+            projected.x(),
+            p.x(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            projected.y(),
+            p.y(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            projected.z(),
+            p.z(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_project_line_parallel() {
+        // Line parallel to XY plane should project to itself (in XY)
+        let plane: Plane<f64> = Plane::xy();
+        let line = Line::from_point_and_direction(
+            &Point::new(0.0, 0.0, 5.0),
+            &EuclideanVector::new(1.0, 0.0, 0.0),
+        );
+        let projected = plane.project_line(&line);
+
+        // Direction should stay along X axis
+        let d = projected.direction();
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x.abs() > 0.9);
+    }
+
+    #[test]
+    fn plane_project_line_diagonal() {
+        // Diagonal line through origin
+        let plane: Plane<f64> = Plane::xy();
+        let line =
+            Line::from_point_and_direction(&Point::origin(), &EuclideanVector::new(1.0, 1.0, 1.0));
+        let projected = plane.project_line(&line);
+
+        // Projected direction should be (1, 1, 0)
+        let d = projected.direction();
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn plane_project_line_in_plane() {
+        // Line already in plane should not change
+        let plane: Plane<f64> = Plane::xy();
+        let line: Line<f64> = Line::x_axis();
+        let projected = plane.project_line(&line);
+
+        let d = projected.direction();
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x.abs() > 0.9);
     }
 }
