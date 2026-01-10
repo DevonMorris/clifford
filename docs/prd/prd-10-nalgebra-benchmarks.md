@@ -1,6 +1,6 @@
 # PRD-10: nalgebra vs clifford Benchmarks
 
-**Status**: Pending
+**Status**: Complete
 **Goal**: Comprehensive benchmarks comparing clifford specialized types with nalgebra equivalents
 
 ## Motivation
@@ -384,11 +384,23 @@ bench-nalgebra:
 
 ## Verification
 
-- [ ] `cargo bench --bench nalgebra_comparison --features nalgebra-0_33` runs
-- [ ] `cargo bench --bench nalgebra_comparison --features nalgebra-0_34` runs
-- [ ] Results documented in `benches/README.md`
-- [ ] SVG reports captured in `benches/reports/`
-- [ ] Key findings summarized
+- [x] `cargo bench --bench nalgebra_comparison --features nalgebra-0_33` runs
+- [x] `cargo bench --bench nalgebra_comparison --features nalgebra-0_34` runs
+- [x] Results documented in `benches/README.md`
+- [x] SVG reports captured in `benches/reports/comparison/`
+- [x] Key findings summarized
+
+## Results Summary
+
+Benchmarks completed on 2026-01-09. Key findings:
+
+| Operation | clifford | nalgebra | Result |
+|-----------|----------|----------|--------|
+| 3D Rotation | 4.4 ns | 10.5 ns (quat) | **clifford 2.4x faster** |
+| Batch rotate 100 | 464 ns | 1094 ns | **clifford 2.4x faster** |
+| Vec3 operations | ~7 ns | ~7 ns | Equal |
+| Rotation slerp | 26.8 ns | 18.6 ns | nalgebra 1.4x faster |
+| Conversions | 1-6 ns | - | Minimal overhead |
 
 ## Future Considerations
 
