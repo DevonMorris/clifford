@@ -63,7 +63,7 @@ impl<T: Float + na::Scalar> From<Vector<T>> for na::Vector2<T> {
     /// ```
     #[inline]
     fn from(v: Vector<T>) -> Self {
-        na::Vector2::new(v.x, v.y)
+        na::Vector2::new(v.x(), v.y())
     }
 }
 

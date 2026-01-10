@@ -43,6 +43,8 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Uses Clifford types (not tuples) in public APIs:
   - Returns `Vector` instead of `(T, T, T)`
   - Accepts `&Vector` instead of `(T, T, T)`
+- [ ] **Field visibility**: All specialized types use private fields with public accessors
+  - Constructor pattern: `new()` for types without constraints, `new_unchecked()` for constrained types
 
 #### Style Consistency (Critical - Check Carefully)
 **New code MUST match existing codebase patterns.** Review for:

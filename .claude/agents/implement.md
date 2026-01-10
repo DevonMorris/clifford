@@ -76,6 +76,22 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
 
+### Field Visibility
+
+**All specialized types use private fields with public accessors** for consistency:
+```rust
+pub struct Vector<T: Float> {
+    x: T,  // private
+}
+
+impl<T: Float> Vector<T> {
+    pub fn x(&self) -> T { self.x }    // accessor
+    pub fn new(x: T, ...) -> Self { }  // constructor
+}
+```
+
+For types with constraints (Motor, Line), add `new_unchecked()` and `try_from_components()`.
+
 ## Module Structure and Naming
 
 The `specialized` module is organized by algebra type, then dimension:

@@ -50,17 +50,17 @@ use std::f64::consts::FRAC_PI_2;
 let v = dim2::Vector::new(1.0, 0.0);
 let rotor = dim2::Rotor::from_angle(FRAC_PI_2);
 let rotated = rotor.rotate(v);
-assert!((rotated.x).abs() < 1e-10);
-assert!((rotated.y - 1.0).abs() < 1e-10);
+assert!((rotated.x()).abs() < 1e-10);
+assert!((rotated.y() - 1.0).abs() < 1e-10);
 
 // 3D: Rotate around an axis
 let v = dim3::Vector::new(1.0, 0.0, 0.0);
 let plane = dim3::Bivector::unit_xy(); // rotation in xy-plane (around z-axis)
 let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_2, plane);
 let rotated = rotor.rotate(v);
-assert!((rotated.x).abs() < 1e-10);
-assert!((rotated.y - 1.0).abs() < 1e-10);
-assert!((rotated.z).abs() < 1e-10);
+assert!((rotated.x()).abs() < 1e-10);
+assert!((rotated.y() - 1.0).abs() < 1e-10);
+assert!((rotated.z()).abs() < 1e-10);
 ```
 
 ### Generic Multivector API

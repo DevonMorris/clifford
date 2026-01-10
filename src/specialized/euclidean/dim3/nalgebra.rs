@@ -91,7 +91,7 @@ impl<T: Float + na::Scalar> From<Vector<T>> for na::Vector3<T> {
     /// ```
     #[inline]
     fn from(v: Vector<T>) -> Self {
-        na::Vector3::new(v.x, v.y, v.z)
+        na::Vector3::new(v.x(), v.y(), v.z())
     }
 }
 
@@ -125,7 +125,7 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Vector3<T> {
     #[inline]
     fn from(b: Bivector<T>) -> Self {
         // dual: Bivector(xy, xz, yz) -> Vector(yz, -xz, xy)
-        na::Vector3::new(b.yz, -b.xz, b.xy)
+        na::Vector3::new(b.yz(), -b.xz(), b.xy())
     }
 }
 
@@ -195,13 +195,13 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Matrix3<T> {
     fn from(b: Bivector<T>) -> Self {
         na::Matrix3::new(
             T::zero(),
-            -b.xy,
-            -b.xz, // row 0
-            b.xy,
+            -b.xy(),
+            -b.xz(), // row 0
+            b.xy(),
             T::zero(),
-            -b.yz, // row 1
-            b.xz,
-            b.yz,
+            -b.yz(), // row 1
+            b.xz(),
+            b.yz(),
             T::zero(), // row 2
         )
     }
@@ -298,7 +298,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     fn from(rotor: Rotor<T>) -> Self {
         let r = rotor.normalized();
         // Mapping: (w, i, j, k) = (s, yz, -xz, xy)
-        let q = na::Quaternion::new(r.s, r.b.yz, -r.b.xz, r.b.xy);
+        let q = na::Quaternion::new(r.s(), r.b().yz(), -r.b().xz(), r.b().xy());
         na::UnitQuaternion::new_normalize(q)
     }
 }
@@ -499,9 +499,9 @@ mod tests {
             let na_v: na::Vector3<f64> = b.into();
             let dual_v = b.dual();
 
-            prop_assert!(abs_diff_eq!(na_v.x, dual_v.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(na_v.y, dual_v.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(na_v.z, dual_v.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(na_v.x, dual_v.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(na_v.y, dual_v.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(na_v.z, dual_v.z(), epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 

@@ -20,19 +20,19 @@ use crate::scalar::Float;
 /// use clifford::specialized::euclidean::dim3::Vector;
 ///
 /// let v = Vector::new(1.0, 2.0, 3.0);
-/// assert_eq!(v.x, 1.0);
-/// assert_eq!(v.y, 2.0);
-/// assert_eq!(v.z, 3.0);
+/// assert_eq!(v.x(), 1.0);
+/// assert_eq!(v.y(), 2.0);
+/// assert_eq!(v.z(), 3.0);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct Vector<T: Float> {
     /// Coefficient of `e₁` (x-direction).
-    pub x: T,
+    x: T,
     /// Coefficient of `e₂` (y-direction).
-    pub y: T,
+    y: T,
     /// Coefficient of `e₃` (z-direction).
-    pub z: T,
+    z: T,
 }
 
 impl<T: Float> Vector<T> {
@@ -40,6 +40,24 @@ impl<T: Float> Vector<T> {
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x, y, z }
+    }
+
+    /// Returns the x component (coefficient of `e₁`).
+    #[inline]
+    pub fn x(&self) -> T {
+        self.x
+    }
+
+    /// Returns the y component (coefficient of `e₂`).
+    #[inline]
+    pub fn y(&self) -> T {
+        self.y
+    }
+
+    /// Returns the z component (coefficient of `e₃`).
+    #[inline]
+    pub fn z(&self) -> T {
+        self.z
     }
 
     /// Creates the zero vector.
@@ -153,11 +171,11 @@ impl<T: Float> Default for Vector<T> {
 #[repr(C)]
 pub struct Bivector<T: Float> {
     /// Coefficient of `e₁₂` (xy-plane).
-    pub xy: T,
+    xy: T,
     /// Coefficient of `e₁₃` (xz-plane).
-    pub xz: T,
+    xz: T,
     /// Coefficient of `e₂₃` (yz-plane).
-    pub yz: T,
+    yz: T,
 }
 
 impl<T: Float> Bivector<T> {
@@ -165,6 +183,24 @@ impl<T: Float> Bivector<T> {
     #[inline]
     pub fn new(xy: T, xz: T, yz: T) -> Self {
         Self { xy, xz, yz }
+    }
+
+    /// Returns the xy component (coefficient of `e₁₂`).
+    #[inline]
+    pub fn xy(&self) -> T {
+        self.xy
+    }
+
+    /// Returns the xz component (coefficient of `e₁₃`).
+    #[inline]
+    pub fn xz(&self) -> T {
+        self.xz
+    }
+
+    /// Returns the yz component (coefficient of `e₂₃`).
+    #[inline]
+    pub fn yz(&self) -> T {
+        self.yz
     }
 
     /// Creates the zero bivector.
@@ -234,7 +270,7 @@ impl<T: Float> Default for Bivector<T> {
 #[repr(transparent)]
 pub struct Trivector<T: Float>(
     /// Coefficient of `e₁₂₃`.
-    pub T,
+    T,
 );
 
 impl<T: Float> Trivector<T> {
@@ -284,9 +320,9 @@ impl<T: Float> Default for Trivector<T> {
 #[repr(C)]
 pub struct Rotor<T: Float> {
     /// Scalar part (grade 0).
-    pub s: T,
+    s: T,
     /// Bivector part (grade 2).
-    pub b: Bivector<T>,
+    b: Bivector<T>,
 }
 
 impl<T: Float> Rotor<T> {
@@ -294,6 +330,18 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn new(s: T, b: Bivector<T>) -> Self {
         Self { s, b }
+    }
+
+    /// Returns the scalar part (grade 0).
+    #[inline]
+    pub fn s(&self) -> T {
+        self.s
+    }
+
+    /// Returns the bivector part (grade 2).
+    #[inline]
+    pub fn b(&self) -> Bivector<T> {
+        self.b
     }
 
     /// Creates the identity rotor (no rotation).
@@ -498,9 +546,9 @@ impl<T: Float> Default for Rotor<T> {
 #[repr(C)]
 pub struct Even<T: Float> {
     /// Scalar part (grade 0).
-    pub s: T,
+    s: T,
     /// Bivector part (grade 2).
-    pub b: Bivector<T>,
+    b: Bivector<T>,
 }
 
 impl<T: Float> Even<T> {
@@ -508,6 +556,18 @@ impl<T: Float> Even<T> {
     #[inline]
     pub fn new(s: T, b: Bivector<T>) -> Self {
         Self { s, b }
+    }
+
+    /// Returns the scalar part (grade 0).
+    #[inline]
+    pub fn s(&self) -> T {
+        self.s
+    }
+
+    /// Returns the bivector part (grade 2).
+    #[inline]
+    pub fn b(&self) -> Bivector<T> {
+        self.b
     }
 
     /// Creates zero.
@@ -522,10 +582,7 @@ impl<T: Float> Even<T> {
     /// Converts to a rotor (same representation).
     #[inline]
     pub fn to_rotor(self) -> Rotor<T> {
-        Rotor {
-            s: self.s,
-            b: self.b,
-        }
+        Rotor::new(self.s, self.b)
     }
 }
 

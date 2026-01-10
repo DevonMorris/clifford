@@ -52,8 +52,8 @@
 //!
 //! // Apply rotation
 //! let rotated = rotor.rotate(v);
-//! assert!((rotated.x).abs() < 1e-10);
-//! assert!((rotated.y - 1.0).abs() < 1e-10);
+//! assert!((rotated.x()).abs() < 1e-10);
+//! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
 pub mod euclidean;

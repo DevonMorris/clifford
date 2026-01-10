@@ -116,7 +116,7 @@ impl<T: Float + Debug> Arbitrary for Motor<T> {
             -10.0f64..10.0,
         )
             .prop_map(|(s, e23, e31, e12, e01, e02, e03, e0123)| {
-                Motor::new(
+                Motor::new_unchecked(
                     T::from_f64(s),
                     T::from_f64(e23),
                     T::from_f64(e31),
@@ -217,7 +217,7 @@ impl<T: Float + Debug> Arbitrary for Line<T> {
             -10.0f64..10.0,
         )
             .prop_map(|(e01, e02, e03, e23, e31, e12)| {
-                Line::new(
+                Line::new_unchecked(
                     T::from_f64(e01),
                     T::from_f64(e02),
                     T::from_f64(e03),
@@ -273,7 +273,7 @@ impl<T: Float + Debug> Arbitrary for NonDegenerateLine<T> {
                 e01 * e01 + e02 * e02 + e03 * e03 > 0.01
             })
             .prop_map(|(e01, e02, e03, e23, e31, e12)| {
-                NonDegenerateLine(Line::new(
+                NonDegenerateLine(Line::new_unchecked(
                     T::from_f64(e01),
                     T::from_f64(e02),
                     T::from_f64(e03),
@@ -624,10 +624,10 @@ mod tests {
         fn unit_motor_satisfies_study_condition(motor in any::<UnitMotor<f64>>()) {
             // Study condition: s*e0123 = v·m
             // where v = (e23, e31, e12) and m = (e01, e02, e03)
-            let study = motor.s * motor.e0123
-                - motor.e23 * motor.e01
-                - motor.e31 * motor.e02
-                - motor.e12 * motor.e03;
+            let study = motor.s() * motor.e0123()
+                - motor.e23() * motor.e01()
+                - motor.e31() * motor.e02()
+                - motor.e12() * motor.e03();
             prop_assert!(abs_diff_eq!(study, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         }
     }

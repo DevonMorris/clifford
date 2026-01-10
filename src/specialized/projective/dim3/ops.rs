@@ -107,12 +107,12 @@ impl<T: Float> Point<T> {
         let p2 = self.e2;
         let p3 = self.e3;
 
-        let d1 = line.e01;
-        let d2 = line.e02;
-        let d3 = line.e03;
-        let m1 = line.e23;
-        let m2 = line.e31;
-        let m3 = line.e12;
+        let d1 = line.e01();
+        let d2 = line.e02();
+        let d3 = line.e03();
+        let m1 = line.e23();
+        let m2 = line.e31();
+        let m3 = line.e12();
 
         // e1 ⌋ e12 = -e2, e1 ⌋ e31 = e3, e1 ⌋ e01 = e0
         // e2 ⌋ e23 = -e3, e2 ⌋ e12 = e1, e2 ⌋ e02 = e0
@@ -142,7 +142,7 @@ impl<T: Float> Point<T> {
     ///
     /// // Result is a line perpendicular to point's direction
     /// let d = line.direction();
-    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z(), 0.0, epsilon = 1e-10));
     /// ```
     pub fn left_contract_plane(&self, plane: &Plane<T>) -> Line<T> {
         // Left contraction P ⌋ G where P is grade-1 and G is grade-3
@@ -162,14 +162,14 @@ impl<T: Float> Point<T> {
         let g012 = plane.e012;
         let g123 = plane.e123;
 
-        Line {
-            e01: -p2 * g012 + p3 * g031,
-            e02: p1 * g012 - p3 * g023,
-            e03: -p1 * g031 + p2 * g023,
-            e23: p1 * g023 + p0 * g123,
-            e31: p2 * g031 + p0 * g123,
-            e12: p3 * g012 + p0 * g123,
-        }
+        Line::new_unchecked(
+            -p2 * g012 + p3 * g031,
+            p1 * g012 - p3 * g023,
+            -p1 * g031 + p2 * g023,
+            p1 * g023 + p0 * g123,
+            p2 * g031 + p0 * g123,
+            p3 * g012 + p0 * g123,
+        )
     }
 }
 
@@ -226,13 +226,13 @@ impl<T: Float> Motor<T> {
         //
         // Derivation: `derivations/src/clifford_derivations/transform.py`
 
-        let s = self.s;
-        let b23 = self.e23;
-        let b31 = self.e31;
-        let b12 = self.e12;
-        let b01 = self.e01;
-        let b02 = self.e02;
-        let b03 = self.e03;
+        let s = self.s();
+        let b23 = self.e23();
+        let b31 = self.e31();
+        let b12 = self.e12();
+        let b01 = self.e01();
+        let b02 = self.e02();
+        let b03 = self.e03();
 
         let px = p.e1;
         let py = p.e2;
@@ -256,7 +256,7 @@ impl<T: Float> Motor<T> {
         // The e0123 term is needed for composed motors (T*R) to give the correct
         // forward transformation. For motors satisfying the study condition
         // (s*e0123 + v·m = 0), the roundtrip with inverse also works correctly.
-        let i = self.e0123;
+        let i = self.e0123();
         Point {
             e1: px + two * (s * ax + vxa_x + i * pw * b23),
             e2: py + two * (s * ay + vxa_y + i * pw * b31),
@@ -285,9 +285,9 @@ impl<T: Float> Motor<T> {
     ///
     /// // X axis rotated 90° around Z becomes Y axis
     /// let d = rotated.direction();
-    /// assert!(abs_diff_eq!(d.x, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(d.y, 1.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.y(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z(), 0.0, epsilon = 1e-10));
     /// ```
     pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
         // For a line L = d + m (direction bivector + moment bivector)
@@ -299,21 +299,21 @@ impl<T: Float> Motor<T> {
         //
         // For translation, the direction is unchanged but the moment changes.
 
-        let s = self.s;
-        let b23 = self.e23;
-        let b31 = self.e31;
-        let b12 = self.e12;
-        let b01 = self.e01;
-        let b02 = self.e02;
-        let b03 = self.e03;
+        let s = self.s();
+        let b23 = self.e23();
+        let b31 = self.e31();
+        let b12 = self.e12();
+        let b01 = self.e01();
+        let b02 = self.e02();
+        let b03 = self.e03();
 
         // Line components
-        let d1 = l.e01; // direction x
-        let d2 = l.e02; // direction y
-        let d3 = l.e03; // direction z
-        let m1 = l.e23; // moment x
-        let m2 = l.e31; // moment y
-        let m3 = l.e12; // moment z
+        let d1 = l.e01(); // direction x
+        let d2 = l.e02(); // direction y
+        let d3 = l.e03(); // direction z
+        let m1 = l.e23(); // moment x
+        let m2 = l.e31(); // moment y
+        let m3 = l.e12(); // moment z
 
         let two = T::TWO;
 
@@ -354,14 +354,14 @@ impl<T: Float> Motor<T> {
         let txd_y = b03 * d1_new - b01 * d3_new;
         let txd_z = b01 * d2_new - b02 * d1_new;
 
-        Line {
-            e01: d1_new,
-            e02: d2_new,
-            e03: d3_new,
-            e23: m1_rot + two * txd_x,
-            e31: m2_rot + two * txd_y,
-            e12: m3_rot + two * txd_z,
-        }
+        Line::new_unchecked(
+            d1_new,
+            d2_new,
+            d3_new,
+            m1_rot + two * txd_x,
+            m2_rot + two * txd_y,
+            m3_rot + two * txd_z,
+        )
     }
 
     /// Transforms a plane: `G' = M G M̃`.
@@ -384,9 +384,9 @@ impl<T: Float> Motor<T> {
     ///
     /// // Normal changes from (0,0,1) to (0,-1,0)
     /// let n = rotated.normal();
-    /// assert!(abs_diff_eq!(n.x, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(n.y, -1.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(n.z, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.y(), -1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.z(), 0.0, epsilon = 1e-10));
     /// ```
     pub fn transform_plane(&self, g: &Plane<T>) -> Plane<T> {
         // For a plane G = n + d*e123 (normal + distance)
@@ -395,13 +395,13 @@ impl<T: Float> Motor<T> {
         // The normal transforms like a vector (Rodrigues formula),
         // and the distance updates based on translation perpendicular to the plane.
 
-        let s = self.s;
-        let b23 = self.e23;
-        let b31 = self.e31;
-        let b12 = self.e12;
-        let b01 = self.e01;
-        let b02 = self.e02;
-        let b03 = self.e03;
+        let s = self.s();
+        let b23 = self.e23();
+        let b31 = self.e31();
+        let b12 = self.e12();
+        let b01 = self.e01();
+        let b02 = self.e02();
+        let b03 = self.e03();
 
         // Plane components
         let nx = g.e023; // normal x
@@ -458,7 +458,7 @@ impl<T: Float> Motor<T> {
     /// let comm = r1.commutator(&r2);
     ///
     /// // Result should be close to zero
-    /// assert!(abs_diff_eq!(comm.s, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(comm.s(), 0.0, epsilon = 1e-10));
     /// ```
     #[inline]
     pub fn commutator(&self, other: &Motor<T>) -> Motor<T> {
@@ -466,16 +466,16 @@ impl<T: Float> Motor<T> {
         let m1m2 = self.compose(other);
         let m2m1 = other.compose(self);
 
-        Motor {
-            s: m1m2.s - m2m1.s,
-            e23: m1m2.e23 - m2m1.e23,
-            e31: m1m2.e31 - m2m1.e31,
-            e12: m1m2.e12 - m2m1.e12,
-            e01: m1m2.e01 - m2m1.e01,
-            e02: m1m2.e02 - m2m1.e02,
-            e03: m1m2.e03 - m2m1.e03,
-            e0123: m1m2.e0123 - m2m1.e0123,
-        }
+        Motor::new_unchecked(
+            m1m2.s() - m2m1.s(),
+            m1m2.e23() - m2m1.e23(),
+            m1m2.e31() - m2m1.e31(),
+            m1m2.e12() - m2m1.e12(),
+            m1m2.e01() - m2m1.e01(),
+            m1m2.e02() - m2m1.e02(),
+            m1m2.e03() - m2m1.e03(),
+            m1m2.e0123() - m2m1.e0123(),
+        )
     }
 
     /// Computes the anticommutator of two motors.
@@ -496,7 +496,7 @@ impl<T: Float> Motor<T> {
     /// let anti = m.anticommutator(&m);
     /// let m_sq = m.compose(&m);
     ///
-    /// assert!(abs_diff_eq!(anti.s, 2.0 * m_sq.s, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(anti.s(), 2.0 * m_sq.s(), epsilon = 1e-10));
     /// ```
     #[inline]
     pub fn anticommutator(&self, other: &Motor<T>) -> Motor<T> {
@@ -504,16 +504,16 @@ impl<T: Float> Motor<T> {
         let m1m2 = self.compose(other);
         let m2m1 = other.compose(self);
 
-        Motor {
-            s: m1m2.s + m2m1.s,
-            e23: m1m2.e23 + m2m1.e23,
-            e31: m1m2.e31 + m2m1.e31,
-            e12: m1m2.e12 + m2m1.e12,
-            e01: m1m2.e01 + m2m1.e01,
-            e02: m1m2.e02 + m2m1.e02,
-            e03: m1m2.e03 + m2m1.e03,
-            e0123: m1m2.e0123 + m2m1.e0123,
-        }
+        Motor::new_unchecked(
+            m1m2.s() + m2m1.s(),
+            m1m2.e23() + m2m1.e23(),
+            m1m2.e31() + m2m1.e31(),
+            m1m2.e12() + m2m1.e12(),
+            m1m2.e01() + m2m1.e01(),
+            m1m2.e02() + m2m1.e02(),
+            m1m2.e03() + m2m1.e03(),
+            m1m2.e0123() + m2m1.e0123(),
+        )
     }
 }
 
@@ -569,12 +569,12 @@ impl<T: Float> Line<T> {
         // e₃: -g₄·d₃ + g₁·m₂ - g₂·m₁
         // e₀: g₁·d₁ + g₂·d₂ + g₃·d₃
 
-        let d1 = self.e01;
-        let d2 = self.e02;
-        let d3 = self.e03;
-        let m1 = self.e23;
-        let m2 = self.e31;
-        let m3 = self.e12;
+        let d1 = self.e01();
+        let d2 = self.e02();
+        let d3 = self.e03();
+        let m1 = self.e23();
+        let m2 = self.e31();
+        let m3 = self.e12();
 
         let g1 = plane.e023; // nx
         let g2 = plane.e031; // ny
@@ -611,12 +611,12 @@ impl<T: Float> Line<T> {
         // distance = |L ∨ P| / |d|
         // where L ∨ P gives a plane and we take its weight norm
 
-        let d1 = self.e01;
-        let d2 = self.e02;
-        let d3 = self.e03;
-        let m1 = self.e23;
-        let m2 = self.e31;
-        let m3 = self.e12;
+        let d1 = self.e01();
+        let d2 = self.e02();
+        let d3 = self.e03();
+        let m1 = self.e23();
+        let m2 = self.e31();
+        let m3 = self.e12();
 
         let px = p.e1;
         let py = p.e2;
@@ -674,9 +674,9 @@ impl<T: Float> Line<T> {
         let d2 = other.direction();
 
         // Cross product of directions
-        let cross_x = d1.y * d2.z - d1.z * d2.y;
-        let cross_y = d1.z * d2.x - d1.x * d2.z;
-        let cross_z = d1.x * d2.y - d1.y * d2.x;
+        let cross_x = d1.y() * d2.z() - d1.z() * d2.y();
+        let cross_y = d1.z() * d2.x() - d1.x() * d2.z();
+        let cross_z = d1.x() * d2.y() - d1.y() * d2.x();
         let cross_norm = (cross_x * cross_x + cross_y * cross_y + cross_z * cross_z).sqrt();
 
         if cross_norm < T::epsilon() {
@@ -684,25 +684,25 @@ impl<T: Float> Line<T> {
             // Get a point on each line and compute perpendicular distance
             let m1 = self.moment();
             let m2 = other.moment();
-            let d1_sq = d1.x * d1.x + d1.y * d1.y + d1.z * d1.z;
+            let d1_sq = d1.x() * d1.x() + d1.y() * d1.y() + d1.z() * d1.z();
 
             if d1_sq < T::epsilon() {
                 return T::zero();
             }
 
             // Point on line 1: d1 × m1 / |d1|²
-            let p1_x = (d1.y * m1.z - d1.z * m1.y) / d1_sq;
-            let p1_y = (d1.z * m1.x - d1.x * m1.z) / d1_sq;
-            let p1_z = (d1.x * m1.y - d1.y * m1.x) / d1_sq;
+            let p1_x = (d1.y() * m1.z() - d1.z() * m1.y()) / d1_sq;
+            let p1_y = (d1.z() * m1.x() - d1.x() * m1.z()) / d1_sq;
+            let p1_z = (d1.x() * m1.y() - d1.y() * m1.x()) / d1_sq;
 
             // Point on line 2: d2 × m2 / |d2|²
-            let d2_sq = d2.x * d2.x + d2.y * d2.y + d2.z * d2.z;
+            let d2_sq = d2.x() * d2.x() + d2.y() * d2.y() + d2.z() * d2.z();
             if d2_sq < T::epsilon() {
                 return T::zero();
             }
-            let p2_x = (d2.y * m2.z - d2.z * m2.y) / d2_sq;
-            let p2_y = (d2.z * m2.x - d2.x * m2.z) / d2_sq;
-            let p2_z = (d2.x * m2.y - d2.y * m2.x) / d2_sq;
+            let p2_x = (d2.y() * m2.z() - d2.z() * m2.y()) / d2_sq;
+            let p2_y = (d2.z() * m2.x() - d2.x() * m2.z()) / d2_sq;
+            let p2_z = (d2.x() * m2.y() - d2.y() * m2.x()) / d2_sq;
 
             // Vector between points
             let v_x = p2_x - p1_x;
@@ -711,10 +711,10 @@ impl<T: Float> Line<T> {
 
             // Project onto perpendicular direction (perpendicular to d1)
             // For parallel lines, we need the component perpendicular to d1
-            let proj = (v_x * d1.x + v_y * d1.y + v_z * d1.z) / d1_sq;
-            let perp_x = v_x - proj * d1.x;
-            let perp_y = v_y - proj * d1.y;
-            let perp_z = v_z - proj * d1.z;
+            let proj = (v_x * d1.x() + v_y * d1.y() + v_z * d1.z()) / d1_sq;
+            let perp_x = v_x - proj * d1.x();
+            let perp_y = v_y - proj * d1.y();
+            let perp_z = v_z - proj * d1.z();
 
             (perp_x * perp_x + perp_y * perp_y + perp_z * perp_z).sqrt()
         } else {
@@ -751,9 +751,9 @@ impl<T: Float> Line<T> {
         let d1 = self.direction();
         let d2 = other.direction();
 
-        let dot = d1.x * d2.x + d1.y * d2.y + d1.z * d2.z;
-        let norm1 = (d1.x * d1.x + d1.y * d1.y + d1.z * d1.z).sqrt();
-        let norm2 = (d2.x * d2.x + d2.y * d2.y + d2.z * d2.z).sqrt();
+        let dot = d1.x() * d2.x() + d1.y() * d2.y() + d1.z() * d2.z();
+        let norm1 = (d1.x() * d1.x() + d1.y() * d1.y() + d1.z() * d1.z()).sqrt();
+        let norm2 = (d2.x() * d2.x() + d2.y() * d2.y() + d2.z() * d2.z()).sqrt();
 
         let denom = norm1 * norm2;
         if denom < T::epsilon() {
@@ -833,12 +833,12 @@ impl<T: Float> Line<T> {
         // Left contraction L ⌋ G where L is grade-2 and G is grade-3
         // Result is grade 3-2 = 1 (a point/vector)
 
-        let d1 = self.e01;
-        let d2 = self.e02;
-        let d3 = self.e03;
-        let m1 = self.e23;
-        let m2 = self.e31;
-        let m3 = self.e12;
+        let d1 = self.e01();
+        let d2 = self.e02();
+        let d3 = self.e03();
+        let m1 = self.e23();
+        let m2 = self.e31();
+        let m3 = self.e12();
 
         let g023 = plane.e023;
         let g031 = plane.e031;
@@ -882,9 +882,9 @@ impl<T: Float> Line<T> {
     ///
     /// // Plane should be the XZ plane (normal in Y direction)
     /// let n = plane.normal();
-    /// assert!(abs_diff_eq!(n.x, 0.0, epsilon = 1e-10));
-    /// assert!(n.y.abs() > 0.9); // ny = ±1
-    /// assert!(abs_diff_eq!(n.z, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.x(), 0.0, epsilon = 1e-10));
+    /// assert!(n.y().abs() > 0.9); // ny = ±1
+    /// assert!(abs_diff_eq!(n.z(), 0.0, epsilon = 1e-10));
     /// ```
     pub fn join_point(&self, p: &Point<T>) -> Plane<T> {
         // L ∧ P: line (bivector) ∧ point (vector) = trivector (plane)
@@ -906,12 +906,12 @@ impl<T: Float> Line<T> {
         // e₀₁₂: d₁p₂ - d₂p₁ + m₃p₀
         // e₁₂₃: m₁p₁ - m₂p₂ + m₃p₃
 
-        let d1 = self.e01;
-        let d2 = self.e02;
-        let d3 = self.e03;
-        let m1 = self.e23;
-        let m2 = self.e31;
-        let m3 = self.e12;
+        let d1 = self.e01();
+        let d2 = self.e02();
+        let d3 = self.e03();
+        let m1 = self.e23();
+        let m2 = self.e31();
+        let m3 = self.e12();
 
         let p0 = p.e0;
         let p1 = p.e1;
@@ -953,7 +953,7 @@ impl<T: Float> Line<T> {
 
         let d = self.direction();
         let m = self.moment();
-        let d_sq = d.x * d.x + d.y * d.y + d.z * d.z;
+        let d_sq = d.x() * d.x() + d.y() * d.y() + d.z() * d.z();
 
         if d_sq < T::epsilon() {
             return Point::origin();
@@ -961,9 +961,9 @@ impl<T: Float> Line<T> {
 
         // A point on the line: P_line = d × m / |d|² (when line doesn't pass through origin)
         // For line through origin (m = 0), use origin
-        let line_pt_x = (d.y * m.z - d.z * m.y) / d_sq;
-        let line_pt_y = (d.z * m.x - d.x * m.z) / d_sq;
-        let line_pt_z = (d.x * m.y - d.y * m.x) / d_sq;
+        let line_pt_x = (d.y() * m.z() - d.z() * m.y()) / d_sq;
+        let line_pt_y = (d.z() * m.x() - d.x() * m.z()) / d_sq;
+        let line_pt_z = (d.x() * m.y() - d.y() * m.x()) / d_sq;
 
         // Vector from line point to given point
         let px = p.x() - line_pt_x;
@@ -971,12 +971,12 @@ impl<T: Float> Line<T> {
         let pz = p.z() - line_pt_z;
 
         // Project onto direction
-        let t = (px * d.x + py * d.y + pz * d.z) / d_sq;
+        let t = (px * d.x() + py * d.y() + pz * d.z()) / d_sq;
 
         Point::new(
-            line_pt_x + t * d.x,
-            line_pt_y + t * d.y,
-            line_pt_z + t * d.z,
+            line_pt_x + t * d.x(),
+            line_pt_y + t * d.y(),
+            line_pt_z + t * d.z(),
         )
     }
 }
@@ -1041,9 +1041,9 @@ impl<T: Float> Plane<T> {
         let n1 = self.normal();
         let n2 = other.normal();
 
-        let dot = n1.x * n2.x + n1.y * n2.y + n1.z * n2.z;
-        let norm1 = (n1.x * n1.x + n1.y * n1.y + n1.z * n1.z).sqrt();
-        let norm2 = (n2.x * n2.x + n2.y * n2.y + n2.z * n2.z).sqrt();
+        let dot = n1.x() * n2.x() + n1.y() * n2.y() + n1.z() * n2.z();
+        let norm1 = (n1.x() * n1.x() + n1.y() * n1.y() + n1.z() * n1.z()).sqrt();
+        let norm2 = (n2.x() * n2.x() + n2.y() * n2.y() + n2.z() * n2.z()).sqrt();
 
         let denom = norm1 * norm2;
         if denom < T::epsilon() {
@@ -1092,9 +1092,9 @@ impl<T: Float> Plane<T> {
         let n = self.normal();
         let d = line.direction();
 
-        let dot = (n.x * d.x + n.y * d.y + n.z * d.z).abs();
-        let norm_n = (n.x * n.x + n.y * n.y + n.z * n.z).sqrt();
-        let norm_d = (d.x * d.x + d.y * d.y + d.z * d.z).sqrt();
+        let dot = (n.x() * d.x() + n.y() * d.y() + n.z() * d.z()).abs();
+        let norm_n = (n.x() * n.x() + n.y() * n.y() + n.z() * n.z()).sqrt();
+        let norm_d = (d.x() * d.x() + d.y() * d.y() + d.z() * d.z()).sqrt();
 
         let denom = norm_n * norm_d;
         if denom < T::epsilon() {
@@ -1169,9 +1169,9 @@ impl<T: Float> Plane<T> {
     ///
     /// // Direction should be along X axis (or its negative)
     /// let d = line.direction();
-    /// assert!(abs_diff_eq!(d.y, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
-    /// assert!(d.x.abs() > 0.9); // dx = ±1
+    /// assert!(abs_diff_eq!(d.y(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z(), 0.0, epsilon = 1e-10));
+    /// assert!(d.x().abs() > 0.9); // dx = ±1
     /// ```
     pub fn meet(&self, other: &Plane<T>) -> Line<T> {
         // The regressive product of two planes gives a line
@@ -1202,14 +1202,7 @@ impl<T: Float> Plane<T> {
         let mom_y = d1 * m2 - d2 * n2;
         let mom_z = d1 * m3 - d2 * n3;
 
-        Line {
-            e01: dir_x,
-            e02: dir_y,
-            e03: dir_z,
-            e23: mom_x,
-            e31: mom_y,
-            e12: mom_z,
-        }
+        Line::new_unchecked(dir_x, dir_y, dir_z, mom_x, mom_y, mom_z)
     }
 
     /// Projects a point onto this plane.
@@ -1238,7 +1231,7 @@ impl<T: Float> Plane<T> {
         // P' = P - (signed_distance) * n
         // where n is the unit normal and signed_distance is the distance from P to plane
         let n = self.normal();
-        let n_norm_sq = n.x * n.x + n.y * n.y + n.z * n.z;
+        let n_norm_sq = n.x() * n.x() + n.y() * n.y() + n.z() * n.z();
 
         if n_norm_sq < T::epsilon() {
             return *p;
@@ -1250,9 +1243,9 @@ impl<T: Float> Plane<T> {
         let dist = numerator / (p.e0 * n_norm_sq.sqrt());
 
         Point::new(
-            p.x() - dist * n.x / n_norm_sq.sqrt(),
-            p.y() - dist * n.y / n_norm_sq.sqrt(),
-            p.z() - dist * n.z / n_norm_sq.sqrt(),
+            p.x() - dist * n.x() / n_norm_sq.sqrt(),
+            p.y() - dist * n.y() / n_norm_sq.sqrt(),
+            p.z() - dist * n.z() / n_norm_sq.sqrt(),
         )
     }
 
@@ -1281,14 +1274,14 @@ impl<T: Float> Plane<T> {
     /// // Projected direction should be (1, 1, 0) (normalized)
     /// let d = projected.direction();
     /// // Z component should be 0
-    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z(), 0.0, epsilon = 1e-10));
     /// ```
     pub fn project_line(&self, line: &Line<T>) -> Line<T> {
         // Project both the direction and a point on the line
         // Then construct the projected line from the projected point and direction
 
         let n = self.normal();
-        let n_norm_sq = n.x * n.x + n.y * n.y + n.z * n.z;
+        let n_norm_sq = n.x() * n.x() + n.y() * n.y() + n.z() * n.z();
 
         if n_norm_sq < T::epsilon() {
             return *line;
@@ -1298,31 +1291,31 @@ impl<T: Float> Plane<T> {
 
         // Get direction and project onto plane
         let d = line.direction();
-        let d_dot_n = d.x * n.x + d.y * n.y + d.z * n.z;
-        let projected_dx = d.x - d_dot_n * n.x / n_norm_sq;
-        let projected_dy = d.y - d_dot_n * n.y / n_norm_sq;
-        let projected_dz = d.z - d_dot_n * n.z / n_norm_sq;
+        let d_dot_n = d.x() * n.x() + d.y() * n.y() + d.z() * n.z();
+        let projected_dx = d.x() - d_dot_n * n.x() / n_norm_sq;
+        let projected_dy = d.y() - d_dot_n * n.y() / n_norm_sq;
+        let projected_dz = d.z() - d_dot_n * n.z() / n_norm_sq;
 
         // Get a point on the line and project it
         let m = line.moment();
-        let d_sq = d.x * d.x + d.y * d.y + d.z * d.z;
+        let d_sq = d.x() * d.x() + d.y() * d.y() + d.z() * d.z();
         if d_sq < T::epsilon() {
             return Line::zero();
         }
 
         // Point on line: d × m / |d|²
-        let pt_x = (d.y * m.z - d.z * m.y) / d_sq;
-        let pt_y = (d.z * m.x - d.x * m.z) / d_sq;
-        let pt_z = (d.x * m.y - d.y * m.x) / d_sq;
+        let pt_x = (d.y() * m.z() - d.z() * m.y()) / d_sq;
+        let pt_y = (d.z() * m.x() - d.x() * m.z()) / d_sq;
+        let pt_z = (d.x() * m.y() - d.y() * m.x()) / d_sq;
 
         // Project point onto plane
-        let pt_dot_n = pt_x * n.x + pt_y * n.y + pt_z * n.z;
+        let pt_dot_n = pt_x * n.x() + pt_y * n.y() + pt_z * n.z();
         let plane_dist = self.e123 / n_norm;
         let signed_dist = (pt_dot_n + plane_dist) / n_norm;
 
-        let proj_pt_x = pt_x - signed_dist * n.x / n_norm;
-        let proj_pt_y = pt_y - signed_dist * n.y / n_norm;
-        let proj_pt_z = pt_z - signed_dist * n.z / n_norm;
+        let proj_pt_x = pt_x - signed_dist * n.x() / n_norm;
+        let proj_pt_y = pt_y - signed_dist * n.y() / n_norm;
+        let proj_pt_z = pt_z - signed_dist * n.z() / n_norm;
 
         // Construct projected line from point and direction
         let proj_point = Point::new(proj_pt_x, proj_pt_y, proj_pt_z);
@@ -1507,7 +1500,7 @@ impl<T: Float> Flector<T> {
         // Pseudoscalar from distance terms
         let e0123 = g1w * g2w;
 
-        Motor::new(s, e23, e31, e12, e01, e02, e03, e0123)
+        Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
     }
 }
 
@@ -1696,15 +1689,15 @@ mod tests {
 
         // Direction should be (1, 0, 0)
         let d = line.direction();
-        assert!(abs_diff_eq!(d.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // Moment should be zero (line through origin)
         let m = line.moment();
-        assert!(abs_diff_eq!(m.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(m.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(m.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(m.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(m.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(m.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1716,9 +1709,9 @@ mod tests {
 
         // Direction should be (1, 0, 0)
         let d = line.direction();
-        assert!(abs_diff_eq!(d.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // Moment should be non-zero (line not through origin)
         // For this line, moment = direction × point_on_line = (1,0,0) × (0,1,0) = (0,0,1)
@@ -1733,9 +1726,9 @@ mod tests {
 
         // Direction should be (0, 0, 1)
         let d = line.direction();
-        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1807,9 +1800,9 @@ mod tests {
 
         // Direction should be along X axis
         let d = line.direction();
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(d.x.abs() > 0.9); // dx = ±1
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x().abs() > 0.9); // dx = ±1
 
         // Line should pass through origin
         assert!(line.through_origin(ABS_DIFF_EQ_EPS));
@@ -1848,9 +1841,9 @@ mod tests {
         let rotated = rotation.transform_line(&line);
 
         let d = rotated.direction();
-        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.y, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1862,9 +1855,9 @@ mod tests {
 
         // Direction should still be (0, 0, 1)
         let d = translated.direction();
-        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // But line should no longer pass through origin
         assert!(!translated.through_origin(ABS_DIFF_EQ_EPS));
@@ -1979,23 +1972,23 @@ mod tests {
 
         // Attitude should be the direction
         let att = z_axis.attitude();
-        assert!(abs_diff_eq!(att.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.z(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
     fn line_reverse() {
-        let line = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+        let line = Line::new_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
         let rev = line.reverse();
 
         // Reverse negates all components
-        assert!(abs_diff_eq!(rev.e01, -1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e02, -2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e03, -3.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e23, -4.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e31, -5.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e12, -6.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e01(), -1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e02(), -2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e03(), -3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e23(), -4.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e31(), -5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e12(), -6.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2034,9 +2027,9 @@ mod tests {
         let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
         let att = plane.attitude();
 
-        assert!(abs_diff_eq!(att.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.z(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2047,23 +2040,23 @@ mod tests {
         let identity = rotation.compose(&inv);
 
         // Should give identity
-        assert!(abs_diff_eq!(identity.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(identity.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(identity.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(identity.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
     fn motor_unitized() {
         // Create non-unit motor by scaling
         let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_4);
-        let scaled = Motor::new(
-            rotation.s * 2.0,
-            rotation.e23 * 2.0,
-            rotation.e31 * 2.0,
-            rotation.e12 * 2.0,
-            rotation.e01 * 2.0,
-            rotation.e02 * 2.0,
-            rotation.e03 * 2.0,
-            rotation.e0123 * 2.0,
+        let scaled = Motor::new_unchecked(
+            rotation.s() * 2.0,
+            rotation.e23() * 2.0,
+            rotation.e31() * 2.0,
+            rotation.e12() * 2.0,
+            rotation.e01() * 2.0,
+            rotation.e02() * 2.0,
+            rotation.e03() * 2.0,
+            rotation.e0123() * 2.0,
         );
 
         // Unitize and check norm
@@ -2272,9 +2265,9 @@ mod tests {
 
         // Normal should be in Y direction
         let n = plane.normal();
-        assert!(abs_diff_eq!(n.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(n.y.abs() > 0.9);
-        assert!(abs_diff_eq!(n.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(n.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(n.y().abs() > 0.9);
+        assert!(abs_diff_eq!(n.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2286,9 +2279,9 @@ mod tests {
 
         // Normal should be in Y direction
         let n = plane.normal();
-        assert!(abs_diff_eq!(n.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(n.y.abs() > 0.9);
-        assert!(abs_diff_eq!(n.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(n.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(n.y().abs() > 0.9);
+        assert!(abs_diff_eq!(n.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2323,7 +2316,7 @@ mod tests {
 
         // Normal should be degenerate (zero or very small)
         let n = plane.normal();
-        let norm = (n.x * n.x + n.y * n.y + n.z * n.z).sqrt();
+        let norm = (n.x() * n.x() + n.y() * n.y() + n.z() * n.z()).sqrt();
         assert!(norm < ABS_DIFF_EQ_EPS);
     }
 
@@ -2403,9 +2396,9 @@ mod tests {
 
         // Direction should stay along X axis
         let d = projected.direction();
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(d.x.abs() > 0.9);
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x().abs() > 0.9);
     }
 
     #[test]
@@ -2418,7 +2411,7 @@ mod tests {
 
         // Projected direction should be (1, 1, 0)
         let d = projected.direction();
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2429,9 +2422,9 @@ mod tests {
         let projected = plane.project_line(&line);
 
         let d = projected.direction();
-        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(d.x.abs() > 0.9);
+        assert!(abs_diff_eq!(d.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x().abs() > 0.9);
     }
 
     // ========================================================================
@@ -2543,10 +2536,10 @@ mod tests {
         let comm = r1.commutator(&r2);
 
         // All components should be approximately zero
-        assert!(abs_diff_eq!(comm.s, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e23, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e31, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.s(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e23(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e31(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -2557,8 +2550,10 @@ mod tests {
         let comm = rx.commutator(&ry);
 
         // Commutator should be non-zero
-        let norm =
-            comm.s * comm.s + comm.e23 * comm.e23 + comm.e31 * comm.e31 + comm.e12 * comm.e12;
+        let norm = comm.s() * comm.s()
+            + comm.e23() * comm.e23()
+            + comm.e31() * comm.e31()
+            + comm.e12() * comm.e12();
         assert!(norm > ABS_DIFF_EQ_EPS);
     }
 
@@ -2571,23 +2566,23 @@ mod tests {
         let comm_ba = m2.commutator(&m1);
 
         assert!(abs_diff_eq!(
-            comm_ab.s,
-            -comm_ba.s,
+            comm_ab.s(),
+            -comm_ba.s(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            comm_ab.e23,
-            -comm_ba.e23,
+            comm_ab.e23(),
+            -comm_ba.e23(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            comm_ab.e31,
-            -comm_ba.e31,
+            comm_ab.e31(),
+            -comm_ba.e31(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            comm_ab.e12,
-            -comm_ba.e12,
+            comm_ab.e12(),
+            -comm_ba.e12(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
@@ -2600,13 +2595,13 @@ mod tests {
         let m_sq = m.compose(&m);
 
         assert!(abs_diff_eq!(
-            anti.s,
-            2.0 * m_sq.s,
+            anti.s(),
+            2.0 * m_sq.s(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            anti.e12,
-            2.0 * m_sq.e12,
+            anti.e12(),
+            2.0 * m_sq.e12(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
@@ -2620,23 +2615,23 @@ mod tests {
         let anti_ba = m2.anticommutator(&m1);
 
         assert!(abs_diff_eq!(
-            anti_ab.s,
-            anti_ba.s,
+            anti_ab.s(),
+            anti_ba.s(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            anti_ab.e23,
-            anti_ba.e23,
+            anti_ab.e23(),
+            anti_ba.e23(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            anti_ab.e31,
-            anti_ba.e31,
+            anti_ab.e31(),
+            anti_ba.e31(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
         assert!(abs_diff_eq!(
-            anti_ab.e12,
-            anti_ba.e12,
+            anti_ab.e12(),
+            anti_ba.e12(),
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
@@ -2648,10 +2643,10 @@ mod tests {
         let t2 = Motor::from_translation(0.0, 1.0, 0.0);
         let comm = t1.commutator(&t2);
 
-        assert!(abs_diff_eq!(comm.s, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(comm.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.s(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e01(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e02(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(comm.e03(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     // ========================================================================
@@ -2677,7 +2672,7 @@ mod tests {
 
         // Contracting z-direction point with xy plane gives line in xy plane
         let d = line.direction();
-        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]

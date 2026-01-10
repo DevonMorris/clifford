@@ -19,7 +19,7 @@
 //! let v = Vector::new(1.0, 0.0, 0.0);
 //! let rotated = rotor.rotate(v);
 //!
-//! assert!((rotated.y - 1.0).abs() < 1e-10);
+//! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
 pub mod dim2;

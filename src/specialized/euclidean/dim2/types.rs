@@ -11,9 +11,9 @@ use crate::scalar::Float;
 #[repr(C)]
 pub struct Vector<T: Float> {
     /// Coefficient of `e₁` (x-direction).
-    pub x: T,
+    x: T,
     /// Coefficient of `e₂` (y-direction).
-    pub y: T,
+    y: T,
 }
 
 impl<T: Float> Vector<T> {
@@ -21,6 +21,18 @@ impl<T: Float> Vector<T> {
     #[inline]
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
+    }
+
+    /// Returns the x component (coefficient of `e₁`).
+    #[inline]
+    pub fn x(&self) -> T {
+        self.x
+    }
+
+    /// Returns the y component (coefficient of `e₂`).
+    #[inline]
+    pub fn y(&self) -> T {
+        self.y
     }
 
     /// Creates the zero vector.
@@ -122,7 +134,7 @@ impl<T: Float> Default for Vector<T> {
 #[repr(transparent)]
 pub struct Bivector<T: Float>(
     /// Coefficient of `e₁₂`.
-    pub T,
+    T,
 );
 
 impl<T: Float> Bivector<T> {
@@ -170,9 +182,9 @@ impl<T: Float> Default for Bivector<T> {
 #[repr(C)]
 pub struct Rotor<T: Float> {
     /// Scalar part (grade 0).
-    pub s: T,
+    s: T,
     /// Bivector coefficient of `e₁₂` (grade 2).
-    pub xy: T,
+    xy: T,
 }
 
 impl<T: Float> Rotor<T> {
@@ -180,6 +192,18 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn new(s: T, xy: T) -> Self {
         Self { s, xy }
+    }
+
+    /// Returns the scalar part (grade 0).
+    #[inline]
+    pub fn s(&self) -> T {
+        self.s
+    }
+
+    /// Returns the bivector coefficient (grade 2).
+    #[inline]
+    pub fn xy(&self) -> T {
+        self.xy
     }
 
     /// Creates the identity rotor (no rotation).

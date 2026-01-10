@@ -246,31 +246,89 @@ impl<T: Float> Default for Point<T> {
 ///
 /// // Direction should be (1, 0, 0)
 /// let d = line.direction();
-/// assert!(abs_diff_eq!(d.x, 1.0, epsilon = 1e-10));
-/// assert!(abs_diff_eq!(d.y, 0.0, epsilon = 1e-10));
-/// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(d.x(), 1.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(d.y(), 0.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(d.z(), 0.0, epsilon = 1e-10));
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct Line<T: Float> {
     /// Coefficient of e₀₁ (x-component of direction).
-    pub e01: T,
+    e01: T,
     /// Coefficient of e₀₂ (y-component of direction).
-    pub e02: T,
+    e02: T,
     /// Coefficient of e₀₃ (z-component of direction).
-    pub e03: T,
+    e03: T,
     /// Coefficient of e₂₃ (x-component of moment).
-    pub e23: T,
+    e23: T,
     /// Coefficient of e₃₁ (y-component of moment).
-    pub e31: T,
+    e31: T,
     /// Coefficient of e₁₂ (z-component of moment).
-    pub e12: T,
+    e12: T,
 }
 
 impl<T: Float> Line<T> {
-    /// Creates a line from bivector coefficients.
+    // ========================================================================
+    // Accessors
+    // ========================================================================
+
+    /// Returns the e₀₁ (x-component of direction) component.
     #[inline]
-    pub fn new(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
+    pub fn e01(&self) -> T {
+        self.e01
+    }
+
+    /// Returns the e₀₂ (y-component of direction) component.
+    #[inline]
+    pub fn e02(&self) -> T {
+        self.e02
+    }
+
+    /// Returns the e₀₃ (z-component of direction) component.
+    #[inline]
+    pub fn e03(&self) -> T {
+        self.e03
+    }
+
+    /// Returns the e₂₃ (x-component of moment) component.
+    #[inline]
+    pub fn e23(&self) -> T {
+        self.e23
+    }
+
+    /// Returns the e₃₁ (y-component of moment) component.
+    #[inline]
+    pub fn e31(&self) -> T {
+        self.e31
+    }
+
+    /// Returns the e₁₂ (z-component of moment) component.
+    #[inline]
+    pub fn e12(&self) -> T {
+        self.e12
+    }
+
+    /// Returns all components as a tuple `(e01, e02, e03, e23, e31, e12)`.
+    #[inline]
+    pub fn components(&self) -> (T, T, T, T, T, T) {
+        (self.e01, self.e02, self.e03, self.e23, self.e31, self.e12)
+    }
+
+    // ========================================================================
+    // Constructors
+    // ========================================================================
+
+    /// Creates a line from bivector coefficients without validation.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the components satisfy the Plücker condition:
+    /// `e₀₁·e₂₃ + e₀₂·e₃₁ + e₀₃·e₁₂ = 0`
+    ///
+    /// This is primarily for internal use, automatic differentiation, and
+    /// performance-critical code where constraints are known to be satisfied.
+    #[inline]
+    pub fn new_unchecked(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
         Self {
             e01,
             e02,
@@ -281,6 +339,50 @@ impl<T: Float> Line<T> {
         }
     }
 
+    /// Attempts to create a line from bivector coefficients.
+    ///
+    /// Returns an error if the components violate the Plücker condition.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Line;
+    /// use clifford::specialized::projective::LineConstraintError;
+    ///
+    /// // Valid line (Plücker condition satisfied: direction perpendicular to moment)
+    /// // Direction (1,0,0), Moment (0,1,0) -> 1*0 + 0*1 + 0*0 = 0
+    /// let valid = Line::<f64>::try_from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    /// assert!(valid.is_ok());
+    ///
+    /// // Invalid line (Plücker condition violated)
+    /// // Direction (1,0,0), Moment (1,0,0) -> 1*1 + 0*0 + 0*0 = 1 ≠ 0
+    /// let invalid = Line::<f64>::try_from_components(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    /// assert!(matches!(invalid, Err(LineConstraintError::PluckerConditionViolation)));
+    /// ```
+    pub fn try_from_components(
+        e01: T,
+        e02: T,
+        e03: T,
+        e23: T,
+        e31: T,
+        e12: T,
+    ) -> Result<Self, super::super::LineConstraintError> {
+        let line = Self {
+            e01,
+            e02,
+            e03,
+            e23,
+            e31,
+            e12,
+        };
+        // Use a tolerance of 100*epsilon for numerical stability
+        let tolerance = T::epsilon() * T::from_i8(100);
+        if !line.satisfies_plucker_condition(tolerance) {
+            return Err(super::super::LineConstraintError::PluckerConditionViolation);
+        }
+        Ok(line)
+    }
+
     /// Creates a line from Plücker coordinates.
     ///
     /// # Arguments
@@ -288,18 +390,48 @@ impl<T: Float> Line<T> {
     /// * `direction` - The line's direction vector
     /// * `moment` - The line's moment vector
     ///
-    /// # Note
+    /// # Panics
     ///
-    /// For a valid line, `direction · moment = 0`.
+    /// Panics if `direction · moment ≠ 0` (Plücker condition violated).
+    /// Use [`from_plucker_unchecked`](Self::from_plucker_unchecked) if you know the
+    /// constraint is satisfied, or use [`from_point_and_direction`](Self::from_point_and_direction)
+    /// which always produces valid lines.
     #[inline]
     pub fn from_plucker(direction: &EuclideanVector<T>, moment: &EuclideanVector<T>) -> Self {
+        let dot =
+            direction.x() * moment.x() + direction.y() * moment.y() + direction.z() * moment.z();
+        let tolerance = T::epsilon() * T::from_i8(100);
+        assert!(
+            dot.abs() < tolerance,
+            "Plücker condition violated: direction·moment ≠ 0"
+        );
         Self {
-            e01: direction.x,
-            e02: direction.y,
-            e03: direction.z,
-            e23: moment.x,
-            e31: moment.y,
-            e12: moment.z,
+            e01: direction.x(),
+            e02: direction.y(),
+            e03: direction.z(),
+            e23: moment.x(),
+            e31: moment.y(),
+            e12: moment.z(),
+        }
+    }
+
+    /// Creates a line from Plücker coordinates without validation.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure `direction · moment = 0`.
+    #[inline]
+    pub fn from_plucker_unchecked(
+        direction: &EuclideanVector<T>,
+        moment: &EuclideanVector<T>,
+    ) -> Self {
+        Self {
+            e01: direction.x(),
+            e02: direction.y(),
+            e03: direction.z(),
+            e23: moment.x(),
+            e31: moment.y(),
+            e12: moment.z(),
         }
     }
 
@@ -323,8 +455,8 @@ impl<T: Float> Line<T> {
     ///
     /// // Direction is (3, 4, 0), normalized
     /// let d = line.direction();
-    /// assert!(abs_diff_eq!(d.x, 3.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(d.y, 4.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.x(), 3.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.y(), 4.0, epsilon = 1e-10));
     /// ```
     pub fn join(p: &Point<T>, q: &Point<T>) -> Self {
         // P ∧ Q for P = (px, py, pz, pw) and Q = (qx, qy, qz, qw)
@@ -363,11 +495,11 @@ impl<T: Float> Line<T> {
     ///
     /// // Line through (1,2,3) in Z direction
     /// let d = line.direction();
-    /// assert!(abs_diff_eq!(d.z, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z(), 1.0, epsilon = 1e-10));
     /// ```
     pub fn from_point_and_direction(point: &Point<T>, direction: &EuclideanVector<T>) -> Self {
         // Create an ideal point (point at infinity) in the direction
-        let ideal = Point::ideal(direction.x, direction.y, direction.z);
+        let ideal = Point::ideal(direction.x(), direction.y(), direction.z());
         // Line is the join of the finite point and the ideal point
         Self::join(point, &ideal)
     }
@@ -402,7 +534,7 @@ impl<T: Float> Line<T> {
     /// Creates the zero line (degenerate).
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -494,6 +626,54 @@ impl<T: Float> Line<T> {
             + other.e01 * self.e23
             + other.e02 * self.e31
             + other.e03 * self.e12
+    }
+
+    /// Returns true if this line satisfies the Plücker condition.
+    ///
+    /// The Plücker condition is: `direction · moment = 0`
+    /// i.e., `e₀₁·e₂₃ + e₀₂·e₃₁ + e₀₃·e₁₂ = 0`
+    ///
+    /// This condition ensures the line components describe a valid line in 3D space.
+    /// Lines constructed via factory methods (`join`, `from_point_and_direction`,
+    /// `x_axis`, etc.) always satisfy this condition.
+    ///
+    /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line};
+    ///
+    /// let p1 = Point::new(0.0, 0.0, 0.0);
+    /// let p2 = Point::new(1.0, 2.0, 3.0);
+    /// let line = Line::join(&p1, &p2);
+    /// assert!(line.satisfies_plucker_condition(1e-10));
+    ///
+    /// let x_axis: Line<f64> = Line::x_axis();
+    /// assert!(x_axis.satisfies_plucker_condition(1e-10));
+    /// ```
+    #[inline]
+    pub fn satisfies_plucker_condition(&self, epsilon: T) -> bool {
+        self.plucker_residual().abs() < epsilon
+    }
+
+    /// Returns the Plücker condition residual.
+    ///
+    /// For a valid line, this should be zero (within numerical tolerance).
+    /// The Plücker condition is: `direction · moment = 0`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let line = Line::<f64>::x_axis();
+    /// assert!(abs_diff_eq!(line.plucker_residual(), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn plucker_residual(&self) -> T {
+        self.e01 * self.e23 + self.e02 * self.e31 + self.e03 * self.e12
     }
 
     /// Returns true if this line is parallel to another.
@@ -662,28 +842,195 @@ impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Line<T> {
 #[repr(C)]
 pub struct Motor<T: Float> {
     /// Scalar part (cos(θ/2) for pure rotation).
-    pub s: T,
+    s: T,
     /// Coefficient of e₂₃ (rotation around x-axis).
-    pub e23: T,
+    e23: T,
     /// Coefficient of e₃₁ (rotation around y-axis).
-    pub e31: T,
+    e31: T,
     /// Coefficient of e₁₂ (rotation around z-axis).
-    pub e12: T,
+    e12: T,
     /// Coefficient of e₀₁ (translation in x).
-    pub e01: T,
+    e01: T,
     /// Coefficient of e₀₂ (translation in y).
-    pub e02: T,
+    e02: T,
     /// Coefficient of e₀₃ (translation in z).
-    pub e03: T,
+    e03: T,
     /// Coefficient of e₀₁₂₃ (pseudoscalar part).
-    pub e0123: T,
+    e0123: T,
 }
 
 impl<T: Float> Motor<T> {
-    /// Creates a motor from all components.
+    // ========================================================================
+    // Accessors
+    // ========================================================================
+
+    /// Returns the scalar component.
+    #[inline]
+    pub fn s(&self) -> T {
+        self.s
+    }
+
+    /// Returns the e₂₃ (rotation around x-axis) component.
+    #[inline]
+    pub fn e23(&self) -> T {
+        self.e23
+    }
+
+    /// Returns the e₃₁ (rotation around y-axis) component.
+    #[inline]
+    pub fn e31(&self) -> T {
+        self.e31
+    }
+
+    /// Returns the e₁₂ (rotation around z-axis) component.
+    #[inline]
+    pub fn e12(&self) -> T {
+        self.e12
+    }
+
+    /// Returns the e₀₁ (translation in x) component.
+    #[inline]
+    pub fn e01(&self) -> T {
+        self.e01
+    }
+
+    /// Returns the e₀₂ (translation in y) component.
+    #[inline]
+    pub fn e02(&self) -> T {
+        self.e02
+    }
+
+    /// Returns the e₀₃ (translation in z) component.
+    #[inline]
+    pub fn e03(&self) -> T {
+        self.e03
+    }
+
+    /// Returns the e₀₁₂₃ (pseudoscalar) component.
+    #[inline]
+    pub fn e0123(&self) -> T {
+        self.e0123
+    }
+
+    /// Returns all components as a tuple `(s, e23, e31, e12, e01, e02, e03, e0123)`.
+    #[inline]
+    pub fn components(&self) -> (T, T, T, T, T, T, T, T) {
+        (
+            self.s, self.e23, self.e31, self.e12, self.e01, self.e02, self.e03, self.e0123,
+        )
+    }
+
+    // ========================================================================
+    // Constructors
+    // ========================================================================
+
+    /// Creates a motor from raw components without validation.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the components satisfy the Study condition:
+    /// `s·e₀₁₂₃ - e₂₃·e₀₁ - e₃₁·e₀₂ - e₁₂·e₀₃ = 0`
+    ///
+    /// This is primarily for internal use, automatic differentiation, and
+    /// performance-critical code where constraints are known to be satisfied.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    ///
+    /// // Identity motor (satisfies Study condition: 1*0 - 0*0 - 0*0 - 0*0 = 0)
+    /// let motor = Motor::new_unchecked(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// assert!(motor.satisfies_study_condition(1e-10));
+    /// ```
     #[inline]
     #[allow(clippy::too_many_arguments)]
-    pub fn new(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+    pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+        Self {
+            s,
+            e23,
+            e31,
+            e12,
+            e01,
+            e02,
+            e03,
+            e0123,
+        }
+    }
+
+    /// Attempts to create a motor from raw components.
+    ///
+    /// Returns an error if the components violate the Study condition.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use clifford::specialized::projective::MotorConstraintError;
+    ///
+    /// // Valid motor (Study condition satisfied)
+    /// let valid = Motor::<f64>::try_from_components(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    /// assert!(valid.is_ok());
+    ///
+    /// // Invalid motor (Study condition violated: 1*1 - 0 ≠ 0)
+    /// let invalid = Motor::<f64>::try_from_components(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    /// assert!(matches!(invalid, Err(MotorConstraintError::StudyConditionViolation)));
+    /// ```
+    #[allow(clippy::too_many_arguments)]
+    pub fn try_from_components(
+        s: T,
+        e23: T,
+        e31: T,
+        e12: T,
+        e01: T,
+        e02: T,
+        e03: T,
+        e0123: T,
+    ) -> Result<Self, super::super::MotorConstraintError> {
+        let motor = Self {
+            s,
+            e23,
+            e31,
+            e12,
+            e01,
+            e02,
+            e03,
+            e0123,
+        };
+        // Use a tolerance of 100*epsilon for numerical stability
+        let tolerance = T::epsilon() * T::from_i8(100);
+        if !motor.satisfies_study_condition(tolerance) {
+            return Err(super::super::MotorConstraintError::StudyConditionViolation);
+        }
+        Ok(motor)
+    }
+
+    /// Creates a motor by projecting components to satisfy the Study condition.
+    ///
+    /// Given `(s, e23, e31, e12, e01, e02, e03)`, this computes the `e0123` value
+    /// that satisfies the Study condition:
+    /// `e0123 = (e23·e01 + e31·e02 + e12·e03) / s`
+    ///
+    /// # Panics
+    ///
+    /// Panics if `s` is zero (use [`from_translation`](Self::from_translation) for pure translations).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    ///
+    /// // Create motor with arbitrary rotation/translation components
+    /// let motor = Motor::from_components_projected(0.5, 0.5, 0.5, 0.5, 1.0, 2.0, 3.0);
+    /// assert!(motor.satisfies_study_condition(1e-10));
+    /// ```
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_components_projected(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T) -> Self {
+        assert!(
+            s.abs() > T::epsilon(),
+            "scalar must be non-zero for projection; use from_translation for pure translations"
+        );
+        let e0123 = (e23 * e01 + e31 * e02 + e12 * e03) / s;
         Self {
             s,
             e23,
@@ -828,9 +1175,9 @@ impl<T: Float> Motor<T> {
         let sin_half = half.sin();
         Self {
             s: half.cos(),
-            e23: axis.x * sin_half,
-            e31: axis.y * sin_half,
-            e12: axis.z * sin_half,
+            e23: axis.x() * sin_half,
+            e31: axis.y() * sin_half,
+            e12: axis.z() * sin_half,
             e01: T::zero(),
             e02: T::zero(),
             e03: T::zero(),
@@ -1141,6 +1488,51 @@ impl<T: Float> Motor<T> {
     #[inline]
     pub fn is_unitized(&self, epsilon: T) -> bool {
         (self.weight_norm_squared() - T::one()).abs() < epsilon
+    }
+
+    /// Returns true if this motor satisfies the Study condition.
+    ///
+    /// The Study condition is: `s·e₀₁₂₃ - e₂₃·e₀₁ - e₃₁·e₀₂ - e₁₂·e₀₃ = 0`
+    ///
+    /// This condition ensures the motor represents a valid rigid transformation.
+    /// Motors constructed via factory methods (`from_rotation_*`, `from_translation`,
+    /// `from_axis_angle`, etc.) always satisfy this condition.
+    ///
+    /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    ///
+    /// let rotation = Motor::<f64>::from_rotation_z(std::f64::consts::FRAC_PI_4);
+    /// assert!(rotation.satisfies_study_condition(1e-10));
+    ///
+    /// let translation = Motor::from_translation(1.0, 2.0, 3.0);
+    /// assert!(translation.satisfies_study_condition(1e-10));
+    /// ```
+    #[inline]
+    pub fn satisfies_study_condition(&self, epsilon: T) -> bool {
+        self.study_residual().abs() < epsilon
+    }
+
+    /// Returns the Study condition residual.
+    ///
+    /// For a valid motor, this should be zero (within numerical tolerance).
+    /// The Study condition is: `s·e₀₁₂₃ - e₂₃·e₀₁ - e₃₁·e₀₂ - e₁₂·e₀₃ = 0`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let motor = Motor::<f64>::from_rotation_z(std::f64::consts::FRAC_PI_2);
+    /// assert!(abs_diff_eq!(motor.study_residual(), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn study_residual(&self) -> T {
+        self.s * self.e0123 - self.e23 * self.e01 - self.e31 * self.e02 - self.e12 * self.e03
     }
 }
 

@@ -160,6 +160,43 @@ done
   - Re-export the trait in our prelude so users don't need to import the dependency directly, or
   - Add helper methods that encapsulate the foreign trait usage (preferred when feasible)
 
+#### Field Visibility
+
+**All specialized types use private fields with public accessors** for consistency:
+
+```rust
+pub struct Vector<T: Float> {
+    x: T,  // private
+    y: T,  // private
+    z: T,  // private
+}
+
+impl<T: Float> Vector<T> {
+    // Accessors
+    pub fn x(&self) -> T { self.x }
+    pub fn y(&self) -> T { self.y }
+    pub fn z(&self) -> T { self.z }
+
+    // Constructor
+    pub fn new(x: T, y: T, z: T) -> Self { ... }
+}
+```
+
+**For types with constraints** (Motor, Line), add validated constructors:
+```rust
+impl<T: Float> Motor<T> {
+    pub fn new_unchecked(...) -> Self { ... }               // raw construction
+    pub fn try_from_components(...) -> Result<Self, E> { }  // validated
+    pub fn from_rotation_z(angle: T) -> Self { ... }        // factory (safe)
+}
+```
+
+**Constructor naming conventions:**
+- `new()` - Standard constructor for types without constraints.
+- `new_unchecked()` - Raw construction for constrained types. For internal operations and AD.
+- `try_from_components()` - Validates constraint, returns `Result`.
+- `from_*()` - Factory methods that guarantee validity by construction.
+
 #### Module Structure and Naming
 
 The `specialized` module is organized by algebra type, then dimension:

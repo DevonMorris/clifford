@@ -162,8 +162,8 @@ impl<T: Float> Line<T> {
         let n = self.normal();
         let d = self.e12;
         let (px, py) = p.to_cartesian().unwrap_or((p.e1, p.e2));
-        let numerator = n.x * px + n.y * py + d;
-        let denominator = (n.x * n.x + n.y * n.y).sqrt();
+        let numerator = n.x() * px + n.y() * py + d;
+        let denominator = (n.x() * n.x() + n.y() * n.y()).sqrt();
         if denominator.abs() < T::epsilon() {
             T::zero()
         } else {
@@ -178,14 +178,14 @@ impl<T: Float> Line<T> {
         let d = self.e12;
         let (px, py) = p.to_cartesian().unwrap_or((p.e1, p.e2));
 
-        let norm_sq = n.x * n.x + n.y * n.y;
+        let norm_sq = n.x() * n.x() + n.y() * n.y();
         if norm_sq.abs() < T::epsilon() {
             return *p;
         }
 
         // Projection formula: P' = P - ((a*px + b*py + d)/(a² + b²)) * (a, b)
-        let t = (n.x * px + n.y * py + d) / norm_sq;
-        Point::new(px - t * n.x, py - t * n.y)
+        let t = (n.x() * px + n.y() * py + d) / norm_sq;
+        Point::new(px - t * n.x(), py - t * n.y())
     }
 
     /// Reflects a point across this line.
@@ -228,9 +228,9 @@ impl<T: Float> Line<T> {
         let n1 = self.normal();
         let n2 = other.normal();
 
-        let dot = n1.x * n2.x + n1.y * n2.y;
-        let norm1 = (n1.x * n1.x + n1.y * n1.y).sqrt();
-        let norm2 = (n2.x * n2.x + n2.y * n2.y).sqrt();
+        let dot = n1.x() * n2.x() + n1.y() * n2.y();
+        let norm1 = (n1.x() * n1.x() + n1.y() * n1.y()).sqrt();
+        let norm2 = (n2.x() * n2.x() + n2.y() * n2.y()).sqrt();
 
         let denom = norm1 * norm2;
         if denom < T::epsilon() {
@@ -284,10 +284,10 @@ impl<T: Float> Motor<T> {
         // Sandwich product: M P M̃
         // For efficiency, we compute this directly rather than using generic multivector ops
 
-        let s = self.s;
-        let b12 = self.e12;
-        let b20 = self.e20;
-        let b01 = self.e01;
+        let s = self.s();
+        let b12 = self.e12();
+        let b20 = self.e20();
+        let b01 = self.e01();
 
         let px = p.e1;
         let py = p.e2;
@@ -336,10 +336,10 @@ impl<T: Float> Motor<T> {
         // For lines (bivectors), the sandwich product preserves the bivector grade
         // This is more complex to derive, so we use the general formula
 
-        let s = self.s;
-        let b12 = self.e12;
-        let b20 = self.e20;
-        let b01 = self.e01;
+        let s = self.s();
+        let b12 = self.e12();
+        let b20 = self.e20();
+        let b01 = self.e01();
 
         let l12 = l.e12;
         let l20 = l.e20;
@@ -538,8 +538,8 @@ mod tests {
 
         // Attitude should be the normal direction
         let att = y_axis.attitude();
-        assert!(abs_diff_eq!(att.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -568,7 +568,7 @@ mod tests {
 
         // Normal should be unit length
         let n = unitized.normal();
-        let norm = (n.x * n.x + n.y * n.y).sqrt();
+        let norm = (n.x() * n.x() + n.y() * n.y()).sqrt();
         assert!(abs_diff_eq!(norm, 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
