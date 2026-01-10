@@ -23,7 +23,8 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-7](prd-7-traits.md) | Pending | Trait abstractions for generic algorithms |
 | [PRD-8](prd-8-nalgebra.md) | **Complete** | nalgebra interoperability (feature-gated) |
 | [PRD-9](prd-9-simd.md) | Draft | SIMD and simba integration (feature-gated) |
-| [PRD-10](prd-10-nalgebra-benchmarks.md) | Pending | nalgebra vs clifford benchmarks |
+| [PRD-10](prd-10-nalgebra-benchmarks.md) | **Complete** | nalgebra vs clifford benchmarks |
+| [PRD-11](prd-11-autodiff.md) | Pending | Automatic differentiation via dual numbers |
 
 ## Implementation Order
 
@@ -36,7 +37,8 @@ Implementation plan for the Clifford Geometric Algebra library.
 7. PRD-7: Trait Abstractions (can be done in parallel with PRD-5/6)
 8. ~~PRD-8: nalgebra Interop~~ **Done**
 9. PRD-9: SIMD/simba (can be done anytime, independent of other PRDs)
-10. PRD-10: nalgebra Benchmarks (depends on PRD-8)
+10. ~~PRD-10: nalgebra Benchmarks~~ **Done**
+11. PRD-11: Autodiff via Dual Numbers (independent, can be done anytime)
 
 ## Verification
 
