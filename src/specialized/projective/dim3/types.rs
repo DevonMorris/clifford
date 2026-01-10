@@ -642,3 +642,444 @@ impl<T: Float> UlpsEq for Motor<T> {
             && T::ulps_eq(&self.e0123, &other.e0123, epsilon, max_ulps)
     }
 }
+
+/// A plane in 3D PGA (grade 3 trivector).
+///
+/// In point-based PGA, a plane is represented as a trivector:
+/// `g = nx·e₀₂₃ + ny·e₀₃₁ + nz·e₀₁₂ + d·e₁₂₃`
+///
+/// This represents the implicit plane `nx·x + ny·y + nz·z + d = 0`
+/// where `(nx, ny, nz)` is the normal direction.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::projective::dim3::Plane;
+///
+/// // XY plane (z = 0): normal (0, 0, 1), d = 0
+/// let xy_plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, 0.0);
+///
+/// // Plane z = 5: normal (0, 0, 1), d = -5
+/// let offset_plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Plane<T: Float> {
+    /// Coefficient of e₀₂₃ (x-component of normal).
+    pub e023: T,
+    /// Coefficient of e₀₃₁ (y-component of normal).
+    pub e031: T,
+    /// Coefficient of e₀₁₂ (z-component of normal).
+    pub e012: T,
+    /// Coefficient of e₁₂₃ (signed distance from origin, scaled by normal length).
+    pub e123: T,
+}
+
+impl<T: Float> Plane<T> {
+    /// Creates a plane from trivector coefficients.
+    #[inline]
+    pub fn new(e023: T, e031: T, e012: T, e123: T) -> Self {
+        Self {
+            e023,
+            e031,
+            e012,
+            e123,
+        }
+    }
+
+    /// Creates a plane from normal direction and signed distance.
+    ///
+    /// The plane equation is `nx·x + ny·y + nz·z + d = 0`.
+    ///
+    /// # Arguments
+    ///
+    /// * `nx, ny, nz` - Normal direction (should be unit length for geometric interpretation)
+    /// * `d` - Signed distance parameter (negative of the distance from origin along normal)
+    #[inline]
+    pub fn from_normal_and_distance(nx: T, ny: T, nz: T, d: T) -> Self {
+        Self {
+            e023: nx,
+            e031: ny,
+            e012: nz,
+            e123: d,
+        }
+    }
+
+    /// Creates the XY plane (z = 0).
+    #[inline]
+    pub fn xy() -> Self {
+        Self::from_normal_and_distance(T::zero(), T::zero(), T::one(), T::zero())
+    }
+
+    /// Creates the XZ plane (y = 0).
+    #[inline]
+    pub fn xz() -> Self {
+        Self::from_normal_and_distance(T::zero(), T::one(), T::zero(), T::zero())
+    }
+
+    /// Creates the YZ plane (x = 0).
+    #[inline]
+    pub fn yz() -> Self {
+        Self::from_normal_and_distance(T::one(), T::zero(), T::zero(), T::zero())
+    }
+
+    /// Returns the normal direction `(nx, ny, nz)`.
+    #[inline]
+    pub fn normal(&self) -> (T, T, T) {
+        (self.e023, self.e031, self.e012)
+    }
+
+    /// Returns the signed distance parameter `d`.
+    #[inline]
+    pub fn distance(&self) -> T {
+        self.e123
+    }
+
+    /// Returns the squared norm of the plane's weight (normal direction).
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        self.e023 * self.e023 + self.e031 * self.e031 + self.e012 * self.e012
+    }
+
+    /// Returns the weight norm (length of normal direction).
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
+    }
+
+    /// Returns a unitized plane (unit normal).
+    pub fn unitized(&self) -> Self {
+        let n = self.weight_norm();
+        if n.abs() < T::epsilon() {
+            *self
+        } else {
+            Self {
+                e023: self.e023 / n,
+                e031: self.e031 / n,
+                e012: self.e012 / n,
+                e123: self.e123 / n,
+            }
+        }
+    }
+}
+
+impl<T: Float> Default for Plane<T> {
+    fn default() -> Self {
+        Self::xy()
+    }
+}
+
+/// A flector (improper isometry) in 3D PGA.
+///
+/// Flectors represent orientation-reversing transformations: reflections,
+/// glide reflections, rotoreflections, and inversions. A flector is an
+/// odd-grade element combining a point (grade 1) and plane (grade 3):
+///
+/// `F = (px·e₁ + py·e₂ + pz·e₃ + pw·e₀) + (gx·e₀₂₃ + gy·e₀₃₁ + gz·e₀₁₂ + gw·e₁₂₃)`
+///
+/// The geometric constraint requires the point to lie in the plane.
+///
+/// A flector transforms geometric objects via the sandwich product with sign:
+/// `X' = F X F̃` (note: some conventions use `X' = -F X F̃`)
+///
+/// # Construction
+///
+/// - [`Flector::from_plane`]: Pure reflection through a plane
+/// - [`Flector::from_plane_through_origin`]: Reflection through plane containing origin
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::projective::dim3::{Point, Plane, Flector};
+/// use approx::abs_diff_eq;
+///
+/// // Reflection through the XY plane (z = 0)
+/// let plane = Plane::xy();
+/// let flector = Flector::from_plane(plane);
+///
+/// // Reflect a point above the plane
+/// let p = Point::new(1.0, 2.0, 3.0);
+/// let reflected = flector.transform_point(&p);
+///
+/// // z-coordinate is negated
+/// assert!(abs_diff_eq!(reflected.x(), 1.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(reflected.y(), 2.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(reflected.z(), -3.0, epsilon = 1e-10));
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Flector<T: Float> {
+    // Grade 1 (point) components
+    /// Coefficient of e₁.
+    pub e1: T,
+    /// Coefficient of e₂.
+    pub e2: T,
+    /// Coefficient of e₃.
+    pub e3: T,
+    /// Coefficient of e₀.
+    pub e0: T,
+
+    // Grade 3 (plane) components
+    /// Coefficient of e₀₂₃.
+    pub e023: T,
+    /// Coefficient of e₀₃₁.
+    pub e031: T,
+    /// Coefficient of e₀₁₂.
+    pub e012: T,
+    /// Coefficient of e₁₂₃.
+    pub e123: T,
+}
+
+impl<T: Float> Flector<T> {
+    /// Creates a flector from all components.
+    #[inline]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
+        Self {
+            e1,
+            e2,
+            e3,
+            e0,
+            e023,
+            e031,
+            e012,
+            e123,
+        }
+    }
+
+    /// Creates a pure reflection flector from a plane.
+    ///
+    /// The resulting flector reflects points through the given plane.
+    #[inline]
+    pub fn from_plane(plane: Plane<T>) -> Self {
+        Self {
+            e1: T::zero(),
+            e2: T::zero(),
+            e3: T::zero(),
+            e0: T::zero(),
+            e023: plane.e023,
+            e031: plane.e031,
+            e012: plane.e012,
+            e123: plane.e123,
+        }
+    }
+
+    /// Creates a reflection through a plane passing through the origin.
+    ///
+    /// # Arguments
+    ///
+    /// * `nx, ny, nz` - Unit normal of the reflection plane
+    #[inline]
+    pub fn from_plane_through_origin(nx: T, ny: T, nz: T) -> Self {
+        Self::from_plane(Plane::from_normal_and_distance(nx, ny, nz, T::zero()))
+    }
+
+    /// Creates a reflection through the XY plane (z = 0).
+    #[inline]
+    pub fn reflect_xy() -> Self {
+        Self::from_plane(Plane::xy())
+    }
+
+    /// Creates a reflection through the XZ plane (y = 0).
+    #[inline]
+    pub fn reflect_xz() -> Self {
+        Self::from_plane(Plane::xz())
+    }
+
+    /// Creates a reflection through the YZ plane (x = 0).
+    #[inline]
+    pub fn reflect_yz() -> Self {
+        Self::from_plane(Plane::yz())
+    }
+
+    /// Returns the reverse of the flector: `F̃`.
+    ///
+    /// For odd-grade elements, the reverse negates grade-3 parts.
+    /// Grade 1 is unchanged, grade 3 is negated.
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self {
+            e1: self.e1,
+            e2: self.e2,
+            e3: self.e3,
+            e0: self.e0,
+            e023: -self.e023,
+            e031: -self.e031,
+            e012: -self.e012,
+            e123: -self.e123,
+        }
+    }
+
+    /// Returns the point (grade 1) part of the flector.
+    #[inline]
+    pub fn point_part(&self) -> Point<T> {
+        Point::from_homogeneous(self.e1, self.e2, self.e3, self.e0)
+    }
+
+    /// Returns the plane (grade 3) part of the flector.
+    #[inline]
+    pub fn plane_part(&self) -> Plane<T> {
+        Plane::new(self.e023, self.e031, self.e012, self.e123)
+    }
+
+    /// Returns true if this is a pure plane reflection (no point component).
+    #[inline]
+    pub fn is_pure_reflection(&self, epsilon: T) -> bool {
+        self.e1.abs() < epsilon
+            && self.e2.abs() < epsilon
+            && self.e3.abs() < epsilon
+            && self.e0.abs() < epsilon
+    }
+
+    /// Returns the weight norm squared of the flector.
+    ///
+    /// For a unitized flector, this equals 1.
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        // Weight norm² = g_x² + g_y² + g_z² + p_w²
+        self.e023 * self.e023 + self.e031 * self.e031 + self.e012 * self.e012 + self.e0 * self.e0
+    }
+
+    /// Returns the weight norm.
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
+    }
+
+    /// Returns a unitized flector (weight norm = 1).
+    pub fn unitized(&self) -> Self {
+        let n = self.weight_norm();
+        if n.abs() < T::epsilon() {
+            *self
+        } else {
+            Self {
+                e1: self.e1 / n,
+                e2: self.e2 / n,
+                e3: self.e3 / n,
+                e0: self.e0 / n,
+                e023: self.e023 / n,
+                e031: self.e031 / n,
+                e012: self.e012 / n,
+                e123: self.e123 / n,
+            }
+        }
+    }
+}
+
+impl<T: Float> Default for Flector<T> {
+    fn default() -> Self {
+        Self::reflect_xy()
+    }
+}
+
+// ============================================================================
+// Plane approx trait implementations
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Plane<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.e023, &other.e023, epsilon)
+            && T::abs_diff_eq(&self.e031, &other.e031, epsilon)
+            && T::abs_diff_eq(&self.e012, &other.e012, epsilon)
+            && T::abs_diff_eq(&self.e123, &other.e123, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Plane<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.e023, &other.e023, epsilon, max_relative)
+            && T::relative_eq(&self.e031, &other.e031, epsilon, max_relative)
+            && T::relative_eq(&self.e012, &other.e012, epsilon, max_relative)
+            && T::relative_eq(&self.e123, &other.e123, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Plane<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.e023, &other.e023, epsilon, max_ulps)
+            && T::ulps_eq(&self.e031, &other.e031, epsilon, max_ulps)
+            && T::ulps_eq(&self.e012, &other.e012, epsilon, max_ulps)
+            && T::ulps_eq(&self.e123, &other.e123, epsilon, max_ulps)
+    }
+}
+
+// ============================================================================
+// Flector approx trait implementations
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Flector<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.e1, &other.e1, epsilon)
+            && T::abs_diff_eq(&self.e2, &other.e2, epsilon)
+            && T::abs_diff_eq(&self.e3, &other.e3, epsilon)
+            && T::abs_diff_eq(&self.e0, &other.e0, epsilon)
+            && T::abs_diff_eq(&self.e023, &other.e023, epsilon)
+            && T::abs_diff_eq(&self.e031, &other.e031, epsilon)
+            && T::abs_diff_eq(&self.e012, &other.e012, epsilon)
+            && T::abs_diff_eq(&self.e123, &other.e123, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Flector<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.e1, &other.e1, epsilon, max_relative)
+            && T::relative_eq(&self.e2, &other.e2, epsilon, max_relative)
+            && T::relative_eq(&self.e3, &other.e3, epsilon, max_relative)
+            && T::relative_eq(&self.e0, &other.e0, epsilon, max_relative)
+            && T::relative_eq(&self.e023, &other.e023, epsilon, max_relative)
+            && T::relative_eq(&self.e031, &other.e031, epsilon, max_relative)
+            && T::relative_eq(&self.e012, &other.e012, epsilon, max_relative)
+            && T::relative_eq(&self.e123, &other.e123, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Flector<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.e1, &other.e1, epsilon, max_ulps)
+            && T::ulps_eq(&self.e2, &other.e2, epsilon, max_ulps)
+            && T::ulps_eq(&self.e3, &other.e3, epsilon, max_ulps)
+            && T::ulps_eq(&self.e0, &other.e0, epsilon, max_ulps)
+            && T::ulps_eq(&self.e023, &other.e023, epsilon, max_ulps)
+            && T::ulps_eq(&self.e031, &other.e031, epsilon, max_ulps)
+            && T::ulps_eq(&self.e012, &other.e012, epsilon, max_ulps)
+            && T::ulps_eq(&self.e123, &other.e123, epsilon, max_ulps)
+    }
+}

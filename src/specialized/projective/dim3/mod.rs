@@ -10,8 +10,9 @@
 //! |-------|------|------------|-------------------|
 //! | 1 | [`Point`] | e₁, e₂, e₃, e₀ | Point (homogeneous) |
 //! | 2 | Line | 6 components | Line (Plücker coords) |
-//! | 3 | Plane | 4 components | Plane |
-//! | 0+2+4 | [`Motor`] | 8 components | Rigid transformation |
+//! | 3 | [`Plane`] | 4 components | Plane |
+//! | 0+2+4 | [`Motor`] | 8 components | Rigid transformation (proper isometry) |
+//! | 1+3 | [`Flector`] | 8 components | Reflection (improper isometry) |
 //!
 //! # Homogeneous Coordinates
 //!
@@ -61,4 +62,11 @@ pub mod arbitrary;
 ))]
 mod nalgebra;
 
-pub use types::{Motor, Point};
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
+
+pub use types::{Flector, Motor, Plane, Point};

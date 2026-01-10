@@ -5,10 +5,11 @@
 //! - [`Motor`] ↔ [`nalgebra::Isometry3`]
 //! - [`Motor`] ↔ [`nalgebra::UnitQuaternion`] (rotation only)
 //! - [`Motor`] ↔ [`nalgebra::Rotation3`] (rotation only)
+//! - [`Flector`] ↔ [`nalgebra::Reflection`] (pure plane reflection only)
 
 use crate::scalar::Float;
 
-use super::types::{Motor, Point};
+use super::types::{Flector, Motor, Plane, Point};
 
 #[cfg(feature = "nalgebra-0_32")]
 use nalgebra_0_32 as na;
@@ -191,6 +192,89 @@ where
 }
 
 // ============================================================================
+// Flector <-> Reflection
+// ============================================================================
+
+/// Type alias for nalgebra 3D Reflection with owned (array) storage.
+///
+/// This is the most common type of 3D reflection in nalgebra, using stack-allocated storage.
+pub type Reflection3<T> = na::Reflection<T, na::Const<3>, na::ArrayStorage<T, 3, 1>>;
+
+impl<T, S> From<na::Reflection<T, na::Const<3>, S>> for Flector<T>
+where
+    T: Float + na::RealField,
+    S: na::Storage<T, na::Const<3>>,
+{
+    /// Converts a nalgebra [`Reflection`](na::Reflection) to a PGA [`Flector`].
+    ///
+    /// The nalgebra Reflection represents a pure plane reflection with:
+    /// - `axis()`: unit normal vector of the reflection plane
+    /// - `bias()`: signed distance from origin to plane along the normal
+    ///
+    /// # Convention
+    ///
+    /// nalgebra's reflection plane equation: `n · x = bias`
+    /// PGA's plane equation: `nx·x + ny·y + nz·z + d = 0`
+    ///
+    /// So `d = -bias` when converting.
+    fn from(refl: na::Reflection<T, na::Const<3>, S>) -> Self {
+        let axis = refl.axis();
+        let bias = refl.bias();
+
+        // Create a pure plane reflection flector
+        // nalgebra uses n · x = bias, PGA uses n · x + d = 0, so d = -bias
+        Flector::from_plane(Plane::from_normal_and_distance(
+            axis[0], axis[1], axis[2], -bias,
+        ))
+    }
+}
+
+impl<T> TryFrom<Flector<T>> for Reflection3<T>
+where
+    T: Float + na::RealField,
+{
+    type Error = FlectorConversionError;
+
+    /// Tries to convert a PGA [`Flector`] to a nalgebra [`Reflection`](na::Reflection).
+    ///
+    /// Returns an error if the flector is not a pure plane reflection
+    /// (has non-zero point component).
+    ///
+    /// # Errors
+    ///
+    /// - [`FlectorConversionError::NotPureReflection`]: The flector has a
+    ///   non-zero point component
+    /// - [`FlectorConversionError::DegeneratePlane`]: The plane normal has zero length
+    fn try_from(f: Flector<T>) -> Result<Self, Self::Error> {
+        // Check if this is a pure plane reflection
+        if !f.is_pure_reflection(T::epsilon()) {
+            return Err(FlectorConversionError::NotPureReflection);
+        }
+
+        let plane = f.plane_part();
+        let weight_norm = plane.weight_norm();
+
+        if weight_norm < T::epsilon() {
+            return Err(FlectorConversionError::DegeneratePlane);
+        }
+
+        // Unitize the plane
+        let unitized = plane.unitized();
+        let (nx, ny, nz) = unitized.normal();
+        let d = unitized.distance();
+
+        // Create axis as unit vector
+        let axis = na::Unit::new_unchecked(na::Vector3::new(nx, ny, nz));
+
+        // Find a point on the plane: for plane n·x + d = 0, the point P = -d*n lies on it
+        // since n·(-d*n) = -d*|n|² = -d (when |n|=1), and -d + d = 0 ✓
+        let point_on_plane = na::Point3::new(-d * nx, -d * ny, -d * nz);
+
+        Ok(na::Reflection::new_containing_point(axis, &point_on_plane))
+    }
+}
+
+// ============================================================================
 // Error types
 // ============================================================================
 
@@ -210,6 +294,28 @@ impl core::fmt::Display for PointConversionError {
 }
 
 impl std::error::Error for PointConversionError {}
+
+/// Error type for flector conversions to nalgebra types.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FlectorConversionError {
+    /// The flector is not a pure plane reflection (has non-zero point component).
+    NotPureReflection,
+    /// The reflection plane has zero-length normal.
+    DegeneratePlane,
+}
+
+impl core::fmt::Display for FlectorConversionError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NotPureReflection => {
+                write!(f, "flector is not a pure plane reflection")
+            }
+            Self::DegeneratePlane => write!(f, "reflection plane has zero-length normal"),
+        }
+    }
+}
+
+impl std::error::Error for FlectorConversionError {}
 
 #[cfg(test)]
 mod tests {
@@ -913,5 +1019,150 @@ mod tests {
         assert!(abs_diff_eq!(motor.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(motor.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(motor.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Flector <-> Reflection conversion tests
+    // ========================================================================
+
+    #[test]
+    fn reflection_to_flector_xy_plane() {
+        // XY plane at z=0: normal (0,0,1), bias = 0
+        let axis = na::Unit::new_normalize(na::Vector3::new(0.0, 0.0, 1.0));
+        let na_refl = na::Reflection::new_containing_point(axis, &na::Point3::origin());
+
+        let flector: Flector<f64> = na_refl.into();
+
+        // Should be a pure plane reflection through XY plane
+        assert!(flector.is_pure_reflection(ABS_DIFF_EQ_EPS));
+        let plane = flector.plane_part();
+        assert!(abs_diff_eq!(plane.e023, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // nx
+        assert!(abs_diff_eq!(plane.e031, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // ny
+        assert!(abs_diff_eq!(plane.e012, 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
+        assert!(abs_diff_eq!(plane.e123, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+    }
+
+    #[test]
+    fn reflection_to_flector_offset_plane() {
+        // Plane z = 5: normal (0,0,1), contains point (0,0,5)
+        let axis = na::Unit::new_normalize(na::Vector3::new(0.0, 0.0, 1.0));
+        let na_refl = na::Reflection::new_containing_point(axis, &na::Point3::new(0.0, 0.0, 5.0));
+
+        let flector: Flector<f64> = na_refl.into();
+
+        // Should be a pure plane reflection
+        assert!(flector.is_pure_reflection(ABS_DIFF_EQ_EPS));
+        let plane = flector.plane_part();
+        // PGA plane: nz = 1, d = -5 (since n·x + d = 0 means z - 5 = 0)
+        assert!(abs_diff_eq!(plane.e012, 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
+        assert!(abs_diff_eq!(plane.e123, -5.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+    }
+
+    #[test]
+    fn flector_to_reflection_xy_plane() {
+        let flector = Flector::reflect_xy();
+        let na_refl: Reflection3<f64> = flector.try_into().unwrap();
+
+        // Should have axis (0, 0, 1) and bias 0
+        let axis = na_refl.axis();
+        assert!(abs_diff_eq!(axis[0], 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(axis[1], 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(axis[2], 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(na_refl.bias(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn flector_to_reflection_offset_plane() {
+        // Plane z = 5: nx·x + ny·y + nz·z + d = 0 => z - 5 = 0 => d = -5
+        let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
+        let flector = Flector::from_plane(plane);
+        let na_refl: Reflection3<f64> = flector.try_into().unwrap();
+
+        // nalgebra bias = n·P where P is on plane, so bias = 5
+        let axis = na_refl.axis();
+        assert!(abs_diff_eq!(axis[0], 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(axis[1], 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(axis[2], 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(na_refl.bias(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn non_pure_flector_conversion_fails() {
+        // Create a flector with non-zero point component (not a pure reflection)
+        let flector = Flector::new(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        let result: Result<Reflection3<f64>, _> = flector.try_into();
+        assert!(matches!(
+            result,
+            Err(FlectorConversionError::NotPureReflection)
+        ));
+    }
+
+    proptest! {
+        /// Tests that Flector -> Reflection -> Flector roundtrip preserves behavior.
+        #[test]
+        fn flector_reflection_roundtrip(
+            nx in -1.0f64..1.0, ny in -1.0f64..1.0, nz in -1.0f64..1.0,
+            d in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize to get unit normal (skip degenerate cases)
+            let len = (nx * nx + ny * ny + nz * nz).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let (nx, ny, nz) = (nx / len, ny / len, nz / len);
+
+            let plane = Plane::from_normal_and_distance(nx, ny, nz, d);
+            let flector = Flector::from_plane(plane);
+
+            let na_refl: Reflection3<f64> = flector.try_into().unwrap();
+            let back: Flector<f64> = na_refl.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py, pz);
+            let result_orig = flector.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Flector reflection matches nalgebra Reflection.
+        #[test]
+        fn flector_matches_nalgebra_reflection(
+            nx in -1.0f64..1.0, ny in -1.0f64..1.0, nz in -1.0f64..1.0,
+            d in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize to get unit normal (skip degenerate cases)
+            let len = (nx * nx + ny * ny + nz * nz).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let (nx, ny, nz) = (nx / len, ny / len, nz / len);
+
+            // Create PGA flector
+            let plane = Plane::from_normal_and_distance(nx, ny, nz, d);
+            let flector = Flector::from_plane(plane);
+
+            // Create nalgebra reflection
+            let axis = na::Unit::new_unchecked(na::Vector3::new(nx, ny, nz));
+            // Point on plane: P = -d * n (since n·P + d = 0 => n·(-d*n) + d = -d + d = 0)
+            let point_on_plane = na::Point3::new(-d * nx, -d * ny, -d * nz);
+            let na_refl = na::Reflection::new_containing_point(axis, &point_on_plane);
+
+            // Transform with PGA
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = flector.transform_point(&pga_point);
+
+            // Transform with nalgebra
+            let mut na_vec = na::Vector3::new(px, py, pz);
+            na_refl.reflect(&mut na_vec);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_vec.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_vec.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_vec.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
     }
 }
