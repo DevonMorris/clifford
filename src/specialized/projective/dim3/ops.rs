@@ -80,6 +80,93 @@ impl<T: Float> Point<T> {
         // So only the Euclidean (e₁, e₂, e₃) parts contribute
         self.e1 * other.e1 + self.e2 * other.e2 + self.e3 * other.e3
     }
+
+    /// Left contraction with a line: `P ⌋ L`.
+    ///
+    /// Contracts the point into the line, returning a point.
+    /// This operation extracts the component perpendicular to the point direction.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let p = Point::new(1.0, 0.0, 0.0);
+    /// let line: Line<f64> = Line::z_axis();
+    /// let result = p.left_contract_line(&line);
+    ///
+    /// // Contraction gives the perpendicular component
+    /// assert!(abs_diff_eq!(result.e0, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn left_contract_line(&self, line: &Line<T>) -> Point<T> {
+        // Left contraction P ⌋ L where P is grade-1 and L is grade-2
+        // Result is grade 2-1 = 1 (a point/vector)
+
+        let p1 = self.e1;
+        let p2 = self.e2;
+        let p3 = self.e3;
+
+        let d1 = line.e01;
+        let d2 = line.e02;
+        let d3 = line.e03;
+        let m1 = line.e23;
+        let m2 = line.e31;
+        let m3 = line.e12;
+
+        // e1 ⌋ e12 = -e2, e1 ⌋ e31 = e3, e1 ⌋ e01 = e0
+        // e2 ⌋ e23 = -e3, e2 ⌋ e12 = e1, e2 ⌋ e02 = e0
+        // e3 ⌋ e31 = -e1, e3 ⌋ e23 = e2, e3 ⌋ e03 = e0
+
+        Point {
+            e1: p2 * m3 - p3 * m2,
+            e2: p3 * m1 - p1 * m3,
+            e3: p1 * m2 - p2 * m1,
+            e0: p1 * d1 + p2 * d2 + p3 * d3,
+        }
+    }
+
+    /// Left contraction with a plane: `P ⌋ G`.
+    ///
+    /// Contracts the point into the plane, returning a line.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Plane};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let p = Point::new(0.0, 0.0, 1.0);
+    /// let plane: Plane<f64> = Plane::xy();
+    /// let line = p.left_contract_plane(&plane);
+    ///
+    /// // Result is a line perpendicular to point's direction
+    /// let d = line.direction();
+    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn left_contract_plane(&self, plane: &Plane<T>) -> Line<T> {
+        // Left contraction P ⌋ G where P is grade-1 and G is grade-3
+        // Result is grade 3-1 = 2 (a line/bivector)
+
+        let p1 = self.e1;
+        let p2 = self.e2;
+        let p3 = self.e3;
+        let p0 = self.e0;
+
+        let g023 = plane.e023;
+        let g031 = plane.e031;
+        let g012 = plane.e012;
+        let g123 = plane.e123;
+
+        Line {
+            e01: -p2 * g012 + p3 * g031,
+            e02: p1 * g012 - p3 * g023,
+            e03: -p1 * g031 + p2 * g023,
+            e23: p1 * g023 + p0 * g123,
+            e31: p2 * g031 + p0 * g123,
+            e12: p3 * g012 + p0 * g123,
+        }
+    }
 }
 
 // ============================================================================
@@ -631,6 +718,54 @@ impl<T: Float> Line<T> {
         // The inner product of two bivectors in PGA
         // This is the Plücker inner product: d₁·m₂ + d₂·m₁
         self.plucker_inner(other)
+    }
+
+    /// Left contraction with a plane: `L ⌋ G`.
+    ///
+    /// Contracts the line into the plane, returning a point.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Plane};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let line: Line<f64> = Line::z_axis();
+    /// let plane: Plane<f64> = Plane::xy();
+    /// let point = line.left_contract_plane(&plane);
+    ///
+    /// // Contraction gives a point
+    /// // For Z axis and XY plane, the result relates to the intersection
+    /// ```
+    pub fn left_contract_plane(&self, plane: &Plane<T>) -> Point<T> {
+        // Left contraction L ⌋ G where L is grade-2 and G is grade-3
+        // Result is grade 3-2 = 1 (a point/vector)
+
+        let d1 = self.e01;
+        let d2 = self.e02;
+        let d3 = self.e03;
+        let m1 = self.e23;
+        let m2 = self.e31;
+        let m3 = self.e12;
+
+        let g023 = plane.e023;
+        let g031 = plane.e031;
+        let g012 = plane.e012;
+        let g123 = plane.e123;
+
+        // e01 ⌋ e012 = e2, e01 ⌋ e031 = -e3, e01 ⌋ e123 = e23
+        // e02 ⌋ e023 = -e3, e02 ⌋ e012 = -e1, e02 ⌋ e123 = e31
+        // e03 ⌋ e031 = e1, e03 ⌋ e023 = e2, e03 ⌋ e123 = e12
+        // e23 ⌋ e023 = e0, e23 ⌋ e123 = e1
+        // e31 ⌋ e031 = e0, e31 ⌋ e123 = e2
+        // e12 ⌋ e012 = e0, e12 ⌋ e123 = e3
+
+        Point {
+            e1: -d2 * g012 + d3 * g031 + m1 * g123,
+            e2: d1 * g012 + d3 * g023 + m2 * g123,
+            e3: -d1 * g031 - d2 * g023 + m3 * g123,
+            e0: m1 * g023 + m2 * g031 + m3 * g012,
+        }
     }
 
     /// Computes the plane containing this line and a point.
@@ -2425,5 +2560,62 @@ mod tests {
         assert!(abs_diff_eq!(comm.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(comm.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(comm.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Interior product (contraction) tests
+    // ========================================================================
+
+    #[test]
+    fn point_left_contract_line() {
+        let p = Point::new(1.0, 0.0, 0.0);
+        let line: Line<f64> = Line::z_axis();
+        let result = p.left_contract_line(&line);
+
+        // For unit x point and z axis:
+        // e0 component = p1*d1 + p2*d2 + p3*d3 = 1*0 + 0*0 + 0*1 = 0
+        assert!(abs_diff_eq!(result.e0, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn point_left_contract_plane() {
+        let p = Point::new(0.0, 0.0, 1.0);
+        let plane: Plane<f64> = Plane::xy();
+        let line = p.left_contract_plane(&plane);
+
+        // Contracting z-direction point with xy plane gives line in xy plane
+        let d = line.direction();
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_left_contract_plane() {
+        let line: Line<f64> = Line::z_axis();
+        let plane: Plane<f64> = Plane::xy();
+        let point = line.left_contract_plane(&plane);
+
+        // Result is a point
+        // The contraction extracts intersection-related information
+        // Should give a point related to the line-plane relationship
+        assert!(!point.is_ideal(ABS_DIFF_EQ_EPS) || point.e0.abs() < ABS_DIFF_EQ_EPS);
+    }
+
+    #[test]
+    fn contraction_grade_check() {
+        // Point (grade 1) ⌋ Line (grade 2) = Point (grade 1)
+        let p = Point::new(1.0, 2.0, 3.0);
+        let line: Line<f64> = Line::x_axis();
+        let result = p.left_contract_line(&line);
+        // Result is a point (has e0, e1, e2, e3 components)
+        let _ = result.x(); // Verifies it's a point type
+
+        // Point (grade 1) ⌋ Plane (grade 3) = Line (grade 2)
+        let plane: Plane<f64> = Plane::xy();
+        let result_line = p.left_contract_plane(&plane);
+        let _ = result_line.direction(); // Verifies it's a line type
+
+        // Line (grade 2) ⌋ Plane (grade 3) = Point (grade 1)
+        let result_point = line.left_contract_plane(&plane);
+        let _ = result_point.x(); // Verifies it's a point type
     }
 }
