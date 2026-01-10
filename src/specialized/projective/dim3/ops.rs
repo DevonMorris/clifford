@@ -348,6 +348,91 @@ impl<T: Float> Line<T> {
         (nx * nx + ny * ny + nz * nz).sqrt() / (d_norm * pw.abs())
     }
 
+    /// Computes the perpendicular distance between two lines.
+    ///
+    /// For skew lines, returns the shortest distance between them.
+    /// For intersecting lines, returns 0.
+    /// For parallel lines, returns the constant perpendicular distance.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Point};
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Z axis and a parallel line at (3, 4, 0)
+    /// let z_axis: Line<f64> = Line::z_axis();
+    /// let parallel = Line::from_point_and_direction(
+    ///     &Point::new(3.0, 4.0, 0.0),
+    ///     &Vector::new(0.0, 0.0, 1.0),
+    /// );
+    ///
+    /// // Distance should be 5 (sqrt(3² + 4²))
+    /// assert!(abs_diff_eq!(z_axis.distance(&parallel), 5.0, epsilon = 1e-10));
+    ///
+    /// // Intersecting lines have distance 0
+    /// let x_axis: Line<f64> = Line::x_axis();
+    /// let y_axis: Line<f64> = Line::y_axis();
+    /// assert!(abs_diff_eq!(x_axis.distance(&y_axis), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn distance(&self, other: &Line<T>) -> T {
+        let d1 = self.direction();
+        let d2 = other.direction();
+
+        // Cross product of directions
+        let cross_x = d1.y * d2.z - d1.z * d2.y;
+        let cross_y = d1.z * d2.x - d1.x * d2.z;
+        let cross_z = d1.x * d2.y - d1.y * d2.x;
+        let cross_norm = (cross_x * cross_x + cross_y * cross_y + cross_z * cross_z).sqrt();
+
+        if cross_norm < T::epsilon() {
+            // Lines are parallel - compute distance using closest point approach
+            // Get a point on each line and compute perpendicular distance
+            let m1 = self.moment();
+            let m2 = other.moment();
+            let d1_sq = d1.x * d1.x + d1.y * d1.y + d1.z * d1.z;
+
+            if d1_sq < T::epsilon() {
+                return T::zero();
+            }
+
+            // Point on line 1: d1 × m1 / |d1|²
+            let p1_x = (d1.y * m1.z - d1.z * m1.y) / d1_sq;
+            let p1_y = (d1.z * m1.x - d1.x * m1.z) / d1_sq;
+            let p1_z = (d1.x * m1.y - d1.y * m1.x) / d1_sq;
+
+            // Point on line 2: d2 × m2 / |d2|²
+            let d2_sq = d2.x * d2.x + d2.y * d2.y + d2.z * d2.z;
+            if d2_sq < T::epsilon() {
+                return T::zero();
+            }
+            let p2_x = (d2.y * m2.z - d2.z * m2.y) / d2_sq;
+            let p2_y = (d2.z * m2.x - d2.x * m2.z) / d2_sq;
+            let p2_z = (d2.x * m2.y - d2.y * m2.x) / d2_sq;
+
+            // Vector between points
+            let v_x = p2_x - p1_x;
+            let v_y = p2_y - p1_y;
+            let v_z = p2_z - p1_z;
+
+            // Project onto perpendicular direction (perpendicular to d1)
+            // For parallel lines, we need the component perpendicular to d1
+            let proj = (v_x * d1.x + v_y * d1.y + v_z * d1.z) / d1_sq;
+            let perp_x = v_x - proj * d1.x;
+            let perp_y = v_y - proj * d1.y;
+            let perp_z = v_z - proj * d1.z;
+
+            (perp_x * perp_x + perp_y * perp_y + perp_z * perp_z).sqrt()
+        } else {
+            // Skew or intersecting lines
+            // Distance = |d1·m2 + d2·m1| / |d1×d2|
+            let plucker = self.plucker_inner(other);
+            plucker.abs() / cross_norm
+        }
+    }
+
     /// Computes the angle between two lines.
     ///
     /// Returns the acute angle in radians, in the range `[0, π/2]`.
@@ -1484,6 +1569,87 @@ mod tests {
         assert!(abs_diff_eq!(
             xy_plane.angle_to_line(&x_axis),
             0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    // ========================================================================
+    // Line-Line distance tests
+    // ========================================================================
+
+    #[test]
+    fn line_distance_intersecting() {
+        // X axis and Y axis intersect at origin
+        let x_axis: Line<f64> = Line::x_axis();
+        let y_axis: Line<f64> = Line::y_axis();
+        assert!(abs_diff_eq!(
+            x_axis.distance(&y_axis),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_distance_parallel() {
+        // Z axis and a parallel line at (3, 4, 0)
+        let z_axis: Line<f64> = Line::z_axis();
+        let parallel = Line::from_point_and_direction(
+            &Point::new(3.0, 4.0, 0.0),
+            &EuclideanVector::new(0.0, 0.0, 1.0),
+        );
+        // Distance should be 5 (sqrt(3² + 4²))
+        assert!(abs_diff_eq!(
+            z_axis.distance(&parallel),
+            5.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_distance_skew() {
+        // Z axis and a line in Y direction at (1, 0, 0)
+        let z_axis: Line<f64> = Line::z_axis();
+        let skew = Line::from_point_and_direction(
+            &Point::new(1.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 1.0, 0.0),
+        );
+        // Distance should be 1 (perpendicular distance between skew lines)
+        assert!(abs_diff_eq!(
+            z_axis.distance(&skew),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_distance_symmetric() {
+        // Distance should be symmetric
+        let z_axis: Line<f64> = Line::z_axis();
+        let skew = Line::from_point_and_direction(
+            &Point::new(2.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 1.0, 0.0),
+        );
+        assert!(abs_diff_eq!(
+            z_axis.distance(&skew),
+            skew.distance(&z_axis),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_distance_skew_diagonal() {
+        // Two skew lines at 45 degrees
+        // Line 1: through origin, direction (1, 0, 0)
+        let line1: Line<f64> = Line::x_axis();
+        // Line 2: through (0, 0, 1), direction (0, 1, 0)
+        let line2 = Line::from_point_and_direction(
+            &Point::new(0.0, 0.0, 1.0),
+            &EuclideanVector::new(0.0, 1.0, 0.0),
+        );
+        // Distance between these skew lines is 1 (the z separation)
+        assert!(abs_diff_eq!(
+            line1.distance(&line2),
+            1.0,
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
