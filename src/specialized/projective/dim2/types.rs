@@ -1,4 +1,11 @@
 //! Type definitions for 2D Projective Geometric Algebra.
+//!
+//! # Convention Choices
+//!
+//! - **Basis ordering**: e₁, e₂, e₀ (Euclidean first, null last)
+//! - **Motor composition**: `a.compose(&b)` applies `a` first, then `b`
+//! - **nalgebra correspondence**: `iso1 * iso2` applies `iso2` first, then `iso1`,
+//!   so `motor2.compose(&motor1)` ≡ `iso1 * iso2`
 
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
