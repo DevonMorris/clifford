@@ -13,6 +13,8 @@ use crate::algebra::Multivector;
 use crate::basis::Blade;
 use crate::scalar::Float;
 use crate::signature::Projective3;
+use crate::specialized::euclidean::dim3::Bivector as EuclideanBivector;
+use crate::specialized::euclidean::dim3::Rotor as EuclideanRotor;
 use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
 use super::types::{Motor, Point};
@@ -280,6 +282,102 @@ impl<T: Float> TryFrom<Point<T>> for EuclideanVector<T> {
             return Err(ConversionError::IdealPoint);
         }
         Ok(EuclideanVector::new(p.e1 / p.e0, p.e2 / p.e0, p.e3 / p.e0))
+    }
+}
+
+impl<T: Float> From<EuclideanRotor<T>> for Motor<T> {
+    /// Converts a Euclidean 3D rotor to a pure rotation motor.
+    ///
+    /// The resulting motor has no translation component.
+    ///
+    /// # Mapping
+    ///
+    /// The Euclidean bivector components map to PGA motor bivectors:
+    /// - `rotor.s` → `motor.s` (scalar)
+    /// - `rotor.b.xy` → `motor.e12` (xy-plane rotation)
+    /// - `rotor.b.xz` → `-motor.e31` (xz-plane, sign due to e₁₃ = -e₃₁)
+    /// - `rotor.b.yz` → `motor.e23` (yz-plane rotation)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor};
+    /// use clifford::specialized::projective::dim3::{Motor, Point};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Create a 90° rotation around Z axis
+    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let motor: Motor<f64> = rotor.into();
+    ///
+    /// // Transform a point
+    /// let p = Point::new(1.0, 0.0, 0.0);
+    /// let rotated = motor.transform_point(&p);
+    ///
+    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.z(), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    fn from(r: EuclideanRotor<T>) -> Self {
+        // Mapping: xy -> e12, xz -> -e31 (sign!), yz -> e23
+        Motor::new(
+            r.s,
+            r.b.yz,    // e23: yz-plane rotation
+            -r.b.xz,   // e31: note sign flip (e13 = -e31)
+            r.b.xy,    // e12: xy-plane rotation
+            T::zero(), // e01: no translation
+            T::zero(), // e02: no translation
+            T::zero(), // e03: no translation
+            T::zero(), // e0123: no pseudoscalar
+        )
+    }
+}
+
+impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
+    /// Extracts the rotation part of a motor as a Euclidean rotor.
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is discarded.
+    /// The result is normalized to ensure a valid unit rotor.
+    ///
+    /// # Mapping
+    ///
+    /// - `motor.s` → `rotor.s`
+    /// - `motor.e12` → `rotor.b.xy`
+    /// - `-motor.e31` → `rotor.b.xz` (sign due to e₃₁ = -e₁₃)
+    /// - `motor.e23` → `rotor.b.yz`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
+    /// use clifford::specialized::projective::dim3::Motor;
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Create a motor with rotation and translation
+    /// let rotation = Motor::from_rotation_z(FRAC_PI_2);
+    /// let translation = Motor::from_translation(1.0, 2.0, 3.0);
+    /// let motor = rotation.compose(&translation);
+    ///
+    /// // Extract just the rotation
+    /// let rotor: Rotor<f64> = motor.into();
+    ///
+    /// // The rotor should perform the same rotation
+    /// let v = Vector::new(1.0, 0.0, 0.0);
+    /// let rotated = rotor.rotate(v);
+    ///
+    /// assert!(abs_diff_eq!(rotated.x, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.z, 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    fn from(m: Motor<T>) -> Self {
+        // Inverse mapping: e12 -> xy, -e31 -> xz, e23 -> yz
+        let b = EuclideanBivector::new(m.e12, -m.e31, m.e23);
+        EuclideanRotor::new(m.s, b).normalized()
     }
 }
 

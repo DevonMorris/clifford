@@ -13,6 +13,7 @@ use crate::algebra::Multivector;
 use crate::basis::Blade;
 use crate::scalar::Float;
 use crate::signature::Projective2;
+use crate::specialized::euclidean::dim2::Rotor as EuclideanRotor;
 use crate::specialized::euclidean::dim2::Vector as EuclideanVector;
 
 use super::types::{Line, Motor, Point};
@@ -241,6 +242,88 @@ impl<T: Float> TryFrom<Point<T>> for EuclideanVector<T> {
             return Err(ConversionError::IdealPoint);
         }
         Ok(EuclideanVector::new(p.e1 / p.e0, p.e2 / p.e0))
+    }
+}
+
+impl<T: Float> From<EuclideanRotor<T>> for Motor<T> {
+    /// Converts a Euclidean 2D rotor to a pure rotation motor.
+    ///
+    /// The resulting motor has no translation component.
+    ///
+    /// # Mapping
+    ///
+    /// - `rotor.s` → `motor.s` (scalar, cos(θ/2))
+    /// - `rotor.xy` → `motor.e12` (rotation bivector, sin(θ/2))
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim2::Rotor;
+    /// use clifford::specialized::projective::dim2::{Motor, Point};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Create a 90° rotation rotor
+    /// let rotor = Rotor::from_angle(FRAC_PI_2);
+    /// let motor: Motor<f64> = rotor.into();
+    ///
+    /// // Transform a point
+    /// let p = Point::new(1.0, 0.0);
+    /// let rotated = motor.transform_point(&p);
+    ///
+    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    fn from(r: EuclideanRotor<T>) -> Self {
+        Motor {
+            s: r.s,
+            e12: r.xy,
+            e20: T::zero(),
+            e01: T::zero(),
+        }
+    }
+}
+
+impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
+    /// Extracts the rotation part of a motor as a Euclidean rotor.
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is discarded.
+    /// The result is normalized to ensure a valid unit rotor.
+    ///
+    /// # Mapping
+    ///
+    /// - `motor.s` → `rotor.s`
+    /// - `motor.e12` → `rotor.xy`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
+    /// use clifford::specialized::projective::dim2::Motor;
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Create a motor with rotation and translation
+    /// let rotation = Motor::from_rotation(FRAC_PI_2);
+    /// let translation = Motor::from_translation(1.0, 2.0);
+    /// let motor = rotation.compose(&translation);
+    ///
+    /// // Extract just the rotation
+    /// let rotor: Rotor<f64> = motor.into();
+    ///
+    /// // The rotor should perform the same rotation
+    /// let v = Vector::new(1.0, 0.0);
+    /// let rotated = rotor.rotate(v);
+    ///
+    /// assert!(abs_diff_eq!(rotated.x, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y, 1.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    fn from(m: Motor<T>) -> Self {
+        EuclideanRotor::new(m.s, m.e12).normalized()
     }
 }
 
