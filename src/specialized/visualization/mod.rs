@@ -13,7 +13,7 @@
 //!
 //! ```ignore
 //! use clifford::specialized::euclidean::dim3::Vector;
-//! use clifford::specialized::visualization::{AsPosition, AsArrow};
+//! use clifford::specialized::visualization::{rerun, AsPosition, AsArrow};
 //!
 //! let v = Vector::new(1.0_f32, 2.0, 3.0);
 //!
@@ -23,6 +23,11 @@
 //! // Log as a direction arrow from origin
 //! rec.log("arrow", &rerun::Arrows3D::from_vectors([AsArrow(v)]))?;
 //! ```
+
+/// Re-export of the rerun crate for convenience.
+///
+/// This allows users to access rerun types without adding a separate dependency.
+pub use rerun_0_28 as rerun;
 
 /// Wrapper to interpret a geometric type as a position (point in space).
 ///
