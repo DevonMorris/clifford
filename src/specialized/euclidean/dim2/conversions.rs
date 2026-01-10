@@ -28,7 +28,7 @@
 //!
 //! The `TryFrom` implementations use `CONVERSION_TOLERANCE` (1e-10) rather than
 //! machine epsilon to account for accumulated floating-point errors in computed
-//! results. This is intentionally more lenient than `T::EPSILON`.
+//! results. This is intentionally more lenient than `T::epsilon()`.
 
 use core::fmt;
 
@@ -82,7 +82,7 @@ const E12_IDX: usize = 3;
 ///
 /// This is intentionally larger than machine epsilon to accommodate
 /// accumulated floating-point errors from arithmetic operations.
-/// Using `T::EPSILON` (~2.2e-16 for f64) would be too strict for
+/// Using `T::epsilon()` (~2.2e-16 for f64) would be too strict for
 /// practical use with computed results.
 ///
 /// For exact conversions without tolerance checking, use the

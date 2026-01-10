@@ -28,6 +28,7 @@ nalgebra-0_34 = ["dep:nalgebra-0-34"]
 [dependencies]
 approx = "0.5"
 generic-array = "1"
+num-traits = "0.2"
 typenum = "1"
 serde = { version = "1", features = ["derive"], optional = true }
 proptest = { version = "1", optional = true }

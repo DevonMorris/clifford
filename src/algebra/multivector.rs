@@ -146,7 +146,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     #[inline]
     pub fn zero() -> Self {
         Self {
-            coeffs: GenericArray::generate(|_| T::ZERO),
+            coeffs: GenericArray::generate(|_| T::zero()),
             _signature: PhantomData,
         }
     }
@@ -167,7 +167,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     #[inline]
     pub fn one() -> Self {
-        Self::scalar(T::ONE)
+        Self::scalar(T::one())
     }
 
     /// Creates a scalar multivector (grade 0 only).
@@ -214,7 +214,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     #[inline]
     pub fn from_blade(blade: Blade) -> Self {
         let mut mv = Self::zero();
-        mv.coeffs[blade.index()] = T::ONE;
+        mv.coeffs[blade.index()] = T::one();
         mv
     }
 
@@ -386,26 +386,6 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     pub fn is_zero(&self, epsilon: T) -> bool {
         self.coeffs.iter().all(|&c| c.abs() < epsilon)
     }
-
-    /// Checks if this multivector is approximately equal to another.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::algebra::Multivector;
-    /// use clifford::signature::Euclidean3;
-    ///
-    /// let a: Multivector<f64, Euclidean3> = Multivector::scalar(1.0);
-    /// let b: Multivector<f64, Euclidean3> = Multivector::scalar(1.0 + 1e-12);
-    /// assert!(a.approx_eq(&b, 1e-10));
-    /// ```
-    #[inline]
-    pub fn approx_eq(&self, other: &Self, epsilon: T) -> bool {
-        self.coeffs
-            .iter()
-            .zip(other.coeffs.iter())
-            .all(|(&a, &b)| (a - b).abs() < epsilon)
-    }
 }
 
 // ============================================================================
@@ -453,9 +433,9 @@ impl<T: Float, S: Signature> Multivector<T, S> {
             // For grade 4 and 5: sign = +1
             // Pattern repeats every 4 grades
             let sign = if grade < 2 || (grade / 2).is_multiple_of(2) {
-                T::ONE
+                T::one()
             } else {
-                -T::ONE
+                -T::one()
             };
             result.coeffs[i] = sign * self.coeffs[i];
         }
@@ -494,9 +474,9 @@ impl<T: Float, S: Signature> Multivector<T, S> {
             let grade = Blade::from_index(i).grade();
             // Sign is (-1)^k
             let sign = if grade.is_multiple_of(2) {
-                T::ONE
+                T::one()
             } else {
-                -T::ONE
+                -T::one()
             };
             result.coeffs[i] = sign * self.coeffs[i];
         }
@@ -534,9 +514,9 @@ impl<T: Float, S: Signature> Multivector<T, S> {
             let grade = Blade::from_index(i).grade();
             // Sign is (-1)^(k(k+1)/2)
             let sign = if (grade * (grade + 1) / 2).is_multiple_of(2) {
-                T::ONE
+                T::one()
             } else {
-                -T::ONE
+                -T::one()
             };
             result.coeffs[i] = sign * self.coeffs[i];
         }
@@ -601,7 +581,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     pub fn normalize(&self) -> Option<Self> {
         let n = self.norm();
-        if n < T::EPSILON { None } else { Some(self / n) }
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self / n)
+        }
     }
 
     /// Returns the multiplicative inverse, or None if not invertible.
@@ -630,7 +614,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     pub fn inverse(&self) -> Option<Self> {
         let norm_sq = self.norm_squared();
-        if norm_sq.abs() < T::EPSILON {
+        if norm_sq.abs() < T::epsilon() {
             None
         } else {
             Some(&self.reverse() / norm_sq)
@@ -691,6 +675,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
+    /// use approx::abs_diff_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -698,7 +683,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// // A rotor is an even multivector: scalar + bivector
     /// let rotor = &Multivector::scalar(0.5_f64.sqrt()) + &(&e1 * &e2) * 0.5_f64.sqrt();
     /// let even = rotor.even();
-    /// assert!(even.approx_eq(&rotor, 1e-10));
+    /// assert!(abs_diff_eq!(even, rotor, epsilon = 1e-10));
     /// ```
     pub fn even(&self) -> Self {
         let mut result = Self::zero();
@@ -717,10 +702,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
+    /// use approx::abs_diff_eq;
     ///
     /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let odd = v.odd();
-    /// assert!(odd.approx_eq(&v, 1e-10)); // Vectors are odd
+    /// assert!(abs_diff_eq!(odd, v, epsilon = 1e-10)); // Vectors are odd
     /// ```
     pub fn odd(&self) -> Self {
         let mut result = Self::zero();
@@ -823,6 +809,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
+    /// use approx::abs_diff_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -833,20 +820,20 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// // Anticommutativity: e₂ ∧ e₁ = -e₁₂
     /// let e21 = e2.outer(&e1);
-    /// assert!(e21.approx_eq(&(-&e12), 1e-10));
+    /// assert!(abs_diff_eq!(e21, -&e12, epsilon = 1e-10));
     /// ```
     pub fn outer(&self, other: &Self) -> Self {
         let mut result = Self::zero();
 
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] == T::ZERO {
+            if self.coeffs[i] == T::zero() {
                 continue;
             }
             let blade_i = Blade::from_index(i);
             let grade_i = blade_i.grade();
 
             for j in 0..S::NumBlades::USIZE {
-                if other.coeffs[j] == T::ZERO {
+                if other.coeffs[j] == T::zero() {
                     continue;
                 }
                 let blade_j = Blade::from_index(j);
@@ -893,14 +880,14 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         let mut result = Self::zero();
 
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] == T::ZERO {
+            if self.coeffs[i] == T::zero() {
                 continue;
             }
             let blade_i = Blade::from_index(i);
             let grade_i = blade_i.grade();
 
             for j in 0..S::NumBlades::USIZE {
-                if other.coeffs[j] == T::ZERO {
+                if other.coeffs[j] == T::zero() {
                     continue;
                 }
                 let blade_j = Blade::from_index(j);
@@ -952,14 +939,14 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         let mut result = Self::zero();
 
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] == T::ZERO {
+            if self.coeffs[i] == T::zero() {
                 continue;
             }
             let blade_i = Blade::from_index(i);
             let grade_i = blade_i.grade();
 
             for j in 0..S::NumBlades::USIZE {
-                if other.coeffs[j] == T::ZERO {
+                if other.coeffs[j] == T::zero() {
                     continue;
                 }
                 let blade_j = Blade::from_index(j);
@@ -1039,10 +1026,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
+    /// use approx::abs_diff_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let roundtrip = e1.dual().undual();
-    /// assert!(roundtrip.approx_eq(&e1, 1e-10));
+    /// assert!(abs_diff_eq!(roundtrip, e1, epsilon = 1e-10));
     /// ```
     pub fn undual(&self) -> Self {
         let ps = Self::pseudoscalar();
@@ -1131,11 +1119,11 @@ impl<T: Float, S: Signature> Mul for &Multivector<T, S> {
         let mut result = Multivector::zero();
 
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] == T::ZERO {
+            if self.coeffs[i] == T::zero() {
                 continue;
             }
             for j in 0..S::NumBlades::USIZE {
-                if rhs.coeffs[j] == T::ZERO {
+                if rhs.coeffs[j] == T::zero() {
                     continue;
                 }
 
@@ -1237,6 +1225,7 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 /// ```
 /// use clifford::algebra::Multivector;
 /// use clifford::signature::Euclidean3;
+/// use approx::abs_diff_eq;
 ///
 /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
 /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -1247,7 +1236,7 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 ///
 /// // Anticommutativity: e₂ ^ e₁ = -e₁₂
 /// let e21 = &e2 ^ &e1;
-/// assert!(e21.approx_eq(&(-&e12), 1e-10));
+/// assert!(abs_diff_eq!(e21, -&e12, epsilon = 1e-10));
 /// ```
 impl<T: Float, S: Signature> BitXor for &Multivector<T, S> {
     type Output = Multivector<T, S>;
@@ -1484,7 +1473,7 @@ impl<T: Float, S: Signature> fmt::Debug for Multivector<T, S> {
         write!(f, "Multivector(")?;
         let mut first = true;
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] != T::ZERO {
+            if self.coeffs[i] != T::zero() {
                 if !first {
                     write!(f, " + ")?;
                 }
@@ -1503,7 +1492,7 @@ impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut first = true;
         for i in 0..S::NumBlades::USIZE {
-            if self.coeffs[i] != T::ZERO {
+            if self.coeffs[i] != T::zero() {
                 if !first {
                     write!(f, " + ")?;
                 }
@@ -1619,8 +1608,8 @@ mod tests {
     fn test_scalar_is_identity() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
-        assert!((&one * &v).approx_eq(&v, ABS_DIFF_EQ_EPS));
-        assert!((&v * &one).approx_eq(&v, ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(&one * &v, v, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(&v * &one, v, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     // ========================================================================
@@ -1630,7 +1619,7 @@ mod tests {
     #[test]
     fn test_reverse_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(v.reverse().approx_eq(&v, ABS_DIFF_EQ_EPS)); // Vectors unchanged
+        assert!(abs_diff_eq!(v.reverse(), v, epsilon = ABS_DIFF_EQ_EPS)); // Vectors unchanged
     }
 
     #[test]
@@ -1638,13 +1627,17 @@ mod tests {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
-        assert!(e12.reverse().approx_eq(&(-&e12), ABS_DIFF_EQ_EPS)); // Bivectors negate
+        assert!(abs_diff_eq!(
+            e12.reverse(),
+            -&e12,
+            epsilon = ABS_DIFF_EQ_EPS
+        )); // Bivectors negate
     }
 
     #[test]
     fn test_involute_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(v.involute().approx_eq(&(-&v), ABS_DIFF_EQ_EPS)); // Vectors negate
+        assert!(abs_diff_eq!(v.involute(), -&v, epsilon = ABS_DIFF_EQ_EPS)); // Vectors negate
     }
 
     // ========================================================================
@@ -1672,7 +1665,11 @@ mod tests {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[2.0, 0.0, 0.0]);
         let v_inv = v.inverse().unwrap();
         let product = &v * &v_inv;
-        assert!(product.approx_eq(&Multivector::one(), ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            product,
+            Multivector::one(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1688,7 +1685,7 @@ mod tests {
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1699,12 +1696,12 @@ mod tests {
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn reverse_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
-            prop_assert!(a.reverse().reverse().approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(a.reverse().reverse(), a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1714,12 +1711,12 @@ mod tests {
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn involute_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
-            prop_assert!(a.involute().involute().approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(a.involute().involute(), a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1727,7 +1724,7 @@ mod tests {
             // Vectors are always invertible in Euclidean space
             let inv = a.inverse().expect("non-zero vector should be invertible");
             let product = &*a * &inv;
-            prop_assert!(product.approx_eq(&Multivector::one(), ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(product, Multivector::one(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1735,7 +1732,7 @@ mod tests {
             a in any::<Multivector<f64, Euclidean3>>(),
             b in any::<Multivector<f64, Euclidean3>>()
         ) {
-            prop_assert!((&a + &b).approx_eq(&(&b + &a), ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(&a + &b, &b + &a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1746,20 +1743,20 @@ mod tests {
         ) {
             let lhs = &(&a + &b) + &c;
             let rhs = &a + &(&b + &c);
-            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn zero_is_additive_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let zero = Multivector::<f64, Euclidean3>::zero();
-            prop_assert!((&a + &zero).approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(&a + &zero, a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn one_is_multiplicative_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let one = Multivector::<f64, Euclidean3>::one();
-            prop_assert!((&a * &one).approx_eq(&a, ABS_DIFF_EQ_EPS));
-            prop_assert!((&one * &a).approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(&a * &one, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(&one * &a, a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1772,13 +1769,13 @@ mod tests {
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
                 .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| &acc + &x);
-            prop_assert!(sum.approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(sum, a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn even_plus_odd_equals_original(a in any::<Multivector<f64, Euclidean3>>()) {
             let reconstructed = &a.even() + &a.odd();
-            prop_assert!(reconstructed.approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(reconstructed, a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1788,7 +1785,7 @@ mod tests {
         ) {
             let once = a.grade_select(k);
             let twice = once.grade_select(k);
-            prop_assert!(once.approx_eq(&twice, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(once, twice, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1802,7 +1799,7 @@ mod tests {
         ) {
             let ab = a.outer(&*b);
             let ba = b.outer(&*a);
-            prop_assert!(ab.approx_eq(&(-&ba), ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(ab, -&ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1813,7 +1810,7 @@ mod tests {
         ) {
             let lhs = a.outer(&b).outer(&c);
             let rhs = a.outer(&b.outer(&c));
-            prop_assert!(lhs.approx_eq(&rhs, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1851,7 +1848,7 @@ mod tests {
             // For vectors, a·b = b·a
             let ab = a.inner(&*b);
             let ba = b.inner(&*a);
-            prop_assert!(ab.approx_eq(&ba, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(ab, ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         // ====================================================================
@@ -1861,7 +1858,7 @@ mod tests {
         #[test]
         fn dual_undual_roundtrip(a in any::<Multivector<f64, Euclidean3>>()) {
             let roundtrip = a.dual().undual();
-            prop_assert!(roundtrip.approx_eq(&a, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(roundtrip, a, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
@@ -1893,7 +1890,7 @@ mod tests {
             let reflected = n.sandwich(&*v);
             // Double reflection returns original
             let double_reflected = n.sandwich(&reflected);
-            prop_assert!(double_reflected.approx_eq(&*v, ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(double_reflected, *v, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -1961,6 +1958,6 @@ mod tests {
         let v2: Multivector<f64, Euclidean3> =
             serde_json::from_str(&json).expect("deserialization failed");
 
-        assert!(v.approx_eq(&v2, ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v, v2, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

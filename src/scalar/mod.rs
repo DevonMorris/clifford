@@ -25,7 +25,7 @@
 //!     a.iter()
 //!         .zip(b.iter())
 //!         .map(|(&x, &y)| x * y)
-//!         .fold(T::ZERO, |acc, x| acc + x)
+//!         .fold(T::zero(), |acc, x| acc + x)
 //! }
 //!
 //! let a = [1.0_f64, 2.0, 3.0];

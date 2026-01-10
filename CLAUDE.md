@@ -152,6 +152,45 @@ specialized/
   let v3 = dim3::Vector::new(1.0, 2.0, 3.0);
   ```
 
+#### Scalar and Float Types
+
+Our `Float` trait extends `num_traits::Float`, which provides standard floating-point operations.
+
+**Accessing constants via methods (not associated constants):**
+```rust
+// CORRECT: Use methods from num_traits::Float
+let zero: T = T::zero();
+let one: T = T::one();
+let eps: T = T::epsilon();
+
+// WRONG: Don't use associated constants (these don't exist)
+// let zero: T = T::ZERO;  // Compile error!
+```
+
+**Using approx crate for comparisons:**
+```rust
+use approx::abs_diff_eq;
+
+// CORRECT: Use abs_diff_eq! macro
+assert!(abs_diff_eq!(a, b, epsilon = 1e-10));
+prop_assert!(abs_diff_eq!(result, expected, epsilon = ABS_DIFF_EQ_EPS));
+
+// WRONG: Don't use custom comparison methods
+// assert!(a.approx_eq(&b, 1e-10));  // This method doesn't exist
+```
+
+**Custom constants on our Float trait:**
+```rust
+// Additional constants provided by clifford::scalar::Float
+let two: T = T::TWO;     // 2.0
+let pi: T = T::PI;       // π
+
+// Conversions
+let from_int: T = T::from_i8(1);
+let from_idx: T = T::from_usize(42);
+let from_f64: T = T::from_f64(3.14);
+```
+
 ### 7. Testing
 - **Property-based testing is mandatory**: Use `proptest` for all tests where possible. Tests that only pass for hardcoded inputs are insufficient—correctness must hold across the full input domain.
 - **Implement `Arbitrary` trait** for types instead of writing free functions:
