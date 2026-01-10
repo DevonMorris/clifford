@@ -16,10 +16,11 @@
 //!
 //! The bivector u ∧ v has:
 //! - Magnitude = area of parallelogram spanned by u and v
-//! - Zero when u and v are parallel (no area!)
-//! - Maximum when u and v are perpendicular
+//! - Zero when u ∥ v (parallel = no area!)
+//! - Maximum when u ⊥ v (perpendicular)
+//! - Sign flips when v crosses u (orientation reverses)
 //!
-//! The Hodge dual vector is perpendicular to the plane containing u and v.
+//! The Hodge dual vector is perpendicular to the xy-plane (points along z).
 
 use std::f32::consts::TAU;
 
@@ -38,15 +39,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Fixed vector u along x-axis
         let u = Vector::new(2.0_f32, 0.0, 0.0);
 
-        // Rotating vector v - starts along y, rotates in xy-plane then tilts up
-        let angle_xy = t * TAU * 2.0; // Two full rotations in xy
-        let angle_tilt = (t * TAU).sin() * 0.5; // Gentle tilt up and down
-
-        let rotor_xy = Rotor::from_angle_plane(angle_xy, Bivector::unit_xy());
-        let rotor_tilt = Rotor::from_angle_plane(angle_tilt, Bivector::unit_xz());
+        // Rotating vector v in the xy-plane
+        let angle = t * TAU; // One full rotation
+        let rotor = Rotor::from_angle_plane(angle, Bivector::unit_xy());
 
         let base_v = Vector::new(0.0, 1.5_f32, 0.0);
-        let v = rotor_tilt.rotate(rotor_xy.rotate(base_v));
+        let v = rotor.rotate(base_v);
 
         // The bivector is u ∧ v (wedge product)
         let bivector = u.wedge(v);
