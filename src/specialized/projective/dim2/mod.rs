@@ -54,4 +54,7 @@ pub mod arbitrary;
 ))]
 mod nalgebra;
 
+#[cfg(feature = "rerun-0_28")]
+mod rerun;
+
 pub use types::{Line, Motor, Point};
