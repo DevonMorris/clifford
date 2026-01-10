@@ -308,4 +308,15 @@ mod tests {
             epsilon = ABS_DIFF_EQ_EPS
         ));
     }
+
+    #[test]
+    fn rotor2_from_vectors_near_antiparallel() {
+        // Regression test: nearly anti-parallel vectors require numerical stability
+        let a = Vector::new(-0.9502169739797897, 0.31158899589152983);
+        let b = Vector::new(0.9502173192786301, -0.31158794287156594);
+
+        let r = Rotor::from_vectors(a, b);
+        let rotated = r.rotate(a);
+        assert!(abs_diff_eq!(rotated, b, epsilon = ABS_DIFF_EQ_EPS));
+    }
 }
