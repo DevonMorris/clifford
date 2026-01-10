@@ -60,6 +60,25 @@ impl<T: Float> Vector<T> {
         Self::new(self.x / n, self.y / n)
     }
 
+    /// Scales the vector by a scalar: `s * v`.
+    ///
+    /// This is equivalent to `v * s` but allows scalar-first syntax,
+    /// which is useful with generic scalar types like `Dual<f64>`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim2::Vector;
+    ///
+    /// let v = Vector::new(1.0, 2.0);
+    /// let scaled = v.scale(2.0);
+    /// assert_eq!(scaled, Vector::new(2.0, 4.0));
+    /// ```
+    #[inline]
+    pub fn scale(self, scalar: T) -> Self {
+        Self::new(self.x * scalar, self.y * scalar)
+    }
+
     /// Dot product: `a · b = a.x*b.x + a.y*b.y`.
     #[inline]
     pub fn dot(self, other: Self) -> T {

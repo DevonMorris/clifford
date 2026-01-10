@@ -586,8 +586,8 @@ fn forward_kinematics(joints: [Dual<f64>; 3]) -> Vector<Dual<f64>> {
     let r3 = Rotor::from_angle_plane(joints[2], Bivector::unit_yz());
 
     let rotor = r1.compose(r2).compose(r3);
-    // Note: Vector * T works, but T * Vector only works for f32/f64
-    rotor.rotate(Vector::unit_x() * arm_length)
+    // Use scale() for generic scalar types like Dual<f64>
+    rotor.rotate(Vector::unit_x().scale(arm_length))
 }
 
 let jac = jacobian(forward_kinematics, current_joints);
@@ -689,10 +689,13 @@ For autodiff types to work seamlessly with existing GA types, some API adjustmen
 
 Currently, `Vector<T> * T` works for any `T: Float`, but `T * Vector<T>` only works for `f32` and `f64` due to Rust's orphan rules. For `Dual<f64> * Vector<Dual<f64>>`, users must write `vector * scalar` not `scalar * vector`.
 
-**Options:**
-- Document the limitation (users use `v * s` instead of `s * v`)
-- Add a `scale(&self, scalar: T) -> Self` method for clarity
-- Both approaches work; the method provides discoverability
+**Solution:** The `scale(scalar: T) -> Self` method is now available on all Vector types:
+
+```rust
+// These are equivalent:
+let v1 = vector * scalar;      // Works for any T: Float
+let v2 = vector.scale(scalar); // Also works, more discoverable
+```
 
 ### 2. Float Trait Constants
 
