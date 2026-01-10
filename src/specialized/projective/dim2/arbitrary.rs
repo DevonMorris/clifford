@@ -170,7 +170,7 @@ impl<T: Float + Debug> Arbitrary for Motor<T> {
             -10.0f64..10.0,
         )
             .prop_map(|(s, e12, e20, e01)| {
-                Motor::new(
+                Motor::new_unchecked(
                     T::from_f64(s),
                     T::from_f64(e12),
                     T::from_f64(e20),

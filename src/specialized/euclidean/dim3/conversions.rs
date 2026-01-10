@@ -128,9 +128,9 @@ impl<T: Float> From<Vector<T>> for Multivector<T, Euclidean3> {
     /// ```
     fn from(v: Vector<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(E1_IDX), v.x);
-        mv.set(Blade::from_index(E2_IDX), v.y);
-        mv.set(Blade::from_index(E3_IDX), v.z);
+        mv.set(Blade::from_index(E1_IDX), v.x());
+        mv.set(Blade::from_index(E2_IDX), v.y());
+        mv.set(Blade::from_index(E3_IDX), v.z());
         mv
     }
 }
@@ -151,9 +151,9 @@ impl<T: Float> Vector<T> {
     ///
     /// let mv: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let v = Vector::from_multivector_unchecked(&mv);
-    /// assert_eq!(v.x, 1.0);
-    /// assert_eq!(v.y, 2.0);
-    /// assert_eq!(v.z, 3.0);
+    /// assert_eq!(v.x(), 1.0);
+    /// assert_eq!(v.y(), 2.0);
+    /// assert_eq!(v.z(), 3.0);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean3>) -> Self {
@@ -192,9 +192,9 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Vector<T> {
     ///
     /// let mv: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let v = Vector::try_from(mv).unwrap();
-    /// assert_eq!(v.x, 1.0);
-    /// assert_eq!(v.y, 2.0);
-    /// assert_eq!(v.z, 3.0);
+    /// assert_eq!(v.x(), 1.0);
+    /// assert_eq!(v.y(), 2.0);
+    /// assert_eq!(v.z(), 3.0);
     /// ```
     fn try_from(mv: Multivector<T, Euclidean3>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
@@ -246,9 +246,9 @@ impl<T: Float> From<Bivector<T>> for Multivector<T, Euclidean3> {
     /// ```
     fn from(b: Bivector<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(E12_IDX), b.xy);
-        mv.set(Blade::from_index(E13_IDX), b.xz);
-        mv.set(Blade::from_index(E23_IDX), b.yz);
+        mv.set(Blade::from_index(E12_IDX), b.xy());
+        mv.set(Blade::from_index(E13_IDX), b.xz());
+        mv.set(Blade::from_index(E23_IDX), b.yz());
         mv
     }
 }
@@ -273,9 +273,9 @@ impl<T: Float> Bivector<T> {
     /// mv.set(Blade::from_index(5), 2.0); // e13
     /// mv.set(Blade::from_index(6), 3.0); // e23
     /// let b = Bivector::from_multivector_unchecked(&mv);
-    /// assert_eq!(b.xy, 1.0);
-    /// assert_eq!(b.xz, 2.0);
-    /// assert_eq!(b.yz, 3.0);
+    /// assert_eq!(b.xy(), 1.0);
+    /// assert_eq!(b.xz(), 2.0);
+    /// assert_eq!(b.yz(), 3.0);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean3>) -> Self {
@@ -315,9 +315,9 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Bivector<T> {
     /// let b = Bivector::new(1.0_f64, 2.0, 3.0);
     /// let mv: Multivector<f64, Euclidean3> = b.into();
     /// let back = Bivector::try_from(mv).unwrap();
-    /// assert_eq!(back.xy, 1.0);
-    /// assert_eq!(back.xz, 2.0);
-    /// assert_eq!(back.yz, 3.0);
+    /// assert_eq!(back.xy(), 1.0);
+    /// assert_eq!(back.xz(), 2.0);
+    /// assert_eq!(back.yz(), 3.0);
     /// ```
     fn try_from(mv: Multivector<T, Euclidean3>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
@@ -367,7 +367,7 @@ impl<T: Float> From<Trivector<T>> for Multivector<T, Euclidean3> {
     /// ```
     fn from(t: Trivector<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(E123_IDX), t.0);
+        mv.set(Blade::from_index(E123_IDX), t.value());
         mv
     }
 }
@@ -485,10 +485,10 @@ impl<T: Float> From<Rotor<T>> for Multivector<T, Euclidean3> {
     /// ```
     fn from(r: Rotor<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(SCALAR_IDX), r.s);
-        mv.set(Blade::from_index(E12_IDX), r.b.xy);
-        mv.set(Blade::from_index(E13_IDX), r.b.xz);
-        mv.set(Blade::from_index(E23_IDX), r.b.yz);
+        mv.set(Blade::from_index(SCALAR_IDX), r.s());
+        mv.set(Blade::from_index(E12_IDX), r.b().xy());
+        mv.set(Blade::from_index(E13_IDX), r.b().xz());
+        mv.set(Blade::from_index(E23_IDX), r.b().yz());
         mv
     }
 }
@@ -512,7 +512,7 @@ impl<T: Float> Rotor<T> {
     /// mv.set(Blade::from_index(0), 0.9238); // scalar (cos(π/8))
     /// mv.set(Blade::from_index(3), 0.3827); // e12 (sin(π/8))
     /// let r = Rotor::from_multivector_unchecked(&mv);
-    /// assert!((r.s - 0.9238).abs() < 1e-4);
+    /// assert!((r.s() - 0.9238).abs() < 1e-4);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean3>) -> Self {
@@ -557,7 +557,7 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean3>> for Rotor<T> {
     /// let mv: Multivector<f64, Euclidean3> = original.into();
     /// let recovered = Rotor::try_from(mv).unwrap();
     ///
-    /// assert!((original.s - recovered.s).abs() < 1e-10);
+    /// assert!((original.s() - recovered.s()).abs() < 1e-10);
     /// ```
     fn try_from(mv: Multivector<T, Euclidean3>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
@@ -593,10 +593,10 @@ impl<T: Float> From<Even<T>> for Multivector<T, Euclidean3> {
     /// - `b.yz` → `e₂₃` (index 6)
     fn from(e: Even<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(SCALAR_IDX), e.s);
-        mv.set(Blade::from_index(E12_IDX), e.b.xy);
-        mv.set(Blade::from_index(E13_IDX), e.b.xz);
-        mv.set(Blade::from_index(E23_IDX), e.b.yz);
+        mv.set(Blade::from_index(SCALAR_IDX), e.s());
+        mv.set(Blade::from_index(E12_IDX), e.b().xy());
+        mv.set(Blade::from_index(E13_IDX), e.b().xz());
+        mv.set(Blade::from_index(E23_IDX), e.b().yz());
         mv
     }
 }
@@ -620,8 +620,8 @@ impl<T: Float> Even<T> {
     /// mv.set(Blade::from_index(0), 1.0);  // scalar
     /// mv.set(Blade::from_index(3), 0.5); // e12
     /// let e = Even::from_multivector_unchecked(&mv);
-    /// assert_eq!(e.s, 1.0);
-    /// assert_eq!(e.b.xy, 0.5);
+    /// assert_eq!(e.s(), 1.0);
+    /// assert_eq!(e.b().xy(), 0.5);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean3>) -> Self {
@@ -718,9 +718,9 @@ impl<T: Float> Multivector<T, Euclidean3> {
     /// assert!(trivector.is_none()); // No trivector part
     ///
     /// let vec = vector.unwrap();
-    /// assert!((vec.x - 1.0).abs() < 1e-10);
-    /// assert!((vec.y - 2.0).abs() < 1e-10);
-    /// assert!((vec.z - 3.0).abs() < 1e-10);
+    /// assert!((vec.x() - 1.0).abs() < 1e-10);
+    /// assert!((vec.y() - 2.0).abs() < 1e-10);
+    /// assert!((vec.z() - 3.0).abs() < 1e-10);
     /// ```
     ///
     /// # Example: Mixed multivector
@@ -754,25 +754,29 @@ impl<T: Float> Multivector<T, Euclidean3> {
 
         // Extract vector (grade 1)
         let vec = Vector::from_multivector_unchecked(self);
-        let vector =
-            if vec.x.abs() > tolerance || vec.y.abs() > tolerance || vec.z.abs() > tolerance {
-                Some(vec)
-            } else {
-                None
-            };
+        let vector = if vec.x().abs() > tolerance
+            || vec.y().abs() > tolerance
+            || vec.z().abs() > tolerance
+        {
+            Some(vec)
+        } else {
+            None
+        };
 
         // Extract bivector (grade 2)
         let biv = Bivector::from_multivector_unchecked(self);
-        let bivector =
-            if biv.xy.abs() > tolerance || biv.xz.abs() > tolerance || biv.yz.abs() > tolerance {
-                Some(biv)
-            } else {
-                None
-            };
+        let bivector = if biv.xy().abs() > tolerance
+            || biv.xz().abs() > tolerance
+            || biv.yz().abs() > tolerance
+        {
+            Some(biv)
+        } else {
+            None
+        };
 
         // Extract trivector (grade 3)
         let tri = Trivector::from_multivector_unchecked(self);
-        let trivector = if tri.0.abs() > tolerance {
+        let trivector = if tri.value().abs() > tolerance {
             Some(tri)
         } else {
             None
@@ -1058,9 +1062,9 @@ mod tests {
             let vec3 = Vector::try_from(v.into_inner()).expect("VectorE3 should convert to Vector");
 
             // Verify components match
-            prop_assert!(abs_diff_eq!(vec3.x, x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(vec3.y, y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(vec3.z, z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(vec3.x(), x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(vec3.y(), y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(vec3.z(), z, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that a generic vector Multivector converts to Vector correctly.
@@ -1068,9 +1072,9 @@ mod tests {
         fn generic_vector_to_vec3(x in -100.0f64..100.0, y in -100.0f64..100.0, z in -100.0f64..100.0) {
             let mv: Multivector<f64, Euclidean3> = Multivector::vector(&[x, y, z]);
             let v = Vector::try_from(mv).expect("pure vector should convert");
-            prop_assert!(abs_diff_eq!(v.x, x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.y, y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.z, z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.x(), x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.y(), y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.z(), z, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that a generic bivector Multivector converts to Bivector correctly.
@@ -1081,9 +1085,9 @@ mod tests {
             mv.set(Blade::from_index(E13_IDX), xz);
             mv.set(Blade::from_index(E23_IDX), yz);
             let b = Bivector::try_from(mv).expect("pure bivector should convert");
-            prop_assert!(abs_diff_eq!(b.xy, xy, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.xz, xz, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.yz, yz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xy(), xy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xz(), xz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.yz(), yz, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that a generic trivector Multivector converts to Trivector correctly.
@@ -1109,10 +1113,10 @@ mod tests {
             mv.set(Blade::from_index(E13_IDX), xz);
             mv.set(Blade::from_index(E23_IDX), yz);
             let r = Rotor::try_from(mv).expect("even element should convert");
-            prop_assert!(abs_diff_eq!(r.s, s, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(r.b.xy, xy, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(r.b.xz, xz, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(r.b.yz, yz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.s(), s, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.b().xy(), xy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.b().xz(), xz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.b().yz(), yz, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that full generic Multivector fails TryFrom for specialized types.
@@ -1153,9 +1157,9 @@ mod tests {
             let expected_xz = ax * bz - az * bx;
             let expected_yz = ay * bz - az * by;
 
-            prop_assert!(abs_diff_eq!(bivec.xy, expected_xy, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(bivec.xz, expected_xz, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(bivec.yz, expected_yz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(bivec.xy(), expected_xy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(bivec.xz(), expected_xz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(bivec.yz(), expected_yz, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that vector geometric product (generic) converts to Even/Rotor.
@@ -1175,7 +1179,7 @@ mod tests {
             let bz = b.get(Blade::from_index(E3_IDX));
 
             let expected_s = ax * bx + ay * by + az * bz;
-            prop_assert!(abs_diff_eq!(even.s, expected_s, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(even.s(), expected_s, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test sandwich product via generic Multivector produces result with vector grade.
@@ -1206,9 +1210,9 @@ mod tests {
             let result = Vector::try_from(grade1).expect("grade-1 part should be vector");
 
             // Verify finite values
-            prop_assert!(result.x.is_finite());
-            prop_assert!(result.y.is_finite());
-            prop_assert!(result.z.is_finite());
+            prop_assert!(result.x().is_finite());
+            prop_assert!(result.y().is_finite());
+            prop_assert!(result.z().is_finite());
         }
 
         /// Test dual of generic bivector produces valid vector.
@@ -1251,7 +1255,7 @@ mod tests {
             prop_assert!(bivector.is_none());
             prop_assert!(trivector.is_none());
 
-            if v.x.abs().max(v.y.abs()).max(v.z.abs()) > ABS_DIFF_EQ_EPS {
+            if v.x().abs().max(v.y().abs()).max(v.z().abs()) > ABS_DIFF_EQ_EPS {
                 prop_assert!(vector.is_some());
                 let vec = vector.unwrap();
                 prop_assert!(abs_diff_eq!(vec, v, epsilon = ABS_DIFF_EQ_EPS));
@@ -1268,7 +1272,7 @@ mod tests {
             prop_assert!(vector.is_none());
             prop_assert!(trivector.is_none());
 
-            if b.xy.abs().max(b.xz.abs()).max(b.yz.abs()) > ABS_DIFF_EQ_EPS {
+            if b.xy().abs().max(b.xz().abs()).max(b.yz().abs()) > ABS_DIFF_EQ_EPS {
                 prop_assert!(bivector.is_some());
                 let biv = bivector.unwrap();
                 prop_assert!(abs_diff_eq!(biv, b, epsilon = ABS_DIFF_EQ_EPS));
@@ -1320,15 +1324,15 @@ mod tests {
             prop_assert!(trivector.is_none());
 
             // Check scalar part
-            if r.s.abs() > ABS_DIFF_EQ_EPS {
+            if r.s().abs() > ABS_DIFF_EQ_EPS {
                 prop_assert!(scalar.is_some());
-                prop_assert!(abs_diff_eq!(scalar.unwrap(), r.s, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(abs_diff_eq!(scalar.unwrap(), r.s(), epsilon = ABS_DIFF_EQ_EPS));
             }
 
             // Check bivector part
-            if r.b.xy.abs().max(r.b.xz.abs()).max(r.b.yz.abs()) > ABS_DIFF_EQ_EPS {
+            if r.b().xy().abs().max(r.b().xz().abs()).max(r.b().yz().abs()) > ABS_DIFF_EQ_EPS {
                 prop_assert!(bivector.is_some());
-                prop_assert!(abs_diff_eq!(bivector.unwrap(), r.b, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(abs_diff_eq!(bivector.unwrap(), r.b(), epsilon = ABS_DIFF_EQ_EPS));
             }
         }
 
@@ -1393,15 +1397,15 @@ mod tests {
 
         assert!(vector.is_some());
         let v = vector.unwrap();
-        assert!(abs_diff_eq!(v.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(v.y, 2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(v.z, 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
 
         assert!(bivector.is_some());
         let b = bivector.unwrap();
-        assert!(abs_diff_eq!(b.xy, 4.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(b.xz, 5.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(b.yz, 6.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(b.xy(), 4.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(b.xz(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(b.yz(), 6.0, epsilon = ABS_DIFF_EQ_EPS));
 
         assert!(trivector.is_some());
         assert!(abs_diff_eq!(

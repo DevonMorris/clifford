@@ -27,7 +27,7 @@
 //! let rotated = rotor.rotate(v);
 //!
 //! // x-axis rotated 90° becomes y-axis
-//! assert!((rotated.y - 1.0).abs() < 1e-10);
+//! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
 mod conversions;

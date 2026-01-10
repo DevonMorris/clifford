@@ -52,13 +52,9 @@
 
 pub mod dim2;
 pub mod dim3;
-
-#[cfg(any(
-    feature = "nalgebra-0_32",
-    feature = "nalgebra-0_33",
-    feature = "nalgebra-0_34"
-))]
 mod errors;
+
+pub use errors::{LineConstraintError, MotorConstraintError};
 
 #[cfg(any(
     feature = "nalgebra-0_32",

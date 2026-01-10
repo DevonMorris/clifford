@@ -13,7 +13,7 @@ impl<T: Float> Neg for Vector<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.x, -self.y)
+        Self::new(-self.x(), -self.y())
     }
 }
 
@@ -22,7 +22,7 @@ impl<T: Float> Add for Vector<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.x + other.x, self.y + other.y)
+        Self::new(self.x() + other.x(), self.y() + other.y())
     }
 }
 
@@ -31,7 +31,7 @@ impl<T: Float> Sub for Vector<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.x - other.x, self.y - other.y)
+        Self::new(self.x() - other.x(), self.y() - other.y())
     }
 }
 
@@ -40,7 +40,7 @@ impl<T: Float> Mul<T> for Vector<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self::new(self.x * scalar, self.y * scalar)
+        Self::new(self.x() * scalar, self.y() * scalar)
     }
 }
 
@@ -49,7 +49,7 @@ impl Mul<Vector<f32>> for f32 {
 
     #[inline]
     fn mul(self, v: Vector<f32>) -> Self::Output {
-        Vector::new(self * v.x, self * v.y)
+        Vector::new(self * v.x(), self * v.y())
     }
 }
 
@@ -58,7 +58,7 @@ impl Mul<Vector<f64>> for f64 {
 
     #[inline]
     fn mul(self, v: Vector<f64>) -> Self::Output {
-        Vector::new(self * v.x, self * v.y)
+        Vector::new(self * v.x(), self * v.y())
     }
 }
 
@@ -81,7 +81,7 @@ impl<T: Float> Neg for Bivector<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self(-self.0)
+        Self::new(-self.value())
     }
 }
 
@@ -90,7 +90,7 @@ impl<T: Float> Add for Bivector<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self(self.0 + other.0)
+        Self::new(self.value() + other.value())
     }
 }
 
@@ -99,7 +99,7 @@ impl<T: Float> Sub for Bivector<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self(self.0 - other.0)
+        Self::new(self.value() - other.value())
     }
 }
 
@@ -108,7 +108,7 @@ impl<T: Float> Mul<T> for Bivector<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self(self.0 * scalar)
+        Self::new(self.value() * scalar)
     }
 }
 
@@ -121,7 +121,7 @@ impl<T: Float> Neg for Rotor<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.s, -self.xy)
+        Self::new(-self.s(), -self.xy())
     }
 }
 
@@ -130,7 +130,7 @@ impl<T: Float> Add for Rotor<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.s + other.s, self.xy + other.xy)
+        Self::new(self.s() + other.s(), self.xy() + other.xy())
     }
 }
 
@@ -139,7 +139,7 @@ impl<T: Float> Sub for Rotor<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.s - other.s, self.xy - other.xy)
+        Self::new(self.s() - other.s(), self.xy() - other.xy())
     }
 }
 
@@ -158,7 +158,7 @@ impl<T: Float> Mul<T> for Rotor<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self::new(self.s * scalar, self.xy * scalar)
+        Self::new(self.s() * scalar, self.xy() * scalar)
     }
 }
 
@@ -202,7 +202,7 @@ mod tests {
         fn vec2_wedge_anticommutative(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
             let ab = a.wedge(b);
             let ba = b.wedge(a);
-            prop_assert!(abs_diff_eq!(ab.0, -ba.0, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(ab.value(), -ba.value(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]

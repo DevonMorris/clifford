@@ -114,8 +114,8 @@ impl<T: Float> From<Vector<T>> for Multivector<T, Euclidean2> {
     /// ```
     fn from(v: Vector<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(E1_IDX), v.x);
-        mv.set(Blade::from_index(E2_IDX), v.y);
+        mv.set(Blade::from_index(E1_IDX), v.x());
+        mv.set(Blade::from_index(E2_IDX), v.y());
         mv
     }
 }
@@ -142,8 +142,8 @@ impl<T: Float> Vector<T> {
     ///
     /// let mv: Multivector<f64, Euclidean2> = Multivector::vector(&[3.0, 4.0]);
     /// let v = Vector::from_multivector_unchecked(&mv);
-    /// assert_eq!(v.x, 3.0);
-    /// assert_eq!(v.y, 4.0);
+    /// assert_eq!(v.x(), 3.0);
+    /// assert_eq!(v.y(), 4.0);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean2>) -> Self {
@@ -181,8 +181,8 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Vector<T> {
     ///
     /// let mv: Multivector<f64, Euclidean2> = Multivector::vector(&[3.0, 4.0]);
     /// let v = Vector::try_from(mv).unwrap();
-    /// assert_eq!(v.x, 3.0);
-    /// assert_eq!(v.y, 4.0);
+    /// assert_eq!(v.x(), 3.0);
+    /// assert_eq!(v.y(), 4.0);
     /// ```
     fn try_from(mv: Multivector<T, Euclidean2>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
@@ -223,7 +223,7 @@ impl<T: Float> From<Bivector<T>> for Multivector<T, Euclidean2> {
     /// ```
     fn from(b: Bivector<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(E12_IDX), b.0);
+        mv.set(Blade::from_index(E12_IDX), b.value());
         mv
     }
 }
@@ -330,8 +330,8 @@ impl<T: Float> From<Rotor<T>> for Multivector<T, Euclidean2> {
     /// ```
     fn from(r: Rotor<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(SCALAR_IDX), r.s);
-        mv.set(Blade::from_index(E12_IDX), r.xy);
+        mv.set(Blade::from_index(SCALAR_IDX), r.s());
+        mv.set(Blade::from_index(E12_IDX), r.xy());
         mv
     }
 }
@@ -355,7 +355,7 @@ impl<T: Float> Rotor<T> {
     /// let mv: Multivector<f64, Euclidean2> = original.into();
     /// let recovered = Rotor::from_multivector_unchecked(&mv);
     ///
-    /// assert!((original.s - recovered.s).abs() < 1e-10);
+    /// assert!((original.s() - recovered.s()).abs() < 1e-10);
     /// ```
     #[inline]
     pub fn from_multivector_unchecked(mv: &Multivector<T, Euclidean2>) -> Self {
@@ -396,8 +396,8 @@ impl<T: Float> TryFrom<Multivector<T, Euclidean2>> for Rotor<T> {
     /// let mv: Multivector<f64, Euclidean2> = original.into();
     /// let recovered = Rotor::try_from(mv).unwrap();
     ///
-    /// assert!((original.s - recovered.s).abs() < 1e-10);
-    /// assert!((original.xy - recovered.xy).abs() < 1e-10);
+    /// assert!((original.s() - recovered.s()).abs() < 1e-10);
+    /// assert!((original.xy() - recovered.xy()).abs() < 1e-10);
     /// ```
     fn try_from(mv: Multivector<T, Euclidean2>) -> Result<Self, Self::Error> {
         let tolerance = T::from_f64(CONVERSION_TOLERANCE);
@@ -456,8 +456,8 @@ impl<T: Float> Multivector<T, Euclidean2> {
     /// assert!(bivector.is_none()); // No bivector part
     ///
     /// let vec = vector.unwrap();
-    /// assert!((vec.x - 3.0).abs() < 1e-10);
-    /// assert!((vec.y - 4.0).abs() < 1e-10);
+    /// assert!((vec.x() - 3.0).abs() < 1e-10);
+    /// assert!((vec.y() - 4.0).abs() < 1e-10);
     /// ```
     ///
     /// # Example: Mixed multivector
@@ -475,7 +475,7 @@ impl<T: Float> Multivector<T, Euclidean2> {
     /// let (scalar, vector, bivector) = mv.to_specialized(1e-10);
     ///
     /// assert_eq!(scalar, Some(2.0));
-    /// assert_eq!(vector.map(|v| (v.x, v.y)), Some((3.0, 4.0)));
+    /// assert_eq!(vector.map(|v| (v.x(), v.y())), Some((3.0, 4.0)));
     /// assert_eq!(bivector.map(|b| b.value()), Some(5.0));
     /// ```
     pub fn to_specialized(&self, tolerance: T) -> Specialized<T> {
@@ -489,7 +489,7 @@ impl<T: Float> Multivector<T, Euclidean2> {
 
         // Extract vector (grade 1)
         let vec = Vector::from_multivector_unchecked(self);
-        let vector = if vec.x.abs() > tolerance || vec.y.abs() > tolerance {
+        let vector = if vec.x().abs() > tolerance || vec.y().abs() > tolerance {
             Some(vec)
         } else {
             None
@@ -497,7 +497,7 @@ impl<T: Float> Multivector<T, Euclidean2> {
 
         // Extract bivector (grade 2)
         let biv = Bivector::from_multivector_unchecked(self);
-        let bivector = if biv.0.abs() > tolerance {
+        let bivector = if biv.value().abs() > tolerance {
             Some(biv)
         } else {
             None
@@ -683,8 +683,8 @@ mod tests {
         fn generic_vector_to_vec2(x in -100.0f64..100.0, y in -100.0f64..100.0) {
             let mv: Multivector<f64, Euclidean2> = Multivector::vector(&[x, y]);
             let v = Vector::try_from(mv).expect("pure vector should convert");
-            prop_assert!(abs_diff_eq!(v.x, x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.y, y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.x(), x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.y(), y, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that a generic bivector Multivector converts to Bivector correctly.
@@ -703,8 +703,8 @@ mod tests {
             mv.set(Blade::from_index(SCALAR_IDX), s);
             mv.set(Blade::from_index(E12_IDX), xy);
             let r = Rotor::try_from(mv).expect("even element should convert");
-            prop_assert!(abs_diff_eq!(r.s, s, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(r.xy, xy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.s(), s, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(r.xy(), xy, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Test that full generic Multivector fails TryFrom for specialized types.
@@ -761,8 +761,8 @@ mod tests {
             // Check components
             let expected_s = ax * bx + ay * by; // dot product
             let expected_xy = ax * by - ay * bx; // wedge product
-            prop_assert!(abs_diff_eq!(rotor.s, expected_s, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotor.xy, expected_xy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotor.s(), expected_s, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotor.xy(), expected_xy, epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -780,7 +780,7 @@ mod tests {
             prop_assert!(scalar.is_none());
             prop_assert!(bivector.is_none());
 
-            if v.x.abs().max(v.y.abs()) > ABS_DIFF_EQ_EPS {
+            if v.x().abs().max(v.y().abs()) > ABS_DIFF_EQ_EPS {
                 prop_assert!(vector.is_some());
                 let vec = vector.unwrap();
                 prop_assert!(abs_diff_eq!(vec, v, epsilon = ABS_DIFF_EQ_EPS));
@@ -829,15 +829,15 @@ mod tests {
             prop_assert!(vector.is_none());
 
             // Check scalar part
-            if r.s.abs() > ABS_DIFF_EQ_EPS {
+            if r.s().abs() > ABS_DIFF_EQ_EPS {
                 prop_assert!(scalar.is_some());
-                prop_assert!(abs_diff_eq!(scalar.unwrap(), r.s, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(abs_diff_eq!(scalar.unwrap(), r.s(), epsilon = ABS_DIFF_EQ_EPS));
             }
 
             // Check bivector part
-            if r.xy.abs() > ABS_DIFF_EQ_EPS {
+            if r.xy().abs() > ABS_DIFF_EQ_EPS {
                 prop_assert!(bivector.is_some());
-                prop_assert!(abs_diff_eq!(bivector.unwrap().value(), r.xy, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(abs_diff_eq!(bivector.unwrap().value(), r.xy(), epsilon = ABS_DIFF_EQ_EPS));
             }
         }
 
@@ -896,8 +896,8 @@ mod tests {
         assert_eq!(scalar, Some(2.0));
         assert!(vector.is_some());
         let v = vector.unwrap();
-        assert!(abs_diff_eq!(v.x, 3.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(v.y, 4.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.x(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(v.y(), 4.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(bivector.is_some());
         assert!(abs_diff_eq!(
             bivector.unwrap().value(),

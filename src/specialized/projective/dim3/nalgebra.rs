@@ -100,9 +100,9 @@ where
         // For a composed motor R*T, the translation extraction is:
         // t = 2 * (s*e0i + cross terms from rotation-translation interaction)
         // For simplicity, we extract as if it's a pure translation
-        let tx = m.e01 * T::TWO;
-        let ty = m.e02 * T::TWO;
-        let tz = m.e03 * T::TWO;
+        let tx = m.e01() * T::TWO;
+        let ty = m.e02() * T::TWO;
+        let tz = m.e03() * T::TWO;
 
         na::Isometry3::from_parts(na::Translation3::new(tx, ty, tz), q)
     }
@@ -126,7 +126,7 @@ where
     /// - `q.k` → `motor.e12` (z-axis rotation, xy-plane)
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
-        Motor::new(
+        Motor::new_unchecked(
             q.w,
             q.i,
             q.j,
@@ -156,7 +156,7 @@ where
     /// - `motor.e31` → `q.j` (y-axis rotation)
     /// - `motor.e12` → `q.k` (z-axis rotation)
     fn from(m: Motor<T>) -> Self {
-        let q = na::Quaternion::new(m.s, m.e23, m.e31, m.e12);
+        let q = na::Quaternion::new(m.s(), m.e23(), m.e31(), m.e12());
         na::UnitQuaternion::new_normalize(q)
     }
 }
@@ -264,11 +264,11 @@ where
         let d = unitized.distance();
 
         // Create axis as unit vector
-        let axis = na::Unit::new_unchecked(na::Vector3::new(n.x, n.y, n.z));
+        let axis = na::Unit::new_unchecked(na::Vector3::new(n.x(), n.y(), n.z()));
 
         // Find a point on the plane: for plane n·x + d = 0, the point P = -d*n lies on it
         // since n·(-d*n) = -d*|n|² = -d (when |n|=1), and -d + d = 0 ✓
-        let point_on_plane = na::Point3::new(-d * n.x, -d * n.y, -d * n.z);
+        let point_on_plane = na::Point3::new(-d * n.x(), -d * n.y(), -d * n.z());
 
         Ok(na::Reflection::new_containing_point(axis, &point_on_plane))
     }
@@ -552,7 +552,7 @@ mod tests {
             let axis = EuclideanVector::new(ax / len, ay / len, az / len);
 
             let pga_rot = Motor::from_axis_angle(&axis, angle);
-            let na_axis = na::Unit::new_normalize(na::Vector3::new(axis.x, axis.y, axis.z));
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(axis.x(), axis.y(), axis.z()));
             let na_rot = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
 
             let pga_point = Point::new(px, py, pz);
@@ -1106,13 +1106,13 @@ mod tests {
         let motor: Motor<f64> = q.into();
 
         // Should produce identity motor
-        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e23, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e31, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e23(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e31(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e01(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e02(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e03(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     // ========================================================================

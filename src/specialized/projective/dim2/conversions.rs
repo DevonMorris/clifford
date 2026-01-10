@@ -153,10 +153,10 @@ impl<T: Float> From<Motor<T>> for Multivector<T, Projective2> {
     /// Converts a [`Motor`] to a [`Multivector`].
     fn from(m: Motor<T>) -> Self {
         let mut mv = Multivector::zero();
-        mv.set(Blade::from_index(SCALAR), m.s);
-        mv.set(Blade::from_index(E12), m.e12);
-        mv.set(Blade::from_index(E20), m.e20);
-        mv.set(Blade::from_index(E01), m.e01);
+        mv.set(Blade::from_index(SCALAR), m.s());
+        mv.set(Blade::from_index(E12), m.e12());
+        mv.set(Blade::from_index(E20), m.e20());
+        mv.set(Blade::from_index(E01), m.e01());
         mv
     }
 }
@@ -181,12 +181,12 @@ impl<T: Float> TryFrom<Multivector<T, Projective2>> for Motor<T> {
             return Err(ConversionError::NonZeroPseudoscalar);
         }
 
-        Ok(Motor {
-            s: mv.get(Blade::from_index(SCALAR)),
-            e12: mv.get(Blade::from_index(E12)),
-            e20: mv.get(Blade::from_index(E20)),
-            e01: mv.get(Blade::from_index(E01)),
-        })
+        Ok(Motor::new_unchecked(
+            mv.get(Blade::from_index(SCALAR)),
+            mv.get(Blade::from_index(E12)),
+            mv.get(Blade::from_index(E20)),
+            mv.get(Blade::from_index(E01)),
+        ))
     }
 }
 
@@ -214,7 +214,7 @@ impl<T: Float> From<EuclideanVector<T>> for Point<T> {
     /// ```
     #[inline]
     fn from(v: EuclideanVector<T>) -> Self {
-        Point::new(v.x, v.y)
+        Point::new(v.x(), v.y())
     }
 }
 
@@ -234,8 +234,8 @@ impl<T: Float> TryFrom<Point<T>> for EuclideanVector<T> {
     /// let p = Point::new(3.0, 4.0);
     /// let v: EucVec<f64> = p.try_into().unwrap();
     ///
-    /// assert_eq!(v.x, 3.0);
-    /// assert_eq!(v.y, 4.0);
+    /// assert_eq!(v.x(), 3.0);
+    /// assert_eq!(v.y(), 4.0);
     /// ```
     fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
         if p.e0.abs() < T::epsilon() {
@@ -276,12 +276,7 @@ impl<T: Float> From<EuclideanRotor<T>> for Motor<T> {
     /// ```
     #[inline]
     fn from(r: EuclideanRotor<T>) -> Self {
-        Motor {
-            s: r.s,
-            e12: r.xy,
-            e20: T::zero(),
-            e01: T::zero(),
-        }
+        Motor::new_unchecked(r.s(), r.xy(), T::zero(), T::zero())
     }
 }
 
@@ -318,12 +313,12 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     /// let v = Vector::new(1.0, 0.0);
     /// let rotated = rotor.rotate(v);
     ///
-    /// assert!(abs_diff_eq!(rotated.x, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(rotated.y, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
     fn from(m: Motor<T>) -> Self {
-        EuclideanRotor::new(m.s, m.e12).normalized()
+        EuclideanRotor::new(m.s(), m.e12()).normalized()
     }
 }
 
@@ -351,12 +346,12 @@ impl<T: Float> Motor<T> {
     /// let motor = rotation.compose(&translation);
     ///
     /// let result = motor.transform_euclidean(&v);
-    /// assert!(abs_diff_eq!(result.x, 1.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(result.y, 3.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.x(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.y(), 3.0, epsilon = 1e-10));
     /// ```
     #[inline]
     pub fn transform_euclidean(&self, v: &EuclideanVector<T>) -> EuclideanVector<T> {
-        let p = Point::new(v.x, v.y);
+        let p = Point::new(v.x(), v.y());
         let transformed = self.transform_point(&p);
         // Safe because motor preserves weight of finite points
         EuclideanVector::new(
@@ -436,14 +431,26 @@ mod tests {
 
     #[test]
     fn motor_roundtrip() {
-        let motor = Motor::new(0.5, 0.1, 0.2, 0.3);
+        let motor = Motor::new_unchecked(0.5, 0.1, 0.2, 0.3);
         let mv: Multivector<f64, Projective2> = motor.into();
         let back = Motor::try_from(mv).unwrap();
 
-        assert!(abs_diff_eq!(motor.s, back.s, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12, back.e12, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e20, back.e20, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e01, back.e01, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.s(), back.s(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            motor.e12(),
+            back.e12(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            motor.e20(),
+            back.e20(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            motor.e01(),
+            back.e01(),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
@@ -475,8 +482,8 @@ mod tests {
             let result_orig = rotor.rotate(v);
             let result_back = back.rotate(v);
 
-            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Tests Motor -> Rotor -> Motor roundtrip preserves rotation behavior.
@@ -516,8 +523,8 @@ mod tests {
             let p = Point::new(x, y);
             let rotated_pga = motor.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(rotated_euc.x, rotated_pga.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_euc.y, rotated_pga.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_euc.x(), rotated_pga.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_euc.y(), rotated_pga.y(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Tests that Motor -> Rotor extracts correct rotation from composed motor.
@@ -542,8 +549,8 @@ mod tests {
             let result = rotor.rotate(v);
             let expected = expected_rotor.rotate(v);
 
-            prop_assert!(abs_diff_eq!(result.x, expected.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result.y, expected.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result.x(), expected.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result.y(), expected.y(), epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 
@@ -553,10 +560,10 @@ mod tests {
         let motor: Motor<f64> = rotor.into();
 
         // Should be identity motor (no rotation, no translation)
-        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e20, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e20(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e01(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -565,7 +572,7 @@ mod tests {
         let rotor: EuclideanRotor<f64> = motor.into();
 
         // Should be identity rotor
-        assert!(abs_diff_eq!(rotor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rotor.xy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rotor.xy(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

@@ -443,20 +443,97 @@ impl<T: Float> Default for Line<T> {
 #[repr(C)]
 pub struct Motor<T: Float> {
     /// Scalar part (cos(θ/2) for pure rotation).
-    pub s: T,
+    s: T,
     /// Coefficient of e₁₂ (sin(θ/2) for pure rotation).
-    pub e12: T,
+    e12: T,
     /// Coefficient of e₂₀ (translation x / 2 for pure translation).
-    pub e20: T,
+    e20: T,
     /// Coefficient of e₀₁ (translation y / 2 for pure translation).
-    pub e01: T,
+    e01: T,
 }
 
 impl<T: Float> Motor<T> {
-    /// Creates a motor from components.
+    // ========================================================================
+    // Accessors
+    // ========================================================================
+
+    /// Returns the scalar component.
     #[inline]
-    pub fn new(s: T, e12: T, e20: T, e01: T) -> Self {
+    pub fn s(&self) -> T {
+        self.s
+    }
+
+    /// Returns the e₁₂ (rotation) component.
+    #[inline]
+    pub fn e12(&self) -> T {
+        self.e12
+    }
+
+    /// Returns the e₂₀ (translation x) component.
+    #[inline]
+    pub fn e20(&self) -> T {
+        self.e20
+    }
+
+    /// Returns the e₀₁ (translation y) component.
+    #[inline]
+    pub fn e01(&self) -> T {
+        self.e01
+    }
+
+    /// Returns all components as a tuple `(s, e12, e20, e01)`.
+    #[inline]
+    pub fn components(&self) -> (T, T, T, T) {
+        (self.s, self.e12, self.e20, self.e01)
+    }
+
+    // ========================================================================
+    // Constructors
+    // ========================================================================
+
+    /// Creates a motor from raw components without validation.
+    ///
+    /// # Safety
+    ///
+    /// The caller should ensure the motor has non-zero weight norm
+    /// (`s² + e12² > 0`) for geometric operations.
+    ///
+    /// This is primarily for internal use, automatic differentiation, and
+    /// performance-critical code where constraints are known to be satisfied.
+    #[inline]
+    pub fn new_unchecked(s: T, e12: T, e20: T, e01: T) -> Self {
         Self { s, e12, e20, e01 }
+    }
+
+    /// Attempts to create a motor from raw components.
+    ///
+    /// Returns an error if the weight norm is zero (degenerate motor).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim2::Motor;
+    /// use clifford::specialized::projective::MotorConstraintError;
+    ///
+    /// // Valid motor
+    /// let valid = Motor::<f64>::try_from_components(1.0, 0.0, 1.0, 2.0);
+    /// assert!(valid.is_ok());
+    ///
+    /// // Invalid motor (zero weight norm)
+    /// let invalid = Motor::<f64>::try_from_components(0.0, 0.0, 1.0, 2.0);
+    /// assert!(matches!(invalid, Err(MotorConstraintError::ZeroWeightNorm)));
+    /// ```
+    pub fn try_from_components(
+        s: T,
+        e12: T,
+        e20: T,
+        e01: T,
+    ) -> Result<Self, super::super::MotorConstraintError> {
+        let weight_norm_sq = s * s + e12 * e12;
+        if weight_norm_sq < T::epsilon() {
+            return Err(super::super::MotorConstraintError::ZeroWeightNorm);
+        }
+        Ok(Self { s, e12, e20, e01 })
     }
 
     /// Creates the identity motor (no transformation).

@@ -86,7 +86,7 @@ where
 
         // Note: for a composed motor, the translation extraction is approximate
         // For accurate extraction, we'd need to decompose the motor properly
-        na::Isometry2::new(na::Vector2::new(t.x, t.y), angle)
+        na::Isometry2::new(na::Vector2::new(t.x(), t.y()), angle)
     }
 }
 
@@ -134,8 +134,8 @@ where
     /// - `sin(θ) = 2·sin(θ/2)·cos(θ/2) = 2·s·e12`
     fn from(m: Motor<T>) -> Self {
         // Double angle formulas
-        let cos_theta = m.s * m.s - m.e12 * m.e12;
-        let sin_theta = T::TWO * m.s * m.e12;
+        let cos_theta = m.s() * m.s() - m.e12() * m.e12();
+        let sin_theta = T::TWO * m.s() * m.e12();
         na::UnitComplex::from_cos_sin_unchecked(cos_theta, sin_theta)
     }
 }
@@ -624,8 +624,8 @@ mod tests {
         let motor: Motor<f64> = uc.into();
 
         // Should produce identity motor (rotation part)
-        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]

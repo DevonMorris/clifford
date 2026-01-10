@@ -29,8 +29,8 @@ mod dim2_tests {
             let na_v: na::Vector2<f64> = v.into();
             let back: dim2::Vector<f64> = na_v.into();
 
-            prop_assert!(abs_diff_eq!(v.x, back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.y, back.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.x(), back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.y(), back.y(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Rotor roundtrip preserves rotation angle
@@ -64,8 +64,8 @@ mod dim2_tests {
             // Convert back and compare
             let rotated_back: dim2::Vector<f64> = rotated_na.into();
 
-            prop_assert!(abs_diff_eq!(rotated_cliff.x, rotated_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_cliff.y, rotated_back.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_cliff.x(), rotated_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_cliff.y(), rotated_back.y(), epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 }
@@ -81,9 +81,9 @@ mod dim3_tests {
             let na_v: na::Vector3<f64> = v.into();
             let back: dim3::Vector<f64> = na_v.into();
 
-            prop_assert!(abs_diff_eq!(v.x, back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.y, back.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(v.z, back.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.x(), back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.y(), back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(v.z(), back.z(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Bivector <-> Vector3 via Hodge dual roundtrip
@@ -93,9 +93,9 @@ mod dim3_tests {
             let na_v: na::Vector3<f64> = b.into();
             let back: dim3::Bivector<f64> = na_v.into();
 
-            prop_assert!(abs_diff_eq!(b.xy, back.xy, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.xz, back.xz, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.yz, back.yz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xy(), back.xy(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xz(), back.xz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.yz(), back.yz(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Bivector to nalgebra vector matches Bivector::dual()
@@ -105,9 +105,9 @@ mod dim3_tests {
             let dual = b.dual();
             let na_v: na::Vector3<f64> = b.into();
 
-            prop_assert!(abs_diff_eq!(dual.x, na_v.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(dual.y, na_v.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(dual.z, na_v.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(dual.x(), na_v.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(dual.y(), na_v.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(dual.z(), na_v.z, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Bivector <-> Matrix3 (antisymmetric) roundtrip
@@ -117,9 +117,9 @@ mod dim3_tests {
             let m: na::Matrix3<f64> = b.into();
             let back: dim3::Bivector<f64> = m.try_into().unwrap();
 
-            prop_assert!(abs_diff_eq!(b.xy, back.xy, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.xz, back.xz, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.yz, back.yz, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xy(), back.xy(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.xz(), back.xz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.yz(), back.yz(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Matrix from bivector is antisymmetric
@@ -170,9 +170,9 @@ mod dim3_tests {
             // Convert back and compare
             let rotated_back: dim3::Vector<f64> = rotated_na.into();
 
-            prop_assert!(abs_diff_eq!(rotated_cliff.x, rotated_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_cliff.y, rotated_back.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_cliff.z, rotated_back.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_cliff.x(), rotated_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_cliff.y(), rotated_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_cliff.z(), rotated_back.z(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Rotor <-> Rotation3 roundtrip via rotation equivalence
@@ -197,9 +197,9 @@ mod dim3_tests {
             let rotated_orig = rotor.rotate(test_v);
             let rotated_back = back.rotate(test_v);
 
-            prop_assert!(abs_diff_eq!(rotated_orig.x, rotated_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_orig.y, rotated_back.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_orig.z, rotated_back.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_orig.x(), rotated_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_orig.y(), rotated_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rotated_orig.z(), rotated_back.z(), epsilon = ABS_DIFF_EQ_EPS));
         }
     }
 

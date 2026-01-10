@@ -13,7 +13,7 @@ impl<T: Float> Neg for Vector<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.x, -self.y, -self.z)
+        Self::new(-self.x(), -self.y(), -self.z())
     }
 }
 
@@ -22,7 +22,11 @@ impl<T: Float> Add for Vector<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.x + other.x, self.y + other.y, self.z + other.z)
+        Self::new(
+            self.x() + other.x(),
+            self.y() + other.y(),
+            self.z() + other.z(),
+        )
     }
 }
 
@@ -31,7 +35,11 @@ impl<T: Float> Sub for Vector<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.x - other.x, self.y - other.y, self.z - other.z)
+        Self::new(
+            self.x() - other.x(),
+            self.y() - other.y(),
+            self.z() - other.z(),
+        )
     }
 }
 
@@ -40,7 +48,7 @@ impl<T: Float> Mul<T> for Vector<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self::new(self.x * scalar, self.y * scalar, self.z * scalar)
+        Self::new(self.x() * scalar, self.y() * scalar, self.z() * scalar)
     }
 }
 
@@ -49,7 +57,7 @@ impl Mul<Vector<f32>> for f32 {
 
     #[inline]
     fn mul(self, v: Vector<f32>) -> Self::Output {
-        Vector::new(self * v.x, self * v.y, self * v.z)
+        Vector::new(self * v.x(), self * v.y(), self * v.z())
     }
 }
 
@@ -58,7 +66,7 @@ impl Mul<Vector<f64>> for f64 {
 
     #[inline]
     fn mul(self, v: Vector<f64>) -> Self::Output {
-        Vector::new(self * v.x, self * v.y, self * v.z)
+        Vector::new(self * v.x(), self * v.y(), self * v.z())
     }
 }
 
@@ -81,7 +89,7 @@ impl<T: Float> Neg for Bivector<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.xy, -self.xz, -self.yz)
+        Self::new(-self.xy(), -self.xz(), -self.yz())
     }
 }
 
@@ -90,7 +98,11 @@ impl<T: Float> Add for Bivector<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.xy + other.xy, self.xz + other.xz, self.yz + other.yz)
+        Self::new(
+            self.xy() + other.xy(),
+            self.xz() + other.xz(),
+            self.yz() + other.yz(),
+        )
     }
 }
 
@@ -99,7 +111,11 @@ impl<T: Float> Sub for Bivector<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.xy - other.xy, self.xz - other.xz, self.yz - other.yz)
+        Self::new(
+            self.xy() - other.xy(),
+            self.xz() - other.xz(),
+            self.yz() - other.yz(),
+        )
     }
 }
 
@@ -108,7 +124,7 @@ impl<T: Float> Mul<T> for Bivector<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self::new(self.xy * scalar, self.xz * scalar, self.yz * scalar)
+        Self::new(self.xy() * scalar, self.xz() * scalar, self.yz() * scalar)
     }
 }
 
@@ -117,7 +133,7 @@ impl Mul<Bivector<f32>> for f32 {
 
     #[inline]
     fn mul(self, b: Bivector<f32>) -> Self::Output {
-        Bivector::new(self * b.xy, self * b.xz, self * b.yz)
+        Bivector::new(self * b.xy(), self * b.xz(), self * b.yz())
     }
 }
 
@@ -126,7 +142,7 @@ impl Mul<Bivector<f64>> for f64 {
 
     #[inline]
     fn mul(self, b: Bivector<f64>) -> Self::Output {
-        Bivector::new(self * b.xy, self * b.xz, self * b.yz)
+        Bivector::new(self * b.xy(), self * b.xz(), self * b.yz())
     }
 }
 
@@ -139,7 +155,7 @@ impl<T: Float> Neg for Trivector<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self(-self.0)
+        Self::new(-self.value())
     }
 }
 
@@ -148,7 +164,7 @@ impl<T: Float> Add for Trivector<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self(self.0 + other.0)
+        Self::new(self.value() + other.value())
     }
 }
 
@@ -157,7 +173,7 @@ impl<T: Float> Sub for Trivector<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self(self.0 - other.0)
+        Self::new(self.value() - other.value())
     }
 }
 
@@ -166,7 +182,7 @@ impl<T: Float> Mul<T> for Trivector<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self(self.0 * scalar)
+        Self::new(self.value() * scalar)
     }
 }
 
@@ -179,7 +195,7 @@ impl<T: Float> Neg for Rotor<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.s, -self.b)
+        Self::new(-self.s(), -self.b())
     }
 }
 
@@ -188,7 +204,7 @@ impl<T: Float> Add for Rotor<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.s + other.s, self.b + other.b)
+        Self::new(self.s() + other.s(), self.b() + other.b())
     }
 }
 
@@ -197,7 +213,7 @@ impl<T: Float> Sub for Rotor<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.s - other.s, self.b - other.b)
+        Self::new(self.s() - other.s(), self.b() - other.b())
     }
 }
 
@@ -216,7 +232,7 @@ impl<T: Float> Mul<T> for Rotor<T> {
 
     #[inline]
     fn mul(self, scalar: T) -> Self::Output {
-        Self::new(self.s * scalar, self.b * scalar)
+        Self::new(self.s() * scalar, self.b() * scalar)
     }
 }
 
@@ -239,7 +255,7 @@ impl<T: Float> Neg for Even<T> {
 
     #[inline]
     fn neg(self) -> Self::Output {
-        Self::new(-self.s, -self.b)
+        Self::new(-self.s(), -self.b())
     }
 }
 
@@ -248,7 +264,7 @@ impl<T: Float> Add for Even<T> {
 
     #[inline]
     fn add(self, other: Self) -> Self::Output {
-        Self::new(self.s + other.s, self.b + other.b)
+        Self::new(self.s() + other.s(), self.b() + other.b())
     }
 }
 
@@ -257,7 +273,7 @@ impl<T: Float> Sub for Even<T> {
 
     #[inline]
     fn sub(self, other: Self) -> Self::Output {
-        Self::new(self.s - other.s, self.b - other.b)
+        Self::new(self.s() - other.s(), self.b() - other.b())
     }
 }
 
@@ -402,8 +418,8 @@ mod tests {
         let at_0 = r1.slerp(r2, 0.0);
         let at_1 = r1.slerp(r2, 1.0);
 
-        assert!(abs_diff_eq!(at_0.s, r1.s, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(at_1.s, r2.s, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(at_0.s(), r1.s(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(at_1.s(), r2.s(), epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -417,7 +433,15 @@ mod tests {
 
         // 45° rotation should give (√2/2, √2/2, 0)
         let expected = std::f64::consts::FRAC_1_SQRT_2;
-        assert!(abs_diff_eq!(rotated.x, expected, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rotated.y, expected, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            rotated.x(),
+            expected,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            rotated.y(),
+            expected,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 }
