@@ -76,9 +76,13 @@
 //! ```
 
 // Ensure nalgebra feature flags are mutually exclusive
-#[cfg(all(feature = "nalgebra-0_33", feature = "nalgebra-0_34"))]
+#[cfg(any(
+    all(feature = "nalgebra-0_32", feature = "nalgebra-0_33"),
+    all(feature = "nalgebra-0_32", feature = "nalgebra-0_34"),
+    all(feature = "nalgebra-0_33", feature = "nalgebra-0_34"),
+))]
 compile_error!(
-    "Features `nalgebra-0_33` and `nalgebra-0_34` are mutually exclusive. Enable only one."
+    "Features `nalgebra-0_32`, `nalgebra-0_33`, and `nalgebra-0_34` are mutually exclusive. Enable only one."
 );
 
 pub mod algebra;

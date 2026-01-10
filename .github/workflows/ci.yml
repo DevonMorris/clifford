@@ -20,6 +20,7 @@ jobs:
       # Check with serde and proptest (non-mutually-exclusive features)
       - run: cargo check --features proptest-support,serde
       # Check each nalgebra version separately (mutually exclusive)
+      - run: cargo check --features nalgebra-0_32
       - run: cargo check --features nalgebra-0_33
       - run: cargo check --features nalgebra-0_34
       # Verify benchmarks compile
@@ -39,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        nalgebra: [nalgebra-0_33, nalgebra-0_34]
+        nalgebra: [nalgebra-0_32, nalgebra-0_33, nalgebra-0_34]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -68,6 +69,7 @@ jobs:
       # Lint with serde and proptest (non-mutually-exclusive features)
       - run: cargo clippy --features proptest-support,serde -- -D warnings
       # Lint each nalgebra version separately (mutually exclusive)
+      - run: cargo clippy --features nalgebra-0_32 -- -D warnings
       - run: cargo clippy --features nalgebra-0_33 -- -D warnings
       - run: cargo clippy --features nalgebra-0_34 -- -D warnings
 

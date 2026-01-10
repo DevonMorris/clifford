@@ -10,6 +10,8 @@ use crate::scalar::Float;
 
 use super::types::{Motor, Point};
 
+#[cfg(feature = "nalgebra-0_32")]
+use nalgebra_0_32 as na;
 #[cfg(feature = "nalgebra-0_33")]
 use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
