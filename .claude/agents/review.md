@@ -40,6 +40,9 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Consistent naming
 - [ ] No fully-qualified syntax (`<Type as Trait>::`) when simpler syntax works
 - [ ] Foreign traits not exposed in public API (use helper methods or re-export in prelude)
+- [ ] Uses Clifford types (not tuples) in public APIs:
+  - Returns `Vector` instead of `(T, T, T)`
+  - Accepts `&Vector` instead of `(T, T, T)`
 
 ### 5. Performance & Benchmarking
 - [ ] No unnecessary allocations

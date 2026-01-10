@@ -12,6 +12,7 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::scalar::Float;
+use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
 /// A point in 3D PGA (grade 1 vector).
 ///
@@ -244,10 +245,10 @@ impl<T: Float> Default for Point<T> {
 /// let line = Line::join(&p1, &p2);
 ///
 /// // Direction should be (1, 0, 0)
-/// let (dx, dy, dz) = line.direction();
-/// assert!(abs_diff_eq!(dx, 1.0, epsilon = 1e-10));
-/// assert!(abs_diff_eq!(dy, 0.0, epsilon = 1e-10));
-/// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
+/// let d = line.direction();
+/// assert!(abs_diff_eq!(d.x, 1.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(d.y, 0.0, epsilon = 1e-10));
+/// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
@@ -284,21 +285,21 @@ impl<T: Float> Line<T> {
     ///
     /// # Arguments
     ///
-    /// * `direction` - The line's direction vector `(dx, dy, dz)`
-    /// * `moment` - The line's moment vector `(mx, my, mz)`
+    /// * `direction` - The line's direction vector
+    /// * `moment` - The line's moment vector
     ///
     /// # Note
     ///
     /// For a valid line, `direction · moment = 0`.
     #[inline]
-    pub fn from_plucker(direction: (T, T, T), moment: (T, T, T)) -> Self {
+    pub fn from_plucker(direction: &EuclideanVector<T>, moment: &EuclideanVector<T>) -> Self {
         Self {
-            e01: direction.0,
-            e02: direction.1,
-            e03: direction.2,
-            e23: moment.0,
-            e31: moment.1,
-            e12: moment.2,
+            e01: direction.x,
+            e02: direction.y,
+            e03: direction.z,
+            e23: moment.x,
+            e31: moment.y,
+            e12: moment.z,
         }
     }
 
@@ -321,9 +322,9 @@ impl<T: Float> Line<T> {
     /// let line = Line::join(&origin, &p);
     ///
     /// // Direction is (3, 4, 0), normalized
-    /// let (dx, dy, dz) = line.direction();
-    /// assert!(abs_diff_eq!(dx, 3.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(dy, 4.0, epsilon = 1e-10));
+    /// let d = line.direction();
+    /// assert!(abs_diff_eq!(d.x, 3.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.y, 4.0, epsilon = 1e-10));
     /// ```
     pub fn join(p: &Point<T>, q: &Point<T>) -> Self {
         // P ∧ Q for P = (px, py, pz, pw) and Q = (qx, qy, qz, qw)
@@ -348,24 +349,25 @@ impl<T: Float> Line<T> {
     /// # Arguments
     ///
     /// * `point` - A point on the line
-    /// * `direction` - The direction vector `(dx, dy, dz)`
+    /// * `direction` - The direction vector
     ///
     /// # Example
     ///
     /// ```
     /// use clifford::specialized::projective::dim3::{Point, Line};
+    /// use clifford::specialized::euclidean::dim3::Vector;
     /// use approx::abs_diff_eq;
     ///
     /// let p = Point::new(1.0, 2.0, 3.0);
-    /// let line = Line::from_point_and_direction(&p, (0.0, 0.0, 1.0));
+    /// let line = Line::from_point_and_direction(&p, &Vector::new(0.0, 0.0, 1.0));
     ///
     /// // Line through (1,2,3) in Z direction
-    /// let (dx, dy, dz) = line.direction();
-    /// assert!(abs_diff_eq!(dz, 1.0, epsilon = 1e-10));
+    /// let d = line.direction();
+    /// assert!(abs_diff_eq!(d.z, 1.0, epsilon = 1e-10));
     /// ```
-    pub fn from_point_and_direction(point: &Point<T>, direction: (T, T, T)) -> Self {
+    pub fn from_point_and_direction(point: &Point<T>, direction: &EuclideanVector<T>) -> Self {
         // Create an ideal point (point at infinity) in the direction
-        let ideal = Point::ideal(direction.0, direction.1, direction.2);
+        let ideal = Point::ideal(direction.x, direction.y, direction.z);
         // Line is the join of the finite point and the ideal point
         Self::join(point, &ideal)
     }
@@ -374,8 +376,8 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn x_axis() -> Self {
         Self::from_plucker(
-            (T::one(), T::zero(), T::zero()),
-            (T::zero(), T::zero(), T::zero()),
+            &EuclideanVector::new(T::one(), T::zero(), T::zero()),
+            &EuclideanVector::new(T::zero(), T::zero(), T::zero()),
         )
     }
 
@@ -383,8 +385,8 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn y_axis() -> Self {
         Self::from_plucker(
-            (T::zero(), T::one(), T::zero()),
-            (T::zero(), T::zero(), T::zero()),
+            &EuclideanVector::new(T::zero(), T::one(), T::zero()),
+            &EuclideanVector::new(T::zero(), T::zero(), T::zero()),
         )
     }
 
@@ -392,8 +394,8 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn z_axis() -> Self {
         Self::from_plucker(
-            (T::zero(), T::zero(), T::one()),
-            (T::zero(), T::zero(), T::zero()),
+            &EuclideanVector::new(T::zero(), T::zero(), T::one()),
+            &EuclideanVector::new(T::zero(), T::zero(), T::zero()),
         )
     }
 
@@ -410,16 +412,16 @@ impl<T: Float> Line<T> {
         )
     }
 
-    /// Returns the direction vector `(dx, dy, dz)`.
+    /// Returns the direction vector as a Euclidean vector.
     #[inline]
-    pub fn direction(&self) -> (T, T, T) {
-        (self.e01, self.e02, self.e03)
+    pub fn direction(&self) -> EuclideanVector<T> {
+        EuclideanVector::new(self.e01, self.e02, self.e03)
     }
 
-    /// Returns the moment vector `(mx, my, mz)`.
+    /// Returns the moment vector as a Euclidean vector.
     #[inline]
-    pub fn moment(&self) -> (T, T, T) {
-        (self.e23, self.e31, self.e12)
+    pub fn moment(&self) -> EuclideanVector<T> {
+        EuclideanVector::new(self.e23, self.e31, self.e12)
     }
 
     /// Returns the attitude of the line.
@@ -427,7 +429,7 @@ impl<T: Float> Line<T> {
     /// For a line, the attitude is the direction vector.
     /// This is equivalent to calling [`direction()`](Self::direction).
     #[inline]
-    pub fn attitude(&self) -> (T, T, T) {
+    pub fn attitude(&self) -> EuclideanVector<T> {
         self.direction()
     }
 
@@ -796,17 +798,18 @@ impl<T: Float> Motor<T> {
     ///
     /// # Arguments
     ///
-    /// * `axis` - The rotation axis as (x, y, z). Must be normalized (unit length).
+    /// * `axis` - The rotation axis. Must be normalized (unit length).
     /// * `angle` - Rotation angle in radians (counterclockwise when looking down the axis)
     ///
     /// # Example
     ///
     /// ```
     /// use clifford::specialized::projective::dim3::{Point, Motor};
+    /// use clifford::specialized::euclidean::dim3::Vector;
     /// use approx::abs_diff_eq;
     ///
     /// // Rotate around Z axis (same as from_rotation_z)
-    /// let motor = Motor::from_axis_angle((0.0, 0.0, 1.0), std::f64::consts::FRAC_PI_2);
+    /// let motor = Motor::from_axis_angle(&Vector::new(0.0, 0.0, 1.0), std::f64::consts::FRAC_PI_2);
     /// let p = Point::new(1.0, 0.0, 0.0);
     /// let result = motor.transform_point(&p);
     ///
@@ -815,7 +818,7 @@ impl<T: Float> Motor<T> {
     /// assert!(abs_diff_eq!(result.z(), 0.0, epsilon = 1e-10));
     /// ```
     #[inline]
-    pub fn from_axis_angle(axis: (T, T, T), angle: T) -> Self {
+    pub fn from_axis_angle(axis: &EuclideanVector<T>, angle: T) -> Self {
         // Rotation motor: R = cos(θ/2) + sin(θ/2)·(ax·e₂₃ + ay·e₃₁ + az·e₁₂)
         // The axis components map to bivector components:
         // - x-axis rotation -> e₂₃ bivector
@@ -823,12 +826,11 @@ impl<T: Float> Motor<T> {
         // - z-axis rotation -> e₁₂ bivector
         let half = angle / T::TWO;
         let sin_half = half.sin();
-        let (ax, ay, az) = axis;
         Self {
             s: half.cos(),
-            e23: ax * sin_half,
-            e31: ay * sin_half,
-            e12: az * sin_half,
+            e23: axis.x * sin_half,
+            e31: axis.y * sin_half,
+            e12: axis.z * sin_half,
             e01: T::zero(),
             e02: T::zero(),
             e03: T::zero(),
@@ -1234,10 +1236,10 @@ impl<T: Float> Plane<T> {
         Self::from_normal_and_distance(T::one(), T::zero(), T::zero(), T::zero())
     }
 
-    /// Returns the normal direction `(nx, ny, nz)`.
+    /// Returns the normal direction as a Euclidean vector.
     #[inline]
-    pub fn normal(&self) -> (T, T, T) {
-        (self.e023, self.e031, self.e012)
+    pub fn normal(&self) -> EuclideanVector<T> {
+        EuclideanVector::new(self.e023, self.e031, self.e012)
     }
 
     /// Returns the signed distance parameter `d`.
@@ -1251,7 +1253,7 @@ impl<T: Float> Plane<T> {
     /// For a plane, the attitude is the normal direction.
     /// This is equivalent to calling [`normal()`](Self::normal).
     #[inline]
-    pub fn attitude(&self) -> (T, T, T) {
+    pub fn attitude(&self) -> EuclideanVector<T> {
         self.normal()
     }
 

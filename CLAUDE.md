@@ -117,6 +117,14 @@ done
   - Encapsulate internal details; don't leak implementation (e.g., bitmask indices)
   - Methods on types are more discoverable and provide better IDE support
   - Example: `blade.grade()` is better than `grade_of_blade(index)`
+- **Use Clifford types in APIs, not tuples**
+  - Return Clifford types (e.g., `euclidean::dim3::Vector`) instead of tuples `(T, T, T)`
+  - Accept Clifford types as parameters instead of tuples
+  - Examples:
+    - `line.direction() -> Vector` (not `-> (T, T, T)`)
+    - `line.normal() -> Vector` (not `-> (T, T)`)
+    - `Motor::from_axis_angle(&Vector, T)` (not `(T, T, T), T`)
+  - This provides better IDE support, type safety, and method chaining
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()` when possible. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our public API depends on a foreign trait (e.g., `typenum::Unsigned`), either:
   - Re-export the trait in our prelude so users don't need to import the dependency directly, or

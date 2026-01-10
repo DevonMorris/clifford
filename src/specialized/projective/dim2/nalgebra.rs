@@ -82,11 +82,11 @@ where
     /// For non-unit motors, the result may not be exact.
     fn from(m: Motor<T>) -> Self {
         let angle = m.rotation_angle();
-        let (tx, ty) = m.translation();
+        let t = m.translation();
 
         // Note: for a composed motor, the translation extraction is approximate
         // For accurate extraction, we'd need to decompose the motor properly
-        na::Isometry2::new(na::Vector2::new(tx, ty), angle)
+        na::Isometry2::new(na::Vector2::new(t.x, t.y), angle)
     }
 }
 

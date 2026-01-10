@@ -144,10 +144,10 @@ impl<T: Float> Motor<T> {
     /// let rotated = rotation.transform_line(&line);
     ///
     /// // X axis rotated 90° around Z becomes Y axis
-    /// let (dx, dy, dz) = rotated.direction();
-    /// assert!(abs_diff_eq!(dx, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(dy, 1.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
+    /// let d = rotated.direction();
+    /// assert!(abs_diff_eq!(d.x, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.y, 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
     /// ```
     pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
         // For a line L = d + m (direction bivector + moment bivector)
@@ -375,7 +375,7 @@ impl<T: Float> Line<T> {
 
         let d = self.direction();
         let m = self.moment();
-        let d_sq = d.0 * d.0 + d.1 * d.1 + d.2 * d.2;
+        let d_sq = d.x * d.x + d.y * d.y + d.z * d.z;
 
         if d_sq < T::epsilon() {
             return Point::origin();
@@ -383,9 +383,9 @@ impl<T: Float> Line<T> {
 
         // A point on the line: P_line = d × m / |d|² (when line doesn't pass through origin)
         // For line through origin (m = 0), use origin
-        let line_pt_x = (d.1 * m.2 - d.2 * m.1) / d_sq;
-        let line_pt_y = (d.2 * m.0 - d.0 * m.2) / d_sq;
-        let line_pt_z = (d.0 * m.1 - d.1 * m.0) / d_sq;
+        let line_pt_x = (d.y * m.z - d.z * m.y) / d_sq;
+        let line_pt_y = (d.z * m.x - d.x * m.z) / d_sq;
+        let line_pt_z = (d.x * m.y - d.y * m.x) / d_sq;
 
         // Vector from line point to given point
         let px = p.x() - line_pt_x;
@@ -393,12 +393,12 @@ impl<T: Float> Line<T> {
         let pz = p.z() - line_pt_z;
 
         // Project onto direction
-        let t = (px * d.0 + py * d.1 + pz * d.2) / d_sq;
+        let t = (px * d.x + py * d.y + pz * d.z) / d_sq;
 
         Point::new(
-            line_pt_x + t * d.0,
-            line_pt_y + t * d.1,
-            line_pt_z + t * d.2,
+            line_pt_x + t * d.x,
+            line_pt_y + t * d.y,
+            line_pt_z + t * d.z,
         )
     }
 }
@@ -459,10 +459,10 @@ impl<T: Float> Plane<T> {
     /// let line = xy_plane.meet(&xz_plane);
     ///
     /// // Direction should be along X axis (or its negative)
-    /// let (dx, dy, dz) = line.direction();
-    /// assert!(abs_diff_eq!(dy, 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(dz, 0.0, epsilon = 1e-10));
-    /// assert!(dx.abs() > 0.9); // dx = ±1
+    /// let d = line.direction();
+    /// assert!(abs_diff_eq!(d.y, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(d.z, 0.0, epsilon = 1e-10));
+    /// assert!(d.x.abs() > 0.9); // dx = ±1
     /// ```
     pub fn meet(&self, other: &Plane<T>) -> Line<T> {
         // The regressive product of two planes gives a line
@@ -682,6 +682,7 @@ impl<T: Float> Flector<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
 
@@ -862,16 +863,16 @@ mod tests {
         let line = Line::join(&p1, &p2);
 
         // Direction should be (1, 0, 0)
-        let (dx, dy, dz) = line.direction();
-        assert!(abs_diff_eq!(dx, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        let d = line.direction();
+        assert!(abs_diff_eq!(d.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // Moment should be zero (line through origin)
-        let (mx, my, mz) = line.moment();
-        assert!(abs_diff_eq!(mx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(my, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(mz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        let m = line.moment();
+        assert!(abs_diff_eq!(m.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(m.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(m.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -882,10 +883,10 @@ mod tests {
         let line = Line::join(&p1, &p2);
 
         // Direction should be (1, 0, 0)
-        let (dx, dy, dz) = line.direction();
-        assert!(abs_diff_eq!(dx, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        let d = line.direction();
+        assert!(abs_diff_eq!(d.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // Moment should be non-zero (line not through origin)
         // For this line, moment = direction × point_on_line = (1,0,0) × (0,1,0) = (0,0,1)
@@ -896,13 +897,13 @@ mod tests {
     #[test]
     fn line_from_point_and_direction() {
         let p = Point::new(1.0, 2.0, 3.0);
-        let line = Line::from_point_and_direction(&p, (0.0, 0.0, 1.0));
+        let line = Line::from_point_and_direction(&p, &EuclideanVector::new(0.0, 0.0, 1.0));
 
         // Direction should be (0, 0, 1)
-        let (dx, dy, dz) = line.direction();
-        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        let d = line.direction();
+        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -973,10 +974,10 @@ mod tests {
         let line = xy_plane.meet(&xz_plane);
 
         // Direction should be along X axis
-        let (dx, dy, dz) = line.direction();
-        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(dx.abs() > 0.9); // dx = ±1
+        let d = line.direction();
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(d.x.abs() > 0.9); // dx = ±1
 
         // Line should pass through origin
         assert!(line.through_origin(ABS_DIFF_EQ_EPS));
@@ -1014,10 +1015,10 @@ mod tests {
         let rotation = Motor::from_rotation_z(std::f64::consts::FRAC_PI_2);
         let rotated = rotation.transform_line(&line);
 
-        let (dx, dy, dz) = rotated.direction();
-        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dy, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        let d = rotated.direction();
+        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1028,10 +1029,10 @@ mod tests {
         let translated = translation.transform_line(&line);
 
         // Direction should still be (0, 0, 1)
-        let (dx, dy, dz) = translated.direction();
-        assert!(abs_diff_eq!(dx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dy, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(dz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        let d = translated.direction();
+        assert!(abs_diff_eq!(d.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
 
         // But line should no longer pass through origin
         assert!(!translated.through_origin(ABS_DIFF_EQ_EPS));
@@ -1040,7 +1041,10 @@ mod tests {
     #[test]
     fn line_parallel_check() {
         let line1: Line<f64> = Line::z_axis();
-        let line2 = Line::from_point_and_direction(&Point::new(1.0, 0.0, 0.0), (0.0, 0.0, 1.0));
+        let line2 = Line::from_point_and_direction(
+            &Point::new(1.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 0.0, 1.0),
+        );
 
         // These lines are parallel (both in Z direction)
         assert!(line1.is_parallel(&line2, ABS_DIFF_EQ_EPS));
@@ -1058,7 +1062,10 @@ mod tests {
     fn line_skew_check() {
         // Create two skew lines
         let line1 = Line::z_axis(); // Z axis through origin
-        let line2 = Line::from_point_and_direction(&Point::new(1.0, 0.0, 0.0), (0.0, 1.0, 0.0)); // Y direction at x=1
+        let line2 = Line::from_point_and_direction(
+            &Point::new(1.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 1.0, 0.0),
+        ); // Y direction at x=1
 
         // These lines are skew (non-parallel, non-intersecting)
         assert!(!line1.is_parallel(&line2, ABS_DIFF_EQ_EPS));
@@ -1111,8 +1118,10 @@ mod tests {
         ));
 
         // Line at x=3, parallel to z has geometric norm 3
-        let offset_line =
-            Line::from_point_and_direction(&Point::new(3.0, 0.0, 0.0), (0.0, 0.0, 1.0));
+        let offset_line = Line::from_point_and_direction(
+            &Point::new(3.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 0.0, 1.0),
+        );
         let unitized = offset_line.unitized();
         assert!(abs_diff_eq!(
             unitized.geometric_norm(),
@@ -1137,10 +1146,10 @@ mod tests {
         ));
 
         // Attitude should be the direction
-        let (ax, ay, az) = z_axis.attitude();
-        assert!(abs_diff_eq!(ax, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(ay, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(az, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        let att = z_axis.attitude();
+        assert!(abs_diff_eq!(att.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -1191,11 +1200,11 @@ mod tests {
     #[test]
     fn plane_attitude() {
         let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
-        let (nx, ny, nz) = plane.attitude();
+        let att = plane.attitude();
 
-        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(nz, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.z, 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]

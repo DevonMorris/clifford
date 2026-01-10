@@ -260,15 +260,15 @@ where
 
         // Unitize the plane
         let unitized = plane.unitized();
-        let (nx, ny, nz) = unitized.normal();
+        let n = unitized.normal();
         let d = unitized.distance();
 
         // Create axis as unit vector
-        let axis = na::Unit::new_unchecked(na::Vector3::new(nx, ny, nz));
+        let axis = na::Unit::new_unchecked(na::Vector3::new(n.x, n.y, n.z));
 
         // Find a point on the plane: for plane n·x + d = 0, the point P = -d*n lies on it
         // since n·(-d*n) = -d*|n|² = -d (when |n|=1), and -d + d = 0 ✓
-        let point_on_plane = na::Point3::new(-d * nx, -d * ny, -d * nz);
+        let point_on_plane = na::Point3::new(-d * n.x, -d * n.y, -d * n.z);
 
         Ok(na::Reflection::new_containing_point(axis, &point_on_plane))
     }
@@ -320,6 +320,7 @@ impl std::error::Error for FlectorConversionError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
     use proptest::prelude::*;
@@ -571,10 +572,10 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = EuclideanVector::new(ax / len, ay / len, az / len);
 
-            let pga_rot = Motor::from_axis_angle(axis, angle);
-            let na_axis = na::Unit::new_normalize(na::Vector3::new(axis.0, axis.1, axis.2));
+            let pga_rot = Motor::from_axis_angle(&axis, angle);
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(axis.x, axis.y, axis.z));
             let na_rot = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
 
             let pga_point = Point::new(px, py, pz);
@@ -773,9 +774,9 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = EuclideanVector::new(ax / len, ay / len, az / len);
 
-            let motor = Motor::from_axis_angle(axis, angle);
+            let motor = Motor::from_axis_angle(&axis, angle);
             let q: na::UnitQuaternion<f64> = motor.into();
             let back: Motor<f64> = q.into();
 
@@ -829,9 +830,9 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = EuclideanVector::new(ax / len, ay / len, az / len);
 
-            let motor = Motor::from_axis_angle(axis, angle);
+            let motor = Motor::from_axis_angle(&axis, angle);
             let q: na::UnitQuaternion<f64> = motor.into();
 
             // Transform with both
@@ -864,9 +865,9 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = EuclideanVector::new(ax / len, ay / len, az / len);
 
-            let motor = Motor::from_axis_angle(axis, angle);
+            let motor = Motor::from_axis_angle(&axis, angle);
             let rot: na::Rotation3<f64> = motor.into();
             let back: Motor<f64> = rot.into();
 

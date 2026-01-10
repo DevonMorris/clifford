@@ -10,6 +10,7 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::scalar::Float;
+use crate::specialized::euclidean::dim2::Vector as EuclideanVector;
 
 /// A point in 2D PGA (grade 1 vector).
 ///
@@ -267,10 +268,12 @@ impl<T: Float> Line<T> {
         Self::from_implicit(T::one(), T::zero(), T::zero())
     }
 
-    /// Returns the normal direction `(a, b)` of the line `ax + by + d = 0`.
+    /// Returns the normal direction of the line `ax + by + d = 0`.
+    ///
+    /// Returns a Euclidean vector `(a, b)` representing the normal.
     #[inline]
-    pub fn normal(&self) -> (T, T) {
-        (self.e20, self.e01)
+    pub fn normal(&self) -> EuclideanVector<T> {
+        EuclideanVector::new(self.e20, self.e01)
     }
 
     /// Returns the attitude of the line.
@@ -278,7 +281,7 @@ impl<T: Float> Line<T> {
     /// For a 2D line, the attitude is the normal direction.
     /// This is equivalent to calling [`normal()`](Self::normal).
     #[inline]
-    pub fn attitude(&self) -> (T, T) {
+    pub fn attitude(&self) -> EuclideanVector<T> {
         self.normal()
     }
 
@@ -619,12 +622,12 @@ impl<T: Float> Motor<T> {
         self.e12.atan2(self.s) * T::TWO
     }
 
-    /// Returns the translation vector (dx, dy).
+    /// Returns the translation vector as a Euclidean vector.
     #[inline]
-    pub fn translation(&self) -> (T, T) {
+    pub fn translation(&self) -> EuclideanVector<T> {
         // For a pure translation: dx = 2*e20, dy = 2*e01
         // For a composed motor, this is more complex
-        (self.e20 * T::TWO, self.e01 * T::TWO)
+        EuclideanVector::new(self.e20 * T::TWO, self.e01 * T::TWO)
     }
 }
 

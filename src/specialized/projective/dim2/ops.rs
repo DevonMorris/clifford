@@ -23,7 +23,7 @@ impl<T: Float> Point<T> {
     /// let line = p1.join(&p2);
     ///
     /// // Line x - y = 0
-    /// let (a, b) = line.normal();
+    /// let n = line.normal();
     /// // Normal should be proportional to (1, -1)
     /// ```
     #[inline]
@@ -159,11 +159,11 @@ impl<T: Float> Line<T> {
     pub fn distance_to_point(&self, p: &Point<T>) -> T {
         // For line ax + by + d = 0 and point (px, py):
         // Distance = (a*px + b*py + d) / sqrt(a² + b²)
-        let (a, b) = self.normal();
+        let n = self.normal();
         let d = self.e12;
         let (px, py) = p.to_cartesian().unwrap_or((p.e1, p.e2));
-        let numerator = a * px + b * py + d;
-        let denominator = (a * a + b * b).sqrt();
+        let numerator = n.x * px + n.y * py + d;
+        let denominator = (n.x * n.x + n.y * n.y).sqrt();
         if denominator.abs() < T::epsilon() {
             T::zero()
         } else {
@@ -174,18 +174,18 @@ impl<T: Float> Line<T> {
     /// Projects a point onto this line.
     #[inline]
     pub fn project(&self, p: &Point<T>) -> Point<T> {
-        let (a, b) = self.normal();
+        let n = self.normal();
         let d = self.e12;
         let (px, py) = p.to_cartesian().unwrap_or((p.e1, p.e2));
 
-        let norm_sq = a * a + b * b;
+        let norm_sq = n.x * n.x + n.y * n.y;
         if norm_sq.abs() < T::epsilon() {
             return *p;
         }
 
         // Projection formula: P' = P - ((a*px + b*py + d)/(a² + b²)) * (a, b)
-        let t = (a * px + b * py + d) / norm_sq;
-        Point::new(px - t * a, py - t * b)
+        let t = (n.x * px + n.y * py + d) / norm_sq;
+        Point::new(px - t * n.x, py - t * n.y)
     }
 
     /// Reflects a point across this line.
@@ -490,9 +490,9 @@ mod tests {
         ));
 
         // Attitude should be the normal direction
-        let (ax, ay) = y_axis.attitude();
-        assert!(abs_diff_eq!(ax, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(ay, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        let att = y_axis.attitude();
+        assert!(abs_diff_eq!(att.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 
     #[test]
@@ -520,8 +520,8 @@ mod tests {
         ));
 
         // Normal should be unit length
-        let (nx, ny) = unitized.normal();
-        let norm = (nx * nx + ny * ny).sqrt();
+        let n = unitized.normal();
+        let norm = (n.x * n.x + n.y * n.y).sqrt();
         assert!(abs_diff_eq!(norm, 1.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

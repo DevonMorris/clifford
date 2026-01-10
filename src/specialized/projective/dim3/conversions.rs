@@ -671,10 +671,10 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = Vector::new(ax / len, ay / len, az / len);
 
             // Create a pure rotation motor
-            let motor = Motor::from_axis_angle(axis, angle);
+            let motor = Motor::from_axis_angle(&axis, angle);
             let rotor: EuclideanRotor<f64> = motor.into();
             let back: Motor<f64> = rotor.into();
 
@@ -722,10 +722,10 @@ mod tests {
             if len < 0.1 {
                 return Ok(());
             }
-            let axis = (ax / len, ay / len, az / len);
+            let axis = Vector::new(ax / len, ay / len, az / len);
 
             // Create a motor with both rotation and translation
-            let rotation = Motor::from_axis_angle(axis, angle);
+            let rotation = Motor::from_axis_angle(&axis, angle);
             let translation = Motor::from_translation(tx, ty, tz);
             let composed = rotation.compose(&translation);
 
@@ -735,7 +735,7 @@ mod tests {
             // The extracted rotor should match the original rotation
             let expected_rotor = EuclideanRotor::from_angle_plane(
                 angle,
-                EucBivector::new(axis.2, -axis.1, axis.0)  // Map axis to bivector
+                EucBivector::new(axis.z, -axis.y, axis.x)  // Map axis to bivector
             );
             let v = Vector::new(vx, vy, vz);
 

@@ -34,6 +34,7 @@ use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
 
 use crate::scalar::Float;
+use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
 use super::types::{Motor, Point};
 
@@ -181,16 +182,13 @@ impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
             .prop_map(|(ax, ay, az, angle, tx, ty, tz)| {
                 // Normalize axis
                 let len = (ax * ax + ay * ay + az * az).sqrt();
-                let axis = (ax / len, ay / len, az / len);
-
-                let rotation = Motor::from_axis_angle(
-                    (
-                        T::from_f64(axis.0),
-                        T::from_f64(axis.1),
-                        T::from_f64(axis.2),
-                    ),
-                    T::from_f64(angle),
+                let axis = EuclideanVector::new(
+                    T::from_f64(ax / len),
+                    T::from_f64(ay / len),
+                    T::from_f64(az / len),
                 );
+
+                let rotation = Motor::from_axis_angle(&axis, T::from_f64(angle));
                 let translation =
                     Motor::from_translation(T::from_f64(tx), T::from_f64(ty), T::from_f64(tz));
                 UnitMotor(translation.compose(&rotation))
