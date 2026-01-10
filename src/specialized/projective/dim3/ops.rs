@@ -45,6 +45,41 @@ impl<T: Float> Point<T> {
             (p1_norm.e3 + p2_norm.e3) / T::TWO,
         )
     }
+
+    /// Computes the inner product of two points.
+    ///
+    /// In PGA, the inner product of two grade-1 elements (points) gives a scalar.
+    /// For normalized points, this equals the dot product of their Euclidean parts
+    /// plus the product of their weights.
+    ///
+    /// # Formula
+    ///
+    /// For points `P₁ = (e₁, e₂, e₃, e₀)` and `P₂ = (e₁', e₂', e₃', e₀')`:
+    /// `P₁ · P₂ = e₁·e₁' + e₂·e₂' + e₃·e₃'`
+    ///
+    /// Note: The `e₀` components don't contribute because `e₀² = 0` in PGA.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Point;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let p1 = Point::new(1.0, 0.0, 0.0);
+    /// let p2 = Point::new(1.0, 0.0, 0.0);
+    /// // Same direction -> dot = 1
+    /// assert!(abs_diff_eq!(p1.dot(&p2), 1.0, epsilon = 1e-10));
+    ///
+    /// let p3 = Point::new(0.0, 1.0, 0.0);
+    /// // Perpendicular -> dot = 0
+    /// assert!(abs_diff_eq!(p1.dot(&p3), 0.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn dot(&self, other: &Point<T>) -> T {
+        // In PGA with signature (+,+,+,0), e₀² = 0
+        // So only the Euclidean (e₁, e₂, e₃) parts contribute
+        self.e1 * other.e1 + self.e2 * other.e2 + self.e3 * other.e3
+    }
 }
 
 // ============================================================================
@@ -479,6 +514,47 @@ impl<T: Float> Line<T> {
         clamped.acos()
     }
 
+    /// Computes the inner product of two lines.
+    ///
+    /// In PGA, the inner product of two grade-2 elements (lines) gives a scalar.
+    /// This is related to the Plücker inner product and measures the
+    /// "reciprocity" of the two lines.
+    ///
+    /// # Formula
+    ///
+    /// For lines `L₁ = d₁ + m₁` and `L₂ = d₂ + m₂` (direction + moment):
+    /// `L₁ · L₂ = d₁·m₂ + d₂·m₁`
+    ///
+    /// This equals zero when the lines intersect (including parallel lines).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Line, Point};
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Intersecting lines have dot = 0
+    /// let x_axis: Line<f64> = Line::x_axis();
+    /// let y_axis: Line<f64> = Line::y_axis();
+    /// assert!(abs_diff_eq!(x_axis.dot(&y_axis), 0.0, epsilon = 1e-10));
+    ///
+    /// // Skew lines have non-zero dot
+    /// let z_axis: Line<f64> = Line::z_axis();
+    /// let skew = Line::from_point_and_direction(
+    ///     &Point::new(1.0, 0.0, 0.0),
+    ///     &Vector::new(0.0, 1.0, 0.0),
+    /// );
+    /// // Non-zero for skew lines
+    /// assert!(z_axis.dot(&skew).abs() > 0.0);
+    /// ```
+    #[inline]
+    pub fn dot(&self, other: &Line<T>) -> T {
+        // The inner product of two bivectors in PGA
+        // This is the Plücker inner product: d₁·m₂ + d₂·m₁
+        self.plucker_inner(other)
+    }
+
     /// Computes the plane containing this line and a point.
     ///
     /// This is the join (exterior product) `L ∧ P`, giving the unique plane
@@ -728,6 +804,41 @@ impl<T: Float> Plane<T> {
             sin_theta
         };
         clamped.asin()
+    }
+
+    /// Computes the inner product of two planes.
+    ///
+    /// In PGA, the inner product of two grade-3 elements (planes) gives a scalar.
+    /// This measures the alignment of the two planes' normals.
+    ///
+    /// # Formula
+    ///
+    /// For planes `G₁ = (n₁, d₁)` and `G₂ = (n₂, d₂)` (normal + distance):
+    /// `G₁ · G₂ = n₁·n₂`
+    ///
+    /// The `e₁₂₃` (distance) components don't contribute because `e₁₂₃² = 0` in PGA.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::Plane;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let xy_plane: Plane<f64> = Plane::xy();
+    /// let xz_plane: Plane<f64> = Plane::xz();
+    ///
+    /// // Perpendicular planes have dot = 0
+    /// assert!(abs_diff_eq!(xy_plane.dot(&xz_plane), 0.0, epsilon = 1e-10));
+    ///
+    /// // Same plane has dot = 1 (for unit normals)
+    /// assert!(abs_diff_eq!(xy_plane.dot(&xy_plane), 1.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn dot(&self, other: &Plane<T>) -> T {
+        // Inner product of two trivectors in PGA
+        // Only the normal parts (e023, e031, e012) contribute
+        // e123² = 0 in the degenerate metric
+        self.e023 * other.e023 + self.e031 * other.e031 + self.e012 * other.e012
     }
 
     /// Computes the meet (intersection) of this plane with another plane.
@@ -2016,5 +2127,102 @@ mod tests {
         assert!(abs_diff_eq!(d.y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(d.z, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(d.x.abs() > 0.9);
+    }
+
+    // ========================================================================
+    // Dot product tests
+    // ========================================================================
+
+    #[test]
+    fn point_dot_same() {
+        let p: Point<f64> = Point::new(1.0, 0.0, 0.0);
+        assert!(abs_diff_eq!(p.dot(&p), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn point_dot_perpendicular() {
+        let p1: Point<f64> = Point::new(1.0, 0.0, 0.0);
+        let p2: Point<f64> = Point::new(0.0, 1.0, 0.0);
+        assert!(abs_diff_eq!(p1.dot(&p2), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn point_dot_symmetric() {
+        let p1 = Point::new(1.0, 2.0, 3.0);
+        let p2 = Point::new(4.0, 5.0, 6.0);
+        assert!(abs_diff_eq!(
+            p1.dot(&p2),
+            p2.dot(&p1),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_dot_intersecting() {
+        // Intersecting lines have dot = 0
+        let x_axis: Line<f64> = Line::x_axis();
+        let y_axis: Line<f64> = Line::y_axis();
+        assert!(abs_diff_eq!(
+            x_axis.dot(&y_axis),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn line_dot_skew() {
+        // Skew lines have non-zero dot
+        let z_axis: Line<f64> = Line::z_axis();
+        let skew = Line::from_point_and_direction(
+            &Point::new(1.0, 0.0, 0.0),
+            &EuclideanVector::new(0.0, 1.0, 0.0),
+        );
+        assert!(z_axis.dot(&skew).abs() > ABS_DIFF_EQ_EPS);
+    }
+
+    #[test]
+    fn line_dot_symmetric() {
+        let l1: Line<f64> = Line::x_axis();
+        let l2 = Line::from_point_and_direction(
+            &Point::new(0.0, 1.0, 0.0),
+            &EuclideanVector::new(0.0, 0.0, 1.0),
+        );
+        assert!(abs_diff_eq!(
+            l1.dot(&l2),
+            l2.dot(&l1),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_dot_perpendicular() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        let xz_plane: Plane<f64> = Plane::xz();
+        assert!(abs_diff_eq!(
+            xy_plane.dot(&xz_plane),
+            0.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_dot_same() {
+        let xy_plane: Plane<f64> = Plane::xy();
+        assert!(abs_diff_eq!(
+            xy_plane.dot(&xy_plane),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn plane_dot_symmetric() {
+        let p1: Plane<f64> = Plane::xy();
+        let p2 = Plane::from_normal_and_distance(1.0, 1.0, 0.0, 0.0);
+        assert!(abs_diff_eq!(
+            p1.dot(&p2),
+            p2.dot(&p1),
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 }
