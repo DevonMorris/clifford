@@ -16,9 +16,13 @@ use std::f32::consts::{FRAC_PI_4, PI};
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
 use clifford::specialized::visualization::{rerun, AsPosition};
+use tracing::info;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Spawn a new Rerun viewer and connect to it
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let rec = rerun::RecordingStreamBuilder::new("clifford_demo").spawn()?;
 
     // =========================================================================
@@ -92,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &rerun::Points3D::new(trajectory.iter().copied()),
     )?;
 
-    println!("Logged visualization data to Rerun viewer.");
+    info!("Logged visualization data to Rerun viewer");
 
     Ok(())
 }

@@ -26,8 +26,14 @@ use std::f32::consts::TAU;
 
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::visualization::rerun;
+use tracing::info;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Initialize tracing subscriber
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let rec = rerun::RecordingStreamBuilder::new("clifford_bivector").spawn()?;
 
     let num_frames = 300;
@@ -161,45 +167,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )),
         )?;
 
-        // =====================================================================
-        // Reference coordinate axes
-        // =====================================================================
-
-        if frame == 0 {
-            rec.log_static(
-                "axes/x",
-                &rerun::Arrows3D::from_vectors([[3.0_f32, 0.0, 0.0]])
-                    .with_origins([[0.0, 0.0, 0.0]])
-                    .with_colors([[255, 0, 0, 80]]),
-            )?;
-            rec.log_static(
-                "axes/y",
-                &rerun::Arrows3D::from_vectors([[0.0_f32, 3.0, 0.0]])
-                    .with_origins([[0.0, 0.0, 0.0]])
-                    .with_colors([[0, 255, 0, 80]]),
-            )?;
-            rec.log_static(
-                "axes/z",
-                &rerun::Arrows3D::from_vectors([[0.0_f32, 0.0, 3.0]])
-                    .with_origins([[0.0, 0.0, 0.0]])
-                    .with_colors([[0, 0, 255, 80]]),
-            )?;
-        }
     }
 
-    println!("Bivector visualization complete!");
-    println!();
-    println!("Watch how the bivector changes as v rotates around fixed u:");
-    println!("- Red arrow (u): fixed vector along x-axis");
-    println!("- Green arrow (v): rotating vector");
-    println!("- Orange surface: positive orientation (u ∧ v > 0)");
-    println!("- Blue surface: negative orientation (u ∧ v < 0)");
-    println!("- Blue arrow: Hodge dual (length = area!)");
-    println!();
-    println!("Notice:");
-    println!("  - When u ∥ v: bivector and dual collapse to zero!");
-    println!("  - When u ⊥ v: bivector and dual are maximum!");
-    println!("  - When v crosses u: orientation (color) flips!");
+    info!("Bivector visualization complete!");
+    info!("Watch how the bivector changes as v rotates around fixed u:");
+    info!("  Red arrow (u): fixed vector along x-axis");
+    info!("  Green arrow (v): rotating vector");
+    info!("  Orange surface: positive orientation (u ∧ v > 0)");
+    info!("  Blue surface: negative orientation (u ∧ v < 0)");
+    info!("  Blue arrow: Hodge dual (length = area!)");
+    info!("Notice:");
+    info!("  When u ∥ v: bivector and dual collapse to zero!");
+    info!("  When u ⊥ v: bivector and dual are maximum!");
+    info!("  When v crosses u: orientation (color) flips!");
 
     Ok(())
 }

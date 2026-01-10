@@ -19,8 +19,13 @@ use std::f32::consts::TAU;
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
 use clifford::specialized::visualization::{rerun, AsPosition};
+use tracing::info;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let rec = rerun::RecordingStreamBuilder::new("clifford_animation").spawn()?;
 
     // Number of frames
@@ -174,7 +179,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("Animation complete! Use the timeline scrubber in Rerun to replay.");
+    info!("Animation complete! Use the timeline scrubber in Rerun to replay.");
 
     Ok(())
 }

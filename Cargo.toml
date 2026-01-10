@@ -44,6 +44,8 @@ rerun-0-28 = { package = "rerun", version = "0.28", optional = true, default-fea
 criterion = { version = "0.8", features = ["html_reports"] }
 proptest = "1"
 serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [[bench]]
 name = "generic"
