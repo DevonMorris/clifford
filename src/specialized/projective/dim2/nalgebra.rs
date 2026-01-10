@@ -3,6 +3,8 @@
 //! This module provides conversions between 2D PGA types and nalgebra types:
 //! - [`Point`] ↔ [`nalgebra::Point2`]
 //! - [`Motor`] ↔ [`nalgebra::Isometry2`]
+//! - [`Motor`] ↔ [`nalgebra::UnitComplex`] (rotation only)
+//! - [`Motor`] ↔ [`nalgebra::Rotation2`] (rotation only)
 
 use crate::scalar::Float;
 
@@ -83,6 +85,86 @@ where
         // Note: for a composed motor, the translation extraction is approximate
         // For accurate extraction, we'd need to decompose the motor properly
         na::Isometry2::new(na::Vector2::new(tx, ty), angle)
+    }
+}
+
+// ============================================================================
+// Motor <-> UnitComplex (rotation only)
+// ============================================================================
+
+impl<T> From<na::UnitComplex<T>> for Motor<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a nalgebra [`UnitComplex`](na::UnitComplex) to a pure rotation [`Motor`].
+    ///
+    /// # Mapping
+    ///
+    /// UnitComplex stores `z = cos(θ) + i·sin(θ)` where θ is the full rotation angle.
+    /// Motor stores `s = cos(θ/2)`, `e12 = sin(θ/2)` (half-angle representation).
+    ///
+    /// We use half-angle formulas:
+    /// - `cos(θ/2) = √((1 + cos(θ))/2)`
+    /// - `sin(θ/2) = √((1 - cos(θ))/2)` with sign from sin(θ)
+    fn from(uc: na::UnitComplex<T>) -> Self {
+        let angle = uc.angle();
+        Motor::from_rotation(angle)
+    }
+}
+
+impl<T> From<Motor<T>> for na::UnitComplex<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a [`Motor`]'s rotation part to a nalgebra [`UnitComplex`](na::UnitComplex).
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is ignored.
+    ///
+    /// # Mapping
+    ///
+    /// Motor stores `s = cos(θ/2)`, `e12 = sin(θ/2)`.
+    /// UnitComplex needs `cos(θ)`, `sin(θ)`.
+    ///
+    /// We use double-angle formulas:
+    /// - `cos(θ) = cos²(θ/2) - sin²(θ/2) = s² - e12²`
+    /// - `sin(θ) = 2·sin(θ/2)·cos(θ/2) = 2·s·e12`
+    fn from(m: Motor<T>) -> Self {
+        // Double angle formulas
+        let cos_theta = m.s * m.s - m.e12 * m.e12;
+        let sin_theta = T::TWO * m.s * m.e12;
+        na::UnitComplex::from_cos_sin_unchecked(cos_theta, sin_theta)
+    }
+}
+
+// ============================================================================
+// Motor <-> Rotation2 (rotation only)
+// ============================================================================
+
+impl<T> From<na::Rotation2<T>> for Motor<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a nalgebra [`Rotation2`](na::Rotation2) to a pure rotation [`Motor`].
+    fn from(rot: na::Rotation2<T>) -> Self {
+        let angle = rot.angle();
+        Motor::from_rotation(angle)
+    }
+}
+
+impl<T> From<Motor<T>> for na::Rotation2<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a [`Motor`]'s rotation part to a nalgebra [`Rotation2`](na::Rotation2).
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is ignored.
+    fn from(m: Motor<T>) -> Self {
+        let uc: na::UnitComplex<T> = m.into();
+        uc.into()
     }
 }
 
@@ -348,5 +430,150 @@ mod tests {
             assert!(abs_diff_eq!(pga_result.x(), px, epsilon = ABS_DIFF_EQ_EPS));
             assert!(abs_diff_eq!(pga_result.y(), py, epsilon = ABS_DIFF_EQ_EPS));
         }
+    }
+
+    // ========================================================================
+    // Motor <-> UnitComplex conversion tests
+    // ========================================================================
+
+    proptest! {
+        /// Tests that Motor -> UnitComplex -> Motor preserves rotation behavior.
+        #[test]
+        fn motor_unitcomplex_roundtrip(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let motor = Motor::from_rotation(angle);
+            let uc: na::UnitComplex<f64> = motor.into();
+            let back: Motor<f64> = uc.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py);
+            let result_orig = motor.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that UnitComplex -> Motor -> UnitComplex preserves rotation.
+        #[test]
+        fn unitcomplex_motor_roundtrip(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let uc = na::UnitComplex::from_angle(angle);
+            let motor: Motor<f64> = uc.into();
+            let back: na::UnitComplex<f64> = motor.into();
+
+            // Compare by transforming a point
+            let na_point = na::Point2::new(px, py);
+            let result_orig = uc * na_point;
+            let result_back = back * na_point;
+
+            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Motor rotation matches UnitComplex rotation.
+        #[test]
+        fn motor_unitcomplex_rotation_equivalence(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let motor = Motor::from_rotation(angle);
+            let uc: na::UnitComplex<f64> = motor.into();
+
+            // Transform with both
+            let pga_point = Point::new(px, py);
+            let pga_result = motor.transform_point(&pga_point);
+
+            let na_point = na::Point2::new(px, py);
+            let na_result = uc * na_point;
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    // ========================================================================
+    // Motor <-> Rotation2 conversion tests
+    // ========================================================================
+
+    proptest! {
+        /// Tests that Motor -> Rotation2 -> Motor preserves rotation behavior.
+        #[test]
+        fn motor_rotation2_roundtrip(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let motor = Motor::from_rotation(angle);
+            let rot: na::Rotation2<f64> = motor.into();
+            let back: Motor<f64> = rot.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py);
+            let result_orig = motor.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Rotation2 -> Motor transformation equivalence.
+        #[test]
+        fn rotation2_to_motor_equivalence(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        ) {
+            let rot = na::Rotation2::new(angle);
+            let motor: Motor<f64> = rot.into();
+
+            // Transform a point with both
+            let na_point = na::Point2::new(px, py);
+            let na_result = rot * na_point;
+
+            let pga_point = Point::new(px, py);
+            let pga_result = motor.transform_point(&pga_point);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    // ========================================================================
+    // Identity tests for rotation conversions
+    // ========================================================================
+
+    #[test]
+    fn identity_motor_to_unitcomplex() {
+        let motor = Motor::<f64>::identity();
+        let uc: na::UnitComplex<f64> = motor.into();
+
+        // Should be identity (angle = 0, so cos=1, sin=0)
+        assert!(abs_diff_eq!(uc.re, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(uc.im, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_unitcomplex_to_motor() {
+        let uc = na::UnitComplex::<f64>::identity();
+        let motor: Motor<f64> = uc.into();
+
+        // Should produce identity motor (rotation part)
+        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_motor_to_rotation2() {
+        let motor = Motor::<f64>::identity();
+        let rot: na::Rotation2<f64> = motor.into();
+
+        // Should be identity rotation
+        let p = na::Point2::new(1.0, 2.0);
+        let result = rot * p;
+        assert!(abs_diff_eq!(result.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.y, 2.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }
