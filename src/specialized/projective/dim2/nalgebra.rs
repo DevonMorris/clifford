@@ -174,22 +174,8 @@ where
 // Error types
 // ============================================================================
 
-/// Error type for point conversions to nalgebra types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PointConversionError {
-    /// The point is at infinity (homogeneous weight ≈ 0).
-    PointAtInfinity,
-}
-
-impl core::fmt::Display for PointConversionError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::PointAtInfinity => write!(f, "point is at infinity (w ≈ 0)"),
-        }
-    }
-}
-
-impl std::error::Error for PointConversionError {}
+// Re-export the shared error type
+pub use super::super::PointConversionError;
 
 #[cfg(test)]
 mod tests {

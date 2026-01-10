@@ -249,6 +249,16 @@ fn bench_pga3_line_left_contract_plane(c: &mut Criterion) {
     });
 }
 
+fn bench_pga3_motor_transform_plane(c: &mut Criterion) {
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
+        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let plane: dim3::Plane<f64> = dim3::Plane::from_normal_and_distance(1.0, 0.0, 0.0, 5.0);
+
+    c.bench_function("projective/dim3/motor_transform_plane", |bencher| {
+        bencher.iter(|| black_box(motor).transform_plane(&black_box(plane)))
+    });
+}
+
 // ============================================================================
 // Batch operations
 // ============================================================================
@@ -306,6 +316,7 @@ criterion_group!(
     pga3_benches,
     bench_pga3_motor_transform_point,
     bench_pga3_motor_transform_line,
+    bench_pga3_motor_transform_plane,
     bench_pga3_motor_compose,
     bench_pga3_motor_inverse,
     bench_pga3_motor_commutator,

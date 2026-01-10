@@ -278,44 +278,21 @@ where
 // Error types
 // ============================================================================
 
-/// Error type for point conversions to nalgebra types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PointConversionError {
-    /// The point is at infinity (homogeneous weight ≈ 0).
-    PointAtInfinity,
-}
+// Re-export the shared error type
+pub use super::super::PointConversionError;
 
-impl core::fmt::Display for PointConversionError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::PointAtInfinity => write!(f, "point is at infinity (w ≈ 0)"),
-        }
-    }
-}
-
-impl std::error::Error for PointConversionError {}
+use thiserror::Error;
 
 /// Error type for flector conversions to nalgebra types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Error)]
 pub enum FlectorConversionError {
     /// The flector is not a pure plane reflection (has non-zero point component).
+    #[error("flector is not a pure plane reflection")]
     NotPureReflection,
     /// The reflection plane has zero-length normal.
+    #[error("reflection plane has zero-length normal")]
     DegeneratePlane,
 }
-
-impl core::fmt::Display for FlectorConversionError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::NotPureReflection => {
-                write!(f, "flector is not a pure plane reflection")
-            }
-            Self::DegeneratePlane => write!(f, "reflection plane has zero-length normal"),
-        }
-    }
-}
-
-impl std::error::Error for FlectorConversionError {}
 
 #[cfg(test)]
 mod tests {

@@ -4,7 +4,7 @@
 //! by dimension. Currently supported:
 //!
 //! - **[`dim2`]**: 2D PGA `Cl(2,0,1)`: Point, Line, Motor
-//! - **[`dim3`]**: 3D PGA `Cl(3,0,1)`: Point, Motor (Line, Plane coming soon)
+//! - **[`dim3`]**: 3D PGA `Cl(3,0,1)`: Point, Line, Plane, Motor, Flector
 //!
 //! # Point-Based Formulation
 //!
@@ -20,7 +20,7 @@
 //! ```text
 //! projective/
 //!   dim2/   - 2D PGA: Point, Line, Motor
-//!   dim3/   - 3D PGA: Point, Motor (Line, Plane coming soon)
+//!   dim3/   - 3D PGA: Point, Line, Plane, Motor, Flector
 //! ```
 //!
 //! # Motors
@@ -52,3 +52,17 @@
 
 pub mod dim2;
 pub mod dim3;
+
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+mod errors;
+
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+pub use errors::PointConversionError;

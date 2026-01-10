@@ -147,6 +147,10 @@ impl<T: Float> Point<T> {
     pub fn left_contract_plane(&self, plane: &Plane<T>) -> Line<T> {
         // Left contraction P ⌋ G where P is grade-1 and G is grade-3
         // Result is grade 3-1 = 2 (a line/bivector)
+        //
+        // Note: The Euclidean bivector components (e23, e31, e12) each include
+        // `p0 * g123` which represents the contraction of the weight component
+        // with the e123 (pseudoscalar-like) part of the plane.
 
         let p1 = self.e1;
         let p2 = self.e2;
@@ -343,6 +347,80 @@ impl<T: Float> Motor<T> {
             e23: m1_rot + two * txd_x,
             e31: m2_rot + two * txd_y,
             e12: m3_rot + two * txd_z,
+        }
+    }
+
+    /// Transforms a plane: `G' = M G M̃`.
+    ///
+    /// This applies the rigid transformation represented by the motor to the plane.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Plane, Motor};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // XY plane at z = 0
+    /// let plane = Plane::xy();
+    ///
+    /// // Rotate 90° around X axis: XY plane becomes XZ plane
+    /// let rotation = Motor::from_rotation_x(FRAC_PI_2);
+    /// let rotated = rotation.transform_plane(&plane);
+    ///
+    /// // Normal changes from (0,0,1) to (0,-1,0)
+    /// let n = rotated.normal();
+    /// assert!(abs_diff_eq!(n.x, 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.y, -1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(n.z, 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn transform_plane(&self, g: &Plane<T>) -> Plane<T> {
+        // For a plane G = n + d*e123 (normal + distance)
+        // The transformation is G' = M G M̃
+        //
+        // The normal transforms like a vector (Rodrigues formula),
+        // and the distance updates based on translation perpendicular to the plane.
+
+        let s = self.s;
+        let b23 = self.e23;
+        let b31 = self.e31;
+        let b12 = self.e12;
+        let b01 = self.e01;
+        let b02 = self.e02;
+        let b03 = self.e03;
+
+        // Plane components
+        let nx = g.e023; // normal x
+        let ny = g.e031; // normal y
+        let nz = g.e012; // normal z
+        let d = g.e123; // distance parameter
+
+        let two = T::TWO;
+
+        // Rotate the normal using Rodrigues formula: n' = n + 2s(v × n) + 2(v × (v × n))
+        // where v = (b23, b31, b12) is the rotation bivector
+        let vxn_x = b31 * nz - b12 * ny;
+        let vxn_y = b12 * nx - b23 * nz;
+        let vxn_z = b23 * ny - b31 * nx;
+
+        let vxvxn_x = b31 * vxn_z - b12 * vxn_y;
+        let vxvxn_y = b12 * vxn_x - b23 * vxn_z;
+        let vxvxn_z = b23 * vxn_y - b31 * vxn_x;
+
+        let nx_new = nx + two * (s * vxn_x + vxvxn_x);
+        let ny_new = ny + two * (s * vxn_y + vxvxn_y);
+        let nz_new = nz + two * (s * vxn_z + vxvxn_z);
+
+        // Update distance based on translation component projected onto normal
+        // d' = d + 2 * (t · n')
+        // where t = (b01, b02, b03) is the translation bivector
+        let d_new = d + two * (b01 * nx_new + b02 * ny_new + b03 * nz_new);
+
+        Plane {
+            e023: nx_new,
+            e031: ny_new,
+            e012: nz_new,
+            e123: d_new,
         }
     }
 

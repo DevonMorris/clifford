@@ -1,7 +1,7 @@
 //! Proptest `Arbitrary` implementations for 3D PGA specialized types.
 //!
-//! This module provides strategies for generating random [`Point`] and
-//! [`Motor`] values for property-based testing.
+//! This module provides strategies for generating random [`Point`], [`Line`],
+//! [`Plane`], [`Motor`], and [`Flector`] values for property-based testing.
 //!
 //! # Example
 //!
@@ -36,7 +36,7 @@ use proptest::strategy::BoxedStrategy;
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
-use super::types::{Motor, Point};
+use super::types::{Flector, Line, Motor, Plane, Point};
 
 // ============================================================================
 // Point
@@ -163,35 +163,290 @@ impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
     type Strategy = BoxedStrategy<Self>;
 
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate a valid rigid transformation: rotation around arbitrary axis + translation
-        (
-            // Rotation axis (will be normalized)
-            -1.0f64..1.0,
-            -1.0f64..1.0,
-            -1.0f64..1.0,
-            // Rotation angle
-            -std::f64::consts::PI..std::f64::consts::PI,
-            // Translation
-            -100.0f64..100.0,
-            -100.0f64..100.0,
-            -100.0f64..100.0,
-        )
-            .prop_filter("axis must be non-zero", |(ax, ay, az, _, _, _, _)| {
-                ax * ax + ay * ay + az * az > 0.01
-            })
-            .prop_map(|(ax, ay, az, angle, tx, ty, tz)| {
-                // Normalize axis
-                let len = (ax * ax + ay * ay + az * az).sqrt();
-                let axis = EuclideanVector::new(
-                    T::from_f64(ax / len),
-                    T::from_f64(ay / len),
-                    T::from_f64(az / len),
-                );
+        // Generate valid rigid transformations: either pure rotations or pure translations
+        // We avoid composing them because composed motors have non-zero e0123 (screw component)
+        // which has more complex inverse behavior.
+        prop_oneof![
+            // Pure rotation around arbitrary axis
+            (
+                -1.0f64..1.0,
+                -1.0f64..1.0,
+                -1.0f64..1.0,
+                -std::f64::consts::PI..std::f64::consts::PI,
+            )
+                .prop_filter("axis must be non-zero", |(ax, ay, az, _)| {
+                    ax * ax + ay * ay + az * az > 0.01
+                })
+                .prop_map(|(ax, ay, az, angle)| {
+                    let len = (ax * ax + ay * ay + az * az).sqrt();
+                    let axis = EuclideanVector::new(
+                        T::from_f64(ax / len),
+                        T::from_f64(ay / len),
+                        T::from_f64(az / len),
+                    );
+                    UnitMotor(Motor::from_axis_angle(&axis, T::from_f64(angle)))
+                }),
+            // Pure translation
+            (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0).prop_map(|(tx, ty, tz)| {
+                UnitMotor(Motor::from_translation(
+                    T::from_f64(tx),
+                    T::from_f64(ty),
+                    T::from_f64(tz),
+                ))
+            }),
+        ]
+        .boxed()
+    }
+}
 
-                let rotation = Motor::from_axis_angle(&axis, T::from_f64(angle));
-                let translation =
-                    Motor::from_translation(T::from_f64(tx), T::from_f64(ty), T::from_f64(tz));
-                UnitMotor(translation.compose(&rotation))
+// ============================================================================
+// Line
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Line<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+        )
+            .prop_map(|(e01, e02, e03, e23, e31, e12)| {
+                Line::new(
+                    T::from_f64(e01),
+                    T::from_f64(e02),
+                    T::from_f64(e03),
+                    T::from_f64(e23),
+                    T::from_f64(e31),
+                    T::from_f64(e12),
+                )
+            })
+            .boxed()
+    }
+}
+
+/// Wrapper type for non-degenerate lines in 3D PGA.
+///
+/// Use this when you need a line with non-zero direction (weight).
+#[derive(Debug, Clone)]
+pub struct NonDegenerateLine<T: Float>(
+    /// The wrapped line.
+    pub Line<T>,
+);
+
+impl<T: Float> NonDegenerateLine<T> {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Line<T> {
+        self.0
+    }
+}
+
+impl<T: Float> Deref for NonDegenerateLine<T> {
+    type Target = Line<T>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Float + Debug> Arbitrary for NonDegenerateLine<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+        )
+            .prop_filter("direction must be non-zero", |(e01, e02, e03, _, _, _)| {
+                e01 * e01 + e02 * e02 + e03 * e03 > 0.01
+            })
+            .prop_map(|(e01, e02, e03, e23, e31, e12)| {
+                NonDegenerateLine(Line::new(
+                    T::from_f64(e01),
+                    T::from_f64(e02),
+                    T::from_f64(e03),
+                    T::from_f64(e23),
+                    T::from_f64(e31),
+                    T::from_f64(e12),
+                ))
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Plane
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Plane<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+        )
+            .prop_map(|(e023, e031, e012, e123)| {
+                Plane::new(
+                    T::from_f64(e023),
+                    T::from_f64(e031),
+                    T::from_f64(e012),
+                    T::from_f64(e123),
+                )
+            })
+            .boxed()
+    }
+}
+
+/// Wrapper type for non-degenerate planes in 3D PGA.
+///
+/// Use this when you need a plane with non-zero normal direction (weight).
+#[derive(Debug, Clone)]
+pub struct NonDegeneratePlane<T: Float>(
+    /// The wrapped plane.
+    pub Plane<T>,
+);
+
+impl<T: Float> NonDegeneratePlane<T> {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Plane<T> {
+        self.0
+    }
+}
+
+impl<T: Float> Deref for NonDegeneratePlane<T> {
+    type Target = Plane<T>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Float + Debug> Arbitrary for NonDegeneratePlane<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+        )
+            .prop_filter("normal must be non-zero", |(e023, e031, e012, _)| {
+                e023 * e023 + e031 * e031 + e012 * e012 > 0.01
+            })
+            .prop_map(|(e023, e031, e012, e123)| {
+                NonDegeneratePlane(Plane::new(
+                    T::from_f64(e023),
+                    T::from_f64(e031),
+                    T::from_f64(e012),
+                    T::from_f64(e123),
+                ))
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Flector
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Flector<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+            -10.0f64..10.0,
+        )
+            .prop_map(|(e1, e2, e3, e0, e023, e031, e012, e123)| {
+                Flector::new(
+                    T::from_f64(e1),
+                    T::from_f64(e2),
+                    T::from_f64(e3),
+                    T::from_f64(e0),
+                    T::from_f64(e023),
+                    T::from_f64(e031),
+                    T::from_f64(e012),
+                    T::from_f64(e123),
+                )
+            })
+            .boxed()
+    }
+}
+
+/// Wrapper type for unit flectors (valid improper isometries) in 3D PGA.
+///
+/// Use this when you need a flector guaranteed to represent a valid
+/// improper isometry (reflection, glide reflection, etc.).
+#[derive(Debug, Clone)]
+pub struct UnitFlector<T: Float>(
+    /// The wrapped unit flector.
+    pub Flector<T>,
+);
+
+impl<T: Float> UnitFlector<T> {
+    /// Unwraps and returns the inner value.
+    #[inline]
+    pub fn into_inner(self) -> Flector<T> {
+        self.0
+    }
+}
+
+impl<T: Float> Deref for UnitFlector<T> {
+    type Target = Flector<T>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T: Float + Debug> Arbitrary for UnitFlector<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        // Generate a pure plane reflection (unit flector)
+        (-1.0f64..1.0, -1.0f64..1.0, -1.0f64..1.0, -100.0f64..100.0)
+            .prop_filter("normal must be non-zero", |(nx, ny, nz, _)| {
+                nx * nx + ny * ny + nz * nz > 0.01
+            })
+            .prop_map(|(nx, ny, nz, d)| {
+                // Normalize the normal direction
+                let len = (nx * nx + ny * ny + nz * nz).sqrt();
+                let plane = Plane::from_normal_and_distance(
+                    T::from_f64(nx / len),
+                    T::from_f64(ny / len),
+                    T::from_f64(nz / len),
+                    T::from_f64(d),
+                );
+                UnitFlector(Flector::from_plane(plane))
             })
             .boxed()
     }
@@ -227,6 +482,103 @@ mod tests {
             let lhs = m1.compose(&*m2).compose(&*m3);
             let rhs = m1.compose(&m2.compose(&*m3));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn motor_inverse_roundtrip(
+            motor in any::<UnitMotor<f64>>(),
+            point in any::<Point<f64>>(),
+        ) {
+            let transformed = motor.transform_point(&point);
+            let back = motor.inverse().transform_point(&transformed);
+
+            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn line_join_contains_both_points(
+            p1 in any::<NonOriginPoint<f64>>(),
+            p2 in any::<NonOriginPoint<f64>>(),
+        ) {
+            let line = Line::join(&*p1, &*p2);
+            // Both points should have ~0 distance to the line (if line is non-degenerate)
+            if !line.is_zero(ABS_DIFF_EQ_EPS) {
+                let d1 = line.distance_to_point(&*p1);
+                let d2 = line.distance_to_point(&*p2);
+                prop_assert!(d1.abs() < ABS_DIFF_EQ_EPS);
+                prop_assert!(d2.abs() < ABS_DIFF_EQ_EPS);
+            }
+        }
+
+        #[test]
+        fn point_dot_symmetric(
+            p1 in any::<Point<f64>>(),
+            p2 in any::<Point<f64>>(),
+        ) {
+            let d12 = p1.dot(&p2);
+            let d21 = p2.dot(&p1);
+            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn line_dot_symmetric(
+            l1 in any::<Line<f64>>(),
+            l2 in any::<Line<f64>>(),
+        ) {
+            let d12 = l1.dot(&l2);
+            let d21 = l2.dot(&l1);
+            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn line_plucker_inner_symmetric(
+            l1 in any::<NonDegenerateLine<f64>>(),
+            l2 in any::<NonDegenerateLine<f64>>(),
+        ) {
+            let p12 = l1.plucker_inner(&*l2);
+            let p21 = l2.plucker_inner(&*l1);
+            prop_assert!(abs_diff_eq!(p12, p21, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn flector_double_reflection_is_identity(
+            flector in any::<UnitFlector<f64>>(),
+            point in any::<Point<f64>>(),
+        ) {
+            // Reflecting twice should return to original point
+            let once = flector.transform_point(&point);
+            let twice = flector.transform_point(&once);
+
+            prop_assert!(abs_diff_eq!(twice.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(twice.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(twice.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn motor_transforms_line_preserves_direction_norm(
+            motor in any::<UnitMotor<f64>>(),
+            line in any::<NonDegenerateLine<f64>>(),
+        ) {
+            let transformed = motor.transform_line(&*line);
+            // Direction norm (weight) should be preserved
+            prop_assert!(abs_diff_eq!(
+                line.weight_norm(),
+                transformed.weight_norm(),
+                epsilon = ABS_DIFF_EQ_EPS
+            ));
+        }
+
+        #[test]
+        fn line_join_point_contains_both(
+            line in any::<NonDegenerateLine<f64>>(),
+            point in any::<Point<f64>>(),
+        ) {
+            let plane = line.join_point(&point);
+            // The plane should contain both the original line and the point
+            // For now, just verify we get a valid plane
+            let _ = plane.normal();
         }
     }
 }

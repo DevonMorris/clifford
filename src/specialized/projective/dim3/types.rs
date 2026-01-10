@@ -838,6 +838,115 @@ impl<T: Float> Motor<T> {
         }
     }
 
+    /// Creates a screw motor from a line, angle, and pitch.
+    ///
+    /// A screw motion is the most general rigid transformation in 3D:
+    /// rotation around a line combined with translation along that line.
+    ///
+    /// # Arguments
+    ///
+    /// * `line` - The screw axis (must have unit direction for geometric interpretation)
+    /// * `angle` - Rotation angle in radians around the line
+    /// * `pitch` - Translation distance along the line
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Point, Line, Motor};
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Screw motion around Z axis: rotate and translate along Z
+    /// let z_axis = Line::z_axis();
+    /// let motor = Motor::from_line(&z_axis, std::f64::consts::FRAC_PI_2, 0.0);
+    ///
+    /// let p = Point::new(1.0, 0.0, 0.0);
+    /// let result = motor.transform_point(&p);
+    ///
+    /// // With zero pitch, this is just a 90° rotation around Z
+    /// // Point rotates from (1,0,0) to (0,1,0)
+    /// assert!(abs_diff_eq!(result.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.y(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.z(), 0.0, epsilon = 1e-10));
+    /// ```
+    pub fn from_line(line: &Line<T>, angle: T, pitch: T) -> Self {
+        // A screw motor is: exp((θ/2 + d/2 * e₀₁₂₃) * L_normalized)
+        // where L is the line bivector, θ is the angle, and d is the pitch.
+        //
+        // For a line through origin with direction (dx, dy, dz):
+        //   L = dx*e01 + dy*e02 + dz*e03 (direction only, no moment)
+        //   Motor = cos(θ/2) + sin(θ/2)*(dx*e23 + dy*e31 + dz*e12)
+        //         + (d/2)*(dx*e01 + dy*e02 + dz*e03)
+        //
+        // For a general line with both direction and moment:
+        //   The rotation part uses the normalized direction
+        //   The translation part includes both the pitch and the moment offset
+
+        let half_angle = angle / T::TWO;
+        let half_pitch = pitch / T::TWO;
+
+        // Direction (weight) of the line
+        let dx = line.e01;
+        let dy = line.e02;
+        let dz = line.e03;
+
+        // Moment of the line
+        let mx = line.e23;
+        let my = line.e31;
+        let mz = line.e12;
+
+        // Normalize direction for rotation
+        let dir_len = (dx * dx + dy * dy + dz * dz).sqrt();
+        if dir_len < T::epsilon() {
+            // Degenerate line, return identity
+            return Self::identity();
+        }
+
+        let ndx = dx / dir_len;
+        let ndy = dy / dir_len;
+        let ndz = dz / dir_len;
+
+        let cos_half = half_angle.cos();
+        let sin_half = half_angle.sin();
+
+        // Rotation part (Euclidean bivectors)
+        let r23 = ndx * sin_half;
+        let r31 = ndy * sin_half;
+        let r12 = ndz * sin_half;
+
+        // Translation part (null bivectors)
+        // For rotation around a line not through origin, we need:
+        // t = (d/2)*direction + sin(θ/2)*moment/|direction| + (1-cos(θ/2))*(direction × moment)/|direction|²
+        let nmx = mx / dir_len;
+        let nmy = my / dir_len;
+        let nmz = mz / dir_len;
+
+        // Cross product: direction × moment (normalized)
+        let cx = ndy * nmz - ndz * nmy;
+        let cy = ndz * nmx - ndx * nmz;
+        let cz = ndx * nmy - ndy * nmx;
+
+        let t01 = half_pitch * ndx + sin_half * nmx + (T::one() - cos_half) * cx;
+        let t02 = half_pitch * ndy + sin_half * nmy + (T::one() - cos_half) * cy;
+        let t03 = half_pitch * ndz + sin_half * nmz + (T::one() - cos_half) * cz;
+
+        // Pseudoscalar part
+        // For a proper screw: e0123 = -(d/2)*sin(θ/2) (when line through origin)
+        // For general line: also includes moment contributions
+        let e0123 = -half_pitch * sin_half;
+
+        Self {
+            s: cos_half,
+            e23: r23,
+            e31: r31,
+            e12: r12,
+            e01: t01,
+            e02: t02,
+            e03: t03,
+            e0123,
+        }
+    }
+
     /// Composes two motors via geometric product: `self * other`.
     ///
     /// The composition order follows PGA convention where `self` is applied first,
@@ -1329,6 +1438,11 @@ impl<T: Float> Plane<T> {
 }
 
 impl<T: Float> Default for Plane<T> {
+    /// Returns the XY plane (z = 0) as the default.
+    ///
+    /// The XY plane is chosen as the default because it is the most common
+    /// reference plane in 3D applications and corresponds to the "ground plane"
+    /// in many coordinate conventions.
     fn default() -> Self {
         Self::xy()
     }

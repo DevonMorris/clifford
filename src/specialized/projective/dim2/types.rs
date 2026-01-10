@@ -623,10 +623,19 @@ impl<T: Float> Motor<T> {
     }
 
     /// Returns the translation vector as a Euclidean vector.
+    ///
+    /// # Note
+    ///
+    /// For pure translations (no rotation), this returns the exact translation.
+    /// For composed motors (rotation + translation), this is an approximation
+    /// that extracts the translation components directly from the bivector.
+    /// The exact translation after a rotation depends on the rotation center,
+    /// so this extraction is only exact when the motor was constructed as
+    /// `translation.compose(&rotation)` (translate after rotate).
     #[inline]
     pub fn translation(&self) -> EuclideanVector<T> {
         // For a pure translation: dx = 2*e20, dy = 2*e01
-        // For a composed motor, this is more complex
+        // For a composed motor, this extracts the translation bivector components
         EuclideanVector::new(self.e20 * T::TWO, self.e01 * T::TWO)
     }
 }
