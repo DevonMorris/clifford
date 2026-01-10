@@ -122,14 +122,23 @@ impl<T: Float> num_traits::Float for Dual<T> {
 }
 
 impl<T: Float> Float for Dual<T> {
-    const TWO: Self = Dual { real: T::TWO, dual: T::zero() };
-    const PI: Self = Dual { real: T::PI, dual: T::zero() };
+    // Note: TWO and PI are associated constants on Float trait.
+    // For Dual<T>, these must be defined carefully since T::zero() is a method.
+    // The actual implementation will need to handle this appropriately,
+    // potentially by making TWO/PI methods instead of constants for Dual.
+    const TWO: Self = Dual { real: T::TWO, dual: T::ZERO };  // T::ZERO if available
+    const PI: Self = Dual { real: T::PI, dual: T::ZERO };
 
     fn from_f64(value: f64) -> Self {
         Dual::constant(T::from_f64(value))
     }
     // ...
 }
+
+// Note: The above const definitions are illustrative. In practice, since T::zero()
+// is a method (not a const), implementing Float for Dual<T> may require either:
+// 1. Changing TWO/PI to methods in the Float trait, or
+// 2. Using a different approach for the dual part initialization
 ```
 
 ### 3. Approx Traits for Dual Numbers
@@ -173,8 +182,8 @@ fn rotate_x_component_derivative() {
 
     let rotated = rotor.rotate(v);
 
-    // rotated.x().real() = cos(0.5) ≈ 0.877
-    // rotated.x().dual() = -sin(0.5) ≈ -0.479 (derivative w.r.t. angle)
+    // rotated.x.real() = cos(0.5) ≈ 0.877
+    // rotated.x.dual() = -sin(0.5) ≈ -0.479 (derivative w.r.t. angle)
 }
 
 // Gradient of distance function
@@ -286,6 +295,7 @@ impl<T: Float, const N: usize> num_traits::Float for MultiDual<T, N> {
 **Usage:**
 
 ```rust
+use std::f64::consts::FRAC_PI_2;
 use clifford::autodiff::MultiDual;
 
 // Compute gradient of f(x,y,z) = x²y + sin(z) at (1, 2, π/2)
@@ -576,6 +586,7 @@ fn forward_kinematics(joints: [Dual<f64>; 3]) -> Vector<Dual<f64>> {
     let r3 = Rotor::from_angle_plane(joints[2], Bivector::unit_yz());
 
     let rotor = r1.compose(r2).compose(r3);
+    // Note: Vector * T works, but T * Vector only works for f32/f64
     rotor.rotate(Vector::unit_x() * arm_length)
 }
 
@@ -669,6 +680,32 @@ let cost = arm_cost(joints, target);
 // Full gradient in ONE forward pass!
 let gradient = cost.grad();  // [∂cost/∂θ₁, ∂cost/∂θ₂, ∂cost/∂θ₃]
 ```
+
+## API Considerations for Autodiff Support
+
+For autodiff types to work seamlessly with existing GA types, some API adjustments may be needed:
+
+### 1. Scalar Multiplication Order
+
+Currently, `Vector<T> * T` works for any `T: Float`, but `T * Vector<T>` only works for `f32` and `f64` due to Rust's orphan rules. For `Dual<f64> * Vector<Dual<f64>>`, users must write `vector * scalar` not `scalar * vector`.
+
+**Options:**
+- Document the limitation (users use `v * s` instead of `s * v`)
+- Add a `scale(&self, scalar: T) -> Self` method for clarity
+- Both approaches work; the method provides discoverability
+
+### 2. Float Trait Constants
+
+The `Float` trait has associated constants `TWO` and `PI`. For `Dual<T>`, these require the dual part to be zero, but `T::zero()` is a method, not a const.
+
+**Options:**
+- Change `TWO`/`PI` from `const` to methods: `fn two() -> Self`
+- Add a `ZERO` associated constant to `Float` trait
+- Use a macro or const fn approach (if Rust const generics allow)
+
+### 3. Vector Field Access
+
+Vectors have public fields (`v.x`, `v.y`, `v.z`), which works well with autodiff since you can write `v.x.real()` and `v.x.dual()` to extract value and derivative.
 
 ## Performance Considerations
 
