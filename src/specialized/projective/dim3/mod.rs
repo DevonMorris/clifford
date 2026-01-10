@@ -47,6 +47,7 @@
 //! assert!(abs_diff_eq!(translated.z(), 3.0, epsilon = 1e-10));
 //! ```
 
+mod conversions;
 mod ops;
 mod types;
 
