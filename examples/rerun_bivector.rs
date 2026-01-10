@@ -14,9 +14,12 @@
 //! In 3D, a bivector represents an oriented plane segment (like an oriented area).
 //! The Hodge dual of a bivector is a vector perpendicular to that plane.
 //!
-//! - Bivector `e₁₂` (xy-plane) → dual vector `e₃` (z-axis)
-//! - Bivector `e₂₃` (yz-plane) → dual vector `e₁` (x-axis)
-//! - Bivector `e₃₁` (zx-plane) → dual vector `e₂` (y-axis)
+//! The bivector u ∧ v has:
+//! - Magnitude = area of parallelogram spanned by u and v
+//! - Zero when u and v are parallel (no area!)
+//! - Maximum when u and v are perpendicular
+//!
+//! The Hodge dual vector is perpendicular to the plane containing u and v.
 
 use std::f32::consts::TAU;
 
@@ -32,22 +35,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let t = frame as f32 / num_frames as f32;
         rec.set_time_sequence("frame", frame as i64);
 
-        // Animate the bivector by rotating the plane it represents
-        // We'll use two angles to create interesting motion
-        let angle1 = t * TAU;
-        let angle2 = t * TAU * 0.7;
+        // Fixed vector u along x-axis
+        let u = Vector::new(2.0_f32, 0.0, 0.0);
 
-        // Create a bivector by specifying two vectors that span the plane
-        // Then compute their wedge product
-        let rotor1 = Rotor::from_angle_plane(angle1, Bivector::unit_xy());
-        let rotor2 = Rotor::from_angle_plane(angle2, Bivector::unit_xz());
+        // Rotating vector v - starts along y, rotates in xy-plane then tilts up
+        let angle_xy = t * TAU * 2.0; // Two full rotations in xy
+        let angle_tilt = (t * TAU).sin() * 0.5; // Gentle tilt up and down
 
-        // Start with two orthogonal vectors and rotate them
-        let base_u = Vector::new(1.5_f32, 0.0, 0.0);
-        let base_v = Vector::new(0.0, 1.5, 0.0);
+        let rotor_xy = Rotor::from_angle_plane(angle_xy, Bivector::unit_xy());
+        let rotor_tilt = Rotor::from_angle_plane(angle_tilt, Bivector::unit_xz());
 
-        let u = rotor2.rotate(rotor1.rotate(base_u));
-        let v = rotor2.rotate(rotor1.rotate(base_v));
+        let base_v = Vector::new(0.0, 1.5_f32, 0.0);
+        let v = rotor_tilt.rotate(rotor_xy.rotate(base_v));
 
         // The bivector is u ∧ v (wedge product)
         let bivector = u.wedge(v);
@@ -100,17 +99,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         // Draw the spanning vectors u and v
+        // u is fixed (red), v is rotating (green)
         rec.log(
-            "bivector/vector_u",
+            "bivector/vector_u_fixed",
             &rerun::Arrows3D::from_vectors([[u.x(), u.y(), u.z()]])
                 .with_origins([[0.0, 0.0, 0.0]])
-                .with_colors([[255, 100, 100]]),
+                .with_colors([[255, 80, 80]]),
         )?;
         rec.log(
-            "bivector/vector_v",
+            "bivector/vector_v_rotating",
             &rerun::Arrows3D::from_vectors([[v.x(), v.y(), v.z()]])
                 .with_origins([[0.0, 0.0, 0.0]])
-                .with_colors([[100, 255, 100]]),
+                .with_colors([[80, 255, 80]]),
         )?;
 
         // =====================================================================
@@ -200,9 +200,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Bivector visualization complete!");
-    println!("- Orange parallelogram: bivector (oriented area)");
-    println!("- Red/green arrows: spanning vectors u and v");
-    println!("- Blue arrow: Hodge dual vector (perpendicular to plane)");
+    println!();
+    println!("Watch how the bivector changes as v rotates around fixed u:");
+    println!("- Red arrow (u): fixed vector along x-axis");
+    println!("- Green arrow (v): rotating vector");
+    println!("- Orange parallelogram: bivector u ∧ v (oriented area)");
+    println!("- Blue arrow: Hodge dual (perpendicular to plane)");
+    println!();
+    println!("Notice: when u and v align, the bivector collapses to zero!");
 
     Ok(())
 }
