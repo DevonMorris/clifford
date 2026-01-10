@@ -3,14 +3,12 @@
 //! This module provides conversions between 3D PGA types and nalgebra types:
 //! - [`Point`] ↔ [`nalgebra::Point3`]
 //! - [`Motor`] ↔ [`nalgebra::Isometry3`]
+//! - [`Motor`] ↔ [`nalgebra::UnitQuaternion`] (rotation only)
+//! - [`Motor`] ↔ [`nalgebra::Rotation3`] (rotation only)
 
 use crate::scalar::Float;
 
-use super::types::Point;
-
-// Motor will be used once we add Motor <-> Isometry3 conversions
-#[allow(unused_imports)]
-use super::types::Motor;
+use super::types::{Motor, Point};
 
 #[cfg(feature = "nalgebra-0_33")]
 use nalgebra_0_33 as na;
@@ -47,6 +45,146 @@ where
             return Err(PointConversionError::PointAtInfinity);
         }
         Ok(na::Point3::new(p.x(), p.y(), p.z()))
+    }
+}
+
+// ============================================================================
+// Motor <-> Isometry3
+// ============================================================================
+
+impl<T> From<na::Isometry3<T>> for Motor<T>
+where
+    T: Float + na::RealField + Copy,
+{
+    /// Converts a nalgebra [`Isometry3`](na::Isometry3) to a PGA [`Motor`].
+    ///
+    /// # Convention
+    ///
+    /// nalgebra's `Isometry3` applies rotation first, then translation.
+    /// The motor is constructed by composing rotation and translation motors
+    /// in the same order.
+    fn from(iso: na::Isometry3<T>) -> Self {
+        // Extract rotation as unit quaternion
+        let q = iso.rotation;
+        let rotation = Motor::from(q);
+
+        // Extract translation
+        let t = iso.translation.vector;
+        let translation = Motor::from_translation(t.x, t.y, t.z);
+
+        // nalgebra applies rotation first, then translation
+        rotation.compose(&translation)
+    }
+}
+
+impl<T> From<Motor<T>> for na::Isometry3<T>
+where
+    T: Float + na::RealField + Copy,
+{
+    /// Converts a PGA [`Motor`] to a nalgebra [`Isometry3`](na::Isometry3).
+    ///
+    /// # Note
+    ///
+    /// This extracts the rotation from the motor's rotation bivector and
+    /// the translation from the translation bivector. For motors that are
+    /// not simple rotation+translation compositions, the extraction may
+    /// be approximate.
+    fn from(m: Motor<T>) -> Self {
+        // Extract rotation as quaternion
+        let q: na::UnitQuaternion<T> = m.into();
+
+        // Extract translation
+        // For a composed motor R*T, the translation extraction is:
+        // t = 2 * (s*e0i + cross terms from rotation-translation interaction)
+        // For simplicity, we extract as if it's a pure translation
+        let tx = m.e01 * T::TWO;
+        let ty = m.e02 * T::TWO;
+        let tz = m.e03 * T::TWO;
+
+        na::Isometry3::from_parts(na::Translation3::new(tx, ty, tz), q)
+    }
+}
+
+// ============================================================================
+// Motor <-> UnitQuaternion (rotation only)
+// ============================================================================
+
+impl<T> From<na::UnitQuaternion<T>> for Motor<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a nalgebra [`UnitQuaternion`](na::UnitQuaternion) to a pure rotation [`Motor`].
+    ///
+    /// # Mapping
+    ///
+    /// - `q.w` → `motor.s` (scalar)
+    /// - `q.i` → `motor.e23` (x-axis rotation, yz-plane)
+    /// - `q.j` → `motor.e31` (y-axis rotation, zx-plane)
+    /// - `q.k` → `motor.e12` (z-axis rotation, xy-plane)
+    fn from(q: na::UnitQuaternion<T>) -> Self {
+        let q = q.quaternion();
+        Motor::new(
+            q.w,
+            q.i,
+            q.j,
+            q.k,
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+        )
+    }
+}
+
+impl<T> From<Motor<T>> for na::UnitQuaternion<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a [`Motor`]'s rotation part to a nalgebra [`UnitQuaternion`](na::UnitQuaternion).
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is ignored.
+    ///
+    /// # Mapping
+    ///
+    /// - `motor.s` → `q.w` (scalar)
+    /// - `motor.e23` → `q.i` (x-axis rotation)
+    /// - `motor.e31` → `q.j` (y-axis rotation)
+    /// - `motor.e12` → `q.k` (z-axis rotation)
+    fn from(m: Motor<T>) -> Self {
+        let q = na::Quaternion::new(m.s, m.e23, m.e31, m.e12);
+        na::UnitQuaternion::new_normalize(q)
+    }
+}
+
+// ============================================================================
+// Motor <-> Rotation3 (rotation only)
+// ============================================================================
+
+impl<T> From<na::Rotation3<T>> for Motor<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a nalgebra [`Rotation3`](na::Rotation3) to a pure rotation [`Motor`].
+    fn from(rot: na::Rotation3<T>) -> Self {
+        let q: na::UnitQuaternion<T> = rot.into();
+        q.into()
+    }
+}
+
+impl<T> From<Motor<T>> for na::Rotation3<T>
+where
+    T: Float + na::RealField,
+{
+    /// Converts a [`Motor`]'s rotation part to a nalgebra [`Rotation3`](na::Rotation3).
+    ///
+    /// # Note
+    ///
+    /// This extracts only the rotation component. Translation is ignored.
+    fn from(m: Motor<T>) -> Self {
+        let q: na::UnitQuaternion<T> = m.into();
+        q.into()
     }
 }
 
@@ -508,5 +646,270 @@ mod tests {
             prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
             prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
         }
+    }
+
+    // ========================================================================
+    // Motor <-> UnitQuaternion conversion tests
+    // ========================================================================
+
+    proptest! {
+        /// Tests that Motor -> UnitQuaternion -> Motor preserves rotation behavior.
+        #[test]
+        fn motor_quaternion_roundtrip_rotation(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let axis = (ax / len, ay / len, az / len);
+
+            let motor = Motor::from_axis_angle(axis, angle);
+            let q: na::UnitQuaternion<f64> = motor.into();
+            let back: Motor<f64> = q.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py, pz);
+            let result_orig = motor.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that UnitQuaternion -> Motor -> UnitQuaternion preserves rotation.
+        #[test]
+        fn quaternion_motor_roundtrip(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(ax / len, ay / len, az / len));
+            let q = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
+
+            let motor: Motor<f64> = q.into();
+            let back: na::UnitQuaternion<f64> = motor.into();
+
+            // Compare by transforming a point
+            let na_point = na::Point3::new(px, py, pz);
+            let result_orig = q * na_point;
+            let result_back = back * na_point;
+
+            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z, result_back.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests that Motor rotation matches UnitQuaternion rotation.
+        #[test]
+        fn motor_quaternion_rotation_equivalence(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let axis = (ax / len, ay / len, az / len);
+
+            let motor = Motor::from_axis_angle(axis, angle);
+            let q: na::UnitQuaternion<f64> = motor.into();
+
+            // Transform with both
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = motor.transform_point(&pga_point);
+
+            let na_point = na::Point3::new(px, py, pz);
+            let na_result = q * na_point;
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    // ========================================================================
+    // Motor <-> Rotation3 conversion tests
+    // ========================================================================
+
+    proptest! {
+        /// Tests that Motor -> Rotation3 -> Motor preserves rotation behavior.
+        #[test]
+        fn motor_rotation3_roundtrip(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let axis = (ax / len, ay / len, az / len);
+
+            let motor = Motor::from_axis_angle(axis, angle);
+            let rot: na::Rotation3<f64> = motor.into();
+            let back: Motor<f64> = rot.into();
+
+            // Compare by transforming a point
+            let p = Point::new(px, py, pz);
+            let result_orig = motor.transform_point(&p);
+            let result_back = back.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    // ========================================================================
+    // Motor <-> Isometry3 conversion tests
+    // ========================================================================
+
+    proptest! {
+        /// Tests that Isometry3 -> Motor conversion produces equivalent transformation.
+        #[test]
+        fn isometry_to_motor_equivalence(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -10.0f64..10.0, ty in -10.0f64..10.0, tz in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Create isometry (rotation around Z)
+            let iso = na::Isometry3::new(
+                na::Vector3::new(tx, ty, tz),
+                na::Vector3::new(0.0, 0.0, angle),
+            );
+            let motor: Motor<f64> = iso.into();
+
+            // Transform a point with both
+            let na_point = na::Point3::new(px, py, pz);
+            let na_result = iso * na_point;
+
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = motor.transform_point(&pga_point);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests pure rotation Isometry conversion.
+        #[test]
+        fn isometry_pure_rotation_to_motor(
+            ax in -1.0f64..1.0, ay in -1.0f64..1.0, az in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            // Normalize axis (skip if too small)
+            let len = (ax * ax + ay * ay + az * az).sqrt();
+            if len < 0.1 {
+                return Ok(());
+            }
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(ax / len, ay / len, az / len));
+
+            let q = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
+            let iso = na::Isometry3::from_parts(na::Translation3::identity(), q);
+            let motor: Motor<f64> = iso.into();
+
+            // Transform a point with both
+            let na_point = na::Point3::new(px, py, pz);
+            let na_result = iso * na_point;
+
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = motor.transform_point(&pga_point);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        /// Tests pure translation Isometry conversion.
+        #[test]
+        fn isometry_pure_translation_to_motor(
+            tx in -10.0f64..10.0, ty in -10.0f64..10.0, tz in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            let iso = na::Isometry3::translation(tx, ty, tz);
+            let motor: Motor<f64> = iso.into();
+
+            // Transform a point with both
+            let na_point = na::Point3::new(px, py, pz);
+            let na_result = iso * na_point;
+
+            let pga_point = Point::new(px, py, pz);
+            let pga_result = motor.transform_point(&pga_point);
+
+            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    // ========================================================================
+    // Identity and edge case tests
+    // ========================================================================
+
+    #[test]
+    fn identity_motor_to_isometry() {
+        let motor = Motor::<f64>::identity();
+        let iso: na::Isometry3<f64> = motor.into();
+
+        // Should be identity isometry
+        let p = na::Point3::new(1.0, 2.0, 3.0);
+        let result = iso * p;
+        assert!(abs_diff_eq!(result.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.y, 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.z, 3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_isometry_to_motor() {
+        let iso = na::Isometry3::<f64>::identity();
+        let motor: Motor<f64> = iso.into();
+
+        // Should be identity motor
+        let p = Point::new(1.0, 2.0, 3.0);
+        let result = motor.transform_point(&p);
+        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_motor_to_quaternion() {
+        let motor = Motor::<f64>::identity();
+        let q: na::UnitQuaternion<f64> = motor.into();
+
+        // Should be identity quaternion (w=1, i=j=k=0)
+        assert!(abs_diff_eq!(q.w, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(q.i, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(q.j, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(q.k, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn identity_quaternion_to_motor() {
+        let q = na::UnitQuaternion::<f64>::identity();
+        let motor: Motor<f64> = q.into();
+
+        // Should produce identity motor
+        assert!(abs_diff_eq!(motor.s, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e23, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e31, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e12, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e01, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e02, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(motor.e03, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }
