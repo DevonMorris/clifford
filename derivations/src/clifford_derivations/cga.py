@@ -371,6 +371,71 @@ def derive_circumcenter():
     else:
         print("  Degenerate case (collinear points)")
 
+    # Generate Rust code for the formulas
+    print("\n" + "=" * 60)
+    print("Generated Rust code:")
+    print("=" * 60)
+
+    # Edge vectors
+    print("\n// Edge vectors")
+    print("let d1x = bx - ax;")
+    print("let d1y = by - ay;")
+    print("let d1z = bz - az;")
+    print("let d2x = cx - ax;")
+    print("let d2y = cy - ay;")
+    print("let d2z = cz - az;")
+
+    # Plane normal (cross product)
+    print("\n// Plane normal: n = d1 × d2")
+    print(f"let nx = {rust_code(expand(d1y * d2z - d1z * d2y))};")
+    print(f"let ny = {rust_code(expand(d1z * d2x - d1x * d2z))};")
+    print(f"let nz = {rust_code(expand(d1x * d2y - d1y * d2x))};")
+
+    # Midpoints
+    print("\n// Midpoints")
+    print("let m1x = (ax + bx) / T::TWO;")
+    print("let m1y = (ay + by) / T::TWO;")
+    print("let m1z = (az + bz) / T::TWO;")
+
+    # Perpendicular direction p1 = d1 × n
+    print("\n// Perpendicular direction: p1 = d1 × n")
+    print(f"let p1x = {rust_code(expand(p1x))};")
+    print(f"let p1y = {rust_code(expand(p1y))};")
+    print(f"let p1z = {rust_code(expand(p1z))};")
+
+    # dm = m2 - m1 = (C - B) / 2
+    print("\n// Delta midpoint: dm = m2 - m1 = (C - B) / 2")
+    print("let dmx = (cx - bx) / T::TWO;")
+    print("let dmy = (cy - by) / T::TWO;")
+    print("let dmz = (cz - bz) / T::TWO;")
+
+    # Perpendicular direction p2 = d2 × n
+    print("\n// Perpendicular direction: p2 = d2 × n")
+    print(f"let p2x = {rust_code(expand(p2x))};")
+    print(f"let p2y = {rust_code(expand(p2y))};")
+    print(f"let p2z = {rust_code(expand(p2z))};")
+
+    # Numerator: (dm × p2) · n
+    print("\n// Numerator: ((m2 - m1) × p2) · n")
+    print("let dm_cross_p2_x = dmy * p2z - dmz * p2y;")
+    print("let dm_cross_p2_y = dmz * p2x - dmx * p2z;")
+    print("let dm_cross_p2_z = dmx * p2y - dmy * p2x;")
+    print("let numer = dm_cross_p2_x * nx + dm_cross_p2_y * ny + dm_cross_p2_z * nz;")
+
+    # Denominator: (p1 × p2) · n
+    print("\n// Denominator: (p1 × p2) · n")
+    print("let p1_cross_p2_x = p1y * p2z - p1z * p2y;")
+    print("let p1_cross_p2_y = p1z * p2x - p1x * p2z;")
+    print("let p1_cross_p2_z = p1x * p2y - p1y * p2x;")
+    print("let denom = p1_cross_p2_x * nx + p1_cross_p2_y * ny + p1_cross_p2_z * nz;")
+
+    # Solve for t and compute center
+    print("\n// Solve for t and compute center")
+    print("let t = numer / denom;")
+    print("let center_x = m1x + t * p1x;")
+    print("let center_y = m1y + t * p1y;")
+    print("let center_z = m1z + t * p1z;")
+
     print("\n" + "=" * 60)
     print("Circumcenter derivation complete!")
     print("=" * 60)

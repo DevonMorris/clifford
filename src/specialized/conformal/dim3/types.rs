@@ -729,7 +729,7 @@ impl<T: Float> Default for Plane<T> {
 /// let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
 /// let p2 = Point::new(0.0, 1.0, 0.0);
 /// let p3 = Point::new(-1.0, 0.0, 0.0);
-/// let circle = Circle::from_three_points(&p1, &p2, &p3);
+/// let circle = Circle::from_three_points(&p1, &p2, &p3).unwrap();
 ///
 /// // Verify radius
 /// assert!((circle.radius() - 1.0).abs() < 1e-10);
@@ -783,9 +783,28 @@ impl<T: Float> Circle<T> {
 
     /// Creates a circle from three points.
     ///
-    /// The three points define a unique circle (assuming they're not collinear).
-    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Self {
-        // Compute plane normal
+    /// The three points define a unique circle. Returns `None` if the points
+    /// are collinear (no unique circle exists).
+    ///
+    /// # Algorithm
+    ///
+    /// Uses perpendicular bisector intersection to find the circumcenter.
+    /// See `derivations/src/clifford_derivations/cga.py::derive_circumcenter()`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Circle};
+    ///
+    /// let p1 = Point::new(1.0, 0.0, 0.0);
+    /// let p2 = Point::new(0.0, 1.0, 0.0);
+    /// let p3 = Point::new(-1.0, 0.0, 0.0);
+    ///
+    /// let circle = Circle::from_three_points(&p1, &p2, &p3).unwrap();
+    /// assert!(circle.contains(&p1, 1e-10));
+    /// ```
+    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Option<Self> {
+        // Compute plane normal via cross product of edge vectors
         let v1 = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
         let v2 = (p3.x() - p1.x(), p3.y() - p1.y(), p3.z() - p1.z());
 
@@ -794,16 +813,16 @@ impl<T: Float> Circle<T> {
         let nz = v1.0 * v2.1 - v1.1 * v2.0;
 
         let len = (nx * nx + ny * ny + nz * nz).sqrt();
-        let (nx, ny, nz) = if len > T::epsilon() {
-            (nx / len, ny / len, nz / len)
-        } else {
-            (T::zero(), T::zero(), T::one())
-        };
 
-        // Find circumcenter by solving the system of equations
-        // For now, use a simplified approach: project to 2D in the plane, find circumcenter
-        // This is the correct formula derived from circumcenter equations
+        // Collinear points: normal has zero length
+        if len < T::epsilon() {
+            return None;
+        }
 
+        let (nx, ny, nz) = (nx / len, ny / len, nz / len);
+
+        // Find circumcenter using perpendicular bisector intersection
+        // Algorithm from derivations/src/clifford_derivations/cga.py
         let ax = p1.x();
         let ay = p1.y();
         let az = p1.z();
@@ -816,60 +835,57 @@ impl<T: Float> Circle<T> {
 
         // Midpoints
         let m1 = ((ax + bx) / T::TWO, (ay + by) / T::TWO, (az + bz) / T::TWO);
-        let m2 = ((ax + cx) / T::TWO, (ay + cy) / T::TWO, (az + cz) / T::TWO);
 
         // Edge directions
         let d1 = (bx - ax, by - ay, bz - az);
-        let d2 = (cx - ax, cy - ay, cz - az);
 
-        // Perpendicular directions in the plane
-        // p1 = d1 × n (perpendicular to edge 1 in plane)
-        let p1 = (
+        // Perpendicular direction in the plane: p1 = d1 × n
+        let perp1 = (
             d1.1 * nz - d1.2 * ny,
             d1.2 * nx - d1.0 * nz,
             d1.0 * ny - d1.1 * nx,
         );
 
-        // p2 = d2 × n (perpendicular to edge 2 in plane)
-        let p2 = (
+        // Delta midpoint: dm = m2 - m1 = (C - B) / 2
+        let dm = ((cx - bx) / T::TWO, (cy - by) / T::TWO, (cz - bz) / T::TWO);
+
+        // Edge direction d2
+        let d2 = (cx - ax, cy - ay, cz - az);
+
+        // Perpendicular direction: p2 = d2 × n
+        let perp2 = (
             d2.1 * nz - d2.2 * ny,
             d2.2 * nx - d2.0 * nz,
             d2.0 * ny - d2.1 * nx,
         );
 
-        // Solve for intersection: m1 + t*p1 = m2 + s*p2
-        // Using least squares approach for numerical stability
-        let dm = (m2.0 - m1.0, m2.1 - m1.1, m2.2 - m1.2);
-
-        // t = (dm · p1) / (p1 · p1) approximately
-        let p1_dot_p1 = p1.0 * p1.0 + p1.1 * p1.1 + p1.2 * p1.2;
+        // Numerator: ((m2 - m1) × p2) · n
         let dm_cross_p2 = (
-            dm.1 * p2.2 - dm.2 * p2.1,
-            dm.2 * p2.0 - dm.0 * p2.2,
-            dm.0 * p2.1 - dm.1 * p2.0,
+            dm.1 * perp2.2 - dm.2 * perp2.1,
+            dm.2 * perp2.0 - dm.0 * perp2.2,
+            dm.0 * perp2.1 - dm.1 * perp2.0,
         );
-        let p1_cross_p2 = (
-            p1.1 * p2.2 - p1.2 * p2.1,
-            p1.2 * p2.0 - p1.0 * p2.2,
-            p1.0 * p2.1 - p1.1 * p2.0,
-        );
-
-        let denom = p1_cross_p2.0 * nx + p1_cross_p2.1 * ny + p1_cross_p2.2 * nz;
         let numer = dm_cross_p2.0 * nx + dm_cross_p2.1 * ny + dm_cross_p2.2 * nz;
 
-        let t = if denom.abs() > T::epsilon() {
-            numer / denom
-        } else if p1_dot_p1 > T::epsilon() {
-            // Fallback: use midpoint
-            T::zero()
-        } else {
-            T::zero()
-        };
+        // Denominator: (p1 × p2) · n
+        let p1_cross_p2 = (
+            perp1.1 * perp2.2 - perp1.2 * perp2.1,
+            perp1.2 * perp2.0 - perp1.0 * perp2.2,
+            perp1.0 * perp2.1 - perp1.1 * perp2.0,
+        );
+        let denom = p1_cross_p2.0 * nx + p1_cross_p2.1 * ny + p1_cross_p2.2 * nz;
+
+        // Degenerate case: perpendicular bisectors are parallel
+        if denom.abs() < T::epsilon() {
+            return None;
+        }
+
+        let t = numer / denom;
 
         // Circumcenter
-        let center_x = m1.0 + t * p1.0;
-        let center_y = m1.1 + t * p1.1;
-        let center_z = m1.2 + t * p1.2;
+        let center_x = m1.0 + t * perp1.0;
+        let center_y = m1.1 + t * perp1.1;
+        let center_z = m1.2 + t * perp1.2;
 
         // Radius
         let dx = center_x - ax;
@@ -877,7 +893,7 @@ impl<T: Float> Circle<T> {
         let dz = center_z - az;
         let r = (dx * dx + dy * dy + dz * dz).sqrt();
 
-        Self {
+        Some(Self {
             cx: center_x,
             cy: center_y,
             cz: center_z,
@@ -885,7 +901,7 @@ impl<T: Float> Circle<T> {
             nx,
             ny,
             nz,
-        }
+        })
     }
 
     /// Returns the center as a Euclidean vector.
@@ -957,6 +973,17 @@ impl<T: Float> Circle<T> {
     #[inline]
     pub fn cz(&self) -> T {
         self.cz
+    }
+}
+
+impl<T: Float> Default for Circle<T> {
+    /// Returns the unit circle in the xy-plane centered at the origin.
+    fn default() -> Self {
+        Self::from_center_radius_normal(
+            &Vector::new(T::zero(), T::zero(), T::zero()),
+            T::one(),
+            &Vector::new(T::zero(), T::zero(), T::one()),
+        )
     }
 }
 
@@ -1145,6 +1172,13 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn pz(&self) -> T {
         self.pz
+    }
+}
+
+impl<T: Float> Default for Line<T> {
+    /// Returns the x-axis (line through origin along x direction).
+    fn default() -> Self {
+        Self::x_axis()
     }
 }
 
@@ -1957,13 +1991,107 @@ mod tests {
     // Circle tests
     // ========================================================================
 
+    proptest! {
+        #[test]
+        fn circle_from_center_radius_normal_contains_points(
+            cx in -10.0f64..10.0, cy in -10.0f64..10.0, cz in -10.0f64..10.0,
+            r in 0.1f64..10.0,
+            nx in -1.0f64..1.0, ny in -1.0f64..1.0, nz in -1.0f64..1.0,
+            theta in 0.0f64..std::f64::consts::TAU,
+        ) {
+            // Skip degenerate normals
+            let norm_sq = nx * nx + ny * ny + nz * nz;
+            prop_assume!(norm_sq > 0.01);
+            let norm = norm_sq.sqrt();
+            let nx = nx / norm;
+            let ny = ny / norm;
+            let nz = nz / norm;
+
+            let circle = Circle::from_center_radius_normal(
+                &Vector::new(cx, cy, cz),
+                r,
+                &Vector::new(nx, ny, nz),
+            );
+
+            // Generate a point on the circle using angle theta
+            // Need two perpendicular vectors in the circle's plane
+            let (u, v) = {
+                // Find a vector not parallel to normal
+                let candidate = if nx.abs() < 0.9 {
+                    Vector::new(1.0, 0.0, 0.0)
+                } else {
+                    Vector::new(0.0, 1.0, 0.0)
+                };
+                // u = n × candidate (normalized)
+                let ux = ny * candidate.z() - nz * candidate.y();
+                let uy = nz * candidate.x() - nx * candidate.z();
+                let uz = nx * candidate.y() - ny * candidate.x();
+                let u_len = (ux * ux + uy * uy + uz * uz).sqrt();
+                let u = Vector::new(ux / u_len, uy / u_len, uz / u_len);
+                // v = n × u
+                let vx = ny * u.z() - nz * u.y();
+                let vy = nz * u.x() - nx * u.z();
+                let vz = nx * u.y() - ny * u.x();
+                (u, Vector::new(vx, vy, vz))
+            };
+
+            // Point on circle: center + r * (cos(theta) * u + sin(theta) * v)
+            let px = cx + r * (theta.cos() * u.x() + theta.sin() * v.x());
+            let py = cy + r * (theta.cos() * u.y() + theta.sin() * v.y());
+            let pz = cz + r * (theta.cos() * u.z() + theta.sin() * v.z());
+            let p = Point::new(px, py, pz);
+
+            prop_assert!(circle.contains(&p, 1e-6));
+        }
+
+        #[test]
+        fn circle_radius_matches_distance_from_center(
+            cx in -10.0f64..10.0, cy in -10.0f64..10.0, cz in -10.0f64..10.0,
+            r in 0.1f64..10.0,
+        ) {
+            let circle = Circle::from_center_radius_normal(
+                &Vector::new(cx, cy, cz),
+                r,
+                &Vector::new(0.0, 0.0, 1.0),
+            );
+
+            prop_assert!(abs_diff_eq!(circle.radius(), r, epsilon = ABS_DIFF_EQ_EPS));
+
+            let center = circle.center();
+            prop_assert!(abs_diff_eq!(center.x(), cx, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(center.y(), cy, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(center.z(), cz, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn circle_carrier_plane_contains_circle(
+            cx in -10.0f64..10.0, cy in -10.0f64..10.0, cz in -10.0f64..10.0,
+            r in 0.1f64..10.0,
+            nx in -1.0f64..1.0, ny in -1.0f64..1.0, nz in -1.0f64..1.0,
+        ) {
+            // Skip degenerate normals
+            let norm_sq = nx * nx + ny * ny + nz * nz;
+            prop_assume!(norm_sq > 0.01);
+
+            let circle = Circle::from_center_radius_normal(
+                &Vector::new(cx, cy, cz),
+                r,
+                &Vector::new(nx, ny, nz),
+            );
+
+            let plane = circle.carrier_plane();
+            let center_point = Point::new(cx, cy, cz);
+            prop_assert!(plane.contains(&center_point, 1e-6));
+        }
+    }
+
     #[test]
     fn circle_from_three_points_xy() {
         // Unit circle in xy-plane
         let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
         let p2 = Point::new(0.0, 1.0, 0.0);
         let p3 = Point::new(-1.0, 0.0, 0.0);
-        let circle = Circle::from_three_points(&p1, &p2, &p3);
+        let circle = Circle::from_three_points(&p1, &p2, &p3).unwrap();
 
         // Center should be at origin
         assert!(abs_diff_eq!(circle.cx(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
@@ -1989,11 +2117,20 @@ mod tests {
     }
 
     #[test]
+    fn circle_from_three_points_collinear_returns_none() {
+        // Collinear points should return None
+        let p1 = Point::<f64>::new(0.0, 0.0, 0.0);
+        let p2 = Point::new(1.0, 0.0, 0.0);
+        let p3 = Point::new(2.0, 0.0, 0.0);
+        assert!(Circle::from_three_points(&p1, &p2, &p3).is_none());
+    }
+
+    #[test]
     fn circle_contains_defining_points() {
         let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
         let p2 = Point::new(0.0, 1.0, 0.0);
         let p3 = Point::new(-1.0, 0.0, 0.0);
-        let circle = Circle::from_three_points(&p1, &p2, &p3);
+        let circle = Circle::from_three_points(&p1, &p2, &p3).unwrap();
 
         assert!(circle.contains(&p1, ABS_DIFF_EQ_EPS));
         assert!(circle.contains(&p2, ABS_DIFF_EQ_EPS));
