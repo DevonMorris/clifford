@@ -752,8 +752,8 @@ impl<'a> TraitsGenerator<'a> {
                                     let mv_a: Multivector<f64, #signature_name> = a.into();
                                     let mv_b: Multivector<f64, #signature_name> = b.into();
 
-                                    let specialized_result: #name_out<f64> = #fn_name(a, b);
-                                    let generic_result = mv_a.geometric(mv_b);
+                                    let specialized_result: #name_out<f64> = #fn_name(&a, &b);
+                                    let generic_result = mv_a * mv_b;
 
                                     let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
                                     prop_assert!(
@@ -830,8 +830,8 @@ impl<'a> TraitsGenerator<'a> {
                                     let mv_a: Multivector<f64, #signature_name> = a.into();
                                     let mv_b: Multivector<f64, #signature_name> = b.into();
 
-                                    let specialized_result: #name_out<f64> = #fn_name(a, b);
-                                    let generic_result = mv_a.outer(mv_b);
+                                    let specialized_result: #name_out<f64> = #fn_name(&a, &b);
+                                    let generic_result = mv_a.outer(&mv_b);
 
                                     let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
                                     prop_assert!(

@@ -25,7 +25,8 @@ use clap::{Parser, Subcommand};
 
 use clifford_codegen::algebra::{Algebra, ProductTable};
 use clifford_codegen::codegen::{
-    ConstraintGenerator, ProductGenerator, TraitsGenerator, TypeGenerator, format_tokens,
+    ConstraintGenerator, ConversionsGenerator, ProductGenerator, TraitsGenerator, TypeGenerator,
+    format_tokens,
 };
 use clifford_codegen::spec::parse_spec;
 
@@ -235,6 +236,7 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
     let product_gen = ProductGenerator::new(&spec, &algebra, table.clone());
     let constraint_gen = ConstraintGenerator::new(&spec, &algebra);
     let traits_gen = TraitsGenerator::new(&spec, &algebra, table);
+    let conversions_gen = ConversionsGenerator::new(&spec, &algebra);
 
     // Generate all files
     let files = vec![
@@ -242,6 +244,10 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
         ("products.rs", product_gen.generate_products_file()),
         ("constrained.rs", constraint_gen.generate_constraints_file()),
         ("traits.rs", traits_gen.generate_traits_file()),
+        (
+            "conversions.rs",
+            conversions_gen.generate_conversions_file(),
+        ),
     ];
 
     // Generate mod.rs
@@ -297,6 +303,7 @@ fn generate_mod_file(
         quote! { pub mod products; },
         quote! { pub mod constrained; },
         quote! { pub mod traits; },
+        quote! { pub mod conversions; },
     ];
 
     if options.nalgebra {

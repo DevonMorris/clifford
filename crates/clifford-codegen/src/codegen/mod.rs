@@ -33,12 +33,14 @@
 //! ```
 
 mod constraints;
+mod conversions;
 mod format;
 mod products;
 mod traits;
 mod types;
 
 pub use constraints::ConstraintGenerator;
+pub use conversions::ConversionsGenerator;
 pub use format::format_tokens;
 pub use products::ProductGenerator;
 pub use traits::TraitsGenerator;
