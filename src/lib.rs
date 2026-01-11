@@ -1,4 +1,8 @@
 #![doc = include_str!("../README.md")]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/DevonMorris/clifford/main/assets/clifford.png",
+    html_favicon_url = "https://raw.githubusercontent.com/DevonMorris/clifford/main/assets/clifford.png"
+)]
 
 // Ensure nalgebra feature flags are mutually exclusive
 #[cfg(any(
