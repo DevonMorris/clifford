@@ -326,7 +326,6 @@ fn generate_mod_file(
 
     quote! {
         #![doc = #doc]
-        #![allow(dead_code, unused_imports, unused_parens, clippy::needless_update)]
 
         #(#mods)*
     }

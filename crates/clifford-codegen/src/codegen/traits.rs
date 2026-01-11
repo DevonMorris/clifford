@@ -510,13 +510,6 @@ impl<'a> TraitsGenerator<'a> {
             .map(|_| quote! { -100.0f64..100.0 })
             .collect();
 
-        let prop_map_args: Vec<TokenStream> = (0..num_fields)
-            .map(|i| {
-                let var = format_ident!("x{}", i);
-                quote! { #var }
-            })
-            .collect();
-
         let field_inits: Vec<TokenStream> = (0..num_fields)
             .map(|i| {
                 let var = format_ident!("x{}", i);
@@ -524,17 +517,42 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        quote! {
-            impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
-                type Parameters = ();
-                type Strategy = BoxedStrategy<Self>;
+        // Handle single-field case specially to avoid unnecessary parentheses
+        if num_fields == 1 {
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
 
-                fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-                    (#(#range_tuple),*)
-                        .prop_map(|(#(#prop_map_args),*)| {
-                            #name::new(#(#field_inits),*)
-                        })
-                        .boxed()
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (-100.0f64..100.0)
+                            .prop_map(|x0| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
+                }
+            }
+        } else {
+            let prop_map_args: Vec<TokenStream> = (0..num_fields)
+                .map(|i| {
+                    let var = format_ident!("x{}", i);
+                    quote! { #var }
+                })
+                .collect();
+
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
+
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (#(#range_tuple),*)
+                            .prop_map(|(#(#prop_map_args),*)| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
                 }
             }
         }
@@ -555,7 +573,6 @@ impl<'a> TraitsGenerator<'a> {
             #[cfg(test)]
             mod verification_tests {
                 use super::*;
-                use super::arbitrary_impls::*;
                 use crate::algebra::Multivector;
                 use crate::signature::#signature_name;
                 use approx::abs_diff_eq;

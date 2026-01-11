@@ -388,11 +388,10 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         .map(|t| (t.name.clone(), t.grades.clone()))
         .collect();
 
-    // Infer products for each product type
+    // Infer products for geometric and outer only
+    // Left contraction and other products are only generated if explicitly specified
     let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
     let outer_table = infer_all_products(&entities, ProductType::Outer, &algebra);
-    let left_contraction_table =
-        infer_all_products(&entities, ProductType::LeftContraction, &algebra);
 
     // Convert inferred products to ProductEntry format
     // Skip products that don't have matching entity types
@@ -416,7 +415,7 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     ProductsSpec {
         geometric: convert_entries(geometric_table),
         outer: convert_entries(outer_table),
-        left_contraction: convert_entries(left_contraction_table),
+        left_contraction: vec![],  // Only generated if explicitly specified
         right_contraction: vec![], // Not commonly used
         regressive: vec![],        // Not commonly used
         scalar: vec![],            // Can be derived from geometric
