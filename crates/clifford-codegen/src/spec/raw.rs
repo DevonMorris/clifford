@@ -21,6 +21,9 @@ pub struct RawAlgebraSpec {
     /// Type definitions.
     #[serde(default)]
     pub types: HashMap<String, RawTypeSpec>,
+    /// Product definitions.
+    #[serde(default)]
+    pub products: RawProducts,
     /// Generation options.
     #[serde(default)]
     pub options: RawOptions,
@@ -73,6 +76,32 @@ pub struct RawTypeSpec {
 pub struct RawConstraint {
     /// Condition expression.
     pub condition: Option<String>,
+}
+
+/// Raw products section.
+///
+/// Each product type maps "Lhs_Rhs" -> "Output".
+/// For example: `Vector_Vector = "Rotor"`.
+#[derive(Debug, Deserialize, Default)]
+pub struct RawProducts {
+    /// Geometric product entries.
+    #[serde(default)]
+    pub geometric: HashMap<String, String>,
+    /// Outer (wedge) product entries.
+    #[serde(default)]
+    pub outer: HashMap<String, String>,
+    /// Left contraction entries.
+    #[serde(default)]
+    pub left_contraction: HashMap<String, String>,
+    /// Right contraction entries.
+    #[serde(default)]
+    pub right_contraction: HashMap<String, String>,
+    /// Regressive product entries.
+    #[serde(default)]
+    pub regressive: HashMap<String, String>,
+    /// Scalar product entries.
+    #[serde(default)]
+    pub scalar: HashMap<String, String>,
 }
 
 /// Raw generation options.

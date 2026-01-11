@@ -23,6 +23,8 @@ pub struct AlgebraSpec {
     pub blade_names: HashMap<usize, String>,
     /// Type definitions.
     pub types: Vec<TypeSpec>,
+    /// Product specifications.
+    pub products: ProductsSpec,
     /// Code generation options.
     pub options: GenerationOptions,
 }
@@ -132,6 +134,36 @@ impl ConstraintKind {
             ConstraintKind::Ideal => "Ideal",
         }
     }
+}
+
+/// Product specifications for all product types.
+#[derive(Debug, Clone, Default)]
+pub struct ProductsSpec {
+    /// Geometric product entries.
+    pub geometric: Vec<ProductEntry>,
+    /// Outer (wedge) product entries.
+    pub outer: Vec<ProductEntry>,
+    /// Left contraction entries.
+    pub left_contraction: Vec<ProductEntry>,
+    /// Right contraction entries.
+    pub right_contraction: Vec<ProductEntry>,
+    /// Regressive product entries.
+    pub regressive: Vec<ProductEntry>,
+    /// Scalar product entries.
+    pub scalar: Vec<ProductEntry>,
+}
+
+/// A single product entry specifying lhs × rhs → output.
+#[derive(Debug, Clone)]
+pub struct ProductEntry {
+    /// Left-hand side type name (e.g., "Vector", "UnitRotor").
+    pub lhs: String,
+    /// Right-hand side type name.
+    pub rhs: String,
+    /// Output type name.
+    pub output: String,
+    /// Whether the output is a constrained type (uses new_unchecked).
+    pub output_constrained: bool,
 }
 
 /// Code generation options.

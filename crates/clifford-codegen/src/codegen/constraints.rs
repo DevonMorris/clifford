@@ -477,11 +477,26 @@ impl<'a> ConstraintGenerator<'a> {
 /// Parsed constraint expression.
 enum ParsedExpression {
     /// `lhs = rhs` (equality within tolerance)
-    Equality { lhs: String, rhs: String },
+    Equality {
+        /// Left-hand side of the expression.
+        lhs: String,
+        /// Right-hand side of the expression.
+        rhs: String,
+    },
     /// `lhs > rhs`
-    GreaterThan { lhs: String, rhs: String },
+    GreaterThan {
+        /// Left-hand side of the expression.
+        lhs: String,
+        /// Right-hand side of the expression.
+        rhs: String,
+    },
     /// `lhs < rhs`
-    LessThan { lhs: String, rhs: String },
+    LessThan {
+        /// Left-hand side of the expression.
+        lhs: String,
+        /// Right-hand side of the expression.
+        rhs: String,
+    },
     /// Parse error
     Invalid(String),
 }
@@ -541,7 +556,7 @@ fn transform_field_references(expr: &str, field_names: &[&str]) -> String {
 
     // Sort field names by length (longest first) to avoid partial replacements
     let mut sorted_fields: Vec<&str> = field_names.to_vec();
-    sorted_fields.sort_by(|a, b| b.len().cmp(&a.len()));
+    sorted_fields.sort_by_key(|f| std::cmp::Reverse(f.len()));
 
     for field in sorted_fields {
         let replacement = format!("inner.{}()", field);

@@ -70,6 +70,6 @@ pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
     AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
-    SignatureSpec, TypeSpec,
+    ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
 };
 pub use parser::parse_spec;

@@ -6,7 +6,7 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::algebra::{Algebra, ProductTable, geometric_grades};
+use crate::algebra::{Algebra, ProductTable};
 use crate::spec::{AlgebraSpec, TypeSpec};
 
 /// Generates trait implementations for algebra types.
@@ -170,27 +170,67 @@ impl<'a> TraitsGenerator<'a> {
         impls.push(self.generate_scalar_mul_reverse_f32(ty));
         impls.push(self.generate_scalar_mul_reverse_f64(ty));
 
-        // Cross-type operations (geometric product)
-        for other in &self.spec.types {
-            if other.alias_of.is_some() {
+        // Cross-type operations (geometric product) - only for explicit products
+        for entry in &self.spec.products.geometric {
+            // Skip constrained types
+            if self.is_constrained_type(&entry.lhs) || self.is_constrained_type(&entry.rhs) {
                 continue;
             }
-            if let Some(output_type) = self.find_geometric_output(ty, other) {
-                impls.push(self.generate_geometric_mul(ty, other, output_type));
+            // Only generate if lhs matches this type
+            if entry.lhs == ty.name {
+                if let Some(other) = self.find_type(&entry.rhs) {
+                    let output_name = if entry.output_constrained {
+                        // Get the base type for constrained outputs
+                        self.resolve_base_type_name(&entry.output)
+                    } else {
+                        entry.output.clone()
+                    };
+                    if let Some(output_type) = self.find_type(&output_name) {
+                        impls.push(self.generate_geometric_mul_from_entry(ty, other, output_type, entry));
+                    }
+                }
             }
         }
 
-        // Outer product (using BitXor)
-        for other in &self.spec.types {
-            if other.alias_of.is_some() {
+        // Outer product (using BitXor) - only for explicit products
+        for entry in &self.spec.products.outer {
+            // Skip constrained types
+            if self.is_constrained_type(&entry.lhs) || self.is_constrained_type(&entry.rhs) {
                 continue;
             }
-            if let Some(output_type) = self.find_outer_output(ty, other) {
-                impls.push(self.generate_outer(ty, other, output_type));
+            // Only generate if lhs matches this type
+            if entry.lhs == ty.name {
+                if let Some(other) = self.find_type(&entry.rhs) {
+                    let output_name = if entry.output_constrained {
+                        self.resolve_base_type_name(&entry.output)
+                    } else {
+                        entry.output.clone()
+                    };
+                    if let Some(output_type) = self.find_type(&output_name) {
+                        impls.push(self.generate_outer_from_entry(ty, other, output_type, entry));
+                    }
+                }
             }
         }
 
         impls
+    }
+
+    /// Finds a TypeSpec by name.
+    fn find_type(&self, name: &str) -> Option<&TypeSpec> {
+        self.spec.types.iter().find(|t| t.name == name)
+    }
+
+    /// Resolves a constrained type name to its base type name.
+    fn resolve_base_type_name(&self, name: &str) -> String {
+        for ty in &self.spec.types {
+            for constraint in &ty.constraints {
+                if constraint.wrapper_name == name {
+                    return ty.name.clone();
+                }
+            }
+        }
+        name.to_string()
     }
 
     /// Generates Add implementation.
@@ -313,15 +353,21 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates geometric product (Type * Other -> Output).
-    fn generate_geometric_mul(&self, a: &TypeSpec, b: &TypeSpec, output: &TypeSpec) -> TokenStream {
+    /// Generates geometric product (Type * Other -> Output) from a product entry.
+    fn generate_geometric_mul_from_entry(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
         let fn_name = format_ident!(
             "geometric_{}_{}",
-            a.name.to_lowercase(),
-            b.name.to_lowercase()
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
         );
 
         quote! {
@@ -336,12 +382,22 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates outer product (Type ^ Other -> Output).
-    fn generate_outer(&self, a: &TypeSpec, b: &TypeSpec, output: &TypeSpec) -> TokenStream {
+    /// Generates outer product (Type ^ Other -> Output) from a product entry.
+    fn generate_outer_from_entry(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!("outer_{}_{}", a.name.to_lowercase(), b.name.to_lowercase());
+        let fn_name = format_ident!(
+            "outer_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
 
         quote! {
             impl<T: Float> BitXor<#b_name<T>> for #a_name<T> {
@@ -353,68 +409,6 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
-    }
-
-    /// Finds the output type for geometric product.
-    fn find_geometric_output(&self, a: &TypeSpec, b: &TypeSpec) -> Option<&TypeSpec> {
-        let dim = self.algebra.dim();
-        let output_grades = self.compute_geometric_output_grades(a, b, dim);
-        self.find_type_for_grades(&output_grades)
-    }
-
-    /// Finds the output type for outer product.
-    fn find_outer_output(&self, a: &TypeSpec, b: &TypeSpec) -> Option<&TypeSpec> {
-        let dim = self.algebra.dim();
-        let output_grades = self.compute_outer_output_grades(a, b, dim);
-        if output_grades.is_empty() {
-            return None;
-        }
-        self.find_type_for_grades(&output_grades)
-    }
-
-    /// Computes output grades for geometric product.
-    fn compute_geometric_output_grades(
-        &self,
-        a: &TypeSpec,
-        b: &TypeSpec,
-        dim: usize,
-    ) -> Vec<usize> {
-        let mut grades = Vec::new();
-        for &ga in &a.grades {
-            for &gb in &b.grades {
-                for g in geometric_grades(ga, gb, dim) {
-                    if !grades.contains(&g) {
-                        grades.push(g);
-                    }
-                }
-            }
-        }
-        grades.sort();
-        grades
-    }
-
-    /// Computes output grades for outer product.
-    fn compute_outer_output_grades(&self, a: &TypeSpec, b: &TypeSpec, dim: usize) -> Vec<usize> {
-        let mut grades = Vec::new();
-        for &ga in &a.grades {
-            for &gb in &b.grades {
-                let sum = ga + gb;
-                if sum <= dim && !grades.contains(&sum) {
-                    grades.push(sum);
-                }
-            }
-        }
-        grades.sort();
-        grades
-    }
-
-    /// Finds a type that contains exactly the given grades.
-    fn find_type_for_grades(&self, grades: &[usize]) -> Option<&TypeSpec> {
-        self.spec
-            .types
-            .iter()
-            .filter(|t| t.alias_of.is_none())
-            .find(|t| t.grades == grades)
     }
 
     // ========================================================================
@@ -705,145 +699,131 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Generates geometric product verification tests.
     fn generate_geometric_verification_tests(&self) -> TokenStream {
+        // Only generate tests for products explicitly listed in the TOML
+        if self.spec.products.geometric.is_empty() {
+            return quote! {};
+        }
+
         let signature_name = self.generate_signature_name();
-        let dim = self.algebra.dim();
         let tests: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .geometric
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| {
-                        // Compute all result grades from geometric product
-                        let mut result_grades = Vec::new();
-                        for &ga in &type_a.grades {
-                            for &gb in &type_b.grades {
-                                result_grades.extend(geometric_grades(ga, gb, dim));
-                            }
+            .filter_map(|entry| {
+                // Skip constrained types for now (they need special handling for Arbitrary)
+                if self.is_constrained_type(&entry.lhs)
+                    || self.is_constrained_type(&entry.rhs)
+                    || entry.output_constrained
+                {
+                    return None;
+                }
+
+                let name_a = format_ident!("{}", entry.lhs);
+                let name_b = format_ident!("{}", entry.rhs);
+                let name_out = format_ident!("{}", entry.output);
+                let test_name = format_ident!(
+                    "geometric_{}_{}_{}_matches_multivector",
+                    entry.lhs.to_lowercase(),
+                    entry.rhs.to_lowercase(),
+                    entry.output.to_lowercase()
+                );
+                let fn_name = format_ident!(
+                    "geometric_{}_{}",
+                    entry.lhs.to_lowercase(),
+                    entry.rhs.to_lowercase()
+                );
+
+                Some(quote! {
+                    proptest! {
+                        #[test]
+                        fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
+                            let mv_a: Multivector<f64, #signature_name> = a.into();
+                            let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                            let specialized_result: #name_out<f64> = #fn_name(&a, &b);
+                            let generic_result = mv_a * mv_b;
+
+                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                            prop_assert!(
+                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                                specialized_mv, generic_result
+                            );
                         }
-                        result_grades.sort();
-                        result_grades.dedup();
-
-                        let output_type = self.find_type_for_grades(&result_grades)?;
-
-                        let name_a = format_ident!("{}", type_a.name);
-                        let name_b = format_ident!("{}", type_b.name);
-                        let name_out = format_ident!("{}", output_type.name);
-                        let test_name = format_ident!(
-                            "geometric_{}_{}_{}_matches_multivector",
-                            type_a.name.to_lowercase(),
-                            type_b.name.to_lowercase(),
-                            output_type.name.to_lowercase()
-                        );
-                        let fn_name = format_ident!(
-                            "geometric_{}_{}",
-                            type_a.name.to_lowercase(),
-                            type_b.name.to_lowercase()
-                        );
-
-                        Some(quote! {
-                            proptest! {
-                                #[test]
-                                fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
-                                    let mv_a: Multivector<f64, #signature_name> = a.into();
-                                    let mv_b: Multivector<f64, #signature_name> = b.into();
-
-                                    let specialized_result: #name_out<f64> = #fn_name(&a, &b);
-                                    let generic_result = mv_a * mv_b;
-
-                                    let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                                    prop_assert!(
-                                        abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                        "Geometric product mismatch: specialized={:?}, generic={:?}",
-                                        specialized_mv, generic_result
-                                    );
-                                }
-                            }
-                        })
-                    })
-                    .collect::<Vec<_>>()
+                    }
+                })
             })
             .collect();
 
         quote! { #(#tests)* }
     }
 
+    /// Checks if a type name is a constrained wrapper.
+    fn is_constrained_type(&self, name: &str) -> bool {
+        self.spec
+            .types
+            .iter()
+            .flat_map(|t| &t.constraints)
+            .any(|c| c.wrapper_name == name)
+    }
+
     /// Generates outer product verification tests.
     fn generate_outer_verification_tests(&self) -> TokenStream {
+        // Only generate tests for products explicitly listed in the TOML
+        if self.spec.products.outer.is_empty() {
+            return quote! {};
+        }
+
         let signature_name = self.generate_signature_name();
         let tests: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .outer
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| {
-                        // Check if this product produces a valid output type
-                        let result_grades: Vec<usize> = type_a
-                            .grades
-                            .iter()
-                            .flat_map(|&ga| {
-                                type_b.grades.iter().filter_map(move |&gb| {
-                                    let sum = ga + gb;
-                                    if sum <= self.algebra.dim() {
-                                        Some(sum)
-                                    } else {
-                                        None
-                                    }
-                                })
-                            })
-                            .collect();
+            .filter_map(|entry| {
+                // Skip constrained types for now (they need special handling for Arbitrary)
+                if self.is_constrained_type(&entry.lhs)
+                    || self.is_constrained_type(&entry.rhs)
+                    || entry.output_constrained
+                {
+                    return None;
+                }
 
-                        if result_grades.is_empty() {
-                            return None;
+                let name_a = format_ident!("{}", entry.lhs);
+                let name_b = format_ident!("{}", entry.rhs);
+                let name_out = format_ident!("{}", entry.output);
+                let test_name = format_ident!(
+                    "outer_{}_{}_{}_matches_multivector",
+                    entry.lhs.to_lowercase(),
+                    entry.rhs.to_lowercase(),
+                    entry.output.to_lowercase()
+                );
+                let fn_name = format_ident!(
+                    "outer_{}_{}",
+                    entry.lhs.to_lowercase(),
+                    entry.rhs.to_lowercase()
+                );
+
+                Some(quote! {
+                    proptest! {
+                        #[test]
+                        fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
+                            let mv_a: Multivector<f64, #signature_name> = a.into();
+                            let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                            let specialized_result: #name_out<f64> = #fn_name(&a, &b);
+                            let generic_result = mv_a.outer(&mv_b);
+
+                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                            prop_assert!(
+                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                "Outer product mismatch: specialized={:?}, generic={:?}",
+                                specialized_mv, generic_result
+                            );
                         }
-
-                        let output_type = self.find_type_for_grades(&result_grades)?;
-
-                        let name_a = format_ident!("{}", type_a.name);
-                        let name_b = format_ident!("{}", type_b.name);
-                        let name_out = format_ident!("{}", output_type.name);
-                        let test_name = format_ident!(
-                            "outer_{}_{}_{}_matches_multivector",
-                            type_a.name.to_lowercase(),
-                            type_b.name.to_lowercase(),
-                            output_type.name.to_lowercase()
-                        );
-                        let fn_name = format_ident!(
-                            "outer_{}_{}",
-                            type_a.name.to_lowercase(),
-                            type_b.name.to_lowercase()
-                        );
-
-                        Some(quote! {
-                            proptest! {
-                                #[test]
-                                fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
-                                    let mv_a: Multivector<f64, #signature_name> = a.into();
-                                    let mv_b: Multivector<f64, #signature_name> = b.into();
-
-                                    let specialized_result: #name_out<f64> = #fn_name(&a, &b);
-                                    let generic_result = mv_a.outer(&mv_b);
-
-                                    let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                                    prop_assert!(
-                                        abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                        "Outer product mismatch: specialized={:?}, generic={:?}",
-                                        specialized_mv, generic_result
-                                    );
-                                }
-                            }
-                        })
-                    })
-                    .collect::<Vec<_>>()
+                    }
+                })
             })
             .collect();
 

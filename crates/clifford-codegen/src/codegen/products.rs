@@ -6,10 +6,10 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::algebra::{
-    Algebra, Blade, ProductTable, geometric_grades, left_contraction_grade, outer_grade,
-};
-use crate::spec::{AlgebraSpec, TypeSpec};
+#[cfg(test)]
+use crate::algebra::geometric_grades;
+use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
+use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
 
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +90,9 @@ struct SandwichTerm {
 /// [types.Rotor]
 /// grades = [0, 2]
 /// fields = ["s", "xy"]
+///
+/// [products.geometric]
+/// Vector_Vector = "Rotor"
 /// "#).unwrap();
 ///
 /// let algebra = Algebra::euclidean(2);
@@ -118,6 +121,74 @@ impl<'a> ProductGenerator<'a> {
             algebra,
             table,
         }
+    }
+
+    // ========================================================================
+    // Type Resolution Helpers
+    // ========================================================================
+
+    /// Finds a TypeSpec by name.
+    fn find_type(&self, name: &str) -> Option<&TypeSpec> {
+        self.spec.types.iter().find(|t| t.name == name)
+    }
+
+    /// Finds the base type for a type name (resolves constrained wrappers).
+    ///
+    /// For example, "UnitRotor" -> Some("Rotor"), "Rotor" -> Some("Rotor").
+    fn resolve_base_type(&self, name: &str) -> Option<&TypeSpec> {
+        // First check if it's a direct type
+        if let Some(ty) = self.find_type(name) {
+            return Some(ty);
+        }
+
+        // Check if it's a constrained wrapper
+        for ty in &self.spec.types {
+            for constraint in &ty.constraints {
+                if constraint.wrapper_name == name {
+                    return Some(ty);
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Checks if a type name is a constrained wrapper.
+    fn is_constrained_type(&self, name: &str) -> bool {
+        self.spec
+            .types
+            .iter()
+            .flat_map(|t| &t.constraints)
+            .any(|c| c.wrapper_name == name)
+    }
+
+    /// Gets all constrained type names used in product entries.
+    fn constrained_types_in_products(&self) -> Vec<String> {
+        let mut names = Vec::new();
+        let all_entries = self
+            .spec
+            .products
+            .geometric
+            .iter()
+            .chain(&self.spec.products.outer)
+            .chain(&self.spec.products.left_contraction)
+            .chain(&self.spec.products.right_contraction)
+            .chain(&self.spec.products.regressive)
+            .chain(&self.spec.products.scalar);
+
+        for entry in all_entries {
+            if self.is_constrained_type(&entry.lhs) && !names.contains(&entry.lhs) {
+                names.push(entry.lhs.clone());
+            }
+            if self.is_constrained_type(&entry.rhs) && !names.contains(&entry.rhs) {
+                names.push(entry.rhs.clone());
+            }
+            if self.is_constrained_type(&entry.output) && !names.contains(&entry.output) {
+                names.push(entry.output.clone());
+            }
+        }
+
+        names
     }
 
     /// Generates the complete products.rs file.
@@ -185,9 +256,25 @@ impl<'a> ProductGenerator<'a> {
             .map(|t| format_ident!("{}", t.name))
             .collect();
 
+        let constrained_names = self.constrained_types_in_products();
+        let has_constrained = !constrained_names.is_empty();
+
+        let constrained_import = if has_constrained {
+            let names: Vec<_> = constrained_names
+                .iter()
+                .map(|n| format_ident!("{}", n))
+                .collect();
+            quote! {
+                use super::constrained::{#(#names),*};
+            }
+        } else {
+            quote! {}
+        };
+
         quote! {
             use crate::scalar::Float;
             use super::types::{#(#type_names),*};
+            #constrained_import
         }
     }
 
@@ -197,44 +284,40 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all geometric product functions.
     fn generate_all_geometric(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.geometric.is_empty() {
+            return quote! {};
+        }
+
         let products: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .geometric
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| self.generate_geometric_product(type_a, type_b))
-                    .collect::<Vec<_>>()
-            })
+            .filter_map(|entry| self.generate_geometric_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates a single geometric product function.
-    fn generate_geometric_product(
-        &self,
-        type_a: &TypeSpec,
-        type_b: &TypeSpec,
-    ) -> Option<TokenStream> {
-        let output_grades = self.compute_output_grades(type_a, type_b, ProductKind::Geometric);
-        let output_type = self.find_type_for_grades(&output_grades)?;
+    /// Generates a geometric product from a product entry.
+    fn generate_geometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.resolve_base_type(&entry.lhs)?;
+        let type_b = self.resolve_base_type(&entry.rhs)?;
+        let output_base = self.resolve_base_type(&entry.output)?;
 
-        let a_name = format_ident!("{}", type_a.name);
-        let b_name = format_ident!("{}", type_b.name);
-        let c_name = format_ident!("{}", output_type.name);
+        // Use the actual names from the entry (may be constrained)
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
             "geometric_{}_{}",
-            type_a.name.to_lowercase(),
-            type_b.name.to_lowercase()
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
+        let field_exprs: Vec<TokenStream> = output_base
             .fields
             .iter()
             .map(|field| {
@@ -246,14 +329,22 @@ impl<'a> ProductGenerator<'a> {
 
         let doc = format!(
             "Geometric product: {} * {} -> {}",
-            type_a.name, type_b.name, output_type.name
+            entry.lhs, entry.rhs, entry.output
         );
+
+        // For constrained output, we use new_unchecked since the constraint is preserved
+        let output_base_name = format_ident!("{}", output_base.name);
+        let constructor = if entry.output_constrained {
+            quote! { #c_name::new_unchecked(#output_base_name::new(#(#field_exprs),*)) }
+        } else {
+            quote! { #c_name::new(#(#field_exprs),*) }
+        };
 
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor
             }
         })
     }
@@ -264,43 +355,39 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all outer product functions.
     fn generate_all_outer(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.outer.is_empty() {
+            return quote! {};
+        }
+
         let products: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .outer
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| self.generate_outer_product(type_a, type_b))
-                    .collect::<Vec<_>>()
-            })
+            .filter_map(|entry| self.generate_outer_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates a single outer product function.
-    fn generate_outer_product(&self, type_a: &TypeSpec, type_b: &TypeSpec) -> Option<TokenStream> {
-        let output_grades = self.compute_output_grades(type_a, type_b, ProductKind::Outer);
-        if output_grades.is_empty() {
-            return None;
-        }
-        let output_type = self.find_type_for_grades(&output_grades)?;
+    /// Generates an outer product from a product entry.
+    fn generate_outer_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.resolve_base_type(&entry.lhs)?;
+        let type_b = self.resolve_base_type(&entry.rhs)?;
+        let output_base = self.resolve_base_type(&entry.output)?;
 
-        let a_name = format_ident!("{}", type_a.name);
-        let b_name = format_ident!("{}", type_b.name);
-        let c_name = format_ident!("{}", output_type.name);
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
             "outer_{}_{}",
-            type_a.name.to_lowercase(),
-            type_b.name.to_lowercase()
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
+        let field_exprs: Vec<TokenStream> = output_base
             .fields
             .iter()
             .map(|field| {
@@ -312,14 +399,21 @@ impl<'a> ProductGenerator<'a> {
 
         let doc = format!(
             "Outer product: {} ^ {} -> {}",
-            type_a.name, type_b.name, output_type.name
+            entry.lhs, entry.rhs, entry.output
         );
+
+        let output_base_name = format_ident!("{}", output_base.name);
+        let constructor = if entry.output_constrained {
+            quote! { #c_name::new_unchecked(#output_base_name::new(#(#field_exprs),*)) }
+        } else {
+            quote! { #c_name::new(#(#field_exprs),*) }
+        };
 
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor
             }
         })
     }
@@ -330,44 +424,39 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all inner product (left contraction) functions.
     fn generate_all_inner(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.left_contraction.is_empty() {
+            return quote! {};
+        }
+
         let products: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .left_contraction
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| self.generate_inner_product(type_a, type_b))
-                    .collect::<Vec<_>>()
-            })
+            .filter_map(|entry| self.generate_inner_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates a single inner product (left contraction) function.
-    fn generate_inner_product(&self, type_a: &TypeSpec, type_b: &TypeSpec) -> Option<TokenStream> {
-        let output_grades =
-            self.compute_output_grades(type_a, type_b, ProductKind::LeftContraction);
-        if output_grades.is_empty() {
-            return None;
-        }
-        let output_type = self.find_type_for_grades(&output_grades)?;
+    /// Generates a left contraction from a product entry.
+    fn generate_inner_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.resolve_base_type(&entry.lhs)?;
+        let type_b = self.resolve_base_type(&entry.rhs)?;
+        let output_base = self.resolve_base_type(&entry.output)?;
 
-        let a_name = format_ident!("{}", type_a.name);
-        let b_name = format_ident!("{}", type_b.name);
-        let c_name = format_ident!("{}", output_type.name);
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
             "left_contract_{}_{}",
-            type_a.name.to_lowercase(),
-            type_b.name.to_lowercase()
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
+        let field_exprs: Vec<TokenStream> = output_base
             .fields
             .iter()
             .map(|field| {
@@ -383,14 +472,21 @@ impl<'a> ProductGenerator<'a> {
 
         let doc = format!(
             "Left contraction: {} | {} -> {}",
-            type_a.name, type_b.name, output_type.name
+            entry.lhs, entry.rhs, entry.output
         );
+
+        let output_base_name = format_ident!("{}", output_base.name);
+        let constructor = if entry.output_constrained {
+            quote! { #c_name::new_unchecked(#output_base_name::new(#(#field_exprs),*)) }
+        } else {
+            quote! { #c_name::new(#(#field_exprs),*) }
+        };
 
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor
             }
         })
     }
@@ -401,39 +497,34 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all scalar product functions.
     fn generate_all_scalar(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.scalar.is_empty() {
+            return quote! {};
+        }
+
         let products: Vec<TokenStream> = self
             .spec
-            .types
+            .products
+            .scalar
             .iter()
-            .filter(|t| t.alias_of.is_none())
-            .flat_map(|type_a| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter_map(|type_b| self.generate_scalar_product(type_a, type_b))
-                    .collect::<Vec<_>>()
-            })
+            .filter_map(|entry| self.generate_scalar_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates a single scalar product function.
-    fn generate_scalar_product(&self, type_a: &TypeSpec, type_b: &TypeSpec) -> Option<TokenStream> {
-        // Check if scalar grade 0 is possible
-        let output_grades = self.compute_output_grades(type_a, type_b, ProductKind::Geometric);
-        if !output_grades.contains(&0) {
-            return None;
-        }
+    /// Generates a scalar product from a product entry.
+    fn generate_scalar_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.resolve_base_type(&entry.lhs)?;
+        let type_b = self.resolve_base_type(&entry.rhs)?;
 
-        let a_name = format_ident!("{}", type_a.name);
-        let b_name = format_ident!("{}", type_b.name);
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
 
         let fn_name = format_ident!(
             "scalar_{}_{}",
-            type_a.name.to_lowercase(),
-            type_b.name.to_lowercase()
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
         );
 
         // Compute terms that produce grade 0 (scalar blade index = 0)
@@ -445,7 +536,7 @@ impl<'a> ProductGenerator<'a> {
 
         let doc = format!(
             "Scalar product: {} * {} -> T (grade-0 part)",
-            type_a.name, type_b.name
+            entry.lhs, entry.rhs
         );
 
         Some(quote! {
@@ -539,6 +630,7 @@ impl<'a> ProductGenerator<'a> {
     // ========================================================================
 
     /// Computes output grades for a product.
+    #[cfg(test)]
     fn compute_output_grades(
         &self,
         type_a: &TypeSpec,
@@ -595,15 +687,6 @@ impl<'a> ProductGenerator<'a> {
 
         grades.sort();
         grades
-    }
-
-    /// Finds a type that contains exactly the given grades.
-    fn find_type_for_grades(&self, grades: &[usize]) -> Option<&TypeSpec> {
-        self.spec
-            .types
-            .iter()
-            .filter(|t| t.alias_of.is_none())
-            .find(|t| t.grades == grades)
     }
 
     /// Computes product terms for a given output blade.

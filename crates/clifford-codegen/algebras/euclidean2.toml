@@ -54,6 +54,20 @@ grades = [0, 1, 2]
 description = "Full multivector"
 fields = ["s", "x", "y", "xy"]
 
+[products.geometric]
+Vector_Vector = "Rotor"
+Rotor_Rotor = "Rotor"
+UnitRotor_UnitRotor = "UnitRotor"
+Rotor_Vector = "Full"
+Vector_Rotor = "Full"
+
+[products.outer]
+Vector_Vector = "Bivector"
+
+[products.scalar]
+Vector_Vector = "T"
+Rotor_Rotor = "T"
+
 [options]
 generate_serde = true
 generate_arbitrary = true

@@ -9,9 +9,9 @@ use crate::algebra::binomial;
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
-    SignatureSpec, TypeSpec,
+    ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
 };
-use super::raw::{RawAlgebraSpec, RawConstraint, RawSignature, RawTypeSpec};
+use super::raw::{RawAlgebraSpec, RawConstraint, RawProducts, RawSignature, RawTypeSpec};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -57,6 +57,9 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
     // Build types
     let types = parse_types(&raw.types, &signature, &blade_names)?;
 
+    // Build products
+    let products = parse_products(&raw.products, &types);
+
     // Validate the complete specification
     validate_spec(&types)?;
 
@@ -67,6 +70,7 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
         signature,
         blade_names,
         types,
+        products,
         options: GenerationOptions {
             generate_serde: raw.options.generate_serde,
             generate_arbitrary: raw.options.generate_arbitrary,
@@ -405,6 +409,57 @@ fn parse_constraint_kind(type_name: &str, kind: &str) -> Result<ConstraintKind, 
             kind: kind.to_string(),
         }),
     }
+}
+
+/// Parses the products section.
+fn parse_products(raw: &RawProducts, types: &[TypeSpec]) -> ProductsSpec {
+    // Collect all type names including constrained wrapper names
+    let mut all_types: HashSet<&str> = types.iter().map(|t| t.name.as_str()).collect();
+    for ty in types {
+        for constraint in &ty.constraints {
+            all_types.insert(&constraint.wrapper_name);
+        }
+    }
+
+    // Helper to check if a type is constrained
+    let is_constrained = |name: &str| -> bool {
+        types
+            .iter()
+            .flat_map(|t| &t.constraints)
+            .any(|c| c.wrapper_name == name)
+    };
+
+    ProductsSpec {
+        geometric: parse_product_entries(&raw.geometric, is_constrained),
+        outer: parse_product_entries(&raw.outer, is_constrained),
+        left_contraction: parse_product_entries(&raw.left_contraction, is_constrained),
+        right_contraction: parse_product_entries(&raw.right_contraction, is_constrained),
+        regressive: parse_product_entries(&raw.regressive, is_constrained),
+        scalar: parse_product_entries(&raw.scalar, is_constrained),
+    }
+}
+
+/// Parses product entries from a map of "Lhs_Rhs" -> "Output".
+fn parse_product_entries(
+    entries: &HashMap<String, String>,
+    is_constrained: impl Fn(&str) -> bool,
+) -> Vec<ProductEntry> {
+    entries
+        .iter()
+        .filter_map(|(key, output)| {
+            // Parse "Lhs_Rhs" format
+            let parts: Vec<&str> = key.split('_').collect();
+            if parts.len() != 2 {
+                return None;
+            }
+            Some(ProductEntry {
+                lhs: parts[0].to_string(),
+                rhs: parts[1].to_string(),
+                output: output.clone(),
+                output_constrained: is_constrained(output),
+            })
+        })
+        .collect()
 }
 
 /// Validates the complete specification.
