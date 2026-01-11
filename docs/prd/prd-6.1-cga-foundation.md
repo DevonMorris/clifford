@@ -83,29 +83,38 @@ impl Signature for Conformal3 {
 
 ### 2. Null Basis Helper Functions
 
+Helper functions are associated functions on the signature type for better discoverability
+and to follow the encapsulation principles in CLAUDE.md.
+
 ```rust
 impl Conformal3 {
     /// Index of e₊ basis vector.
     pub const E_PLUS: usize = 3;
     /// Index of e₋ basis vector.
     pub const E_MINUS: usize = 4;
-}
 
-/// Creates e∞ = e₋ + e₊ (point at infinity).
-pub fn e_infinity<T: Float>() -> Multivector<T, Conformal3> {
-    let mut mv = Multivector::zero();
-    mv.set(Blade::basis_vector(Conformal3::E_PLUS), T::one());
-    mv.set(Blade::basis_vector(Conformal3::E_MINUS), T::one());
-    mv
-}
+    /// Creates e∞ = e₋ + e₊ (point at infinity).
+    ///
+    /// This is the null vector representing the point at infinity.
+    /// Key properties: e∞ · e∞ = 0, e₀ · e∞ = -1
+    pub fn e_infinity<T: Float>() -> Multivector<T, Self> {
+        let mut mv = Multivector::zero();
+        mv.set(Blade::basis_vector(Self::E_PLUS), T::one());
+        mv.set(Blade::basis_vector(Self::E_MINUS), T::one());
+        mv
+    }
 
-/// Creates e₀ = (e₋ - e₊) / 2 (origin).
-pub fn e_origin<T: Float>() -> Multivector<T, Conformal3> {
-    let mut mv = Multivector::zero();
-    let half = T::one() / T::TWO;
-    mv.set(Blade::basis_vector(Conformal3::E_MINUS), half);
-    mv.set(Blade::basis_vector(Conformal3::E_PLUS), -half);
-    mv
+    /// Creates e₀ = (e₋ - e₊) / 2 (origin).
+    ///
+    /// This is the null vector representing the origin.
+    /// Key properties: e₀ · e₀ = 0, e₀ · e∞ = -1
+    pub fn e_origin<T: Float>() -> Multivector<T, Self> {
+        let mut mv = Multivector::zero();
+        let half = T::one() / T::TWO;
+        mv.set(Blade::basis_vector(Self::E_MINUS), half);
+        mv.set(Blade::basis_vector(Self::E_PLUS), -half);
+        mv
+    }
 }
 ```
 
@@ -172,7 +181,7 @@ mod tests {
         #[test]
         fn e_infinity_squares_to_zero(s in -100.0f64..100.0) {
             // e∞ = e₋ + e₊ should square to zero
-            let e_inf = e_infinity::<f64>() * s;
+            let e_inf = Conformal3::e_infinity::<f64>() * s;
             let sq = &e_inf * &e_inf;
             prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
         }
@@ -180,7 +189,7 @@ mod tests {
         #[test]
         fn e_origin_squares_to_zero(s in -100.0f64..100.0) {
             // e₀ = (e₋ - e₊) / 2 should square to zero
-            let e_o = e_origin::<f64>() * s;
+            let e_o = Conformal3::e_origin::<f64>() * s;
             let sq = &e_o * &e_o;
             prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
         }
@@ -188,8 +197,8 @@ mod tests {
         #[test]
         fn e_inf_dot_e_o_equals_minus_one(_dummy in 0..1i32) {
             // e∞ · e₀ = -1
-            let e_inf = e_infinity::<f64>();
-            let e_o = e_origin::<f64>();
+            let e_inf = Conformal3::e_infinity::<f64>();
+            let e_o = Conformal3::e_origin::<f64>();
             let dot = e_inf.inner(&e_o).scalar_part();
             prop_assert!(abs_diff_eq!(dot, -1.0, epsilon = ABS_DIFF_EQ_EPS));
         }

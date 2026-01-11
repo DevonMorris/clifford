@@ -123,11 +123,30 @@ impl<T: Float> Dilator<T> {
     }
 
     /// Returns the scale factor σ.
+    ///
+    /// Uses the identity: σ = e^λ where λ = 2·atanh(tanh(λ/2))
+    /// and tanh(λ/2) = sinh_half / cosh_half.
+    ///
+    /// # Numerical Stability
+    ///
+    /// For |tanh| < 0.99, uses: σ = exp(2·atanh(sinh/cosh))
+    /// For |tanh| >= 0.99, uses direct formula: σ = (cosh + sinh) / (cosh - sinh)
+    /// to avoid `atanh()` singularity near ±1.
+    ///
+    /// Valid scale factor range: approximately [0.02, 50] for f64 precision.
     pub fn scale_factor(&self) -> T {
-        // σ = e^λ = e^(2·atanh(sinh/cosh))
-        // For small angles: σ ≈ (1 + sinh_half) / (1 - sinh_half)
-        let lambda = T::TWO * (self.sinh_half / self.cosh_half).atanh();
-        lambda.exp()
+        let ratio = self.sinh_half / self.cosh_half;
+        let threshold = T::from_f64(0.99);
+
+        if ratio.abs() >= threshold {
+            // Direct formula for large scales (avoids atanh singularity)
+            // σ = e^λ = (e^(λ/2))² / (e^(-λ/2))² = (cosh + sinh) / (cosh - sinh)
+            (self.cosh_half + self.sinh_half) / (self.cosh_half - self.sinh_half)
+        } else {
+            // Use atanh for numerical stability in the normal range
+            let lambda = T::TWO * ratio.atanh();
+            lambda.exp()
+        }
     }
 
     /// Returns the reverse (inverse) dilator.

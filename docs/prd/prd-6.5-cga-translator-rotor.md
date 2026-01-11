@@ -154,10 +154,15 @@ impl<T: Float> Translator<T> {
     }
 
     /// Transforms a round point: T ⋈ P ⋈ T̃
+    ///
+    /// The result should be the point translated by the displacement vector.
+    /// This formula MUST be verified via SymPy derivation to ensure the
+    /// sandwich product `T ⋈ P ⋈ T̃` produces the expected result.
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        // Derived from SymPy
-        let (dx, dy, dz) = self.displacement();
-        Point::new(p.x() + dx, p.y() + dy, p.z() + dz)
+        todo!("Derive from SymPy: derive_translator_transform_point()")
+        // Expected result after derivation:
+        // let (dx, dy, dz) = self.displacement();
+        // Point::new(p.x() + dx, p.y() + dy, p.z() + dz)
     }
 
     /// Transforms a sphere.

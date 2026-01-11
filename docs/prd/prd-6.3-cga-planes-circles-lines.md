@@ -78,11 +78,12 @@ use super::{Point, Sphere};
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Plane<T: Float> {
     // Grade-4 components (5 choose 4 = 5 components)
-    e1234: T,  // Coefficient of e₁₂₃₊ (or similar basis ordering)
-    e1235: T,
-    e1245: T,
-    e1345: T,
-    e2345: T,
+    // Basis: {e₁, e₂, e₃, e₊, e₋} where p=e₊ (positive) and m=e₋ (negative)
+    e123p: T,  // Coefficient of e₁₂₃₊
+    e123m: T,  // Coefficient of e₁₂₃₋
+    e12pm: T,  // Coefficient of e₁₂₊₋
+    e13pm: T,  // Coefficient of e₁₃₊₋
+    e23pm: T,  // Coefficient of e₂₃₊₋
 }
 
 impl<T: Float> Plane<T> {
@@ -187,16 +188,17 @@ use super::{Point, Sphere, Plane};
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Circle<T: Float> {
     // Grade-3 components (5 choose 3 = 10 components)
-    e123: T,
-    e124: T,
-    e125: T,
-    e134: T,
-    e135: T,
-    e145: T,
-    e234: T,
-    e235: T,
-    e245: T,
-    e345: T,
+    // Basis: {e₁, e₂, e₃, e₊, e₋} where p=e₊ (positive) and m=e₋ (negative)
+    e123: T,   // Coefficient of e₁₂₃
+    e12p: T,   // Coefficient of e₁₂₊
+    e12m: T,   // Coefficient of e₁₂₋
+    e13p: T,   // Coefficient of e₁₃₊
+    e13m: T,   // Coefficient of e₁₃₋
+    e1pm: T,   // Coefficient of e₁₊₋
+    e23p: T,   // Coefficient of e₂₃₊
+    e23m: T,   // Coefficient of e₂₃₋
+    e2pm: T,   // Coefficient of e₂₊₋
+    e3pm: T,   // Coefficient of e₃₊₋
 }
 
 impl<T: Float> Circle<T> {
@@ -386,16 +388,17 @@ use super::Point;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Dipole<T: Float> {
     // Grade-2 components (5 choose 2 = 10 components)
-    e12: T,
-    e13: T,
-    e14: T,
-    e15: T,
-    e23: T,
-    e24: T,
-    e25: T,
-    e34: T,
-    e35: T,
-    e45: T,
+    // Basis: {e₁, e₂, e₃, e₊, e₋} where p=e₊ (positive) and m=e₋ (negative)
+    e12: T,   // Coefficient of e₁₂
+    e13: T,   // Coefficient of e₁₃
+    e1p: T,   // Coefficient of e₁₊
+    e1m: T,   // Coefficient of e₁₋
+    e23: T,   // Coefficient of e₂₃
+    e2p: T,   // Coefficient of e₂₊
+    e2m: T,   // Coefficient of e₂₋
+    e3p: T,   // Coefficient of e₃₊
+    e3m: T,   // Coefficient of e₃₋
+    epm: T,   // Coefficient of e₊₋
 }
 
 impl<T: Float> Dipole<T> {
