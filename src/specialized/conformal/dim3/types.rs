@@ -2657,4 +2657,1126 @@ mod tests {
         assert!(abs_diff_eq!(rp.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(rp.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
     }
+
+    // ========================================================================
+    // Translator tests
+    // ========================================================================
+
+    #[test]
+    fn translator_identity_is_noop() {
+        proptest!(|(p in any::<Point<f64>>())| {
+            let t = Translator::<f64>::identity();
+            let q = t.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(p.x(), q.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), q.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), q.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn translator_inverse_roundtrip() {
+        proptest!(|(t in any::<Translator<f64>>(), p in any::<Point<f64>>())| {
+            let q = t.transform_point(&p);
+            let r = t.inverse().transform_point(&q);
+
+            prop_assert!(abs_diff_eq!(p.x(), r.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), r.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), r.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn translator_compose_matches_sequential() {
+        proptest!(|(t1 in any::<Translator<f64>>(), t2 in any::<Translator<f64>>(), p in any::<Point<f64>>())| {
+            // Apply t1 then t2 sequentially
+            let q_seq = t2.transform_point(&t1.transform_point(&p));
+
+            // Apply composed translator
+            let composed = t1.compose(&t2);
+            let q_composed = composed.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(q_seq.x(), q_composed.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.y(), q_composed.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.z(), q_composed.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn translator_preserves_null() {
+        proptest!(|(t in any::<Translator<f64>>(), p in any::<Point<f64>>())| {
+            let q = t.transform_point(&p);
+            prop_assert!(q.is_null(ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    // ========================================================================
+    // Rotor tests
+    // ========================================================================
+
+    #[test]
+    fn rotor_identity_is_noop() {
+        proptest!(|(p in any::<Point<f64>>())| {
+            let r = Rotor::<f64>::identity();
+            let q = r.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(p.x(), q.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), q.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), q.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn rotor_preserves_distance_from_origin() {
+        proptest!(|(r in any::<Rotor<f64>>(), p in any::<Point<f64>>())| {
+            let q = r.transform_point(&p);
+
+            let dist_p = p.distance(&Point::origin());
+            let dist_q = q.distance(&Point::origin());
+
+            prop_assert!(abs_diff_eq!(dist_p, dist_q, epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn rotor_preserves_null() {
+        proptest!(|(r in any::<Rotor<f64>>(), p in any::<Point<f64>>())| {
+            let q = r.transform_point(&p);
+            prop_assert!(q.is_null(ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn rotor_compose_matches_sequential() {
+        proptest!(|(r1 in any::<Rotor<f64>>(), r2 in any::<Rotor<f64>>(), p in any::<Point<f64>>())| {
+            // Apply r1 then r2 sequentially
+            let q_seq = r2.transform_point(&r1.transform_point(&p));
+
+            // Apply composed rotor
+            let composed = r1.compose(&r2);
+            let q_composed = composed.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(q_seq.x(), q_composed.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.y(), q_composed.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.z(), q_composed.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    // ========================================================================
+    // Dilator tests
+    // ========================================================================
+
+    #[test]
+    fn dilator_identity_is_noop() {
+        proptest!(|(p in any::<Point<f64>>())| {
+            let d = Dilator::<f64>::identity();
+            let q = d.transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(p.x(), q.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), q.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), q.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn dilator_center_is_invariant() {
+        proptest!(|(d in any::<Dilator<f64>>())| {
+            let center = d.center();
+            let q = d.transform_point(&center);
+
+            prop_assert!(abs_diff_eq!(center.x(), q.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(center.y(), q.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(center.z(), q.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn dilator_inverse_roundtrip() {
+        proptest!(|(d in any::<Dilator<f64>>(), p in any::<Point<f64>>())| {
+            let q = d.transform_point(&p);
+            let r = d.inverse().transform_point(&q);
+
+            prop_assert!(abs_diff_eq!(p.x(), r.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), r.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), r.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn dilator_preserves_null() {
+        proptest!(|(d in any::<Dilator<f64>>(), p in any::<Point<f64>>())| {
+            let q = d.transform_point(&p);
+            prop_assert!(q.is_null(ABS_DIFF_EQ_EPS));
+        });
+    }
+}
+
+// ============================================================================
+// Translator type
+// ============================================================================
+
+/// A translator (translation versor) in 3D CGA.
+///
+/// Represents a translation by a displacement vector `τ = (τₓ, τᵧ, τᵤ)`.
+///
+/// The translator versor is:
+/// ```text
+/// T = 1 - (1/2)·τ·e∞
+/// ```
+///
+/// It transforms objects via the sandwich product `T ⊛ x ⊛ T̃`.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Translator};
+///
+/// // Create a translator that moves by (1, 2, 3)
+/// let t = Translator::new(1.0_f64, 2.0, 3.0);
+///
+/// // Translate a point at the origin
+/// let p = Point::<f64>::origin();
+/// let q = t.transform_point(&p);
+///
+/// assert!((q.x() - 1.0).abs() < 1e-10);
+/// assert!((q.y() - 2.0).abs() < 1e-10);
+/// assert!((q.z() - 3.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Translation>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Translator<T: Float> {
+    /// Translation in x direction.
+    tx: T,
+    /// Translation in y direction.
+    ty: T,
+    /// Translation in z direction.
+    tz: T,
+}
+
+impl<T: Float> Translator<T> {
+    /// Creates a translator with the given displacement vector.
+    ///
+    /// The translator will move points by `(tx, ty, tz)`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Translator;
+    ///
+    /// let t = Translator::new(1.0_f64, 2.0, 3.0);
+    /// assert!((t.tx() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn new(tx: T, ty: T, tz: T) -> Self {
+        Self { tx, ty, tz }
+    }
+
+    /// Creates a translator from a displacement vector.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Translator;
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    ///
+    /// let v = Vector::new(1.0_f64, 2.0, 3.0);
+    /// let t = Translator::from_vector(&v);
+    /// assert!((t.tx() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn from_vector(v: &Vector<T>) -> Self {
+        Self::new(v.x(), v.y(), v.z())
+    }
+
+    /// Returns the identity translator (no translation).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Translator};
+    ///
+    /// let t = Translator::<f64>::identity();
+    /// let p = Point::new(1.0, 2.0, 3.0);
+    /// let q = t.transform_point(&p);
+    ///
+    /// assert!((q.x() - p.x()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn identity() -> Self {
+        Self::new(T::zero(), T::zero(), T::zero())
+    }
+
+    /// Returns the x component of the translation.
+    #[inline]
+    pub fn tx(&self) -> T {
+        self.tx
+    }
+
+    /// Returns the y component of the translation.
+    #[inline]
+    pub fn ty(&self) -> T {
+        self.ty
+    }
+
+    /// Returns the z component of the translation.
+    #[inline]
+    pub fn tz(&self) -> T {
+        self.tz
+    }
+
+    /// Returns the translation as a Euclidean vector.
+    #[inline]
+    pub fn as_vector(&self) -> Vector<T> {
+        Vector::new(self.tx, self.ty, self.tz)
+    }
+
+    /// Returns the inverse translator (translates in the opposite direction).
+    ///
+    /// For translator `T`, the inverse `T⁻¹` satisfies `T * T⁻¹ = 1`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Translator};
+    ///
+    /// let t = Translator::new(1.0_f64, 2.0, 3.0);
+    /// let t_inv = t.inverse();
+    ///
+    /// // Composing with inverse gives identity
+    /// let composed = t.compose(&t_inv);
+    /// assert!((composed.tx()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        Self::new(-self.tx, -self.ty, -self.tz)
+    }
+
+    /// Composes two translators: `self` applied first, then `other`.
+    ///
+    /// `a.compose(&b).transform(x) == b.transform(a.transform(x))`
+    ///
+    /// Since translations commute, the order doesn't matter for translators,
+    /// but this convention is consistent with other versors.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Translator;
+    ///
+    /// let t1 = Translator::new(1.0_f64, 0.0, 0.0);
+    /// let t2 = Translator::new(0.0_f64, 2.0, 0.0);
+    /// let composed = t1.compose(&t2);
+    ///
+    /// assert!((composed.tx() - 1.0).abs() < 1e-10);
+    /// assert!((composed.ty() - 2.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn compose(&self, other: &Self) -> Self {
+        Self::new(self.tx + other.tx, self.ty + other.ty, self.tz + other.tz)
+    }
+
+    /// Transforms a point by this translator.
+    ///
+    /// Applies the sandwich product `T * P * T̃` where `T̃` is the reverse.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Translator};
+    ///
+    /// let t = Translator::new(1.0_f64, 2.0, 3.0);
+    /// let p = Point::new(0.0_f64, 0.0, 0.0);
+    /// let q = t.transform_point(&p);
+    ///
+    /// assert!((q.x() - 1.0).abs() < 1e-10);
+    /// assert!((q.y() - 2.0).abs() < 1e-10);
+    /// assert!((q.z() - 3.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        // Translation simply adds the displacement to the Euclidean coordinates
+        Point::new(p.x() + self.tx, p.y() + self.ty, p.z() + self.tz)
+    }
+
+    /// Transforms a sphere by this translator.
+    ///
+    /// Translates the sphere's center while preserving its radius.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Sphere, Translator};
+    ///
+    /// let t = Translator::new(1.0_f64, 2.0, 3.0);
+    /// let s = Sphere::from_center_radius(0.0_f64, 0.0, 0.0, 5.0);
+    /// let s2 = t.transform_sphere(&s);
+    ///
+    /// assert!((s2.cx() - 1.0).abs() < 1e-10);
+    /// assert!((s2.radius() - 5.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_sphere(&self, s: &Sphere<T>) -> Sphere<T> {
+        Sphere::from_center_radius(
+            s.cx() + self.tx,
+            s.cy() + self.ty,
+            s.cz() + self.tz,
+            s.radius(),
+        )
+    }
+
+    /// Transforms a plane by this translator.
+    ///
+    /// The normal direction is preserved; only the distance changes.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Plane, Translator};
+    ///
+    /// // xy-plane at z=0
+    /// let plane = Plane::<f64>::xy();
+    /// let t = Translator::new(0.0_f64, 0.0, 5.0);
+    /// let translated = t.transform_plane(&plane);
+    ///
+    /// // Now z=5 plane
+    /// assert!((translated.d() + 5.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        // d' = d - (a*tx + b*ty + c*tz)
+        let new_d = plane.d() - (plane.a() * self.tx + plane.b() * self.ty + plane.c() * self.tz);
+        Plane::from_normal_distance(plane.a(), plane.b(), plane.c(), new_d)
+    }
+}
+
+impl<T: Float> Default for Translator<T> {
+    /// Returns the identity translator.
+    fn default() -> Self {
+        Self::identity()
+    }
+}
+
+// ============================================================================
+// Translator approx traits
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Translator<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.tx, &other.tx, epsilon)
+            && T::abs_diff_eq(&self.ty, &other.ty, epsilon)
+            && T::abs_diff_eq(&self.tz, &other.tz, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Translator<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.tx, &other.tx, epsilon, max_relative)
+            && T::relative_eq(&self.ty, &other.ty, epsilon, max_relative)
+            && T::relative_eq(&self.tz, &other.tz, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Translator<T> {
+    fn default_max_ulps() -> u32 {
+        4
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.tx, &other.tx, epsilon, max_ulps)
+            && T::ulps_eq(&self.ty, &other.ty, epsilon, max_ulps)
+            && T::ulps_eq(&self.tz, &other.tz, epsilon, max_ulps)
+    }
+}
+
+// ============================================================================
+// Rotor type
+// ============================================================================
+
+use crate::specialized::euclidean::dim3::{Bivector, Rotor as EuclideanRotor};
+
+/// A rotor (rotation versor) in 3D CGA.
+///
+/// Represents a rotation around an axis through the origin. The rotation
+/// is encoded as a unit quaternion in geometric algebra form:
+///
+/// ```text
+/// R = cos(θ/2) + sin(θ/2)·B
+/// ```
+///
+/// where `B` is the unit bivector representing the rotation plane.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Rotor};
+/// use clifford::specialized::euclidean::dim3::Bivector;
+/// use std::f64::consts::FRAC_PI_2;
+///
+/// // Create a 90° rotation around the z-axis
+/// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+///
+/// // Rotate a point on the x-axis
+/// let p = Point::new(1.0, 0.0, 0.0);
+/// let q = r.transform_point(&p);
+///
+/// assert!((q.x()).abs() < 1e-10);
+/// assert!((q.y() - 1.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Rotation>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(transparent)]
+pub struct Rotor<T: Float>(EuclideanRotor<T>);
+
+impl<T: Float> Rotor<T> {
+    /// Creates a rotor from scalar and bivector parts.
+    ///
+    /// The rotor should be normalized for proper rotation behavior.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Rotor;
+    /// use clifford::specialized::euclidean::dim3::Bivector;
+    ///
+    /// // Identity rotor
+    /// let r = Rotor::new(1.0_f64, Bivector::zero());
+    /// assert!((r.s() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn new(s: T, b: Bivector<T>) -> Self {
+        Self(EuclideanRotor::new(s, b))
+    }
+
+    /// Creates a rotor from an angle and rotation plane.
+    ///
+    /// The plane bivector should be normalized. The rotation follows the
+    /// right-hand rule: positive angles rotate from the first basis vector
+    /// toward the second.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Rotor;
+    /// use clifford::specialized::euclidean::dim3::Bivector;
+    /// use std::f64::consts::FRAC_PI_4;
+    ///
+    /// // 45° rotation in the xy-plane (around z-axis)
+    /// let r = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());
+    /// ```
+    #[inline]
+    pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self {
+        Self(EuclideanRotor::from_angle_plane(angle, plane))
+    }
+
+    /// Creates a rotor from an axis and angle.
+    ///
+    /// The axis vector should be normalized. The rotation follows the
+    /// right-hand rule.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Rotor;
+    /// use clifford::specialized::euclidean::dim3::Vector;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// // 90° rotation around the z-axis
+    /// let r = Rotor::from_axis_angle(&Vector::unit_z(), FRAC_PI_2);
+    /// ```
+    #[inline]
+    pub fn from_axis_angle(axis: &Vector<T>, angle: T) -> Self {
+        // The rotation plane bivector is the dual of the axis vector
+        // For axis (x, y, z), the dual bivector is (yz, -xz, xy) = (x*e23, y*e31, z*e12)
+        // But we need the bivector such that rotating in it gives rotation around axis
+        // The bivector is: axis_x * e23 + axis_y * e31 + axis_z * e12
+        let plane = Bivector::new(axis.z(), -axis.y(), axis.x());
+        Self(EuclideanRotor::from_angle_plane(angle, plane))
+    }
+
+    /// Returns the identity rotor (no rotation).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Rotor};
+    ///
+    /// let r = Rotor::<f64>::identity();
+    /// let p = Point::new(1.0, 2.0, 3.0);
+    /// let q = r.transform_point(&p);
+    ///
+    /// assert!((q.x() - p.x()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn identity() -> Self {
+        Self(EuclideanRotor::identity())
+    }
+
+    /// Returns the scalar part (grade 0).
+    #[inline]
+    pub fn s(&self) -> T {
+        self.0.s()
+    }
+
+    /// Returns the bivector part (grade 2).
+    #[inline]
+    pub fn b(&self) -> Bivector<T> {
+        self.0.b()
+    }
+
+    /// Returns the underlying Euclidean rotor.
+    #[inline]
+    pub fn as_euclidean(&self) -> &EuclideanRotor<T> {
+        &self.0
+    }
+
+    /// Returns the reverse of this rotor.
+    ///
+    /// For a unit rotor, the reverse equals the inverse.
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self(self.0.reverse())
+    }
+
+    /// Composes two rotors: `self` applied first, then `other`.
+    ///
+    /// `a.compose(&b).transform(x) == b.transform(a.transform(x))`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Rotor;
+    /// use clifford::specialized::euclidean::dim3::Bivector;
+    /// use std::f64::consts::FRAC_PI_4;
+    ///
+    /// let r1 = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());
+    /// let r2 = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());
+    /// let composed = r1.compose(&r2);
+    ///
+    /// // Composed rotation is 90°
+    /// ```
+    #[inline]
+    pub fn compose(&self, other: &Self) -> Self {
+        // R_composed = R_other * R_self
+        Self(other.0.compose(self.0))
+    }
+
+    /// Transforms a point by this rotor.
+    ///
+    /// Applies the sandwich product `R * P * R̃`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Rotor};
+    /// use clifford::specialized::euclidean::dim3::Bivector;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let p = Point::new(1.0, 0.0, 0.0);
+    /// let q = r.transform_point(&p);
+    ///
+    /// assert!((q.x()).abs() < 1e-10);
+    /// assert!((q.y() - 1.0).abs() < 1e-10);
+    /// assert!((q.z()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        // For rotation around origin, only the Euclidean coordinates change
+        let v = Vector::new(p.x(), p.y(), p.z());
+        let rotated = self.0.rotate(v);
+        Point::new(rotated.x(), rotated.y(), rotated.z())
+    }
+
+    /// Transforms a sphere by this rotor.
+    ///
+    /// Rotates the sphere's center around the origin.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Sphere, Rotor};
+    /// use clifford::specialized::euclidean::dim3::Bivector;
+    /// use std::f64::consts::FRAC_PI_2;
+    ///
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let s = Sphere::from_center_radius(1.0, 0.0, 0.0, 5.0);
+    /// let s2 = r.transform_sphere(&s);
+    ///
+    /// assert!((s2.cx()).abs() < 1e-10);
+    /// assert!((s2.cy() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_sphere(&self, s: &Sphere<T>) -> Sphere<T> {
+        let center = Vector::new(s.cx(), s.cy(), s.cz());
+        let rotated = self.0.rotate(center);
+        Sphere::from_center_radius(rotated.x(), rotated.y(), rotated.z(), s.radius())
+    }
+
+    /// Transforms a plane by this rotor.
+    ///
+    /// Rotates the plane's normal around the origin.
+    #[inline]
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        // Rotate the normal vector
+        let normal = Vector::new(plane.a(), plane.b(), plane.c());
+        let rotated_normal = self.0.rotate(normal);
+
+        // For a plane through the origin (d=0), just use the rotated normal
+        // For other planes, we need to find a point on the plane, rotate it,
+        // and compute the new distance
+        if plane.d().abs() < T::epsilon() {
+            Plane::from_normal_distance(
+                rotated_normal.x(),
+                rotated_normal.y(),
+                rotated_normal.z(),
+                T::zero(),
+            )
+        } else {
+            // Find a point on the plane: p = -d * n (assuming unit normal)
+            let point_on_plane = Vector::new(
+                -plane.d() * plane.a(),
+                -plane.d() * plane.b(),
+                -plane.d() * plane.c(),
+            );
+            let rotated_point = self.0.rotate(point_on_plane);
+            // New distance is -dot(rotated_point, rotated_normal)
+            let new_d = -(rotated_point.x() * rotated_normal.x()
+                + rotated_point.y() * rotated_normal.y()
+                + rotated_point.z() * rotated_normal.z());
+            Plane::from_normal_distance(
+                rotated_normal.x(),
+                rotated_normal.y(),
+                rotated_normal.z(),
+                new_d,
+            )
+        }
+    }
+}
+
+impl<T: Float> Default for Rotor<T> {
+    /// Returns the identity rotor.
+    fn default() -> Self {
+        Self::identity()
+    }
+}
+
+impl<T: Float> From<EuclideanRotor<T>> for Rotor<T> {
+    fn from(r: EuclideanRotor<T>) -> Self {
+        Self(r)
+    }
+}
+
+impl<T: Float> From<Rotor<T>> for EuclideanRotor<T> {
+    fn from(r: Rotor<T>) -> Self {
+        r.0
+    }
+}
+
+// ============================================================================
+// Rotor approx traits
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Rotor<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.0.abs_diff_eq(&other.0, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Rotor<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        self.0.relative_eq(&other.0, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Rotor<T> {
+    fn default_max_ulps() -> u32 {
+        4
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        self.0.ulps_eq(&other.0, epsilon, max_ulps)
+    }
+}
+
+// ============================================================================
+// Dilator type
+// ============================================================================
+
+/// A dilator (uniform scaling versor) in 3D CGA.
+///
+/// Represents a uniform scaling by factor `σ` centered at a point.
+///
+/// The dilator versor for origin-centered scaling is:
+/// ```text
+/// D = cosh(λ/2) + sinh(λ/2)·e∞∧e₀
+/// ```
+/// where `λ = ln(σ)` and `σ` is the scale factor.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Dilator};
+///
+/// // Create a dilator that scales by factor 2 around the origin
+/// let d = Dilator::from_scale(2.0_f64);
+///
+/// // Scale a point
+/// let p = Point::new(1.0_f64, 2.0, 3.0);
+/// let q = d.transform_point(&p);
+///
+/// assert!((q.x() - 2.0).abs() < 1e-10);
+/// assert!((q.y() - 4.0).abs() < 1e-10);
+/// assert!((q.z() - 6.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Dilation>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Dilator<T: Float> {
+    /// Scale factor (σ).
+    scale: T,
+    /// Center x-coordinate.
+    cx: T,
+    /// Center y-coordinate.
+    cy: T,
+    /// Center z-coordinate.
+    cz: T,
+}
+
+impl<T: Float> Dilator<T> {
+    /// Creates a dilator with the given scale factor centered at the origin.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `scale` is zero or negative.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Dilator;
+    ///
+    /// let d = Dilator::from_scale(2.0_f64);
+    /// assert!((d.scale() - 2.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn from_scale(scale: T) -> Self {
+        assert!(scale > T::zero(), "Scale factor must be positive");
+        Self {
+            scale,
+            cx: T::zero(),
+            cy: T::zero(),
+            cz: T::zero(),
+        }
+    }
+
+    /// Creates a dilator with the given scale factor centered at the specified point.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `scale` is zero or negative.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Dilator, Point};
+    ///
+    /// let center = Point::new(1.0_f64, 2.0, 3.0);
+    /// let d = Dilator::from_center_scale(&center, 2.0);
+    ///
+    /// // The center point is invariant under dilation
+    /// let q = d.transform_point(&center);
+    /// assert!((q.x() - center.x()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn from_center_scale(center: &Point<T>, scale: T) -> Self {
+        assert!(scale > T::zero(), "Scale factor must be positive");
+        Self {
+            scale,
+            cx: center.x(),
+            cy: center.y(),
+            cz: center.z(),
+        }
+    }
+
+    /// Returns the identity dilator (scale factor 1).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Dilator};
+    ///
+    /// let d = Dilator::<f64>::identity();
+    /// let p = Point::new(1.0, 2.0, 3.0);
+    /// let q = d.transform_point(&p);
+    ///
+    /// assert!((q.x() - p.x()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn identity() -> Self {
+        Self {
+            scale: T::one(),
+            cx: T::zero(),
+            cy: T::zero(),
+            cz: T::zero(),
+        }
+    }
+
+    /// Returns the scale factor.
+    #[inline]
+    pub fn scale(&self) -> T {
+        self.scale
+    }
+
+    /// Returns the center x-coordinate.
+    #[inline]
+    pub fn cx(&self) -> T {
+        self.cx
+    }
+
+    /// Returns the center y-coordinate.
+    #[inline]
+    pub fn cy(&self) -> T {
+        self.cy
+    }
+
+    /// Returns the center z-coordinate.
+    #[inline]
+    pub fn cz(&self) -> T {
+        self.cz
+    }
+
+    /// Returns the center as a point.
+    #[inline]
+    pub fn center(&self) -> Point<T> {
+        Point::new(self.cx, self.cy, self.cz)
+    }
+
+    /// Returns the inverse dilator (scales by 1/σ).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Dilator};
+    ///
+    /// let d = Dilator::from_scale(2.0_f64);
+    /// let d_inv = d.inverse();
+    ///
+    /// // Composing with inverse gives identity
+    /// let composed = d.compose(&d_inv);
+    /// assert!((composed.scale() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        Self {
+            scale: T::one() / self.scale,
+            cx: self.cx,
+            cy: self.cy,
+            cz: self.cz,
+        }
+    }
+
+    /// Composes two dilators with the same center.
+    ///
+    /// Note: Only valid if both dilators have the same center.
+    /// For dilators with different centers, use sequential transformation.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::Dilator;
+    ///
+    /// let d1 = Dilator::from_scale(2.0_f64);
+    /// let d2 = Dilator::from_scale(3.0_f64);
+    /// let composed = d1.compose(&d2);
+    ///
+    /// assert!((composed.scale() - 6.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn compose(&self, other: &Self) -> Self {
+        // For same-center dilators, scales multiply
+        Self {
+            scale: self.scale * other.scale,
+            cx: self.cx,
+            cy: self.cy,
+            cz: self.cz,
+        }
+    }
+
+    /// Transforms a point by this dilator.
+    ///
+    /// Scales the point relative to the center by the scale factor.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Dilator};
+    ///
+    /// let d = Dilator::from_scale(2.0_f64);
+    /// let p = Point::new(1.0_f64, 2.0, 3.0);
+    /// let q = d.transform_point(&p);
+    ///
+    /// assert!((q.x() - 2.0).abs() < 1e-10);
+    /// assert!((q.y() - 4.0).abs() < 1e-10);
+    /// assert!((q.z() - 6.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        // Scale relative to center:
+        // q = center + scale * (p - center)
+        //   = center * (1 - scale) + scale * p
+        let x = self.cx * (T::one() - self.scale) + self.scale * p.x();
+        let y = self.cy * (T::one() - self.scale) + self.scale * p.y();
+        let z = self.cz * (T::one() - self.scale) + self.scale * p.z();
+        Point::new(x, y, z)
+    }
+
+    /// Transforms a sphere by this dilator.
+    ///
+    /// Scales both the center position and the radius.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Sphere, Dilator};
+    ///
+    /// let d = Dilator::from_scale(2.0_f64);
+    /// let s = Sphere::from_center_radius(1.0_f64, 0.0, 0.0, 1.0);
+    /// let s2 = d.transform_sphere(&s);
+    ///
+    /// assert!((s2.cx() - 2.0).abs() < 1e-10);
+    /// assert!((s2.radius() - 2.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_sphere(&self, s: &Sphere<T>) -> Sphere<T> {
+        // Scale center relative to dilator center
+        let cx = self.cx * (T::one() - self.scale) + self.scale * s.cx();
+        let cy = self.cy * (T::one() - self.scale) + self.scale * s.cy();
+        let cz = self.cz * (T::one() - self.scale) + self.scale * s.cz();
+        // Radius scales uniformly
+        let r = self.scale * s.radius();
+        Sphere::from_center_radius(cx, cy, cz, r)
+    }
+
+    /// Transforms a plane by this dilator.
+    ///
+    /// For planes through the dilation center, the plane is unchanged.
+    /// For other planes, the distance from center scales.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Plane, Dilator};
+    ///
+    /// let d = Dilator::from_scale(2.0_f64);
+    /// let plane = Plane::from_normal_distance(0.0_f64, 0.0, 1.0, -1.0);  // z=1 plane
+    /// let scaled = d.transform_plane(&plane);
+    ///
+    /// // Distance doubles
+    /// assert!((scaled.d() + 2.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        // The normal direction is unchanged
+        // The distance from center scales
+        // d_new = scale * d + (1 - scale) * (n · center)
+        let center_dot_n = plane.a() * self.cx + plane.b() * self.cy + plane.c() * self.cz;
+        let new_d = self.scale * plane.d() + (T::one() - self.scale) * center_dot_n;
+        Plane::from_normal_distance(plane.a(), plane.b(), plane.c(), new_d)
+    }
+}
+
+impl<T: Float> Default for Dilator<T> {
+    /// Returns the identity dilator.
+    fn default() -> Self {
+        Self::identity()
+    }
+}
+
+// ============================================================================
+// Dilator approx traits
+// ============================================================================
+
+impl<T: Float> AbsDiffEq for Dilator<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.scale, &other.scale, epsilon)
+            && T::abs_diff_eq(&self.cx, &other.cx, epsilon)
+            && T::abs_diff_eq(&self.cy, &other.cy, epsilon)
+            && T::abs_diff_eq(&self.cz, &other.cz, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Dilator<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::epsilon()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.scale, &other.scale, epsilon, max_relative)
+            && T::relative_eq(&self.cx, &other.cx, epsilon, max_relative)
+            && T::relative_eq(&self.cy, &other.cy, epsilon, max_relative)
+            && T::relative_eq(&self.cz, &other.cz, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Dilator<T> {
+    fn default_max_ulps() -> u32 {
+        4
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.scale, &other.scale, epsilon, max_ulps)
+            && T::ulps_eq(&self.cx, &other.cx, epsilon, max_ulps)
+            && T::ulps_eq(&self.cy, &other.cy, epsilon, max_ulps)
+            && T::ulps_eq(&self.cz, &other.cz, epsilon, max_ulps)
+    }
 }

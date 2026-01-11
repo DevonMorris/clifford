@@ -18,8 +18,9 @@
 //! }
 //! ```
 
-use super::{Circle, Dipole, FlatPoint, Line, Plane, Point, Sphere};
+use super::{Circle, Dilator, Dipole, FlatPoint, Line, Plane, Point, Rotor, Sphere, Translator};
 use crate::scalar::Float;
+use crate::specialized::euclidean::dim3::Bivector;
 use core::fmt::Debug;
 use proptest::arbitrary::Arbitrary;
 use proptest::prelude::*;
@@ -232,6 +233,84 @@ impl<T: Float + Debug> Arbitrary for Dipole<T> {
                     &Point::new(T::from_f64(x1), T::from_f64(y1), T::from_f64(z1)),
                     &Point::new(T::from_f64(x2), T::from_f64(y2), T::from_f64(z2)),
                 ))
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Translator Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Translator<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
+            .prop_map(|(tx, ty, tz)| {
+                Translator::new(T::from_f64(tx), T::from_f64(ty), T::from_f64(tz))
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Rotor Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Rotor<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            // Angle
+            -std::f64::consts::PI..std::f64::consts::PI,
+            // Axis direction (will be normalized)
+            -1.0f64..1.0,
+            -1.0f64..1.0,
+            -1.0f64..1.0,
+        )
+            .prop_filter_map("non-zero axis", |(angle, ax, ay, az)| {
+                let norm_sq = ax * ax + ay * ay + az * az;
+                if norm_sq < 0.01 {
+                    return None;
+                }
+                let norm = norm_sq.sqrt();
+                let plane = Bivector::new(
+                    T::from_f64(az / norm),
+                    T::from_f64(-ay / norm),
+                    T::from_f64(ax / norm),
+                );
+                Some(Rotor::from_angle_plane(T::from_f64(angle), plane))
+            })
+            .boxed()
+    }
+}
+
+// ============================================================================
+// Dilator Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for Dilator<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (
+            // Scale factor (positive)
+            0.1f64..10.0,
+            // Center
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+            -100.0f64..100.0,
+        )
+            .prop_map(|(scale, cx, cy, cz)| {
+                Dilator::from_center_scale(
+                    &Point::new(T::from_f64(cx), T::from_f64(cy), T::from_f64(cz)),
+                    T::from_f64(scale),
+                )
             })
             .boxed()
     }
