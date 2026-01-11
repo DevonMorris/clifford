@@ -112,6 +112,12 @@ impl<T: Float> Point<T> {
     /// # Safety
     ///
     /// This does not verify `P · P = 0`. Use [`Point::new`] for safe construction.
+    ///
+    /// # Panics
+    ///
+    /// The accessor methods [`x()`](Self::x), [`y()`](Self::y), [`z()`](Self::z)
+    /// will panic or return infinity if the point has zero weight (i.e., `em - ep = 0`).
+    /// Points created via [`Point::new`] always have unit weight.
     #[inline]
     pub fn from_conformal_unchecked(e1: T, e2: T, e3: T, ep: T, em: T) -> Self {
         Self { e1, e2, e3, ep, em }
@@ -481,6 +487,10 @@ impl<T: Float> Sphere<T> {
     /// let p_out = Point::new(2.0, 0.0, 0.0);
     /// assert!(sphere.signed_distance(&p_out) > 0.0);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if the sphere is imaginary (`r² < 0`).
     pub fn signed_distance(&self, p: &Point<T>) -> T {
         // Distance from point to center minus radius
         let px = p.x();
@@ -492,7 +502,8 @@ impl<T: Float> Sphere<T> {
         let dz = pz - self.cz;
 
         let dist_to_center = (dx * dx + dy * dy + dz * dz).sqrt();
-        dist_to_center - self.r_sq.sqrt()
+        // Use radius() which panics with a clear message for imaginary spheres
+        dist_to_center - self.radius()
     }
 
     /// Returns the center as a conformal [`Point`].
