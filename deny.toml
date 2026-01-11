@@ -25,6 +25,8 @@ allow = [
     "Unlicense",
     "MPL-2.0",      # Weak copyleft, file-level only
     "Unicode-3.0",  # Required by unicode-ident
+    "BSL-1.0",      # Boost Software License (used by rerun dependencies)
+    "CDLA-Permissive-2.0",  # Community Data License Agreement (used by rerun dependencies)
 ]
 
 [bans]

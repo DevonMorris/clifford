@@ -105,7 +105,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 [p3.x(), p3.y(), p3.z()],
             ])
             .with_triangle_indices([[0_u32, 1, 2], [0, 2, 3]])
-            .with_vertex_colors([color_primary, color_primary, color_primary, color_primary]),
+            .with_vertex_colors([
+                color_primary,
+                color_primary,
+                color_primary,
+                color_primary,
+            ]),
         )?;
 
         // Draw the spanning vectors u and v
@@ -166,7 +171,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 dual.z()
             )),
         )?;
-
     }
 
     info!("Bivector visualization complete!");

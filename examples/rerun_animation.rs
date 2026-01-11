@@ -18,7 +18,7 @@ use std::f32::consts::TAU;
 
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
-use clifford::specialized::visualization::{rerun, AsPosition};
+use clifford::specialized::visualization::{AsPosition, rerun};
 use tracing::info;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -108,11 +108,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Log edges as line strips
             let edges = [
                 // Bottom face
-                (0, 1), (1, 2), (2, 3), (3, 0),
+                (0, 1),
+                (1, 2),
+                (2, 3),
+                (3, 0),
                 // Top face
-                (4, 5), (5, 6), (6, 7), (7, 4),
+                (4, 5),
+                (5, 6),
+                (6, 7),
+                (7, 4),
                 // Vertical edges
-                (0, 4), (1, 5), (2, 6), (3, 7),
+                (0, 4),
+                (1, 5),
+                (2, 6),
+                (3, 7),
             ];
 
             for (i, (a, b)) in edges.iter().enumerate() {

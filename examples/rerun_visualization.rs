@@ -15,7 +15,7 @@ use std::f32::consts::{FRAC_PI_4, PI};
 
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
-use clifford::specialized::visualization::{rerun, AsPosition};
+use clifford::specialized::visualization::{AsPosition, rerun};
 use tracing::info;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -31,7 +31,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Log a point using AsPosition wrapper
     let point = Vector::new(1.0_f32, 2.0, 3.0);
-    rec.log("euclidean/point", &rerun::Points3D::new([AsPosition(point)]))?;
+    rec.log(
+        "euclidean/point",
+        &rerun::Points3D::new([AsPosition(point)]),
+    )?;
 
     // Log direction arrows
     let directions = [
@@ -39,10 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Vector::new(0.0, 1.0, 0.0),
         Vector::new(0.0, 0.0, 1.0),
     ];
-    rec.log(
-        "euclidean/axes",
-        &rerun::Arrows3D::from_vectors(directions),
-    )?;
+    rec.log("euclidean/axes", &rerun::Arrows3D::from_vectors(directions))?;
 
     // Log a rotation as a transform
     let rotor = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());

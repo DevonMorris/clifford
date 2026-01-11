@@ -68,3 +68,15 @@ harness = false
 name = "pga_nalgebra_comparison"
 harness = false
 required-features = ["nalgebra-0_34"]
+
+[[example]]
+name = "rerun_visualization"
+required-features = ["rerun-0_28"]
+
+[[example]]
+name = "rerun_animation"
+required-features = ["rerun-0_28"]
+
+[[example]]
+name = "rerun_bivector"
+required-features = ["rerun-0_28"]
