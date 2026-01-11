@@ -252,81 +252,35 @@ When documenting GA operations, use standard notation:
 - Outer product: `a ∧ b` or `a.outer(b)`
 - Grade selection: `⟨M⟩ₖ` or `m.grade(k)`
 
-## Algebraic Derivations with SymPy
+## Code Generation for Algebraic Types
 
-**Use SymPy to derive and verify complex formulas before implementing them in Rust.** Manual algebraic derivations are error-prone, especially for:
+**Use the clifford-codegen tool to generate correct implementations.** Manual algebraic derivations are error-prone.
 
-- Motor composition (`M₁ * M₂`)
-- Sandwich products (`M x M̃`)
-- Product expansions (geometric, inner, outer)
-- Normalization formulas
-- Any formula with more than 3-4 terms
-
-### Derivations Package
-
-The `derivations/` folder contains a Python package managed by `uv`:
+### Using the Codegen Tool
 
 ```bash
-# Run a derivation
-cd derivations
-uv run python -m clifford_derivations.motor
+# Generate code for an algebra
+cargo run --package clifford-codegen -- generate algebras/projective3.toml --force
 
-# Interactive session
-uv run python
->>> from clifford_derivations import *
+# Discover valid entities for a signature
+cargo run --package clifford-codegen -- discover 3 0 1
+
+# List blades for an algebra
+cargo run --package clifford-codegen -- blades algebras/projective3.toml
 ```
 
-### Critical Rule: Generate Rust from SymPy
+### What Codegen Handles
 
-**Never hardcode algebraic formulas.** We cannot trust manual algebra—we can trust SymPy.
+- **Products**: Geometric, outer, inner, left contraction - all generated correctly
+- **Constraints**: Study conditions, Plücker conditions, unit norm - solved automatically
+- **Constructors**: `new()`, `new_checked()`, `new_unchecked()` with proper constraint solving
+- **Verification tests**: Property-based tests comparing against generic Multivector
 
-- **Always generate Rust code from SymPy expressions** using `sympy.printing.rust.rust_code()`
-- **Never write formulas by hand** and claim they came from derivation
-- **The derivation script must produce the actual Rust code** that goes into the implementation
+### When Adding New Algebras
 
-```python
-from sympy import symbols, expand, rust_code
+1. Create a TOML spec in `algebras/` (see `projective3.toml` for example)
+2. Define types with grades, fields, and constraints
+3. Run `cargo run --package clifford-codegen -- generate algebras/your_algebra.toml`
+4. Review generated code in `src/generated/`
 
-# CORRECT: Generate Rust from sympy expression
-x, y = symbols('x y')
-expr = x**2 + 2*x*y + y**2
-rust_output = rust_code(expand(expr))  # Produces actual Rust code
-
-# WRONG: Hardcoded string - DO NOT DO THIS
-rust_output = "x*x + 2*x*y + y*y"
-```
-
-### Workflow
-
-1. **Derive symbolically** - Use SymPy to compute the exact formula
-2. **Simplify** - Let SymPy simplify and collect terms
-3. **Generate Rust code** - Use `rust_code()` from `sympy.printing.rust` to convert expressions
-4. **Test against SymPy** - Property tests can compare against SymPy for random inputs
-5. **Commit the derivation** - Keep scripts in `derivations/` for future reference
-
-### Simplification and Timeouts
-
-SymPy can hang on complex expressions. Follow these rules:
-
-- **Use `expand()` over `simplify()`** - `expand()` is fast; `simplify()` can hang
-- **Simplify incrementally** - Simplify sub-expressions before combining
-- **Set timeouts** - Use `@with_timeout(30)` decorator for slow operations
-- **Break up complex derivations** - If > 60 seconds, split into smaller steps
-
-```python
-from clifford_derivations import with_timeout
-
-@with_timeout(30)  # Timeout after 30 seconds
-def derive_formula():
-    result = expand(expr)  # Use expand(), not simplify()
-    return collect(result, x)  # Collect for readability
-```
-
-### When Implementing Complex Operations
-
-Before writing Rust code for operations like `Motor::compose` or `Motor::transform_point`:
-
-1. Check if a derivation already exists in `derivations/src/clifford_derivations/`
-2. If not, create one and verify the formula symbolically
-3. Use the verified formula in your Rust implementation
-4. Reference the derivation script in your code comments
+**Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
