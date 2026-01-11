@@ -298,11 +298,15 @@ pub fn discover_valid_combinations(algebra: &Algebra) -> Vec<Vec<usize>> {
         .collect()
 }
 
-/// Discovers entities and creates structured representations.
+/// Discovers the minimal closed set of geometric entities.
 ///
-/// This is the main entry point for entity discovery. It finds all
-/// grade combinations that can satisfy geometric constraints, either
-/// automatically or with field constraints.
+/// This returns the standard set of types that form a closed algebra:
+/// - All single-grade types (scalar, vector, bivector, etc.)
+/// - Even subalgebra (grades 0, 2, 4, ...) - motors/rotors
+/// - Odd subalgebra (grades 1, 3, 5, ...) - flectors
+///
+/// This minimal set is sufficient for most geometric algebra applications
+/// and matches the standard types used in PGA, CGA, etc.
 ///
 /// For grade combinations that need field constraints (like PGA bivectors),
 /// the constraint expression is included in the entity.
@@ -313,41 +317,52 @@ pub fn discover_valid_combinations(algebra: &Algebra) -> Vec<Vec<usize>> {
 /// use clifford_codegen::discovery::discover_entities;
 /// use clifford_codegen::algebra::Algebra;
 ///
-/// let algebra = Algebra::euclidean(3);
+/// let algebra = Algebra::pga(3);
 /// let entities = discover_entities(&algebra);
 ///
-/// for entity in &entities {
-///     println!("{}: grades {:?}", entity.name, entity.grades);
-///     if let Some(c) = &entity.constraint {
-///         println!("  constraint: {}", c);
-///     }
-/// }
+/// // Returns 7 entities for PGA:
+/// // [0], [1], [2], [3], [4], [0,2,4], [1,3]
+/// assert_eq!(entities.len(), 7);
 /// ```
 pub fn discover_entities(algebra: &Algebra) -> Vec<DiscoveredEntity> {
-    enumerate_grade_combinations(algebra.dim())
+    let dim = algebra.dim();
+
+    // Build the minimal set of grade combinations
+    let mut grade_sets: Vec<Vec<usize>> = Vec::new();
+
+    // Single grades (scalar, vector, bivector, ..., pseudoscalar)
+    for g in 0..=dim {
+        grade_sets.push(vec![g]);
+    }
+
+    // Even subalgebra (grades 0, 2, 4, ...) - only if more than one grade
+    let even: Vec<usize> = (0..=dim).step_by(2).collect();
+    if even.len() > 1 {
+        grade_sets.push(even);
+    }
+
+    // Odd subalgebra (grades 1, 3, 5, ...) - only if more than one grade
+    let odd: Vec<usize> = (1..=dim).step_by(2).collect();
+    if odd.len() > 1 {
+        grade_sets.push(odd);
+    }
+
+    // Convert to entities with constraints
+    grade_sets
         .into_iter()
-        .filter_map(|grades| {
-            let (satisfiable, constraint) = can_satisfy_constraints(&grades, algebra);
-
-            if !satisfiable {
-                return None; // Skip unsatisfiable combinations
-            }
-
+        .map(|grades| {
+            let (_, constraint) = can_satisfy_constraints(&grades, algebra);
             let name = suggest_name(&grades, algebra.dim());
             let description = generate_description(&grades, algebra.dim());
 
-            // Types that can satisfy geometric constraint can have unit/nonzero wrappers
-            let can_be_unit = true;
-            let can_be_nonzero = true;
-
-            Some(DiscoveredEntity {
+            DiscoveredEntity {
                 name,
                 grades,
                 description,
-                can_be_unit,
-                can_be_nonzero,
+                can_be_unit: true,
+                can_be_nonzero: true,
                 constraint,
-            })
+            }
         })
         .collect()
 }
@@ -446,17 +461,39 @@ mod tests {
     }
 
     #[test]
-    fn discover_entities_has_names() {
+    fn discover_entities_minimal_set() {
+        // Euclidean 3D: 4 single grades + even [0,2] + odd [1,3] = 6 entities
         let algebra = Algebra::euclidean(3);
         let entities = discover_entities(&algebra);
+        assert_eq!(entities.len(), 6);
 
-        // Check entities are named with their grades
-        assert!(entities.iter().any(|e| e.name == "Entity_0"));
-        assert!(entities.iter().any(|e| e.name == "Entity_1"));
-        assert!(entities.iter().any(|e| e.name == "Entity_2"));
-        assert!(entities.iter().any(|e| e.name == "Entity_3"));
-        assert!(entities.iter().any(|e| e.name == "Entity_0_2"));
-        assert!(entities.iter().any(|e| e.name == "Entity_1_3"));
+        // Check all expected entities are present
+        assert!(entities.iter().any(|e| e.grades == vec![0]));
+        assert!(entities.iter().any(|e| e.grades == vec![1]));
+        assert!(entities.iter().any(|e| e.grades == vec![2]));
+        assert!(entities.iter().any(|e| e.grades == vec![3]));
+        assert!(entities.iter().any(|e| e.grades == vec![0, 2]));
+        assert!(entities.iter().any(|e| e.grades == vec![1, 3]));
+    }
+
+    #[test]
+    fn discover_pga_entities_minimal_set() {
+        // PGA 3D (4D algebra): 5 single grades + even [0,2,4] + odd [1,3] = 7 entities
+        let algebra = Algebra::pga(3);
+        let entities = discover_entities(&algebra);
+        assert_eq!(entities.len(), 7);
+
+        // Check bivector has constraint
+        let bivector = entities.iter().find(|e| e.grades == vec![2]).unwrap();
+        assert!(bivector.constraint.is_some());
+
+        // Check motor has constraint
+        let motor = entities.iter().find(|e| e.grades == vec![0, 2, 4]).unwrap();
+        assert!(motor.constraint.is_some());
+
+        // Check flector has constraint
+        let flector = entities.iter().find(|e| e.grades == vec![1, 3]).unwrap();
+        assert!(flector.constraint.is_some());
     }
 
     #[test]
