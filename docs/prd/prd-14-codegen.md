@@ -16,6 +16,9 @@ This PRD is implemented through the following sub-PRDs:
 | [PRD-14.5](prd-14.5-constrained-types.md) | Constrained Types (Unit, Normalized) | Draft |
 | [PRD-14.6](prd-14.6-traits-tests.md) | Trait Impls & Test Generation | Draft |
 | [PRD-14.7](prd-14.7-cli-integration.md) | CLI Tool & Build Integration | Draft |
+| [PRD-14.8](prd-14.8-constraint-engine.md) | Geometric Constraint Engine | Draft |
+| [PRD-14.9](prd-14.9-entity-discovery.md) | Entity Discovery | Draft |
+| [PRD-14.10](prd-14.10-product-inference.md) | Product Output Inference | Draft |
 
 ## Problem Statement
 
