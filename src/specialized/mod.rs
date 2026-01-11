@@ -58,3 +58,6 @@
 
 pub mod euclidean;
 pub mod projective;
+
+#[cfg(feature = "rerun-0_28")]
+pub mod visualization;

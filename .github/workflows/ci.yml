@@ -23,6 +23,8 @@ jobs:
       - run: cargo check --no-default-features --features nalgebra-0_32
       - run: cargo check --no-default-features --features nalgebra-0_33
       - run: cargo check --no-default-features --features nalgebra-0_34
+      # Check rerun integration compiles
+      - run: cargo check --features rerun-0_28
       # Verify benchmarks compile
       - run: cargo build --benches
 

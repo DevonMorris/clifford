@@ -51,5 +51,8 @@ mod nalgebra;
 ))]
 pub use nalgebra::NalgebraConversionError;
 
+#[cfg(feature = "rerun-0_28")]
+mod rerun;
+
 pub use conversions::{ConversionError, Specialized};
 pub use types::*;

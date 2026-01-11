@@ -69,4 +69,7 @@ mod nalgebra;
 ))]
 pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
 
+#[cfg(feature = "rerun-0_28")]
+mod rerun;
+
 pub use types::{Flector, Line, Motor, Plane, Point};
