@@ -8,7 +8,11 @@
 //! | Type | Grade | Description |
 //! |------|-------|-------------|
 //! | [`Point`] | 1 | Round point (null vector) |
+//! | [`Dipole`] | 2 | Point pair (two points as bivector) |
+//! | [`Circle`] | 3 | Circle (intersection of two spheres) |
+//! | [`Line`] | 3 | Flat circle (circle through infinity) |
 //! | [`Sphere`] | 4 | Sphere (or imaginary sphere) |
+//! | [`Plane`] | 4 | Flat sphere (sphere through infinity) |
 //!
 //! # Conformal Embedding
 //!
@@ -31,23 +35,31 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::conformal::dim3::Point;
+//! use clifford::specialized::conformal::dim3::{Point, Plane, Line};
 //!
+//! // Create a point
 //! let p = Point::<f64>::new(1.0, 2.0, 3.0);
 //!
 //! // Verify null constraint
 //! assert!(p.is_null(1e-10));
 //!
-//! // Coordinates round-trip
-//! assert!((p.x() - 1.0).abs() < 1e-10);
-//! assert!((p.y() - 2.0).abs() < 1e-10);
-//! assert!((p.z() - 3.0).abs() < 1e-10);
+//! // Create the xy-plane
+//! let plane = Plane::<f64>::xy();
+//! assert!(plane.contains(&Point::new(1.0, 2.0, 0.0), 1e-10));
+//!
+//! // Create the x-axis
+//! let x_axis = Line::<f64>::x_axis();
+//! assert!(x_axis.contains(&Point::new(5.0, 0.0, 0.0), 1e-10));
 //! ```
 //!
 //! # References
 //!
 //! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Round_point>
 //! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Sphere>
+//! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Plane>
+//! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Circle>
+//! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Line>
+//! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Dipole>
 
 mod types;
 

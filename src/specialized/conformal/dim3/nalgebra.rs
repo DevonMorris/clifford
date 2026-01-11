@@ -89,8 +89,11 @@ impl<T: Float + na::Scalar> From<Sphere<T>> for (na::Point3<T>, T) {
     /// ```
     #[inline]
     fn from(s: Sphere<T>) -> Self {
-        let (cx, cy, cz) = s.center();
-        (na::Point3::new(cx, cy, cz), s.radius())
+        let center = s.center();
+        (
+            na::Point3::new(center.x(), center.y(), center.z()),
+            s.radius(),
+        )
     }
 }
 
