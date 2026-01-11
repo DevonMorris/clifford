@@ -389,10 +389,10 @@ impl<T: Float> Sphere<T> {
         Self::from_center_radius(T::zero(), T::zero(), T::zero(), T::one())
     }
 
-    /// Returns the center as Euclidean coordinates.
+    /// Returns the center as a Euclidean vector.
     #[inline]
-    pub fn center(&self) -> (T, T, T) {
-        (self.cx, self.cy, self.cz)
+    pub fn center(&self) -> Vector<T> {
+        Vector::new(self.cx, self.cy, self.cz)
     }
 
     /// Returns the center x-coordinate.
