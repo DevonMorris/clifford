@@ -353,55 +353,14 @@ pub fn discover_entities(algebra: &Algebra) -> Vec<DiscoveredEntity> {
         .map(|grades| {
             let (_, constraint) = can_satisfy_constraints(&grades, algebra);
             let name = suggest_name(&grades, algebra.dim());
-            let description = generate_description(&grades, algebra.dim());
 
             DiscoveredEntity {
                 name,
                 grades,
-                description,
-                can_be_unit: true,
-                can_be_nonzero: true,
                 constraint,
             }
         })
         .collect()
-}
-
-/// Generates a description for a grade combination.
-fn generate_description(grades: &[usize], dim: usize) -> String {
-    if grades.len() == 1 {
-        let g = grades[0];
-        if g == 0 {
-            "Scalar (grade-0 element)".to_string()
-        } else if g == dim {
-            format!("Pseudoscalar (grade-{} element)", g)
-        } else {
-            let name = match g {
-                1 => "vector",
-                2 => "bivector",
-                3 => "trivector",
-                4 => "quadvector",
-                _ => "element",
-            };
-            format!("Grade-{} {}", g, name)
-        }
-    } else {
-        let all_grades: Vec<usize> = (0..=dim).collect();
-        if grades == &all_grades[..] {
-            "Full multivector (all grades)".to_string()
-        } else {
-            let even_grades: Vec<usize> = (0..=dim).step_by(2).collect();
-            let odd_grades: Vec<usize> = (1..=dim).step_by(2).collect();
-
-            if grades == &even_grades[..] {
-                "Even subalgebra element".to_string()
-            } else if grades == &odd_grades[..] {
-                "Odd subalgebra element".to_string()
-            } else {
-                format!("Grades {:?}", grades)
-            }
-        }
-    }
 }
 
 #[cfg(test)]
