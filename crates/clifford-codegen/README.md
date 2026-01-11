@@ -222,11 +222,8 @@ generate_tests = true      # Generate property-based tests
 Use the `generate` command to produce Rust code from your specification:
 
 ```bash
-# Generate to default location (src/generated/<name>/)
-clifford-codegen generate algebras/euclidean3.toml
-
-# Generate to custom location
-clifford-codegen generate algebras/euclidean3.toml -o src/my_algebra/
+# Generate to the clifford crate's src directory
+clifford-codegen generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/
 
 # Preview what would be generated
 clifford-codegen generate algebras/euclidean3.toml --dry-run
@@ -243,13 +240,36 @@ clifford-codegen generate algebras/euclidean3.toml -v
 The generator creates a Rust module with:
 
 ```
-euclidean3/
-├── mod.rs        # Module re-exports
-├── types.rs      # Type definitions (Vector, Bivector, Rotor, etc.)
-├── products.rs   # Product implementations (geometric, outer, inner)
-├── traits.rs     # Standard trait impls (Debug, Clone, PartialEq, ops)
+my_algebra/
+├── mod.rs         # Module re-exports and allow attributes
+├── types.rs       # Type definitions (Vector, Bivector, Rotor, etc.)
+├── products.rs    # Product implementations (geometric, outer, inner)
+├── traits.rs      # Standard trait impls (Debug, Clone, PartialEq, ops)
 └── conversions.rs # Multivector conversions
 ```
+
+### Integrating Generated Code
+
+The generated code is designed to be used **inside the clifford crate**. It uses
+`crate::` imports for the `Float` trait, `Multivector`, `Blade`, and signatures.
+
+To integrate generated code:
+
+1. Generate into a subdirectory under `src/`:
+   ```bash
+   clifford-codegen generate algebras/my_algebra.toml -o src/my_algebra/ --force
+   ```
+
+2. Add the module to `src/lib.rs`:
+   ```rust
+   pub mod my_algebra;
+   ```
+
+3. Build and test:
+   ```bash
+   cargo build
+   cargo test my_algebra
+   ```
 
 ## Complete Example: Creating a 2D Euclidean Algebra
 
@@ -259,8 +279,11 @@ clifford-codegen discover "2,0,0" -o algebras/euclidean2.toml
 
 # 2. Edit the TOML (see example below)
 
-# 3. Generate code
-clifford-codegen generate algebras/euclidean2.toml -o src/euclidean2/ --force
+# 3. Generate code into the clifford crate
+clifford-codegen generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/ --force
+
+# 4. Add module to lib.rs and test
+cargo test specialized::euclidean::dim2
 ```
 
 Example customized `euclidean2.toml`:
@@ -342,7 +365,7 @@ clifford-codegen products algebras/euclidean3.toml --product geometric --table
 ### Verify Generated Code
 
 ```bash
-clifford-codegen verify src/generated/euclidean3/ --spec algebras/euclidean3.toml
+clifford-codegen verify src/specialized/euclidean/dim3/ --spec algebras/euclidean3.toml
 ```
 
 ## Common Algebras
