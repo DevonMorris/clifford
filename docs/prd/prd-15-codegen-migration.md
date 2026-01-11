@@ -23,8 +23,7 @@ Each sub-PRD should be implemented as a separate PR with full test coverage befo
 The `algebras/` directory contains TOML files created during PRD-14 as **test fixtures for the codegen tool**. These files may differ from the specifications in these PRDs because:
 
 1. **Module paths**: Test files use `generated::*` paths; PRDs specify actual `specialized/*` paths
-2. **Options**: Test files enable all generation; PRDs disable `generate_arbitrary` (hand-written wrapper types needed)
-3. **Constraint format**: PRDs use simplified notation for clarity; implementation uses actual parser format
+2. **Constraint format**: PRDs use simplified notation for clarity; implementation uses actual parser format
 
 During implementation, the existing TOMLs will be **updated or replaced** to match these PRD specifications. The PRDs describe the desired end state, not the current test fixtures.
 
@@ -115,11 +114,11 @@ src/specialized/
 │   │   │   ├── mod.rs
 │   │   │   ├── types.rs          # Generated type definitions
 │   │   │   ├── products.rs       # Generated product functions
-│   │   │   └── traits.rs         # Generated trait impls
+│   │   │   ├── traits.rs         # Generated trait impls
+│   │   │   └── arbitrary.rs      # Generated proptest support
 │   │   ├── extensions.rs         # NEW: Domain-specific methods
 │   │   ├── ops.rs                # Operator overloads (hand-written)
 │   │   ├── conversions.rs        # Multivector conversions (hand-written)
-│   │   ├── arbitrary.rs          # Proptest support (hand-written)
 │   │   ├── nalgebra.rs           # nalgebra support (hand-written)
 │   │   └── rerun.rs              # Visualization (hand-written)
 │   └── dim3/
@@ -142,6 +141,7 @@ src/specialized/
 - Norm operations
 - Product functions (not operator overloads)
 - Basic trait implementations
+- Proptest `Arbitrary` implementations
 
 **Extension code** (`extensions.rs`):
 - Domain-specific constructors (`from_angle()`, `from_vectors()`, etc.)
@@ -153,7 +153,6 @@ src/specialized/
 **Hand-written modules**:
 - `ops.rs` - Operator overloads using generated products
 - `conversions.rs` - Multivector conversions with validation
-- `arbitrary.rs` - Proptest support
 - `nalgebra.rs` - nalgebra conversions
 - `rerun.rs` - Visualization
 
@@ -238,7 +237,7 @@ Vector_Vector = "T"
 
 [options]
 generate_serde = true
-generate_arbitrary = false  # Hand-written for wrapper types
+generate_arbitrary = true
 generate_tests = true
 ```
 
@@ -303,7 +302,7 @@ Motor_Line = "Line"
 
 [options]
 generate_serde = true
-generate_arbitrary = false
+generate_arbitrary = true
 generate_tests = true
 ```
 
@@ -393,7 +392,7 @@ Flector_Plane = "Plane"
 
 [options]
 generate_serde = true
-generate_arbitrary = false
+generate_arbitrary = true
 generate_tests = true
 ```
 

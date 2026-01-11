@@ -86,7 +86,7 @@ Rotor_Vector = "Vector"
 
 [options]
 generate_serde = true
-generate_arbitrary = false
+generate_arbitrary = true
 generate_tests = true
 ```
 
