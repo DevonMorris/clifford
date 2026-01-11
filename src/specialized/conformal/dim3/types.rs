@@ -2817,7 +2817,7 @@ mod tests {
 
 /// A translator (translation versor) in 3D CGA.
 ///
-/// Represents a translation by a displacement vector `τ = (τₓ, τᵧ, τᵤ)`.
+/// Represents a translation by a displacement vector `τ = (τₓ, τᵧ, τz)`.
 ///
 /// The translator versor is:
 /// ```text
