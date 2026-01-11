@@ -461,6 +461,10 @@ impl<T: Float> Sphere<T> {
     /// let on_surface = Point::new(1.0, 0.0, 0.0);
     /// assert!(sphere.contains(&on_surface, 1e-10));
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if the sphere is imaginary (`r² < 0`).
     #[inline]
     pub fn contains(&self, p: &Point<T>, epsilon: T) -> bool {
         self.signed_distance(p).abs() < epsilon
