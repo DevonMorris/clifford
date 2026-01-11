@@ -49,11 +49,11 @@ pub fn generate_toml_template(
     writeln!(output, "# - Configure constraints")?;
     writeln!(output)?;
 
-    // Algebra section
+    // Algebra section - user should fill in these values
     writeln!(output, "[algebra]")?;
-    writeln!(output, "name = \"{}\"", algebra_id(algebra))?;
-    writeln!(output, "module_path = \"{}\"", module_path(algebra))?;
-    writeln!(output, "description = \"{}\"", algebra_description(algebra))?;
+    writeln!(output, "name = \"\"  # TODO: Fill in algebra name")?;
+    writeln!(output, "module_path = \"\"  # TODO: Fill in module path")?;
+    writeln!(output, "description = \"{}\"", algebra_name(algebra))?;
     writeln!(output)?;
 
     // Signature section
@@ -112,93 +112,20 @@ fn write_signature_section(algebra: &Algebra, output: &mut dyn Write) -> io::Res
 fn write_entity_section(entity: &DiscoveredEntity, output: &mut dyn Write) -> io::Result<()> {
     writeln!(output, "[types.{}]", entity.name)?;
     writeln!(output, "grades = {:?}", entity.grades)?;
-    writeln!(output, "description = \"{}\"", entity.description)?;
 
     // Output constraint if present
     if let Some(ref constraint) = entity.constraint {
         writeln!(output, "constraint = \"{}\"", constraint)?;
     }
 
-    // Suggest unit/nonzero constraints for types that support them
-    if entity.can_be_unit || entity.can_be_nonzero {
-        writeln!(output, "#")?;
-        writeln!(output, "# Suggested wrappers:")?;
-        if entity.can_be_unit {
-            writeln!(output, "# [types.{}.wrappers.unit]", entity.name)?;
-        }
-        if entity.can_be_nonzero {
-            writeln!(output, "# [types.{}.wrappers.nonzero]", entity.name)?;
-        }
-    }
-
     writeln!(output)?;
     Ok(())
 }
 
-/// Generates a descriptive name for the algebra.
+/// Generates a descriptive name for the algebra based on signature.
 fn algebra_name(algebra: &Algebra) -> String {
     let (p, q, r) = algebra.signature();
     format!("Cl({},{},{})", p, q, r)
-}
-
-/// Generates an identifier for the algebra.
-fn algebra_id(algebra: &Algebra) -> String {
-    let (p, q, r) = algebra.signature();
-
-    // Common algebra identifiers
-    match (p, q, r) {
-        (2, 0, 0) => "euclidean2".to_string(),
-        (3, 0, 0) => "euclidean3".to_string(),
-        (3, 0, 1) => "pga3".to_string(),
-        (4, 1, 0) => "cga3".to_string(),
-        (4, 0, 0) => "euclidean4".to_string(),
-        (n, 0, 0) => format!("euclidean{}", n),
-        _ => format!(
-            "cl_{}_{}{}",
-            p,
-            q,
-            if r > 0 {
-                format!("_{}", r)
-            } else {
-                String::new()
-            }
-        ),
-    }
-}
-
-/// Generates a module path for the algebra.
-fn module_path(algebra: &Algebra) -> String {
-    let (p, q, r) = algebra.signature();
-
-    match (p, q, r) {
-        (2, 0, 0) => "euclidean::dim2".to_string(),
-        (3, 0, 0) => "euclidean::dim3".to_string(),
-        (3, 0, 1) => "projective::dim3".to_string(),
-        (4, 1, 0) => "conformal::dim3".to_string(),
-        _ => format!(
-            "generated::cl_{}_{}{}",
-            p,
-            q,
-            if r > 0 {
-                format!("_{}", r)
-            } else {
-                String::new()
-            }
-        ),
-    }
-}
-
-/// Generates a description for the algebra.
-fn algebra_description(algebra: &Algebra) -> String {
-    let (p, q, r) = algebra.signature();
-
-    match (p, q, r) {
-        (2, 0, 0) => "2D Euclidean Geometric Algebra Cl(2,0,0)".to_string(),
-        (3, 0, 0) => "3D Euclidean Geometric Algebra Cl(3,0,0)".to_string(),
-        (3, 0, 1) => "3D Projective Geometric Algebra Cl(3,0,1)".to_string(),
-        (4, 1, 0) => "3D Conformal Geometric Algebra Cl(4,1,0)".to_string(),
-        _ => format!("Geometric Algebra Cl({},{},{})", p, q, r),
-    }
 }
 
 #[cfg(test)]
@@ -219,9 +146,11 @@ mod tests {
         // Check header
         assert!(toml.contains("Auto-discovered entities for Cl(3,0,0)"));
 
-        // Check algebra section
+        // Check algebra section has placeholders for user to fill in
         assert!(toml.contains("[algebra]"));
-        assert!(toml.contains("name = \"euclidean3\""));
+        assert!(toml.contains("name = \"\""));
+        assert!(toml.contains("module_path = \"\""));
+        assert!(toml.contains("description = \"Cl(3,0,0)\""));
 
         // Check signature section
         assert!(toml.contains("[signature]"));
