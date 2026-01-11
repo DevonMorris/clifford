@@ -1,0 +1,94 @@
+name: Auto-tag Release
+
+# Automatically creates a git tag when a release branch is merged to main.
+# This triggers the publish.yml workflow which handles crates.io publishing.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag-release:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    # Only run if PR was merged (not just closed) and from a release branch
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need full history and ability to push tags
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from branch name
+        id: version
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          # Extract version from branch name (release/v0.1.0 -> v0.1.0)
+          VERSION="${BRANCH#release/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Verify version format
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Expected format: v1.2.3 or v1.2.3-alpha.1"
+            exit 1
+          fi
+
+      - name: Verify Cargo.toml version matches
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CARGO_VERSION="v$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')"
+          if [ "$CARGO_VERSION" != "$VERSION" ]; then
+            echo "Version mismatch: Cargo.toml has $CARGO_VERSION, branch is $VERSION"
+            exit 1
+          fi
+          echo "Version verified: $VERSION"
+
+      - name: Verify CHANGELOG has release entry
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Strip the 'v' prefix for CHANGELOG lookup
+          CHANGELOG_VERSION="${VERSION#v}"
+          if ! grep -q "## \[$CHANGELOG_VERSION\]" CHANGELOG.md; then
+            echo "CHANGELOG.md missing entry for version $CHANGELOG_VERSION"
+            exit 1
+          fi
+          echo "CHANGELOG entry verified for $CHANGELOG_VERSION"
+
+      - name: Check if tag already exists
+        id: check-tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag $VERSION does not exist, will create"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check-tag.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+          echo "Created and pushed tag: $VERSION"
+
+      - name: Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "## Release Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.event.pull_request.head.ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR**: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The [Publish workflow](../actions/workflows/publish.yml) will now run automatically." >> $GITHUB_STEP_SUMMARY

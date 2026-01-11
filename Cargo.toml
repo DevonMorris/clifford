@@ -2,9 +2,10 @@
 name = "clifford"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.87.0"
 license = "MIT"
-description = "A Rust library for Geometric Algebra (Clifford Algebra)"
-keywords = ["geometric-algebra", "clifford-algebra", "mathematics", "simd", "linear-algebra"]
+description = "Geometric Algebra (Clifford Algebra) for Rust: rotors, motors, PGA for 3D rotations and rigid transforms"
+keywords = ["geometric-algebra", "clifford-algebra", "quaternion", "rotation", "pga"]
 categories = ["mathematics", "science"]
 repository = "https://github.com/DevonMorris/clifford"
 readme = "README.md"
