@@ -28,7 +28,6 @@ description = "Grade-1 vector"
 fields = ["x", "y"]
 
 [types.Vector.constraints.unit]
-norm = "euclidean"
 
 [types.Vector.constraints.nonzero]
 
@@ -43,7 +42,6 @@ description = "2D rotation element (complex number)"
 fields = ["s", "xy"]
 
 [types.Rotor.constraints.unit]
-norm = "euclidean"
 
 [types.Even]
 grades = [0, 2]

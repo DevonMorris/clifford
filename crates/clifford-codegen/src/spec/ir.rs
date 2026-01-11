@@ -102,14 +102,8 @@ pub struct ConstraintSpec {
     pub kind: ConstraintKind,
     /// Generated wrapper type name (e.g., "UnitRotor").
     pub wrapper_name: String,
-    /// Norm type for unit constraints.
-    pub norm_type: Option<NormType>,
     /// Condition expression for custom constraints.
     pub condition: Option<String>,
-    /// Safe constructors for the constrained type.
-    pub constructors: Vec<ConstructorSpec>,
-    /// Operations that preserve this constraint.
-    pub preserving_ops: Vec<String>,
 }
 
 /// Kind of constraint.
@@ -138,37 +132,6 @@ impl ConstraintKind {
             ConstraintKind::Ideal => "Ideal",
         }
     }
-}
-
-/// Type of norm used for unit constraints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NormType {
-    /// s² + x² + y² + z² + ...
-    Euclidean,
-    /// PGA motor norm (special handling for degenerate components).
-    Motor,
-    /// CGA-specific norm.
-    Cga,
-    /// Custom norm (specified by condition).
-    Custom,
-}
-
-/// A constructor for a constrained type.
-#[derive(Debug, Clone)]
-pub struct ConstructorSpec {
-    /// Constructor name (e.g., "identity", "from_angle").
-    pub name: String,
-    /// Parameters.
-    pub params: Vec<ParamSpec>,
-}
-
-/// A parameter in a constructor.
-#[derive(Debug, Clone)]
-pub struct ParamSpec {
-    /// Parameter name.
-    pub name: String,
-    /// Type annotation (e.g., "T", "Vector<T>").
-    pub ty: String,
 }
 
 /// Code generation options.

@@ -32,9 +32,6 @@
 //! fields = ["s", "xy", "xz", "yz"]
 //!
 //! [types.Rotor.constraints.unit]
-//! norm = "euclidean"
-//! constructors = ["identity()"]
-//! preserving_ops = ["compose", "inverse"]
 //!
 //! [options]
 //! generate_serde = true
@@ -72,7 +69,7 @@ mod raw;
 pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
-    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, ConstructorSpec, FieldSpec,
-    GenerationOptions, NormType, ParamSpec, SignatureSpec, TypeSpec,
+    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
+    SignatureSpec, TypeSpec,
 };
 pub use parser::parse_spec;

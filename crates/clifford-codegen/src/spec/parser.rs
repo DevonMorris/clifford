@@ -8,8 +8,8 @@ use crate::algebra::binomial;
 
 use super::error::ParseError;
 use super::ir::{
-    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, ConstructorSpec, FieldSpec,
-    GenerationOptions, NormType, ParamSpec, SignatureSpec, TypeSpec,
+    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
+    SignatureSpec, TypeSpec,
 };
 use super::raw::{RawAlgebraSpec, RawConstraint, RawSignature, RawTypeSpec};
 
@@ -380,41 +380,12 @@ fn parse_constraints(
 
     for (kind_str, raw_constraint) in raw {
         let kind = parse_constraint_kind(type_name, kind_str)?;
-
-        // Unit constraints require norm type
-        let norm_type = if kind == ConstraintKind::Unit {
-            let norm_str =
-                raw_constraint
-                    .norm
-                    .as_deref()
-                    .ok_or_else(|| ParseError::MissingNormType {
-                        type_name: type_name.to_string(),
-                    })?;
-            Some(parse_norm_type(type_name, norm_str)?)
-        } else {
-            raw_constraint
-                .norm
-                .as_deref()
-                .map(|s| parse_norm_type(type_name, s))
-                .transpose()?
-        };
-
-        // Parse constructors
-        let constructors = raw_constraint
-            .constructors
-            .iter()
-            .map(|s| parse_constructor(type_name, s))
-            .collect::<Result<Vec<_>, _>>()?;
-
         let wrapper_name = format!("{}{}", kind.wrapper_prefix(), type_name);
 
         constraints.push(ConstraintSpec {
             kind,
             wrapper_name,
-            norm_type,
             condition: raw_constraint.condition.clone(),
-            constructors,
-            preserving_ops: raw_constraint.preserving_ops.clone(),
         });
     }
 
@@ -434,77 +405,6 @@ fn parse_constraint_kind(type_name: &str, kind: &str) -> Result<ConstraintKind, 
             kind: kind.to_string(),
         }),
     }
-}
-
-/// Parses a norm type string.
-fn parse_norm_type(type_name: &str, norm: &str) -> Result<NormType, ParseError> {
-    match norm {
-        "euclidean" => Ok(NormType::Euclidean),
-        "motor" => Ok(NormType::Motor),
-        "cga" => Ok(NormType::Cga),
-        "custom" => Ok(NormType::Custom),
-        _ => Err(ParseError::UnknownNormType {
-            type_name: type_name.to_string(),
-            norm: norm.to_string(),
-        }),
-    }
-}
-
-/// Parses a constructor signature like "from_angle(angle: T)".
-fn parse_constructor(type_name: &str, sig: &str) -> Result<ConstructorSpec, ParseError> {
-    // Find the opening paren
-    let paren_start = sig
-        .find('(')
-        .ok_or_else(|| ParseError::InvalidConstructor {
-            type_name: type_name.to_string(),
-            message: format!("missing '(' in constructor: {}", sig),
-        })?;
-
-    let paren_end = sig
-        .rfind(')')
-        .ok_or_else(|| ParseError::InvalidConstructor {
-            type_name: type_name.to_string(),
-            message: format!("missing ')' in constructor: {}", sig),
-        })?;
-
-    let name = sig[..paren_start].trim().to_string();
-    if name.is_empty() {
-        return Err(ParseError::InvalidConstructor {
-            type_name: type_name.to_string(),
-            message: "constructor name is empty".to_string(),
-        });
-    }
-
-    let params_str = sig[paren_start + 1..paren_end].trim();
-    let params = if params_str.is_empty() {
-        Vec::new()
-    } else {
-        params_str
-            .split(',')
-            .map(|p| parse_param(type_name, p.trim()))
-            .collect::<Result<Vec<_>, _>>()?
-    };
-
-    Ok(ConstructorSpec { name, params })
-}
-
-/// Parses a parameter like "angle: T".
-fn parse_param(type_name: &str, param: &str) -> Result<ParamSpec, ParseError> {
-    let parts: Vec<&str> = param.split(':').map(|s| s.trim()).collect();
-    if parts.len() != 2 {
-        return Err(ParseError::InvalidConstructor {
-            type_name: type_name.to_string(),
-            message: format!(
-                "invalid parameter format: '{}' (expected 'name: Type')",
-                param
-            ),
-        });
-    }
-
-    Ok(ParamSpec {
-        name: parts[0].to_string(),
-        ty: parts[1].to_string(),
-    })
 }
 
 /// Validates the complete specification.
@@ -608,9 +508,6 @@ mod tests {
             fields = ["s", "xy"]
 
             [types.Rotor.constraints.unit]
-            norm = "euclidean"
-            constructors = ["identity()", "from_angle(angle: T)"]
-            preserving_ops = ["compose", "inverse"]
             "#,
         )
         .unwrap();
@@ -620,9 +517,7 @@ mod tests {
 
         let unit = &rotor.constraints[0];
         assert_eq!(unit.kind, ConstraintKind::Unit);
-        assert_eq!(unit.norm_type, Some(NormType::Euclidean));
-        assert_eq!(unit.constructors.len(), 2);
-        assert_eq!(unit.preserving_ops, vec!["compose", "inverse"]);
+        assert_eq!(unit.wrapper_name, "UnitRotor");
     }
 
     #[test]
@@ -760,27 +655,6 @@ mod tests {
         );
 
         assert!(matches!(result, Err(ParseError::DuplicateFieldName { .. })));
-    }
-
-    #[test]
-    fn reject_missing_norm_type() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Rotor]
-            grades = [0, 2]
-
-            [types.Rotor.constraints.unit]
-            constructors = ["identity()"]
-            "#,
-        );
-
-        assert!(matches!(result, Err(ParseError::MissingNormType { .. })));
     }
 
     #[test]

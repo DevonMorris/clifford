@@ -32,11 +32,8 @@ description = "Grade-1 vector"
 fields = ["x", "y", "z"]
 
 [types.Vector.constraints.unit]
-norm = "euclidean"
-constructors = ["unit_x()", "unit_y()", "unit_z()"]
 
 [types.Vector.constraints.nonzero]
-condition = "norm_squared > epsilon"
 
 [types.Bivector]
 grades = [2]
@@ -44,8 +41,6 @@ description = "Grade-2 bivector (oriented plane)"
 fields = ["xy", "xz", "yz"]
 
 [types.Bivector.constraints.unit]
-norm = "euclidean"
-constructors = ["unit_xy()", "unit_xz()", "unit_yz()"]
 
 [types.Trivector]
 grades = [3]
@@ -58,14 +53,6 @@ description = "3D rotation element"
 fields = ["s", "xy", "xz", "yz"]
 
 [types.Rotor.constraints.unit]
-norm = "euclidean"
-constructors = [
-    "identity()",
-    "from_angle_plane(angle: T, plane: Bivector<T>)",
-    "from_angle_axis(angle: T, axis: Vector<T>)",
-    "from_vectors(a: Vector<T>, b: Vector<T>)",
-]
-preserving_ops = ["compose", "inverse", "slerp"]
 
 [types.Even]
 grades = [0, 2]

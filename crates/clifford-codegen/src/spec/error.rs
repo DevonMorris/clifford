@@ -59,13 +59,6 @@ pub enum ParseError {
     #[error("duplicate type name: '{0}'")]
     DuplicateTypeName(String),
 
-    /// Unit constraint requires a norm type.
-    #[error("unit constraint for '{type_name}' requires norm type")]
-    MissingNormType {
-        /// The type name.
-        type_name: String,
-    },
-
     /// Invalid blade name in blades section.
     #[error("invalid blade name: '{name}' (expected format: e1, e12, e123, etc.)")]
     InvalidBladeName {
@@ -95,24 +88,6 @@ pub enum ParseError {
         type_name: String,
         /// The unknown constraint kind.
         kind: String,
-    },
-
-    /// Invalid norm type.
-    #[error("unknown norm type: '{norm}' in type '{type_name}'")]
-    UnknownNormType {
-        /// The type name.
-        type_name: String,
-        /// The unknown norm type.
-        norm: String,
-    },
-
-    /// Invalid constructor signature.
-    #[error("invalid constructor signature in type '{type_name}': {message}")]
-    InvalidConstructor {
-        /// The type name.
-        type_name: String,
-        /// Description of what's wrong.
-        message: String,
     },
 
     /// Type alias references itself.

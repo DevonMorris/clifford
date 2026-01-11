@@ -71,16 +71,8 @@ pub struct RawTypeSpec {
 /// Raw constraint specification.
 #[derive(Debug, Deserialize, Default)]
 pub struct RawConstraint {
-    /// Norm type for unit constraints.
-    pub norm: Option<String>,
     /// Condition expression.
     pub condition: Option<String>,
-    /// Constructor signatures.
-    #[serde(default)]
-    pub constructors: Vec<String>,
-    /// Operations preserving the constraint.
-    #[serde(default)]
-    pub preserving_ops: Vec<String>,
 }
 
 /// Raw generation options.

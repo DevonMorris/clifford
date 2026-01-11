@@ -11,7 +11,7 @@ pub const EUCLIDEAN3: &str = include_str!("../../algebras/euclidean3.toml");
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spec::{ConstraintKind, NormType, parse_spec};
+    use crate::spec::{ConstraintKind, parse_spec};
 
     #[test]
     fn parse_euclidean2_spec() {
@@ -49,7 +49,6 @@ mod tests {
             .iter()
             .find(|c| c.kind == ConstraintKind::Unit)
             .unwrap();
-        assert_eq!(unit.norm_type, Some(NormType::Euclidean));
         assert_eq!(unit.wrapper_name, "UnitRotor");
 
         // Check Even aliases Rotor
@@ -109,24 +108,13 @@ mod tests {
         assert_eq!(rotor.grades, vec![0, 2]);
         assert_eq!(rotor.fields.len(), 4);
 
-        // Check Rotor unit constraint constructors
+        // Check Rotor unit constraint
         let unit = rotor
             .constraints
             .iter()
             .find(|c| c.kind == ConstraintKind::Unit)
             .unwrap();
-        assert!(unit.constructors.iter().any(|c| c.name == "identity"));
-        assert!(
-            unit.constructors
-                .iter()
-                .any(|c| c.name == "from_angle_plane")
-        );
-        assert!(
-            unit.constructors
-                .iter()
-                .any(|c| c.name == "from_angle_axis")
-        );
-        assert!(unit.constructors.iter().any(|c| c.name == "from_vectors"));
+        assert_eq!(unit.wrapper_name, "UnitRotor");
 
         // Check Odd type
         let odd = spec.types.iter().find(|t| t.name == "Odd").unwrap();

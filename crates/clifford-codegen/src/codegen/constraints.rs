@@ -49,7 +49,7 @@ use crate::spec::{AlgebraSpec, ConstraintKind, ConstraintSpec, TypeSpec};
 /// let code = tokens.to_string();
 ///
 /// assert!(code.contains("UnitVector"));
-/// assert!(code.contains("fn new"));
+/// assert!(code.contains("fn new_checked"));
 /// ```
 pub struct ConstraintGenerator<'a> {
     /// The algebra specification.
@@ -218,7 +218,7 @@ impl<'a> ConstraintGenerator<'a> {
         let doc = format!(
             "{} with constraint: `{}`.\n\n\
             # Panics\n\n\
-            The `new()` constructor panics if the constraint is violated.",
+            The `new_checked()` constructor panics if the constraint is violated.",
             constraint.wrapper_name, expr
         );
 
@@ -242,7 +242,7 @@ impl<'a> ConstraintGenerator<'a> {
                 ///
                 /// Panics if the constraint is violated.
                 #[inline]
-                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                pub fn new_checked(inner: #base_name<T>, tolerance: T) -> Self {
                     #check_code
                     Self(inner)
                 }
@@ -280,7 +280,7 @@ impl<'a> ConstraintGenerator<'a> {
         let doc = format!(
             "Unit {} with guaranteed norm = 1.\n\n\
             # Panics\n\n\
-            The `new()` constructor panics if `|norm - 1| >= tolerance`.",
+            The `new_checked()` constructor panics if `|norm - 1| >= tolerance`.",
             base_type.name
         );
 
@@ -299,7 +299,7 @@ impl<'a> ConstraintGenerator<'a> {
                 ///
                 /// Panics if `|inner.norm() - 1| >= tolerance`.
                 #[inline]
-                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                pub fn new_checked(inner: #base_name<T>, tolerance: T) -> Self {
                     let norm = inner.norm();
                     let deviation = if norm > T::one() {
                         norm - T::one()
@@ -343,7 +343,7 @@ impl<'a> ConstraintGenerator<'a> {
         let doc = format!(
             "Non-zero {} with guaranteed norm > 0.\n\n\
             # Panics\n\n\
-            The `new()` constructor panics if `norm_squared <= tolerance`.",
+            The `new_checked()` constructor panics if `norm_squared <= tolerance`.",
             base_type.name
         );
 
@@ -362,7 +362,7 @@ impl<'a> ConstraintGenerator<'a> {
                 ///
                 /// Panics if `inner.norm_squared() <= tolerance`.
                 #[inline]
-                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                pub fn new_checked(inner: #base_name<T>, tolerance: T) -> Self {
                     let norm_sq = inner.norm_squared();
                     assert!(
                         norm_sq > tolerance,
@@ -657,7 +657,7 @@ norm = "euclidean"
         let code = tokens.to_string();
 
         assert!(code.contains("UnitVector"));
-        assert!(code.contains("fn new"));
+        assert!(code.contains("fn new_checked"));
         assert!(code.contains("inner.norm()"));
     }
 
@@ -689,7 +689,7 @@ condition = "x * x + y * y - ep * em = 0"
         let code = tokens.to_string();
 
         assert!(code.contains("NullPoint"));
-        assert!(code.contains("fn new"));
+        assert!(code.contains("fn new_checked"));
         // TokenStream::to_string() adds spaces between tokens
         assert!(code.contains("inner . x ()"));
         assert!(code.contains("inner . ep ()"));
