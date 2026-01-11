@@ -1656,7 +1656,7 @@ impl<T: Float> UlpsEq for Dipole<T> {
 ///
 /// A flat point has the form:
 /// ```text
-/// p = pₓ·e₁∞ + pᵧ·e₂∞ + pᵤ·e₃∞ + pᵥ·e₀∞
+/// p = x·e₁∞ + y·e₂∞ + z·e₃∞ + w·e₀∞
 /// ```
 ///
 /// where each component contains the factor e∞ (point at infinity).
