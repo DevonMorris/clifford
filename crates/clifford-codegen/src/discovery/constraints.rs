@@ -106,8 +106,8 @@ pub fn derive_field_constraint(grades: &[usize], algebra: &Algebra) -> Option<St
         for &(a, b, coef) in contributions {
             let blade_a = Blade::from_index(a);
             let blade_b = Blade::from_index(b);
-            let name_a = algebra.blade_name(blade_a);
-            let name_b = algebra.blade_name(blade_b);
+            let name_a = algebra.blade_index_name(blade_a);
+            let name_b = algebra.blade_index_name(blade_b);
 
             let term = if coef == 1 {
                 format!("{}*{}", name_a, name_b)
@@ -237,8 +237,8 @@ pub fn derive_antiproduct_constraint(grades: &[usize], algebra: &Algebra) -> Opt
         for &(a, b, coef) in contributions {
             let blade_a = Blade::from_index(a);
             let blade_b = Blade::from_index(b);
-            let name_a = algebra.blade_name(blade_a);
-            let name_b = algebra.blade_name(blade_b);
+            let name_a = algebra.blade_index_name(blade_a);
+            let name_b = algebra.blade_index_name(blade_b);
 
             let term = if coef == 1 {
                 format!("{}*{}", name_a, name_b)

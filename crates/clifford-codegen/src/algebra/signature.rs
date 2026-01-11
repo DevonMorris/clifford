@@ -333,6 +333,39 @@ impl Algebra {
             .collect::<Vec<_>>()
             .join("")
     }
+
+    /// Returns the canonical index-based name for a blade.
+    ///
+    /// This produces names compatible with the TOML parser format:
+    /// - Scalar: "s" (but scalars shouldn't be in blades section)
+    /// - Basis vectors: "e1", "e2", etc. (1-indexed)
+    /// - Higher blades: "e12", "e123", etc.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, Blade};
+    ///
+    /// let alg = Algebra::euclidean(3);
+    ///
+    /// assert_eq!(alg.blade_index_name(Blade::basis(0)), "e1");
+    /// assert_eq!(alg.blade_index_name(Blade::basis(1)), "e2");
+    /// assert_eq!(alg.blade_index_name(Blade::from_index(0b011)), "e12");
+    /// assert_eq!(alg.blade_index_name(Blade::from_index(0b111)), "e123");
+    /// ```
+    pub fn blade_index_name(&self, blade: Blade) -> String {
+        if blade.index() == 0 {
+            return "s".to_string();
+        }
+
+        // Build from 1-indexed basis indices
+        let indices: String = blade
+            .basis_vectors()
+            .map(|i| char::from_digit((i + 1) as u32, 10).unwrap())
+            .collect();
+
+        format!("e{}", indices)
+    }
 }
 
 impl Default for Algebra {

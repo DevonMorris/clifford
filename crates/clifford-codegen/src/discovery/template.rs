@@ -1,7 +1,7 @@
 //! TOML template generation for discovered entities.
 
 use super::DiscoveredEntity;
-use crate::algebra::Algebra;
+use crate::algebra::{Algebra, Blade, blades_of_grade};
 use std::io::{self, Write};
 
 /// Generates a TOML template from discovered entities.
@@ -59,6 +59,9 @@ pub fn generate_toml_template(
     // Signature section
     write_signature_section(algebra, output)?;
 
+    // Blades section - map index names to field names
+    write_blades_section(algebra, output)?;
+
     // Types section
     writeln!(
         output,
@@ -104,6 +107,43 @@ fn write_signature_section(algebra: &Algebra, output: &mut dyn Write) -> io::Res
     writeln!(output, "negative = {:?}", negative)?;
     writeln!(output, "zero = {:?}", zero)?;
     writeln!(output)?;
+
+    Ok(())
+}
+
+/// Writes the blades section of the TOML.
+///
+/// Maps index-based blade names (e1, e12, e123) to field names.
+/// This provides sensible defaults that users can customize.
+fn write_blades_section(algebra: &Algebra, output: &mut dyn Write) -> io::Result<()> {
+    writeln!(output, "[blades]")?;
+    writeln!(output, "# Map blade indices to field names")?;
+    writeln!(output, "# Format: e<indices> = \"<field_name>\"")?;
+    writeln!(output)?;
+
+    let dim = algebra.dim();
+
+    // Generate blade mappings for each grade (skip grade 0 - scalar handled separately)
+    for grade in 1..=dim {
+        let grade_name = match grade {
+            1 => "Vectors (grade 1)",
+            2 => "Bivectors (grade 2)",
+            3 => "Trivectors (grade 3)",
+            4 => "Quadvectors (grade 4)",
+            5 => "5-vectors (grade 5)",
+            6 => "6-vectors (grade 6)",
+            _ => "Higher grade",
+        };
+        writeln!(output, "# {}", grade_name)?;
+
+        for blade_index in blades_of_grade(dim, grade) {
+            let blade = Blade::from_index(blade_index);
+            let index_name = algebra.blade_index_name(blade);
+            let field_name = algebra.blade_name(blade);
+            writeln!(output, "{} = \"{}\"", index_name, field_name)?;
+        }
+        writeln!(output)?;
+    }
 
     Ok(())
 }
