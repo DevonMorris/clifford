@@ -1,0 +1,37 @@
+[package]
+name = "clifford-codegen"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87.0"
+license = "MIT"
+description = "Code generator for optimized geometric algebra types"
+keywords = ["geometric-algebra", "code-generation", "clifford-algebra"]
+categories = ["development-tools"]
+repository = "https://github.com/DevonMorris/clifford"
+
+[lints.rust]
+warnings = "deny"
+missing_docs = "deny"
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+missing_docs_in_private_items = "deny"
+uninlined_format_args = "allow"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+proc-macro2 = "1"
+quote = "1"
+serde = { version = "1", features = ["derive"] }
+symbolica = "1.2"
+thiserror = "2"
+toml = "0.8"
+
+[[bin]]
+name = "clifford-codegen"
+path = "src/main.rs"
+
+[dev-dependencies]
+proptest = "1"
+clifford = { path = "../.." }
