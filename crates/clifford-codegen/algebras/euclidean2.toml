@@ -31,7 +31,6 @@ fields = ["x", "y"]
 norm = "euclidean"
 
 [types.Vector.constraints.nonzero]
-condition = "norm_squared > epsilon"
 
 [types.Bivector]
 grades = [2]
