@@ -2762,6 +2762,18 @@ mod tests {
         });
     }
 
+    #[test]
+    fn rotor_inverse_roundtrip() {
+        proptest!(|(r in any::<Rotor<f64>>(), p in any::<Point<f64>>())| {
+            let q = r.transform_point(&p);
+            let p_back = r.inverse().transform_point(&q);
+
+            prop_assert!(abs_diff_eq!(p.x(), p_back.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.y(), p_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p.z(), p_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+        });
+    }
+
     // ========================================================================
     // Dilator tests
     // ========================================================================
@@ -2807,6 +2819,22 @@ mod tests {
         proptest!(|(d in any::<Dilator<f64>>(), p in any::<Point<f64>>())| {
             let q = d.transform_point(&p);
             prop_assert!(q.is_null(ABS_DIFF_EQ_EPS));
+        });
+    }
+
+    #[test]
+    fn dilator_compose_matches_sequential() {
+        proptest!(|(d1 in any::<Dilator<f64>>(), d2 in any::<Dilator<f64>>(), p in any::<Point<f64>>())| {
+            // For same-center dilators: d1.compose(d2) should equal sequential application
+            // Create d2 with same center as d1
+            let d2_same_center = Dilator::from_center_scale(&d1.center(), d2.scale());
+
+            let q_seq = d2_same_center.transform_point(&d1.transform_point(&p));
+            let q_composed = d1.compose(&d2_same_center).transform_point(&p);
+
+            prop_assert!(abs_diff_eq!(q_seq.x(), q_composed.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.y(), q_composed.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q_seq.z(), q_composed.z(), epsilon = ABS_DIFF_EQ_EPS));
         });
     }
 }
@@ -3259,6 +3287,15 @@ impl<T: Float> Rotor<T> {
         Self(self.0.reverse())
     }
 
+    /// Returns the inverse of this rotor.
+    ///
+    /// For a unit rotor, this equals the reverse.
+    /// For non-unit rotors, this properly scales by the norm squared.
+    #[inline]
+    pub fn inverse(&self) -> Self {
+        Self(self.0.inverse())
+    }
+
     /// Composes two rotors: `self` applied first, then `other`.
     ///
     /// `a.compose(&b).transform(x) == b.transform(a.transform(x))`
@@ -3616,7 +3653,13 @@ impl<T: Float> Dilator<T> {
 
     /// Composes two dilators with the same center.
     ///
-    /// Note: Only valid if both dilators have the same center.
+    /// # Panics
+    ///
+    /// Panics in debug builds if the dilators have different centers.
+    ///
+    /// # Note
+    ///
+    /// Only valid if both dilators have the same center.
     /// For dilators with different centers, use sequential transformation.
     ///
     /// # Example
@@ -3632,6 +3675,12 @@ impl<T: Float> Dilator<T> {
     /// ```
     #[inline]
     pub fn compose(&self, other: &Self) -> Self {
+        debug_assert!(
+            T::abs_diff_eq(&self.cx, &other.cx, T::default_epsilon())
+                && T::abs_diff_eq(&self.cy, &other.cy, T::default_epsilon())
+                && T::abs_diff_eq(&self.cz, &other.cz, T::default_epsilon()),
+            "Dilator::compose requires both dilators to have the same center"
+        );
         // For same-center dilators, scales multiply
         Self {
             scale: self.scale * other.scale,
