@@ -18,6 +18,16 @@ This PRD is broken into four sub-PRDs, one per algebra:
 
 Each sub-PRD should be implemented as a separate PR with full test coverage before proceeding to the next.
 
+### Note on Existing TOML Files
+
+The `algebras/` directory contains TOML files created during PRD-14 as **test fixtures for the codegen tool**. These files may differ from the specifications in these PRDs because:
+
+1. **Module paths**: Test files use `generated::*` paths; PRDs specify actual `specialized/*` paths
+2. **Options**: Test files enable all generation; PRDs disable `generate_arbitrary` (hand-written wrapper types needed)
+3. **Constraint format**: PRDs use simplified notation for clarity; implementation uses actual parser format
+
+During implementation, the existing TOMLs will be **updated or replaced** to match these PRD specifications. The PRDs describe the desired end state, not the current test fixtures.
+
 ## Background
 
 The clifford-codegen framework (PRD-14) provides automatic generation of geometric algebra types, products, and traits from TOML specifications. We now want to migrate the existing hand-rolled implementations in `specialized/euclidean` and `specialized/projective` to use generated code. This provides:
