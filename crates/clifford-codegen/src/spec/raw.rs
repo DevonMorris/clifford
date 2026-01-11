@@ -77,6 +77,32 @@ pub struct RawTypeSpec {
     /// Field to solve for when enforcing the antiproduct constraint.
     /// Only required when antiproduct_constraint differs from geometric_constraint.
     pub antiproduct_solve_for: Option<String>,
+    /// User-defined additional constraints.
+    #[serde(default)]
+    pub constraints: Vec<RawUserConstraint>,
+}
+
+/// Raw user-defined constraint.
+#[derive(Debug, Deserialize, Clone)]
+pub struct RawUserConstraint {
+    /// Constraint name (e.g., "unit", "normalized").
+    pub name: String,
+    /// Documentation.
+    pub description: Option<String>,
+    /// Constraint expression (e.g., "s*s + e12*e12 + e13*e13 + e23*e23 = 1").
+    pub expression: String,
+    /// Field to solve for. If present, this constraint reduces the parameter count.
+    pub solve_for: Option<String>,
+    /// Sign convention for ± ambiguity: "positive" (default) or "negative".
+    #[serde(default = "default_positive")]
+    pub sign: String,
+    /// Enforcement method to generate (e.g., "normalize").
+    pub enforce: Option<String>,
+}
+
+/// Default sign convention.
+fn default_positive() -> String {
+    "positive".to_string()
 }
 
 /// Raw products section.

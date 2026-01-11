@@ -7,8 +7,8 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade};
-use crate::spec::{AlgebraSpec, TypeSpec};
-use crate::symbolic::{ConstraintSolver, SolveResult};
+use crate::spec::{AlgebraSpec, SignConvention, TypeSpec};
+use crate::symbolic::{ConstraintSolver, SolutionType, SolveResult};
 
 /// Generates Rust struct definitions for algebra types.
 ///
@@ -347,6 +347,28 @@ impl<'a> TypeGenerator<'a> {
             }
         }
 
+        // Solve user-defined constraints with solve_for
+        for user_constraint in &ty.constraints {
+            if let Some(ref solve_for) = user_constraint.solve_for {
+                let positive_root = user_constraint.sign == SignConvention::Positive;
+                match solver.solve_with_sign(&user_constraint.expression, solve_for, positive_root)
+                {
+                    Ok(solution) => solutions.push((solve_for.clone(), solution)),
+                    Err(e) => {
+                        let error_msg = format!(
+                            "/* user constraint '{}' solve_for failed: {} */",
+                            user_constraint.name, e
+                        );
+                        let unchecked = self.generate_new_unchecked(ty);
+                        return quote! {
+                            #[doc = #error_msg]
+                            #unchecked
+                        };
+                    }
+                }
+            }
+        }
+
         if solutions.is_empty() {
             // No solutions - generate simple constructor
             return self.generate_simple_constructor(ty);
@@ -402,12 +424,20 @@ impl<'a> TypeGenerator<'a> {
     }
 
     /// Generates `new()` that computes all solved-for fields.
+    ///
+    /// For quadratic constraints (involving sqrt), returns `Option<Self>` since
+    /// the sqrt argument may be negative for some inputs.
     fn generate_new_with_solve_multi(
         &self,
         ty: &TypeSpec,
         solutions: &[(String, SolveResult)],
     ) -> TokenStream {
         let solve_for_names: Vec<&str> = solutions.iter().map(|(name, _)| name.as_str()).collect();
+
+        // Check if any solution requires sqrt (quadratic)
+        let has_quadratic = solutions
+            .iter()
+            .any(|(_, sol)| sol.solution_type == SolutionType::Quadratic);
 
         // Parameters: all fields except solve_for fields
         let params: Vec<TokenStream> = ty
@@ -441,20 +471,52 @@ impl<'a> TypeGenerator<'a> {
                     .parse()
                     .unwrap_or_else(|_| quote! { T::zero() });
 
-                if let Some(ref divisor) = solution.divisor {
-                    let divisor_ident: TokenStream =
-                        divisor.parse().unwrap_or_else(|_| quote! { T::one() });
-
-                    quote! {
-                        let #solve_for_ident = if (#divisor_ident).abs() > T::epsilon() {
-                            (#numerator_expr) / (#divisor_ident)
+                match solution.solution_type {
+                    SolutionType::Quadratic => {
+                        // Quadratic: var = sqrt(expr)
+                        if has_quadratic {
+                            let sign_expr = if solution.positive_root {
+                                quote! { sqrt_arg.sqrt() }
+                            } else {
+                                quote! { -sqrt_arg.sqrt() }
+                            };
+                            quote! {
+                                let sqrt_arg = #numerator_expr;
+                                if sqrt_arg < T::zero() {
+                                    return None; // No real solution
+                                }
+                                let #solve_for_ident = #sign_expr;
+                            }
                         } else {
-                            T::zero() // Canonical value for degenerate case
-                        };
+                            // Shouldn't happen, but handle gracefully
+                            let sign_expr = if solution.positive_root {
+                                quote! { (#numerator_expr).sqrt() }
+                            } else {
+                                quote! { -(#numerator_expr).sqrt() }
+                            };
+                            quote! {
+                                let #solve_for_ident = #sign_expr;
+                            }
+                        }
                     }
-                } else {
-                    quote! {
-                        let #solve_for_ident = #numerator_expr;
+                    SolutionType::Linear => {
+                        // Linear: var = expr / divisor
+                        if let Some(ref divisor) = solution.divisor {
+                            let divisor_ident: TokenStream =
+                                divisor.parse().unwrap_or_else(|_| quote! { T::one() });
+
+                            quote! {
+                                let #solve_for_ident = if (#divisor_ident).abs() > T::epsilon() {
+                                    (#numerator_expr) / (#divisor_ident)
+                                } else {
+                                    T::zero() // Canonical value for degenerate case
+                                };
+                            }
+                        } else {
+                            quote! {
+                                let #solve_for_ident = #numerator_expr;
+                            }
+                        }
                     }
                 }
             })
@@ -462,20 +524,41 @@ impl<'a> TypeGenerator<'a> {
 
         // Generate doc comment
         let solve_for_list = solve_for_names.join("`, `");
-        let doc = format!(
-            "Creates a new element from {} independent coefficients.\n\n\
-             The `{}` coefficient(s) are computed from geometric constraints.\n\
-             When divisors are zero (degenerate case), computed values default to zero.",
-            ty.fields.len() - solutions.len(),
-            solve_for_list
-        );
 
-        quote! {
-            #[doc = #doc]
-            #[inline]
-            pub fn new(#(#params),*) -> Self {
-                #(#compute_exprs)*
-                Self { #(#field_inits),* }
+        if has_quadratic {
+            let doc = format!(
+                "Creates a new element from {} independent coefficients.\n\n\
+                 The `{}` coefficient(s) are computed from geometric constraints.\n\n\
+                 Returns `None` if the constraint cannot be satisfied (e.g., when the\n\
+                 sqrt argument would be negative).",
+                ty.fields.len() - solutions.len(),
+                solve_for_list
+            );
+
+            quote! {
+                #[doc = #doc]
+                #[inline]
+                pub fn new(#(#params),*) -> Option<Self> {
+                    #(#compute_exprs)*
+                    Some(Self { #(#field_inits),* })
+                }
+            }
+        } else {
+            let doc = format!(
+                "Creates a new element from {} independent coefficients.\n\n\
+                 The `{}` coefficient(s) are computed from geometric constraints.\n\
+                 When divisors are zero (degenerate case), computed values default to zero.",
+                ty.fields.len() - solutions.len(),
+                solve_for_list
+            );
+
+            quote! {
+                #[doc = #doc]
+                #[inline]
+                pub fn new(#(#params),*) -> Self {
+                    #(#compute_exprs)*
+                    Self { #(#field_inits),* }
+                }
             }
         }
     }
@@ -668,6 +751,7 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
+    /// Generates the zero() method for a type.
     fn generate_zero(&self, ty: &TypeSpec) -> TokenStream {
         let zeros: Vec<TokenStream> = ty.fields.iter().map(|_| quote! { T::zero() }).collect();
         let constructor = Self::constructor_name(ty);

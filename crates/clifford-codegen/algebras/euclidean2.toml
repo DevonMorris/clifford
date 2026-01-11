@@ -27,10 +27,6 @@ grades = [1]
 description = "Grade-1 vector"
 fields = ["x", "y"]
 
-[types.Vector.constraints.unit]
-
-[types.Vector.constraints.nonzero]
-
 [types.Bivector]
 grades = [2]
 description = "Grade-2 pseudoscalar"
@@ -40,8 +36,6 @@ fields = ["xy"]
 grades = [0, 2]
 description = "2D rotation element (complex number)"
 fields = ["s", "xy"]
-
-[types.Rotor.constraints.unit]
 
 [types.Even]
 grades = [0, 2]

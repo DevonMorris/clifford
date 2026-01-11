@@ -137,4 +137,17 @@ pub enum ParseError {
         /// The type name.
         type_name: String,
     },
+
+    /// Invalid sign convention in user constraint.
+    #[error(
+        "type '{type_name}' constraint '{constraint_name}' has invalid sign '{sign}' (expected 'positive' or 'negative')"
+    )]
+    InvalidSignConvention {
+        /// The type name.
+        type_name: String,
+        /// The constraint name.
+        constraint_name: String,
+        /// The invalid sign value.
+        sign: String,
+    },
 }

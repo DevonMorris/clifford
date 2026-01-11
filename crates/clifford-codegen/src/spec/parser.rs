@@ -10,9 +10,9 @@ use crate::discovery::{ProductType, infer_all_products};
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
-    SignatureSpec, TypeSpec,
+    SignConvention, SignatureSpec, TypeSpec, UserConstraint, normalize_constraint_expr,
 };
-use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec};
+use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec, RawUserConstraint};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -319,7 +319,7 @@ fn parse_type(
 
     // Check: if constraints are independent, both solve_for fields must differ
     let constraints_independent = match (&raw.geometric_constraint, &raw.antiproduct_constraint) {
-        (Some(gc), Some(ac)) => gc != ac,
+        (Some(gc), Some(ac)) => normalize_constraint_expr(gc) != normalize_constraint_expr(ac),
         _ => false,
     };
 
@@ -340,6 +340,9 @@ fn parse_type(
         }
     }
 
+    // Parse and validate user constraints
+    let constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
+
     Ok(TypeSpec {
         name: name.to_string(),
         grades: raw.grades.clone(),
@@ -350,7 +353,87 @@ fn parse_type(
         antiproduct_constraint: raw.antiproduct_constraint.clone(),
         geometric_solve_for: raw.geometric_solve_for.clone(),
         antiproduct_solve_for: raw.antiproduct_solve_for.clone(),
+        constraints,
     })
+}
+
+/// Parses and validates user-defined constraints.
+fn parse_user_constraints(
+    raw_constraints: &[RawUserConstraint],
+    fields: &[FieldSpec],
+    type_name: &str,
+) -> Result<Vec<UserConstraint>, ParseError> {
+    let mut constraints = Vec::with_capacity(raw_constraints.len());
+
+    for raw in raw_constraints {
+        // Validate solve_for field if present
+        if let Some(ref solve_for) = raw.solve_for {
+            let valid_field = fields.iter().any(|f| &f.name == solve_for);
+            if !valid_field {
+                return Err(ParseError::InvalidSolveFor {
+                    type_name: type_name.to_string(),
+                    field: solve_for.clone(),
+                });
+            }
+        }
+
+        // Parse sign convention
+        let sign = match raw.sign.to_lowercase().as_str() {
+            "positive" => SignConvention::Positive,
+            "negative" => SignConvention::Negative,
+            _ => {
+                return Err(ParseError::InvalidSignConvention {
+                    type_name: type_name.to_string(),
+                    constraint_name: raw.name.clone(),
+                    sign: raw.sign.clone(),
+                });
+            }
+        };
+
+        // Detect if constraint has domain restrictions
+        // A constraint has domain restrictions if solving requires sqrt
+        // (detected by quadratic terms in the expression)
+        let has_domain_restriction = detect_domain_restriction(&raw.expression, &raw.solve_for);
+
+        constraints.push(UserConstraint {
+            name: raw.name.clone(),
+            description: raw.description.clone(),
+            expression: raw.expression.clone(),
+            solve_for: raw.solve_for.clone(),
+            sign,
+            enforce: raw.enforce.clone(),
+            has_domain_restriction,
+        });
+    }
+
+    Ok(constraints)
+}
+
+/// Detects if a constraint expression has domain restrictions when solved for a variable.
+///
+/// Returns true if:
+/// - The constraint involves squared terms of the solve_for variable
+/// - Solving would require taking a square root (potentially undefined for some inputs)
+fn detect_domain_restriction(expression: &str, solve_for: &Option<String>) -> bool {
+    let Some(var) = solve_for else {
+        return false;
+    };
+
+    // Check if the variable appears squared in the expression
+    // Patterns: "var*var", "var^2", "var**2"
+    let squared_patterns = [
+        format!("{}*{}", var, var),
+        format!("{}^2", var),
+        format!("{}**2", var),
+    ];
+
+    for pattern in &squared_patterns {
+        if expression.contains(pattern) {
+            return true;
+        }
+    }
+
+    false
 }
 
 /// Generates default field specs from blade indices.
@@ -950,5 +1033,115 @@ mod tests {
         assert_eq!(spec.signature.q, 1);
         assert_eq!(spec.signature.r, 0);
         assert_eq!(spec.signature.dim(), 5);
+    }
+
+    #[test]
+    fn parse_user_constraints() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+            zero = ["e0"]
+
+            [types.Motor]
+            grades = [0, 2, 4]
+            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
+            geometric_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
+            geometric_solve_for = "e0123"
+
+            [[types.Motor.constraints]]
+            name = "unit"
+            expression = "s*s + e12*e12 + e13*e13 + e23*e23 = 1"
+            solve_for = "s"
+            sign = "positive"
+            "#,
+        )
+        .unwrap();
+
+        let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
+        assert_eq!(motor.constraints.len(), 1);
+        assert_eq!(motor.constraints[0].name, "unit");
+        assert_eq!(motor.constraints[0].solve_for, Some("s".to_string()));
+        assert_eq!(motor.constraints[0].sign, SignConvention::Positive);
+        assert!(motor.constraints[0].has_domain_restriction);
+    }
+
+    #[test]
+    fn parse_user_constraint_with_enforce() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+
+            [[types.Rotor.constraints]]
+            name = "unit"
+            description = "Unit rotor constraint"
+            expression = "s*s + xy*xy = 1"
+            enforce = "normalize"
+            "#,
+        )
+        .unwrap();
+
+        let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
+        assert_eq!(rotor.constraints.len(), 1);
+        assert_eq!(rotor.constraints[0].name, "unit");
+        assert_eq!(rotor.constraints[0].solve_for, None);
+        assert_eq!(rotor.constraints[0].enforce, Some("normalize".to_string()));
+    }
+
+    #[test]
+    fn reject_invalid_sign_convention() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+
+            [[types.Rotor.constraints]]
+            name = "unit"
+            expression = "s*s + xy*xy = 1"
+            solve_for = "s"
+            sign = "invalid"
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::InvalidSignConvention { .. })
+        ));
+    }
+
+    #[test]
+    fn detect_domain_restriction() {
+        // Test the detection function directly
+        assert!(super::detect_domain_restriction(
+            "s*s + b*b = 1",
+            &Some("s".to_string())
+        ));
+        assert!(super::detect_domain_restriction(
+            "x^2 + y = 1",
+            &Some("x".to_string())
+        ));
+        assert!(!super::detect_domain_restriction(
+            "2*s*b = 0",
+            &Some("s".to_string())
+        ));
+        assert!(!super::detect_domain_restriction("s*s = 1", &None));
     }
 }

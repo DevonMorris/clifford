@@ -33,5 +33,5 @@ mod verify;
 
 pub use parser::{ConstraintExpr, ConstraintParser, ParseError};
 pub use product::{ProductKind, SymbolicField, SymbolicProduct};
-pub use solver::{ConstraintSolver, SolveError, SolveResult};
+pub use solver::{ConstraintSolver, SolutionType, SolveError, SolveResult};
 pub use verify::{ConstraintVerifier, VerificationResult};

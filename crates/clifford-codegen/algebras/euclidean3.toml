@@ -31,16 +31,10 @@ grades = [1]
 description = "Grade-1 vector"
 fields = ["x", "y", "z"]
 
-[types.Vector.constraints.unit]
-
-[types.Vector.constraints.nonzero]
-
 [types.Bivector]
 grades = [2]
 description = "Grade-2 bivector (oriented plane)"
 fields = ["xy", "xz", "yz"]
-
-[types.Bivector.constraints.unit]
 
 [types.Trivector]
 grades = [3]
@@ -51,8 +45,6 @@ fields = ["xyz"]
 grades = [0, 2]
 description = "3D rotation element"
 fields = ["s", "xy", "xz", "yz"]
-
-[types.Rotor.constraints.unit]
 
 [types.Even]
 grades = [0, 2]

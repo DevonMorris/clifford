@@ -259,13 +259,13 @@ pub fn derive_antiproduct_constraint(grades: &[usize], algebra: &Algebra) -> Opt
     let mut expr = String::new();
     for (i, term) in terms.iter().enumerate() {
         if i == 0 {
-            expr.push_str(&term);
+            expr.push_str(term);
         } else if let Some(stripped) = term.strip_prefix('-') {
             expr.push_str(" - ");
             expr.push_str(stripped);
         } else {
             expr.push_str(" + ");
-            expr.push_str(&term);
+            expr.push_str(term);
         }
     }
 
