@@ -195,7 +195,11 @@ impl<T: Float> Point<T> {
         let r_sq = self.e1 * self.e1 + self.e2 * self.e2 + self.e3 * self.e3;
         let ep_sq_minus_em_sq = (self.ep - self.em) * (self.ep + self.em);
         let norm_sq = r_sq + ep_sq_minus_em_sq;
-        norm_sq.abs() < epsilon
+
+        // Use relative tolerance scaled by magnitude for numerical stability
+        // with large coordinates
+        let scale = T::one() + r_sq;
+        norm_sq.abs() < epsilon * scale
     }
 
     /// Euclidean distance to another point.
