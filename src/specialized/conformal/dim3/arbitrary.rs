@@ -18,7 +18,7 @@
 //! }
 //! ```
 
-use super::{Circle, Dipole, Line, Plane, Point, Sphere};
+use super::{Circle, Dipole, FlatPoint, Line, Plane, Point, Sphere};
 use crate::scalar::Float;
 use core::fmt::Debug;
 use proptest::arbitrary::Arbitrary;
@@ -36,6 +36,21 @@ impl<T: Float + Debug> Arbitrary for Point<T> {
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
         (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
             .prop_map(|(x, y, z)| Point::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+            .boxed()
+    }
+}
+
+// ============================================================================
+// FlatPoint Arbitrary implementation
+// ============================================================================
+
+impl<T: Float + Debug> Arbitrary for FlatPoint<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
+            .prop_map(|(x, y, z)| FlatPoint::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
             .boxed()
     }
 }

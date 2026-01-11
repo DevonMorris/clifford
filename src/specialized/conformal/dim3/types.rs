@@ -1644,6 +1644,294 @@ impl<T: Float> UlpsEq for Dipole<T> {
 }
 
 // ============================================================================
+// Flat Point type
+// ============================================================================
+
+/// A flat point in 3D CGA (grade-2 bivector).
+///
+/// Represents a point without radius/weight information, analogous to
+/// a point in Projective Geometric Algebra (PGA).
+///
+/// # Representation
+///
+/// A flat point has the form:
+/// ```text
+/// p = pₓ·e₁∞ + pᵧ·e₂∞ + pᵤ·e₃∞ + pᵥ·e₀∞
+/// ```
+///
+/// where each component contains the factor e∞ (point at infinity).
+///
+/// # Relationship to Round Points
+///
+/// - `FlatPoint = RoundPoint ∧ e∞`
+/// - `RoundPoint = FlatPoint ⌋ e₀` (left contraction)
+///
+/// Flat points are useful for:
+/// - Line representation (outer product of flat points)
+/// - Plane representation (outer product of flat points)
+/// - When only position matters, not conformal weight
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, FlatPoint};
+///
+/// // Create a flat point at (1, 2, 3)
+/// let fp = FlatPoint::<f64>::new(1.0, 2.0, 3.0);
+///
+/// // Coordinates round-trip
+/// assert!((fp.x() - 1.0).abs() < 1e-10);
+/// assert!((fp.y() - 2.0).abs() < 1e-10);
+/// assert!((fp.z() - 3.0).abs() < 1e-10);
+///
+/// // Convert to round point
+/// let rp: Point<f64> = fp.to_round();
+/// assert!((rp.x() - 1.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Flat_point>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct FlatPoint<T: Float> {
+    /// Coefficient of e₁∞ (x-coordinate times e∞).
+    e1i: T,
+    /// Coefficient of e₂∞ (y-coordinate times e∞).
+    e2i: T,
+    /// Coefficient of e₃∞ (z-coordinate times e∞).
+    e3i: T,
+    /// Coefficient of e₀∞ (weight times e∞).
+    e0i: T,
+}
+
+impl<T: Float> FlatPoint<T> {
+    /// Creates a flat point at Euclidean coordinates (x, y, z).
+    ///
+    /// Creates a unit-weight flat point where `e0i = 1`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::FlatPoint;
+    ///
+    /// let fp = FlatPoint::<f64>::new(1.0, 2.0, 3.0);
+    /// assert!((fp.x() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn new(x: T, y: T, z: T) -> Self {
+        // FlatPoint = RoundPoint ∧ e∞
+        // For unit weight: e1i = x, e2i = y, e3i = z, e0i = 1
+        Self {
+            e1i: x,
+            e2i: y,
+            e3i: z,
+            e0i: T::one(),
+        }
+    }
+
+    /// Creates a flat point from raw components (unchecked).
+    ///
+    /// # Panics
+    ///
+    /// The accessor methods [`x()`](Self::x), [`y()`](Self::y), [`z()`](Self::z)
+    /// will panic or return infinity if the point has zero weight (i.e., `e0i = 0`).
+    /// Points created via [`FlatPoint::new`] always have unit weight.
+    #[inline]
+    pub fn from_components_unchecked(e1i: T, e2i: T, e3i: T, e0i: T) -> Self {
+        Self { e1i, e2i, e3i, e0i }
+    }
+
+    /// Creates a flat point from a round point.
+    ///
+    /// `FlatPoint = RoundPoint ∧ e∞`
+    ///
+    /// For a round point P = x·e₁ + y·e₂ + z·e₃ + e₀ + ½r²·e∞,
+    /// the outer product with e∞ gives a flat point with:
+    /// - e1i = x (from x·e₁ ∧ e∞)
+    /// - e2i = y (from y·e₂ ∧ e∞)
+    /// - e3i = z (from z·e₃ ∧ e∞)
+    /// - e0i = weight (from e₀ ∧ e∞)
+    #[inline]
+    pub fn from_round(p: &Point<T>) -> Self {
+        // The round point already stores x, y, z directly in e1, e2, e3
+        // The weight is em - ep (which equals 1 for unit-weight points)
+        Self {
+            e1i: p.e1(),
+            e2i: p.e2(),
+            e3i: p.e3(),
+            e0i: p.weight(),
+        }
+    }
+
+    /// The origin as a flat point.
+    #[inline]
+    pub fn origin() -> Self {
+        Self::new(T::zero(), T::zero(), T::zero())
+    }
+
+    /// Extracts the x-coordinate.
+    ///
+    /// # Panics
+    ///
+    /// Panics or returns infinity if the flat point has zero weight.
+    #[inline]
+    pub fn x(&self) -> T {
+        self.e1i / self.e0i
+    }
+
+    /// Extracts the y-coordinate.
+    ///
+    /// # Panics
+    ///
+    /// Panics or returns infinity if the flat point has zero weight.
+    #[inline]
+    pub fn y(&self) -> T {
+        self.e2i / self.e0i
+    }
+
+    /// Extracts the z-coordinate.
+    ///
+    /// # Panics
+    ///
+    /// Panics or returns infinity if the flat point has zero weight.
+    #[inline]
+    pub fn z(&self) -> T {
+        self.e3i / self.e0i
+    }
+
+    /// Returns the weight (e₀∞ component).
+    ///
+    /// For flat points created via [`FlatPoint::new`], this is always 1.
+    #[inline]
+    pub fn weight(&self) -> T {
+        self.e0i
+    }
+
+    /// Normalizes the flat point so weight = 1.
+    ///
+    /// Returns `None` for ideal points (at infinity) where weight ≈ 0.
+    pub fn normalize(&self) -> Option<Self> {
+        if self.e0i.abs() < T::epsilon() {
+            None // Ideal point (at infinity)
+        } else {
+            Some(Self {
+                e1i: self.e1i / self.e0i,
+                e2i: self.e2i / self.e0i,
+                e3i: self.e3i / self.e0i,
+                e0i: T::one(),
+            })
+        }
+    }
+
+    /// Returns true if this is an ideal flat point (at infinity).
+    #[inline]
+    pub fn is_ideal(&self, epsilon: T) -> bool {
+        self.e0i.abs() < epsilon
+    }
+
+    /// Converts to a round point.
+    ///
+    /// `RoundPoint = FlatPoint ⌋ e₀`
+    ///
+    /// # Panics
+    ///
+    /// Panics if the flat point has zero weight.
+    pub fn to_round(&self) -> Point<T> {
+        let (x, y, z) = (self.x(), self.y(), self.z());
+        Point::new(x, y, z)
+    }
+
+    /// Accessor for `e₁∞` component.
+    #[inline]
+    pub fn e1i(&self) -> T {
+        self.e1i
+    }
+
+    /// Accessor for `e₂∞` component.
+    #[inline]
+    pub fn e2i(&self) -> T {
+        self.e2i
+    }
+
+    /// Accessor for `e₃∞` component.
+    #[inline]
+    pub fn e3i(&self) -> T {
+        self.e3i
+    }
+
+    /// Accessor for `e₀∞` component.
+    #[inline]
+    pub fn e0i(&self) -> T {
+        self.e0i
+    }
+}
+
+impl<T: Float> Default for FlatPoint<T> {
+    fn default() -> Self {
+        Self::origin()
+    }
+}
+
+impl<T: Float> From<Point<T>> for FlatPoint<T> {
+    fn from(p: Point<T>) -> Self {
+        FlatPoint::from_round(&p)
+    }
+}
+
+impl<T: Float> From<FlatPoint<T>> for Point<T> {
+    fn from(fp: FlatPoint<T>) -> Self {
+        fp.to_round()
+    }
+}
+
+impl<T: Float> AbsDiffEq for FlatPoint<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.e1i, &other.e1i, epsilon)
+            && T::abs_diff_eq(&self.e2i, &other.e2i, epsilon)
+            && T::abs_diff_eq(&self.e3i, &other.e3i, epsilon)
+            && T::abs_diff_eq(&self.e0i, &other.e0i, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for FlatPoint<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.e1i, &other.e1i, epsilon, max_relative)
+            && T::relative_eq(&self.e2i, &other.e2i, epsilon, max_relative)
+            && T::relative_eq(&self.e3i, &other.e3i, epsilon, max_relative)
+            && T::relative_eq(&self.e0i, &other.e0i, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for FlatPoint<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.e1i, &other.e1i, epsilon, max_ulps)
+            && T::ulps_eq(&self.e2i, &other.e2i, epsilon, max_ulps)
+            && T::ulps_eq(&self.e3i, &other.e3i, epsilon, max_ulps)
+            && T::ulps_eq(&self.e0i, &other.e0i, epsilon, max_ulps)
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -2243,5 +2531,130 @@ mod tests {
         let p = Point::new(1.0, 2.0, 3.0);
         let dipole = Dipole::from_two_points(&p, &p);
         assert!(!dipole.is_real(ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // FlatPoint tests
+    // ========================================================================
+
+    proptest! {
+        #[test]
+        fn flat_point_roundtrip_coordinates(
+            x in -100.0f64..100.0,
+            y in -100.0f64..100.0,
+            z in -100.0f64..100.0,
+        ) {
+            let fp = FlatPoint::new(x, y, z);
+            prop_assert!(abs_diff_eq!(fp.x(), x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(fp.y(), y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(fp.z(), z, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn flat_point_unit_weight(
+            x in -100.0f64..100.0,
+            y in -100.0f64..100.0,
+            z in -100.0f64..100.0,
+        ) {
+            let fp = FlatPoint::new(x, y, z);
+            prop_assert!(abs_diff_eq!(fp.weight(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn flat_round_roundtrip(
+            x in -100.0f64..100.0,
+            y in -100.0f64..100.0,
+            z in -100.0f64..100.0,
+        ) {
+            let rp = Point::new(x, y, z);
+            let fp = FlatPoint::from_round(&rp);
+            let rp2 = fp.to_round();
+
+            prop_assert!(abs_diff_eq!(rp.x(), rp2.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rp.y(), rp2.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(rp.z(), rp2.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn round_flat_roundtrip(
+            x in -100.0f64..100.0,
+            y in -100.0f64..100.0,
+            z in -100.0f64..100.0,
+        ) {
+            let fp = FlatPoint::new(x, y, z);
+            let rp = fp.to_round();
+            let fp2 = FlatPoint::from_round(&rp);
+
+            prop_assert!(abs_diff_eq!(fp.x(), fp2.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(fp.y(), fp2.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(fp.z(), fp2.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn flat_point_normalize_preserves_coordinates(
+            x in -100.0f64..100.0,
+            y in -100.0f64..100.0,
+            z in -100.0f64..100.0,
+            scale in 0.1f64..10.0,
+        ) {
+            // Create a scaled flat point
+            let fp = FlatPoint::from_components_unchecked(x * scale, y * scale, z * scale, scale);
+            let normalized = fp.normalize().expect("non-zero weight");
+
+            prop_assert!(abs_diff_eq!(normalized.x(), x, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(normalized.y(), y, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(normalized.z(), z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(normalized.weight(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    #[test]
+    fn flat_point_origin() {
+        let fp = FlatPoint::<f64>::origin();
+        assert!(abs_diff_eq!(fp.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.weight(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn flat_point_is_ideal_at_infinity() {
+        // An ideal flat point has zero weight
+        let ideal = FlatPoint::from_components_unchecked(1.0, 0.0, 0.0, 0.0f64);
+        assert!(ideal.is_ideal(ABS_DIFF_EQ_EPS));
+
+        // A normal flat point is not ideal
+        let normal = FlatPoint::new(1.0, 2.0, 3.0);
+        assert!(!normal.is_ideal(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn flat_point_from_round_preserves_coordinates() {
+        let rp = Point::<f64>::new(1.0, 2.0, 3.0);
+        let fp = FlatPoint::from_round(&rp);
+
+        assert!(abs_diff_eq!(fp.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn flat_point_from_trait() {
+        let rp = Point::<f64>::new(1.0, 2.0, 3.0);
+        let fp: FlatPoint<f64> = rp.into();
+
+        assert!(abs_diff_eq!(fp.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(fp.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn flat_point_to_round_trait() {
+        let fp = FlatPoint::<f64>::new(1.0, 2.0, 3.0);
+        let rp: Point<f64> = fp.into();
+
+        assert!(abs_diff_eq!(rp.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rp.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rp.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

@@ -8,6 +8,7 @@
 //! | Type | Grade | Description |
 //! |------|-------|-------------|
 //! | [`Point`] | 1 | Round point (null vector) |
+//! | [`FlatPoint`] | 2 | Flat point (PGA analog) |
 //! | [`Dipole`] | 2 | Point pair (two points as bivector) |
 //! | [`Circle`] | 3 | Circle (intersection of two spheres) |
 //! | [`Line`] | 3 | Flat circle (circle through infinity) |
@@ -35,7 +36,7 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::conformal::dim3::{Point, Plane, Line};
+//! use clifford::specialized::conformal::dim3::{Point, FlatPoint, Plane, Line};
 //!
 //! // Create a point
 //! let p = Point::<f64>::new(1.0, 2.0, 3.0);
