@@ -67,16 +67,8 @@ pub struct RawTypeSpec {
     pub fields: Vec<String>,
     /// Type this aliases.
     pub alias_of: Option<String>,
-    /// Constraints.
-    #[serde(default)]
-    pub constraints: HashMap<String, RawConstraint>,
-}
-
-/// Raw constraint specification.
-#[derive(Debug, Deserialize, Default)]
-pub struct RawConstraint {
-    /// Condition expression.
-    pub condition: Option<String>,
+    /// Constraint expression (e.g., "s * s + xy * xy = 1" for unit rotors).
+    pub constraint: Option<String>,
 }
 
 /// Raw products section.

@@ -30,8 +30,7 @@
 //! [types.Rotor]
 //! grades = [0, 2]
 //! fields = ["s", "xy", "xz", "yz"]
-//!
-//! [types.Rotor.constraints.unit]
+//! constraint = "s * s + xy * xy + xz * xz + yz * yz = 1"  # Optional constraint
 //!
 //! [options]
 //! generate_serde = true
@@ -69,7 +68,7 @@ mod raw;
 pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
-    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
-    ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
+    AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
+    SignatureSpec, TypeSpec,
 };
 pub use parser::parse_spec;

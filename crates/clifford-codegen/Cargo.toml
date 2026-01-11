@@ -24,6 +24,7 @@ clap = { version = "4", features = ["derive"] }
 proc-macro2 = "1"
 quote = "1"
 serde = { version = "1", features = ["derive"] }
+symbolica = "1.2"
 thiserror = "2"
 toml = "0.8"
 

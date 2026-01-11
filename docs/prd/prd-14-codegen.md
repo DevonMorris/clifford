@@ -9,16 +9,18 @@ This PRD is implemented through the following sub-PRDs:
 
 | PRD | Title | Status |
 |-----|-------|--------|
-| [PRD-14.1](prd-14.1-blade-algebra.md) | Blade Algebra Engine | Draft |
-| [PRD-14.2](prd-14.2-specification.md) | Specification Format & Parser | Draft |
-| [PRD-14.3](prd-14.3-type-generation.md) | Type & Struct Generation | Draft |
-| [PRD-14.4](prd-14.4-product-generation.md) | Product Code Generation | Draft |
-| [PRD-14.5](prd-14.5-constrained-types.md) | Constrained Types (Unit, Normalized) | Draft |
-| [PRD-14.6](prd-14.6-traits-tests.md) | Trait Impls & Test Generation | Draft |
-| [PRD-14.7](prd-14.7-cli-integration.md) | CLI Tool & Build Integration | Draft |
-| [PRD-14.8](prd-14.8-constraint-engine.md) | Geometric Constraint Engine | Draft |
-| [PRD-14.9](prd-14.9-entity-discovery.md) | Entity Discovery | Draft |
-| [PRD-14.10](prd-14.10-product-inference.md) | Product Output Inference | Draft |
+| [PRD-14.1](prd-14.1-blade-algebra.md) | Blade Algebra Engine | Complete |
+| [PRD-14.2](prd-14.2-specification.md) | Specification Format & Parser | Complete |
+| [PRD-14.3](prd-14.3-type-generation.md) | Type & Struct Generation | Complete |
+| [PRD-14.4](prd-14.4-product-generation.md) | Product Code Generation | Complete |
+| [PRD-14.5](prd-14.5-constrained-types.md) | Constrained Types (Unit, Normalized) | Superseded by 14.11 |
+| [PRD-14.6](prd-14.6-traits-tests.md) | Trait Impls & Test Generation | Complete |
+| [PRD-14.7](prd-14.7-cli-integration.md) | CLI Tool & Build Integration | Complete |
+| [PRD-14.8](prd-14.8-constraint-engine.md) | Geometric Constraint Engine | Complete |
+| [PRD-14.9](prd-14.9-entity-discovery.md) | Entity Discovery | Complete |
+| [PRD-14.10](prd-14.10-product-inference.md) | Product Output Inference | Complete |
+| [PRD-14.11](prd-14.11-constraint-simplification.md) | Constraint Simplification | Complete |
+| [PRD-14.12](prd-14.12-symbolica-verification.md) | Symbolic Constraint Verification | Draft |
 
 ## Problem Statement
 

@@ -47,7 +47,10 @@ mod template;
 
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;
-pub use products::{ProductResult, ProductTable2D, ProductType, infer_all_products, infer_output_grades, infer_product};
+pub use products::{
+    ProductResult, ProductTable2D, ProductType, infer_all_products, infer_output_grades,
+    infer_product,
+};
 pub use template::generate_toml_template;
 
 use crate::algebra::{

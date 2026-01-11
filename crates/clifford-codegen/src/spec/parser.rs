@@ -9,10 +9,10 @@ use crate::discovery::{ProductType, infer_all_products};
 
 use super::error::ParseError;
 use super::ir::{
-    AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
-    ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
+    AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
+    SignatureSpec, TypeSpec,
 };
-use super::raw::{RawAlgebraSpec, RawConstraint, RawSignature, RawTypeSpec};
+use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -274,9 +274,6 @@ fn parse_type(
         }
     }
 
-    // Parse constraints
-    let constraints = parse_constraints(name, &raw.constraints)?;
-
     // Check self-alias
     if let Some(alias) = &raw.alias_of {
         if alias == name {
@@ -292,7 +289,7 @@ fn parse_type(
         description: raw.description.clone(),
         fields,
         alias_of: raw.alias_of.clone(),
-        constraints,
+        constraint: raw.constraint.clone(),
     })
 }
 
@@ -376,42 +373,6 @@ fn build_fields_from_names(
         .collect())
 }
 
-/// Parses constraint specifications.
-fn parse_constraints(
-    type_name: &str,
-    raw: &HashMap<String, RawConstraint>,
-) -> Result<Vec<ConstraintSpec>, ParseError> {
-    let mut constraints = Vec::new();
-
-    for (kind_str, raw_constraint) in raw {
-        let kind = parse_constraint_kind(type_name, kind_str)?;
-        let wrapper_name = format!("{}{}", kind.wrapper_prefix(), type_name);
-
-        constraints.push(ConstraintSpec {
-            kind,
-            wrapper_name,
-            condition: raw_constraint.condition.clone(),
-        });
-    }
-
-    Ok(constraints)
-}
-
-/// Parses a constraint kind string.
-fn parse_constraint_kind(type_name: &str, kind: &str) -> Result<ConstraintKind, ParseError> {
-    match kind {
-        "unit" => Ok(ConstraintKind::Unit),
-        "nonzero" => Ok(ConstraintKind::NonZero),
-        "normalized" => Ok(ConstraintKind::Normalized),
-        "null" => Ok(ConstraintKind::Null),
-        "ideal" => Ok(ConstraintKind::Ideal),
-        _ => Err(ParseError::UnknownConstraintKind {
-            type_name: type_name.to_string(),
-            kind: kind.to_string(),
-        }),
-    }
-}
-
 /// Infers products automatically from types.
 ///
 /// Products are always auto-inferred from the defined types.
@@ -427,18 +388,11 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         .map(|t| (t.name.clone(), t.grades.clone()))
         .collect();
 
-    // Helper to check if a type is constrained
-    let is_constrained = |name: &str| -> bool {
-        types
-            .iter()
-            .flat_map(|t| &t.constraints)
-            .any(|c| c.wrapper_name == name)
-    };
-
     // Infer products for each product type
     let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
     let outer_table = infer_all_products(&entities, ProductType::Outer, &algebra);
-    let left_contraction_table = infer_all_products(&entities, ProductType::LeftContraction, &algebra);
+    let left_contraction_table =
+        infer_all_products(&entities, ProductType::LeftContraction, &algebra);
 
     // Convert inferred products to ProductEntry format
     // Skip products that don't have matching entity types
@@ -453,7 +407,7 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
                     lhs,
                     rhs,
                     output: output.clone(),
-                    output_constrained: is_constrained(&output),
+                    output_constrained: false, // No wrapper types
                 }
             })
             .collect()
@@ -464,8 +418,8 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         outer: convert_entries(outer_table),
         left_contraction: convert_entries(left_contraction_table),
         right_contraction: vec![], // Not commonly used
-        regressive: vec![], // Not commonly used
-        scalar: vec![], // Can be derived from geometric
+        regressive: vec![],        // Not commonly used
+        scalar: vec![],            // Can be derived from geometric
     }
 }
 
@@ -562,7 +516,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_with_constraints() {
+    fn parse_with_constraint() {
         let spec = parse_spec(
             r#"
             [algebra]
@@ -583,18 +537,13 @@ mod tests {
             [types.Rotor]
             grades = [0, 2]
             fields = ["s", "xy"]
-
-            [types.Rotor.constraints.unit]
+            constraint = "s * s + xy * xy = 1"
             "#,
         )
         .unwrap();
 
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        assert_eq!(rotor.constraints.len(), 1);
-
-        let unit = &rotor.constraints[0];
-        assert_eq!(unit.kind, ConstraintKind::Unit);
-        assert_eq!(unit.wrapper_name, "UnitRotor");
+        assert_eq!(rotor.constraint, Some("s * s + xy * xy = 1".to_string()));
     }
 
     #[test]

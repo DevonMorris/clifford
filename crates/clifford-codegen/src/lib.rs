@@ -10,6 +10,7 @@
 //! - [`discovery`]: Automatic entity discovery from geometric constraints
 //! - [`spec`]: TOML specification parsing and validation
 //! - [`codegen`]: Code generation from specifications
+//! - [`symbolic`]: Symbolic constraint verification (requires `symbolic` feature)
 //!
 //! # Example
 //!
@@ -35,3 +36,4 @@ pub mod algebra;
 pub mod codegen;
 pub mod discovery;
 pub mod spec;
+pub mod symbolic;

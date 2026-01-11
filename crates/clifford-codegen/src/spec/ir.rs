@@ -82,8 +82,8 @@ pub struct TypeSpec {
     pub fields: Vec<FieldSpec>,
     /// If this type aliases another (same storage layout).
     pub alias_of: Option<String>,
-    /// Constraints (unit, nonzero, etc.).
-    pub constraints: Vec<ConstraintSpec>,
+    /// Constraint expression (e.g., "s * s + xy * xy = 1" for unit rotors).
+    pub constraint: Option<String>,
 }
 
 /// A field in a type.
@@ -95,45 +95,6 @@ pub struct FieldSpec {
     pub blade_index: usize,
     /// Grade of the blade.
     pub grade: usize,
-}
-
-/// A constraint on a type (unit, nonzero, etc.).
-#[derive(Debug, Clone)]
-pub struct ConstraintSpec {
-    /// Kind of constraint.
-    pub kind: ConstraintKind,
-    /// Generated wrapper type name (e.g., "UnitRotor").
-    pub wrapper_name: String,
-    /// Condition expression for custom constraints.
-    pub condition: Option<String>,
-}
-
-/// Kind of constraint.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ConstraintKind {
-    /// ‖x‖ = 1
-    Unit,
-    /// ‖x‖ ≠ 0
-    NonZero,
-    /// Context-dependent canonical form
-    Normalized,
-    /// x · x = 0 (null vector in CGA)
-    Null,
-    /// In ideal subspace
-    Ideal,
-}
-
-impl ConstraintKind {
-    /// Returns the prefix for the wrapper type name.
-    pub fn wrapper_prefix(&self) -> &'static str {
-        match self {
-            ConstraintKind::Unit => "Unit",
-            ConstraintKind::NonZero => "NonZero",
-            ConstraintKind::Normalized => "Normalized",
-            ConstraintKind::Null => "Null",
-            ConstraintKind::Ideal => "Ideal",
-        }
-    }
 }
 
 /// Product specifications for all product types.

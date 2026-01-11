@@ -172,20 +172,10 @@ impl<'a> TraitsGenerator<'a> {
 
         // Cross-type operations (geometric product) - only for explicit products
         for entry in &self.spec.products.geometric {
-            // Skip constrained types
-            if self.is_constrained_type(&entry.lhs) || self.is_constrained_type(&entry.rhs) {
-                continue;
-            }
             // Only generate if lhs matches this type
             if entry.lhs == ty.name {
                 if let Some(other) = self.find_type(&entry.rhs) {
-                    let output_name = if entry.output_constrained {
-                        // Get the base type for constrained outputs
-                        self.resolve_base_type_name(&entry.output)
-                    } else {
-                        entry.output.clone()
-                    };
-                    if let Some(output_type) = self.find_type(&output_name) {
+                    if let Some(output_type) = self.find_type(&entry.output) {
                         impls.push(self.generate_geometric_mul_from_entry(
                             ty,
                             other,
@@ -199,19 +189,10 @@ impl<'a> TraitsGenerator<'a> {
 
         // Outer product (using BitXor) - only for explicit products
         for entry in &self.spec.products.outer {
-            // Skip constrained types
-            if self.is_constrained_type(&entry.lhs) || self.is_constrained_type(&entry.rhs) {
-                continue;
-            }
             // Only generate if lhs matches this type
             if entry.lhs == ty.name {
                 if let Some(other) = self.find_type(&entry.rhs) {
-                    let output_name = if entry.output_constrained {
-                        self.resolve_base_type_name(&entry.output)
-                    } else {
-                        entry.output.clone()
-                    };
-                    if let Some(output_type) = self.find_type(&output_name) {
+                    if let Some(output_type) = self.find_type(&entry.output) {
                         impls.push(self.generate_outer_from_entry(ty, other, output_type, entry));
                     }
                 }
@@ -224,18 +205,6 @@ impl<'a> TraitsGenerator<'a> {
     /// Finds a TypeSpec by name.
     fn find_type(&self, name: &str) -> Option<&TypeSpec> {
         self.spec.types.iter().find(|t| t.name == name)
-    }
-
-    /// Resolves a constrained type name to its base type name.
-    fn resolve_base_type_name(&self, name: &str) -> String {
-        for ty in &self.spec.types {
-            for constraint in &ty.constraints {
-                if constraint.wrapper_name == name {
-                    return ty.name.clone();
-                }
-            }
-        }
-        name.to_string()
     }
 
     /// Generates Add implementation.
@@ -715,15 +684,7 @@ impl<'a> TraitsGenerator<'a> {
             .products
             .geometric
             .iter()
-            .filter_map(|entry| {
-                // Skip constrained types for now (they need special handling for Arbitrary)
-                if self.is_constrained_type(&entry.lhs)
-                    || self.is_constrained_type(&entry.rhs)
-                    || entry.output_constrained
-                {
-                    return None;
-                }
-
+            .map(|entry| {
                 let name_a = format_ident!("{}", entry.lhs);
                 let name_b = format_ident!("{}", entry.rhs);
                 let name_out = format_ident!("{}", entry.output);
@@ -739,7 +700,7 @@ impl<'a> TraitsGenerator<'a> {
                     entry.rhs.to_lowercase()
                 );
 
-                Some(quote! {
+                quote! {
                     proptest! {
                         #[test]
                         fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
@@ -757,20 +718,11 @@ impl<'a> TraitsGenerator<'a> {
                             );
                         }
                     }
-                })
+                }
             })
             .collect();
 
         quote! { #(#tests)* }
-    }
-
-    /// Checks if a type name is a constrained wrapper.
-    fn is_constrained_type(&self, name: &str) -> bool {
-        self.spec
-            .types
-            .iter()
-            .flat_map(|t| &t.constraints)
-            .any(|c| c.wrapper_name == name)
     }
 
     /// Generates outer product verification tests.
@@ -786,15 +738,7 @@ impl<'a> TraitsGenerator<'a> {
             .products
             .outer
             .iter()
-            .filter_map(|entry| {
-                // Skip constrained types for now (they need special handling for Arbitrary)
-                if self.is_constrained_type(&entry.lhs)
-                    || self.is_constrained_type(&entry.rhs)
-                    || entry.output_constrained
-                {
-                    return None;
-                }
-
+            .map(|entry| {
                 let name_a = format_ident!("{}", entry.lhs);
                 let name_b = format_ident!("{}", entry.rhs);
                 let name_out = format_ident!("{}", entry.output);
@@ -810,7 +754,7 @@ impl<'a> TraitsGenerator<'a> {
                     entry.rhs.to_lowercase()
                 );
 
-                Some(quote! {
+                quote! {
                     proptest! {
                         #[test]
                         fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
@@ -828,7 +772,7 @@ impl<'a> TraitsGenerator<'a> {
                             );
                         }
                     }
-                })
+                }
             })
             .collect();
 

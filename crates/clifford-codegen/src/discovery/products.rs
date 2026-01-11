@@ -219,7 +219,8 @@ pub fn infer_product(
     algebra: &Algebra,
     table: &ProductTable,
 ) -> ProductResult {
-    let raw_output = infer_output_grades_precise(lhs_grades, rhs_grades, product_type, algebra, table);
+    let raw_output =
+        infer_output_grades_precise(lhs_grades, rhs_grades, product_type, algebra, table);
 
     if raw_output.is_empty() {
         return ProductResult {
@@ -232,7 +233,10 @@ pub fn infer_product(
     let raw_set: BTreeSet<usize> = raw_output.iter().copied().collect();
 
     // First try exact match
-    if let Some((_, name)) = known_entities.iter().find(|(grades, _)| grades == &raw_output) {
+    if let Some((_, name)) = known_entities
+        .iter()
+        .find(|(grades, _)| grades == &raw_output)
+    {
         return ProductResult {
             output_grades: raw_output,
             matching_entity: Some(name.clone()),
@@ -273,9 +277,7 @@ fn find_best_matching_subset(
     // Filter to entities that are subsets of raw_grades
     let matching: Vec<_> = known_entities
         .iter()
-        .filter(|(grades, _)| {
-            grades.iter().all(|g| raw_grades.contains(g))
-        })
+        .filter(|(grades, _)| grades.iter().all(|g| raw_grades.contains(g)))
         .collect();
 
     // Find the one with the most grades (largest subset)
@@ -357,7 +359,8 @@ mod tests {
         let table = ProductTable::new(&algebra);
 
         // Vector * Vector = Scalar + Bivector (same result with precise computation)
-        let output = infer_output_grades_precise(&[1], &[1], ProductType::Geometric, &algebra, &table);
+        let output =
+            infer_output_grades_precise(&[1], &[1], ProductType::Geometric, &algebra, &table);
         assert_eq!(output, vec![0, 2]);
     }
 
@@ -450,7 +453,14 @@ mod tests {
         ];
 
         // Vector * Vector should match Entity_0_2 (grades 0, 2)
-        let result = infer_product(&[1], &[1], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1],
+            &[1],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![0, 2]);
         assert_eq!(result.matching_entity, Some("Entity_0_2".to_string()));
         assert!(!result.is_zero);
@@ -481,7 +491,14 @@ mod tests {
 
         // Vector * Vector produces raw [0, 2], but Entity_0_2 doesn't exist
         // Constraint propagation finds Entity_0 as the best matching subset
-        let result = infer_product(&[1], &[1], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1],
+            &[1],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![0]);
         assert_eq!(result.matching_entity, Some("Entity_0".to_string()));
         assert!(!result.is_zero);
@@ -496,7 +513,14 @@ mod tests {
         let entities = vec![(vec![3], "Entity_3".to_string())];
 
         // Vector * Vector produces raw [0, 2], no subset matches
-        let result = infer_product(&[1], &[1], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1],
+            &[1],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![0, 2]);
         assert!(result.matching_entity.is_none());
         assert!(!result.is_zero);
@@ -532,7 +556,10 @@ mod tests {
         assert_eq!(table.entries.len(), 9); // 3x3 = 9 combinations
 
         // Find Entity_1 * Entity_1 entry
-        let v_times_v = table.entries.iter().find(|(lhs, rhs, _)| lhs == "Entity_1" && rhs == "Entity_1");
+        let v_times_v = table
+            .entries
+            .iter()
+            .find(|(lhs, rhs, _)| lhs == "Entity_1" && rhs == "Entity_1");
         assert!(v_times_v.is_some());
         let (_, _, result) = v_times_v.unwrap();
         assert_eq!(result.output_grades, vec![0, 2]);
@@ -548,7 +575,8 @@ mod tests {
         let table = ProductTable::new(&algebra);
 
         // Single vector still produces scalar + bivector
-        let output = infer_output_grades_precise(&[1], &[1], ProductType::Geometric, &algebra, &table);
+        let output =
+            infer_output_grades_precise(&[1], &[1], ProductType::Geometric, &algebra, &table);
         assert!(output.contains(&0));
         assert!(output.contains(&2));
     }
@@ -597,17 +625,38 @@ mod tests {
         ];
 
         // Even * Vector = Odd [1, 3]
-        let result = infer_product(&[0, 2], &[1], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[0, 2],
+            &[1],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![1, 3]);
         assert_eq!(result.matching_entity, Some("Entity_1_3".to_string()));
 
         // Odd * Vector = Even [0, 2]
-        let result = infer_product(&[1, 3], &[1], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1, 3],
+            &[1],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![0, 2]);
         assert_eq!(result.matching_entity, Some("Entity_0_2".to_string()));
 
         // Even * Even = Even
-        let result = infer_product(&[0, 2], &[0, 2], ProductType::Geometric, &entities, &algebra, &table);
+        let result = infer_product(
+            &[0, 2],
+            &[0, 2],
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![0, 2]);
         assert_eq!(result.matching_entity, Some("Entity_0_2".to_string()));
     }

@@ -25,8 +25,7 @@ use clap::{Parser, Subcommand};
 
 use clifford_codegen::algebra::{Algebra, ProductTable};
 use clifford_codegen::codegen::{
-    ConstraintGenerator, ConversionsGenerator, ProductGenerator, TraitsGenerator, TypeGenerator,
-    format_tokens,
+    ConversionsGenerator, ProductGenerator, TraitsGenerator, TypeGenerator, format_tokens,
 };
 use clifford_codegen::discovery::{discover_entities, generate_toml_template};
 use clifford_codegen::spec::parse_spec;
@@ -252,7 +251,6 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
     // Create generators
     let type_gen = TypeGenerator::new(&spec, &algebra);
     let product_gen = ProductGenerator::new(&spec, &algebra, table.clone());
-    let constraint_gen = ConstraintGenerator::new(&spec, &algebra);
     let traits_gen = TraitsGenerator::new(&spec, &algebra, table);
     let conversions_gen = ConversionsGenerator::new(&spec, &algebra);
 
@@ -260,7 +258,6 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
     let files = vec![
         ("types.rs", type_gen.generate_types_file()),
         ("products.rs", product_gen.generate_products_file()),
-        ("constrained.rs", constraint_gen.generate_constraints_file()),
         ("traits.rs", traits_gen.generate_traits_file()),
         (
             "conversions.rs",
@@ -319,7 +316,6 @@ fn generate_mod_file(
     let mut mods = vec![
         quote! { pub mod types; },
         quote! { pub mod products; },
-        quote! { pub mod constrained; },
         quote! { pub mod traits; },
         quote! { pub mod conversions; },
     ];
@@ -629,10 +625,7 @@ fn discover_algebra(signature_str: &str, output_path: Option<&std::path::Path>) 
     let algebra = Algebra::new(p, q, r);
     let (p, q, r) = algebra.signature();
 
-    eprintln!(
-        "Discovering entities for Cl({},{},{})...",
-        p, q, r
-    );
+    eprintln!("Discovering entities for Cl({},{},{})...", p, q, r);
 
     // Discover entities
     let entities = discover_entities(&algebra);
