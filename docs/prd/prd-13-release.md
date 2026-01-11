@@ -199,30 +199,50 @@ Before creating a release:
    gh pr create --title "Release v0.2.0" --body "Release preparation for v0.2.0"
    ```
 
-5. **Merge PR after CI passes**
+5. **Merge PR after CI passes** - This triggers the automated release pipeline
 
-6. **Create and push tag**
+6. **Monitor release workflows**
+   - `release-tag.yml` automatically creates and pushes the git tag
+   - `publish.yml` automatically publishes to crates.io
    ```bash
-   git checkout main
-   git pull origin main
-   git tag -a v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
+   gh run list --workflow=release-tag.yml
+   gh run list --workflow=publish.yml
    ```
 
-7. **Verify publish workflow succeeds**
-   - Check GitHub Actions for publish job
-   - Verify crate appears on crates.io
-
-8. **Create GitHub Release**
+7. **Create GitHub Release** (optional)
    ```bash
-   # Extract release notes from CHANGELOG and create release
    gh release create v0.2.0 --title "v0.2.0" --generate-notes
    ```
    Or manually copy the CHANGELOG section for that version as release notes.
 
-### Automated Publishing
+### Automated Release Pipeline
 
-The existing `publish.yml` workflow handles publishing:
+The release process is fully automated via two workflows:
+
+#### 1. Auto-Tag Workflow (`release-tag.yml`)
+
+Triggers when a `release/*` branch is merged to main:
+
+```yaml
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag-release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/')
+```
+
+This workflow:
+- Extracts version from branch name (`release/v0.2.0` → `v0.2.0`)
+- Verifies Cargo.toml version matches the branch name
+- Verifies CHANGELOG.md has an entry for the version
+- Creates and pushes the git tag
+
+#### 2. Publish Workflow (`publish.yml`)
+
+Triggers when a version tag is pushed:
 
 ```yaml
 on:
@@ -231,11 +251,17 @@ on:
       - 'v*.*.*'
 ```
 
-**Enhancements needed**:
+This workflow:
+- Verifies version in Cargo.toml matches the tag
+- Runs full CI checks
+- Publishes to crates.io
 
-1. **Verify CHANGELOG has entry for version**
-2. **Create GitHub Release automatically**
-3. **Post to social media / announce** (optional)
+### Benefits of Automated Pipeline
+
+1. **No manual tagging step** - eliminates human error
+2. **Consistent validation** - version and CHANGELOG always verified
+3. **Single merge action** - merging the release PR triggers everything
+4. **Audit trail** - GitHub Actions logs provide release history
 
 ## Backwards Compatibility
 
@@ -424,23 +450,27 @@ jobs:
 ### New Files
 - `CHANGELOG.md` - Changelog following Keep a Changelog format
 - `docs/prd/prd-13-release.md` - This PRD
+- `.github/workflows/release-tag.yml` - Auto-tag workflow for release branches
+- `.claude/agents/release.md` - Release agent for guided release process
 
 ### Modified Files
 - `Cargo.toml` - Add `rust-version` field for MSRV
 - `.github/workflows/publish.yml` - Enhanced publish workflow
 - `.github/workflows/ci.yml` - Add MSRV and release-ready jobs
 - `README.md` - Document MSRV and versioning policy
-- `CLAUDE.md` - Document release process
+- `CLAUDE.md` - Document release process and release agent
 
 ## Verification Checklist
 
-- [ ] CHANGELOG.md exists with proper format
-- [ ] Cargo.toml has `rust-version` field
+- [x] CHANGELOG.md exists with proper format
+- [x] Cargo.toml has `rust-version` field
 - [ ] CI tests MSRV
-- [ ] Publish workflow verifies CHANGELOG
+- [x] Publish workflow verifies CHANGELOG
 - [ ] GitHub Release created automatically
-- [ ] README documents versioning policy
+- [x] README documents versioning policy
 - [ ] Deprecation examples work correctly
+- [x] Auto-tag workflow triggers on release branch merge
+- [x] Release agent documents automated pipeline
 
 ## Summary
 

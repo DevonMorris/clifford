@@ -161,31 +161,35 @@ gh pr create --title "Release v0.2.0" --body "Release preparation for v0.2.0
 - [ ] Documentation builds without warnings"
 ```
 
-### Step 5: Merge and Tag
+### Step 5: Merge PR
 
-After PR is approved and merged:
+After PR is approved and merged, the release is **fully automated**:
 
-```bash
-git checkout main
-git pull origin main
-git tag -a v0.2.0 -m "Release v0.2.0"
-git push origin v0.2.0
-```
+1. **Auto-tag workflow** (`.github/workflows/release-tag.yml`) triggers on merge
+   - Extracts version from branch name (`release/v0.2.0` → `v0.2.0`)
+   - Verifies Cargo.toml version matches
+   - Verifies CHANGELOG has release entry
+   - Creates and pushes the git tag
 
-### Step 6: Verify Publishing
-
-The tag push triggers `.github/workflows/publish.yml`:
-- Verifies version matches tag
-- Runs full CI suite
-- Publishes to crates.io
+2. **Publish workflow** (`.github/workflows/publish.yml`) triggers on tag push
+   - Verifies version matches tag
+   - Runs full CI suite
+   - Publishes to crates.io
 
 Monitor with:
 ```bash
+# Watch the auto-tag workflow
+gh run list --workflow=release-tag.yml
+gh run watch
+
+# Then watch the publish workflow
 gh run list --workflow=publish.yml
 gh run watch
 ```
 
-### Step 7: Create GitHub Release
+### Step 6: Create GitHub Release (Optional)
+
+The publish workflow handles crates.io. For a GitHub Release:
 
 ```bash
 # Extract release notes from CHANGELOG
@@ -195,6 +199,8 @@ gh release create v0.2.0 \
 ```
 
 Or use the CHANGELOG section as release notes.
+
+**Note**: You can also create the GitHub Release manually from the Actions summary page after the publish workflow completes.
 
 ## Pre-Release Versions
 
