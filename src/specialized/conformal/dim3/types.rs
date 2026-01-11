@@ -897,8 +897,10 @@ impl<T: Float> Circle<T> {
         );
         let denom = p1_cross_p2.0 * nx + p1_cross_p2.1 * ny + p1_cross_p2.2 * nz;
 
-        // Degenerate case: perpendicular bisectors are parallel
-        if denom.abs() < T::epsilon() {
+        // Degenerate case: perpendicular bisectors are parallel or nearly parallel
+        // Use a relative threshold to avoid numerical instability
+        let denom_threshold = T::epsilon() * (T::one() + numer.abs());
+        if denom.abs() < denom_threshold {
             return None;
         }
 

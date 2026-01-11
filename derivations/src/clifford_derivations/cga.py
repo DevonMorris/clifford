@@ -371,72 +371,139 @@ def derive_circumcenter():
     else:
         print("  Degenerate case (collinear points)")
 
-    # Generate Rust code for the formulas
+    # Generate complete Rust function body
     print("\n" + "=" * 60)
-    print("Generated Rust code:")
+    print("Generated Rust function:")
     print("=" * 60)
 
-    # Edge vectors
-    print("\n// Edge vectors")
-    print("let d1x = bx - ax;")
-    print("let d1y = by - ay;")
-    print("let d1z = bz - az;")
-    print("let d2x = cx - ax;")
-    print("let d2y = cy - ay;")
-    print("let d2z = cz - az;")
+    # Build the function body using rust_code() for all derived expressions
+    function_body = f'''
+    /// Creates a circle from three non-collinear points.
+    ///
+    /// The circle passes through all three points, with center at the circumcenter
+    /// and radius equal to the circumradius.
+    ///
+    /// Returns `None` if the points are collinear (no unique circle exists).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{{Circle, Point}};
+    ///
+    /// let p1 = Point::new(1.0, 0.0, 0.0);
+    /// let p2 = Point::new(0.0, 1.0, 0.0);
+    /// let p3 = Point::new(-1.0, 0.0, 0.0);
+    /// let circle = Circle::from_three_points(&p1, &p2, &p3).unwrap();
+    /// assert!((circle.radius() - 1.0).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Option<Self> {{
+        // Extract coordinates
+        let ax = p1.x();
+        let ay = p1.y();
+        let az = p1.z();
+        let bx = p2.x();
+        let by = p2.y();
+        let bz = p2.z();
+        let cx = p3.x();
+        let cy = p3.y();
+        let cz = p3.z();
 
-    # Plane normal (cross product)
-    print("\n// Plane normal: n = d1 × d2")
-    print(f"let nx = {rust_code(expand(d1y * d2z - d1z * d2y))};")
-    print(f"let ny = {rust_code(expand(d1z * d2x - d1x * d2z))};")
-    print(f"let nz = {rust_code(expand(d1x * d2y - d1y * d2x))};")
+        // Edge vectors: d1 = B - A, d2 = C - A
+        let d1x = bx - ax;
+        let d1y = by - ay;
+        let d1z = bz - az;
+        let d2x = cx - ax;
+        let d2y = cy - ay;
+        let d2z = cz - az;
 
-    # Midpoints
-    print("\n// Midpoints")
-    print("let m1x = (ax + bx) / T::TWO;")
-    print("let m1y = (ay + by) / T::TWO;")
-    print("let m1z = (az + bz) / T::TWO;")
+        // Plane normal: n = d1 × d2
+        let nx = {rust_code(expand(d1y * d2z - d1z * d2y))};
+        let ny = {rust_code(expand(d1z * d2x - d1x * d2z))};
+        let nz = {rust_code(expand(d1x * d2y - d1y * d2x))};
 
-    # Perpendicular direction p1 = d1 × n
-    print("\n// Perpendicular direction: p1 = d1 × n")
-    print(f"let p1x = {rust_code(expand(p1x))};")
-    print(f"let p1y = {rust_code(expand(p1y))};")
-    print(f"let p1z = {rust_code(expand(p1z))};")
+        // Check for collinearity
+        let len_sq = nx * nx + ny * ny + nz * nz;
+        if len_sq < T::epsilon() {{
+            return None;
+        }}
 
-    # dm = m2 - m1 = (C - B) / 2
-    print("\n// Delta midpoint: dm = m2 - m1 = (C - B) / 2")
-    print("let dmx = (cx - bx) / T::TWO;")
-    print("let dmy = (cy - by) / T::TWO;")
-    print("let dmz = (cz - bz) / T::TWO;")
+        // Normalize the normal
+        let len = len_sq.sqrt();
+        let nx = nx / len;
+        let ny = ny / len;
+        let nz = nz / len;
 
-    # Perpendicular direction p2 = d2 × n
-    print("\n// Perpendicular direction: p2 = d2 × n")
-    print(f"let p2x = {rust_code(expand(p2x))};")
-    print(f"let p2y = {rust_code(expand(p2y))};")
-    print(f"let p2z = {rust_code(expand(p2z))};")
+        // Midpoint of edge AB: m1 = (A + B) / 2
+        let m1 = ((ax + bx) / T::TWO, (ay + by) / T::TWO, (az + bz) / T::TWO);
 
-    # Numerator: (dm × p2) · n
-    print("\n// Numerator: ((m2 - m1) × p2) · n")
-    print("let dm_cross_p2_x = dmy * p2z - dmz * p2y;")
-    print("let dm_cross_p2_y = dmz * p2x - dmx * p2z;")
-    print("let dm_cross_p2_z = dmx * p2y - dmy * p2x;")
-    print("let numer = dm_cross_p2_x * nx + dm_cross_p2_y * ny + dm_cross_p2_z * nz;")
+        // Perpendicular direction in plane: p1 = d1 × n
+        let perp1 = (
+            {rust_code(expand(p1x))},
+            {rust_code(expand(p1y))},
+            {rust_code(expand(p1z))},
+        );
 
-    # Denominator: (p1 × p2) · n
-    print("\n// Denominator: (p1 × p2) · n")
-    print("let p1_cross_p2_x = p1y * p2z - p1z * p2y;")
-    print("let p1_cross_p2_y = p1z * p2x - p1x * p2z;")
-    print("let p1_cross_p2_z = p1x * p2y - p1y * p2x;")
-    print("let denom = p1_cross_p2_x * nx + p1_cross_p2_y * ny + p1_cross_p2_z * nz;")
+        // Perpendicular direction for edge AC: p2 = d2 × n
+        let perp2 = (
+            {rust_code(expand(p2x))},
+            {rust_code(expand(p2y))},
+            {rust_code(expand(p2z))},
+        );
 
-    # Solve for t and compute center
-    print("\n// Solve for t and compute center")
-    print("let t = numer / denom;")
-    print("let center_x = m1x + t * p1x;")
-    print("let center_y = m1y + t * p1y;")
-    print("let center_z = m1z + t * p1z;")
+        // Delta midpoint: dm = m2 - m1 = (C - B) / 2
+        let dm = ((cx - bx) / T::TWO, (cy - by) / T::TWO, (cz - bz) / T::TWO);
 
-    print("\n" + "=" * 60)
+        // Numerator: ((m2 - m1) × p2) · n
+        let dm_cross_p2 = (
+            dm.1 * perp2.2 - dm.2 * perp2.1,
+            dm.2 * perp2.0 - dm.0 * perp2.2,
+            dm.0 * perp2.1 - dm.1 * perp2.0,
+        );
+        let numer = dm_cross_p2.0 * nx + dm_cross_p2.1 * ny + dm_cross_p2.2 * nz;
+
+        // Denominator: (p1 × p2) · n
+        let p1_cross_p2 = (
+            perp1.1 * perp2.2 - perp1.2 * perp2.1,
+            perp1.2 * perp2.0 - perp1.0 * perp2.2,
+            perp1.0 * perp2.1 - perp1.1 * perp2.0,
+        );
+        let denom = p1_cross_p2.0 * nx + p1_cross_p2.1 * ny + p1_cross_p2.2 * nz;
+
+        // Degenerate case: perpendicular bisectors are parallel or nearly parallel
+        // Use a relative threshold to avoid numerical instability
+        let denom_threshold = T::epsilon() * (T::one() + numer.abs());
+        if denom.abs() < denom_threshold {{
+            return None;
+        }}
+
+        let t = numer / denom;
+
+        // Circumcenter: m1 + t * p1
+        let center_x = m1.0 + t * perp1.0;
+        let center_y = m1.1 + t * perp1.1;
+        let center_z = m1.2 + t * perp1.2;
+
+        // Radius: distance from center to any point
+        let dx = center_x - ax;
+        let dy = center_y - ay;
+        let dz = center_z - az;
+        let r = (dx * dx + dy * dy + dz * dz).sqrt();
+
+        Some(Self {{
+            cx: center_x,
+            cy: center_y,
+            cz: center_z,
+            r,
+            nx,
+            ny,
+            nz,
+        }})
+    }}
+'''
+    print(function_body)
+
+    print("=" * 60)
     print("Circumcenter derivation complete!")
     print("=" * 60)
 
