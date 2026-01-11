@@ -4,8 +4,9 @@
 //! Given two entities and a product type, it computes which grades appear in
 //! the output and matches them to known entities.
 //!
-//! When the raw output doesn't match a known entity exactly, constraint
-//! propagation finds the largest known entity that is a subset of the output.
+//! Products are only generated when the output grades exactly match a known
+//! entity type. This prevents generating incorrect code that loses grade
+//! components.
 
 use crate::algebra::{
     Algebra, ProductTable, blades_of_grades, geometric_grades, grade, inner_grade,
@@ -195,9 +196,12 @@ pub fn infer_output_grades_precise(
 ///
 /// This function:
 /// 1. Computes raw output grades from the product
-/// 2. Matches directly to known entities (exact match)
-/// 3. If no exact match, finds the best matching known entity that is a subset
-///    of the raw output (constraint propagation from input types)
+/// 2. Matches directly to known entities (exact match only)
+///
+/// Products are only generated when the output grades exactly match a known
+/// entity. Subset matching would generate incorrect code that loses grade
+/// components (e.g., returning Quadvector for an output that should be
+/// Bivector + Quadvector).
 ///
 /// # Arguments
 ///
@@ -230,9 +234,8 @@ pub fn infer_product(
         };
     }
 
-    let raw_set: BTreeSet<usize> = raw_output.iter().copied().collect();
-
-    // First try exact match
+    // Only match if output grades exactly match a known entity
+    // Subset matching would generate incorrect code that loses grade components
     if let Some((_, name)) = known_entities
         .iter()
         .find(|(grades, _)| grades == &raw_output)
@@ -244,47 +247,13 @@ pub fn infer_product(
         };
     }
 
-    // No exact match - find the best matching known entity that is a subset of raw output
-    // This implements constraint propagation: the input types' constraints limit the output
-    // to grades that form a valid entity
-    let best_match = find_best_matching_subset(&raw_set, known_entities);
-
-    if let Some((grades, name)) = best_match {
-        ProductResult {
-            output_grades: grades,
-            matching_entity: Some(name),
-            is_zero: false,
-        }
-    } else {
-        // No matching entity - return raw output without entity match
-        ProductResult {
-            output_grades: raw_output,
-            matching_entity: None,
-            is_zero: false,
-        }
+    // No exact match - return raw output without entity match
+    // This product won't be generated in code
+    ProductResult {
+        output_grades: raw_output,
+        matching_entity: None,
+        is_zero: false,
     }
-}
-
-/// Finds the largest known entity that is a subset of the given grades.
-///
-/// This implements constraint propagation: when the raw product output
-/// doesn't match any known entity exactly, we find the largest known
-/// entity whose grades are all present in the output.
-fn find_best_matching_subset(
-    raw_grades: &BTreeSet<usize>,
-    known_entities: &[(Vec<usize>, String)],
-) -> Option<(Vec<usize>, String)> {
-    // Filter to entities that are subsets of raw_grades
-    let matching: Vec<_> = known_entities
-        .iter()
-        .filter(|(grades, _)| grades.iter().all(|g| raw_grades.contains(g)))
-        .collect();
-
-    // Find the one with the most grades (largest subset)
-    matching
-        .into_iter()
-        .max_by_key(|(grades, _)| grades.len())
-        .map(|(grades, name)| (grades.clone(), name.clone()))
 }
 
 /// Represents a complete product table between entities.
@@ -479,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn infer_product_constraint_propagation() {
+    fn infer_product_requires_exact_match() {
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
 
@@ -490,7 +459,7 @@ mod tests {
         ];
 
         // Vector * Vector produces raw [0, 2], but Entity_0_2 doesn't exist
-        // Constraint propagation finds Entity_0 as the best matching subset
+        // No exact match, so matching_entity is None (product won't be generated)
         let result = infer_product(
             &[1],
             &[1],
@@ -499,8 +468,8 @@ mod tests {
             &algebra,
             &table,
         );
-        assert_eq!(result.output_grades, vec![0]);
-        assert_eq!(result.matching_entity, Some("Entity_0".to_string()));
+        assert_eq!(result.output_grades, vec![0, 2]);
+        assert!(result.matching_entity.is_none());
         assert!(!result.is_zero);
     }
 
@@ -579,34 +548,6 @@ mod tests {
             infer_output_grades_precise(&[1], &[1], ProductType::Geometric, &algebra, &table);
         assert!(output.contains(&0));
         assert!(output.contains(&2));
-    }
-
-    #[test]
-    fn constraint_propagation_finds_best_subset() {
-        // Test that find_best_matching_subset finds the largest matching entity
-        let known_entities = vec![
-            (vec![0], "Entity_0".to_string()),
-            (vec![1], "Entity_1".to_string()),
-            (vec![0, 2], "Entity_0_2".to_string()),
-            (vec![1, 3], "Entity_1_3".to_string()),
-        ];
-
-        // Raw output [0, 1, 2, 3] - should match the largest subset
-        let raw_set: BTreeSet<usize> = [0, 1, 2, 3].iter().copied().collect();
-        let result = find_best_matching_subset(&raw_set, &known_entities);
-
-        // Should match Entity_0_2 or Entity_1_3 (both have 2 grades)
-        assert!(result.is_some());
-        let (grades, _) = result.unwrap();
-        assert_eq!(grades.len(), 2);
-
-        // Raw output [0, 2] - should match Entity_0_2 exactly
-        let raw_set: BTreeSet<usize> = [0, 2].iter().copied().collect();
-        let result = find_best_matching_subset(&raw_set, &known_entities);
-        assert!(result.is_some());
-        let (grades, name) = result.unwrap();
-        assert_eq!(grades, vec![0, 2]);
-        assert_eq!(name, "Entity_0_2");
     }
 
     #[test]
