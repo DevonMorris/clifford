@@ -22,6 +22,61 @@ pub mod scalar;
 pub mod signature;
 pub mod specialized;
 
+// ============================================================================
+// Error Types
+// ============================================================================
+
+/// Error returned when a geometric constraint is not satisfied.
+///
+/// This error is returned by `new_checked()` constructors on constrained types
+/// (like `Motor`, `Bivector`, `Flector` in PGA) when the provided coefficients
+/// violate the geometric constraint.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::generated::projective3::Motor;
+///
+/// // Valid motor - constraint satisfied
+/// let m = Motor::new(1.0, 0.1, 0.2, 0.3, 0.01, 0.02, 0.03);
+///
+/// // Check with explicit coefficients
+/// let result = Motor::new_checked(1.0, 0.1, 0.2, 0.3, 0.01, 0.02, 0.03, 999.0, 1e-10);
+/// assert!(result.is_err()); // e0123 = 999.0 violates constraint
+/// ```
+#[derive(Debug, Clone)]
+pub struct ConstraintError {
+    /// The type that failed the constraint check.
+    pub type_name: &'static str,
+    /// The constraint expression that was violated.
+    pub constraint: &'static str,
+    /// The residual value (how far from zero).
+    pub residual: f64,
+}
+
+impl ConstraintError {
+    /// Creates a new constraint error.
+    pub fn new(type_name: &'static str, constraint: &'static str, residual: f64) -> Self {
+        Self {
+            type_name,
+            constraint,
+            residual,
+        }
+    }
+}
+
+impl std::fmt::Display for ConstraintError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} constraint violated: {} (residual: {:.2e})",
+            self.type_name, self.constraint, self.residual
+        )
+    }
+}
+
+impl std::error::Error for ConstraintError {}
+
 /// Test utilities available only during testing.
 #[cfg(test)]
 pub(crate) mod test_utils {

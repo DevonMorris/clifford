@@ -154,11 +154,40 @@ fn write_entity_section(entity: &DiscoveredEntity, output: &mut dyn Write) -> io
     writeln!(output, "grades = {:?}", entity.grades)?;
 
     // Output constraints if present
+    let has_geometric = entity.geometric_constraint.is_some();
+    let has_antiproduct = entity.antiproduct_constraint.is_some();
+
     if let Some(ref constraint) = entity.geometric_constraint {
         writeln!(output, "geometric_constraint = \"{}\"", constraint)?;
     }
     if let Some(ref constraint) = entity.antiproduct_constraint {
         writeln!(output, "antiproduct_constraint = \"{}\"", constraint)?;
+    }
+
+    // Prompt for solve_for fields when constraints are present
+    if has_geometric && has_antiproduct {
+        // Check if constraints are the same (dependent)
+        let same_constraint = entity.geometric_constraint == entity.antiproduct_constraint;
+        if same_constraint {
+            writeln!(
+                output,
+                "# TODO: Specify which field to solve for (constraints are dependent)"
+            )?;
+            writeln!(output, "# geometric_solve_for = \"field_name\"")?;
+        } else {
+            writeln!(
+                output,
+                "# TODO: Specify solve_for fields for each independent constraint"
+            )?;
+            writeln!(output, "# geometric_solve_for = \"field_name\"")?;
+            writeln!(output, "# antiproduct_solve_for = \"other_field_name\"")?;
+        }
+    } else if has_geometric {
+        writeln!(output, "# TODO: Specify which field to solve for")?;
+        writeln!(output, "# geometric_solve_for = \"field_name\"")?;
+    } else if has_antiproduct {
+        writeln!(output, "# TODO: Specify which field to solve for")?;
+        writeln!(output, "# antiproduct_solve_for = \"field_name\"")?;
     }
 
     writeln!(output)?;

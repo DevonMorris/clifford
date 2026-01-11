@@ -103,4 +103,38 @@ pub enum ParseError {
         /// The type name.
         type_name: String,
     },
+
+    /// solve_for references a field that doesn't exist.
+    #[error("type '{type_name}' has solve_for = '{field}' but no such field exists")]
+    InvalidSolveFor {
+        /// The type name.
+        type_name: String,
+        /// The invalid field name.
+        field: String,
+    },
+
+    /// solve_for specified without a constraint.
+    #[error("type '{type_name}' has solve_for but no matching constraint")]
+    SolveForWithoutConstraint {
+        /// The type name.
+        type_name: String,
+    },
+
+    /// Independent constraints must have different solve_for fields.
+    #[error(
+        "type '{type_name}' has independent constraints but uses same solve_for field for both"
+    )]
+    IndependentConstraintsSameSolveFor {
+        /// The type name.
+        type_name: String,
+    },
+
+    /// Independent constraints require both solve_for fields.
+    #[error(
+        "type '{type_name}' has independent constraints but is missing one or both solve_for fields"
+    )]
+    IndependentConstraintsMissingSolveFor {
+        /// The type name.
+        type_name: String,
+    },
 }

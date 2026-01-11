@@ -166,8 +166,12 @@ impl<T: Float> From<Multivector<T, Projective3>> for Bivector<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
+    #[doc = r""]
+    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
+    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
+    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(3usize)),
             mv.get(Blade::from_index(5usize)),
             mv.get(Blade::from_index(6usize)),
@@ -182,8 +186,12 @@ impl<T: Float> From<Multivector<T, Projective3>> for Flector<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
+    #[doc = r""]
+    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
+    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
+    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(1usize)),
             mv.get(Blade::from_index(2usize)),
             mv.get(Blade::from_index(4usize)),
@@ -200,8 +208,12 @@ impl<T: Float> From<Multivector<T, Projective3>> for Motor<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
+    #[doc = r""]
+    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
+    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
+    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(0usize)),
             mv.get(Blade::from_index(3usize)),
             mv.get(Blade::from_index(5usize)),

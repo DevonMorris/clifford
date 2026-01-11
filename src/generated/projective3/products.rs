@@ -7,7 +7,7 @@ use crate::scalar::Float;
 #[doc = "Geometric product: Bivector * Bivector -> Motor"]
 #[inline]
 pub fn geometric_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         -(a.e12() * b.e12()) - a.e13() * b.e13() - a.e23() * b.e23(),
         -(a.e13() * b.e23()) + a.e23() * b.e13(),
         a.e12() * b.e23() - a.e23() * b.e12(),
@@ -23,7 +23,7 @@ pub fn geometric_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -
 #[doc = "Geometric product: Bivector * Flector -> Flector"]
 #[inline]
 pub fn geometric_bivector_flector<T: Float>(a: &Bivector<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e12() * b.e2() + a.e13() * b.e3() - a.e23() * b.e123(),
         -(a.e12() * b.e1()) + a.e13() * b.e123() + a.e23() * b.e3(),
         -(a.e12() * b.e123()) - a.e13() * b.e1() - a.e23() * b.e2(),
@@ -49,7 +49,7 @@ pub fn geometric_bivector_flector<T: Float>(a: &Bivector<T>, b: &Flector<T>) -> 
 #[doc = "Geometric product: Bivector * Motor -> Motor"]
 #[inline]
 pub fn geometric_bivector_motor<T: Float>(a: &Bivector<T>, b: &Motor<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         -(a.e12() * b.e12()) - a.e13() * b.e13() - a.e23() * b.e23(),
         a.e12() * b.s() - a.e13() * b.e23() + a.e23() * b.e13(),
         a.e12() * b.e23() + a.e13() * b.s() - a.e23() * b.e12(),
@@ -75,7 +75,7 @@ pub fn geometric_bivector_motor<T: Float>(a: &Bivector<T>, b: &Motor<T>) -> Moto
 #[doc = "Geometric product: Bivector * Quadvector -> Bivector"]
 #[inline]
 pub fn geometric_bivector_quadvector<T: Float>(a: &Bivector<T>, b: &Quadvector<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         T::zero(),
         T::zero(),
         T::zero(),
@@ -87,7 +87,7 @@ pub fn geometric_bivector_quadvector<T: Float>(a: &Bivector<T>, b: &Quadvector<T
 #[doc = "Geometric product: Bivector * Scalar -> Bivector"]
 #[inline]
 pub fn geometric_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         a.e12() * b.s(),
         a.e13() * b.s(),
         a.e23() * b.s(),
@@ -99,7 +99,7 @@ pub fn geometric_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bi
 #[doc = "Geometric product: Bivector * Trivector -> Flector"]
 #[inline]
 pub fn geometric_bivector_trivector<T: Float>(a: &Bivector<T>, b: &Trivector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e23() * b.e123()),
         a.e13() * b.e123(),
         -(a.e12() * b.e123()),
@@ -113,7 +113,7 @@ pub fn geometric_bivector_trivector<T: Float>(a: &Bivector<T>, b: &Trivector<T>)
 #[doc = "Geometric product: Bivector * Vector -> Flector"]
 #[inline]
 pub fn geometric_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e12() * b.e2() + a.e13() * b.e3(),
         -(a.e12() * b.e1()) + a.e23() * b.e3(),
         -(a.e13() * b.e1()) - a.e23() * b.e2(),
@@ -127,7 +127,7 @@ pub fn geometric_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Fl
 #[doc = "Geometric product: Flector * Bivector -> Flector"]
 #[inline]
 pub fn geometric_flector_bivector<T: Float>(a: &Flector<T>, b: &Bivector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e2() * b.e12()) - a.e3() * b.e13() - a.e123() * b.e23(),
         a.e1() * b.e12() - a.e3() * b.e23() + a.e123() * b.e13(),
         a.e1() * b.e13() + a.e2() * b.e23() - a.e123() * b.e12(),
@@ -150,7 +150,7 @@ pub fn geometric_flector_bivector<T: Float>(a: &Flector<T>, b: &Bivector<T>) -> 
 #[doc = "Geometric product: Flector * Flector -> Motor"]
 #[inline]
 pub fn geometric_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.e1() * b.e1() + a.e2() * b.e2() + a.e3() * b.e3() - a.e123() * b.e123(),
         a.e1() * b.e2() - a.e2() * b.e1() + a.e3() * b.e123() + a.e123() * b.e3(),
         a.e1() * b.e3() - a.e2() * b.e123() - a.e3() * b.e1() - a.e123() * b.e2(),
@@ -184,7 +184,7 @@ pub fn geometric_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Mo
 #[doc = "Geometric product: Flector * Motor -> Flector"]
 #[inline]
 pub fn geometric_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s() - a.e2() * b.e12() - a.e3() * b.e13() - a.e123() * b.e23(),
         a.e1() * b.e12() + a.e2() * b.s() - a.e3() * b.e23() + a.e123() * b.e13(),
         a.e1() * b.e13() + a.e2() * b.e23() + a.e3() * b.s() - a.e123() * b.e12(),
@@ -217,7 +217,7 @@ pub fn geometric_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flecto
 #[doc = "Geometric product: Flector * Quadvector -> Flector"]
 #[inline]
 pub fn geometric_flector_quadvector<T: Float>(a: &Flector<T>, b: &Quadvector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         T::zero(),
         T::zero(),
         T::zero(),
@@ -231,7 +231,7 @@ pub fn geometric_flector_quadvector<T: Float>(a: &Flector<T>, b: &Quadvector<T>)
 #[doc = "Geometric product: Flector * Scalar -> Flector"]
 #[inline]
 pub fn geometric_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
         a.e3() * b.s(),
@@ -245,7 +245,7 @@ pub fn geometric_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flec
 #[doc = "Geometric product: Flector * Trivector -> Motor"]
 #[inline]
 pub fn geometric_flector_trivector<T: Float>(a: &Flector<T>, b: &Trivector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         -(a.e123() * b.e123()),
         a.e3() * b.e123(),
         -(a.e2() * b.e123()),
@@ -259,7 +259,7 @@ pub fn geometric_flector_trivector<T: Float>(a: &Flector<T>, b: &Trivector<T>) -
 #[doc = "Geometric product: Flector * Vector -> Motor"]
 #[inline]
 pub fn geometric_flector_vector<T: Float>(a: &Flector<T>, b: &Vector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.e1() * b.e1() + a.e2() * b.e2() + a.e3() * b.e3(),
         a.e1() * b.e2() - a.e2() * b.e1() + a.e123() * b.e3(),
         a.e1() * b.e3() - a.e3() * b.e1() - a.e123() * b.e2(),
@@ -273,7 +273,7 @@ pub fn geometric_flector_vector<T: Float>(a: &Flector<T>, b: &Vector<T>) -> Moto
 #[doc = "Geometric product: Motor * Bivector -> Motor"]
 #[inline]
 pub fn geometric_motor_bivector<T: Float>(a: &Motor<T>, b: &Bivector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         -(a.e12() * b.e12()) - a.e13() * b.e13() - a.e23() * b.e23(),
         a.s() * b.e12() - a.e13() * b.e23() + a.e23() * b.e13(),
         a.s() * b.e13() + a.e12() * b.e23() - a.e23() * b.e12(),
@@ -297,7 +297,7 @@ pub fn geometric_motor_bivector<T: Float>(a: &Motor<T>, b: &Bivector<T>) -> Moto
 #[doc = "Geometric product: Motor * Flector -> Flector"]
 #[inline]
 pub fn geometric_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1() + a.e12() * b.e2() + a.e13() * b.e3() - a.e23() * b.e123(),
         a.s() * b.e2() - a.e12() * b.e1() + a.e13() * b.e123() + a.e23() * b.e3(),
         a.s() * b.e3() - a.e12() * b.e123() - a.e13() * b.e1() - a.e23() * b.e2(),
@@ -331,7 +331,7 @@ pub fn geometric_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flecto
 #[doc = "Geometric product: Motor * Motor -> Motor"]
 #[inline]
 pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s() - a.e12() * b.e12() - a.e13() * b.e13() - a.e23() * b.e23(),
         a.s() * b.e12() + a.e12() * b.s() - a.e13() * b.e23() + a.e23() * b.e13(),
         a.s() * b.e13() + a.e12() * b.e23() + a.e13() * b.s() - a.e23() * b.e12(),
@@ -364,7 +364,7 @@ pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
 #[doc = "Geometric product: Motor * Scalar -> Motor"]
 #[inline]
 pub fn geometric_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s(),
         a.e12() * b.s(),
         a.e13() * b.s(),
@@ -378,7 +378,7 @@ pub fn geometric_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T>
 #[doc = "Geometric product: Motor * Trivector -> Flector"]
 #[inline]
 pub fn geometric_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e23() * b.e123()),
         a.e13() * b.e123(),
         -(a.e12() * b.e123()),
@@ -392,7 +392,7 @@ pub fn geometric_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Fl
 #[doc = "Geometric product: Motor * Vector -> Flector"]
 #[inline]
 pub fn geometric_motor_vector<T: Float>(a: &Motor<T>, b: &Vector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1() + a.e12() * b.e2() + a.e13() * b.e3(),
         a.s() * b.e2() - a.e12() * b.e1() + a.e23() * b.e3(),
         a.s() * b.e3() - a.e13() * b.e1() - a.e23() * b.e2(),
@@ -406,7 +406,7 @@ pub fn geometric_motor_vector<T: Float>(a: &Motor<T>, b: &Vector<T>) -> Flector<
 #[doc = "Geometric product: Quadvector * Bivector -> Bivector"]
 #[inline]
 pub fn geometric_quadvector_bivector<T: Float>(a: &Quadvector<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         T::zero(),
         T::zero(),
         T::zero(),
@@ -418,7 +418,7 @@ pub fn geometric_quadvector_bivector<T: Float>(a: &Quadvector<T>, b: &Bivector<T
 #[doc = "Geometric product: Quadvector * Flector -> Flector"]
 #[inline]
 pub fn geometric_quadvector_flector<T: Float>(a: &Quadvector<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         T::zero(),
         T::zero(),
         T::zero(),
@@ -452,7 +452,7 @@ pub fn geometric_quadvector_vector<T: Float>(a: &Quadvector<T>, b: &Vector<T>) -
 #[doc = "Geometric product: Scalar * Bivector -> Bivector"]
 #[inline]
 pub fn geometric_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         a.s() * b.e12(),
         a.s() * b.e13(),
         a.s() * b.e23(),
@@ -464,7 +464,7 @@ pub fn geometric_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bi
 #[doc = "Geometric product: Scalar * Flector -> Flector"]
 #[inline]
 pub fn geometric_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1(),
         a.s() * b.e2(),
         a.s() * b.e3(),
@@ -478,7 +478,7 @@ pub fn geometric_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flec
 #[doc = "Geometric product: Scalar * Motor -> Motor"]
 #[inline]
 pub fn geometric_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.e12(),
         a.s() * b.e13(),
@@ -522,7 +522,7 @@ pub fn geometric_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector
 #[doc = "Geometric product: Trivector * Bivector -> Flector"]
 #[inline]
 pub fn geometric_trivector_bivector<T: Float>(a: &Trivector<T>, b: &Bivector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e123() * b.e23()),
         a.e123() * b.e13(),
         -(a.e123() * b.e12()),
@@ -536,7 +536,7 @@ pub fn geometric_trivector_bivector<T: Float>(a: &Trivector<T>, b: &Bivector<T>)
 #[doc = "Geometric product: Trivector * Flector -> Motor"]
 #[inline]
 pub fn geometric_trivector_flector<T: Float>(a: &Trivector<T>, b: &Flector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         -(a.e123() * b.e123()),
         a.e123() * b.e3(),
         -(a.e123() * b.e2()),
@@ -550,7 +550,7 @@ pub fn geometric_trivector_flector<T: Float>(a: &Trivector<T>, b: &Flector<T>) -
 #[doc = "Geometric product: Trivector * Motor -> Flector"]
 #[inline]
 pub fn geometric_trivector_motor<T: Float>(a: &Trivector<T>, b: &Motor<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e123() * b.e23()),
         a.e123() * b.e13(),
         -(a.e123() * b.e12()),
@@ -579,7 +579,7 @@ pub fn geometric_trivector_scalar<T: Float>(a: &Trivector<T>, b: &Scalar<T>) -> 
 #[doc = "Geometric product: Vector * Bivector -> Flector"]
 #[inline]
 pub fn geometric_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         -(a.e2() * b.e12()) - a.e3() * b.e13(),
         a.e1() * b.e12() - a.e3() * b.e23(),
         a.e1() * b.e13() + a.e2() * b.e23(),
@@ -593,7 +593,7 @@ pub fn geometric_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Fl
 #[doc = "Geometric product: Vector * Flector -> Motor"]
 #[inline]
 pub fn geometric_vector_flector<T: Float>(a: &Vector<T>, b: &Flector<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.e1() * b.e1() + a.e2() * b.e2() + a.e3() * b.e3(),
         a.e1() * b.e2() - a.e2() * b.e1() + a.e3() * b.e123(),
         a.e1() * b.e3() - a.e2() * b.e123() - a.e3() * b.e1(),
@@ -607,7 +607,7 @@ pub fn geometric_vector_flector<T: Float>(a: &Vector<T>, b: &Flector<T>) -> Moto
 #[doc = "Geometric product: Vector * Motor -> Flector"]
 #[inline]
 pub fn geometric_vector_motor<T: Float>(a: &Vector<T>, b: &Motor<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s() - a.e2() * b.e12() - a.e3() * b.e13(),
         a.e1() * b.e12() + a.e2() * b.s() - a.e3() * b.e23(),
         a.e1() * b.e13() + a.e2() * b.e23() + a.e3() * b.s(),
@@ -660,7 +660,7 @@ pub fn outer_bivector_flector<T: Float>(a: &Bivector<T>, b: &Flector<T>) -> Triv
 #[doc = "Outer product: Bivector ^ Scalar -> Bivector"]
 #[inline]
 pub fn outer_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         a.e12() * b.s(),
         a.e13() * b.s(),
         a.e23() * b.s(),
@@ -692,7 +692,7 @@ pub fn outer_flector_bivector<T: Float>(a: &Flector<T>, b: &Bivector<T>) -> Triv
 #[doc = "Outer product: Flector ^ Motor -> Flector"]
 #[inline]
 pub fn outer_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
         a.e3() * b.s(),
@@ -706,7 +706,7 @@ pub fn outer_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T>
 #[doc = "Outer product: Flector ^ Scalar -> Flector"]
 #[inline]
 pub fn outer_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
         a.e3() * b.s(),
@@ -725,7 +725,7 @@ pub fn outer_flector_trivector<T: Float>(a: &Flector<T>, b: &Trivector<T>) -> Qu
 #[doc = "Outer product: Motor ^ Flector -> Flector"]
 #[inline]
 pub fn outer_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1(),
         a.s() * b.e2(),
         a.s() * b.e3(),
@@ -739,7 +739,7 @@ pub fn outer_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T>
 #[doc = "Outer product: Motor ^ Motor -> Motor"]
 #[inline]
 pub fn outer_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.e12() + a.e12() * b.s(),
         a.s() * b.e13() + a.e13() * b.s(),
@@ -763,7 +763,7 @@ pub fn outer_motor_quadvector<T: Float>(a: &Motor<T>, b: &Quadvector<T>) -> Quad
 #[doc = "Outer product: Motor ^ Scalar -> Motor"]
 #[inline]
 pub fn outer_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s(),
         a.e12() * b.s(),
         a.e13() * b.s(),
@@ -787,7 +787,7 @@ pub fn outer_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Trivec
 #[doc = "Outer product: Motor ^ Vector -> Flector"]
 #[inline]
 pub fn outer_motor_vector<T: Float>(a: &Motor<T>, b: &Vector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1(),
         a.s() * b.e2(),
         a.s() * b.e3(),
@@ -811,7 +811,7 @@ pub fn outer_quadvector_scalar<T: Float>(a: &Quadvector<T>, b: &Scalar<T>) -> Qu
 #[doc = "Outer product: Scalar ^ Bivector -> Bivector"]
 #[inline]
 pub fn outer_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         a.s() * b.e12(),
         a.s() * b.e13(),
         a.s() * b.e23(),
@@ -823,7 +823,7 @@ pub fn outer_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivect
 #[doc = "Outer product: Scalar ^ Flector -> Flector"]
 #[inline]
 pub fn outer_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.s() * b.e1(),
         a.s() * b.e2(),
         a.s() * b.e3(),
@@ -837,7 +837,7 @@ pub fn outer_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<
 #[doc = "Outer product: Scalar ^ Motor -> Motor"]
 #[inline]
 pub fn outer_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
-    Motor::new(
+    Motor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.e12(),
         a.s() * b.e13(),
@@ -921,7 +921,7 @@ pub fn outer_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Trivec
 #[doc = "Outer product: Vector ^ Motor -> Flector"]
 #[inline]
 pub fn outer_vector_motor<T: Float>(a: &Vector<T>, b: &Motor<T>) -> Flector<T> {
-    Flector::new(
+    Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
         a.e3() * b.s(),
@@ -950,7 +950,7 @@ pub fn outer_vector_trivector<T: Float>(a: &Vector<T>, b: &Trivector<T>) -> Quad
 #[doc = "Outer product: Vector ^ Vector -> Bivector"]
 #[inline]
 pub fn outer_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Bivector<T> {
-    Bivector::new(
+    Bivector::new_unchecked(
         a.e1() * b.e2() - a.e2() * b.e1(),
         a.e1() * b.e3() - a.e3() * b.e1(),
         a.e2() * b.e3() - a.e3() * b.e2(),

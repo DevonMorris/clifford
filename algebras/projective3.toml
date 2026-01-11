@@ -53,6 +53,7 @@ grades = [2]
 fields = ["e12", "e13", "e23", "e01", "e02", "e03"]
 geometric_constraint = "-2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
 antiproduct_constraint = "-2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
+geometric_solve_for = "e03"
 
 [types.Trivector]
 grades = [3]
@@ -67,12 +68,14 @@ grades = [0, 2, 4]
 fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
 geometric_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
 antiproduct_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
+geometric_solve_for = "e0123"
 
 [types.Flector]
 grades = [1, 3]
 fields = ["e1", "e2", "e3", "e0", "e123", "e012", "e013", "e023"]
 geometric_constraint = "-2*e1*e023 + 2*e2*e013 - 2*e3*e012 + 2*e0*e123 = 0"
 antiproduct_constraint = "-2*e1*e023 + 2*e2*e013 - 2*e3*e012 + 2*e0*e123 = 0"
+geometric_solve_for = "e023"
 
 [options]
 generate_serde = true

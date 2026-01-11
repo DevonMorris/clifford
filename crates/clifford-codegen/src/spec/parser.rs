@@ -283,13 +283,73 @@ fn parse_type(
         }
     }
 
+    // Validate geometric_solve_for field if present
+    if let Some(ref solve_for) = raw.geometric_solve_for {
+        let valid_field = fields.iter().any(|f| &f.name == solve_for);
+        if !valid_field {
+            return Err(ParseError::InvalidSolveFor {
+                type_name: name.to_string(),
+                field: solve_for.clone(),
+            });
+        }
+        // geometric_solve_for requires geometric_constraint
+        if raw.geometric_constraint.is_none() {
+            return Err(ParseError::SolveForWithoutConstraint {
+                type_name: name.to_string(),
+            });
+        }
+    }
+
+    // Validate antiproduct_solve_for field if present
+    if let Some(ref solve_for) = raw.antiproduct_solve_for {
+        let valid_field = fields.iter().any(|f| &f.name == solve_for);
+        if !valid_field {
+            return Err(ParseError::InvalidSolveFor {
+                type_name: name.to_string(),
+                field: solve_for.clone(),
+            });
+        }
+        // antiproduct_solve_for requires antiproduct_constraint
+        if raw.antiproduct_constraint.is_none() {
+            return Err(ParseError::SolveForWithoutConstraint {
+                type_name: name.to_string(),
+            });
+        }
+    }
+
+    // Check: if constraints are independent, both solve_for fields must differ
+    let constraints_independent = match (&raw.geometric_constraint, &raw.antiproduct_constraint) {
+        (Some(gc), Some(ac)) => gc != ac,
+        _ => false,
+    };
+
+    if constraints_independent {
+        // Independent constraints require two different solve_for fields
+        match (&raw.geometric_solve_for, &raw.antiproduct_solve_for) {
+            (Some(gsf), Some(asf)) if gsf == asf => {
+                return Err(ParseError::IndependentConstraintsSameSolveFor {
+                    type_name: name.to_string(),
+                });
+            }
+            (None, _) | (_, None) => {
+                return Err(ParseError::IndependentConstraintsMissingSolveFor {
+                    type_name: name.to_string(),
+                });
+            }
+            _ => {} // Valid: different solve_for fields
+        }
+    }
+
     Ok(TypeSpec {
         name: name.to_string(),
         grades: raw.grades.clone(),
         description: raw.description.clone(),
         fields,
         alias_of: raw.alias_of.clone(),
-        constraint: raw.constraint.clone(),
+        geometric_constraint: raw.geometric_constraint.clone(),
+        antiproduct_constraint: raw.antiproduct_constraint.clone(),
+        geometric_solve_for: raw.geometric_solve_for.clone(),
+        antiproduct_solve_for: raw.antiproduct_solve_for.clone(),
     })
 }
 
@@ -536,13 +596,164 @@ mod tests {
             [types.Rotor]
             grades = [0, 2]
             fields = ["s", "xy"]
-            constraint = "s * s + xy * xy = 1"
+            geometric_constraint = "s * s + xy * xy = 1"
             "#,
         )
         .unwrap();
 
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        assert_eq!(rotor.constraint, Some("s * s + xy * xy = 1".to_string()));
+        assert_eq!(
+            rotor.geometric_constraint,
+            Some("s * s + xy * xy = 1".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_with_geometric_solve_for() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+            zero = ["e0"]
+
+            [types.Motor]
+            grades = [0, 2, 4]
+            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
+            geometric_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
+            geometric_solve_for = "e0123"
+            "#,
+        )
+        .unwrap();
+
+        let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
+        assert_eq!(motor.geometric_solve_for, Some("e0123".to_string()));
+    }
+
+    #[test]
+    fn reject_invalid_geometric_solve_for() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+            geometric_constraint = "s * s + xy * xy = 1"
+            geometric_solve_for = "nonexistent"
+            "#,
+        );
+
+        assert!(matches!(result, Err(ParseError::InvalidSolveFor { .. })));
+    }
+
+    #[test]
+    fn reject_geometric_solve_for_without_constraint() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+            geometric_solve_for = "xy"
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::SolveForWithoutConstraint { .. })
+        ));
+    }
+
+    #[test]
+    fn parse_independent_constraints() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+            zero = ["e0"]
+
+            [types.TestType]
+            grades = [0, 2, 4]
+            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
+            geometric_constraint = "s + e0123 = 0"
+            antiproduct_constraint = "e12 + e03 = 0"
+            geometric_solve_for = "e0123"
+            antiproduct_solve_for = "e03"
+            "#,
+        )
+        .unwrap();
+
+        let tt = spec.types.iter().find(|t| t.name == "TestType").unwrap();
+        assert_eq!(tt.geometric_solve_for, Some("e0123".to_string()));
+        assert_eq!(tt.antiproduct_solve_for, Some("e03".to_string()));
+    }
+
+    #[test]
+    fn reject_independent_constraints_same_solve_for() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+            zero = ["e0"]
+
+            [types.TestType]
+            grades = [0, 2, 4]
+            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
+            geometric_constraint = "s + e0123 = 0"
+            antiproduct_constraint = "e12 + e03 = 0"
+            geometric_solve_for = "e0123"
+            antiproduct_solve_for = "e0123"
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::IndependentConstraintsSameSolveFor { .. })
+        ));
+    }
+
+    #[test]
+    fn reject_independent_constraints_missing_solve_for() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+            zero = ["e0"]
+
+            [types.TestType]
+            grades = [0, 2, 4]
+            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
+            geometric_constraint = "s + e0123 = 0"
+            antiproduct_constraint = "e12 + e03 = 0"
+            geometric_solve_for = "e0123"
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::IndependentConstraintsMissingSolveFor { .. })
+        ));
     }
 
     #[test]

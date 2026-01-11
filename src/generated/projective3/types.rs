@@ -27,9 +27,60 @@ pub struct Bivector<T: Float> {
     e03: T,
 }
 impl<T: Float> Bivector<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = "Creates a new element from 5 independent coefficients.\n\nThe `e03` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
     #[inline]
-    pub fn new(e12: T, e13: T, e23: T, e01: T, e02: T, e03: T) -> Self {
+    pub fn new(e12: T, e13: T, e23: T, e01: T, e02: T) -> Self {
+        let e03 = if (e12).abs() > T::epsilon() {
+            (e13 * e02 - e23 * e01) / (e12)
+        } else {
+            T::zero()
+        };
+        Self {
+            e12,
+            e13,
+            e23,
+            e01,
+            e02,
+            e03,
+        }
+    }
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|-2*e12*e03 + 2*e13*e02 - 2*e23*e01| > tolerance`."]
+    #[inline]
+    pub fn new_checked(
+        e12: T,
+        e13: T,
+        e23: T,
+        e01: T,
+        e02: T,
+        e03: T,
+        tolerance: T,
+    ) -> Result<Self, crate::ConstraintError> {
+        let residual = -T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01;
+        if residual.abs() > tolerance {
+            return Err(crate::ConstraintError::new(
+                "Bivector",
+                "-2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0",
+                residual.to_f64().unwrap_or(0.0),
+            ));
+        }
+        Ok(Self {
+            e12,
+            e13,
+            e23,
+            e01,
+            e02,
+            e03,
+        })
+    }
+    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r""]
+    #[doc = r" # Safety (Logical)"]
+    #[doc = r""]
+    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
+    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
+    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[inline]
+    pub fn new_unchecked(e12: T, e13: T, e23: T, e01: T, e02: T, e03: T) -> Self {
         Self {
             e12,
             e13,
@@ -72,7 +123,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -84,7 +135,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e1e2 element."]
     #[inline]
     pub fn unit_e12() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::one(),
             T::zero(),
             T::zero(),
@@ -96,7 +147,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e1e3 element."]
     #[inline]
     pub fn unit_e13() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::one(),
             T::zero(),
@@ -108,7 +159,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e2e3 element."]
     #[inline]
     pub fn unit_e23() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::one(),
@@ -120,7 +171,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e1e4 element."]
     #[inline]
     pub fn unit_e01() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -132,7 +183,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e2e4 element."]
     #[inline]
     pub fn unit_e02() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -144,7 +195,7 @@ impl<T: Float> Bivector<T> {
     #[doc = "Creates the unit e3e4 element."]
     #[inline]
     pub fn unit_e03() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -194,7 +245,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e12 * s,
             self.e13 * s,
             self.e23 * s,
@@ -214,7 +265,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             -self.e12, -self.e13, -self.e23, -self.e01, -self.e02, -self.e03,
         )
     }
@@ -247,9 +298,67 @@ pub struct Flector<T: Float> {
     e023: T,
 }
 impl<T: Float> Flector<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = "Creates a new element from 7 independent coefficients.\n\nThe `e023` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
     #[inline]
-    pub fn new(e1: T, e2: T, e3: T, e0: T, e123: T, e012: T, e013: T, e023: T) -> Self {
+    pub fn new(e1: T, e2: T, e3: T, e0: T, e123: T, e012: T, e013: T) -> Self {
+        let e023 = if (e1).abs() > T::epsilon() {
+            (e2 * e013 - e3 * e012 + e0 * e123) / (e1)
+        } else {
+            T::zero()
+        };
+        Self {
+            e1,
+            e2,
+            e3,
+            e0,
+            e123,
+            e012,
+            e013,
+            e023,
+        }
+    }
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|-2*e1*e023 + 2*e2*e013 - 2*e3*e012 + 2*e0*e123| > tolerance`."]
+    #[inline]
+    pub fn new_checked(
+        e1: T,
+        e2: T,
+        e3: T,
+        e0: T,
+        e123: T,
+        e012: T,
+        e013: T,
+        e023: T,
+        tolerance: T,
+    ) -> Result<Self, crate::ConstraintError> {
+        let residual =
+            -T::TWO * e1 * e023 + T::TWO * e2 * e013 - T::TWO * e3 * e012 + T::TWO * e0 * e123;
+        if residual.abs() > tolerance {
+            return Err(crate::ConstraintError::new(
+                "Flector",
+                "-2*e1*e023 + 2*e2*e013 - 2*e3*e012 + 2*e0*e123 = 0",
+                residual.to_f64().unwrap_or(0.0),
+            ));
+        }
+        Ok(Self {
+            e1,
+            e2,
+            e3,
+            e0,
+            e123,
+            e012,
+            e013,
+            e023,
+        })
+    }
+    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r""]
+    #[doc = r" # Safety (Logical)"]
+    #[doc = r""]
+    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
+    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
+    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[inline]
+    pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T, e123: T, e012: T, e013: T, e023: T) -> Self {
         Self {
             e1,
             e2,
@@ -304,7 +413,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -358,7 +467,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e1 * s,
             self.e2 * s,
             self.e3 * s,
@@ -380,7 +489,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e1, self.e2, self.e3, self.e0, -self.e123, -self.e012, -self.e013, -self.e023,
         )
     }
@@ -413,9 +522,67 @@ pub struct Motor<T: Float> {
     e0123: T,
 }
 impl<T: Float> Motor<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = "Creates a new element from 7 independent coefficients.\n\nThe `e0123` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
     #[inline]
-    pub fn new(s: T, e12: T, e13: T, e23: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+    pub fn new(s: T, e12: T, e13: T, e23: T, e01: T, e02: T, e03: T) -> Self {
+        let e0123 = if (s).abs() > T::epsilon() {
+            (e12 * e03 - e13 * e02 + e23 * e01) / (s)
+        } else {
+            T::zero()
+        };
+        Self {
+            s,
+            e12,
+            e13,
+            e23,
+            e01,
+            e02,
+            e03,
+            e0123,
+        }
+    }
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01| > tolerance`."]
+    #[inline]
+    pub fn new_checked(
+        s: T,
+        e12: T,
+        e13: T,
+        e23: T,
+        e01: T,
+        e02: T,
+        e03: T,
+        e0123: T,
+        tolerance: T,
+    ) -> Result<Self, crate::ConstraintError> {
+        let residual =
+            T::TWO * s * e0123 - T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01;
+        if residual.abs() > tolerance {
+            return Err(crate::ConstraintError::new(
+                "Motor",
+                "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0",
+                residual.to_f64().unwrap_or(0.0),
+            ));
+        }
+        Ok(Self {
+            s,
+            e12,
+            e13,
+            e23,
+            e01,
+            e02,
+            e03,
+            e0123,
+        })
+    }
+    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r""]
+    #[doc = r" # Safety (Logical)"]
+    #[doc = r""]
+    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
+    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
+    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[inline]
+    pub fn new_unchecked(s: T, e12: T, e13: T, e23: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
         Self {
             s,
             e12,
@@ -470,7 +637,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -484,7 +651,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
     #[inline]
     pub fn identity() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::one(),
             T::zero(),
             T::zero(),
@@ -538,7 +705,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s * s,
             self.e12 * s,
             self.e13 * s,
@@ -560,7 +727,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s, -self.e12, -self.e13, -self.e23, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }

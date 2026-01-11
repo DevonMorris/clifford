@@ -67,8 +67,16 @@ pub struct RawTypeSpec {
     pub fields: Vec<String>,
     /// Type this aliases.
     pub alias_of: Option<String>,
-    /// Constraint expression (e.g., "s * s + xy * xy = 1" for unit rotors).
-    pub constraint: Option<String>,
+    /// Geometric product constraint (e.g., "2*s*e0123 - 2*e12*e03 + ... = 0").
+    pub geometric_constraint: Option<String>,
+    /// Antiproduct constraint (often same as geometric_constraint).
+    pub antiproduct_constraint: Option<String>,
+    /// Field to solve for when enforcing the geometric constraint.
+    /// If constraints are dependent (same expression), only this field is used.
+    pub geometric_solve_for: Option<String>,
+    /// Field to solve for when enforcing the antiproduct constraint.
+    /// Only required when antiproduct_constraint differs from geometric_constraint.
+    pub antiproduct_solve_for: Option<String>,
 }
 
 /// Raw products section.

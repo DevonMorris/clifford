@@ -82,8 +82,56 @@ pub struct TypeSpec {
     pub fields: Vec<FieldSpec>,
     /// If this type aliases another (same storage layout).
     pub alias_of: Option<String>,
-    /// Constraint expression (e.g., "s * s + xy * xy = 1" for unit rotors).
-    pub constraint: Option<String>,
+    /// Geometric product constraint (e.g., "2*s*e0123 - 2*e12*e03 + ... = 0").
+    pub geometric_constraint: Option<String>,
+    /// Antiproduct constraint (often same as geometric_constraint).
+    pub antiproduct_constraint: Option<String>,
+    /// Field to solve for when enforcing the geometric constraint.
+    /// If constraints are dependent (same expression), only this field is used.
+    pub geometric_solve_for: Option<String>,
+    /// Field to solve for when enforcing the antiproduct constraint.
+    /// Only required when antiproduct_constraint differs from geometric_constraint.
+    pub antiproduct_solve_for: Option<String>,
+}
+
+impl TypeSpec {
+    /// Returns true if this type has any constraint.
+    pub fn has_constraint(&self) -> bool {
+        self.geometric_constraint.is_some() || self.antiproduct_constraint.is_some()
+    }
+
+    /// Returns true if this type has two independent constraints.
+    ///
+    /// Constraints are considered independent if both exist and differ in their expression.
+    /// When constraints are dependent (same expression), only one solve_for field is needed.
+    pub fn has_independent_constraints(&self) -> bool {
+        match (&self.geometric_constraint, &self.antiproduct_constraint) {
+            (Some(gc), Some(ac)) => gc != ac,
+            _ => false,
+        }
+    }
+
+    /// Returns all solve_for fields that need to be computed.
+    ///
+    /// - If constraints are dependent (same): returns `[geometric_solve_for]`
+    /// - If constraints are independent: returns `[geometric_solve_for, antiproduct_solve_for]`
+    /// - If no constraints: returns empty vec
+    pub fn solve_for_fields(&self) -> Vec<&str> {
+        let mut result = Vec::new();
+
+        if let Some(ref field) = self.geometric_solve_for {
+            result.push(field.as_str());
+        }
+
+        // Only include antiproduct_solve_for if constraints are independent
+        if self.has_independent_constraints() {
+            if let Some(ref field) = self.antiproduct_solve_for {
+                result.push(field.as_str());
+            }
+        }
+
+        result
+    }
 }
 
 /// A field in a type.

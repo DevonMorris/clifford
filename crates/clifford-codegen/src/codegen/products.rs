@@ -203,6 +203,24 @@ impl<'a> ProductGenerator<'a> {
         }
     }
 
+    /// Generates a constructor call for the given type.
+    ///
+    /// For types with solve_for fields (constrained types), uses `new_unchecked`
+    /// to preserve the computed product values. For unconstrained types, uses `new`.
+    fn generate_constructor_call(
+        &self,
+        ty: &TypeSpec,
+        type_name: &proc_macro2::Ident,
+        field_exprs: &[TokenStream],
+    ) -> TokenStream {
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        if has_constraints {
+            quote! { #type_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #type_name::new(#(#field_exprs),*) }
+        }
+    }
+
     // ========================================================================
     // Geometric Products
     // ========================================================================
@@ -256,11 +274,13 @@ impl<'a> ProductGenerator<'a> {
             entry.lhs, entry.rhs, entry.output
         );
 
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor_call
             }
         })
     }
@@ -318,11 +338,13 @@ impl<'a> ProductGenerator<'a> {
             entry.lhs, entry.rhs, entry.output
         );
 
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor_call
             }
         })
     }
@@ -384,11 +406,13 @@ impl<'a> ProductGenerator<'a> {
             entry.lhs, entry.rhs, entry.output
         );
 
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #c_name::new(#(#field_exprs),*)
+                #constructor_call
             }
         })
     }
@@ -529,11 +553,13 @@ impl<'a> ProductGenerator<'a> {
             versor_type.name, operand_type.name, versor_type.name, operand_type.name
         );
 
+        let constructor_call = self.generate_constructor_call(operand_type, &x_name, &field_exprs);
+
         Some(quote! {
             #[doc = #doc]
             #[inline]
             pub fn #fn_name<T: Float>(v: &#v_name<T>, x: &#x_name<T>) -> #x_name<T> {
-                #x_name::new(#(#field_exprs),*)
+                #constructor_call
             }
         })
     }

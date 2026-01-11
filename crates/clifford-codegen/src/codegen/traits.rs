@@ -210,6 +210,16 @@ impl<'a> TraitsGenerator<'a> {
         self.spec.types.iter().find(|t| t.name == name)
     }
 
+    /// Generates a constructor call, using `new_unchecked` for constrained types.
+    fn generate_constructor_call(ty: &TypeSpec, field_exprs: &[TokenStream]) -> TokenStream {
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        if has_constraints {
+            quote! { Self::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { Self::new(#(#field_exprs),*) }
+        }
+    }
+
     /// Generates Add implementation.
     fn generate_add(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
@@ -222,13 +232,15 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
+        let constructor_call = Self::generate_constructor_call(ty, &field_adds);
+
         quote! {
             impl<T: Float> Add for #name<T> {
                 type Output = Self;
 
                 #[inline]
                 fn add(self, rhs: Self) -> Self {
-                    Self::new(#(#field_adds),*)
+                    #constructor_call
                 }
             }
         }
@@ -246,13 +258,15 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
+        let constructor_call = Self::generate_constructor_call(ty, &field_subs);
+
         quote! {
             impl<T: Float> Sub for #name<T> {
                 type Output = Self;
 
                 #[inline]
                 fn sub(self, rhs: Self) -> Self {
-                    Self::new(#(#field_subs),*)
+                    #constructor_call
                 }
             }
         }
@@ -270,13 +284,15 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
+        let constructor_call = Self::generate_constructor_call(ty, &field_negs);
+
         quote! {
             impl<T: Float> Neg for #name<T> {
                 type Output = Self;
 
                 #[inline]
                 fn neg(self) -> Self {
-                    Self::new(#(#field_negs),*)
+                    #constructor_call
                 }
             }
         }
@@ -505,9 +521,21 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates Arbitrary implementation for a type.
+    ///
+    /// For types with `solve_for`, generates values for all fields except the
+    /// solved-for one(s), letting `new()` compute them from constraints.
     fn generate_arbitrary_impl(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
-        let num_fields = ty.fields.len();
+
+        // Determine which fields to generate (exclude solve_for fields)
+        let solve_for_fields = ty.solve_for_fields();
+        let fields_to_generate: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| !solve_for_fields.contains(&f.name.as_str()))
+            .collect();
+
+        let num_fields = fields_to_generate.len();
 
         // Generate tuple of ranges
         let range_tuple: Vec<TokenStream> = (0..num_fields)
@@ -589,11 +617,12 @@ mod verification_tests {{
     use super::*;
     use crate::algebra::Multivector;
     use crate::signature::{sig};
-    use approx::abs_diff_eq;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
-    /// Epsilon for floating-point comparisons in verification tests.
-    const EPSILON: f64 = 1e-10;
+    /// Relative epsilon for floating-point comparisons in verification tests.
+    /// Using relative comparison handles varying magnitudes better than absolute.
+    const REL_EPSILON: f64 = 1e-10;
 {add_sub}{geometric}{outer}}}
 "#,
             sig = signature_name,
@@ -656,7 +685,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -672,7 +701,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -687,7 +716,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -732,7 +761,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -781,7 +810,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
                 "Outer product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );

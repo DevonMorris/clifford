@@ -189,6 +189,8 @@ impl<'a> ConversionsGenerator<'a> {
     /// Generates `From<Multivector> for Type` for a single type.
     ///
     /// Note: This is a lossy projection that only extracts the relevant grades.
+    /// For constrained types, uses `new_unchecked()` since the multivector may not
+    /// satisfy the geometric constraint.
     fn generate_from_multivector(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
         let signature_name = self.generate_signature_name();
@@ -203,14 +205,40 @@ impl<'a> ConversionsGenerator<'a> {
             })
             .collect();
 
-        quote! {
-            impl<T: Float> From<Multivector<T, #signature_name>> for #name<T> {
+        // Use new_unchecked for constrained types since the multivector
+        // may not satisfy the geometric constraint
+        let has_solve_for = !ty.solve_for_fields().is_empty();
+        let constructor = if has_solve_for {
+            quote! { Self::new_unchecked(#(#field_extracts),*) }
+        } else {
+            quote! { Self::new(#(#field_extracts),*) }
+        };
+
+        let doc = if has_solve_for {
+            quote! {
                 /// Extracts this type from a multivector.
                 ///
                 /// Note: This is a lossy projection that only extracts the relevant
                 /// grades. Other components of the multivector are discarded.
+                ///
+                /// **Warning:** Uses `new_unchecked()` since the source multivector
+                /// may not satisfy the geometric constraint. Verify the constraint
+                /// manually if needed.
+            }
+        } else {
+            quote! {
+                /// Extracts this type from a multivector.
+                ///
+                /// Note: This is a lossy projection that only extracts the relevant
+                /// grades. Other components of the multivector are discarded.
+            }
+        };
+
+        quote! {
+            impl<T: Float> From<Multivector<T, #signature_name>> for #name<T> {
+                #doc
                 fn from(mv: Multivector<T, #signature_name>) -> Self {
-                    Self::new(#(#field_extracts),*)
+                    #constructor
                 }
             }
         }
