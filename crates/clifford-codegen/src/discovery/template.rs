@@ -113,9 +113,12 @@ fn write_entity_section(entity: &DiscoveredEntity, output: &mut dyn Write) -> io
     writeln!(output, "[types.{}]", entity.name)?;
     writeln!(output, "grades = {:?}", entity.grades)?;
 
-    // Output constraint if present
-    if let Some(ref constraint) = entity.constraint {
-        writeln!(output, "constraint = \"{}\"", constraint)?;
+    // Output constraints if present
+    if let Some(ref constraint) = entity.geometric_constraint {
+        writeln!(output, "geometric_constraint = \"{}\"", constraint)?;
+    }
+    if let Some(ref constraint) = entity.antiproduct_constraint {
+        writeln!(output, "antiproduct_constraint = \"{}\"", constraint)?;
     }
 
     writeln!(output)?;

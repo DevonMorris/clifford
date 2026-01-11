@@ -3,12 +3,20 @@
 //! When a grade combination doesn't automatically satisfy geometric constraints,
 //! this module derives the field constraint expression that must hold.
 //!
-//! For example, PGA bivectors (lines) have the constraint:
-//! `e01*e23 + e02*e31 + e03*e12 = 0` (direction · moment = 0)
+//! There are two types of constraints:
+//!
+//! 1. **Geometric Product Constraint**: `u * ũ = scalar`
+//!    For example, PGA bivectors (lines) have the constraint:
+//!    `e01*e23 + e02*e31 + e03*e12 = 0` (direction · moment = 0)
+//!
+//! 2. **Antiproduct Constraint**: `u ⊟ ũ̃ = antiscalar`
+//!    This is the dual constraint that must also be satisfied.
 
 use std::collections::HashMap;
 
-use crate::algebra::{Algebra, Blade, ProductTable, blades_of_grades, grade, reverse_sign};
+use crate::algebra::{
+    Algebra, Blade, ProductTable, antireverse_sign, blades_of_grades, grade, reverse_sign,
+};
 
 /// Derives the field constraint expression for a grade combination.
 ///
@@ -128,6 +136,136 @@ pub fn derive_field_constraint(grades: &[usize], algebra: &Algebra) -> Option<St
         } else {
             expr.push_str(" + ");
             expr.push_str(term);
+        }
+    }
+
+    Some(format!("{} = 0", expr))
+}
+
+/// Derives the antiproduct field constraint expression for a grade combination.
+///
+/// The antiproduct constraint requires that `u ⊟ ũ̃` produces only an antiscalar
+/// (grade n). This function derives the field constraint that must hold for this
+/// to be true.
+///
+/// The antiproduct is computed as: `a ⊟ b = dual(dual(a) * dual(b))`
+///
+/// # Arguments
+///
+/// * `grades` - The grades present in the type
+/// * `algebra` - The algebra definition
+///
+/// # Returns
+///
+/// `None` if no constraint needed, or `Some(expression)` where the expression
+/// must equal zero.
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::discovery::derive_antiproduct_constraint;
+/// use clifford_codegen::algebra::Algebra;
+///
+/// let algebra = Algebra::pga(3);
+///
+/// // PGA motors need an antiproduct constraint
+/// let constraint = derive_antiproduct_constraint(&[0, 2, 4], &algebra);
+/// // Returns the constraint expression if one is needed
+/// ```
+pub fn derive_antiproduct_constraint(grades: &[usize], algebra: &Algebra) -> Option<String> {
+    let table = ProductTable::new(algebra);
+    let dim = algebra.dim();
+    let blades = blades_of_grades(dim, grades);
+    let pseudoscalar = (1 << dim) - 1; // All bits set = e123...n
+
+    // Collect non-antiscalar contributions from u ⊟ antireverse(u)
+    // For each non-antiscalar output blade, collect the terms that contribute to it
+    let mut non_antiscalar_terms: HashMap<usize, Vec<(usize, usize, i32)>> = HashMap::new();
+
+    for (i, &a) in blades.iter().enumerate() {
+        for &b in &blades[i..] {
+            let ga = grade(a);
+            let gb = grade(b);
+            let antirev_a = antireverse_sign(ga, dim);
+            let antirev_b = antireverse_sign(gb, dim);
+
+            // Compute dual blades
+            let dual_a = pseudoscalar ^ a;
+            let dual_b = pseudoscalar ^ b;
+
+            // Product of duals
+            let (sign_ab, dual_result_ab) = table.geometric(dual_a, dual_b);
+            // Dual back to get antiproduct result
+            let result_ab = pseudoscalar ^ dual_result_ab;
+
+            if grade(result_ab) == dim {
+                continue; // Antiscalar output (grade n), no constraint needed
+            }
+
+            if a == b {
+                // Same blade producing non-antiscalar - fundamental problem
+                if sign_ab != 0 {
+                    return None; // Can't derive a useful constraint
+                }
+            } else {
+                // Different blades producing non-antiscalar
+                let (sign_ba, _) = table.geometric(dual_b, dual_a);
+
+                // Total coefficient for result blade when terms don't cancel
+                let coef = i32::from(sign_ab) * i32::from(antirev_b)
+                    + i32::from(sign_ba) * i32::from(antirev_a);
+
+                if coef != 0 {
+                    // This pair contributes to a non-antiscalar result
+                    non_antiscalar_terms
+                        .entry(result_ab)
+                        .or_default()
+                        .push((a, b, coef));
+                }
+            }
+        }
+    }
+
+    if non_antiscalar_terms.is_empty() {
+        return None; // No constraint needed
+    }
+
+    // Build constraint expression
+    let mut terms: Vec<String> = Vec::new();
+
+    for contributions in non_antiscalar_terms.values() {
+        for &(a, b, coef) in contributions {
+            let blade_a = Blade::from_index(a);
+            let blade_b = Blade::from_index(b);
+            let name_a = algebra.blade_name(blade_a);
+            let name_b = algebra.blade_name(blade_b);
+
+            let term = if coef == 1 {
+                format!("{}*{}", name_a, name_b)
+            } else if coef == -1 {
+                format!("-{}*{}", name_a, name_b)
+            } else {
+                format!("{}*{}*{}", coef, name_a, name_b)
+            };
+            terms.push(term);
+        }
+    }
+
+    if terms.is_empty() {
+        return None;
+    }
+
+    // Join terms with + (handling leading -)
+    let mut expr = String::new();
+    for (i, term) in terms.iter().enumerate() {
+        if i == 0 {
+            expr.push_str(&term);
+        } else if let Some(stripped) = term.strip_prefix('-') {
+            expr.push_str(" - ");
+            expr.push_str(stripped);
+        } else {
+            expr.push_str(" + ");
+            expr.push_str(&term);
         }
     }
 

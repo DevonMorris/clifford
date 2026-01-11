@@ -46,7 +46,9 @@ mod naming;
 pub mod products;
 mod template;
 
-pub use constraints::{can_satisfy_constraints, derive_field_constraint};
+pub use constraints::{
+    can_satisfy_constraints, derive_antiproduct_constraint, derive_field_constraint,
+};
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;
 pub use products::{
@@ -351,13 +353,15 @@ pub fn discover_entities(algebra: &Algebra) -> Vec<DiscoveredEntity> {
     grade_sets
         .into_iter()
         .map(|grades| {
-            let (_, constraint) = can_satisfy_constraints(&grades, algebra);
+            let geometric_constraint = derive_field_constraint(&grades, algebra);
+            let antiproduct_constraint = derive_antiproduct_constraint(&grades, algebra);
             let name = suggest_name(&grades, algebra.dim());
 
             DiscoveredEntity {
                 name,
                 grades,
-                constraint,
+                geometric_constraint,
+                antiproduct_constraint,
             }
         })
         .collect()
@@ -442,17 +446,26 @@ mod tests {
         let entities = discover_entities(&algebra);
         assert_eq!(entities.len(), 7);
 
-        // Check bivector has constraint
+        // Check bivector has constraint(s)
         let bivector = entities.iter().find(|e| e.grades == vec![2]).unwrap();
-        assert!(bivector.constraint.is_some());
+        assert!(
+            bivector.has_constraints(),
+            "Bivector should have constraints"
+        );
 
-        // Check motor has constraint
+        // Check motor has constraint(s) - should have 2 constraints for 6 DOF
         let motor = entities.iter().find(|e| e.grades == vec![0, 2, 4]).unwrap();
-        assert!(motor.constraint.is_some());
+        assert!(motor.has_constraints(), "Motor should have constraints");
+        // Motor should have 2 constraints (8 coeffs - 2 constraints = 6 DOF)
+        assert_eq!(
+            motor.constraint_count(),
+            2,
+            "Motor should have exactly 2 constraints for 6 DOF"
+        );
 
-        // Check flector has constraint
+        // Check flector has constraint(s)
         let flector = entities.iter().find(|e| e.grades == vec![1, 3]).unwrap();
-        assert!(flector.constraint.is_some());
+        assert!(flector.has_constraints(), "Flector should have constraints");
     }
 
     #[test]
