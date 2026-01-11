@@ -25,6 +25,8 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-9](prd-9-simd.md) | Draft | SIMD and simba integration (feature-gated) |
 | [PRD-10](prd-10-nalgebra-benchmarks.md) | **Complete** | nalgebra vs clifford benchmarks |
 | [PRD-11](prd-11-autodiff.md) | Pending | Automatic differentiation via dual numbers |
+| [PRD-12](prd-12-rerun.md) | **Complete** | Rerun visualization integration |
+| [PRD-13](prd-13-release.md) | Draft | Release and publishing process |
 
 ## Implementation Order
 

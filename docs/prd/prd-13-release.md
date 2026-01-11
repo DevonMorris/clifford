@@ -164,7 +164,7 @@ Before creating a release:
 3. **Version in Cargo.toml matches intended release**
 4. **Documentation builds without warnings**
    ```bash
-   cargo doc --no-deps --all-features
+   cargo doc --no-default-features --features proptest-support,serde,nalgebra-0_34 --no-deps
    ```
 5. **All deprecation warnings addressed or documented**
 6. **Breaking changes clearly documented in CHANGELOG**
@@ -215,9 +215,10 @@ Before creating a release:
 
 8. **Create GitHub Release**
    ```bash
-   gh release create v0.2.0 --title "v0.2.0" --notes-file RELEASE_NOTES.md
+   # Extract release notes from CHANGELOG and create release
+   gh release create v0.2.0 --title "v0.2.0" --generate-notes
    ```
-   Or use the CHANGELOG section for that version as release notes.
+   Or manually copy the CHANGELOG section for that version as release notes.
 
 ### Automated Publishing
 
@@ -400,7 +401,7 @@ jobs:
           cargo fmt --all -- --check
           cargo clippy -- -D warnings
           cargo test
-          cargo doc --no-deps
+          cargo doc --no-default-features --features proptest-support,serde,nalgebra-0_34 --no-deps
 
       - name: Dry run publish
         run: cargo publish --dry-run
@@ -413,7 +414,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: RELEASE_NOTES.md
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

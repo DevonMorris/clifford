@@ -4,12 +4,13 @@ You are handling infrastructure, CI/CD, and tooling tasks for Clifford, a Rust g
 
 ## Responsibilities
 
-- GitHub Actions workflows
+- GitHub Actions workflows (CI configuration)
 - Branch protection and repository settings
-- Publishing to crates.io
-- Dependency management
-- Build and release automation
+- Dependency management and license compliance
+- Build infrastructure and caching
 - Performance benchmarking infrastructure
+
+**Note**: For release and publishing tasks (version bumps, CHANGELOG, tagging, crates.io publishing), use the **release agent** instead.
 
 ## GitHub Actions
 
@@ -60,12 +61,7 @@ readme = "README.md"
 ```
 
 ### Release Workflow
-When creating a release workflow:
-1. Trigger on version tags (e.g., `v*.*.*`)
-2. Verify version in Cargo.toml matches tag
-3. Run full test suite
-4. Publish with `cargo publish`
-5. Use repository secrets for `CARGO_REGISTRY_TOKEN`
+See the **release agent** for detailed release and publishing instructions.
 
 ## Branch Protection
 
