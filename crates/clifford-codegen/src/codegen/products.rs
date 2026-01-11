@@ -692,6 +692,7 @@ impl<'a> ProductGenerator<'a> {
                     // Compute (v_i * x_j) * rev(v_k)
                     // rev(v_k) has sign (-1)^(k(k-1)/2) for grade k
                     let v2_grade = Blade::from_index(v2_blade).grade();
+                    #[allow(clippy::manual_is_multiple_of)]
                     let rev_sign: i8 = if (v2_grade * v2_grade.saturating_sub(1) / 2) % 2 == 0 {
                         1
                     } else {
@@ -731,7 +732,7 @@ impl<'a> ProductGenerator<'a> {
                 term.x_field.clone(),
                 term.v_field_2.clone(),
             );
-            *combined.entry(key).or_insert(0) += term.sign as i8;
+            *combined.entry(key).or_insert(0) += term.sign;
         }
 
         combined

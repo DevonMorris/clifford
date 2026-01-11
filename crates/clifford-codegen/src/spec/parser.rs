@@ -301,8 +301,8 @@ fn generate_default_fields(
     let mut fields = Vec::new();
 
     for &grade in grades {
-        for blade_index in 0..(1 << dim) {
-            if (blade_index as usize).count_ones() as usize == grade {
+        for blade_index in 0usize..(1 << dim) {
+            if blade_index.count_ones() as usize == grade {
                 let name = blade_names
                     .get(&blade_index)
                     .cloned()
@@ -345,8 +345,8 @@ fn build_fields_from_names(
     // Collect blade indices for these grades in order
     let mut blade_indices = Vec::new();
     for &grade in grades {
-        for blade_index in 0..(1 << dim) {
-            if (blade_index as usize).count_ones() as usize == grade {
+        for blade_index in 0usize..(1 << dim) {
+            if blade_index.count_ones() as usize == grade {
                 blade_indices.push((blade_index, grade));
             }
         }

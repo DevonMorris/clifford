@@ -77,6 +77,7 @@ impl<'a> TraitsGenerator<'a> {
         let ops = self.generate_all_ops();
         let approx = self.generate_all_approx();
         let arbitrary = self.generate_all_arbitrary();
+        let verification = self.generate_verification_tests();
 
         quote! {
             #header
@@ -96,6 +97,11 @@ impl<'a> TraitsGenerator<'a> {
             // Arbitrary Implementations (for proptest)
             // ============================================================
             #arbitrary
+
+            // ============================================================
+            // Verification Tests (compare against Multivector)
+            // ============================================================
+            #verification
         }
     }
 
@@ -152,6 +158,7 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates operators for a single type.
+    #[allow(clippy::vec_init_then_push)]
     fn generate_ops_for_type(&self, ty: &TypeSpec) -> Vec<TokenStream> {
         let mut impls = Vec::new();
 
@@ -563,6 +570,284 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    // ========================================================================
+    // Verification Tests
+    // ========================================================================
+
+    /// Generates verification tests that compare specialized operations against Multivector.
+    fn generate_verification_tests(&self) -> TokenStream {
+        let signature_name = self.generate_signature_name();
+        let add_sub_tests = self.generate_add_sub_verification_tests();
+        let geometric_tests = self.generate_geometric_verification_tests();
+        let outer_tests = self.generate_outer_verification_tests();
+
+        quote! {
+            #[cfg(test)]
+            mod verification_tests {
+                use super::*;
+                use super::arbitrary_impls::*;
+                use crate::algebra::Multivector;
+                use crate::signature::#signature_name;
+                use approx::abs_diff_eq;
+                use proptest::prelude::*;
+
+                /// Epsilon for floating-point comparisons in verification tests.
+                const EPSILON: f64 = 1e-10;
+
+                #add_sub_tests
+                #geometric_tests
+                #outer_tests
+            }
+        }
+    }
+
+    /// Generates the signature type name for this algebra.
+    fn generate_signature_name(&self) -> proc_macro2::Ident {
+        // Convert algebra name to PascalCase signature name
+        let name = &self.spec.name;
+        let sig_name = if name.starts_with("euclidean") {
+            match self.algebra.dim() {
+                2 => "Euclidean2",
+                3 => "Euclidean3",
+                _ => "Euclidean3", // fallback
+            }
+        } else if name.starts_with("pga") || name.starts_with("projective") {
+            match self.algebra.dim() {
+                3 => "Projective2",
+                4 => "Projective3",
+                _ => "Projective3",
+            }
+        } else if name.starts_with("cga") || name.starts_with("conformal") {
+            match self.algebra.dim() {
+                4 => "Conformal2",
+                5 => "Conformal3",
+                _ => "Conformal3",
+            }
+        } else {
+            // Default: generate a custom signature name
+            "CustomSignature"
+        };
+        format_ident!("{}", sig_name)
+    }
+
+    /// Generates add/sub verification tests for each type.
+    fn generate_add_sub_verification_tests(&self) -> TokenStream {
+        let signature_name = self.generate_signature_name();
+        let tests: Vec<TokenStream> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|ty| {
+                let name = format_ident!("{}", ty.name);
+                let name_lower = format_ident!("{}", ty.name.to_lowercase());
+                let add_test_name = format_ident!("{}_add_matches_multivector", name_lower);
+                let sub_test_name = format_ident!("{}_sub_matches_multivector", name_lower);
+                let neg_test_name = format_ident!("{}_neg_matches_multivector", name_lower);
+
+                quote! {
+                    proptest! {
+                        #[test]
+                        fn #add_test_name(a in any::<#name<f64>>(), b in any::<#name<f64>>()) {
+                            let mv_a: Multivector<f64, #signature_name> = a.into();
+                            let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                            let specialized_result = a + b;
+                            let generic_result = mv_a + mv_b;
+
+                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                            prop_assert!(
+                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                "Add mismatch: specialized={:?}, generic={:?}",
+                                specialized_mv, generic_result
+                            );
+                        }
+
+                        #[test]
+                        fn #sub_test_name(a in any::<#name<f64>>(), b in any::<#name<f64>>()) {
+                            let mv_a: Multivector<f64, #signature_name> = a.into();
+                            let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                            let specialized_result = a - b;
+                            let generic_result = mv_a - mv_b;
+
+                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                            prop_assert!(
+                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                "Sub mismatch: specialized={:?}, generic={:?}",
+                                specialized_mv, generic_result
+                            );
+                        }
+
+                        #[test]
+                        fn #neg_test_name(a in any::<#name<f64>>()) {
+                            let mv_a: Multivector<f64, #signature_name> = a.into();
+
+                            let specialized_result = -a;
+                            let generic_result = -mv_a;
+
+                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                            prop_assert!(
+                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                "Neg mismatch: specialized={:?}, generic={:?}",
+                                specialized_mv, generic_result
+                            );
+                        }
+                    }
+                }
+            })
+            .collect();
+
+        quote! { #(#tests)* }
+    }
+
+    /// Generates geometric product verification tests.
+    fn generate_geometric_verification_tests(&self) -> TokenStream {
+        let signature_name = self.generate_signature_name();
+        let dim = self.algebra.dim();
+        let tests: Vec<TokenStream> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .flat_map(|type_a| {
+                self.spec
+                    .types
+                    .iter()
+                    .filter(|t| t.alias_of.is_none())
+                    .filter_map(|type_b| {
+                        // Compute all result grades from geometric product
+                        let mut result_grades = Vec::new();
+                        for &ga in &type_a.grades {
+                            for &gb in &type_b.grades {
+                                result_grades.extend(geometric_grades(ga, gb, dim));
+                            }
+                        }
+                        result_grades.sort();
+                        result_grades.dedup();
+
+                        let output_type = self.find_type_for_grades(&result_grades)?;
+
+                        let name_a = format_ident!("{}", type_a.name);
+                        let name_b = format_ident!("{}", type_b.name);
+                        let name_out = format_ident!("{}", output_type.name);
+                        let test_name = format_ident!(
+                            "geometric_{}_{}_{}_matches_multivector",
+                            type_a.name.to_lowercase(),
+                            type_b.name.to_lowercase(),
+                            output_type.name.to_lowercase()
+                        );
+                        let fn_name = format_ident!(
+                            "geometric_{}_{}",
+                            type_a.name.to_lowercase(),
+                            type_b.name.to_lowercase()
+                        );
+
+                        Some(quote! {
+                            proptest! {
+                                #[test]
+                                fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
+                                    let mv_a: Multivector<f64, #signature_name> = a.into();
+                                    let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                                    let specialized_result: #name_out<f64> = #fn_name(a, b);
+                                    let generic_result = mv_a.geometric(mv_b);
+
+                                    let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                                    prop_assert!(
+                                        abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                        "Geometric product mismatch: specialized={:?}, generic={:?}",
+                                        specialized_mv, generic_result
+                                    );
+                                }
+                            }
+                        })
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        quote! { #(#tests)* }
+    }
+
+    /// Generates outer product verification tests.
+    fn generate_outer_verification_tests(&self) -> TokenStream {
+        let signature_name = self.generate_signature_name();
+        let tests: Vec<TokenStream> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .flat_map(|type_a| {
+                self.spec
+                    .types
+                    .iter()
+                    .filter(|t| t.alias_of.is_none())
+                    .filter_map(|type_b| {
+                        // Check if this product produces a valid output type
+                        let result_grades: Vec<usize> = type_a
+                            .grades
+                            .iter()
+                            .flat_map(|&ga| {
+                                type_b.grades.iter().filter_map(move |&gb| {
+                                    let sum = ga + gb;
+                                    if sum <= self.algebra.dim() {
+                                        Some(sum)
+                                    } else {
+                                        None
+                                    }
+                                })
+                            })
+                            .collect();
+
+                        if result_grades.is_empty() {
+                            return None;
+                        }
+
+                        let output_type = self.find_type_for_grades(&result_grades)?;
+
+                        let name_a = format_ident!("{}", type_a.name);
+                        let name_b = format_ident!("{}", type_b.name);
+                        let name_out = format_ident!("{}", output_type.name);
+                        let test_name = format_ident!(
+                            "outer_{}_{}_{}_matches_multivector",
+                            type_a.name.to_lowercase(),
+                            type_b.name.to_lowercase(),
+                            output_type.name.to_lowercase()
+                        );
+                        let fn_name = format_ident!(
+                            "outer_{}_{}",
+                            type_a.name.to_lowercase(),
+                            type_b.name.to_lowercase()
+                        );
+
+                        Some(quote! {
+                            proptest! {
+                                #[test]
+                                fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
+                                    let mv_a: Multivector<f64, #signature_name> = a.into();
+                                    let mv_b: Multivector<f64, #signature_name> = b.into();
+
+                                    let specialized_result: #name_out<f64> = #fn_name(a, b);
+                                    let generic_result = mv_a.outer(mv_b);
+
+                                    let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
+                                    prop_assert!(
+                                        abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                                        "Outer product mismatch: specialized={:?}, generic={:?}",
+                                        specialized_mv, generic_result
+                                    );
+                                }
+                            }
+                        })
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        quote! { #(#tests)* }
     }
 }
 
