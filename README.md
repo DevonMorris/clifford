@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/clifford.png" alt="Clifford" width="240">
+  <img src="https://raw.githubusercontent.com/DevonMorris/clifford/main/assets/clifford.png" alt="Clifford" width="240">
 </p>
 
 <h1 align="center">Clifford</h1>
