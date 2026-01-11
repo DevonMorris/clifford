@@ -537,6 +537,9 @@ impl<'a> TraitsGenerator<'a> {
 
         let num_fields = fields_to_generate.len();
 
+        // Check if new() returns Option<Self> (domain restrictions)
+        let has_domain_restriction = ty.has_domain_restrictions();
+
         // Generate tuple of ranges
         let range_tuple: Vec<TokenStream> = (0..num_fields)
             .map(|_| quote! { -100.0f64..100.0 })
@@ -549,8 +552,52 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Handle single-field case specially to avoid unnecessary parentheses
-        if num_fields == 1 {
+        // For types with domain restrictions, use prop_filter_map
+        // For normal types, use prop_map
+        if has_domain_restriction {
+            // Use smaller range to increase success rate for constrained types
+            let constrained_range_tuple: Vec<TokenStream> =
+                (0..num_fields).map(|_| quote! { -0.5f64..0.5 }).collect();
+
+            let prop_map_args: Vec<TokenStream> = (0..num_fields)
+                .map(|i| {
+                    let var = format_ident!("x{}", i);
+                    quote! { #var }
+                })
+                .collect();
+
+            if num_fields == 1 {
+                quote! {
+                    impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                        type Parameters = ();
+                        type Strategy = BoxedStrategy<Self>;
+
+                        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                            (-0.5f64..0.5)
+                                .prop_filter_map("constraint satisfied", |x0| {
+                                    #name::new(#(#field_inits),*)
+                                })
+                                .boxed()
+                        }
+                    }
+                }
+            } else {
+                quote! {
+                    impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                        type Parameters = ();
+                        type Strategy = BoxedStrategy<Self>;
+
+                        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                            (#(#constrained_range_tuple),*)
+                                .prop_filter_map("constraint satisfied", |(#(#prop_map_args),*)| {
+                                    #name::new(#(#field_inits),*)
+                                })
+                                .boxed()
+                        }
+                    }
+                }
+            }
+        } else if num_fields == 1 {
             quote! {
                 impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
                     type Parameters = ();

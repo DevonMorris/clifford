@@ -522,15 +522,20 @@ pub struct Motor<T: Float> {
     e0123: T,
 }
 impl<T: Float> Motor<T> {
-    #[doc = "Creates a new element from 7 independent coefficients.\n\nThe `e0123` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
+    #[doc = "Creates a new element from 6 independent coefficients.\n\nThe `s`, `e0123` coefficient(s) are computed from geometric constraints.\n\nReturns `None` if the constraint cannot be satisfied (e.g., when the\nsqrt argument would be negative)."]
     #[inline]
-    pub fn new(s: T, e12: T, e13: T, e23: T, e01: T, e02: T, e03: T) -> Self {
+    pub fn new(e12: T, e13: T, e23: T, e01: T, e02: T, e03: T) -> Option<Self> {
+        let sqrt_arg = T::from_i8(1) - e12 * e12 - e13 * e13 - e23 * e23;
+        if sqrt_arg < T::zero() {
+            return None;
+        }
+        let s = sqrt_arg.sqrt();
         let e0123 = if (s).abs() > T::epsilon() {
             (e12 * e03 - e13 * e02 + e23 * e01) / (s)
         } else {
             T::zero()
         };
-        Self {
+        Some(Self {
             s,
             e12,
             e13,
@@ -539,9 +544,9 @@ impl<T: Float> Motor<T> {
             e02,
             e03,
             e0123,
-        }
+        })
     }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01| > tolerance`."]
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|s*s + e12*e12 + e13*e13 + e23*e23 = 1| > tolerance`."]
     #[inline]
     pub fn new_checked(
         s: T,
@@ -554,12 +559,11 @@ impl<T: Float> Motor<T> {
         e0123: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual =
-            T::TWO * s * e0123 - T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01;
+        let residual = s * s + e12 * e12 + e13 * e13 + e23 * e23;
         if residual.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Motor",
-                "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0",
+                "s*s + e12*e12 + e13*e13 + e23*e23 = 1",
                 residual.to_f64().unwrap_or(0.0),
             ));
         }

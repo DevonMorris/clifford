@@ -82,17 +82,11 @@ pub struct TypeSpec {
     pub fields: Vec<FieldSpec>,
     /// If this type aliases another (same storage layout).
     pub alias_of: Option<String>,
-    /// Geometric product constraint (e.g., "2*s*e0123 - 2*e12*e03 + ... = 0").
-    pub geometric_constraint: Option<String>,
-    /// Antiproduct constraint (often same as geometric_constraint).
-    pub antiproduct_constraint: Option<String>,
-    /// Field to solve for when enforcing the geometric constraint.
-    /// If constraints are dependent (same expression), only this field is used.
-    pub geometric_solve_for: Option<String>,
-    /// Field to solve for when enforcing the antiproduct constraint.
-    /// Only required when antiproduct_constraint differs from geometric_constraint.
-    pub antiproduct_solve_for: Option<String>,
-    /// User-defined additional constraints.
+    /// Constraints on this type (both algebraic and user-defined).
+    ///
+    /// Constraints with `solve_for` reduce the parameter count in constructors.
+    /// Linear constraints are always solvable; quadratic constraints may require
+    /// `Option<Self>` return type due to domain restrictions.
     pub constraints: Vec<UserConstraint>,
 }
 
@@ -127,50 +121,17 @@ pub struct UserConstraint {
 }
 
 impl TypeSpec {
-    /// Returns true if this type has any constraint (auto-derived or user-defined).
+    /// Returns true if this type has any constraints.
     pub fn has_constraint(&self) -> bool {
-        self.geometric_constraint.is_some()
-            || self.antiproduct_constraint.is_some()
-            || !self.constraints.is_empty()
-    }
-
-    /// Returns true if the auto-derived geometric and antiproduct constraints are independent.
-    ///
-    /// Constraints are considered independent if both exist and differ in their expression.
-    /// When constraints are dependent (same expression), only one solve_for field is needed.
-    pub fn has_independent_constraints(&self) -> bool {
-        match (&self.geometric_constraint, &self.antiproduct_constraint) {
-            (Some(gc), Some(ac)) => normalize_constraint_expr(gc) != normalize_constraint_expr(ac),
-            _ => false,
-        }
+        !self.constraints.is_empty()
     }
 
     /// Returns all solve_for fields that need to be computed.
-    ///
-    /// Includes both auto-derived constraints and user-defined constraints with solve_for.
     pub fn solve_for_fields(&self) -> Vec<&str> {
-        let mut result = Vec::new();
-
-        // Auto-derived geometric constraint
-        if let Some(ref field) = self.geometric_solve_for {
-            result.push(field.as_str());
-        }
-
-        // Auto-derived antiproduct constraint (only if independent)
-        if self.has_independent_constraints() {
-            if let Some(ref field) = self.antiproduct_solve_for {
-                result.push(field.as_str());
-            }
-        }
-
-        // User-defined constraints with solve_for
-        for constraint in &self.constraints {
-            if let Some(ref field) = constraint.solve_for {
-                result.push(field.as_str());
-            }
-        }
-
-        result
+        self.constraints
+            .iter()
+            .filter_map(|c| c.solve_for.as_deref())
+            .collect()
     }
 
     /// Returns true if any solvable constraint has domain restrictions.

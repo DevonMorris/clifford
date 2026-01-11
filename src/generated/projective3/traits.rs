@@ -1279,15 +1279,14 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
+                -0.5f64..0.5,
+                -0.5f64..0.5,
+                -0.5f64..0.5,
+                -0.5f64..0.5,
+                -0.5f64..0.5,
+                -0.5f64..0.5,
             )
-                .prop_map(|(x0, x1, x2, x3, x4, x5, x6)| {
+                .prop_filter_map("constraint satisfied", |(x0, x1, x2, x3, x4, x5)| {
                     Motor::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
@@ -1295,7 +1294,6 @@ mod arbitrary_impls {
                         T::from_f64(x3),
                         T::from_f64(x4),
                         T::from_f64(x5),
-                        T::from_f64(x6),
                     )
                 })
                 .boxed()

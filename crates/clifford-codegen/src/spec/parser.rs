@@ -283,65 +283,98 @@ fn parse_type(
         }
     }
 
-    // Validate geometric_solve_for field if present
-    if let Some(ref solve_for) = raw.geometric_solve_for {
-        let valid_field = fields.iter().any(|f| &f.name == solve_for);
-        if !valid_field {
-            return Err(ParseError::InvalidSolveFor {
-                type_name: name.to_string(),
-                field: solve_for.clone(),
-            });
-        }
-        // geometric_solve_for requires geometric_constraint
-        if raw.geometric_constraint.is_none() {
-            return Err(ParseError::SolveForWithoutConstraint {
-                type_name: name.to_string(),
-            });
-        }
+    // Validate: geometric_solve_for requires geometric_constraint
+    if raw.geometric_solve_for.is_some() && raw.geometric_constraint.is_none() {
+        return Err(ParseError::SolveForWithoutConstraint {
+            type_name: name.to_string(),
+        });
     }
 
-    // Validate antiproduct_solve_for field if present
-    if let Some(ref solve_for) = raw.antiproduct_solve_for {
-        let valid_field = fields.iter().any(|f| &f.name == solve_for);
-        if !valid_field {
-            return Err(ParseError::InvalidSolveFor {
-                type_name: name.to_string(),
-                field: solve_for.clone(),
-            });
-        }
-        // antiproduct_solve_for requires antiproduct_constraint
-        if raw.antiproduct_constraint.is_none() {
-            return Err(ParseError::SolveForWithoutConstraint {
-                type_name: name.to_string(),
-            });
-        }
+    // Validate: antiproduct_solve_for requires antiproduct_constraint
+    if raw.antiproduct_solve_for.is_some() && raw.antiproduct_constraint.is_none() {
+        return Err(ParseError::SolveForWithoutConstraint {
+            type_name: name.to_string(),
+        });
     }
 
-    // Check: if constraints are independent, both solve_for fields must differ
-    let constraints_independent = match (&raw.geometric_constraint, &raw.antiproduct_constraint) {
-        (Some(gc), Some(ac)) => normalize_constraint_expr(gc) != normalize_constraint_expr(ac),
-        _ => false,
-    };
+    // Convert old-format constraints to unified format
+    let mut constraints = Vec::new();
 
-    if constraints_independent {
-        // Independent constraints require two different solve_for fields
-        match (&raw.geometric_solve_for, &raw.antiproduct_solve_for) {
-            (Some(gsf), Some(asf)) if gsf == asf => {
-                return Err(ParseError::IndependentConstraintsSameSolveFor {
+    // Handle old-format geometric/antiproduct constraints
+    if let Some(ref gc) = raw.geometric_constraint {
+        // Check if antiproduct constraint is the same (dependent)
+        let is_dependent = raw
+            .antiproduct_constraint
+            .as_ref()
+            .is_some_and(|ac| normalize_constraint_expr(gc) == normalize_constraint_expr(ac));
+
+        // Validate geometric_solve_for
+        if let Some(ref solve_for) = raw.geometric_solve_for {
+            let valid_field = fields.iter().any(|f| &f.name == solve_for);
+            if !valid_field {
+                return Err(ParseError::InvalidSolveFor {
                     type_name: name.to_string(),
+                    field: solve_for.clone(),
                 });
             }
-            (None, _) | (_, None) => {
-                return Err(ParseError::IndependentConstraintsMissingSolveFor {
-                    type_name: name.to_string(),
+        }
+
+        // Add geometric constraint
+        constraints.push(UserConstraint {
+            name: "geometric".to_string(),
+            description: Some("Geometric product constraint".to_string()),
+            expression: gc.clone(),
+            solve_for: raw.geometric_solve_for.clone(),
+            sign: SignConvention::default(),
+            enforce: None,
+            has_domain_restriction: false,
+        });
+
+        // Add antiproduct constraint only if independent
+        if !is_dependent {
+            if let Some(ref ac) = raw.antiproduct_constraint {
+                // Validate antiproduct_solve_for
+                if let Some(ref solve_for) = raw.antiproduct_solve_for {
+                    let valid_field = fields.iter().any(|f| &f.name == solve_for);
+                    if !valid_field {
+                        return Err(ParseError::InvalidSolveFor {
+                            type_name: name.to_string(),
+                            field: solve_for.clone(),
+                        });
+                    }
+                }
+
+                // Check that solve_for fields differ
+                match (&raw.geometric_solve_for, &raw.antiproduct_solve_for) {
+                    (Some(gsf), Some(asf)) if gsf == asf => {
+                        return Err(ParseError::IndependentConstraintsSameSolveFor {
+                            type_name: name.to_string(),
+                        });
+                    }
+                    (None, _) | (_, None) => {
+                        return Err(ParseError::IndependentConstraintsMissingSolveFor {
+                            type_name: name.to_string(),
+                        });
+                    }
+                    _ => {} // Valid: different solve_for fields
+                }
+
+                constraints.push(UserConstraint {
+                    name: "antiproduct".to_string(),
+                    description: Some("Antiproduct constraint".to_string()),
+                    expression: ac.clone(),
+                    solve_for: raw.antiproduct_solve_for.clone(),
+                    sign: SignConvention::default(),
+                    enforce: None,
+                    has_domain_restriction: false,
                 });
             }
-            _ => {} // Valid: different solve_for fields
         }
     }
 
-    // Parse and validate user constraints
-    let constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
+    // Parse and validate user constraints (new format)
+    let user_constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
+    constraints.extend(user_constraints);
 
     Ok(TypeSpec {
         name: name.to_string(),
@@ -349,10 +382,6 @@ fn parse_type(
         description: raw.description.clone(),
         fields,
         alias_of: raw.alias_of.clone(),
-        geometric_constraint: raw.geometric_constraint.clone(),
-        antiproduct_constraint: raw.antiproduct_constraint.clone(),
-        geometric_solve_for: raw.geometric_solve_for.clone(),
-        antiproduct_solve_for: raw.antiproduct_solve_for.clone(),
         constraints,
     })
 }
@@ -685,10 +714,10 @@ mod tests {
         .unwrap();
 
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        assert_eq!(
-            rotor.geometric_constraint,
-            Some("s * s + xy * xy = 1".to_string())
-        );
+        // Old format geometric_constraint is converted to a constraint
+        assert_eq!(rotor.constraints.len(), 1);
+        assert_eq!(rotor.constraints[0].name, "geometric");
+        assert_eq!(rotor.constraints[0].expression, "s * s + xy * xy = 1");
     }
 
     #[test]
@@ -712,7 +741,9 @@ mod tests {
         .unwrap();
 
         let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
-        assert_eq!(motor.geometric_solve_for, Some("e0123".to_string()));
+        // Old format geometric_solve_for is converted to constraint.solve_for
+        assert_eq!(motor.constraints.len(), 1);
+        assert_eq!(motor.constraints[0].solve_for, Some("e0123".to_string()));
     }
 
     #[test]
@@ -782,8 +813,12 @@ mod tests {
         .unwrap();
 
         let tt = spec.types.iter().find(|t| t.name == "TestType").unwrap();
-        assert_eq!(tt.geometric_solve_for, Some("e0123".to_string()));
-        assert_eq!(tt.antiproduct_solve_for, Some("e03".to_string()));
+        // Independent constraints are both converted to separate constraints
+        assert_eq!(tt.constraints.len(), 2);
+        assert_eq!(tt.constraints[0].name, "geometric");
+        assert_eq!(tt.constraints[0].solve_for, Some("e0123".to_string()));
+        assert_eq!(tt.constraints[1].name, "antiproduct");
+        assert_eq!(tt.constraints[1].solve_for, Some("e03".to_string()));
     }
 
     #[test]
@@ -1062,11 +1097,16 @@ mod tests {
         .unwrap();
 
         let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
-        assert_eq!(motor.constraints.len(), 1);
-        assert_eq!(motor.constraints[0].name, "unit");
-        assert_eq!(motor.constraints[0].solve_for, Some("s".to_string()));
-        assert_eq!(motor.constraints[0].sign, SignConvention::Positive);
-        assert!(motor.constraints[0].has_domain_restriction);
+        // Old format geometric_constraint is converted + user constraint
+        assert_eq!(motor.constraints.len(), 2);
+        // First constraint is from old format
+        assert_eq!(motor.constraints[0].name, "geometric");
+        assert_eq!(motor.constraints[0].solve_for, Some("e0123".to_string()));
+        // Second constraint is from new format
+        assert_eq!(motor.constraints[1].name, "unit");
+        assert_eq!(motor.constraints[1].solve_for, Some("s".to_string()));
+        assert_eq!(motor.constraints[1].sign, SignConvention::Positive);
+        assert!(motor.constraints[1].has_domain_restriction);
     }
 
     #[test]

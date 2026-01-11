@@ -533,9 +533,31 @@ proptest! {
 - PRD-14.13 (Constraint-Enforcing Constructors) - base constraint solving
 - PRD-14.11 (Constraint Simplification) - expression normalization utilities
 
+## Known Limitations
+
+### Constraint Ordering
+
+The order of constraints in the TOML determines the order they are solved. If constraint B references a field solved by constraint A, then A must appear before B in the TOML:
+
+```toml
+# CORRECT: unit solved first (computes s), then study (uses s)
+[[types.Motor.constraints]]
+name = "unit"
+expression = "s*s + e12*e12 + e13*e13 + e23*e23 = 1"
+solve_for = "s"
+
+[[types.Motor.constraints]]
+name = "study"
+expression = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
+solve_for = "e0123"
+```
+
+**Future improvement**: Automatic dependency detection and topological ordering.
+
 ## Future Extensions
 
 1. **Automatic unit type generation**: Generate `UnitMotor`, `UnitLine` wrappers
 2. **Constraint algebra**: Verify constraint compatibility (e.g., Study + unit = 6 DOF)
 3. **Non-linear solving**: Use numerical methods for quadratic constraints
 4. **Constraint preservation tracking**: Automatically determine which operations preserve which constraints
+5. **Automatic constraint ordering**: Detect dependencies between constraints and order them correctly

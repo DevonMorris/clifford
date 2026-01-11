@@ -307,57 +307,19 @@ impl<'a> TypeGenerator<'a> {
             return self.generate_simple_constructor(ty);
         }
 
-        // Collect solutions for all solve_for fields
+        // Collect solutions for all constraints with solve_for
         let solver = ConstraintSolver::new();
         let mut solutions = Vec::new();
 
-        // Solve geometric constraint if geometric_solve_for is specified
-        if let (Some(solve_for), Some(constraint)) =
-            (&ty.geometric_solve_for, &ty.geometric_constraint)
-        {
-            match solver.solve(constraint, solve_for) {
-                Ok(solution) => solutions.push((solve_for.clone(), solution)),
-                Err(e) => {
-                    let error_msg = format!("/* geometric_solve_for failed: {} */", e);
-                    let unchecked = self.generate_new_unchecked(ty);
-                    return quote! {
-                        #[doc = #error_msg]
-                        #unchecked
-                    };
-                }
-            }
-        }
-
-        // Solve antiproduct constraint only if independent (different constraint)
-        if ty.has_independent_constraints() {
-            if let (Some(solve_for), Some(constraint)) =
-                (&ty.antiproduct_solve_for, &ty.antiproduct_constraint)
-            {
-                match solver.solve(constraint, solve_for) {
-                    Ok(solution) => solutions.push((solve_for.clone(), solution)),
-                    Err(e) => {
-                        let error_msg = format!("/* antiproduct_solve_for failed: {} */", e);
-                        let unchecked = self.generate_new_unchecked(ty);
-                        return quote! {
-                            #[doc = #error_msg]
-                            #unchecked
-                        };
-                    }
-                }
-            }
-        }
-
-        // Solve user-defined constraints with solve_for
-        for user_constraint in &ty.constraints {
-            if let Some(ref solve_for) = user_constraint.solve_for {
-                let positive_root = user_constraint.sign == SignConvention::Positive;
-                match solver.solve_with_sign(&user_constraint.expression, solve_for, positive_root)
-                {
+        for constraint in &ty.constraints {
+            if let Some(ref solve_for) = constraint.solve_for {
+                let positive_root = constraint.sign == SignConvention::Positive;
+                match solver.solve_with_sign(&constraint.expression, solve_for, positive_root) {
                     Ok(solution) => solutions.push((solve_for.clone(), solution)),
                     Err(e) => {
                         let error_msg = format!(
-                            "/* user constraint '{}' solve_for failed: {} */",
-                            user_constraint.name, e
+                            "/* constraint '{}' solve_for failed: {} */",
+                            constraint.name, e
                         );
                         let unchecked = self.generate_new_unchecked(ty);
                         return quote! {
@@ -586,12 +548,11 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        // Get the constraint expression for validation
+        // Get the first constraint expression for validation (typically the geometric/study constraint)
         let constraint = ty
-            .geometric_constraint
-            .as_ref()
-            .or(ty.antiproduct_constraint.as_ref())
-            .cloned()
+            .constraints
+            .first()
+            .map(|c| c.expression.clone())
             .unwrap_or_default();
 
         // Parse the constraint LHS to generate residual computation
