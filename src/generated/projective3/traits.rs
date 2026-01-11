@@ -1218,6 +1218,7 @@ impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Vector<T> {
     }
 }
 #[cfg(any(test, feature = "proptest-support"))]
+#[allow(clippy::missing_docs_in_private_items)]
 mod arbitrary_impls {
     use super::*;
     use proptest::prelude::*;
@@ -1367,94 +1368,1695 @@ mod arbitrary_impls {
         }
     }
 }
+
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
+
 #[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
 mod verification_tests {
     use super::*;
     use crate::algebra::Multivector;
     use crate::signature::Projective3;
     use approx::abs_diff_eq;
     use proptest::prelude::*;
-    #[doc = r" Epsilon for floating-point comparisons in verification tests."]
+
+    /// Epsilon for floating-point comparisons in verification tests.
     const EPSILON: f64 = 1e-10;
-    proptest! { # [test] fn bivector_add_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn bivector_sub_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn bivector_neg_matches_multivector (a in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn flector_add_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn flector_sub_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn flector_neg_matches_multivector (a in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn motor_add_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn motor_sub_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn motor_neg_matches_multivector (a in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn quadvector_add_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn quadvector_sub_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn quadvector_neg_matches_multivector (a in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn scalar_add_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn scalar_sub_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn scalar_neg_matches_multivector (a in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn trivector_add_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn trivector_sub_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn trivector_neg_matches_multivector (a in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn vector_add_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a + b ; let generic_result = mv_a + mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Add mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn vector_sub_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result = a - b ; let generic_result = mv_a - mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Sub mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } # [test] fn vector_neg_matches_multivector (a in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let specialized_result = - a ; let generic_result = - mv_a ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Neg mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_bivector_motor_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_bivector_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_flector_flector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_bivector_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_motor_motor_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_bivector_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_quadvector_bivector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = geometric_bivector_quadvector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_scalar_bivector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = geometric_bivector_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_trivector_flector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_bivector_trivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_bivector_vector_flector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_bivector_vector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_bivector_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_flector_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_flector_motor_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_flector_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_motor_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_flector_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_quadvector_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_flector_quadvector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_scalar_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_flector_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_trivector_motor_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_flector_trivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_flector_vector_motor_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_flector_vector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_bivector_motor_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_motor_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_flector_flector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_motor_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_motor_motor_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_motor_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_scalar_motor_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_motor_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_trivector_flector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_motor_trivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_motor_vector_flector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_motor_vector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_quadvector_bivector_bivector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = geometric_quadvector_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_quadvector_flector_flector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_quadvector_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_quadvector_scalar_quadvector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = geometric_quadvector_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_quadvector_trivector_vector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = geometric_quadvector_trivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_quadvector_vector_trivector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = geometric_quadvector_vector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_bivector_bivector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = geometric_scalar_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_flector_flector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_scalar_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_motor_motor_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_scalar_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_quadvector_quadvector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = geometric_scalar_quadvector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_scalar_scalar_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Scalar < f64 > = geometric_scalar_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_trivector_trivector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = geometric_scalar_trivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_scalar_vector_vector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = geometric_scalar_vector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_trivector_bivector_flector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_trivector_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_trivector_flector_motor_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_trivector_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_trivector_motor_flector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_trivector_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_trivector_quadvector_vector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = geometric_trivector_quadvector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_trivector_scalar_trivector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = geometric_trivector_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_vector_bivector_flector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_vector_bivector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_vector_flector_motor_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = geometric_vector_flector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_vector_motor_flector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = geometric_vector_motor (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_vector_quadvector_trivector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = geometric_vector_quadvector (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn geometric_vector_scalar_vector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = geometric_vector_scalar (& a , & b) ; let generic_result = mv_a * mv_b ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Geometric product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_bivector_bivector_quadvector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_bivector_bivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_bivector_flector_trivector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_bivector_flector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_bivector_scalar_bivector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = outer_bivector_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_bivector_vector_trivector_matches_multivector (a in any :: < Bivector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_bivector_vector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_flector_bivector_trivector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_flector_bivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_flector_motor_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_flector_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_flector_scalar_flector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_flector_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_flector_trivector_quadvector_matches_multivector (a in any :: < Flector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_flector_trivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_flector_flector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_motor_flector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_motor_motor_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = outer_motor_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_quadvector_quadvector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_motor_quadvector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_scalar_motor_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = outer_motor_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_trivector_trivector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_motor_trivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_motor_vector_flector_matches_multivector (a in any :: < Motor < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_motor_vector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_quadvector_motor_quadvector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_quadvector_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_quadvector_scalar_quadvector_matches_multivector (a in any :: < Quadvector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_quadvector_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_bivector_bivector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = outer_scalar_bivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_flector_flector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_scalar_flector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_motor_motor_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Motor < f64 > = outer_scalar_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_quadvector_quadvector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Quadvector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_scalar_quadvector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_scalar_scalar_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Scalar < f64 > = outer_scalar_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_trivector_trivector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_scalar_trivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_scalar_vector_vector_matches_multivector (a in any :: < Scalar < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = outer_scalar_vector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_trivector_flector_quadvector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Flector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_trivector_flector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_trivector_motor_trivector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_trivector_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_trivector_scalar_trivector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_trivector_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_trivector_vector_quadvector_matches_multivector (a in any :: < Trivector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_trivector_vector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_vector_bivector_trivector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Bivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Trivector < f64 > = outer_vector_bivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_vector_motor_flector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Motor < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Flector < f64 > = outer_vector_motor (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_vector_scalar_vector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Scalar < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Vector < f64 > = outer_vector_scalar (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_vector_trivector_quadvector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Trivector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Quadvector < f64 > = outer_vector_trivector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
-    proptest! { # [test] fn outer_vector_vector_bivector_matches_multivector (a in any :: < Vector < f64 >> () , b in any :: < Vector < f64 >> ()) { let mv_a : Multivector < f64 , Projective3 > = a . into () ; let mv_b : Multivector < f64 , Projective3 > = b . into () ; let specialized_result : Bivector < f64 > = outer_vector_vector (& a , & b) ; let generic_result = mv_a . outer (& mv_b) ; let specialized_mv : Multivector < f64 , Projective3 > = specialized_result . into () ; prop_assert ! (abs_diff_eq ! (specialized_mv , generic_result , epsilon = EPSILON) , "Outer product mismatch: specialized={:?}, generic={:?}" , specialized_mv , generic_result) ; } }
+
+    proptest! {
+        #[test]
+        fn bivector_add_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_sub_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_neg_matches_multivector(a in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn flector_add_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn flector_sub_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn flector_neg_matches_multivector(a in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn motor_add_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn motor_sub_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn motor_neg_matches_multivector(a in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn quadvector_add_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn quadvector_sub_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn quadvector_neg_matches_multivector(a in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn scalar_add_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_sub_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_neg_matches_multivector(a in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn trivector_add_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn trivector_sub_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn trivector_neg_matches_multivector(a in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn vector_add_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_sub_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_neg_matches_multivector(a in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_bivector_motor_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_bivector_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_flector_flector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_bivector_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_motor_motor_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_bivector_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_quadvector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = geometric_bivector_quadvector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = geometric_bivector_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_trivector_flector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_bivector_trivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_bivector_vector_flector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_bivector_vector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_bivector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_flector_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_flector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_flector_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_flector_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_quadvector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_flector_quadvector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_scalar_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_flector_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_trivector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_flector_trivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_flector_vector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_flector_vector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_bivector_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_motor_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_motor_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_motor_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_scalar_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_motor_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_trivector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_motor_trivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_motor_vector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_motor_vector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_quadvector_bivector_bivector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = geometric_quadvector_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_quadvector_flector_flector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_quadvector_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_quadvector_scalar_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = geometric_quadvector_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_quadvector_trivector_vector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = geometric_quadvector_trivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_quadvector_vector_trivector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = geometric_quadvector_vector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = geometric_scalar_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_flector_flector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_scalar_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_motor_motor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_scalar_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_quadvector_quadvector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = geometric_scalar_quadvector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Scalar<f64> = geometric_scalar_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_trivector_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = geometric_scalar_trivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = geometric_scalar_vector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_trivector_bivector_flector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_trivector_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_trivector_flector_motor_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_trivector_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_trivector_motor_flector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_trivector_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_trivector_quadvector_vector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = geometric_trivector_quadvector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = geometric_trivector_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_vector_bivector_flector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_vector_bivector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_vector_flector_motor_matches_multivector(a in any::<Vector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = geometric_vector_flector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_vector_motor_flector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = geometric_vector_motor(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_vector_quadvector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = geometric_vector_quadvector(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn geometric_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = geometric_vector_scalar(&a, &b);
+            let generic_result = mv_a * mv_b;
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_bivector_bivector_quadvector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_bivector_bivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_bivector_flector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_bivector_flector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = outer_bivector_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_bivector_vector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_bivector_vector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_flector_bivector_trivector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_flector_bivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_flector_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_flector_scalar_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_flector_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_flector_trivector_quadvector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_flector_trivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_motor_flector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = outer_motor_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_quadvector_quadvector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_motor_quadvector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_scalar_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = outer_motor_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_trivector_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_motor_trivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_motor_vector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_motor_vector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_quadvector_motor_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_quadvector_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_quadvector_scalar_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_quadvector_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = outer_scalar_bivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_flector_flector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_scalar_flector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_motor_motor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Motor<f64> = outer_scalar_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_quadvector_quadvector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Quadvector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_scalar_quadvector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Scalar<f64> = outer_scalar_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_trivector_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_scalar_trivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = outer_scalar_vector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_trivector_flector_quadvector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_trivector_flector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_trivector_motor_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_trivector_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_trivector_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_trivector_vector_quadvector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_trivector_vector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_vector_bivector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Trivector<f64> = outer_vector_bivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_vector_motor_flector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Flector<f64> = outer_vector_motor(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Vector<f64> = outer_vector_scalar(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_vector_trivector_quadvector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Quadvector<f64> = outer_vector_trivector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn outer_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Projective3> = a.into();
+            let mv_b: Multivector<f64, Projective3> = b.into();
+
+            let specialized_result: Bivector<f64> = outer_vector_vector(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
 }

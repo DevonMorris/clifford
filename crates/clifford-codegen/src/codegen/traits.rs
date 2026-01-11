@@ -45,7 +45,7 @@ use crate::spec::{AlgebraSpec, TypeSpec};
 /// let table = ProductTable::new(&algebra);
 /// let generator = TraitsGenerator::new(&spec, &algebra, table);
 ///
-/// let tokens = generator.generate_traits_file();
+/// let (tokens, _tests) = generator.generate_traits_file();
 /// let code = tokens.to_string();
 ///
 /// assert!(code.contains("Add for Vector"));
@@ -71,15 +71,21 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates the complete traits file.
-    pub fn generate_traits_file(&self) -> TokenStream {
+    ///
+    /// Returns a tuple of (TokenStream, String) where:
+    /// - The TokenStream contains the main code (operators, traits, arbitrary)
+    /// - The String contains pre-formatted verification tests that should be
+    ///   appended after formatting the main code (rustfmt can't format inside
+    ///   proptest! macros)
+    pub fn generate_traits_file(&self) -> (TokenStream, String) {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let ops = self.generate_all_ops();
         let approx = self.generate_all_approx();
         let arbitrary = self.generate_all_arbitrary();
-        let verification = self.generate_verification_tests();
+        let verification_tests = self.generate_verification_tests_raw();
 
-        quote! {
+        let main_tokens = quote! {
             #header
             #imports
 
@@ -97,12 +103,9 @@ impl<'a> TraitsGenerator<'a> {
             // Arbitrary Implementations (for proptest)
             // ============================================================
             #arbitrary
+        };
 
-            // ============================================================
-            // Verification Tests (compare against Multivector)
-            // ============================================================
-            #verification
-        }
+        (main_tokens, verification_tests)
     }
 
     /// Generates the file header.
@@ -489,6 +492,7 @@ impl<'a> TraitsGenerator<'a> {
 
         quote! {
             #[cfg(any(test, feature = "proptest-support"))]
+            #[allow(clippy::missing_docs_in_private_items)]
             mod arbitrary_impls {
                 use super::*;
                 use proptest::prelude::*;
@@ -562,30 +566,41 @@ impl<'a> TraitsGenerator<'a> {
     // Verification Tests
     // ========================================================================
 
-    /// Generates verification tests that compare specialized operations against Multivector.
-    fn generate_verification_tests(&self) -> TokenStream {
+    /// Generates verification tests as a pre-formatted string.
+    ///
+    /// This returns a raw string instead of TokenStream because rustfmt
+    /// cannot format code inside proptest! macros. By generating the tests
+    /// as pre-formatted strings, we preserve the formatting.
+    fn generate_verification_tests_raw(&self) -> String {
         let signature_name = self.generate_signature_name();
-        let add_sub_tests = self.generate_add_sub_verification_tests();
-        let geometric_tests = self.generate_geometric_verification_tests();
-        let outer_tests = self.generate_outer_verification_tests();
+        let add_sub_tests = self.generate_add_sub_verification_tests_raw();
+        let geometric_tests = self.generate_geometric_verification_tests_raw();
+        let outer_tests = self.generate_outer_verification_tests_raw();
 
-        quote! {
-            #[cfg(test)]
-            mod verification_tests {
-                use super::*;
-                use crate::algebra::Multivector;
-                use crate::signature::#signature_name;
-                use approx::abs_diff_eq;
-                use proptest::prelude::*;
+        format!(
+            r#"
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
 
-                /// Epsilon for floating-point comparisons in verification tests.
-                const EPSILON: f64 = 1e-10;
+#[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
+mod verification_tests {{
+    use super::*;
+    use crate::algebra::Multivector;
+    use crate::signature::{sig};
+    use approx::abs_diff_eq;
+    use proptest::prelude::*;
 
-                #add_sub_tests
-                #geometric_tests
-                #outer_tests
-            }
-        }
+    /// Epsilon for floating-point comparisons in verification tests.
+    const EPSILON: f64 = 1e-10;
+{add_sub}{geometric}{outer}}}
+"#,
+            sig = signature_name,
+            add_sub = add_sub_tests,
+            geometric = geometric_tests,
+            outer = outer_tests,
+        )
     }
 
     /// Generates the signature type name for this algebra.
@@ -617,183 +632,172 @@ impl<'a> TraitsGenerator<'a> {
         format_ident!("{}", sig_name)
     }
 
-    /// Generates add/sub verification tests for each type.
-    fn generate_add_sub_verification_tests(&self) -> TokenStream {
+    /// Generates add/sub verification tests for each type as a formatted string.
+    fn generate_add_sub_verification_tests_raw(&self) -> String {
         let signature_name = self.generate_signature_name();
-        let tests: Vec<TokenStream> = self
-            .spec
+        self.spec
             .types
             .iter()
             .filter(|t| t.alias_of.is_none())
             .map(|ty| {
-                let name = format_ident!("{}", ty.name);
-                let name_lower = format_ident!("{}", ty.name.to_lowercase());
-                let add_test_name = format_ident!("{}_add_matches_multivector", name_lower);
-                let sub_test_name = format_ident!("{}_sub_matches_multivector", name_lower);
-                let neg_test_name = format_ident!("{}_neg_matches_multivector", name_lower);
+                let name = &ty.name;
+                let name_lower = ty.name.to_lowercase();
 
-                quote! {
-                    proptest! {
-                        #[test]
-                        fn #add_test_name(a in any::<#name<f64>>(), b in any::<#name<f64>>()) {
-                            let mv_a: Multivector<f64, #signature_name> = a.into();
-                            let mv_b: Multivector<f64, #signature_name> = b.into();
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn {name_lower}_add_matches_multivector(a in any::<{name}<f64>>(), b in any::<{name}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
 
-                            let specialized_result = a + b;
-                            let generic_result = mv_a + mv_b;
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
 
-                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                            prop_assert!(
-                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                "Add mismatch: specialized={:?}, generic={:?}",
-                                specialized_mv, generic_result
-                            );
-                        }
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Add mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
 
-                        #[test]
-                        fn #sub_test_name(a in any::<#name<f64>>(), b in any::<#name<f64>>()) {
-                            let mv_a: Multivector<f64, #signature_name> = a.into();
-                            let mv_b: Multivector<f64, #signature_name> = b.into();
+        #[test]
+        fn {name_lower}_sub_matches_multivector(a in any::<{name}<f64>>(), b in any::<{name}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
 
-                            let specialized_result = a - b;
-                            let generic_result = mv_a - mv_b;
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
 
-                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                            prop_assert!(
-                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                "Sub mismatch: specialized={:?}, generic={:?}",
-                                specialized_mv, generic_result
-                            );
-                        }
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Sub mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
 
-                        #[test]
-                        fn #neg_test_name(a in any::<#name<f64>>()) {
-                            let mv_a: Multivector<f64, #signature_name> = a.into();
+        #[test]
+        fn {name_lower}_neg_matches_multivector(a in any::<{name}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
 
-                            let specialized_result = -a;
-                            let generic_result = -mv_a;
+            let specialized_result = -a;
+            let generic_result = -mv_a;
 
-                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                            prop_assert!(
-                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                "Neg mismatch: specialized={:?}, generic={:?}",
-                                specialized_mv, generic_result
-                            );
-                        }
-                    }
-                }
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Neg mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    name_lower = name_lower,
+                    name = name,
+                    sig = signature_name,
+                )
             })
-            .collect();
-
-        quote! { #(#tests)* }
+            .collect()
     }
 
-    /// Generates geometric product verification tests.
-    fn generate_geometric_verification_tests(&self) -> TokenStream {
+    /// Generates geometric product verification tests as a formatted string.
+    fn generate_geometric_verification_tests_raw(&self) -> String {
         // Only generate tests for products explicitly listed in the TOML
         if self.spec.products.geometric.is_empty() {
-            return quote! {};
+            return String::new();
         }
 
         let signature_name = self.generate_signature_name();
-        let tests: Vec<TokenStream> = self
-            .spec
+        self.spec
             .products
             .geometric
             .iter()
             .map(|entry| {
-                let name_a = format_ident!("{}", entry.lhs);
-                let name_b = format_ident!("{}", entry.rhs);
-                let name_out = format_ident!("{}", entry.output);
-                let test_name = format_ident!(
-                    "geometric_{}_{}_{}_matches_multivector",
-                    entry.lhs.to_lowercase(),
-                    entry.rhs.to_lowercase(),
-                    entry.output.to_lowercase()
-                );
-                let fn_name = format_ident!(
-                    "geometric_{}_{}",
-                    entry.lhs.to_lowercase(),
-                    entry.rhs.to_lowercase()
-                );
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
 
-                quote! {
-                    proptest! {
-                        #[test]
-                        fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
-                            let mv_a: Multivector<f64, #signature_name> = a.into();
-                            let mv_b: Multivector<f64, #signature_name> = b.into();
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn geometric_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
 
-                            let specialized_result: #name_out<f64> = #fn_name(&a, &b);
-                            let generic_result = mv_a * mv_b;
+            let specialized_result: {out}<f64> = geometric_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a * mv_b;
 
-                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                            prop_assert!(
-                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                "Geometric product mismatch: specialized={:?}, generic={:?}",
-                                specialized_mv, generic_result
-                            );
-                        }
-                    }
-                }
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Geometric product mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
             })
-            .collect();
-
-        quote! { #(#tests)* }
+            .collect()
     }
 
-    /// Generates outer product verification tests.
-    fn generate_outer_verification_tests(&self) -> TokenStream {
+    /// Generates outer product verification tests as a formatted string.
+    fn generate_outer_verification_tests_raw(&self) -> String {
         // Only generate tests for products explicitly listed in the TOML
         if self.spec.products.outer.is_empty() {
-            return quote! {};
+            return String::new();
         }
 
         let signature_name = self.generate_signature_name();
-        let tests: Vec<TokenStream> = self
-            .spec
+        self.spec
             .products
             .outer
             .iter()
             .map(|entry| {
-                let name_a = format_ident!("{}", entry.lhs);
-                let name_b = format_ident!("{}", entry.rhs);
-                let name_out = format_ident!("{}", entry.output);
-                let test_name = format_ident!(
-                    "outer_{}_{}_{}_matches_multivector",
-                    entry.lhs.to_lowercase(),
-                    entry.rhs.to_lowercase(),
-                    entry.output.to_lowercase()
-                );
-                let fn_name = format_ident!(
-                    "outer_{}_{}",
-                    entry.lhs.to_lowercase(),
-                    entry.rhs.to_lowercase()
-                );
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
 
-                quote! {
-                    proptest! {
-                        #[test]
-                        fn #test_name(a in any::<#name_a<f64>>(), b in any::<#name_b<f64>>()) {
-                            let mv_a: Multivector<f64, #signature_name> = a.into();
-                            let mv_b: Multivector<f64, #signature_name> = b.into();
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn outer_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
 
-                            let specialized_result: #name_out<f64> = #fn_name(&a, &b);
-                            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: {out}<f64> = outer_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.outer(&mv_b);
 
-                            let specialized_mv: Multivector<f64, #signature_name> = specialized_result.into();
-                            prop_assert!(
-                                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
-                                "Outer product mismatch: specialized={:?}, generic={:?}",
-                                specialized_mv, generic_result
-                            );
-                        }
-                    }
-                }
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                abs_diff_eq!(specialized_mv, generic_result, epsilon = EPSILON),
+                "Outer product mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
             })
-            .collect();
-
-        quote! { #(#tests)* }
+            .collect()
     }
 }
 
@@ -809,7 +813,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         assert!(code.contains("impl < T : Float > Add for Vector"));
@@ -822,7 +826,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         assert!(code.contains("impl < T : Float > Sub for Vector"));
@@ -835,7 +839,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         assert!(code.contains("impl < T : Float > Neg for Vector"));
@@ -848,7 +852,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         // Check that scalar mul is generated for Vector
@@ -864,7 +868,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         // Vector * Vector should produce a product type
@@ -878,7 +882,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         // Vector ^ Vector should produce Bivector
@@ -893,7 +897,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         assert!(code.contains("AbsDiffEq for Vector"));
@@ -908,7 +912,7 @@ mod tests {
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
 
-        let tokens = generator.generate_traits_file();
+        let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
         assert!(code.contains("impl < T : Float + Debug + 'static > Arbitrary for Vector"));

@@ -12,9 +12,6 @@ negative = []
 zero = ["e0"]
 
 [blades]
-# Scalar (grade 0)
-s = "s"
-
 # Vectors (grade 1) - represent planes
 # e4 is the degenerate basis (e0 in PGA convention)
 e1 = "e1"

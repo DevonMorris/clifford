@@ -254,16 +254,18 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
     let traits_gen = TraitsGenerator::new(&spec, &algebra, table);
     let conversions_gen = ConversionsGenerator::new(&spec, &algebra);
 
-    // Generate all files
+    // Generate files (traits is special - returns tuple)
     let files = vec![
         ("types.rs", type_gen.generate_types_file()),
         ("products.rs", product_gen.generate_products_file()),
-        ("traits.rs", traits_gen.generate_traits_file()),
         (
             "conversions.rs",
             conversions_gen.generate_conversions_file(),
         ),
     ];
+
+    // Generate traits file separately (returns (TokenStream, String) for formatted tests)
+    let (traits_tokens, traits_tests) = traits_gen.generate_traits_file();
 
     // Generate mod.rs
     let mod_content = generate_mod_file(&spec, options);
@@ -274,6 +276,7 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
         for (name, _) in &files {
             println!("  {}", name);
         }
+        println!("  traits.rs");
         return Ok(());
     }
 
@@ -288,7 +291,7 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
         println!("  Wrote: {}", mod_path.display());
     }
 
-    // Write other files
+    // Write regular files
     for (name, tokens) in files {
         let path = output_dir.join(name);
         let formatted = format_tokens(&tokens);
@@ -296,6 +299,15 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
         if options.verbose {
             println!("  Wrote: {}", path.display());
         }
+    }
+
+    // Write traits.rs (formatted main code + pre-formatted tests)
+    let traits_path = output_dir.join("traits.rs");
+    let formatted_traits = format_tokens(&traits_tokens);
+    let full_traits = format!("{}{}", formatted_traits, traits_tests);
+    std::fs::write(&traits_path, full_traits)?;
+    if options.verbose {
+        println!("  Wrote: {}", traits_path.display());
     }
 
     println!("Generated {} in {}", spec.name, output_dir.display());
