@@ -525,7 +525,7 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
-    /// Generates `new_checked()` that validates the constraint.
+    /// Generates `new_checked()` that validates ALL constraints.
     fn generate_new_checked(&self, ty: &TypeSpec) -> TokenStream {
         let type_name = &ty.name;
 
@@ -548,26 +548,62 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        // Get the first constraint expression for validation (typically the geometric/study constraint)
-        let constraint = ty
+        // Generate validation checks for ALL constraints
+        let validation_checks: Vec<TokenStream> = ty
             .constraints
-            .first()
-            .map(|c| c.expression.clone())
-            .unwrap_or_default();
+            .iter()
+            .enumerate()
+            .map(|(i, constraint)| {
+                let constraint_expr = &constraint.expression;
+                let residual_expr = self.generate_residual_expr(constraint_expr, ty);
+                let residual_name = format_ident!("residual_{}", i);
 
-        // Parse the constraint LHS to generate residual computation
-        let residual_expr = self.generate_residual_expr(&constraint, ty);
+                quote! {
+                    let #residual_name = #residual_expr;
+                    if #residual_name.abs() > tolerance {
+                        return Err(crate::ConstraintError::new(
+                            #type_name,
+                            #constraint_expr,
+                            #residual_name.to_f64().unwrap_or(0.0),
+                        ));
+                    }
+                }
+            })
+            .collect();
 
-        let constraint_doc = constraint.clone();
+        // Generate doc with all constraints listed
+        let constraint_docs: Vec<String> = ty
+            .constraints
+            .iter()
+            .map(|c| self.constraint_to_residual_doc(&c.expression))
+            .collect();
 
-        let doc = format!(
-            "Creates a new element from all coefficients with constraint validation.\n\n\
-             Returns an error if the geometric constraint is not satisfied within\n\
-             the given tolerance.\n\n\
-             # Errors\n\n\
-             Returns `ConstraintError` if `|{}| > tolerance`.",
-            constraint_doc.replace(" = 0", "")
-        );
+        let doc = if constraint_docs.is_empty() {
+            "Creates a new element from all coefficients with constraint validation.".to_string()
+        } else if constraint_docs.len() == 1 {
+            format!(
+                "Creates a new element from all coefficients with constraint validation.\n\n\
+                 Returns an error if the geometric constraint is not satisfied within\n\
+                 the given tolerance.\n\n\
+                 # Errors\n\n\
+                 Returns `ConstraintError` if `|{}| > tolerance`.",
+                constraint_docs[0]
+            )
+        } else {
+            let constraints_list = constraint_docs
+                .iter()
+                .map(|c| format!("- `|{}| > tolerance`", c))
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                "Creates a new element from all coefficients with constraint validation.\n\n\
+                 Returns an error if any geometric constraint is not satisfied within\n\
+                 the given tolerance.\n\n\
+                 # Errors\n\n\
+                 Returns `ConstraintError` if any of:\n{}",
+                constraints_list
+            )
+        };
 
         quote! {
             #[doc = #doc]
@@ -576,18 +612,26 @@ impl<'a> TypeGenerator<'a> {
                 #(#params,)*
                 tolerance: T,
             ) -> Result<Self, crate::ConstraintError> {
-                let residual = #residual_expr;
-
-                if residual.abs() > tolerance {
-                    return Err(crate::ConstraintError::new(
-                        #type_name,
-                        #constraint_doc,
-                        residual.to_f64().unwrap_or(0.0),
-                    ));
-                }
+                #(#validation_checks)*
 
                 Ok(Self { #(#field_inits),* })
             }
+        }
+    }
+
+    /// Converts a constraint expression to a residual doc string.
+    ///
+    /// For `s*s + e12*e12 = 1`, returns `s*s + e12*e12 - 1`.
+    /// For `2*s*e0123 = 0`, returns `2*s*e0123`.
+    fn constraint_to_residual_doc(&self, constraint: &str) -> String {
+        let parts: Vec<&str> = constraint.split('=').collect();
+        let lhs = parts.first().unwrap_or(&"").trim();
+        let rhs = parts.get(1).unwrap_or(&"0").trim();
+
+        if rhs == "0" {
+            lhs.to_string()
+        } else {
+            format!("{} - {}", lhs, rhs)
         }
     }
 

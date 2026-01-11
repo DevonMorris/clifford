@@ -55,13 +55,13 @@ impl<T: Float> Bivector<T> {
         e03: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual =
+        let residual_0 =
             (-T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01) - (T::zero());
-        if residual.abs() > tolerance {
+        if residual_0.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Bivector",
                 "-2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0",
-                residual.to_f64().unwrap_or(0.0),
+                residual_0.to_f64().unwrap_or(0.0),
             ));
         }
         Ok(Self {
@@ -331,14 +331,14 @@ impl<T: Float> Flector<T> {
         e023: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual = (-T::TWO * e1 * e023 + T::TWO * e2 * e013 - T::TWO * e3 * e012
+        let residual_0 = (-T::TWO * e1 * e023 + T::TWO * e2 * e013 - T::TWO * e3 * e012
             + T::TWO * e0 * e123)
             - (T::zero());
-        if residual.abs() > tolerance {
+        if residual_0.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Flector",
                 "-2*e1*e023 + 2*e2*e013 - 2*e3*e012 + 2*e0*e123 = 0",
-                residual.to_f64().unwrap_or(0.0),
+                residual_0.to_f64().unwrap_or(0.0),
             ));
         }
         Ok(Self {
@@ -548,7 +548,7 @@ impl<T: Float> Motor<T> {
             e0123,
         })
     }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|s*s + e12*e12 + e13*e13 + e23*e23 = 1| > tolerance`."]
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if any geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if any of:\n- `|s*s + e12*e12 + e13*e13 + e23*e23 - 1| > tolerance`\n- `|2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01| > tolerance`"]
     #[inline]
     pub fn new_checked(
         s: T,
@@ -561,12 +561,22 @@ impl<T: Float> Motor<T> {
         e0123: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual = (s * s + e12 * e12 + e13 * e13 + e23 * e23) - (T::from_i8(1));
-        if residual.abs() > tolerance {
+        let residual_0 = (s * s + e12 * e12 + e13 * e13 + e23 * e23) - (T::from_i8(1));
+        if residual_0.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Motor",
                 "s*s + e12*e12 + e13*e13 + e23*e23 = 1",
-                residual.to_f64().unwrap_or(0.0),
+                residual_0.to_f64().unwrap_or(0.0),
+            ));
+        }
+        let residual_1 = (T::TWO * s * e0123 - T::TWO * e12 * e03 + T::TWO * e13 * e02
+            - T::TWO * e23 * e01)
+            - (T::zero());
+        if residual_1.abs() > tolerance {
+            return Err(crate::ConstraintError::new(
+                "Motor",
+                "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0",
+                residual_1.to_f64().unwrap_or(0.0),
             ));
         }
         Ok(Self {
