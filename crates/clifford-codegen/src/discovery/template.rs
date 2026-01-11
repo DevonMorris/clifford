@@ -114,15 +114,20 @@ fn write_entity_section(entity: &DiscoveredEntity, output: &mut dyn Write) -> io
     writeln!(output, "grades = {:?}", entity.grades)?;
     writeln!(output, "description = \"{}\"", entity.description)?;
 
-    // Suggest constraints for types that support them
+    // Output constraint if present
+    if let Some(ref constraint) = entity.constraint {
+        writeln!(output, "constraint = \"{}\"", constraint)?;
+    }
+
+    // Suggest unit/nonzero constraints for types that support them
     if entity.can_be_unit || entity.can_be_nonzero {
         writeln!(output, "#")?;
-        writeln!(output, "# Suggested constraints:")?;
+        writeln!(output, "# Suggested wrappers:")?;
         if entity.can_be_unit {
-            writeln!(output, "# [types.{}.constraints.unit]", entity.name)?;
+            writeln!(output, "# [types.{}.wrappers.unit]", entity.name)?;
         }
         if entity.can_be_nonzero {
-            writeln!(output, "# [types.{}.constraints.nonzero]", entity.name)?;
+            writeln!(output, "# [types.{}.wrappers.nonzero]", entity.name)?;
         }
     }
 

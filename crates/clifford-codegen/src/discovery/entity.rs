@@ -22,6 +22,13 @@ pub struct DiscoveredEntity {
     /// Whether this type can support a nonzero constraint.
     /// True if normalization is meaningful.
     pub can_be_nonzero: bool,
+
+    /// Field constraint expression required for geometric constraint satisfaction.
+    ///
+    /// If `None`, the entity automatically satisfies geometric constraints.
+    /// If `Some(expr)`, the expression must equal zero for the constraint to hold.
+    /// Example: "e01*e23 + e02*e31 + e03*e12 = 0" for PGA bivectors.
+    pub constraint: Option<String>,
 }
 
 impl DiscoveredEntity {
@@ -33,6 +40,7 @@ impl DiscoveredEntity {
             description: String::new(),
             can_be_unit: false,
             can_be_nonzero: false,
+            constraint: None,
         }
     }
 
@@ -51,6 +59,12 @@ impl DiscoveredEntity {
     /// Marks this entity as supporting nonzero constraint.
     pub fn with_nonzero_support(mut self) -> Self {
         self.can_be_nonzero = true;
+        self
+    }
+
+    /// Sets the field constraint expression.
+    pub fn with_constraint(mut self, constraint: impl Into<String>) -> Self {
+        self.constraint = Some(constraint.into());
         self
     }
 }

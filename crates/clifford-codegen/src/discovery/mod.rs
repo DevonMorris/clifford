@@ -40,11 +40,13 @@
 //! assert!(entities.iter().any(|e| e.name == "Entity_0_2")); // [0, 2] - no conflicts
 //! ```
 
+mod constraints;
 mod entity;
 mod naming;
 pub mod products;
 mod template;
 
+pub use constraints::{can_satisfy_constraints, derive_field_constraint};
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;
 pub use products::{
@@ -298,9 +300,12 @@ pub fn discover_valid_combinations(algebra: &Algebra) -> Vec<Vec<usize>> {
 
 /// Discovers entities and creates structured representations.
 ///
-/// This is the main entry point for entity discovery. It finds valid
-/// grade combinations, assigns names using heuristics, and analyzes
-/// constraint applicability.
+/// This is the main entry point for entity discovery. It finds all
+/// grade combinations that can satisfy geometric constraints, either
+/// automatically or with field constraints.
+///
+/// For grade combinations that need field constraints (like PGA bivectors),
+/// the constraint expression is included in the entity.
 ///
 /// # Example
 ///
@@ -313,29 +318,36 @@ pub fn discover_valid_combinations(algebra: &Algebra) -> Vec<Vec<usize>> {
 ///
 /// for entity in &entities {
 ///     println!("{}: grades {:?}", entity.name, entity.grades);
+///     if let Some(c) = &entity.constraint {
+///         println!("  constraint: {}", c);
+///     }
 /// }
 /// ```
 pub fn discover_entities(algebra: &Algebra) -> Vec<DiscoveredEntity> {
-    let valid_combinations = discover_valid_combinations(algebra);
-
-    valid_combinations
+    enumerate_grade_combinations(algebra.dim())
         .into_iter()
-        .map(|grades| {
+        .filter_map(|grades| {
+            let (satisfiable, constraint) = can_satisfy_constraints(&grades, algebra);
+
+            if !satisfiable {
+                return None; // Skip unsatisfiable combinations
+            }
+
             let name = suggest_name(&grades, algebra.dim());
             let description = generate_description(&grades, algebra.dim());
 
-            // Types that satisfy geometric constraint can have unit/nonzero wrappers
-            // (they already satisfy it since they passed the filter)
+            // Types that can satisfy geometric constraint can have unit/nonzero wrappers
             let can_be_unit = true;
             let can_be_nonzero = true;
 
-            DiscoveredEntity {
+            Some(DiscoveredEntity {
                 name,
                 grades,
                 description,
                 can_be_unit,
                 can_be_nonzero,
-            }
+                constraint,
+            })
         })
         .collect()
 }
