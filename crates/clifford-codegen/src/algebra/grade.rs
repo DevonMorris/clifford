@@ -222,6 +222,69 @@ pub fn geometric_grades(grade_a: usize, grade_b: usize, dim: usize) -> Vec<usize
     (min_grade..=max_grade).step_by(2).collect()
 }
 
+/// Sign factor for the reverse of a k-blade.
+///
+/// The reverse operation flips the order of basis vectors in a blade,
+/// introducing a sign of `(-1)^(k(k-1)/2)` where k is the grade.
+///
+/// The pattern is: `++--++--...` (repeating every 4 grades)
+///
+/// | Grade | k(k-1)/2 | Sign |
+/// |-------|----------|------|
+/// | 0     | 0        | +1   |
+/// | 1     | 0        | +1   |
+/// | 2     | 1        | -1   |
+/// | 3     | 3        | -1   |
+/// | 4     | 6        | +1   |
+/// | 5     | 10       | +1   |
+/// | 6     | 15       | -1   |
+/// | 7     | 21       | -1   |
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::algebra::reverse_sign;
+///
+/// assert_eq!(reverse_sign(0), 1);  // scalar: +
+/// assert_eq!(reverse_sign(1), 1);  // vector: +
+/// assert_eq!(reverse_sign(2), -1); // bivector: -
+/// assert_eq!(reverse_sign(3), -1); // trivector: -
+/// assert_eq!(reverse_sign(4), 1);  // 4-vector: +
+/// ```
+#[inline]
+pub const fn reverse_sign(grade: usize) -> i8 {
+    // (-1)^(k(k-1)/2)
+    let exponent = (grade * grade.saturating_sub(1)) / 2;
+    if exponent.is_multiple_of(2) { 1 } else { -1 }
+}
+
+/// Sign factor for the antireverse of a k-blade in an n-dimensional algebra.
+///
+/// The antireverse is the dual of the reverse (or equivalently, the reverse
+/// of the dual). For a k-blade in n dimensions, the sign is the reverse sign
+/// of the dual grade (n - k).
+///
+/// # Arguments
+///
+/// * `grade` - The grade of the blade
+/// * `dim` - The dimension of the algebra
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::algebra::antireverse_sign;
+///
+/// // In 3D algebra:
+/// assert_eq!(antireverse_sign(0, 3), -1); // dual is grade 3, reverse sign is -1
+/// assert_eq!(antireverse_sign(1, 3), -1); // dual is grade 2, reverse sign is -1
+/// assert_eq!(antireverse_sign(2, 3), 1);  // dual is grade 1, reverse sign is +1
+/// assert_eq!(antireverse_sign(3, 3), 1);  // dual is grade 0, reverse sign is +1
+/// ```
+#[inline]
+pub const fn antireverse_sign(grade: usize, dim: usize) -> i8 {
+    reverse_sign(dim - grade)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -328,5 +391,46 @@ mod tests {
 
         // Capped by dimension
         assert_eq!(geometric_grades(2, 2, 3), vec![0, 2]);
+    }
+
+    #[test]
+    fn reverse_sign_pattern() {
+        // Pattern: ++--++--...
+        assert_eq!(reverse_sign(0), 1);
+        assert_eq!(reverse_sign(1), 1);
+        assert_eq!(reverse_sign(2), -1);
+        assert_eq!(reverse_sign(3), -1);
+        assert_eq!(reverse_sign(4), 1);
+        assert_eq!(reverse_sign(5), 1);
+        assert_eq!(reverse_sign(6), -1);
+        assert_eq!(reverse_sign(7), -1);
+        assert_eq!(reverse_sign(8), 1);
+    }
+
+    #[test]
+    fn antireverse_is_dual_of_reverse() {
+        // antireverse_sign(k, n) = reverse_sign(n - k)
+        for dim in 1..=6 {
+            for k in 0..=dim {
+                let dual_grade = dim - k;
+                assert_eq!(
+                    antireverse_sign(k, dim),
+                    reverse_sign(dual_grade),
+                    "dim={}, k={}, dual_grade={}",
+                    dim,
+                    k,
+                    dual_grade
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn antireverse_3d() {
+        // In 3D algebra
+        assert_eq!(antireverse_sign(0, 3), -1); // dual grade 3 -> reverse_sign(3) = -1
+        assert_eq!(antireverse_sign(1, 3), -1); // dual grade 2 -> reverse_sign(2) = -1
+        assert_eq!(antireverse_sign(2, 3), 1); // dual grade 1 -> reverse_sign(1) = +1
+        assert_eq!(antireverse_sign(3, 3), 1); // dual grade 0 -> reverse_sign(0) = +1
     }
 }

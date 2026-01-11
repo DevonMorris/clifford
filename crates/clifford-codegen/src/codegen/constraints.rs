@@ -655,9 +655,18 @@ name = "euclidean2"
 [signature]
 positive = ["e1", "e2"]
 
+[types.Scalar]
+grades = [0]
+
 [types.Vector]
 grades = [1]
 fields = ["x", "y"]
+
+[types.Bivector]
+grades = [2]
+
+[types.Rotor]
+grades = [0, 2]
 
 [types.Vector.constraints.unit]
 norm = "euclidean"
@@ -687,9 +696,27 @@ name = "cga2"
 positive = ["e1", "e2", "ep"]
 negative = ["em"]
 
+[types.Scalar]
+grades = [0]
+
 [types.Point]
 grades = [1]
 fields = ["x", "y", "ep", "em"]
+
+[types.Bivector]
+grades = [2]
+
+[types.Trivector]
+grades = [3]
+
+[types.Quadvector]
+grades = [4]
+
+[types.Even]
+grades = [0, 2, 4]
+
+[types.Odd]
+grades = [1, 3]
 
 [types.Point.constraints.null]
 condition = "x * x + y * y - ep * em = 0"

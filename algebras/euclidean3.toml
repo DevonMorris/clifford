@@ -1,0 +1,48 @@
+# 3D Euclidean Geometric Algebra
+# Customized from auto-discovered entities
+
+[algebra]
+name = "euclidean3"
+module_path = "euclidean::dim3"
+description = "3D Euclidean Geometric Algebra Cl(3,0,0)"
+
+[signature]
+positive = ["e1", "e2", "e3"]
+negative = []
+zero = []
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Vector]
+grades = [1]
+description = "3D vector"
+fields = ["x", "y", "z"]
+
+[types.Bivector]
+grades = [2]
+description = "3D bivector"
+fields = ["xy", "xz", "yz"]
+
+[types.Rotor]
+grades = [0, 2]
+description = "3D rotor (even subalgebra element)"
+fields = ["s", "xy", "xz", "yz"]
+
+[types.Trivector]
+grades = [3]
+description = "3D trivector (pseudoscalar)"
+fields = ["xyz"]
+
+# Note: Entity_0_3 (scalar + pseudoscalar) is valid but rarely used
+# Note: Entity_1_3 (vector + trivector) is the odd subalgebra
+
+[options]
+generate_serde = true
+generate_arbitrary = true
+generate_nalgebra = true

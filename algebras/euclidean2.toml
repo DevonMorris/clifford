@@ -1,0 +1,40 @@
+# 2D Euclidean Geometric Algebra
+# Customized from auto-discovered entities
+
+[algebra]
+name = "euclidean2"
+module_path = "euclidean::dim2"
+description = "2D Euclidean Geometric Algebra Cl(2,0,0)"
+
+[signature]
+positive = ["e1", "e2"]
+negative = []
+zero = []
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Vector]
+grades = [1]
+description = "2D vector"
+fields = ["x", "y"]
+
+[types.Bivector]
+grades = [2]
+description = "2D bivector (pseudoscalar)"
+fields = ["xy"]
+
+[types.Rotor]
+grades = [0, 2]
+description = "2D rotor (even subalgebra element)"
+fields = ["s", "xy"]
+
+[options]
+generate_serde = true
+generate_arbitrary = true
+generate_nalgebra = true

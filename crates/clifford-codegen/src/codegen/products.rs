@@ -919,7 +919,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_scalar_product() {
+    fn generates_left_contraction() {
         let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -928,7 +928,8 @@ mod tests {
         let tokens = generator.generate_products_file();
         let code = tokens.to_string();
 
-        assert!(code.contains("scalar_vector_vector"));
+        // Left contraction Vector ⌋ Vector -> Scalar
+        assert!(code.contains("left_contract_vector_vector"));
     }
 
     #[test]

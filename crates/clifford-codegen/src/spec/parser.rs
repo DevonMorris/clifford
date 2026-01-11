@@ -4,14 +4,15 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::algebra::binomial;
+use crate::algebra::{Algebra, binomial};
+use crate::discovery::{ProductType, infer_all_products};
 
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, ConstraintKind, ConstraintSpec, FieldSpec, GenerationOptions,
     ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
 };
-use super::raw::{RawAlgebraSpec, RawConstraint, RawProducts, RawSignature, RawTypeSpec};
+use super::raw::{RawAlgebraSpec, RawConstraint, RawSignature, RawTypeSpec};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -57,8 +58,8 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
     // Build types
     let types = parse_types(&raw.types, &signature, &blade_names)?;
 
-    // Build products
-    let products = parse_products(&raw.products, &types);
+    // Auto-infer products from types (products section in TOML is ignored)
+    let products = infer_products_from_types(&types, &signature);
 
     // Validate the complete specification
     validate_spec(&types)?;
@@ -411,15 +412,20 @@ fn parse_constraint_kind(type_name: &str, kind: &str) -> Result<ConstraintKind, 
     }
 }
 
-/// Parses the products section.
-fn parse_products(raw: &RawProducts, types: &[TypeSpec]) -> ProductsSpec {
-    // Collect all type names including constrained wrapper names
-    let mut all_types: HashSet<&str> = types.iter().map(|t| t.name.as_str()).collect();
-    for ty in types {
-        for constraint in &ty.constraints {
-            all_types.insert(&constraint.wrapper_name);
-        }
-    }
+/// Infers products automatically from types.
+///
+/// Products are always auto-inferred from the defined types.
+/// The TOML no longer needs (or supports) a products section.
+fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
+    // Build algebra for product computation
+    let algebra = Algebra::new(signature.p, signature.q, signature.r);
+
+    // Build entity list for inference
+    let entities: Vec<(String, Vec<usize>)> = types
+        .iter()
+        .filter(|t| t.alias_of.is_none())
+        .map(|t| (t.name.clone(), t.grades.clone()))
+        .collect();
 
     // Helper to check if a type is constrained
     let is_constrained = |name: &str| -> bool {
@@ -429,37 +435,38 @@ fn parse_products(raw: &RawProducts, types: &[TypeSpec]) -> ProductsSpec {
             .any(|c| c.wrapper_name == name)
     };
 
-    ProductsSpec {
-        geometric: parse_product_entries(&raw.geometric, is_constrained),
-        outer: parse_product_entries(&raw.outer, is_constrained),
-        left_contraction: parse_product_entries(&raw.left_contraction, is_constrained),
-        right_contraction: parse_product_entries(&raw.right_contraction, is_constrained),
-        regressive: parse_product_entries(&raw.regressive, is_constrained),
-        scalar: parse_product_entries(&raw.scalar, is_constrained),
-    }
-}
+    // Infer products for each product type
+    let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
+    let outer_table = infer_all_products(&entities, ProductType::Outer, &algebra);
+    let left_contraction_table = infer_all_products(&entities, ProductType::LeftContraction, &algebra);
 
-/// Parses product entries from a map of "Lhs_Rhs" -> "Output".
-fn parse_product_entries(
-    entries: &HashMap<String, String>,
-    is_constrained: impl Fn(&str) -> bool,
-) -> Vec<ProductEntry> {
-    entries
-        .iter()
-        .filter_map(|(key, output)| {
-            // Parse "Lhs_Rhs" format
-            let parts: Vec<&str> = key.split('_').collect();
-            if parts.len() != 2 {
-                return None;
-            }
-            Some(ProductEntry {
-                lhs: parts[0].to_string(),
-                rhs: parts[1].to_string(),
-                output: output.clone(),
-                output_constrained: is_constrained(output),
+    // Convert inferred products to ProductEntry format
+    // Skip products that don't have matching entity types
+    let convert_entries = |table: crate::discovery::ProductTable2D| -> Vec<ProductEntry> {
+        table
+            .entries
+            .into_iter()
+            .filter(|(_, _, result)| !result.is_zero && result.matching_entity.is_some())
+            .map(|(lhs, rhs, result)| {
+                let output = result.matching_entity.unwrap();
+                ProductEntry {
+                    lhs,
+                    rhs,
+                    output: output.clone(),
+                    output_constrained: is_constrained(&output),
+                }
             })
-        })
-        .collect()
+            .collect()
+    };
+
+    ProductsSpec {
+        geometric: convert_entries(geometric_table),
+        outer: convert_entries(outer_table),
+        left_contraction: convert_entries(left_contraction_table),
+        right_contraction: vec![], // Not commonly used
+        regressive: vec![], // Not commonly used
+        scalar: vec![], // Can be derived from geometric
+    }
 }
 
 /// Validates the complete specification.
@@ -526,9 +533,15 @@ mod tests {
             [signature]
             positive = ["e1", "e2"]
 
+            [types.Scalar]
+            grades = [0]
+
             [types.Vector]
             grades = [1]
             fields = ["x", "y"]
+
+            [types.Bivector]
+            grades = [2]
 
             [types.Rotor]
             grades = [0, 2]
@@ -537,7 +550,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(spec.types.len(), 2);
+        assert_eq!(spec.types.len(), 4);
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
         assert_eq!(vector.grades, vec![1]);
@@ -557,6 +570,15 @@ mod tests {
 
             [signature]
             positive = ["e1", "e2"]
+
+            [types.Scalar]
+            grades = [0]
+
+            [types.Vector]
+            grades = [1]
+
+            [types.Bivector]
+            grades = [2]
 
             [types.Rotor]
             grades = [0, 2]

@@ -45,6 +45,7 @@
 //! ```
 
 mod blade;
+mod constraints;
 mod grade;
 #[cfg(test)]
 mod proptest;
@@ -55,9 +56,12 @@ mod table;
 mod verification;
 
 pub use blade::Blade;
+pub use constraints::{
+    satisfies_all_constraints, satisfies_antiproduct_constraint, satisfies_geometric_constraint,
+};
 pub use grade::{
-    binomial, blades_of_grade, blades_of_grades, geometric_grades, grade, inner_grade,
-    left_contraction_grade, outer_grade,
+    antireverse_sign, binomial, blades_of_grade, blades_of_grades, geometric_grades, grade,
+    inner_grade, left_contraction_grade, outer_grade, reverse_sign,
 };
 pub use sign::basis_product;
 pub use signature::Algebra;

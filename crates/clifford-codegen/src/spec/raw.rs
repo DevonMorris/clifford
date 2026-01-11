@@ -21,9 +21,10 @@ pub struct RawAlgebraSpec {
     /// Type definitions.
     #[serde(default)]
     pub types: HashMap<String, RawTypeSpec>,
-    /// Product definitions.
+    /// Product definitions (ignored - products are auto-inferred from types).
     #[serde(default)]
-    pub products: RawProducts,
+    #[allow(dead_code)]
+    products: RawProducts,
     /// Generation options.
     #[serde(default)]
     pub options: RawOptions,
@@ -80,28 +81,30 @@ pub struct RawConstraint {
 
 /// Raw products section.
 ///
-/// Each product type maps "Lhs_Rhs" -> "Output".
-/// For example: `Vector_Vector = "Rotor"`.
+/// **DEPRECATED**: Products are now auto-inferred from types.
+/// This struct exists only for backward compatibility with old TOML files.
+/// Any products specified in TOML are ignored.
 #[derive(Debug, Deserialize, Default)]
+#[allow(dead_code)]
 pub struct RawProducts {
-    /// Geometric product entries.
+    /// Geometric product entries (ignored).
     #[serde(default)]
-    pub geometric: HashMap<String, String>,
-    /// Outer (wedge) product entries.
+    geometric: HashMap<String, String>,
+    /// Outer (wedge) product entries (ignored).
     #[serde(default)]
-    pub outer: HashMap<String, String>,
-    /// Left contraction entries.
+    outer: HashMap<String, String>,
+    /// Left contraction entries (ignored).
     #[serde(default)]
-    pub left_contraction: HashMap<String, String>,
-    /// Right contraction entries.
+    left_contraction: HashMap<String, String>,
+    /// Right contraction entries (ignored).
     #[serde(default)]
-    pub right_contraction: HashMap<String, String>,
-    /// Regressive product entries.
+    right_contraction: HashMap<String, String>,
+    /// Regressive product entries (ignored).
     #[serde(default)]
-    pub regressive: HashMap<String, String>,
-    /// Scalar product entries.
+    regressive: HashMap<String, String>,
+    /// Scalar product entries (ignored).
     #[serde(default)]
-    pub scalar: HashMap<String, String>,
+    scalar: HashMap<String, String>,
 }
 
 /// Raw generation options.

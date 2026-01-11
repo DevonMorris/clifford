@@ -7,7 +7,9 @@
 //! # Architecture
 //!
 //! - [`algebra`]: Core blade algebra computations (signs, products, grades)
+//! - [`discovery`]: Automatic entity discovery from geometric constraints
 //! - [`spec`]: TOML specification parsing and validation
+//! - [`codegen`]: Code generation from specifications
 //!
 //! # Example
 //!
@@ -31,4 +33,5 @@
 
 pub mod algebra;
 pub mod codegen;
+pub mod discovery;
 pub mod spec;

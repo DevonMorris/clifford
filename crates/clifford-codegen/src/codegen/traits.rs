@@ -186,7 +186,12 @@ impl<'a> TraitsGenerator<'a> {
                         entry.output.clone()
                     };
                     if let Some(output_type) = self.find_type(&output_name) {
-                        impls.push(self.generate_geometric_mul_from_entry(ty, other, output_type, entry));
+                        impls.push(self.generate_geometric_mul_from_entry(
+                            ty,
+                            other,
+                            output_type,
+                            entry,
+                        ));
                     }
                 }
             }

@@ -28,6 +28,7 @@ use clifford_codegen::codegen::{
     ConstraintGenerator, ConversionsGenerator, ProductGenerator, TraitsGenerator, TypeGenerator,
     format_tokens,
 };
+use clifford_codegen::discovery::{discover_entities, generate_toml_template};
 use clifford_codegen::spec::parse_spec;
 
 /// Generate optimized geometric algebra code from specifications.
@@ -123,6 +124,20 @@ enum Commands {
         #[arg(long, default_value = "table")]
         format: String,
     },
+
+    /// Discover valid entities for an algebra signature.
+    ///
+    /// Analyzes which grade combinations satisfy geometric constraints
+    /// and generates a TOML template for further customization.
+    Discover {
+        /// Algebra signature as "p,q,r" (positive, negative, zero dimensions).
+        /// Examples: "3,0,0" for Euclidean 3D, "3,0,1" for PGA 3D, "4,1,0" for CGA 3D.
+        signature: String,
+
+        /// Output file for the TOML template. If not specified, prints to stdout.
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+    },
 }
 
 /// Options for code generation.
@@ -193,6 +208,9 @@ fn main() -> Result<()> {
             format,
         } => {
             list_blades(&spec, grade, &format)?;
+        }
+        Commands::Discover { signature, output } => {
+            discover_algebra(&signature, output.as_deref())?;
         }
     }
 
@@ -577,4 +595,62 @@ fn blade_metric(index: usize, algebra: &Algebra) -> i32 {
     }
 
     result
+}
+
+/// Discovers valid entities for an algebra and generates a TOML template.
+fn discover_algebra(signature_str: &str, output_path: Option<&std::path::Path>) -> Result<()> {
+    // Parse signature "p,q,r"
+    let parts: Vec<&str> = signature_str.split(',').collect();
+    if parts.len() < 2 || parts.len() > 3 {
+        return Err(anyhow!(
+            "Invalid signature format. Expected 'p,q' or 'p,q,r', got '{}'",
+            signature_str
+        ));
+    }
+
+    let p: usize = parts[0]
+        .trim()
+        .parse()
+        .map_err(|_| anyhow!("Invalid positive dimension: '{}'", parts[0]))?;
+    let q: usize = parts[1]
+        .trim()
+        .parse()
+        .map_err(|_| anyhow!("Invalid negative dimension: '{}'", parts[1]))?;
+    let r: usize = if parts.len() > 2 {
+        parts[2]
+            .trim()
+            .parse()
+            .map_err(|_| anyhow!("Invalid zero dimension: '{}'", parts[2]))?
+    } else {
+        0
+    };
+
+    // Create algebra
+    let algebra = Algebra::new(p, q, r);
+    let (p, q, r) = algebra.signature();
+
+    eprintln!(
+        "Discovering entities for Cl({},{},{})...",
+        p, q, r
+    );
+
+    // Discover entities
+    let entities = discover_entities(&algebra);
+
+    eprintln!(
+        "Found {} valid grade combinations that satisfy geometric constraints.",
+        entities.len()
+    );
+
+    // Generate TOML template
+    if let Some(path) = output_path {
+        let mut file = std::fs::File::create(path)?;
+        generate_toml_template(&algebra, &entities, &mut file)?;
+        eprintln!("Wrote template to: {}", path.display());
+    } else {
+        let mut stdout = std::io::stdout();
+        generate_toml_template(&algebra, &entities, &mut stdout)?;
+    }
+
+    Ok(())
 }
