@@ -1112,14 +1112,14 @@ impl<T: Float> Line<T> {
         // Substitute: a*(px + t*dx) + b*(py + t*dy) + c*(pz + t*dz) + d = 0
         // Solve for t: t = -(a*px + b*py + c*pz + d) / (a*dx + b*dy + c*dz)
 
-        let denom = plane.a * self.dx + plane.b * self.dy + plane.c * self.dz;
+        let denom = plane.a() * self.dx + plane.b() * self.dy + plane.c() * self.dz;
 
         if denom.abs() < T::epsilon() {
             // Line is parallel to plane
             return None;
         }
 
-        let numer = -(plane.a * self.px + plane.b * self.py + plane.c * self.pz + plane.d);
+        let numer = -(plane.a() * self.px + plane.b() * self.py + plane.c() * self.pz + plane.d());
         let t = numer / denom;
 
         Some(Point::new(
