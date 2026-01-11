@@ -1,0 +1,89 @@
+# 3D Euclidean Geometric Algebra
+#
+# Signature: (3, 0, 0)
+# Basis: e1, e2, e3
+# Blades: 1, e1, e2, e3, e12, e13, e23, e123
+
+[algebra]
+name = "euclidean3"
+module_path = "euclidean::dim3"
+description = "3D Euclidean Geometric Algebra"
+
+[signature]
+positive = ["e1", "e2", "e3"]
+
+[blades]
+e1 = "x"
+e2 = "y"
+e3 = "z"
+e12 = "xy"
+e13 = "xz"
+e23 = "yz"
+e123 = "xyz"
+
+[types.Scalar]
+grades = [0]
+description = "Grade-0 scalar"
+fields = ["s"]
+
+[types.Vector]
+grades = [1]
+description = "Grade-1 vector"
+fields = ["x", "y", "z"]
+
+[types.Vector.constraints.unit]
+norm = "euclidean"
+constructors = ["unit_x()", "unit_y()", "unit_z()"]
+
+[types.Vector.constraints.nonzero]
+condition = "norm_squared > epsilon"
+
+[types.Bivector]
+grades = [2]
+description = "Grade-2 bivector (oriented plane)"
+fields = ["xy", "xz", "yz"]
+
+[types.Bivector.constraints.unit]
+norm = "euclidean"
+constructors = ["unit_xy()", "unit_xz()", "unit_yz()"]
+
+[types.Trivector]
+grades = [3]
+description = "Grade-3 pseudoscalar"
+fields = ["xyz"]
+
+[types.Rotor]
+grades = [0, 2]
+description = "3D rotation element"
+fields = ["s", "xy", "xz", "yz"]
+
+[types.Rotor.constraints.unit]
+norm = "euclidean"
+constructors = [
+    "identity()",
+    "from_angle_plane(angle: T, plane: Bivector<T>)",
+    "from_angle_axis(angle: T, axis: Vector<T>)",
+    "from_vectors(a: Vector<T>, b: Vector<T>)",
+]
+preserving_ops = ["compose", "inverse", "slerp"]
+
+[types.Even]
+grades = [0, 2]
+description = "Even subalgebra"
+fields = ["s", "xy", "xz", "yz"]
+alias_of = "Rotor"
+
+[types.Odd]
+grades = [1, 3]
+description = "Odd subalgebra"
+fields = ["x", "y", "z", "xyz"]
+
+[types.Full]
+grades = [0, 1, 2, 3]
+description = "Full multivector"
+fields = ["s", "x", "y", "z", "xy", "xz", "yz", "xyz"]
+
+[options]
+generate_serde = true
+generate_arbitrary = true
+generate_tests = true
