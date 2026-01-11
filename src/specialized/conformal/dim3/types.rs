@@ -3,6 +3,7 @@
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 use crate::scalar::Float;
+use crate::specialized::euclidean::dim3::Vector;
 
 /// A round point in 3D CGA (null vector).
 ///
@@ -611,10 +612,10 @@ impl<T: Float> Plane<T> {
     /// Creates a plane from a point and normal direction.
     ///
     /// The normal is automatically normalized.
-    pub fn from_point_normal(point: &Point<T>, normal: (T, T, T)) -> Self {
-        let len = (normal.0 * normal.0 + normal.1 * normal.1 + normal.2 * normal.2).sqrt();
+    pub fn from_point_normal(point: &Point<T>, normal: &Vector<T>) -> Self {
+        let len = normal.norm();
         let (a, b, c) = if len > T::epsilon() {
-            (normal.0 / len, normal.1 / len, normal.2 / len)
+            (normal.x() / len, normal.y() / len, normal.z() / len)
         } else {
             (T::zero(), T::zero(), T::one())
         };
@@ -641,10 +642,10 @@ impl<T: Float> Plane<T> {
         Self::from_normal_distance(T::one(), T::zero(), T::zero(), T::zero())
     }
 
-    /// Returns the unit normal vector `(a, b, c)`.
+    /// Returns the unit normal vector.
     #[inline]
-    pub fn normal(&self) -> (T, T, T) {
-        (self.a, self.b, self.c)
+    pub fn normal(&self) -> Vector<T> {
+        Vector::new(self.a, self.b, self.c)
     }
 
     /// Returns the signed distance from origin to the plane.
@@ -761,18 +762,18 @@ impl<T: Float> Circle<T> {
     /// Creates a circle from center, radius, and normal direction.
     ///
     /// The normal defines the plane containing the circle.
-    pub fn from_center_radius_normal(center: (T, T, T), radius: T, normal: (T, T, T)) -> Self {
-        let len = (normal.0 * normal.0 + normal.1 * normal.1 + normal.2 * normal.2).sqrt();
+    pub fn from_center_radius_normal(center: &Vector<T>, radius: T, normal: &Vector<T>) -> Self {
+        let len = normal.norm();
         let (nx, ny, nz) = if len > T::epsilon() {
-            (normal.0 / len, normal.1 / len, normal.2 / len)
+            (normal.x() / len, normal.y() / len, normal.z() / len)
         } else {
             (T::zero(), T::zero(), T::one())
         };
 
         Self {
-            cx: center.0,
-            cy: center.1,
-            cz: center.2,
+            cx: center.x(),
+            cy: center.y(),
+            cz: center.z(),
             r: radius,
             nx,
             ny,
@@ -887,10 +888,10 @@ impl<T: Float> Circle<T> {
         }
     }
 
-    /// Returns the center as Euclidean coordinates.
+    /// Returns the center as a Euclidean vector.
     #[inline]
-    pub fn center(&self) -> (T, T, T) {
-        (self.cx, self.cy, self.cz)
+    pub fn center(&self) -> Vector<T> {
+        Vector::new(self.cx, self.cy, self.cz)
     }
 
     /// Returns the center as a conformal [`Point`].
@@ -907,8 +908,8 @@ impl<T: Float> Circle<T> {
 
     /// Returns the normal direction of the plane containing the circle.
     #[inline]
-    pub fn normal(&self) -> (T, T, T) {
-        (self.nx, self.ny, self.nz)
+    pub fn normal(&self) -> Vector<T> {
+        Vector::new(self.nx, self.ny, self.nz)
     }
 
     /// Returns true if this is a real circle (positive radius).
@@ -920,7 +921,8 @@ impl<T: Float> Circle<T> {
     /// Returns true if the point lies on the circle.
     pub fn contains(&self, p: &Point<T>, epsilon: T) -> bool {
         // Point must be in the plane and at distance r from center
-        let plane = Plane::from_point_normal(&self.center_point(), self.normal());
+        let normal = self.normal();
+        let plane = Plane::from_point_normal(&self.center_point(), &normal);
         if !plane.contains(p, epsilon) {
             return false;
         }
@@ -935,7 +937,8 @@ impl<T: Float> Circle<T> {
 
     /// Returns the plane containing this circle.
     pub fn carrier_plane(&self) -> Plane<T> {
-        Plane::from_point_normal(&self.center_point(), self.normal())
+        let normal = self.normal();
+        Plane::from_point_normal(&self.center_point(), &normal)
     }
 
     /// Accessor for center x-coordinate.
@@ -1005,12 +1008,14 @@ impl<T: Float> Line<T> {
     /// Creates a line from a point and direction.
     ///
     /// The direction is automatically normalized.
-    pub fn from_point_direction(point: &Point<T>, direction: (T, T, T)) -> Self {
-        let len =
-            (direction.0 * direction.0 + direction.1 * direction.1 + direction.2 * direction.2)
-                .sqrt();
+    pub fn from_point_direction(point: &Point<T>, direction: &Vector<T>) -> Self {
+        let len = direction.norm();
         let (dx, dy, dz) = if len > T::epsilon() {
-            (direction.0 / len, direction.1 / len, direction.2 / len)
+            (
+                direction.x() / len,
+                direction.y() / len,
+                direction.z() / len,
+            )
         } else {
             (T::one(), T::zero(), T::zero())
         };
@@ -1027,32 +1032,32 @@ impl<T: Float> Line<T> {
 
     /// Creates a line from two points.
     pub fn from_two_points(p1: &Point<T>, p2: &Point<T>) -> Self {
-        let direction = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
-        Self::from_point_direction(p1, direction)
+        let direction = Vector::new(p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
+        Self::from_point_direction(p1, &direction)
     }
 
     /// The x-axis.
     #[inline]
     pub fn x_axis() -> Self {
-        Self::from_point_direction(&Point::origin(), (T::one(), T::zero(), T::zero()))
+        Self::from_point_direction(&Point::origin(), &Vector::unit_x())
     }
 
     /// The y-axis.
     #[inline]
     pub fn y_axis() -> Self {
-        Self::from_point_direction(&Point::origin(), (T::zero(), T::one(), T::zero()))
+        Self::from_point_direction(&Point::origin(), &Vector::unit_y())
     }
 
     /// The z-axis.
     #[inline]
     pub fn z_axis() -> Self {
-        Self::from_point_direction(&Point::origin(), (T::zero(), T::zero(), T::one()))
+        Self::from_point_direction(&Point::origin(), &Vector::unit_z())
     }
 
     /// Returns the unit direction vector.
     #[inline]
-    pub fn direction(&self) -> (T, T, T) {
-        (self.dx, self.dy, self.dz)
+    pub fn direction(&self) -> Vector<T> {
+        Vector::new(self.dx, self.dy, self.dz)
     }
 
     /// Returns a point on the line (the stored reference point).
@@ -1839,10 +1844,14 @@ mod tests {
         assert!(plane.contains(&p3, ABS_DIFF_EQ_EPS));
 
         // Normal should be (0, 0, 1) or (0, 0, -1)
-        let (nx, ny, nz) = plane.normal();
-        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(nz.abs(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        let normal = plane.normal();
+        assert!(abs_diff_eq!(normal.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(normal.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            normal.z().abs(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1884,14 +1893,15 @@ mod tests {
             }
 
             let p1 = Point::new(x1, y1, z1);
-            let line = Line::from_point_direction(&p1, (dx, dy, dz));
+            let direction = Vector::new(dx, dy, dz);
+            let line = Line::from_point_direction(&p1, &direction);
             let p = Point::new(px, py, pz);
             let closest = line.closest_point(&p);
 
             // Vector from closest to p should be perpendicular to line direction
-            let to_p = (p.x() - closest.x(), p.y() - closest.y(), p.z() - closest.z());
+            let to_p = Vector::new(p.x() - closest.x(), p.y() - closest.y(), p.z() - closest.z());
             let dir = line.direction();
-            let dot = to_p.0 * dir.0 + to_p.1 * dir.1 + to_p.2 * dir.2;
+            let dot = to_p.x() * dir.x() + to_p.y() * dir.y() + to_p.z() * dir.z();
 
             prop_assert!(abs_diff_eq!(dot, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         }
@@ -1908,7 +1918,8 @@ mod tests {
             }
 
             let p1 = Point::new(x1, y1, z1);
-            let line = Line::from_point_direction(&p1, (dx, dy, dz));
+            let direction = Vector::new(dx, dy, dz);
+            let line = Line::from_point_direction(&p1, &direction);
             let p = Point::new(px, py, pz);
 
             prop_assert!(line.distance_to_point(&p) >= 0.0);
@@ -1967,10 +1978,14 @@ mod tests {
         ));
 
         // Normal should be (0, 0, ±1)
-        let (nx, ny, nz) = circle.normal();
-        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(nz.abs(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        let normal = circle.normal();
+        assert!(abs_diff_eq!(normal.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(normal.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            normal.z().abs(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
     }
 
     #[test]
