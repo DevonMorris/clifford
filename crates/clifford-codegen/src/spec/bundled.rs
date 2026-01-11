@@ -51,8 +51,6 @@ mod tests {
             .unwrap();
         assert_eq!(unit.norm_type, Some(NormType::Euclidean));
         assert_eq!(unit.wrapper_name, "UnitRotor");
-        assert!(unit.constructors.iter().any(|c| c.name == "identity"));
-        assert!(unit.constructors.iter().any(|c| c.name == "from_angle"));
 
         // Check Even aliases Rotor
         let even = spec.types.iter().find(|t| t.name == "Even").unwrap();

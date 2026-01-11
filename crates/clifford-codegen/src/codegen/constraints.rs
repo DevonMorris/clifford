@@ -2,20 +2,30 @@
 //!
 //! This module provides the `ConstraintGenerator` for generating type-safe
 //! wrapper types that enforce algebraic constraints (unit, nonzero, etc.).
+//!
+//! The generated wrappers include:
+//! - A `new()` constructor that validates the constraint within tolerance and panics if not met
+//! - A `new_unchecked()` constructor for advanced users who guarantee the constraint
+//! - Accessor methods (`into_inner()`, `Deref`, `AsRef`, `From`)
+//!
+//! Proper domain-specific constructors (like `identity()`, `from_angle()`) must be added
+//! by the user after generation, as the codegen cannot know how to properly construct
+//! these types for all use cases.
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::Algebra;
-use crate::spec::{AlgebraSpec, ConstraintKind, ConstraintSpec, ConstructorSpec, TypeSpec};
+use crate::spec::{AlgebraSpec, ConstraintKind, ConstraintSpec, TypeSpec};
 
 /// Generates constrained wrapper types.
 ///
 /// The generator produces wrapper types that enforce constraints:
-/// - Unit types (norm = 1)
-/// - NonZero types (norm > 0)
+/// - Unit types (norm = 1 within tolerance)
+/// - NonZero types (norm > tolerance)
 /// - Normalized types (context-dependent canonical form)
-/// - Null types (self-inner-product = 0)
+/// - Null types (self-inner-product = 0 within tolerance)
+/// - Ideal types (in ideal subspace)
 ///
 /// # Example
 ///
@@ -37,7 +47,6 @@ use crate::spec::{AlgebraSpec, ConstraintKind, ConstraintSpec, ConstructorSpec, 
 ///
 /// [types.Vector.constraints.unit]
 /// norm = "euclidean"
-/// constructors = ["unit_x()", "unit_y()"]
 /// "#).unwrap();
 ///
 /// let algebra = Algebra::euclidean(2);
@@ -47,6 +56,7 @@ use crate::spec::{AlgebraSpec, ConstraintKind, ConstraintSpec, ConstructorSpec, 
 /// let code = tokens.to_string();
 ///
 /// assert!(code.contains("UnitVector"));
+/// assert!(code.contains("fn new"));
 /// ```
 pub struct ConstraintGenerator<'a> {
     /// The algebra specification.
@@ -136,7 +146,7 @@ impl<'a> ConstraintGenerator<'a> {
         }
     }
 
-    /// Generates a unit constraint wrapper.
+    /// Generates a unit constraint wrapper (norm = 1 within tolerance).
     fn generate_unit_wrapper(
         &self,
         base_type: &TypeSpec,
@@ -147,16 +157,14 @@ impl<'a> ConstraintGenerator<'a> {
 
         let doc = format!(
             "Unit {} with guaranteed norm = 1.\n\n\
-            This wrapper type ensures the {} always has unit norm.",
+            This wrapper type ensures the {} always has unit norm.\n\n\
+            # Panics\n\n\
+            The `new()` constructor panics if `|norm - 1| >= tolerance`.",
             base_type.name,
             base_type.name.to_lowercase()
         );
 
-        let constructors = self.generate_unit_constructors(base_type, constraint);
-        let preserving_ops = self.generate_preserving_ops(base_type, constraint);
-        let deref_impl = self.generate_deref(base_type, constraint);
-        let from_impl = self.generate_from(base_type, constraint);
-        let mul_impl = self.generate_unit_mul(base_type, constraint);
+        let common_impls = self.generate_common_impls(base_type, constraint);
 
         quote! {
             #[doc = #doc]
@@ -165,8 +173,31 @@ impl<'a> ConstraintGenerator<'a> {
             pub struct #wrapper_name<T: Float>(#base_name<T>);
 
             impl<T: Float> #wrapper_name<T> {
-                #constructors
-                #preserving_ops
+                /// Creates a unit wrapper, validating the constraint.
+                ///
+                /// # Arguments
+                ///
+                /// * `inner` - The element to wrap
+                /// * `tolerance` - Maximum allowed deviation from unit norm
+                ///
+                /// # Panics
+                ///
+                /// Panics if `|inner.norm() - 1| >= tolerance`.
+                #[inline]
+                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                    let norm = inner.norm();
+                    let deviation = if norm > T::one() {
+                        norm - T::one()
+                    } else {
+                        T::one() - norm
+                    };
+                    assert!(
+                        deviation < tolerance,
+                        "unit constraint violated: |norm - 1| = {:?} >= tolerance",
+                        deviation
+                    );
+                    Self(inner)
+                }
 
                 /// Creates from components without validation.
                 ///
@@ -178,14 +209,6 @@ impl<'a> ConstraintGenerator<'a> {
                     Self(inner)
                 }
 
-                /// Attempts to create by normalizing the given element.
-                ///
-                /// Returns `None` if the norm is too small.
-                #[inline]
-                pub fn try_from_inner(inner: #base_name<T>) -> Option<Self> {
-                    inner.try_normalize().map(Self)
-                }
-
                 /// Returns the underlying element.
                 #[inline]
                 pub fn into_inner(self) -> #base_name<T> {
@@ -193,13 +216,11 @@ impl<'a> ConstraintGenerator<'a> {
                 }
             }
 
-            #deref_impl
-            #from_impl
-            #mul_impl
+            #common_impls
         }
     }
 
-    /// Generates a nonzero constraint wrapper.
+    /// Generates a nonzero constraint wrapper (norm > tolerance).
     fn generate_nonzero_wrapper(
         &self,
         base_type: &TypeSpec,
@@ -210,13 +231,14 @@ impl<'a> ConstraintGenerator<'a> {
 
         let doc = format!(
             "Non-zero {} with guaranteed norm > 0.\n\n\
-            This wrapper type ensures the {} is never zero.",
+            This wrapper type ensures the {} is never zero.\n\n\
+            # Panics\n\n\
+            The `new()` constructor panics if `norm_squared <= tolerance`.",
             base_type.name,
             base_type.name.to_lowercase()
         );
 
-        let deref_impl = self.generate_deref(base_type, constraint);
-        let from_impl = self.generate_from(base_type, constraint);
+        let common_impls = self.generate_common_impls(base_type, constraint);
 
         quote! {
             #[doc = #doc]
@@ -225,6 +247,27 @@ impl<'a> ConstraintGenerator<'a> {
             pub struct #wrapper_name<T: Float>(#base_name<T>);
 
             impl<T: Float> #wrapper_name<T> {
+                /// Creates a non-zero wrapper, validating the constraint.
+                ///
+                /// # Arguments
+                ///
+                /// * `inner` - The element to wrap
+                /// * `tolerance` - Minimum required norm squared
+                ///
+                /// # Panics
+                ///
+                /// Panics if `inner.norm_squared() <= tolerance`.
+                #[inline]
+                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                    let norm_sq = inner.norm_squared();
+                    assert!(
+                        norm_sq > tolerance,
+                        "nonzero constraint violated: norm_squared = {:?} <= tolerance",
+                        norm_sq
+                    );
+                    Self(inner)
+                }
+
                 /// Creates from components without validation.
                 ///
                 /// # Safety (Logical)
@@ -233,18 +276,6 @@ impl<'a> ConstraintGenerator<'a> {
                 #[inline]
                 pub fn new_unchecked(inner: #base_name<T>) -> Self {
                     Self(inner)
-                }
-
-                /// Attempts to create a non-zero wrapper.
-                ///
-                /// Returns `None` if the norm is too small.
-                #[inline]
-                pub fn try_from_inner(inner: #base_name<T>) -> Option<Self> {
-                    if inner.norm_squared() > T::epsilon() {
-                        Some(Self(inner))
-                    } else {
-                        None
-                    }
                 }
 
                 /// Returns the underlying element.
@@ -260,8 +291,7 @@ impl<'a> ConstraintGenerator<'a> {
                 }
             }
 
-            #deref_impl
-            #from_impl
+            #common_impls
         }
     }
 
@@ -276,12 +306,12 @@ impl<'a> ConstraintGenerator<'a> {
 
         let doc = format!(
             "Normalized {} in canonical form.\n\n\
-            The exact normalization condition depends on the geometric interpretation.",
+            The exact normalization condition depends on the geometric interpretation.\n\
+            Users must implement appropriate constructors for their use case.",
             base_type.name
         );
 
-        let deref_impl = self.generate_deref(base_type, constraint);
-        let from_impl = self.generate_from(base_type, constraint);
+        let common_impls = self.generate_common_impls(base_type, constraint);
 
         quote! {
             #[doc = #doc]
@@ -291,6 +321,9 @@ impl<'a> ConstraintGenerator<'a> {
 
             impl<T: Float> #wrapper_name<T> {
                 /// Creates from components without validation.
+                ///
+                /// Users must implement their own validated constructors
+                /// appropriate for their normalization condition.
                 #[inline]
                 pub fn new_unchecked(inner: #base_name<T>) -> Self {
                     Self(inner)
@@ -303,12 +336,11 @@ impl<'a> ConstraintGenerator<'a> {
                 }
             }
 
-            #deref_impl
-            #from_impl
+            #common_impls
         }
     }
 
-    /// Generates a null constraint wrapper.
+    /// Generates a null constraint wrapper (self-inner-product = 0 within tolerance).
     fn generate_null_wrapper(
         &self,
         base_type: &TypeSpec,
@@ -319,12 +351,13 @@ impl<'a> ConstraintGenerator<'a> {
 
         let doc = format!(
             "Null {} with zero self-inner-product.\n\n\
-            Used in conformal geometric algebra for representing points.",
+            Used in conformal geometric algebra for representing points.\n\n\
+            # Panics\n\n\
+            The `new()` constructor panics if `|self_inner_product| >= tolerance`.",
             base_type.name
         );
 
-        let deref_impl = self.generate_deref(base_type, constraint);
-        let from_impl = self.generate_from(base_type, constraint);
+        let common_impls = self.generate_common_impls(base_type, constraint);
 
         quote! {
             #[doc = #doc]
@@ -333,7 +366,35 @@ impl<'a> ConstraintGenerator<'a> {
             pub struct #wrapper_name<T: Float>(#base_name<T>);
 
             impl<T: Float> #wrapper_name<T> {
+                /// Creates a null wrapper, validating the constraint.
+                ///
+                /// # Arguments
+                ///
+                /// * `inner` - The element to wrap
+                /// * `tolerance` - Maximum allowed self-inner-product magnitude
+                ///
+                /// # Panics
+                ///
+                /// Panics if `|inner.self_inner_product()| >= tolerance`.
+                ///
+                /// Note: Requires the base type to implement `self_inner_product()`.
+                #[inline]
+                pub fn new(inner: #base_name<T>, tolerance: T) -> Self {
+                    let sip = inner.self_inner_product();
+                    let abs_sip = if sip < T::zero() { T::zero() - sip } else { sip };
+                    assert!(
+                        abs_sip < tolerance,
+                        "null constraint violated: |self_inner_product| = {:?} >= tolerance",
+                        abs_sip
+                    );
+                    Self(inner)
+                }
+
                 /// Creates from components without validation.
+                ///
+                /// # Safety (Logical)
+                ///
+                /// Caller must ensure the element is null.
                 #[inline]
                 pub fn new_unchecked(inner: #base_name<T>) -> Self {
                     Self(inner)
@@ -346,8 +407,7 @@ impl<'a> ConstraintGenerator<'a> {
                 }
             }
 
-            #deref_impl
-            #from_impl
+            #common_impls
         }
     }
 
@@ -362,12 +422,12 @@ impl<'a> ConstraintGenerator<'a> {
 
         let doc = format!(
             "Ideal {} representing a point at infinity.\n\n\
-            Used in projective geometric algebra.",
+            Used in projective geometric algebra.\n\
+            Users must implement appropriate constructors for their use case.",
             base_type.name
         );
 
-        let deref_impl = self.generate_deref(base_type, constraint);
-        let from_impl = self.generate_from(base_type, constraint);
+        let common_impls = self.generate_common_impls(base_type, constraint);
 
         quote! {
             #[doc = #doc]
@@ -377,6 +437,9 @@ impl<'a> ConstraintGenerator<'a> {
 
             impl<T: Float> #wrapper_name<T> {
                 /// Creates from components without validation.
+                ///
+                /// Users must implement their own validated constructors
+                /// appropriate for the ideal constraint.
                 #[inline]
                 pub fn new_unchecked(inner: #base_name<T>) -> Self {
                     Self(inner)
@@ -389,248 +452,16 @@ impl<'a> ConstraintGenerator<'a> {
                 }
             }
 
-            #deref_impl
-            #from_impl
+            #common_impls
         }
     }
 
-    /// Generates constructors for unit types.
-    fn generate_unit_constructors(
+    /// Generates common implementations (Deref, AsRef, From).
+    fn generate_common_impls(
         &self,
         base_type: &TypeSpec,
         constraint: &ConstraintSpec,
     ) -> TokenStream {
-        let constructors: Vec<TokenStream> = constraint
-            .constructors
-            .iter()
-            .map(|ctor| self.generate_constructor(base_type, constraint, ctor))
-            .collect();
-
-        quote! { #(#constructors)* }
-    }
-
-    /// Generates a single constructor.
-    fn generate_constructor(
-        &self,
-        base_type: &TypeSpec,
-        constraint: &ConstraintSpec,
-        ctor: &ConstructorSpec,
-    ) -> TokenStream {
-        let name = format_ident!("{}", ctor.name);
-        let base_name = format_ident!("{}", base_type.name);
-        let wrapper_name = format_ident!("{}", constraint.wrapper_name);
-
-        // Parse parameters
-        let params: Vec<TokenStream> = ctor
-            .params
-            .iter()
-            .map(|p| {
-                let param_name = format_ident!("{}", p.name);
-                let param_type = self.parse_type_token(&p.ty);
-                quote! { #param_name: #param_type }
-            })
-            .collect();
-
-        // Generate body based on constructor name
-        let body = match ctor.name.as_str() {
-            "identity" => quote! {
-                Self(#base_name::identity())
-            },
-            "unit_x" => quote! {
-                Self(#base_name::unit_x())
-            },
-            "unit_y" => quote! {
-                Self(#base_name::unit_y())
-            },
-            "unit_z" => quote! {
-                Self(#base_name::unit_z())
-            },
-            "unit_xy" => quote! {
-                Self(#base_name::unit_xy())
-            },
-            "unit_xz" => quote! {
-                Self(#base_name::unit_xz())
-            },
-            "unit_yz" => quote! {
-                Self(#base_name::unit_yz())
-            },
-            "from_angle" => quote! {
-                let half = angle / T::TWO;
-                let (sin_half, cos_half) = (half.sin(), half.cos());
-                Self(#base_name::new(cos_half, sin_half))
-            },
-            "from_angle_plane" => quote! {
-                let half = angle / T::TWO;
-                let (sin_half, cos_half) = (half.sin(), half.cos());
-                let plane_normalized = plane.try_normalize().unwrap_or(#base_name::zero());
-                Self(#base_name::new(
-                    cos_half,
-                    plane_normalized.xy() * sin_half,
-                    plane_normalized.xz() * sin_half,
-                    plane_normalized.yz() * sin_half,
-                ))
-            },
-            "from_angle_axis" => quote! {
-                // axis is a vector, convert to bivector plane
-                // In 3D: e1 -> e23, e2 -> -e13, e3 -> e12 (Hodge dual)
-                let half = angle / T::TWO;
-                let (sin_half, cos_half) = (half.sin(), half.cos());
-                let axis_norm = axis.norm();
-                if axis_norm < T::epsilon() {
-                    return #wrapper_name::identity();
-                }
-                let scale = sin_half / axis_norm;
-                Self(#base_name::new(
-                    cos_half,
-                    axis.z() * scale,   // e12 from e3
-                    -axis.y() * scale,  // e13 from -e2 (negated for right-hand rule)
-                    axis.x() * scale,   // e23 from e1
-                ))
-            },
-            "from_vectors" => quote! {
-                // Rotor from a to b: r = normalize(1 + ba)
-                // Using the formula: r = (||b|| + ba) / ||b||b + ba||
-                let ab = a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
-                let xy = a.x() * b.y() - a.y() * b.x();
-                let xz = a.x() * b.z() - a.z() * b.x();
-                let yz = a.y() * b.z() - a.z() * b.y();
-
-                let s = T::one() + ab;
-                let raw = #base_name::new(s, xy, xz, yz);
-                #wrapper_name::try_from_inner(raw).unwrap_or(#wrapper_name::identity())
-            },
-            _ => {
-                // Generic: try to normalize
-                quote! {
-                    // Unknown constructor - this should be implemented specifically
-                    Self(#base_name::identity())
-                }
-            }
-        };
-
-        let doc = format!(
-            "Creates a unit {} via {}.",
-            base_type.name.to_lowercase(),
-            ctor.name
-        );
-
-        quote! {
-            #[doc = #doc]
-            #[inline]
-            pub fn #name(#(#params),*) -> Self {
-                #body
-            }
-        }
-    }
-
-    /// Generates constraint-preserving operations.
-    fn generate_preserving_ops(
-        &self,
-        base_type: &TypeSpec,
-        constraint: &ConstraintSpec,
-    ) -> TokenStream {
-        let ops: Vec<TokenStream> = constraint
-            .preserving_ops
-            .iter()
-            .map(|op| self.generate_preserving_op(base_type, constraint, op))
-            .collect();
-
-        quote! { #(#ops)* }
-    }
-
-    /// Generates a single constraint-preserving operation.
-    fn generate_preserving_op(
-        &self,
-        base_type: &TypeSpec,
-        constraint: &ConstraintSpec,
-        op_name: &str,
-    ) -> TokenStream {
-        let base_name = format_ident!("{}", base_type.name);
-        let _wrapper_name = format_ident!("{}", constraint.wrapper_name);
-
-        match op_name {
-            "compose" => {
-                quote! {
-                    /// Composes two unit elements. Result is always unit.
-                    ///
-                    /// For unit rotors: `(r1 * r2).norm() = 1`.
-                    #[inline]
-                    pub fn compose(self, other: Self) -> Self {
-                        // Unit * Unit = Unit (algebraic fact for versors)
-                        // We compute the geometric product and trust the constraint
-                        let result = #base_name::new(
-                            self.0.s() * other.0.s() - self.0.xy() * other.0.xy()
-                                - self.0.xz() * other.0.xz() - self.0.yz() * other.0.yz(),
-                            self.0.s() * other.0.xy() + self.0.xy() * other.0.s()
-                                + self.0.xz() * other.0.yz() - self.0.yz() * other.0.xz(),
-                            self.0.s() * other.0.xz() + self.0.xz() * other.0.s()
-                                - self.0.xy() * other.0.yz() + self.0.yz() * other.0.xy(),
-                            self.0.s() * other.0.yz() + self.0.yz() * other.0.s()
-                                + self.0.xy() * other.0.xz() - self.0.xz() * other.0.xy(),
-                        );
-                        Self::new_unchecked(result)
-                    }
-                }
-            }
-            "inverse" => {
-                quote! {
-                    /// Returns the inverse.
-                    ///
-                    /// For unit elements, inverse = reverse.
-                    #[inline]
-                    pub fn inverse(self) -> Self {
-                        Self(self.0.reverse())
-                    }
-                }
-            }
-            "slerp" => {
-                quote! {
-                    /// Spherical linear interpolation.
-                    ///
-                    /// Interpolates between two unit elements along the geodesic.
-                    /// Result is always unit.
-                    #[inline]
-                    pub fn slerp(self, other: Self, t: T) -> Self {
-                        // Compute dot product (scalar part of a * reverse(b))
-                        let dot = self.0.s() * other.0.s()
-                            + self.0.xy() * other.0.xy()
-                            + self.0.xz() * other.0.xz()
-                            + self.0.yz() * other.0.yz();
-
-                        let theta = dot.abs().min(T::one()).acos();
-
-                        if theta.abs() < T::epsilon() {
-                            // Linear interpolation for small angles
-                            let one_minus_t = T::one() - t;
-                            let inner = #base_name::new(
-                                self.0.s() * one_minus_t + other.0.s() * t,
-                                self.0.xy() * one_minus_t + other.0.xy() * t,
-                                self.0.xz() * one_minus_t + other.0.xz() * t,
-                                self.0.yz() * one_minus_t + other.0.yz() * t,
-                            );
-                            return Self(inner.normalize());
-                        }
-
-                        let sin_theta = theta.sin();
-                        let s1 = ((T::one() - t) * theta).sin() / sin_theta;
-                        let s2 = (t * theta).sin() / sin_theta;
-
-                        let inner = #base_name::new(
-                            self.0.s() * s1 + other.0.s() * s2,
-                            self.0.xy() * s1 + other.0.xy() * s2,
-                            self.0.xz() * s1 + other.0.xz() * s2,
-                            self.0.yz() * s1 + other.0.yz() * s2,
-                        );
-                        Self::new_unchecked(inner)
-                    }
-                }
-            }
-            _ => quote! {},
-        }
-    }
-
-    /// Generates Deref implementation.
-    fn generate_deref(&self, base_type: &TypeSpec, constraint: &ConstraintSpec) -> TokenStream {
         let base_name = format_ident!("{}", base_type.name);
         let wrapper_name = format_ident!("{}", constraint.wrapper_name);
 
@@ -650,60 +481,12 @@ impl<'a> ConstraintGenerator<'a> {
                     &self.0
                 }
             }
-        }
-    }
 
-    /// Generates From implementation.
-    fn generate_from(&self, base_type: &TypeSpec, constraint: &ConstraintSpec) -> TokenStream {
-        let base_name = format_ident!("{}", base_type.name);
-        let wrapper_name = format_ident!("{}", constraint.wrapper_name);
-
-        quote! {
             impl<T: Float> From<#wrapper_name<T>> for #base_name<T> {
                 #[inline]
-                fn from(unit: #wrapper_name<T>) -> Self {
-                    unit.0
+                fn from(wrapper: #wrapper_name<T>) -> Self {
+                    wrapper.0
                 }
-            }
-        }
-    }
-
-    /// Generates Mul operator for unit types.
-    fn generate_unit_mul(&self, _base_type: &TypeSpec, constraint: &ConstraintSpec) -> TokenStream {
-        let wrapper_name = format_ident!("{}", constraint.wrapper_name);
-
-        // Only generate if "compose" is a preserving op
-        if !constraint.preserving_ops.iter().any(|s| s == "compose") {
-            return quote! {};
-        }
-
-        quote! {
-            impl<T: Float> std::ops::Mul for #wrapper_name<T> {
-                type Output = Self;
-
-                #[inline]
-                fn mul(self, rhs: Self) -> Self {
-                    self.compose(rhs)
-                }
-            }
-        }
-    }
-
-    /// Parses a type string into a TokenStream.
-    fn parse_type_token(&self, ty: &str) -> TokenStream {
-        // Handle common patterns
-        match ty {
-            "T" => quote! { T },
-            "f32" => quote! { f32 },
-            "f64" => quote! { f64 },
-            t if t.ends_with("<T>") => {
-                let base = &t[..t.len() - 3];
-                let base_ident = format_ident!("{}", base);
-                quote! { #base_ident<T> }
-            }
-            t => {
-                let ident = format_ident!("{}", t);
-                quote! { #ident }
             }
         }
     }
@@ -715,70 +498,65 @@ mod tests {
     use crate::spec::parse_spec;
 
     #[test]
-    fn generates_unit_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
+    fn generates_unit_wrapper() {
+        let spec = parse_spec(
+            r#"
+[algebra]
+name = "euclidean2"
+
+[signature]
+positive = ["e1", "e2"]
+
+[types.Vector]
+grades = [1]
+fields = ["x", "y"]
+
+[types.Vector.constraints.unit]
+norm = "euclidean"
+"#,
+        )
+        .unwrap();
+
+        let algebra = Algebra::euclidean(2);
         let generator = ConstraintGenerator::new(&spec, &algebra);
 
         let tokens = generator.generate_constraints_file();
         let code = tokens.to_string();
 
         assert!(code.contains("UnitVector"));
-        assert!(code.contains("new_unchecked"));
-        assert!(code.contains("try_from_inner"));
-        assert!(code.contains("into_inner"));
+        assert!(code.contains("fn new"));
+        assert!(code.contains("fn new_unchecked"));
+        assert!(code.contains("tolerance"));
     }
 
     #[test]
-    fn generates_unit_rotor() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = ConstraintGenerator::new(&spec, &algebra);
+    fn generates_nonzero_wrapper() {
+        let spec = parse_spec(
+            r#"
+[algebra]
+name = "euclidean2"
 
-        let tokens = generator.generate_constraints_file();
-        let code = tokens.to_string();
+[signature]
+positive = ["e1", "e2"]
 
-        assert!(code.contains("UnitRotor"));
-        assert!(code.contains("identity"));
-        assert!(code.contains("compose"));
-        assert!(code.contains("inverse"));
-    }
+[types.Vector]
+grades = [1]
+fields = ["x", "y"]
 
-    #[test]
-    fn generates_nonzero_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
+[types.Vector.constraints.nonzero]
+condition = "norm_squared > epsilon"
+"#,
+        )
+        .unwrap();
+
+        let algebra = Algebra::euclidean(2);
         let generator = ConstraintGenerator::new(&spec, &algebra);
 
         let tokens = generator.generate_constraints_file();
         let code = tokens.to_string();
 
         assert!(code.contains("NonZeroVector"));
+        assert!(code.contains("fn new"));
         assert!(code.contains("norm_squared"));
-    }
-
-    #[test]
-    fn generates_deref_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = ConstraintGenerator::new(&spec, &algebra);
-
-        let tokens = generator.generate_constraints_file();
-        let code = tokens.to_string();
-
-        assert!(code.contains("impl < T : Float > std :: ops :: Deref for UnitVector"));
-        assert!(code.contains("type Target = Vector"));
-    }
-
-    #[test]
-    fn generates_mul_for_rotor() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = ConstraintGenerator::new(&spec, &algebra);
-
-        let tokens = generator.generate_constraints_file();
-        let code = tokens.to_string();
-
-        assert!(code.contains("impl < T : Float > std :: ops :: Mul for UnitRotor"));
     }
 }

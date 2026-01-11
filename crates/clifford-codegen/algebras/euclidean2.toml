@@ -29,7 +29,6 @@ fields = ["x", "y"]
 
 [types.Vector.constraints.unit]
 norm = "euclidean"
-constructors = ["unit_x()", "unit_y()"]
 
 [types.Vector.constraints.nonzero]
 condition = "norm_squared > epsilon"
@@ -46,9 +45,6 @@ fields = ["s", "xy"]
 
 [types.Rotor.constraints.unit]
 norm = "euclidean"
-constructors = ["identity()", "from_angle(angle: T)"]
-# TODO: preserving_ops uses hardcoded 3D formulas, disabled for 2D
-# preserving_ops = ["compose", "inverse"]
 
 [types.Even]
 grades = [0, 2]
