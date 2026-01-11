@@ -24,8 +24,11 @@
 //! - [`Projective2`]: 2D PGA, `Cl(2,0,1)` - point-based formulation
 //! - [`Projective3`]: 3D PGA, `Cl(3,0,1)` - point-based formulation
 //!
+//! ## Conformal (Euclidean + positive + negative)
+//! - [`Conformal2`]: 2D CGA, `Cl(3,1,0)` - conformal model for 2D
+//! - [`Conformal3`]: 3D CGA, `Cl(4,1,0)` - conformal model for 3D
+//!
 //! ## Coming Soon
-//! - CGA signatures for conformal geometry
 //! - Minkowski signature for special relativity
 //!
 //! # Example
@@ -47,10 +50,12 @@
 //! assert_eq!(Projective3::metric(3), 0);  // e₀² = 0
 //! ```
 
+mod conformal;
 mod euclidean;
 mod metric;
 mod projective;
 
+pub use conformal::{Conformal2, Conformal3};
 pub use euclidean::{Euclidean2, Euclidean3, Euclidean4};
 pub use metric::Signature;
 pub use projective::{Projective2, Projective3};

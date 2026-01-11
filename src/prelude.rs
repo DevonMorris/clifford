@@ -17,7 +17,7 @@ pub use crate::algebra::Multivector;
 pub use crate::basis::Blade;
 pub use crate::scalar::Float;
 pub use crate::signature::{
-    Euclidean2, Euclidean3, Euclidean4, Projective2, Projective3, Signature,
+    Conformal2, Conformal3, Euclidean2, Euclidean3, Euclidean4, Projective2, Projective3, Signature,
 };
 
 // Re-export approx traits for approximate comparisons
