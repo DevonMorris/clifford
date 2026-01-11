@@ -62,6 +62,7 @@
 //! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Line>
 //! - <https://conformalgeometricalgebra.org/wiki/index.php?title=Dipole>
 
+mod conversions;
 mod types;
 
 #[cfg(any(test, feature = "proptest-support"))]
@@ -74,4 +75,5 @@ pub mod arbitrary;
 ))]
 mod nalgebra;
 
+pub use conversions::ConversionError;
 pub use types::*;
