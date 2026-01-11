@@ -370,7 +370,8 @@ This project has specialized agents in `.claude/agents/` for different tasks. **
 | **review** | Reviewing code before merging. Use to check code against the project's quality checklist (docs, correctness, tests, style, performance). |
 | **explain** | Teaching GA concepts. Use when explaining geometric algebra ideas, bridging from linear algebra, or helping users understand the math. |
 | **optimize** | Performance optimization. Use when profiling, benchmarking, adding SIMD, or improving algorithmic efficiency. |
-| **devops** | CI/CD and infrastructure tasks. Use for GitHub Actions, publishing, branch protection, or build/release automation. |
+| **devops** | CI/CD and infrastructure tasks. Use for GitHub Actions, branch protection, or build automation. |
+| **release** | Release and publishing tasks. Use for version bumps, CHANGELOG updates, crates.io publishing, and creating GitHub releases. |
 
 #### How to Invoke Agents
 
@@ -391,6 +392,7 @@ Use the review agent to check this PR before merging
 - **Teaching/explaining?** → `explain`
 - **Improving speed?** → `optimize`
 - **CI/CD/infra?** → `devops`
+- **Publishing a release?** → `release`
 
 ### 10. Algebraic Derivations with SymPy
 
