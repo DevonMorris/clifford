@@ -528,6 +528,751 @@ impl<T: Float> Default for Sphere<T> {
 }
 
 // ============================================================================
+// Plane type
+// ============================================================================
+
+/// A plane in 3D CGA (flat sphere - grade-4 quadvector).
+///
+/// Represents the plane `ax + by + cz + d = 0` in implicit form.
+/// A plane is a sphere that contains the point at infinity.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Plane};
+///
+/// // xy-plane (z = 0)
+/// let plane = Plane::<f64>::from_normal_distance(0.0, 0.0, 1.0, 0.0);
+///
+/// // Point on plane
+/// let p = Point::new(1.0, 2.0, 0.0);
+/// assert!(plane.contains(&p, 1e-10));
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Plane>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Plane<T: Float> {
+    // We store the implicit form (a, b, c, d) for simplicity.
+    // The CGA representation can be derived when needed.
+    /// Normal x-component.
+    a: T,
+    /// Normal y-component.
+    b: T,
+    /// Normal z-component.
+    c: T,
+    /// Distance term.
+    d: T,
+}
+
+impl<T: Float> Plane<T> {
+    /// Creates a plane from normalized normal `(a, b, c)` and signed distance `d`.
+    ///
+    /// The plane equation is `ax + by + cz + d = 0`.
+    ///
+    /// # Note
+    ///
+    /// The normal `(a, b, c)` should be a unit vector for proper distance calculations.
+    #[inline]
+    pub fn from_normal_distance(a: T, b: T, c: T, d: T) -> Self {
+        Self { a, b, c, d }
+    }
+
+    /// Creates a plane from three non-collinear points.
+    ///
+    /// The normal direction follows the right-hand rule for `p1 -> p2 -> p3`.
+    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Self {
+        // Compute normal via cross product
+        let v1 = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
+        let v2 = (p3.x() - p1.x(), p3.y() - p1.y(), p3.z() - p1.z());
+
+        // Cross product: v1 × v2
+        let nx = v1.1 * v2.2 - v1.2 * v2.1;
+        let ny = v1.2 * v2.0 - v1.0 * v2.2;
+        let nz = v1.0 * v2.1 - v1.1 * v2.0;
+
+        // Normalize
+        let len = (nx * nx + ny * ny + nz * nz).sqrt();
+        let (a, b, c) = if len > T::epsilon() {
+            (nx / len, ny / len, nz / len)
+        } else {
+            // Degenerate case: collinear points
+            (T::zero(), T::zero(), T::one())
+        };
+
+        // d = -(a*x + b*y + c*z) for point p1 on plane
+        let d = -(a * p1.x() + b * p1.y() + c * p1.z());
+
+        Self { a, b, c, d }
+    }
+
+    /// Creates a plane from a point and normal direction.
+    ///
+    /// The normal is automatically normalized.
+    pub fn from_point_normal(point: &Point<T>, normal: (T, T, T)) -> Self {
+        let len = (normal.0 * normal.0 + normal.1 * normal.1 + normal.2 * normal.2).sqrt();
+        let (a, b, c) = if len > T::epsilon() {
+            (normal.0 / len, normal.1 / len, normal.2 / len)
+        } else {
+            (T::zero(), T::zero(), T::one())
+        };
+
+        let d = -(a * point.x() + b * point.y() + c * point.z());
+        Self { a, b, c, d }
+    }
+
+    /// The xy-plane (z = 0).
+    #[inline]
+    pub fn xy() -> Self {
+        Self::from_normal_distance(T::zero(), T::zero(), T::one(), T::zero())
+    }
+
+    /// The xz-plane (y = 0).
+    #[inline]
+    pub fn xz() -> Self {
+        Self::from_normal_distance(T::zero(), T::one(), T::zero(), T::zero())
+    }
+
+    /// The yz-plane (x = 0).
+    #[inline]
+    pub fn yz() -> Self {
+        Self::from_normal_distance(T::one(), T::zero(), T::zero(), T::zero())
+    }
+
+    /// Returns the unit normal vector `(a, b, c)`.
+    #[inline]
+    pub fn normal(&self) -> (T, T, T) {
+        (self.a, self.b, self.c)
+    }
+
+    /// Returns the signed distance from origin to the plane.
+    #[inline]
+    pub fn distance_from_origin(&self) -> T {
+        self.d
+    }
+
+    /// Signed distance from a point to the plane.
+    ///
+    /// - Positive: point is on the side the normal points to
+    /// - Zero: point is on the plane
+    /// - Negative: point is on the opposite side
+    #[inline]
+    pub fn signed_distance(&self, p: &Point<T>) -> T {
+        self.a * p.x() + self.b * p.y() + self.c * p.z() + self.d
+    }
+
+    /// Returns true if the point lies on the plane.
+    #[inline]
+    pub fn contains(&self, p: &Point<T>, epsilon: T) -> bool {
+        self.signed_distance(p).abs() < epsilon
+    }
+
+    /// Projects a point onto the plane.
+    pub fn project(&self, p: &Point<T>) -> Point<T> {
+        let dist = self.signed_distance(p);
+        Point::new(
+            p.x() - dist * self.a,
+            p.y() - dist * self.b,
+            p.z() - dist * self.c,
+        )
+    }
+
+    /// Accessor for normal x-component.
+    #[inline]
+    pub fn a(&self) -> T {
+        self.a
+    }
+
+    /// Accessor for normal y-component.
+    #[inline]
+    pub fn b(&self) -> T {
+        self.b
+    }
+
+    /// Accessor for normal z-component.
+    #[inline]
+    pub fn c(&self) -> T {
+        self.c
+    }
+
+    /// Accessor for distance term.
+    #[inline]
+    pub fn d(&self) -> T {
+        self.d
+    }
+}
+
+impl<T: Float> Default for Plane<T> {
+    fn default() -> Self {
+        Self::xy()
+    }
+}
+
+// ============================================================================
+// Circle type
+// ============================================================================
+
+/// A circle in 3D CGA (grade-3 trivector).
+///
+/// Represents a circle as the intersection of two spheres, or equivalently
+/// as the set of points equidistant from a center in a given plane.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Circle};
+///
+/// // Circle from three points
+/// let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
+/// let p2 = Point::new(0.0, 1.0, 0.0);
+/// let p3 = Point::new(-1.0, 0.0, 0.0);
+/// let circle = Circle::from_three_points(&p1, &p2, &p3);
+///
+/// // Verify radius
+/// assert!((circle.radius() - 1.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Circle>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Circle<T: Float> {
+    // We store center, radius, and normal for simplicity.
+    /// Center x-coordinate.
+    cx: T,
+    /// Center y-coordinate.
+    cy: T,
+    /// Center z-coordinate.
+    cz: T,
+    /// Radius.
+    r: T,
+    /// Normal x-component (normalized).
+    nx: T,
+    /// Normal y-component.
+    ny: T,
+    /// Normal z-component.
+    nz: T,
+}
+
+impl<T: Float> Circle<T> {
+    /// Creates a circle from center, radius, and normal direction.
+    ///
+    /// The normal defines the plane containing the circle.
+    pub fn from_center_radius_normal(center: (T, T, T), radius: T, normal: (T, T, T)) -> Self {
+        let len = (normal.0 * normal.0 + normal.1 * normal.1 + normal.2 * normal.2).sqrt();
+        let (nx, ny, nz) = if len > T::epsilon() {
+            (normal.0 / len, normal.1 / len, normal.2 / len)
+        } else {
+            (T::zero(), T::zero(), T::one())
+        };
+
+        Self {
+            cx: center.0,
+            cy: center.1,
+            cz: center.2,
+            r: radius,
+            nx,
+            ny,
+            nz,
+        }
+    }
+
+    /// Creates a circle from three points.
+    ///
+    /// The three points define a unique circle (assuming they're not collinear).
+    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Self {
+        // Compute plane normal
+        let v1 = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
+        let v2 = (p3.x() - p1.x(), p3.y() - p1.y(), p3.z() - p1.z());
+
+        let nx = v1.1 * v2.2 - v1.2 * v2.1;
+        let ny = v1.2 * v2.0 - v1.0 * v2.2;
+        let nz = v1.0 * v2.1 - v1.1 * v2.0;
+
+        let len = (nx * nx + ny * ny + nz * nz).sqrt();
+        let (nx, ny, nz) = if len > T::epsilon() {
+            (nx / len, ny / len, nz / len)
+        } else {
+            (T::zero(), T::zero(), T::one())
+        };
+
+        // Find circumcenter by solving the system of equations
+        // For now, use a simplified approach: project to 2D in the plane, find circumcenter
+        // This is the correct formula derived from circumcenter equations
+
+        let ax = p1.x();
+        let ay = p1.y();
+        let az = p1.z();
+        let bx = p2.x();
+        let by = p2.y();
+        let bz = p2.z();
+        let cx = p3.x();
+        let cy = p3.y();
+        let cz = p3.z();
+
+        // Midpoints
+        let m1 = ((ax + bx) / T::TWO, (ay + by) / T::TWO, (az + bz) / T::TWO);
+        let m2 = ((ax + cx) / T::TWO, (ay + cy) / T::TWO, (az + cz) / T::TWO);
+
+        // Edge directions
+        let d1 = (bx - ax, by - ay, bz - az);
+        let d2 = (cx - ax, cy - ay, cz - az);
+
+        // Perpendicular directions in the plane
+        // p1 = d1 × n (perpendicular to edge 1 in plane)
+        let p1 = (
+            d1.1 * nz - d1.2 * ny,
+            d1.2 * nx - d1.0 * nz,
+            d1.0 * ny - d1.1 * nx,
+        );
+
+        // p2 = d2 × n (perpendicular to edge 2 in plane)
+        let p2 = (
+            d2.1 * nz - d2.2 * ny,
+            d2.2 * nx - d2.0 * nz,
+            d2.0 * ny - d2.1 * nx,
+        );
+
+        // Solve for intersection: m1 + t*p1 = m2 + s*p2
+        // Using least squares approach for numerical stability
+        let dm = (m2.0 - m1.0, m2.1 - m1.1, m2.2 - m1.2);
+
+        // t = (dm · p1) / (p1 · p1) approximately
+        let p1_dot_p1 = p1.0 * p1.0 + p1.1 * p1.1 + p1.2 * p1.2;
+        let dm_cross_p2 = (
+            dm.1 * p2.2 - dm.2 * p2.1,
+            dm.2 * p2.0 - dm.0 * p2.2,
+            dm.0 * p2.1 - dm.1 * p2.0,
+        );
+        let p1_cross_p2 = (
+            p1.1 * p2.2 - p1.2 * p2.1,
+            p1.2 * p2.0 - p1.0 * p2.2,
+            p1.0 * p2.1 - p1.1 * p2.0,
+        );
+
+        let denom = p1_cross_p2.0 * nx + p1_cross_p2.1 * ny + p1_cross_p2.2 * nz;
+        let numer = dm_cross_p2.0 * nx + dm_cross_p2.1 * ny + dm_cross_p2.2 * nz;
+
+        let t = if denom.abs() > T::epsilon() {
+            numer / denom
+        } else if p1_dot_p1 > T::epsilon() {
+            // Fallback: use midpoint
+            T::zero()
+        } else {
+            T::zero()
+        };
+
+        // Circumcenter
+        let center_x = m1.0 + t * p1.0;
+        let center_y = m1.1 + t * p1.1;
+        let center_z = m1.2 + t * p1.2;
+
+        // Radius
+        let dx = center_x - ax;
+        let dy = center_y - ay;
+        let dz = center_z - az;
+        let r = (dx * dx + dy * dy + dz * dz).sqrt();
+
+        Self {
+            cx: center_x,
+            cy: center_y,
+            cz: center_z,
+            r,
+            nx,
+            ny,
+            nz,
+        }
+    }
+
+    /// Returns the center as Euclidean coordinates.
+    #[inline]
+    pub fn center(&self) -> (T, T, T) {
+        (self.cx, self.cy, self.cz)
+    }
+
+    /// Returns the center as a conformal [`Point`].
+    #[inline]
+    pub fn center_point(&self) -> Point<T> {
+        Point::new(self.cx, self.cy, self.cz)
+    }
+
+    /// Returns the radius.
+    #[inline]
+    pub fn radius(&self) -> T {
+        self.r
+    }
+
+    /// Returns the normal direction of the plane containing the circle.
+    #[inline]
+    pub fn normal(&self) -> (T, T, T) {
+        (self.nx, self.ny, self.nz)
+    }
+
+    /// Returns true if this is a real circle (positive radius).
+    #[inline]
+    pub fn is_real(&self, epsilon: T) -> bool {
+        self.r > epsilon
+    }
+
+    /// Returns true if the point lies on the circle.
+    pub fn contains(&self, p: &Point<T>, epsilon: T) -> bool {
+        // Point must be in the plane and at distance r from center
+        let plane = Plane::from_point_normal(&self.center_point(), self.normal());
+        if !plane.contains(p, epsilon) {
+            return false;
+        }
+
+        let dx = p.x() - self.cx;
+        let dy = p.y() - self.cy;
+        let dz = p.z() - self.cz;
+        let dist = (dx * dx + dy * dy + dz * dz).sqrt();
+
+        (dist - self.r).abs() < epsilon
+    }
+
+    /// Returns the plane containing this circle.
+    pub fn carrier_plane(&self) -> Plane<T> {
+        Plane::from_point_normal(&self.center_point(), self.normal())
+    }
+
+    /// Accessor for center x-coordinate.
+    #[inline]
+    pub fn cx(&self) -> T {
+        self.cx
+    }
+
+    /// Accessor for center y-coordinate.
+    #[inline]
+    pub fn cy(&self) -> T {
+        self.cy
+    }
+
+    /// Accessor for center z-coordinate.
+    #[inline]
+    pub fn cz(&self) -> T {
+        self.cz
+    }
+}
+
+// ============================================================================
+// Line type
+// ============================================================================
+
+/// A line in 3D CGA (flat circle - grade-3 trivector through infinity).
+///
+/// Represents a line as a point and direction, or as the intersection of two planes.
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Line};
+///
+/// // Line through two points
+/// let p1 = Point::<f64>::new(0.0, 0.0, 0.0);
+/// let p2 = Point::new(1.0, 1.0, 1.0);
+/// let line = Line::from_two_points(&p1, &p2);
+///
+/// // Both points lie on line
+/// assert!(line.contains(&p1, 1e-10));
+/// assert!(line.contains(&p2, 1e-10));
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Line>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Line<T: Float> {
+    // We store a point on the line and the direction.
+    /// Point on line x-coordinate.
+    px: T,
+    /// Point on line y-coordinate.
+    py: T,
+    /// Point on line z-coordinate.
+    pz: T,
+    /// Direction x-component (normalized).
+    dx: T,
+    /// Direction y-component.
+    dy: T,
+    /// Direction z-component.
+    dz: T,
+}
+
+impl<T: Float> Line<T> {
+    /// Creates a line from a point and direction.
+    ///
+    /// The direction is automatically normalized.
+    pub fn from_point_direction(point: &Point<T>, direction: (T, T, T)) -> Self {
+        let len =
+            (direction.0 * direction.0 + direction.1 * direction.1 + direction.2 * direction.2)
+                .sqrt();
+        let (dx, dy, dz) = if len > T::epsilon() {
+            (direction.0 / len, direction.1 / len, direction.2 / len)
+        } else {
+            (T::one(), T::zero(), T::zero())
+        };
+
+        Self {
+            px: point.x(),
+            py: point.y(),
+            pz: point.z(),
+            dx,
+            dy,
+            dz,
+        }
+    }
+
+    /// Creates a line from two points.
+    pub fn from_two_points(p1: &Point<T>, p2: &Point<T>) -> Self {
+        let direction = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
+        Self::from_point_direction(p1, direction)
+    }
+
+    /// The x-axis.
+    #[inline]
+    pub fn x_axis() -> Self {
+        Self::from_point_direction(&Point::origin(), (T::one(), T::zero(), T::zero()))
+    }
+
+    /// The y-axis.
+    #[inline]
+    pub fn y_axis() -> Self {
+        Self::from_point_direction(&Point::origin(), (T::zero(), T::one(), T::zero()))
+    }
+
+    /// The z-axis.
+    #[inline]
+    pub fn z_axis() -> Self {
+        Self::from_point_direction(&Point::origin(), (T::zero(), T::zero(), T::one()))
+    }
+
+    /// Returns the unit direction vector.
+    #[inline]
+    pub fn direction(&self) -> (T, T, T) {
+        (self.dx, self.dy, self.dz)
+    }
+
+    /// Returns a point on the line (the stored reference point).
+    #[inline]
+    pub fn point_on_line(&self) -> Point<T> {
+        Point::new(self.px, self.py, self.pz)
+    }
+
+    /// Returns true if the point lies on the line.
+    #[inline]
+    pub fn contains(&self, p: &Point<T>, epsilon: T) -> bool {
+        self.distance_to_point(p) < epsilon
+    }
+
+    /// Distance from a point to the line.
+    pub fn distance_to_point(&self, p: &Point<T>) -> T {
+        // Vector from line point to p
+        let v = (p.x() - self.px, p.y() - self.py, p.z() - self.pz);
+
+        // Cross product v × d
+        let cross = (
+            v.1 * self.dz - v.2 * self.dy,
+            v.2 * self.dx - v.0 * self.dz,
+            v.0 * self.dy - v.1 * self.dx,
+        );
+
+        // Distance is |v × d| / |d|, but d is normalized so |d| = 1
+        (cross.0 * cross.0 + cross.1 * cross.1 + cross.2 * cross.2).sqrt()
+    }
+
+    /// Closest point on line to given point.
+    pub fn closest_point(&self, p: &Point<T>) -> Point<T> {
+        // Project p onto the line
+        let v = (p.x() - self.px, p.y() - self.py, p.z() - self.pz);
+
+        // t = (v · d) where d is already normalized
+        let t = v.0 * self.dx + v.1 * self.dy + v.2 * self.dz;
+
+        Point::new(
+            self.px + t * self.dx,
+            self.py + t * self.dy,
+            self.pz + t * self.dz,
+        )
+    }
+
+    /// Meet of line and plane: point of intersection.
+    ///
+    /// Returns `None` if line is parallel to plane.
+    pub fn meet_plane(&self, plane: &Plane<T>) -> Option<Point<T>> {
+        // Line: P(t) = p + t*d
+        // Plane: a*x + b*y + c*z + d = 0
+        // Substitute: a*(px + t*dx) + b*(py + t*dy) + c*(pz + t*dz) + d = 0
+        // Solve for t: t = -(a*px + b*py + c*pz + d) / (a*dx + b*dy + c*dz)
+
+        let denom = plane.a * self.dx + plane.b * self.dy + plane.c * self.dz;
+
+        if denom.abs() < T::epsilon() {
+            // Line is parallel to plane
+            return None;
+        }
+
+        let numer = -(plane.a * self.px + plane.b * self.py + plane.c * self.pz + plane.d);
+        let t = numer / denom;
+
+        Some(Point::new(
+            self.px + t * self.dx,
+            self.py + t * self.dy,
+            self.pz + t * self.dz,
+        ))
+    }
+
+    /// Accessor for reference point x-coordinate.
+    #[inline]
+    pub fn px(&self) -> T {
+        self.px
+    }
+
+    /// Accessor for reference point y-coordinate.
+    #[inline]
+    pub fn py(&self) -> T {
+        self.py
+    }
+
+    /// Accessor for reference point z-coordinate.
+    #[inline]
+    pub fn pz(&self) -> T {
+        self.pz
+    }
+}
+
+// ============================================================================
+// Dipole type
+// ============================================================================
+
+/// A dipole (point pair) in 3D CGA (grade-2 bivector).
+///
+/// Represents two points as a single algebraic object.
+/// `D = P₁ ∧ P₂`
+///
+/// # Example
+///
+/// ```
+/// use clifford::specialized::conformal::dim3::{Point, Dipole};
+///
+/// let p1 = Point::<f64>::new(0.0, 0.0, 0.0);
+/// let p2 = Point::new(1.0, 0.0, 0.0);
+/// let dipole = Dipole::from_two_points(&p1, &p2);
+///
+/// // Verify separation
+/// assert!((dipole.separation() - 1.0).abs() < 1e-10);
+/// ```
+///
+/// # References
+///
+/// - <https://conformalgeometricalgebra.org/wiki/index.php?title=Dipole>
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(C)]
+pub struct Dipole<T: Float> {
+    // We store the two points directly for simplicity.
+    /// First point x-coordinate.
+    x1: T,
+    /// First point y-coordinate.
+    y1: T,
+    /// First point z-coordinate.
+    z1: T,
+    /// Second point x-coordinate.
+    x2: T,
+    /// Second point y-coordinate.
+    y2: T,
+    /// Second point z-coordinate.
+    z2: T,
+}
+
+impl<T: Float> Dipole<T> {
+    /// Creates a dipole from two points.
+    ///
+    /// `D = P₁ ∧ P₂`
+    #[inline]
+    pub fn from_two_points(p1: &Point<T>, p2: &Point<T>) -> Self {
+        Self {
+            x1: p1.x(),
+            y1: p1.y(),
+            z1: p1.z(),
+            x2: p2.x(),
+            y2: p2.y(),
+            z2: p2.z(),
+        }
+    }
+
+    /// Extracts the two points from the dipole.
+    #[inline]
+    pub fn extract_points(&self) -> (Point<T>, Point<T>) {
+        (
+            Point::new(self.x1, self.y1, self.z1),
+            Point::new(self.x2, self.y2, self.z2),
+        )
+    }
+
+    /// Distance between the two points.
+    pub fn separation(&self) -> T {
+        let dx = self.x2 - self.x1;
+        let dy = self.y2 - self.y1;
+        let dz = self.z2 - self.z1;
+        (dx * dx + dy * dy + dz * dz).sqrt()
+    }
+
+    /// Midpoint of the two points.
+    #[inline]
+    pub fn midpoint(&self) -> Point<T> {
+        Point::new(
+            (self.x1 + self.x2) / T::TWO,
+            (self.y1 + self.y2) / T::TWO,
+            (self.z1 + self.z2) / T::TWO,
+        )
+    }
+
+    /// Returns true if this dipole is real (two distinct points).
+    #[inline]
+    pub fn is_real(&self, epsilon: T) -> bool {
+        self.separation() > epsilon
+    }
+
+    /// Accessor for first point x-coordinate.
+    #[inline]
+    pub fn x1(&self) -> T {
+        self.x1
+    }
+
+    /// Accessor for first point y-coordinate.
+    #[inline]
+    pub fn y1(&self) -> T {
+        self.y1
+    }
+
+    /// Accessor for first point z-coordinate.
+    #[inline]
+    pub fn z1(&self) -> T {
+        self.z1
+    }
+
+    /// Accessor for second point x-coordinate.
+    #[inline]
+    pub fn x2(&self) -> T {
+        self.x2
+    }
+
+    /// Accessor for second point y-coordinate.
+    #[inline]
+    pub fn y2(&self) -> T {
+        self.y2
+    }
+
+    /// Accessor for second point z-coordinate.
+    #[inline]
+    pub fn z2(&self) -> T {
+        self.z2
+    }
+}
+
+// ============================================================================
 // approx trait implementations
 // ============================================================================
 
@@ -623,6 +1368,211 @@ impl<T: Float> UlpsEq for Sphere<T> {
             && T::ulps_eq(&self.cy, &other.cy, epsilon, max_ulps)
             && T::ulps_eq(&self.cz, &other.cz, epsilon, max_ulps)
             && T::ulps_eq(&self.r_sq, &other.r_sq, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Plane<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.a, &other.a, epsilon)
+            && T::abs_diff_eq(&self.b, &other.b, epsilon)
+            && T::abs_diff_eq(&self.c, &other.c, epsilon)
+            && T::abs_diff_eq(&self.d, &other.d, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Plane<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.a, &other.a, epsilon, max_relative)
+            && T::relative_eq(&self.b, &other.b, epsilon, max_relative)
+            && T::relative_eq(&self.c, &other.c, epsilon, max_relative)
+            && T::relative_eq(&self.d, &other.d, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Plane<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.a, &other.a, epsilon, max_ulps)
+            && T::ulps_eq(&self.b, &other.b, epsilon, max_ulps)
+            && T::ulps_eq(&self.c, &other.c, epsilon, max_ulps)
+            && T::ulps_eq(&self.d, &other.d, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Circle<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.cx, &other.cx, epsilon)
+            && T::abs_diff_eq(&self.cy, &other.cy, epsilon)
+            && T::abs_diff_eq(&self.cz, &other.cz, epsilon)
+            && T::abs_diff_eq(&self.r, &other.r, epsilon)
+            && T::abs_diff_eq(&self.nx, &other.nx, epsilon)
+            && T::abs_diff_eq(&self.ny, &other.ny, epsilon)
+            && T::abs_diff_eq(&self.nz, &other.nz, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Circle<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.cx, &other.cx, epsilon, max_relative)
+            && T::relative_eq(&self.cy, &other.cy, epsilon, max_relative)
+            && T::relative_eq(&self.cz, &other.cz, epsilon, max_relative)
+            && T::relative_eq(&self.r, &other.r, epsilon, max_relative)
+            && T::relative_eq(&self.nx, &other.nx, epsilon, max_relative)
+            && T::relative_eq(&self.ny, &other.ny, epsilon, max_relative)
+            && T::relative_eq(&self.nz, &other.nz, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Circle<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.cx, &other.cx, epsilon, max_ulps)
+            && T::ulps_eq(&self.cy, &other.cy, epsilon, max_ulps)
+            && T::ulps_eq(&self.cz, &other.cz, epsilon, max_ulps)
+            && T::ulps_eq(&self.r, &other.r, epsilon, max_ulps)
+            && T::ulps_eq(&self.nx, &other.nx, epsilon, max_ulps)
+            && T::ulps_eq(&self.ny, &other.ny, epsilon, max_ulps)
+            && T::ulps_eq(&self.nz, &other.nz, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Line<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.px, &other.px, epsilon)
+            && T::abs_diff_eq(&self.py, &other.py, epsilon)
+            && T::abs_diff_eq(&self.pz, &other.pz, epsilon)
+            && T::abs_diff_eq(&self.dx, &other.dx, epsilon)
+            && T::abs_diff_eq(&self.dy, &other.dy, epsilon)
+            && T::abs_diff_eq(&self.dz, &other.dz, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Line<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.px, &other.px, epsilon, max_relative)
+            && T::relative_eq(&self.py, &other.py, epsilon, max_relative)
+            && T::relative_eq(&self.pz, &other.pz, epsilon, max_relative)
+            && T::relative_eq(&self.dx, &other.dx, epsilon, max_relative)
+            && T::relative_eq(&self.dy, &other.dy, epsilon, max_relative)
+            && T::relative_eq(&self.dz, &other.dz, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Line<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.px, &other.px, epsilon, max_ulps)
+            && T::ulps_eq(&self.py, &other.py, epsilon, max_ulps)
+            && T::ulps_eq(&self.pz, &other.pz, epsilon, max_ulps)
+            && T::ulps_eq(&self.dx, &other.dx, epsilon, max_ulps)
+            && T::ulps_eq(&self.dy, &other.dy, epsilon, max_ulps)
+            && T::ulps_eq(&self.dz, &other.dz, epsilon, max_ulps)
+    }
+}
+
+impl<T: Float> AbsDiffEq for Dipole<T> {
+    type Epsilon = T;
+
+    fn default_epsilon() -> Self::Epsilon {
+        T::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        T::abs_diff_eq(&self.x1, &other.x1, epsilon)
+            && T::abs_diff_eq(&self.y1, &other.y1, epsilon)
+            && T::abs_diff_eq(&self.z1, &other.z1, epsilon)
+            && T::abs_diff_eq(&self.x2, &other.x2, epsilon)
+            && T::abs_diff_eq(&self.y2, &other.y2, epsilon)
+            && T::abs_diff_eq(&self.z2, &other.z2, epsilon)
+    }
+}
+
+impl<T: Float> RelativeEq for Dipole<T> {
+    fn default_max_relative() -> Self::Epsilon {
+        T::default_max_relative()
+    }
+
+    fn relative_eq(
+        &self,
+        other: &Self,
+        epsilon: Self::Epsilon,
+        max_relative: Self::Epsilon,
+    ) -> bool {
+        T::relative_eq(&self.x1, &other.x1, epsilon, max_relative)
+            && T::relative_eq(&self.y1, &other.y1, epsilon, max_relative)
+            && T::relative_eq(&self.z1, &other.z1, epsilon, max_relative)
+            && T::relative_eq(&self.x2, &other.x2, epsilon, max_relative)
+            && T::relative_eq(&self.y2, &other.y2, epsilon, max_relative)
+            && T::relative_eq(&self.z2, &other.z2, epsilon, max_relative)
+    }
+}
+
+impl<T: Float> UlpsEq for Dipole<T> {
+    fn default_max_ulps() -> u32 {
+        T::default_max_ulps()
+    }
+
+    fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+        T::ulps_eq(&self.x1, &other.x1, epsilon, max_ulps)
+            && T::ulps_eq(&self.y1, &other.y1, epsilon, max_ulps)
+            && T::ulps_eq(&self.z1, &other.z1, epsilon, max_ulps)
+            && T::ulps_eq(&self.x2, &other.x2, epsilon, max_ulps)
+            && T::ulps_eq(&self.y2, &other.y2, epsilon, max_ulps)
+            && T::ulps_eq(&self.z2, &other.z2, epsilon, max_ulps)
     }
 }
 
@@ -815,5 +1765,294 @@ mod tests {
         assert!(!imaginary.is_real(ABS_DIFF_EQ_EPS));
         assert!(!imaginary.is_point(ABS_DIFF_EQ_EPS));
         assert!(imaginary.is_imaginary(ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Plane tests
+    // ========================================================================
+
+    proptest! {
+        #[test]
+        fn plane_contains_origin_when_d_is_zero(
+            a in -1.0f64..1.0, b in -1.0f64..1.0, c in -1.0f64..1.0,
+        ) {
+            let len = (a*a + b*b + c*c).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+            let plane = Plane::from_normal_distance(a/len, b/len, c/len, 0.0);
+            let origin = Point::origin();
+            prop_assert!(plane.contains(&origin, ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn plane_distance_matches_euclidean(
+            a in -1.0f64..1.0, b in -1.0f64..1.0, c in -1.0f64..1.0,
+            d in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            let len = (a*a + b*b + c*c).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+            let (a, b, c) = (a/len, b/len, c/len);
+
+            let plane = Plane::from_normal_distance(a, b, c, d);
+            let p = Point::new(px, py, pz);
+
+            let cga_dist = plane.signed_distance(&p);
+            let euclidean_dist = a*px + b*py + c*pz + d;
+
+            prop_assert!(abs_diff_eq!(cga_dist, euclidean_dist, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn plane_projection_on_plane(
+            a in -1.0f64..1.0, b in -1.0f64..1.0, c in -1.0f64..1.0,
+            d in -10.0f64..10.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            let len = (a*a + b*b + c*c).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+            let (a, b, c) = (a/len, b/len, c/len);
+
+            let plane = Plane::from_normal_distance(a, b, c, d);
+            let p = Point::new(px, py, pz);
+            let projected = plane.project(&p);
+
+            prop_assert!(plane.contains(&projected, ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    #[test]
+    fn plane_from_three_points() {
+        let p1 = Point::new(0.0, 0.0, 0.0);
+        let p2 = Point::new(1.0, 0.0, 0.0);
+        let p3 = Point::new(0.0, 1.0, 0.0);
+        let plane = Plane::from_three_points(&p1, &p2, &p3);
+
+        // All three points should be on the plane
+        assert!(plane.contains(&p1, ABS_DIFF_EQ_EPS));
+        assert!(plane.contains(&p2, ABS_DIFF_EQ_EPS));
+        assert!(plane.contains(&p3, ABS_DIFF_EQ_EPS));
+
+        // Normal should be (0, 0, 1) or (0, 0, -1)
+        let (nx, ny, nz) = plane.normal();
+        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(nz.abs(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Line tests
+    // ========================================================================
+
+    proptest! {
+        #[test]
+        fn line_contains_defining_points(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            x2 in -10.0f64..10.0, y2 in -10.0f64..10.0, z2 in -10.0f64..10.0,
+        ) {
+            // Skip degenerate case
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            let dz = z2 - z1;
+            let len = (dx*dx + dy*dy + dz*dz).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+
+            let p1 = Point::new(x1, y1, z1);
+            let p2 = Point::new(x2, y2, z2);
+            let line = Line::from_two_points(&p1, &p2);
+
+            prop_assert!(line.contains(&p1, ABS_DIFF_EQ_EPS));
+            prop_assert!(line.contains(&p2, ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn line_closest_point_is_perpendicular(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            dx in -1.0f64..1.0, dy in -1.0f64..1.0, dz in -1.0f64..1.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            let len = (dx*dx + dy*dy + dz*dz).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+
+            let p1 = Point::new(x1, y1, z1);
+            let line = Line::from_point_direction(&p1, (dx, dy, dz));
+            let p = Point::new(px, py, pz);
+            let closest = line.closest_point(&p);
+
+            // Vector from closest to p should be perpendicular to line direction
+            let to_p = (p.x() - closest.x(), p.y() - closest.y(), p.z() - closest.z());
+            let dir = line.direction();
+            let dot = to_p.0 * dir.0 + to_p.1 * dir.1 + to_p.2 * dir.2;
+
+            prop_assert!(abs_diff_eq!(dot, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn line_distance_is_nonnegative(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            dx in -1.0f64..1.0, dy in -1.0f64..1.0, dz in -1.0f64..1.0,
+            px in -10.0f64..10.0, py in -10.0f64..10.0, pz in -10.0f64..10.0,
+        ) {
+            let len = (dx*dx + dy*dy + dz*dz).sqrt();
+            if len < ABS_DIFF_EQ_EPS {
+                return Ok(());
+            }
+
+            let p1 = Point::new(x1, y1, z1);
+            let line = Line::from_point_direction(&p1, (dx, dy, dz));
+            let p = Point::new(px, py, pz);
+
+            prop_assert!(line.distance_to_point(&p) >= 0.0);
+        }
+    }
+
+    #[test]
+    fn line_meet_plane_intersection() {
+        // Line along z-axis
+        let line = Line::x_axis();
+        // Plane at x = 1
+        let plane = Plane::from_normal_distance(1.0, 0.0, 0.0, -1.0);
+
+        let intersection = line.meet_plane(&plane);
+        assert!(intersection.is_some());
+        let p = intersection.unwrap();
+        assert!(abs_diff_eq!(p.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(p.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(p.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn line_parallel_to_plane_no_intersection() {
+        // Line along x-axis
+        let line = Line::x_axis();
+        // xy-plane (z = 0), parallel to x-axis and containing it
+        // Actually x-axis lies ON the xy-plane, let's use a parallel plane
+        let plane = Plane::from_normal_distance(0.0, 0.0, 1.0, -1.0); // z = 1 plane
+
+        let intersection = line.meet_plane(&plane);
+        assert!(intersection.is_none());
+    }
+
+    // ========================================================================
+    // Circle tests
+    // ========================================================================
+
+    #[test]
+    fn circle_from_three_points_xy() {
+        // Unit circle in xy-plane
+        let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
+        let p2 = Point::new(0.0, 1.0, 0.0);
+        let p3 = Point::new(-1.0, 0.0, 0.0);
+        let circle = Circle::from_three_points(&p1, &p2, &p3);
+
+        // Center should be at origin
+        assert!(abs_diff_eq!(circle.cx(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(circle.cy(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(circle.cz(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+
+        // Radius should be 1
+        assert!(abs_diff_eq!(
+            circle.radius(),
+            1.0,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+
+        // Normal should be (0, 0, ±1)
+        let (nx, ny, nz) = circle.normal();
+        assert!(abs_diff_eq!(nx, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(ny, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(nz.abs(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn circle_contains_defining_points() {
+        let p1 = Point::<f64>::new(1.0, 0.0, 0.0);
+        let p2 = Point::new(0.0, 1.0, 0.0);
+        let p3 = Point::new(-1.0, 0.0, 0.0);
+        let circle = Circle::from_three_points(&p1, &p2, &p3);
+
+        assert!(circle.contains(&p1, ABS_DIFF_EQ_EPS));
+        assert!(circle.contains(&p2, ABS_DIFF_EQ_EPS));
+        assert!(circle.contains(&p3, ABS_DIFF_EQ_EPS));
+    }
+
+    // ========================================================================
+    // Dipole tests
+    // ========================================================================
+
+    proptest! {
+        #[test]
+        fn dipole_separation_matches_distance(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            x2 in -10.0f64..10.0, y2 in -10.0f64..10.0, z2 in -10.0f64..10.0,
+        ) {
+            let p1 = Point::new(x1, y1, z1);
+            let p2 = Point::new(x2, y2, z2);
+            let dipole = Dipole::from_two_points(&p1, &p2);
+
+            let separation = dipole.separation();
+            let distance = p1.distance(&p2);
+
+            prop_assert!(abs_diff_eq!(separation, distance, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn dipole_midpoint_is_equidistant(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            x2 in -10.0f64..10.0, y2 in -10.0f64..10.0, z2 in -10.0f64..10.0,
+        ) {
+            let p1 = Point::new(x1, y1, z1);
+            let p2 = Point::new(x2, y2, z2);
+            let dipole = Dipole::from_two_points(&p1, &p2);
+            let mid = dipole.midpoint();
+
+            let d1 = p1.distance(&mid);
+            let d2 = p2.distance(&mid);
+
+            prop_assert!(abs_diff_eq!(d1, d2, epsilon = ABS_DIFF_EQ_EPS));
+        }
+
+        #[test]
+        fn dipole_roundtrip(
+            x1 in -10.0f64..10.0, y1 in -10.0f64..10.0, z1 in -10.0f64..10.0,
+            x2 in -10.0f64..10.0, y2 in -10.0f64..10.0, z2 in -10.0f64..10.0,
+        ) {
+            let p1 = Point::new(x1, y1, z1);
+            let p2 = Point::new(x2, y2, z2);
+            let dipole = Dipole::from_two_points(&p1, &p2);
+            let (q1, q2) = dipole.extract_points();
+
+            // Points should match exactly (no need to check swapped since we store directly)
+            prop_assert!(abs_diff_eq!(q1.x(), p1.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q1.y(), p1.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q1.z(), p1.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q2.x(), p2.x(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q2.y(), p2.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(q2.z(), p2.z(), epsilon = ABS_DIFF_EQ_EPS));
+        }
+    }
+
+    #[test]
+    fn dipole_is_real_when_distinct() {
+        let p1 = Point::new(0.0, 0.0, 0.0);
+        let p2 = Point::new(1.0, 0.0, 0.0);
+        let dipole = Dipole::from_two_points(&p1, &p2);
+        assert!(dipole.is_real(ABS_DIFF_EQ_EPS));
+    }
+
+    #[test]
+    fn dipole_is_degenerate_when_same_point() {
+        let p = Point::new(1.0, 2.0, 3.0);
+        let dipole = Dipole::from_two_points(&p, &p);
+        assert!(!dipole.is_real(ABS_DIFF_EQ_EPS));
     }
 }
