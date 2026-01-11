@@ -16,6 +16,7 @@ compile_error!(
 
 pub mod algebra;
 pub mod basis;
+pub mod generated;
 pub mod prelude;
 pub mod scalar;
 pub mod signature;
