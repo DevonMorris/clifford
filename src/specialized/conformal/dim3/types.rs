@@ -584,7 +584,20 @@ impl<T: Float> Plane<T> {
     /// Creates a plane from three non-collinear points.
     ///
     /// The normal direction follows the right-hand rule for `p1 -> p2 -> p3`.
-    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Self {
+    /// Returns `None` if the points are collinear (no unique plane exists).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim3::{Point, Plane};
+    ///
+    /// let p1 = Point::new(0.0, 0.0, 0.0);
+    /// let p2 = Point::new(1.0, 0.0, 0.0);
+    /// let p3 = Point::new(0.0, 1.0, 0.0);
+    /// let plane = Plane::from_three_points(&p1, &p2, &p3).unwrap();
+    /// assert!(plane.contains(&p1, 1e-10));
+    /// ```
+    pub fn from_three_points(p1: &Point<T>, p2: &Point<T>, p3: &Point<T>) -> Option<Self> {
         // Compute normal via cross product
         let v1 = (p2.x() - p1.x(), p2.y() - p1.y(), p2.z() - p1.z());
         let v2 = (p3.x() - p1.x(), p3.y() - p1.y(), p3.z() - p1.z());
@@ -596,29 +609,34 @@ impl<T: Float> Plane<T> {
 
         // Normalize
         let len = (nx * nx + ny * ny + nz * nz).sqrt();
-        let (a, b, c) = if len > T::epsilon() {
-            (nx / len, ny / len, nz / len)
-        } else {
-            // Degenerate case: collinear points
-            (T::zero(), T::zero(), T::one())
-        };
+
+        // Collinear points: normal has zero length
+        if len < T::epsilon() {
+            return None;
+        }
+
+        let (a, b, c) = (nx / len, ny / len, nz / len);
 
         // d = -(a*x + b*y + c*z) for point p1 on plane
         let d = -(a * p1.x() + b * p1.y() + c * p1.z());
 
-        Self { a, b, c, d }
+        Some(Self { a, b, c, d })
     }
 
     /// Creates a plane from a point and normal direction.
     ///
     /// The normal is automatically normalized.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the normal vector has zero length.
     pub fn from_point_normal(point: &Point<T>, normal: &Vector<T>) -> Self {
         let len = normal.norm();
-        let (a, b, c) = if len > T::epsilon() {
-            (normal.x() / len, normal.y() / len, normal.z() / len)
-        } else {
-            (T::zero(), T::zero(), T::one())
-        };
+        assert!(
+            len > T::epsilon(),
+            "Cannot create plane from zero-length normal"
+        );
+        let (a, b, c) = (normal.x() / len, normal.y() / len, normal.z() / len);
 
         let d = -(a * point.x() + b * point.y() + c * point.z());
         Self { a, b, c, d }
@@ -761,14 +779,18 @@ pub struct Circle<T: Float> {
 impl<T: Float> Circle<T> {
     /// Creates a circle from center, radius, and normal direction.
     ///
-    /// The normal defines the plane containing the circle.
+    /// The normal defines the plane containing the circle and is automatically normalized.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the normal vector has zero length.
     pub fn from_center_radius_normal(center: &Vector<T>, radius: T, normal: &Vector<T>) -> Self {
         let len = normal.norm();
-        let (nx, ny, nz) = if len > T::epsilon() {
-            (normal.x() / len, normal.y() / len, normal.z() / len)
-        } else {
-            (T::zero(), T::zero(), T::one())
-        };
+        assert!(
+            len > T::epsilon(),
+            "Cannot create circle from zero-length normal"
+        );
+        let (nx, ny, nz) = (normal.x() / len, normal.y() / len, normal.z() / len);
 
         Self {
             cx: center.x(),
@@ -1035,17 +1057,21 @@ impl<T: Float> Line<T> {
     /// Creates a line from a point and direction.
     ///
     /// The direction is automatically normalized.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the direction vector has zero length.
     pub fn from_point_direction(point: &Point<T>, direction: &Vector<T>) -> Self {
         let len = direction.norm();
-        let (dx, dy, dz) = if len > T::epsilon() {
-            (
-                direction.x() / len,
-                direction.y() / len,
-                direction.z() / len,
-            )
-        } else {
-            (T::one(), T::zero(), T::zero())
-        };
+        assert!(
+            len > T::epsilon(),
+            "Cannot create line from zero-length direction"
+        );
+        let (dx, dy, dz) = (
+            direction.x() / len,
+            direction.y() / len,
+            direction.z() / len,
+        );
 
         Self {
             px: point.x(),
@@ -1870,7 +1896,7 @@ mod tests {
         let p1 = Point::new(0.0, 0.0, 0.0);
         let p2 = Point::new(1.0, 0.0, 0.0);
         let p3 = Point::new(0.0, 1.0, 0.0);
-        let plane = Plane::from_three_points(&p1, &p2, &p3);
+        let plane = Plane::from_three_points(&p1, &p2, &p3).unwrap();
 
         // All three points should be on the plane
         assert!(plane.contains(&p1, ABS_DIFF_EQ_EPS));
@@ -1886,6 +1912,15 @@ mod tests {
             1.0,
             epsilon = ABS_DIFF_EQ_EPS
         ));
+    }
+
+    #[test]
+    fn plane_from_three_points_collinear_returns_none() {
+        // Collinear points should return None
+        let p1 = Point::<f64>::new(0.0, 0.0, 0.0);
+        let p2 = Point::new(1.0, 0.0, 0.0);
+        let p3 = Point::new(2.0, 0.0, 0.0);
+        assert!(Plane::from_three_points(&p1, &p2, &p3).is_none());
     }
 
     // ========================================================================
