@@ -166,10 +166,14 @@ impl<T: Float> Point<T> {
         self.e3 / weight
     }
 
-    /// Returns the weight (coefficient of `e₀`).
+    /// Returns the weight for coordinate normalization.
     ///
+    /// This returns `em - ep`, which equals `2·e₀` where `e₀ = (e₋ - e₊)/2`.
     /// For points created via [`Point::new`], this is always 1.
     /// Non-unit weights occur when points are scaled or combined.
+    ///
+    /// The coordinate accessors [`x()`](Self::x), [`y()`](Self::y), [`z()`](Self::z)
+    /// divide by this weight to extract Euclidean coordinates.
     #[inline]
     pub fn weight(&self) -> T {
         self.em - self.ep
