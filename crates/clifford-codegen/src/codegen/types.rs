@@ -627,19 +627,20 @@ impl<'a> TypeGenerator<'a> {
     }
 
     /// Generates the residual expression for constraint validation.
+    ///
+    /// For a constraint like `s*s + e12*e12 = 1`, generates `(lhs) - (rhs)`.
     fn generate_residual_expr(&self, constraint: &str, ty: &TypeSpec) -> TokenStream {
-        // Parse constraint like "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
-        // and generate Rust expression for the LHS
+        // Parse constraint like "s*s + e12*e12 = 1" into LHS and RHS
+        let parts: Vec<&str> = constraint.split('=').collect();
+        let lhs = parts.first().unwrap_or(&"T::zero()").trim();
+        let rhs = parts.get(1).unwrap_or(&"0").trim();
 
-        // Split on '='
-        let lhs = constraint.split('=').next().unwrap_or("T::zero()").trim();
+        let lhs_expr = self.constraint_to_rust_expr(lhs, ty);
+        let rhs_expr = self.constraint_to_rust_expr(rhs, ty);
 
-        // Parse the expression, converting to Rust
-        // This is a simplified conversion - we just use the expression as-is
-        // since our constraints use simple multiplication syntax
-        let rust_expr = self.constraint_to_rust_expr(lhs, ty);
-
-        rust_expr.parse().unwrap_or_else(|_| quote! { T::zero() })
+        // Generate: LHS - RHS
+        let combined = format!("({}) - ({})", lhs_expr, rhs_expr);
+        combined.parse().unwrap_or_else(|_| quote! { T::zero() })
     }
 
     /// Converts a constraint expression to Rust syntax.
@@ -647,11 +648,21 @@ impl<'a> TypeGenerator<'a> {
         // Convert "2*s*e0123" to "T::TWO * s * e0123"
         // and "-2*e12*e03" to "-T::TWO * e12 * e03"
 
+        let trimmed = expr.trim();
+
+        // Handle standalone numeric constants (RHS values like "0" or "1")
+        if trimmed == "0" {
+            return "T::zero()".to_string();
+        }
+        if trimmed == "1" {
+            return "T::from_i8(1)".to_string();
+        }
+
         // First normalize: add spaces around operators
-        let mut result = expr.to_string();
-        result = result.replace("*", " * ");
-        result = result.replace("+", " + ");
-        result = result.replace("-", " - ");
+        let mut result = trimmed.to_string();
+        result = result.replace('*', " * ");
+        result = result.replace('+', " + ");
+        result = result.replace('-', " - ");
 
         // Clean up double spaces
         while result.contains("  ") {

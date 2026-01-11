@@ -55,7 +55,8 @@ impl<T: Float> Bivector<T> {
         e03: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual = -T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01;
+        let residual =
+            (-T::TWO * e12 * e03 + T::TWO * e13 * e02 - T::TWO * e23 * e01) - (T::zero());
         if residual.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Bivector",
@@ -330,8 +331,9 @@ impl<T: Float> Flector<T> {
         e023: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual =
-            -T::TWO * e1 * e023 + T::TWO * e2 * e013 - T::TWO * e3 * e012 + T::TWO * e0 * e123;
+        let residual = (-T::TWO * e1 * e023 + T::TWO * e2 * e013 - T::TWO * e3 * e012
+            + T::TWO * e0 * e123)
+            - (T::zero());
         if residual.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Flector",
@@ -559,7 +561,7 @@ impl<T: Float> Motor<T> {
         e0123: T,
         tolerance: T,
     ) -> Result<Self, crate::ConstraintError> {
-        let residual = s * s + e12 * e12 + e13 * e13 + e23 * e23;
+        let residual = (s * s + e12 * e12 + e13 * e13 + e23 * e23) - (T::from_i8(1));
         if residual.abs() > tolerance {
             return Err(crate::ConstraintError::new(
                 "Motor",
