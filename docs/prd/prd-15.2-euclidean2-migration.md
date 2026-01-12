@@ -51,6 +51,20 @@ The following lessons were learned during the Euclidean 3D migration:
 
 7. **No arbitrary.rs needed**: The generated code includes Arbitrary implementations for all types. Delete any hand-written arbitrary.rs.
 
+8. **Unit constraint as type-level invariant**: For types that must satisfy a unit constraint (like Rotor), use `solve_for` in the TOML constraint to make the constraint a type-level invariant:
+   ```toml
+   constraints = [
+       { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1", solve_for = "s" }
+   ]
+   ```
+   This generates:
+   - `new(xy, xz, yz) -> Option<Self>` - computes `s` from constraint, returns `None` if invalid
+   - `new_unchecked(s, xy, xz, yz) -> Self` - bypasses check for when constraint is guaranteed
+
+9. **Use new_unchecked for internal operations**: When operations mathematically preserve the unit constraint (like rotor composition, slerp, from_angle_plane), use `new_unchecked` since normalization is unnecessary.
+
+10. **nalgebra interop tests in nalgebra.rs**: Keep nalgebra conversion tests in the nalgebra.rs file using generated Arbitrary impls, not in a separate arbitrary.rs with wrapper types
+
 ## Phase 1: Update TOML Specification
 
 ### Deliverable: `algebras/euclidean2.toml`

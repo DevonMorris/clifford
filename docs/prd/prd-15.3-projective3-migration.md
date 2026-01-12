@@ -55,6 +55,22 @@ The following lessons were learned during the Euclidean 3D migration:
 
 8. **Imports may conflict**: If both hand-written and generated code define the same From impls or Arbitrary impls, you'll get conflicts. Remove the hand-written versions entirely.
 
+9. **Unit constraint as type-level invariant**: For types that must satisfy a unit constraint (like Rotor, Motor), use `solve_for` in the TOML constraint to make the constraint a type-level invariant:
+   ```toml
+   constraints = [
+       { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1", solve_for = "s" }
+   ]
+   ```
+   This generates:
+   - `new(xy, xz, yz) -> Option<Self>` - computes `s` from constraint, returns `None` if invalid
+   - `new_unchecked(s, xy, xz, yz) -> Self` - bypasses check for when constraint is guaranteed
+
+10. **Use new_unchecked for internal operations**: When operations mathematically preserve a constraint (like motor composition, conversions from Euclidean types), use `new_unchecked` since the constraint is guaranteed by construction.
+
+11. **nalgebra interop tests in nalgebra.rs**: Keep nalgebra conversion tests in the nalgebra.rs file using generated Arbitrary impls, not in a separate arbitrary.rs with wrapper types.
+
+12. **Motor-to-Rotor conversions**: When converting a unit Motor's rotation part to a Euclidean Rotor, `.normalized()` is unnecessary since the rotation part of a unit motor is already unit
+
 ## Phase 1: Create TOML Specification
 
 ### Deliverable: `algebras/projective3.toml`
