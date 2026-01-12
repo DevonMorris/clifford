@@ -110,7 +110,7 @@ impl<T: Float> Add for Rotor<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s() + rhs.s(),
             self.xy() + rhs.xy(),
             self.xz() + rhs.xz(),
@@ -122,7 +122,7 @@ impl<T: Float> Sub for Rotor<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s() - rhs.s(),
             self.xy() - rhs.xy(),
             self.xz() - rhs.xz(),
@@ -134,7 +134,7 @@ impl<T: Float> Neg for Rotor<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.s(), -self.xy(), -self.xz(), -self.yz())
+        Self::new_unchecked(-self.s(), -self.xy(), -self.xz(), -self.yz())
     }
 }
 impl<T: Float> Mul<T> for Rotor<T> {
@@ -680,19 +680,9 @@ mod arbitrary_impls {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-            (
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-                -100.0f64..100.0,
-            )
-                .prop_map(|(x0, x1, x2, x3)| {
-                    Rotor::new(
-                        T::from_f64(x0),
-                        T::from_f64(x1),
-                        T::from_f64(x2),
-                        T::from_f64(x3),
-                    )
+            (-0.5f64..0.5, -0.5f64..0.5, -0.5f64..0.5)
+                .prop_filter_map("constraint satisfied", |(x0, x1, x2)| {
+                    Rotor::new(T::from_f64(x0), T::from_f64(x1), T::from_f64(x2))
                 })
                 .boxed()
         }

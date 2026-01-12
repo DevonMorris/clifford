@@ -339,7 +339,8 @@ impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
         // Inverse mapping: s=w, xy=k, xz=-j, yz=i
-        Rotor::new(q.w, q.k, -q.j, q.i)
+        // Use new_unchecked since unit quaternion guarantees unit rotor
+        Rotor::new_unchecked(q.w, q.k, -q.j, q.i)
     }
 }
 

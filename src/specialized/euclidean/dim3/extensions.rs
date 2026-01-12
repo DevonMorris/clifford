@@ -191,7 +191,8 @@ impl<T: Float> Rotor<T> {
         let half = angle / T::TWO;
         let cos_half = half.cos();
         let sin_half = half.sin();
-        Self::new(
+        // Use new_unchecked since angle/plane construction guarantees unit norm
+        Self::new_unchecked(
             cos_half,
             plane.xy() * sin_half,
             plane.xz() * sin_half,
@@ -239,7 +240,8 @@ impl<T: Float> Rotor<T> {
         }
 
         let norm = sum_sq.sqrt();
-        Self::new(
+        // Use new_unchecked since we're constructing from geometric product
+        Self::new_unchecked(
             (T::one() + dot) / norm,
             wedge.xy() / norm,
             wedge.xz() / norm,
@@ -254,7 +256,8 @@ impl<T: Float> Rotor<T> {
     pub fn inverse(&self) -> Self {
         let norm_sq = self.norm_squared();
         let rev = self.reverse();
-        Self::new(
+        // Use new_unchecked since inverse preserves unit constraint
+        Self::new_unchecked(
             rev.s() / norm_sq,
             rev.xy() / norm_sq,
             rev.xz() / norm_sq,
@@ -269,7 +272,8 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn normalized(&self) -> Self {
         let n = self.norm();
-        Self::new(self.s() / n, self.xy() / n, self.xz() / n, self.yz() / n)
+        // Use new_unchecked since normalization produces unit rotor
+        Self::new_unchecked(self.s() / n, self.xy() / n, self.xz() / n, self.yz() / n)
     }
 
     /// Applies this rotation to a vector: `v' = R̃ v R`.
@@ -345,7 +349,8 @@ impl<T: Float> Rotor<T> {
         let theta = dot.acos();
 
         if theta.abs() < T::epsilon() {
-            return Self::new(
+            // Linear interpolation for small angles, then normalize
+            return Self::new_unchecked(
                 self.s() * (T::one() - t) + other.s() * t,
                 self.xy() * (T::one() - t) + other.xy() * t,
                 self.xz() * (T::one() - t) + other.xz() * t,
@@ -358,7 +363,8 @@ impl<T: Float> Rotor<T> {
         let s1 = ((T::one() - t) * theta).sin() / sin_theta;
         let s2 = (t * theta).sin() / sin_theta;
 
-        Self::new(
+        // Spherical interpolation preserves unit norm
+        Self::new_unchecked(
             self.s() * s1 + other.s() * s2,
             self.xy() * s1 + other.xy() * s2,
             self.xz() * s1 + other.xz() * s2,

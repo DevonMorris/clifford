@@ -118,7 +118,7 @@ impl<T: Float> Default for Bivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D rotor (even subalgebra element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Rotor;\n\nlet v = Rotor::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Rotor;\n\nlet v = Rotor::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -133,9 +133,44 @@ pub struct Rotor<T: Float> {
     yz: T,
 }
 impl<T: Float> Rotor<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = "Creates a new element from 3 independent coefficients.\n\nThe `s` coefficient(s) are computed from geometric constraints.\n\nReturns `None` if the constraint cannot be satisfied (e.g., when the\nsqrt argument would be negative)."]
     #[inline]
-    pub fn new(s: T, xy: T, xz: T, yz: T) -> Self {
+    pub fn new(xy: T, xz: T, yz: T) -> Option<Self> {
+        let sqrt_arg = T::from_i8(1) - xy * xy - xz * xz - yz * yz;
+        if sqrt_arg < T::zero() {
+            return None;
+        }
+        let s = sqrt_arg.sqrt();
+        Some(Self { s, xy, xz, yz })
+    }
+    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|s*s + xy*xy + xz*xz + yz*yz - 1| > tolerance`."]
+    #[inline]
+    pub fn new_checked(
+        s: T,
+        xy: T,
+        xz: T,
+        yz: T,
+        tolerance: T,
+    ) -> Result<Self, crate::ConstraintError> {
+        let residual_0 = (s * s + xy * xy + xz * xz + yz * yz) - (T::from_i8(1));
+        if residual_0.abs() > tolerance {
+            return Err(crate::ConstraintError::new(
+                "Rotor",
+                "s*s + xy*xy + xz*xz + yz*yz = 1",
+                residual_0.to_f64().unwrap_or(0.0),
+            ));
+        }
+        Ok(Self { s, xy, xz, yz })
+    }
+    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r""]
+    #[doc = r" # Safety (Logical)"]
+    #[doc = r""]
+    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
+    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
+    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[inline]
+    pub fn new_unchecked(s: T, xy: T, xz: T, yz: T) -> Self {
         Self { s, xy, xz, yz }
     }
     #[doc = "Returns the s component (coefficient of `s`)."]
@@ -161,12 +196,12 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
     #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
     #[inline]
     pub fn identity() -> Self {
-        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::one(), T::zero(), T::zero(), T::zero())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -204,7 +239,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.s * s, self.xy * s, self.xz * s, self.yz * s)
+        Self::new_unchecked(self.s * s, self.xy * s, self.xz * s, self.yz * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -217,7 +252,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.s, -self.xy, -self.xz, -self.yz)
+        Self::new_unchecked(self.s, -self.xy, -self.xz, -self.yz)
     }
 }
 impl<T: Float> Default for Rotor<T> {

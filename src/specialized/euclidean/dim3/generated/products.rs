@@ -7,7 +7,7 @@ use crate::scalar::Float;
 #[doc = "Geometric product: Bivector * Bivector -> Rotor"]
 #[inline]
 pub fn geometric_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         -(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz(),
         -(a.xz() * b.yz()) + a.yz() * b.xz(),
         a.xy() * b.yz() - a.yz() * b.xy(),
@@ -17,7 +17,7 @@ pub fn geometric_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -
 #[doc = "Geometric product: Bivector * Rotor -> Rotor"]
 #[inline]
 pub fn geometric_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         -(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz(),
         a.xy() * b.s() - a.xz() * b.yz() + a.yz() * b.xz(),
         a.xy() * b.yz() + a.xz() * b.s() - a.yz() * b.xy(),
@@ -37,7 +37,7 @@ pub fn geometric_bivector_trivector<T: Float>(a: &Bivector<T>, b: &Trivector<T>)
 #[doc = "Geometric product: Rotor * Bivector -> Rotor"]
 #[inline]
 pub fn geometric_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         -(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz(),
         a.s() * b.xy() - a.xz() * b.yz() + a.yz() * b.xz(),
         a.s() * b.xz() + a.xy() * b.yz() - a.yz() * b.xy(),
@@ -47,7 +47,7 @@ pub fn geometric_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Roto
 #[doc = "Geometric product: Rotor * Rotor -> Rotor"]
 #[inline]
 pub fn geometric_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s() - a.xy() * b.xy() - a.xz() * b.xz() - a.yz() * b.yz(),
         a.s() * b.xy() + a.xy() * b.s() - a.xz() * b.yz() + a.yz() * b.xz(),
         a.s() * b.xz() + a.xy() * b.yz() + a.xz() * b.s() - a.yz() * b.xy(),
@@ -57,7 +57,7 @@ pub fn geometric_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
 #[doc = "Geometric product: Rotor * Scalar -> Rotor"]
 #[inline]
 pub fn geometric_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s(),
         a.xy() * b.s(),
         a.xz() * b.s(),
@@ -72,7 +72,7 @@ pub fn geometric_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bi
 #[doc = "Geometric product: Scalar * Rotor -> Rotor"]
 #[inline]
 pub fn geometric_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.xy(),
         a.s() * b.xz(),
@@ -127,7 +127,7 @@ pub fn geometric_vector_trivector<T: Float>(a: &Vector<T>, b: &Trivector<T>) -> 
 #[doc = "Geometric product: Vector * Vector -> Rotor"]
 #[inline]
 pub fn geometric_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.x() * b.x() + a.y() * b.y() + a.z() * b.z(),
         a.x() * b.y() - a.y() * b.x(),
         a.x() * b.z() - a.z() * b.x(),
@@ -157,7 +157,7 @@ pub fn outer_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Bivector
 #[doc = "Outer product: Rotor ^ Rotor -> Rotor"]
 #[inline]
 pub fn outer_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.xy() + a.xy() * b.s(),
         a.s() * b.xz() + a.xz() * b.s(),
@@ -167,7 +167,7 @@ pub fn outer_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
 #[doc = "Outer product: Rotor ^ Scalar -> Rotor"]
 #[inline]
 pub fn outer_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s(),
         a.xy() * b.s(),
         a.xz() * b.s(),
@@ -187,7 +187,7 @@ pub fn outer_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivect
 #[doc = "Outer product: Scalar ^ Rotor -> Rotor"]
 #[inline]
 pub fn outer_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new(
+    Rotor::new_unchecked(
         a.s() * b.s(),
         a.s() * b.xy(),
         a.s() * b.xz(),

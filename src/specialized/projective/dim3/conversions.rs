@@ -375,7 +375,8 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     #[inline]
     fn from(m: Motor<T>) -> Self {
         // Inverse mapping: e12 -> xy, -e31 -> xz, e23 -> yz
-        EuclideanRotor::new(m.s(), m.e12(), -m.e31(), m.e23()).normalized()
+        // Use new_unchecked since unit motor's rotation part is unit rotor
+        EuclideanRotor::new_unchecked(m.s(), m.e12(), -m.e31(), m.e23())
     }
 }
 

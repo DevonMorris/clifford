@@ -31,10 +31,10 @@ fields = ["xy", "xz", "yz"]
 
 [types.Rotor]
 grades = [0, 2]
-description = "3D rotor (even subalgebra element)"
+description = "3D rotor (unit versor for rotations)"
 fields = ["s", "xy", "xz", "yz"]
 constraints = [
-    { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1" }
+    { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1", solve_for = "s" }
 ]
 
 [types.Trivector]
