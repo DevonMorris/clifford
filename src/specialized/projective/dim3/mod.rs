@@ -28,7 +28,7 @@
 //! use approx::abs_diff_eq;
 //!
 //! // Create a point at (1, 0, 0)
-//! let p = Point::new(1.0, 0.0, 0.0);
+//! let p = Point::from_cartesian(1.0, 0.0, 0.0);
 //!
 //! // 90° rotation around Z axis
 //! let rotor = Motor::from_rotation_z(FRAC_PI_2);
@@ -48,12 +48,11 @@
 //! assert!(abs_diff_eq!(translated.z(), 3.0, epsilon = 1e-10));
 //! ```
 
-mod conversions;
-mod ops;
-mod types;
+// Generated code (do not edit manually)
+mod generated;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
+// Domain-specific extensions
+mod extensions;
 
 #[cfg(any(
     feature = "nalgebra-0_32",
@@ -72,4 +71,8 @@ pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-pub use types::{Flector, Line, Motor, Plane, Point};
+#[cfg(any(test, feature = "proptest-support"))]
+pub mod arbitrary;
+
+// Re-export generated types
+pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};

@@ -36,23 +36,13 @@ use proptest::strategy::BoxedStrategy;
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
-use super::types::{Flector, Line, Motor, Plane, Point};
+use super::generated::types::{Flector, Line, Motor, Plane, Point};
 
 // ============================================================================
 // Point
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Point<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate finite points with normalized w=1
-        (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-            .prop_map(|(x, y, z)| Point::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl is in generated/traits.rs
 
 /// Wrapper type for non-origin points in 3D PGA.
 ///
@@ -90,7 +80,11 @@ impl<T: Float + Debug> Arbitrary for NonOriginPoint<T> {
                 x * x + y * y + z * z > 0.01
             })
             .prop_map(|(x, y, z)| {
-                NonOriginPoint(Point::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+                NonOriginPoint(Point::from_cartesian(
+                    T::from_f64(x),
+                    T::from_f64(y),
+                    T::from_f64(z),
+                ))
             })
             .boxed()
     }
@@ -100,36 +94,7 @@ impl<T: Float + Debug> Arbitrary for NonOriginPoint<T> {
 // Motor
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Motor<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        (
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-        )
-            .prop_map(|(s, e23, e31, e12, e01, e02, e03, e0123)| {
-                Motor::new_unchecked(
-                    T::from_f64(s),
-                    T::from_f64(e23),
-                    T::from_f64(e31),
-                    T::from_f64(e12),
-                    T::from_f64(e01),
-                    T::from_f64(e02),
-                    T::from_f64(e03),
-                    T::from_f64(e0123),
-                )
-            })
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl is in generated/traits.rs
 
 /// Wrapper type for unit motors (valid rigid transformations) in 3D PGA.
 ///
@@ -203,32 +168,7 @@ impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
 // Line
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Line<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        (
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-        )
-            .prop_map(|(e01, e02, e03, e23, e31, e12)| {
-                Line::new_unchecked(
-                    T::from_f64(e01),
-                    T::from_f64(e02),
-                    T::from_f64(e03),
-                    T::from_f64(e23),
-                    T::from_f64(e31),
-                    T::from_f64(e12),
-                )
-            })
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl is in generated/traits.rs
 
 /// Wrapper type for non-degenerate lines in 3D PGA.
 ///
@@ -290,28 +230,7 @@ impl<T: Float + Debug> Arbitrary for NonDegenerateLine<T> {
 // Plane
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Plane<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        (
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-        )
-            .prop_map(|(e023, e031, e012, e123)| {
-                Plane::new(
-                    T::from_f64(e023),
-                    T::from_f64(e031),
-                    T::from_f64(e012),
-                    T::from_f64(e123),
-                )
-            })
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl is in generated/traits.rs
 
 /// Wrapper type for non-degenerate planes in 3D PGA.
 ///
@@ -369,36 +288,7 @@ impl<T: Float + Debug> Arbitrary for NonDegeneratePlane<T> {
 // Flector
 // ============================================================================
 
-impl<T: Float + Debug> Arbitrary for Flector<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        (
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-            -10.0f64..10.0,
-        )
-            .prop_map(|(e1, e2, e3, e0, e023, e031, e012, e123)| {
-                Flector::new(
-                    T::from_f64(e1),
-                    T::from_f64(e2),
-                    T::from_f64(e3),
-                    T::from_f64(e0),
-                    T::from_f64(e023),
-                    T::from_f64(e031),
-                    T::from_f64(e012),
-                    T::from_f64(e123),
-                )
-            })
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl is in generated/traits.rs
 
 /// Wrapper type for unit flectors (valid improper isometries) in 3D PGA.
 ///
@@ -446,7 +336,7 @@ impl<T: Float + Debug> Arbitrary for UnitFlector<T> {
                     T::from_f64(nz / len),
                     T::from_f64(d),
                 );
-                UnitFlector(Flector::from_plane(plane))
+                UnitFlector(Flector::from_plane(&plane))
             })
             .boxed()
     }
