@@ -1299,9 +1299,21 @@ mod tests {
             grades: vec![2],
             description: None,
             fields: vec![
-                FieldSpec { name: "xy".to_string(), blade_index: 3, grade: 2 },
-                FieldSpec { name: "xz".to_string(), blade_index: 5, grade: 2 },
-                FieldSpec { name: "yz".to_string(), blade_index: 6, grade: 2 },
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                },
             ],
             alias_of: None,
             constraints: vec![],
@@ -1315,9 +1327,21 @@ mod tests {
             grades: vec![2],
             description: None,
             fields: vec![
-                FieldSpec { name: "yz".to_string(), blade_index: 6, grade: 2 },  // Wrong!
-                FieldSpec { name: "xz".to_string(), blade_index: 5, grade: 2 },  // Wrong!
-                FieldSpec { name: "xy".to_string(), blade_index: 3, grade: 2 },  // Wrong!
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                }, // Wrong!
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                }, // Wrong!
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                }, // Wrong!
             ],
             alias_of: None,
             constraints: vec![],
@@ -1331,10 +1355,26 @@ mod tests {
             grades: vec![0, 2],
             description: None,
             fields: vec![
-                FieldSpec { name: "s".to_string(), blade_index: 0, grade: 0 },
-                FieldSpec { name: "xy".to_string(), blade_index: 3, grade: 2 },
-                FieldSpec { name: "xz".to_string(), blade_index: 5, grade: 2 },
-                FieldSpec { name: "yz".to_string(), blade_index: 6, grade: 2 },
+                FieldSpec {
+                    name: "s".to_string(),
+                    blade_index: 0,
+                    grade: 0,
+                },
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                },
             ],
             alias_of: None,
             constraints: vec![],

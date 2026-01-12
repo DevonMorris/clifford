@@ -517,11 +517,8 @@ impl<'a> ProductGenerator<'a> {
             }
 
             // Check if sandwich preserves grades
-            let output_grades = self.compute_sandwich_output_grades(
-                &versor_type.grades,
-                &candidate.grades,
-                dim,
-            );
+            let output_grades =
+                self.compute_sandwich_output_grades(&versor_type.grades, &candidate.grades, dim);
 
             // Valid target if output grades exactly match candidate grades
             let candidate_grades_set: std::collections::HashSet<usize> =
@@ -813,7 +810,7 @@ impl<'a> ProductGenerator<'a> {
             .into_iter()
             .filter(|(_, sign)| *sign != 0)
             .map(|((v1, x, v2), sign)| SandwichTerm {
-                sign: if sign > 0 { 1 } else { -1 },
+                sign, // Keep the accumulated coefficient (can be 2, 3, -2, etc.)
                 v_field_1: v1,
                 x_field: x,
                 v_field_2: v2,
@@ -928,11 +925,28 @@ impl<'a> ProductGenerator<'a> {
             let x_field = format_ident!("{}", term.x_field);
             let v2 = format_ident!("{}", term.v_field_2);
 
-            let term_expr = match (i, term.sign) {
-                (0, s) if s > 0 => quote! { v.#v1() * x.#x_field() * v.#v2() },
-                (0, _) => quote! { -(v.#v1() * x.#x_field() * v.#v2()) },
-                (_, s) if s > 0 => quote! { + v.#v1() * x.#x_field() * v.#v2() },
-                (_, _) => quote! { - v.#v1() * x.#x_field() * v.#v2() },
+            let abs_coeff = term.sign.abs();
+            let is_negative = term.sign < 0;
+
+            // Build the base product expression
+            let base_expr = quote! { v.#v1() * x.#x_field() * v.#v2() };
+
+            // Apply coefficient if not 1
+            let coeff_expr = match abs_coeff {
+                1 => base_expr,
+                2 => quote! { T::TWO * #base_expr },
+                n => {
+                    let n_i8 = n as i8;
+                    quote! { T::from_i8(#n_i8) * #base_expr }
+                }
+            };
+
+            // Apply sign and position-based formatting
+            let term_expr = match (i, is_negative) {
+                (0, false) => coeff_expr,
+                (0, true) => quote! { -(#coeff_expr) },
+                (_, false) => quote! { + #coeff_expr },
+                (_, true) => quote! { - #coeff_expr },
             };
 
             expr_parts.push(term_expr);

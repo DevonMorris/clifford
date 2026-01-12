@@ -1023,7 +1023,8 @@ impl<'a> TypeGenerator<'a> {
                 let target_ident = format_ident!("{}", target_name);
                 let target_name_lower = target_name.to_lowercase();
                 let method_name = format_ident!("transform_{}", target_name_lower);
-                let sandwich_fn = format_ident!("sandwich_{}_{}", versor_name_lower, target_name_lower);
+                let sandwich_fn =
+                    format_ident!("sandwich_{}_{}", versor_name_lower, target_name_lower);
 
                 let doc = format!(
                     "Transforms a {} by this versor via sandwich product.\n\n\

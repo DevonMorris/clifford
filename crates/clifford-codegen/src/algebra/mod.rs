@@ -52,9 +52,9 @@ mod proptest;
 mod sign;
 mod signature;
 mod table;
-mod versor;
 #[cfg(test)]
 mod verification;
+mod versor;
 
 pub use blade::Blade;
 pub use constraints::{
