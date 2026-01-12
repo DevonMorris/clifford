@@ -675,7 +675,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -683,7 +683,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// // A rotor is an even multivector: scalar + bivector
     /// let rotor = &Multivector::scalar(0.5_f64.sqrt()) + &(&e1 * &e2) * 0.5_f64.sqrt();
     /// let even = rotor.even();
-    /// assert!(abs_diff_eq!(even, rotor, epsilon = 1e-10));
+    /// assert!(relative_eq!(even, rotor, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     pub fn even(&self) -> Self {
         let mut result = Self::zero();
@@ -702,11 +702,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
     /// let odd = v.odd();
-    /// assert!(abs_diff_eq!(odd, v, epsilon = 1e-10)); // Vectors are odd
+    /// assert!(relative_eq!(odd, v, epsilon = 1e-10, max_relative = 1e-10)); // Vectors are odd
     /// ```
     pub fn odd(&self) -> Self {
         let mut result = Self::zero();
@@ -809,7 +809,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -820,7 +820,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// // Anticommutativity: e₂ ∧ e₁ = -e₁₂
     /// let e21 = e2.exterior(&e1);
-    /// assert!(abs_diff_eq!(e21, -&e12, epsilon = 1e-10));
+    /// assert!(relative_eq!(e21, -&e12, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     pub fn exterior(&self, other: &Self) -> Self {
         let mut result = Self::zero();
@@ -1036,11 +1036,11 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// ```
     /// use clifford::algebra::Multivector;
     /// use clifford::signature::Euclidean3;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let roundtrip = e1.dual().undual();
-    /// assert!(abs_diff_eq!(roundtrip, e1, epsilon = 1e-10));
+    /// assert!(relative_eq!(roundtrip, e1, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     pub fn undual(&self) -> Self {
         let ps = Self::pseudoscalar();
@@ -1145,14 +1145,21 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// ```
     /// use clifford::algebra::Multivector;
-    /// use clifford::signature::Projective3;
+    /// use clifford::signature::Euclidean3;
     ///
-    /// // In PGA, use antisandwich for motor transformations
-    /// let motor: Multivector<f64, Projective3> = Multivector::scalar(1.0);
-    /// let point: Multivector<f64, Projective3> = Multivector::basis_vector(0);
+    /// // Create a rotor (identity in this case)
+    /// let rotor: Multivector<f64, Euclidean3> = Multivector::scalar(1.0);
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     ///
-    /// let transformed = motor.antisandwich(&point);
+    /// // Compute the antisandwich transformation
+    /// let _result = rotor.antisandwich(&e1);
     /// ```
+    ///
+    /// # Note
+    ///
+    /// For PGA (Projective Geometric Algebra), use the specialized types in
+    /// `clifford::specialized::projective::dim3` which have optimized antisandwich
+    /// implementations that handle the degenerate metric correctly.
     pub fn antisandwich(&self, x: &Self) -> Self {
         self.antiproduct(x).antiproduct(&self.reverse())
     }
@@ -1315,7 +1322,7 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 /// ```
 /// use clifford::algebra::Multivector;
 /// use clifford::signature::Euclidean3;
-/// use approx::abs_diff_eq;
+/// use approx::relative_eq;
 ///
 /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
 /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
@@ -1326,7 +1333,7 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 ///
 /// // Anticommutativity: e₂ ^ e₁ = -e₁₂
 /// let e21 = &e2 ^ &e1;
-/// assert!(abs_diff_eq!(e21, -&e12, epsilon = 1e-10));
+/// assert!(relative_eq!(e21, -&e12, epsilon = 1e-10, max_relative = 1e-10));
 /// ```
 impl<T: Float, S: Signature> BitXor for &Multivector<T, S> {
     type Output = Multivector<T, S>;
@@ -1607,8 +1614,8 @@ mod tests {
     use super::*;
     use crate::algebra::arbitrary::{NonZeroVectorE3, UnitVectorE3, VectorE3};
     use crate::signature::{Euclidean2, Euclidean3};
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     // ========================================================================
@@ -1618,46 +1625,46 @@ mod tests {
     #[test]
     fn test_zero() {
         let zero: Multivector<f64, Euclidean3> = Multivector::zero();
-        assert!(zero.is_zero(ABS_DIFF_EQ_EPS));
+        assert!(zero.is_zero(RELATIVE_EQ_EPS));
     }
 
     #[test]
     fn test_one() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             one.scalar_part(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
     #[test]
     fn test_basis_vector() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e1.get(Blade::basis_vector(0)),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e1.get(Blade::basis_vector(1)),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
     #[test]
     fn test_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             v.get(Blade::basis_vector(0)),
             3.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             v.get(Blade::basis_vector(1)),
             4.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -1669,15 +1676,15 @@ mod tests {
     fn test_vector_squares_to_scalar() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e1_sq = &e1 * &e1;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e1_sq.scalar_part(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e1_sq,
             Multivector::one(),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -1687,10 +1694,10 @@ mod tests {
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
         let e12_sq = &e12 * &e12;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e12_sq.scalar_part(),
             -1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -1698,8 +1705,18 @@ mod tests {
     fn test_scalar_is_identity() {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
-        assert!(abs_diff_eq!(&one * &v, v, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(&v * &one, v, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            &one * &v,
+            v,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            &v * &one,
+            v,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1709,7 +1726,12 @@ mod tests {
     #[test]
     fn test_reverse_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(abs_diff_eq!(v.reverse(), v, epsilon = ABS_DIFF_EQ_EPS)); // Vectors unchanged
+        assert!(relative_eq!(
+            v.reverse(),
+            v,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // Vectors unchanged
     }
 
     #[test]
@@ -1717,17 +1739,22 @@ mod tests {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
         let e12 = &e1 * &e2;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e12.reverse(),
             -&e12,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         )); // Bivectors negate
     }
 
     #[test]
     fn test_involute_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        assert!(abs_diff_eq!(v.involute(), -&v, epsilon = ABS_DIFF_EQ_EPS)); // Vectors negate
+        assert!(relative_eq!(
+            v.involute(),
+            -&v,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // Vectors negate
     }
 
     // ========================================================================
@@ -1737,17 +1764,22 @@ mod tests {
     #[test]
     fn test_norm_squared_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             v.norm_squared(),
             25.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
     #[test]
     fn test_norm_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[3.0, 4.0, 0.0]);
-        assert!(abs_diff_eq!(v.norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            v.norm(),
+            5.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1755,10 +1787,10 @@ mod tests {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[2.0, 0.0, 0.0]);
         let v_inv = v.inverse().unwrap();
         let product = &v * &v_inv;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             product,
             Multivector::one(),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -1775,7 +1807,7 @@ mod tests {
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1786,12 +1818,12 @@ mod tests {
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn reverse_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
-            prop_assert!(abs_diff_eq!(a.reverse().reverse(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.reverse().reverse(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1801,12 +1833,12 @@ mod tests {
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn involute_involutory(a in any::<Multivector<f64, Euclidean3>>()) {
-            prop_assert!(abs_diff_eq!(a.involute().involute(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.involute().involute(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1814,7 +1846,7 @@ mod tests {
             // Vectors are always invertible in Euclidean space
             let inv = a.inverse().expect("non-zero vector should be invertible");
             let product = &*a * &inv;
-            prop_assert!(abs_diff_eq!(product, Multivector::one(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(product, Multivector::one(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1822,7 +1854,7 @@ mod tests {
             a in any::<Multivector<f64, Euclidean3>>(),
             b in any::<Multivector<f64, Euclidean3>>()
         ) {
-            prop_assert!(abs_diff_eq!(&a + &b, &b + &a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1833,20 +1865,20 @@ mod tests {
         ) {
             let lhs = &(&a + &b) + &c;
             let rhs = &a + &(&b + &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn zero_is_additive_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let zero = Multivector::<f64, Euclidean3>::zero();
-            prop_assert!(abs_diff_eq!(&a + &zero, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn one_is_multiplicative_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let one = Multivector::<f64, Euclidean3>::one();
-            prop_assert!(abs_diff_eq!(&a * &one, a, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(&one * &a, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -1859,13 +1891,13 @@ mod tests {
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
                 .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| &acc + &x);
-            prop_assert!(abs_diff_eq!(sum, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn even_plus_odd_equals_original(a in any::<Multivector<f64, Euclidean3>>()) {
             let reconstructed = &a.even() + &a.odd();
-            prop_assert!(abs_diff_eq!(reconstructed, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(reconstructed, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1875,7 +1907,7 @@ mod tests {
         ) {
             let once = a.grade_select(k);
             let twice = once.grade_select(k);
-            prop_assert!(abs_diff_eq!(once, twice, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(once, twice, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -1889,7 +1921,7 @@ mod tests {
         ) {
             let ab = a.exterior(&*b);
             let ba = b.exterior(&*a);
-            prop_assert!(abs_diff_eq!(ab, -&ba, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(ab, -&ba, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1900,7 +1932,7 @@ mod tests {
         ) {
             let lhs = a.exterior(&b).exterior(&c);
             let rhs = a.exterior(&b.exterior(&c));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1910,8 +1942,8 @@ mod tests {
         ) {
             let wedge = a.exterior(&*b);
             // Result should have no scalar or vector parts
-            prop_assert!(wedge.grade_select(0).is_zero(ABS_DIFF_EQ_EPS));
-            prop_assert!(wedge.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(wedge.grade_select(0).is_zero(RELATIVE_EQ_EPS));
+            prop_assert!(wedge.grade_select(1).is_zero(RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -1925,9 +1957,9 @@ mod tests {
         ) {
             let dot = a.inner(&*b);
             // Should be pure scalar
-            prop_assert!(dot.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
-            prop_assert!(dot.grade_select(2).is_zero(ABS_DIFF_EQ_EPS));
-            prop_assert!(dot.grade_select(3).is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(dot.grade_select(1).is_zero(RELATIVE_EQ_EPS));
+            prop_assert!(dot.grade_select(2).is_zero(RELATIVE_EQ_EPS));
+            prop_assert!(dot.grade_select(3).is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1938,7 +1970,7 @@ mod tests {
             // For vectors, a·b = b·a
             let ab = a.inner(&*b);
             let ba = b.inner(&*a);
-            prop_assert!(abs_diff_eq!(ab, ba, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(ab, ba, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -1948,14 +1980,14 @@ mod tests {
         #[test]
         fn dual_undual_roundtrip(a in any::<Multivector<f64, Euclidean3>>()) {
             let roundtrip = a.dual().undual();
-            prop_assert!(abs_diff_eq!(roundtrip, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(roundtrip, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn dual_changes_grade(a in any::<NonZeroVectorE3>()) {
             // Vector (grade 1) dualizes to bivector (grade 2) in 3D
             let dual = a.dual();
-            prop_assert_eq!(dual.grade(ABS_DIFF_EQ_EPS), Some(2));
+            prop_assert_eq!(dual.grade(RELATIVE_EQ_EPS), Some(2));
         }
 
         // ====================================================================
@@ -1969,7 +2001,7 @@ mod tests {
         ) {
             let reflected = n.sandwich(&*v);
             // Reflection preserves norm
-            prop_assert!(abs_diff_eq!(reflected.norm(), v.norm(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(reflected.norm(), v.norm(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -1980,7 +2012,7 @@ mod tests {
             let reflected = n.sandwich(&*v);
             // Double reflection returns original
             let double_reflected = n.sandwich(&reflected);
-            prop_assert!(abs_diff_eq!(double_reflected, *v, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(double_reflected, *v, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -1997,16 +2029,21 @@ mod tests {
 
         // i² = -1
         let i_sq = &i * &i;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             i_sq.scalar_part(),
             -1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
 
         // We can represent complex numbers as a + b*e₁₂
         let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
         let norm_sq = (&z * &z.reverse()).scalar_part();
-        assert!(abs_diff_eq!(norm_sq, 25.0, epsilon = ABS_DIFF_EQ_EPS)); // |z|² = 3² + 4² = 25
+        assert!(relative_eq!(
+            norm_sq,
+            25.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // |z|² = 3² + 4² = 25
     }
 
     // ========================================================================
@@ -2021,14 +2058,19 @@ mod tests {
         let v2 = v;
 
         // Original is still usable (proves Copy, not just Clone)
-        assert!(abs_diff_eq!(v, v2, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            v,
+            v2,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
 
         // Can use both independently
         let sum = v + v2;
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             sum.get(Blade::basis_vector(0)),
             2.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -2048,6 +2090,11 @@ mod tests {
         let v2: Multivector<f64, Euclidean3> =
             serde_json::from_str(&json).expect("deserialization failed");
 
-        assert!(abs_diff_eq!(v, v2, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            v,
+            v2,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 }

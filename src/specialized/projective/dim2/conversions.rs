@@ -261,7 +261,7 @@ impl<T: Float> From<EuclideanRotor<T>> for Motor<T> {
     /// use clifford::specialized::euclidean::dim2::Rotor;
     /// use clifford::specialized::projective::dim2::{Motor, Point};
     /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// // Create a 90° rotation rotor
     /// let rotor = Rotor::from_angle(FRAC_PI_2);
@@ -271,8 +271,8 @@ impl<T: Float> From<EuclideanRotor<T>> for Motor<T> {
     /// let p = Point::new(1.0, 0.0);
     /// let rotated = motor.transform_point(&p);
     ///
-    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(rotated.x(), 0.0, epsilon = 1e-10, max_relative = 1e-10));
+    /// assert!(relative_eq!(rotated.y(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     #[inline]
     fn from(r: EuclideanRotor<T>) -> Self {
@@ -299,7 +299,7 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use clifford::specialized::projective::dim2::Motor;
     /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// // Create a motor with rotation and translation
     /// let rotation = Motor::from_rotation(FRAC_PI_2);
@@ -313,8 +313,8 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     /// let v = Vector::new(1.0, 0.0);
     /// let rotated = rotor.rotate(v);
     ///
-    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(rotated.x(), 0.0, epsilon = 1e-10, max_relative = 1e-10));
+    /// assert!(relative_eq!(rotated.y(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     #[inline]
     fn from(m: Motor<T>) -> Self {
@@ -337,7 +337,7 @@ impl<T: Float> Motor<T> {
     /// use clifford::specialized::euclidean::dim2::Vector as EucVec;
     /// use clifford::specialized::projective::dim2::Motor;
     /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let v = EucVec::new(1.0, 0.0);
     ///
@@ -347,8 +347,8 @@ impl<T: Float> Motor<T> {
     /// let motor = rotation.compose(&translation);
     ///
     /// let result = motor.transform_euclidean(&v);
-    /// assert!(abs_diff_eq!(result.x(), 1.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(result.y(), 3.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(result.x(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
+    /// assert!(relative_eq!(result.y(), 3.0, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     #[inline]
     pub fn transform_euclidean(&self, v: &EuclideanVector<T>) -> EuclideanVector<T> {
@@ -404,8 +404,8 @@ impl std::error::Error for ConversionError {}
 mod tests {
     use super::*;
     use crate::specialized::euclidean::dim2::Vector;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     #[test]
@@ -414,9 +414,24 @@ mod tests {
         let mv: Multivector<f64, Projective2> = point.into();
         let back = Point::try_from(mv).unwrap();
 
-        assert!(abs_diff_eq!(point.e1, back.e1, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(point.e2, back.e2, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(point.e0, back.e0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            point.e1,
+            back.e1,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            point.e2,
+            back.e2,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            point.e0,
+            back.e0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -425,9 +440,24 @@ mod tests {
         let mv: Multivector<f64, Projective2> = line.into();
         let back = Line::try_from(mv).unwrap();
 
-        assert!(abs_diff_eq!(line.e12, back.e12, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(line.e20, back.e20, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(line.e01, back.e01, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            line.e12,
+            back.e12,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            line.e20,
+            back.e20,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            line.e01,
+            back.e01,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -436,21 +466,26 @@ mod tests {
         let mv: Multivector<f64, Projective2> = motor.into();
         let back = Motor::try_from(mv).unwrap();
 
-        assert!(abs_diff_eq!(motor.s(), back.s(), epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
+            motor.s(),
+            back.s(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
             motor.e12(),
             back.e12(),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             motor.e20(),
             back.e20(),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             motor.e01(),
             back.e01(),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -483,8 +518,8 @@ mod tests {
             let result_orig = rotor.rotate(v);
             let result_back = back.rotate(v);
 
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x(), result_back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y(), result_back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests Motor -> Rotor -> Motor roundtrip preserves rotation behavior.
@@ -503,8 +538,8 @@ mod tests {
             let result_orig = motor.transform_point(&p);
             let result_back = back.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x(), result_back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y(), result_back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests that Rotor rotation matches Motor rotation.
@@ -524,8 +559,8 @@ mod tests {
             let p = Point::new(x, y);
             let rotated_pga = motor.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(rotated_euc.x(), rotated_pga.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(rotated_euc.y(), rotated_pga.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_euc.x(), rotated_pga.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_euc.y(), rotated_pga.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests that Motor -> Rotor extracts correct rotation from composed motor.
@@ -550,8 +585,8 @@ mod tests {
             let result = rotor.rotate(v);
             let expected = expected_rotor.rotate(v);
 
-            prop_assert!(abs_diff_eq!(result.x(), expected.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result.y(), expected.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result.x(), expected.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result.y(), expected.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -561,10 +596,30 @@ mod tests {
         let motor: Motor<f64> = rotor.into();
 
         // Should be identity motor (no rotation, no translation)
-        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e20(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e01(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            motor.s(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e12(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e20(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e01(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -573,7 +628,17 @@ mod tests {
         let rotor: EuclideanRotor<f64> = motor.into();
 
         // Should be identity rotor
-        assert!(abs_diff_eq!(rotor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rotor.xy(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            rotor.s(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            rotor.xy(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 }

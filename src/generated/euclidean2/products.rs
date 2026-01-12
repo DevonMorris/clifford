@@ -180,6 +180,95 @@ pub fn exterior_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<
 pub fn exterior_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Bivector<T> {
     Bivector::new(-(b.x() * a.y()) + b.y() * a.x())
 }
+#[doc = "Interior product (symmetric inner): Bivector · Bivector -> Scalar"]
+#[inline]
+pub fn interior_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.xy() * b.xy()))
+}
+#[doc = "Interior product (symmetric inner): Bivector · Rotor -> Rotor"]
+#[inline]
+pub fn interior_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(-(a.xy() * b.xy()), a.xy() * b.s())
+}
+#[doc = "Interior product (symmetric inner): Bivector · Scalar -> Bivector"]
+#[inline]
+pub fn interior_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
+    Bivector::new(a.xy() * b.s())
+}
+#[doc = "Interior product (symmetric inner): Bivector · Vector -> Vector"]
+#[inline]
+pub fn interior_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(a.xy() * b.y(), -(a.xy() * b.x()))
+}
+#[doc = "Interior product (symmetric inner): Rotor · Bivector -> Rotor"]
+#[inline]
+pub fn interior_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
+    Rotor::new_unchecked(-(a.xy() * b.xy()), b.xy() * a.s())
+}
+#[doc = "Interior product (symmetric inner): Rotor · Rotor -> Rotor"]
+#[inline]
+pub fn interior_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(
+        -(a.xy() * b.xy()) + b.s() * a.s(),
+        a.xy() * b.s() + b.xy() * a.s(),
+    )
+}
+#[doc = "Interior product (symmetric inner): Rotor · Scalar -> Rotor"]
+#[inline]
+pub fn interior_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), a.xy() * b.s())
+}
+#[doc = "Interior product (symmetric inner): Rotor · Vector -> Vector"]
+#[inline]
+pub fn interior_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        a.xy() * b.y() + b.x() * a.s(),
+        -(a.xy() * b.x()) + b.y() * a.s(),
+    )
+}
+#[doc = "Interior product (symmetric inner): Scalar · Bivector -> Bivector"]
+#[inline]
+pub fn interior_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(b.xy() * a.s())
+}
+#[doc = "Interior product (symmetric inner): Scalar · Rotor -> Rotor"]
+#[inline]
+pub fn interior_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), b.xy() * a.s())
+}
+#[doc = "Interior product (symmetric inner): Scalar · Scalar -> Scalar"]
+#[inline]
+pub fn interior_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
+}
+#[doc = "Interior product (symmetric inner): Scalar · Vector -> Vector"]
+#[inline]
+pub fn interior_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(b.x() * a.s(), b.y() * a.s())
+}
+#[doc = "Interior product (symmetric inner): Vector · Bivector -> Vector"]
+#[inline]
+pub fn interior_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Vector<T> {
+    Vector::new(-(b.xy() * a.y()), b.xy() * a.x())
+}
+#[doc = "Interior product (symmetric inner): Vector · Rotor -> Vector"]
+#[inline]
+pub fn interior_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
+    Vector::new(
+        -(b.xy() * a.y()) + b.s() * a.x(),
+        b.xy() * a.x() + b.s() * a.y(),
+    )
+}
+#[doc = "Interior product (symmetric inner): Vector · Scalar -> Vector"]
+#[inline]
+pub fn interior_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
+    Vector::new(b.s() * a.x(), b.s() * a.y())
+}
+#[doc = "Interior product (symmetric inner): Vector · Vector -> Scalar"]
+#[inline]
+pub fn interior_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
+    Scalar::new(b.x() * a.x() + b.y() * a.y())
+}
 #[doc = "Left contraction: Bivector | Bivector -> Scalar"]
 #[inline]
 pub fn left_contract_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Scalar<T> {
@@ -244,4 +333,59 @@ pub fn left_contract_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vect
 #[inline]
 pub fn left_contract_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
     Scalar::new(b.x() * a.x() + b.y() * a.y())
+}
+#[doc = "Reverses the Bivector (negates grades where k(k-1)/2 is odd)."]
+#[inline]
+pub fn reverse_bivector<T: Float>(a: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(-a.xy())
+}
+#[doc = "Reverses the Rotor (negates grades where k(k-1)/2 is odd)."]
+#[inline]
+pub fn reverse_rotor<T: Float>(a: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(a.s(), -a.xy())
+}
+#[doc = "Reverses the Scalar (negates grades where k(k-1)/2 is odd)."]
+#[inline]
+pub fn reverse_scalar<T: Float>(a: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.s())
+}
+#[doc = "Reverses the Vector (negates grades where k(k-1)/2 is odd)."]
+#[inline]
+pub fn reverse_vector<T: Float>(a: &Vector<T>) -> Vector<T> {
+    Vector::new(a.x(), a.y())
+}
+#[doc = "Antireverses the Bivector (negates grades where (n-k)(n-k-1)/2 is odd)."]
+#[inline]
+pub fn antireverse_bivector<T: Float>(a: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(a.xy())
+}
+#[doc = "Antireverses the Rotor (negates grades where (n-k)(n-k-1)/2 is odd)."]
+#[inline]
+pub fn antireverse_rotor<T: Float>(a: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(-a.s(), a.xy())
+}
+#[doc = "Antireverses the Scalar (negates grades where (n-k)(n-k-1)/2 is odd)."]
+#[inline]
+pub fn antireverse_scalar<T: Float>(a: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(-a.s())
+}
+#[doc = "Antireverses the Vector (negates grades where (n-k)(n-k-1)/2 is odd)."]
+#[inline]
+pub fn antireverse_vector<T: Float>(a: &Vector<T>) -> Vector<T> {
+    Vector::new(a.x(), a.y())
+}
+#[doc = "Computes the right complement of Bivector -> Scalar."]
+#[inline]
+pub fn complement_bivector<T: Float>(a: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(a.xy())
+}
+#[doc = "Computes the right complement of Scalar -> Bivector."]
+#[inline]
+pub fn complement_scalar<T: Float>(a: &Scalar<T>) -> Bivector<T> {
+    Bivector::new(a.s())
+}
+#[doc = "Computes the right complement of Vector -> Vector."]
+#[inline]
+pub fn complement_vector<T: Float>(a: &Vector<T>) -> Vector<T> {
+    Vector::new(-a.y(), a.x())
 }

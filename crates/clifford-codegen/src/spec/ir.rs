@@ -211,14 +211,20 @@ pub struct ProductsSpec {
     pub geometric: Vec<ProductEntry>,
     /// Exterior (wedge) product entries.
     pub exterior: Vec<ProductEntry>,
+    /// Interior (symmetric inner) product entries.
+    pub interior: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.
     pub right_contraction: Vec<ProductEntry>,
-    /// Regressive product entries.
+    /// Regressive (meet) product entries.
     pub regressive: Vec<ProductEntry>,
     /// Scalar product entries.
     pub scalar: Vec<ProductEntry>,
+    /// Antigeometric product entries.
+    pub antigeometric: Vec<ProductEntry>,
+    /// Antiscalar product entries.
+    pub antiscalar: Vec<ProductEntry>,
 }
 
 /// A single product entry specifying lhs × rhs → output.

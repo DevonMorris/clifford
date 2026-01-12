@@ -322,8 +322,8 @@ pub enum FlectorConversionError {
 mod tests {
     use super::*;
     use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
     use std::f64::consts::FRAC_PI_2;
 
@@ -338,9 +338,9 @@ mod tests {
             let na_point: na::Point3<f64> = pga_point.try_into().unwrap();
             let back: Point<f64> = na_point.into();
 
-            prop_assert!(abs_diff_eq!(pga_point.x(), back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_point.y(), back.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_point.z(), back.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_point.x(), back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_point.y(), back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_point.z(), back.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -370,17 +370,32 @@ mod tests {
         for p in points {
             let result = motor.transform_point(&p);
             assert!(
-                abs_diff_eq!(result.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS),
+                relative_eq!(
+                    result.x(),
+                    p.x(),
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
                 "x mismatch for point {:?}",
                 p
             );
             assert!(
-                abs_diff_eq!(result.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS),
+                relative_eq!(
+                    result.y(),
+                    p.y(),
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
                 "y mismatch for point {:?}",
                 p
             );
             assert!(
-                abs_diff_eq!(result.z(), p.z(), epsilon = ABS_DIFF_EQ_EPS),
+                relative_eq!(
+                    result.z(),
+                    p.z(),
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
                 "z mismatch for point {:?}",
                 p
             );
@@ -398,9 +413,24 @@ mod tests {
         let p = Point::from_cartesian(1.0, 2.0, 3.0);
         let result = motor.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), 11.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 22.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.z(), 33.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            11.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            22.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            33.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     proptest! {
@@ -418,9 +448,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = na_trans * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -436,17 +466,32 @@ mod tests {
         let result = motor.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected 0",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 1.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                1.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 1",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected 0",
             result.z()
         );
@@ -460,17 +505,32 @@ mod tests {
         let result = motor.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected 0",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 0",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), 1.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                1.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected 1",
             result.z()
         );
@@ -484,17 +544,32 @@ mod tests {
         let result = motor.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                1.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected 1",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 0",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected 0",
             result.z()
         );
@@ -519,9 +594,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = na_rot * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -538,9 +613,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = na_rot * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -557,9 +632,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = na_rot * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -585,9 +660,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = na_rot * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -609,17 +684,32 @@ mod tests {
         let result = combined.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                1.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected 1",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 3.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                3.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 3",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                3.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected 3",
             result.z()
         );
@@ -639,17 +729,32 @@ mod tests {
         let result = combined.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), -2.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                -2.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected -2",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                2.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 2",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                3.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected 3",
             result.z()
         );
@@ -671,17 +776,32 @@ mod tests {
         let result = combined.transform_point(&p);
 
         assert!(
-            abs_diff_eq!(result.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.x(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "x = {} expected 0",
             result.x()
         );
         assert!(
-            abs_diff_eq!(result.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.y(),
+                0.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "y = {} expected 0",
             result.y()
         );
         assert!(
-            abs_diff_eq!(result.z(), -1.0, epsilon = ABS_DIFF_EQ_EPS),
+            relative_eq!(
+                result.z(),
+                -1.0,
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
             "z = {} expected -1",
             result.z()
         );
@@ -716,9 +836,9 @@ mod tests {
             let intermediate = rotation.transform_point(&p);
             let result_sequential = translation.transform_point(&intermediate);
 
-            prop_assert!(abs_diff_eq!(result_composed.x(), result_sequential.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_composed.y(), result_sequential.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_composed.z(), result_sequential.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_composed.x(), result_sequential.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_composed.y(), result_sequential.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_composed.z(), result_sequential.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Verifies composition order mapping to nalgebra.
@@ -766,9 +886,9 @@ mod tests {
             let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_composed.transform_point(&pga_point);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Verifies all four equivalent ways to apply composed transformations match.
@@ -829,15 +949,15 @@ mod tests {
             let result_pga_sequential = motor1.transform_point(&intermediate);
 
             // All four methods should match
-            prop_assert!(abs_diff_eq!(result_na_composed.x, result_na_sequential.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_na_composed.y, result_na_sequential.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_na_composed.z, result_na_sequential.z, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_composed.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_composed.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_composed.z(), result_na_composed.z, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_sequential.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_sequential.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_sequential.z(), result_na_composed.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_na_composed.x, result_na_sequential.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_na_composed.y, result_na_sequential.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_na_composed.z, result_na_sequential.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_composed.x(), result_na_composed.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_composed.y(), result_na_composed.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_composed.z(), result_na_composed.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_sequential.x(), result_na_composed.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_sequential.y(), result_na_composed.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_pga_sequential.z(), result_na_composed.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Verifies triple composition consistency between PGA and nalgebra.
@@ -880,9 +1000,9 @@ mod tests {
             let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_composed.transform_point(&pga_point);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // TODO: Add inverse_matches_nalgebra test
@@ -919,9 +1039,9 @@ mod tests {
             let result_orig = motor.transform_point(&p);
             let result_back = back.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x(), result_back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y(), result_back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.z(), result_back.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests that UnitQuaternion -> Motor -> UnitQuaternion preserves rotation.
@@ -947,9 +1067,9 @@ mod tests {
             let result_orig = q * na_point;
             let result_back = back * na_point;
 
-            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.z, result_back.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x, result_back.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y, result_back.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.z, result_back.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests that Motor rotation matches UnitQuaternion rotation.
@@ -976,9 +1096,9 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = q * na_point;
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -1010,9 +1130,9 @@ mod tests {
             let result_orig = motor.transform_point(&p);
             let result_back = back.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x(), result_back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y(), result_back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.z(), result_back.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -1042,9 +1162,9 @@ mod tests {
             let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests pure rotation Isometry conversion.
@@ -1072,9 +1192,9 @@ mod tests {
             let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests pure translation Isometry conversion.
@@ -1093,9 +1213,9 @@ mod tests {
             let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_result.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_result.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_result.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_result.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -1111,9 +1231,24 @@ mod tests {
         // Should be identity isometry
         let p = na::Point3::new(1.0, 2.0, 3.0);
         let result = iso * p;
-        assert!(abs_diff_eq!(result.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y, 2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.z, 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x,
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y,
+            2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z,
+            3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1124,9 +1259,24 @@ mod tests {
         // Should be identity motor
         let p = Point::from_cartesian(1.0, 2.0, 3.0);
         let result = motor.transform_point(&p);
-        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.z(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1135,10 +1285,30 @@ mod tests {
         let q: na::UnitQuaternion<f64> = motor.into();
 
         // Should be identity quaternion (w=1, i=j=k=0)
-        assert!(abs_diff_eq!(q.w, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(q.i, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(q.j, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(q.k, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            q.w,
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            q.i,
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            q.j,
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            q.k,
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1147,13 +1317,48 @@ mod tests {
         let motor: Motor<f64> = q.into();
 
         // Should produce identity motor
-        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e23(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e31(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e01(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e02(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e03(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            motor.s(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e23(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e31(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e12(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e01(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e02(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            motor.e03(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -1171,10 +1376,30 @@ mod tests {
         // Should be a pure plane reflection through XY plane
         assert!(flector.is_pure_reflection());
         let plane = flector.plane_part();
-        assert!(abs_diff_eq!(plane.e023(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // nx
-        assert!(abs_diff_eq!(plane.e031(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // ny
-        assert!(abs_diff_eq!(plane.e012(), 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
-        assert!(abs_diff_eq!(plane.e123(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+        assert!(relative_eq!(
+            plane.e023(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // nx
+        assert!(relative_eq!(
+            plane.e031(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // ny
+        assert!(relative_eq!(
+            plane.e012(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // nz
+        assert!(relative_eq!(
+            plane.e123(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // d
     }
 
     #[test]
@@ -1189,8 +1414,18 @@ mod tests {
         assert!(flector.is_pure_reflection());
         let plane = flector.plane_part();
         // PGA plane: nz = 1, d = -5 (since n·x + d = 0 means z - 5 = 0)
-        assert!(abs_diff_eq!(plane.e012(), 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
-        assert!(abs_diff_eq!(plane.e123(), -5.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+        assert!(relative_eq!(
+            plane.e012(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // nz
+        assert!(relative_eq!(
+            plane.e123(),
+            -5.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        )); // d
     }
 
     #[test]
@@ -1200,10 +1435,30 @@ mod tests {
 
         // Should have axis (0, 0, 1) and bias 0
         let axis = na_refl.axis();
-        assert!(abs_diff_eq!(axis[0], 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(axis[1], 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(axis[2], 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(na_refl.bias(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            axis[0],
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            axis[1],
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            axis[2],
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            na_refl.bias(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1215,10 +1470,30 @@ mod tests {
 
         // nalgebra bias = n·P where P is on plane, so bias = 5
         let axis = na_refl.axis();
-        assert!(abs_diff_eq!(axis[0], 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(axis[1], 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(axis[2], 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(na_refl.bias(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            axis[0],
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            axis[1],
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            axis[2],
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            na_refl.bias(),
+            5.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -1259,9 +1534,9 @@ mod tests {
             let result_orig = flector.transform_point(&p);
             let result_back = back.transform_point(&p);
 
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.z(), result_back.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.x(), result_back.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.y(), result_back.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(result_orig.z(), result_back.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         /// Tests that Flector reflection matches nalgebra Reflection.
@@ -1297,9 +1572,9 @@ mod tests {
             let mut na_vec = na::Vector3::new(px, py, pz);
             na_refl.reflect(&mut na_vec);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_vec.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_vec.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.z(), na_vec.z, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.x(), na_vec.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.y(), na_vec.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(pga_result.z(), na_vec.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -1352,20 +1627,20 @@ mod tests {
             pga_result.z()
         );
 
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             pga_result.x(),
             na_result.x,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             pga_result.y(),
             na_result.y,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             pga_result.z(),
             na_result.z,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 }

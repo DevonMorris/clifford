@@ -134,8 +134,8 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     proptest! {
@@ -143,7 +143,7 @@ mod tests {
         fn vector_roundtrip(v in any::<Vector<f64>>()) {
             let na_v: na::Vector2<f64> = v.into();
             let back: Vector<f64> = na_v.into();
-            prop_assert!(abs_diff_eq!(v, back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(v, back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -153,7 +153,7 @@ mod tests {
             let back: Rotor<f64> = rotation.into();
 
             // Verify angle is preserved
-            prop_assert!(abs_diff_eq!(rotor.angle(), back.angle(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotor.angle(), back.angle(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -172,7 +172,7 @@ mod tests {
             let rotated_na = rotation * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();
-            prop_assert!(abs_diff_eq!(rotated_ga, rotated_back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_ga, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 }

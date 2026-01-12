@@ -43,8 +43,8 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 ### 3. Testing
 - [ ] Property-based tests with `proptest`
 - [ ] Uses `prop_assert!` (not `assert!`) inside `proptest!` blocks
-- [ ] Uses `abs_diff_eq!` for floating-point comparisons (not hand-rolled)
-- [ ] Uses `ABS_DIFF_EQ_EPS` constant (not magic numbers like `1e-10`)
+- [ ] Uses `relative_eq!` with BOTH `epsilon` AND `max_relative` parameters for floating-point comparisons
+- [ ] Uses `RELATIVE_EQ_EPS` constant for both parameters (not magic numbers like `1e-10`)
 - [ ] Key algebraic properties verified
 - [ ] Edge cases tested
 - [ ] Doc tests present and passing
@@ -182,6 +182,8 @@ Type constraints (Study condition, Plucker condition) apply to *normalized, vali
 - TOML spec has correct grades, fields, and constraints
 - Constraint order is correct (dependencies solved first)
 - Generated tests pass
+- **No clippy warnings** - Generated code passes `cargo clippy` without warnings
+- **No warning suppressions** - No `#[allow(dead_code)]`, `#[allow(unused)]`, etc. in generated code
 
 **Codegen change requirements**:
 - [ ] **TOML specs updated** - If codegen adds new fields/options, algebra TOMLs must be updated

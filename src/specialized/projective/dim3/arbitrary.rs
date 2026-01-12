@@ -36,7 +36,7 @@
 //!         let t1 = motor.transform_point(&p1);
 //!         let t2 = motor.transform_point(&p2);
 //!         let d_after = t1.distance(&t2);
-//!         prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = 1e-10));
+//!         prop_assert!(relative_eq!(d_before, d_after, epsilon = 1e-10));
 //!     }
 //! }
 //! ```
@@ -288,8 +288,8 @@ mod tests {
     use super::*;
     use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
     use crate::specialized::projective::dim3::Motor;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
 
     /// Helper function to create a valid unit motor from rotation + translation params.
     ///
@@ -333,7 +333,7 @@ mod tests {
                 let t1 = motor.transform_point(&p1);
                 let t2 = motor.transform_point(&p2);
                 let d_after = t1.distance(&t2);
-                prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(d_before, d_after, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
         }
 
@@ -362,7 +362,7 @@ mod tests {
                 let lhs = m1.compose(&m2).compose(&m3);
                 let rhs = m1.compose(&m2.compose(&m3));
                 // Compare the geometric product results (associative)
-                prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
         }
 
@@ -383,9 +383,9 @@ mod tests {
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
-            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(back.x(), point.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(back.y(), point.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(back.z(), point.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -401,9 +401,9 @@ mod tests {
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
-            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(back.x(), point.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(back.y(), point.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(back.z(), point.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -413,11 +413,11 @@ mod tests {
         ) {
             let line = Line::join(&*p1, &*p2);
             // Both points should have ~0 distance to the line (if line is non-degenerate)
-            if !line.is_zero(ABS_DIFF_EQ_EPS) {
+            if !line.is_zero(RELATIVE_EQ_EPS) {
                 let d1 = line.distance_to_point(&*p1);
                 let d2 = line.distance_to_point(&*p2);
-                prop_assert!(d1.abs() < ABS_DIFF_EQ_EPS);
-                prop_assert!(d2.abs() < ABS_DIFF_EQ_EPS);
+                prop_assert!(d1.abs() < RELATIVE_EQ_EPS);
+                prop_assert!(d2.abs() < RELATIVE_EQ_EPS);
             }
         }
 
@@ -428,7 +428,7 @@ mod tests {
         ) {
             let d12 = p1.dot(&p2);
             let d21 = p2.dot(&p1);
-            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(d12, d21, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -438,7 +438,7 @@ mod tests {
         ) {
             let d12 = l1.dot(&l2);
             let d21 = l2.dot(&l1);
-            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(d12, d21, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -448,7 +448,7 @@ mod tests {
         ) {
             let p12 = l1.plucker_inner(&*l2);
             let p21 = l2.plucker_inner(&*l1);
-            prop_assert!(abs_diff_eq!(p12, p21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(p12, p21, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -460,9 +460,9 @@ mod tests {
             let once = flector.transform_point(&point);
             let twice = flector.transform_point(&once);
 
-            prop_assert!(abs_diff_eq!(twice.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(twice.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(twice.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(twice.x(), point.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(twice.y(), point.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(twice.z(), point.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -479,10 +479,10 @@ mod tests {
             if let Some(motor) = make_unit_motor(axis_x, axis_y, axis_z, angle, tx, ty, tz) {
                 let transformed = motor.transform_line(&*line);
                 // Direction norm (weight) should be preserved
-                prop_assert!(abs_diff_eq!(
+                prop_assert!(relative_eq!(
                     line.weight_norm(),
                     transformed.weight_norm(),
-                    epsilon = ABS_DIFF_EQ_EPS
+                    max_relative = RELATIVE_EQ_EPS
                 ));
             }
         }
@@ -520,7 +520,7 @@ mod tests {
         ) {
             if let Some(motor) = make_unit_motor(axis_x, axis_y, axis_z, angle, tx, ty, tz) {
                 // Use the method that computes the Study condition residual
-                prop_assert!(abs_diff_eq!(motor.study_residual(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(motor.study_residual(), 0.0, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
         }
     }

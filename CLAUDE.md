@@ -244,11 +244,16 @@ let eps: T = T::epsilon();
 
 **Using approx crate for comparisons:**
 ```rust
-use approx::abs_diff_eq;
+use approx::relative_eq;
 
-// CORRECT: Use abs_diff_eq! macro
-assert!(abs_diff_eq!(a, b, epsilon = 1e-10));
-prop_assert!(abs_diff_eq!(result, expected, epsilon = ABS_DIFF_EQ_EPS));
+// CORRECT: Use relative_eq! with both epsilon and max_relative
+// - epsilon: for near-zero comparisons (absolute tolerance)
+// - max_relative: for larger values (relative tolerance)
+assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));
+prop_assert!(relative_eq!(result, expected, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+
+// WRONG: Using only max_relative fails for values near zero
+// assert!(relative_eq!(a, 0.0, max_relative = 1e-10));  // Will fail unless a == 0
 
 // WRONG: Don't use custom comparison methods
 // assert!(a.approx_eq(&b, 1e-10));  // This method doesn't exist
@@ -295,7 +300,7 @@ let from_f64: T = T::from_f64(3.14);
       #[test]
       fn rotor_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
           let rotated = r.rotate(v);  // Deref allows direct method access
-          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
+          prop_assert!(relative_eq!(v.norm(), rotated.norm(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
       }
   }
   ```
@@ -320,30 +325,41 @@ let from_f64: T = T::from_f64(3.14);
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
-- **Use `approx` crate for comparisons**: Never hand-roll floating-point comparisons. Use `abs_diff_eq!`, `relative_eq!`, or `ulps_eq!` macros from the `approx` crate.
-- **Use `ABS_DIFF_EQ_EPS` constant**: Don't use magic numbers like `1e-10` for epsilon values. Use the standard constant `ABS_DIFF_EQ_EPS` defined in `src/lib.rs::test_utils`:
+- **Use `approx` crate with `relative_eq!`**: Never hand-roll floating-point comparisons. Use `relative_eq!` with both `epsilon` and `max_relative` parameters:
   ```rust
-  use crate::test_utils::ABS_DIFF_EQ_EPS;
-  use approx::abs_diff_eq;
+  use approx::relative_eq;
 
-  // Good: use the standard constant
-  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+  // Use BOTH epsilon (for near-zero) and max_relative (for larger values)
+  assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));
+  ```
+- **Use `RELATIVE_EQ_EPS` constant**: Don't use magic numbers like `1e-10` for epsilon values. Use the standard constant `RELATIVE_EQ_EPS` defined in `src/lib.rs::test_utils`:
+  ```rust
+  use crate::test_utils::RELATIVE_EQ_EPS;
+  use approx::relative_eq;
+
+  // Good: use the standard constant with both parameters
+  assert!(relative_eq!(a.norm(), 1.0, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
 
   // Avoid: magic numbers
-  assert!(abs_diff_eq!(a.norm(), 1.0, epsilon = 1e-10));
+  assert!(relative_eq!(a.norm(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
+
+  // WRONG: using only max_relative fails for values near zero
+  // assert!(relative_eq!(a, 0.0, max_relative = RELATIVE_EQ_EPS));
   ```
   For integration tests (`tests/` directory), define the constant locally since `test_utils` is `pub(crate)`.
+- **Always use both `epsilon` AND `max_relative`**: The `epsilon` parameter provides absolute tolerance for values near zero, while `max_relative` provides relative tolerance for larger values. Using both ensures robust comparisons across all magnitudes.
 - **Use `prop_assert!` in proptest blocks**: Inside `proptest!` blocks, always use `prop_assert!` instead of `assert!`. This provides better error reporting with counterexamples:
   ```rust
   proptest! {
       #[test]
       fn rotor_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
           let rotated = r.rotate(v);
-          // Good: prop_assert! with standard epsilon constant
-          prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
+          // Good: prop_assert! with relative_eq! using both epsilon and max_relative
+          prop_assert!(relative_eq!(v.norm(), rotated.norm(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
 
           // Avoid: assert! loses proptest's shrinking and reporting benefits
           // Avoid: magic numbers like 1e-9
+          // Avoid: using only max_relative (fails for values near zero)
       }
   }
   ```
@@ -440,6 +456,20 @@ cargo run --package clifford-codegen -- discover 3 0 1
 # List blades for an algebra
 cargo run --package clifford-codegen -- blades algebras/projective3.toml
 ```
+
+#### Generated Code Quality
+
+**The code generator must produce clean, warning-free Rust code:**
+
+- **No clippy warnings** - Generated code must pass `cargo clippy` without warnings
+- **No warning suppressions** - Never add `#[allow(dead_code)]`, `#[allow(unused)]`, or similar attributes to hide warnings
+- **If generated code produces warnings**, fix the generator to produce correct code instead
+
+**When you see warnings in generated code:**
+1. Identify the root cause in the codegen tool
+2. Fix the generator to avoid producing that pattern
+3. Regenerate all algebras
+4. Verify no warnings remain
 
 #### When to Use Codegen
 

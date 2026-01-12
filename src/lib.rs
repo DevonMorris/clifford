@@ -80,10 +80,18 @@ impl std::error::Error for ConstraintError {}
 /// Test utilities available only during testing.
 #[cfg(test)]
 pub(crate) mod test_utils {
-    /// Standard epsilon for absolute difference comparisons in tests.
+    /// Standard epsilon for relative comparisons in tests.
     ///
     /// Use this constant instead of magic numbers like `1e-10` or `1e-9`.
-    /// This value is chosen to be strict enough for most operations while
-    /// allowing for reasonable floating-point accumulation in compound operations.
-    pub const ABS_DIFF_EQ_EPS: f64 = 1e-10;
+    /// Relative comparisons are more robust than absolute comparisons because
+    /// they scale with the magnitude of values being compared.
+    ///
+    /// # Example
+    /// ```ignore
+    /// use approx::relative_eq;
+    /// use crate::test_utils::RELATIVE_EQ_EPS;
+    ///
+    /// prop_assert!(relative_eq!(a, b, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+    /// ```
+    pub const RELATIVE_EQ_EPS: f64 = 1e-10;
 }

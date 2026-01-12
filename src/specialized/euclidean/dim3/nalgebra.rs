@@ -402,8 +402,8 @@ impl<T: Float + na::RealField> From<na::Rotation3<T>> for Rotor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     proptest! {
@@ -411,21 +411,21 @@ mod tests {
         fn vector_roundtrip(v in any::<Vector<f64>>()) {
             let na_v: na::Vector3<f64> = v.into();
             let back: Vector<f64> = na_v.into();
-            prop_assert!(abs_diff_eq!(v, back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(v, back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn bivector_dual_roundtrip(b in any::<Bivector<f64>>()) {
             let na_v: na::Vector3<f64> = b.into();
             let back: Bivector<f64> = na_v.into();
-            prop_assert!(abs_diff_eq!(b, back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(b, back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn bivector_matrix_roundtrip(b in any::<Bivector<f64>>()) {
             let m: na::Matrix3<f64> = b.into();
             let back: Bivector<f64> = m.try_into().unwrap();
-            prop_assert!(abs_diff_eq!(b, back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(b, back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -436,7 +436,7 @@ mod tests {
             let sum = m + m.transpose();
             for i in 0..3 {
                 for j in 0..3 {
-                    prop_assert!(sum[(i, j)].abs() < ABS_DIFF_EQ_EPS);
+                    prop_assert!(sum[(i, j)].abs() < RELATIVE_EQ_EPS);
                 }
             }
         }
@@ -453,7 +453,7 @@ mod tests {
             let test_v = Vector::new(1.0, 2.0, 3.0);
             let rotated_orig = r.rotate(test_v);
             let rotated_back = back.rotate(test_v);
-            prop_assert!(abs_diff_eq!(rotated_orig, rotated_back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -465,7 +465,7 @@ mod tests {
             let test_v = Vector::new(1.0, 2.0, 3.0);
             let rotated_orig = r.rotate(test_v);
             let rotated_back = back.rotate(test_v);
-            prop_assert!(abs_diff_eq!(rotated_orig, rotated_back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -484,7 +484,7 @@ mod tests {
             let rotated_na = q * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();
-            prop_assert!(abs_diff_eq!(rotated_ga, rotated_back, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(rotated_ga, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -493,9 +493,9 @@ mod tests {
             let na_v: na::Vector3<f64> = b.into();
             let dual_v = b.dual();
 
-            prop_assert!(abs_diff_eq!(na_v.x, dual_v.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(na_v.y, dual_v.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(na_v.z, dual_v.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(na_v.x, dual_v.x(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(na_v.y, dual_v.y(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(na_v.z, dual_v.z(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 

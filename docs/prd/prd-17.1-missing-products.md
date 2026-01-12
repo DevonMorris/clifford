@@ -1,6 +1,6 @@
 # PRD-17.1: Missing Product Generation
 
-**Status**: Draft
+**Status**: Complete
 **Parent**: [PRD-17: Codegen Product Completeness and Documentation](prd-17-codegen-products.md)
 **Goal**: Add generation for all standard GA products: interior, left/right contraction, scalar
 

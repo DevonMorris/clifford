@@ -15,6 +15,8 @@ use crate::symbolic::{
     SymbolicProduct,
 };
 
+use super::unary::UnaryGenerator;
+
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
@@ -23,12 +25,20 @@ pub enum ProductKind {
     Geometric,
     /// Exterior product (wedge, grade-raising).
     Exterior,
-    /// Left contraction (inner product).
+    /// Interior product (symmetric inner, grade |ga - gb|).
+    Interior,
+    /// Left contraction (A ⌋ B, grade gb - ga when ga <= gb).
     LeftContraction,
-    /// Regressive product (dual of exterior).
+    /// Right contraction (A ⌊ B, grade ga - gb when gb <= ga).
+    RightContraction,
+    /// Regressive product (meet, dual of exterior, grade ga + gb - dim).
     Regressive,
     /// Scalar product (grade-0 part of geometric).
     Scalar,
+    /// Geometric antiproduct (complement(complement(a) * complement(b))).
+    Antigeometric,
+    /// Antiscalar product (grade-n part of antigeometric).
+    Antiscalar,
 }
 
 /// A term in a product expression.
@@ -142,10 +152,17 @@ impl<'a> ProductGenerator<'a> {
         let imports = self.generate_imports();
         let geometric = self.generate_all_geometric();
         let exterior = self.generate_all_exterior();
-        let inner = self.generate_all_inner();
+        let interior = self.generate_all_interior();
+        let left_contraction = self.generate_all_inner(); // Left contraction (inner)
+        let right_contraction = self.generate_all_right_contraction();
+        let regressive = self.generate_all_regressive();
         let scalar = self.generate_all_scalar();
         let sandwich = self.generate_all_sandwich();
         let antisandwich = self.generate_all_antisandwich();
+
+        // Generate unary operations
+        let unary_gen = UnaryGenerator::new(self.spec);
+        let unary = unary_gen.generate_all();
 
         quote! {
             #header
@@ -162,9 +179,24 @@ impl<'a> ProductGenerator<'a> {
             #exterior
 
             // ============================================================
-            // Inner Products (Left Contraction)
+            // Interior Products (Symmetric Inner)
             // ============================================================
-            #inner
+            #interior
+
+            // ============================================================
+            // Left Contraction Products
+            // ============================================================
+            #left_contraction
+
+            // ============================================================
+            // Right Contraction Products
+            // ============================================================
+            #right_contraction
+
+            // ============================================================
+            // Regressive Products (Meet)
+            // ============================================================
+            #regressive
 
             // ============================================================
             // Scalar Products
@@ -180,6 +212,11 @@ impl<'a> ProductGenerator<'a> {
             // Antisandwich Products (for PGA transformations)
             // ============================================================
             #antisandwich
+
+            // ============================================================
+            // Unary Operations (Reverse, Antireverse, Complement)
+            // ============================================================
+            #unary
         }
     }
 
@@ -418,6 +455,178 @@ impl<'a> ProductGenerator<'a> {
 
         let doc = format!(
             "Left contraction: {} | {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Interior Products (Symmetric Inner)
+    // ========================================================================
+
+    /// Generates all interior (symmetric inner) product functions.
+    fn generate_all_interior(&self) -> TokenStream {
+        if self.spec.products.interior.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .interior
+            .iter()
+            .filter_map(|entry| self.generate_interior_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an interior product from a product entry.
+    fn generate_interior_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "interior_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Interior);
+
+        let doc = format!(
+            "Interior product (symmetric inner): {} · {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Right Contraction Products
+    // ========================================================================
+
+    /// Generates all right contraction product functions.
+    fn generate_all_right_contraction(&self) -> TokenStream {
+        if self.spec.products.right_contraction.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .right_contraction
+            .iter()
+            .filter_map(|entry| self.generate_right_contraction_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a right contraction from a product entry.
+    fn generate_right_contraction_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "right_contract_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        let field_exprs = self.generate_expression_symbolic(
+            type_a,
+            type_b,
+            output_type,
+            ProductKind::RightContraction,
+        );
+
+        let doc = format!(
+            "Right contraction: {} ⌊ {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Regressive Products (Meet)
+    // ========================================================================
+
+    /// Generates all regressive (meet) product functions.
+    fn generate_all_regressive(&self) -> TokenStream {
+        if self.spec.products.regressive.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .regressive
+            .iter()
+            .filter_map(|entry| self.generate_regressive_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a regressive product from a product entry.
+    fn generate_regressive_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "regressive_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Regressive);
+
+        let doc = format!(
+            "Regressive product (meet): {} ∨ {} -> {}",
             entry.lhs, entry.rhs, entry.output
         );
 
@@ -768,12 +977,20 @@ impl<'a> ProductGenerator<'a> {
                             vec![]
                         }
                     }
+                    ProductKind::Interior => {
+                        // Interior product: |ga - gb|
+                        vec![ga.abs_diff(gb)]
+                    }
                     ProductKind::LeftContraction => {
                         if let Some(g) = left_contraction_grade(ga, gb) {
                             vec![g]
                         } else {
                             vec![]
                         }
+                    }
+                    ProductKind::RightContraction => {
+                        // Right contraction: ga - gb when gb <= ga
+                        if gb <= ga { vec![ga - gb] } else { vec![] }
                     }
                     ProductKind::Regressive => {
                         // Regressive product: (a* ^ b*)* where * is dual
@@ -791,6 +1008,17 @@ impl<'a> ProductGenerator<'a> {
                         } else {
                             vec![]
                         }
+                    }
+                    ProductKind::Antigeometric => {
+                        // Antigeometric: same grade rules as geometric but with antigrades
+                        // antigrade(a ⊛ b) = antigrade(a) + antigrade(b) ± 2k
+                        // where antigrade = n - grade
+                        // For now, use full geometric grades as the antiproduct produces similar structure
+                        geometric_grades(ga, gb, dim)
+                    }
+                    ProductKind::Antiscalar => {
+                        // Antiscalar: grade-n part of antigeometric
+                        vec![dim]
                     }
                 };
 
@@ -838,6 +1066,13 @@ impl<'a> ProductGenerator<'a> {
                             .map(|g| g == result_grade)
                             .unwrap_or(false)
                     }
+                    ProductKind::Interior => {
+                        // Interior product: result grade = |ga - gb|
+                        let a_grade = Blade::from_index(a_blade).grade();
+                        let b_grade = Blade::from_index(b_blade).grade();
+                        let result_grade = Blade::from_index(result_blade).grade();
+                        result_grade == a_grade.abs_diff(b_grade)
+                    }
                     ProductKind::LeftContraction => {
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
@@ -846,11 +1081,26 @@ impl<'a> ProductGenerator<'a> {
                             .map(|g| g == result_grade)
                             .unwrap_or(false)
                     }
+                    ProductKind::RightContraction => {
+                        // Right contraction: ga - gb when gb <= ga
+                        let a_grade = Blade::from_index(a_blade).grade();
+                        let b_grade = Blade::from_index(b_blade).grade();
+                        let result_grade = Blade::from_index(result_blade).grade();
+                        b_grade <= a_grade && result_grade == a_grade - b_grade
+                    }
                     ProductKind::Regressive => {
-                        // TODO: implement regressive product filtering
-                        false
+                        // Regressive (meet): ga + gb - dim when ga + gb >= dim
+                        let a_grade = Blade::from_index(a_blade).grade();
+                        let b_grade = Blade::from_index(b_blade).grade();
+                        let result_grade = Blade::from_index(result_blade).grade();
+                        let dim = self.algebra.dim();
+                        a_grade + b_grade >= dim && result_grade == a_grade + b_grade - dim
                     }
                     ProductKind::Scalar => result_blade == 0,
+                    ProductKind::Antigeometric | ProductKind::Antiscalar => {
+                        // Antiproducts use table.antiproduct() instead - handled separately
+                        false
+                    }
                 };
 
                 if include {
@@ -1128,8 +1378,7 @@ impl<'a> ProductGenerator<'a> {
                 1 => base_expr,
                 2 => quote! { T::TWO * #base_expr },
                 n => {
-                    let n_i8 = n as i8;
-                    quote! { T::from_i8(#n_i8) * #base_expr }
+                    quote! { T::from_i8(#n) * #base_expr }
                 }
             };
 

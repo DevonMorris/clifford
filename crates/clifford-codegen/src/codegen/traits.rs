@@ -737,7 +737,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -753,7 +753,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -768,7 +768,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -813,7 +813,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -862,7 +862,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Exterior product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );

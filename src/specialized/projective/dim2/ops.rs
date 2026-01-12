@@ -94,7 +94,7 @@ impl<T: Float> Line<T> {
     ///
     /// ```
     /// use clifford::specialized::projective::dim2::Line;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// // x = 0 (y-axis)
     /// let l1: Line<f64> = Line::y_axis();
@@ -104,8 +104,8 @@ impl<T: Float> Line<T> {
     /// // Intersection is the origin
     /// let p = l1.meet(&l2);
     /// if let Some((x, y)) = p.to_cartesian() {
-    ///     assert!(abs_diff_eq!(x, 0.0, epsilon = 1e-10));
-    ///     assert!(abs_diff_eq!(y, 0.0, epsilon = 1e-10));
+    ///     assert!(relative_eq!(x, 0.0, epsilon = 1e-10, max_relative = 1e-10));
+    ///     assert!(relative_eq!(y, 0.0, epsilon = 1e-10, max_relative = 1e-10));
     /// }
     /// ```
     #[inline]
@@ -210,17 +210,17 @@ impl<T: Float> Line<T> {
     /// ```
     /// use clifford::specialized::projective::dim2::Line;
     /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let x_axis: Line<f64> = Line::x_axis();
     /// let y_axis: Line<f64> = Line::y_axis();
     ///
     /// // Perpendicular lines have angle π/2
-    /// assert!(abs_diff_eq!(x_axis.angle(&y_axis), FRAC_PI_2, epsilon = 1e-10));
+    /// assert!(relative_eq!(x_axis.angle(&y_axis), FRAC_PI_2, epsilon = 1e-10, max_relative = 1e-10));
     ///
     /// // Parallel lines have angle 0
     /// let parallel = Line::from_implicit(0.0, 1.0, 5.0); // y = -5
-    /// assert!(abs_diff_eq!(x_axis.angle(&parallel), 0.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(x_axis.angle(&parallel), 0.0, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     #[inline]
     pub fn angle(&self, other: &Line<T>) -> T {
@@ -263,21 +263,21 @@ impl<T: Float> Motor<T> {
     /// ```
     /// use clifford::specialized::projective::dim2::{Point, Motor};
     /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
+    /// use approx::relative_eq;
     ///
     /// let p = Point::new(1.0, 0.0);
     ///
     /// // 90° rotation
     /// let rotor = Motor::from_rotation(FRAC_PI_2);
     /// let rotated = rotor.transform_point(&p);
-    /// assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(rotated.x(), 0.0, epsilon = 1e-10, max_relative = 1e-10));
+    /// assert!(relative_eq!(rotated.y(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
     ///
     /// // Translation
     /// let trans = Motor::from_translation(2.0, 3.0);
     /// let translated = trans.transform_point(&p);
-    /// assert!(abs_diff_eq!(translated.x(), 3.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(translated.y(), 3.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(translated.x(), 3.0, epsilon = 1e-10, max_relative = 1e-10));
+    /// assert!(relative_eq!(translated.y(), 3.0, epsilon = 1e-10, max_relative = 1e-10));
     /// ```
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
@@ -379,8 +379,8 @@ impl<T: Float> Motor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
 
     #[test]
     fn point_join_gives_line_through_both() {
@@ -391,8 +391,18 @@ mod tests {
         // Both points should be on the line (distance ~ 0)
         let d1 = line.distance_to_point(&p1);
         let d2 = line.distance_to_point(&p2);
-        assert!(abs_diff_eq!(d1.abs(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d2.abs(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            d1.abs(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            d2.abs(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -403,8 +413,18 @@ mod tests {
         let intersection = x_axis.meet(&y_axis);
 
         let (x, y) = intersection.to_cartesian().unwrap();
-        assert!(abs_diff_eq!(x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            x,
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            y,
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -413,8 +433,18 @@ mod tests {
         let m: Motor<f64> = Motor::identity();
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            p.x(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            p.y(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -423,8 +453,18 @@ mod tests {
         let m = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -433,8 +473,18 @@ mod tests {
         let m = Motor::from_translation(3.0, 4.0);
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), 4.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 6.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            4.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            6.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -450,8 +500,18 @@ mod tests {
         let result = composed.transform_point(&p);
 
         // (1,0) -> rotated to (0,1) -> translated to (1,3)
-        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            result.x(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -462,8 +522,18 @@ mod tests {
         let transformed = m.transform_point(&p);
         let back = m.inverse().transform_point(&transformed);
 
-        assert!(abs_diff_eq!(back.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(back.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            back.x(),
+            p.x(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            back.y(),
+            p.y(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -474,50 +544,60 @@ mod tests {
     fn point_geometric_norm() {
         // Point at (3, 4) has distance 5 from origin
         let p = Point::new(3.0, 4.0);
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             p.geometric_norm(),
             5.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
 
         // Origin has geometric norm 0
         let origin: Point<f64> = Point::origin();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             origin.geometric_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
     #[test]
     fn point_bulk_weight_norm() {
         let p = Point::new(3.0, 4.0);
-        assert!(abs_diff_eq!(p.bulk_norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
+            p.bulk_norm(),
+            5.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
             p.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(p.attitude(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            p.attitude(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
     fn line_geometric_norm() {
         // X axis at y=0 has distance 0 from origin
         let x_axis: Line<f64> = Line::x_axis();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             x_axis.geometric_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
 
         // Line y = 3 has distance 3 from origin
         let offset_line = Line::from_implicit(0.0, 1.0, -3.0);
         let unitized = offset_line.unitized();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             unitized.geometric_norm(),
             3.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -525,21 +605,31 @@ mod tests {
     fn line_bulk_weight_norm() {
         // Y axis: normal (1, 0), distance 0
         let y_axis: Line<f64> = Line::y_axis();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             y_axis.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             y_axis.bulk_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
 
         // Attitude should be the normal direction
         let att = y_axis.attitude();
-        assert!(abs_diff_eq!(att.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            att.x(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            att.y(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -548,9 +638,24 @@ mod tests {
         let rev = line.reverse();
 
         // Reverse negates all components
-        assert!(abs_diff_eq!(rev.e12, -1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e20, -2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e01, -3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            rev.e12,
+            -1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            rev.e20,
+            -2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            rev.e01,
+            -3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -560,16 +665,21 @@ mod tests {
         let unitized = line.unitized();
 
         // Weight norm should be 1
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             unitized.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
 
         // Normal should be unit length
         let n = unitized.normal();
         let norm = (n.x() * n.x() + n.y() * n.y()).sqrt();
-        assert!(abs_diff_eq!(norm, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(relative_eq!(
+            norm,
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     // ========================================================================
@@ -580,10 +690,10 @@ mod tests {
     fn line_angle_perpendicular() {
         let x_axis: Line<f64> = Line::x_axis();
         let y_axis: Line<f64> = Line::y_axis();
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             x_axis.angle(&y_axis),
             std::f64::consts::FRAC_PI_2,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -591,10 +701,10 @@ mod tests {
     fn line_angle_parallel() {
         let x_axis: Line<f64> = Line::x_axis();
         let parallel = Line::from_implicit(0.0, 1.0, 5.0); // y = -5
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             x_axis.angle(&parallel),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -602,10 +712,10 @@ mod tests {
     fn line_angle_symmetric() {
         let l1: Line<f64> = Line::from_implicit(1.0, 2.0, 3.0);
         let l2: Line<f64> = Line::from_implicit(2.0, -1.0, 1.0);
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             l1.angle(&l2),
             l2.angle(&l1),
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -616,6 +726,6 @@ mod tests {
         let angle = l1.angle(&l2);
         // Angle should be in [0, π/2]
         assert!(angle >= 0.0);
-        assert!(angle <= std::f64::consts::FRAC_PI_2 + ABS_DIFF_EQ_EPS);
+        assert!(angle <= std::f64::consts::FRAC_PI_2 + RELATIVE_EQ_EPS);
     }
 }

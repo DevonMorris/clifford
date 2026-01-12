@@ -354,8 +354,8 @@ impl Conformal3 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     // ========================================================================
@@ -414,7 +414,7 @@ mod tests {
             // e∞ = e₋ + e₊ should square to zero
             let e_inf = Conformal2::e_infinity::<f64>() * s;
             let sq = &e_inf * &e_inf;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -422,7 +422,7 @@ mod tests {
             // e₀ = (e₋ - e₊) / 2 should square to zero
             let e_o = Conformal2::e_origin::<f64>() * s;
             let sq = &e_o * &e_o;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -431,7 +431,7 @@ mod tests {
             let e_inf = Conformal2::e_infinity::<f64>();
             let e_o = Conformal2::e_origin::<f64>();
             let dot = e_inf.inner(&e_o).scalar_part();
-            prop_assert!(abs_diff_eq!(dot, -1.0, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(dot, -1.0, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -443,7 +443,7 @@ mod tests {
             // e∞ = e₋ + e₊ should square to zero
             let e_inf = Conformal3::e_infinity::<f64>() * s;
             let sq = &e_inf * &e_inf;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -451,7 +451,7 @@ mod tests {
             // e₀ = (e₋ - e₊) / 2 should square to zero
             let e_o = Conformal3::e_origin::<f64>() * s;
             let sq = &e_o * &e_o;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -460,7 +460,7 @@ mod tests {
             let e_inf = Conformal3::e_infinity::<f64>();
             let e_o = Conformal3::e_origin::<f64>();
             let dot = e_inf.inner(&e_o).scalar_part();
-            prop_assert!(abs_diff_eq!(dot, -1.0, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(dot, -1.0, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -475,7 +475,7 @@ mod tests {
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -486,15 +486,15 @@ mod tests {
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn conformal3_reverse_involutory(a in any::<Multivector<f64, Conformal3>>()) {
-            prop_assert!(abs_diff_eq!(
+            prop_assert!(relative_eq!(
                 a.reverse().reverse(),
                 a,
-                epsilon = ABS_DIFF_EQ_EPS
+                max_relative = RELATIVE_EQ_EPS
             ));
         }
 
@@ -505,7 +505,7 @@ mod tests {
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -516,7 +516,7 @@ mod tests {
         ) {
             let lhs = a.exterior(&b).exterior(&c);
             let rhs = a.exterior(&b.exterior(&c));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -537,7 +537,7 @@ mod tests {
             // Inner product should match Euclidean dot product
             let cga_dot = cga_a.inner(&cga_b).scalar_part();
             let expected_dot = ax * bx + ay * by + az * bz;
-            prop_assert!(abs_diff_eq!(cga_dot, expected_dot, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(cga_dot, expected_dot, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 

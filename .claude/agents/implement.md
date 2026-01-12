@@ -203,8 +203,9 @@ where
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
    - Use `prop_assert!` instead of `assert!` inside `proptest!` blocks for better error reporting
-   - Use `abs_diff_eq!` from `approx` crate for floating-point comparisons
-   - Use `ABS_DIFF_EQ_EPS` constant from `crate::test_utils` instead of magic numbers like `1e-10`
+   - Use `relative_eq!` from `approx` crate with BOTH `epsilon` and `max_relative` parameters
+   - Use `RELATIVE_EQ_EPS` constant from `crate::test_utils` for both parameters
+   - Example: `relative_eq!(a, b, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS)`
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
@@ -323,6 +324,20 @@ Generated products use `new_unchecked()` for constrained types because:
 4. Review generated code in `src/generated/`
 
 **Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
+
+### Generated Code Quality
+
+**The code generator must produce clean, warning-free Rust code:**
+
+- **No clippy warnings** - Generated code must pass `cargo clippy` without warnings
+- **No warning suppressions** - Never add `#[allow(dead_code)]`, `#[allow(unused)]`, or similar attributes to hide warnings
+- **If generated code produces warnings**, fix the generator to produce correct code instead
+
+**When you see warnings in generated code:**
+1. Identify the root cause in the codegen tool
+2. Fix the generator to avoid producing that pattern
+3. Regenerate all algebras
+4. Verify no warnings remain
 
 ### Using Generated Products in Extensions
 

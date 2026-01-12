@@ -420,7 +420,7 @@ impl<T: Float> Default for Line<T> {
 /// ```
 /// use clifford::specialized::projective::dim2::{Point, Motor};
 /// use std::f64::consts::FRAC_PI_2;
-/// use approx::abs_diff_eq;
+/// use approx::relative_eq;
 ///
 /// // 90° rotation around origin
 /// let rotation = Motor::from_rotation(FRAC_PI_2);
@@ -436,8 +436,8 @@ impl<T: Float> Default for Line<T> {
 /// let result = combined.transform_point(&p);
 ///
 /// // (1,0) rotated 90° becomes (0,1), then translated to (1,3)
-/// assert!(abs_diff_eq!(result.x(), 1.0, epsilon = 1e-10));
-/// assert!(abs_diff_eq!(result.y(), 3.0, epsilon = 1e-10));
+/// assert!(relative_eq!(result.x(), 1.0, epsilon = 1e-10, max_relative = 1e-10));
+/// assert!(relative_eq!(result.y(), 3.0, epsilon = 1e-10, max_relative = 1e-10));
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]

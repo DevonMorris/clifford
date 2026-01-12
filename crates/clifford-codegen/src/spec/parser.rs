@@ -661,18 +661,19 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
             .collect()
     };
 
-    // Note: We use left_contraction for the left_contraction field since inner product
-    // (symmetric) has subtle differences. Left contraction is more commonly used in GA.
-    // Inner product entries are not stored separately but could be added if needed.
-    let _ = inner_table; // Mark as intentionally unused for now
+    // Note: Interior product is the symmetric inner product.
+    // Left contraction is more commonly used in GA, but we provide both.
 
     ProductsSpec {
         geometric: convert_entries(geometric_table),
         exterior: convert_entries(exterior_table),
+        interior: convert_entries(inner_table), // Symmetric inner product
         left_contraction: convert_entries(left_contraction_table),
-        right_contraction: vec![], // Symmetric to left contraction - can be added if needed
-        regressive: vec![],        // For projective GA - can be added if needed
-        scalar: vec![],            // Can be derived from geometric - can be added if needed
+        right_contraction: vec![], // Dual of left contraction - can be added if needed
+        regressive: vec![],        // For projective GA meet - can be added if needed
+        scalar: vec![],            // Grade-0 part of geometric - can be added if needed
+        antigeometric: vec![],     // For PGA antisandwich - can be added if needed
+        antiscalar: vec![],        // Grade-n part of antigeometric - can be added if needed
     }
 }
 
