@@ -1,8 +1,8 @@
-# PRD-17.8: Product Normalization for Constrained Types
+# PRD-17.8: Use Constrained Constructors in Generated Products
 
 **Status**: Draft
 **Parent**: [PRD-17](prd-17-codegen-products.md)
-**Goal**: Remove `new_unchecked` from generated products and add automatic normalization to maintain type invariants
+**Goal**: Replace `new_unchecked` with `new` in generated products to maintain type invariants via existing constraint solving
 
 ## Problem Statement
 
@@ -16,53 +16,67 @@ pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
 }
 ```
 
-**The problem:** Due to floating-point arithmetic errors, the output may not satisfy the type's constraints:
-
-1. **Study condition drift**: `s * e0123 + e23 * e01 + e31 * e02 + e12 * e03 = 0` may become non-zero
-2. **Unit norm drift**: `s² + e23² + e31² + e12² = 1` may drift from unity
-3. **Plücker constraint drift**: `e01 * e23 + e02 * e31 + e03 * e12 = 0` for lines
-4. **Accumulation**: Errors compound with repeated operations (e.g., animation loops)
-
-### Concrete Example
-
-```rust
-// After many compositions, errors accumulate
-let mut motor = Motor::identity();
-for _ in 0..1000 {
-    motor = motor.compose(&small_rotation);
-}
-
-// motor may no longer satisfy Study condition
-// motor.study_residual() could be 1e-6 or worse
-// motor.weight_norm() could be 1.0001 or 0.9999
-```
-
-### Current Workaround
-
-Users must manually call `normalized()` after operations:
-
-```rust
-// Current user code (verbose, easy to forget)
-let result = motor1.compose(&motor2).normalized();
-```
-
-This is:
-- Easy to forget
-- Inconsistent (some code paths normalize, others don't)
-- Not enforced by the type system
+**The problem:** Due to floating-point arithmetic errors, the output may not satisfy the type's constraints, and `new_unchecked` bypasses all validation and constraint solving.
 
 ## Solution
 
-### Option A: Normalize in Generated Products (Recommended)
-
-Generated products for constrained types should automatically normalize:
+Use the existing `new()` constructor which already applies constraint solving:
 
 ```rust
-// Generated code with normalization
+// Correct generated code
+pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
+    // ... compute product terms ...
+    Motor::new(s, e23, e31, e12, e01, e02, e03)  // e0123 solved from Study constraint
+}
+```
+
+The `new()` constructor:
+1. Takes only the free (unconstrained) fields
+2. Solves for constrained fields using the constraint expressions
+3. Guarantees the output satisfies all type invariants
+
+### How Constraint Solving Already Works
+
+For `Motor`, the TOML specifies:
+
+```toml
+[[types.Motor.constraints]]
+name = "study"
+expression = "s*e0123 + e23*e01 + e31*e02 + e12*e03 = 0"
+solve_for = "e0123"
+```
+
+The generated `new()` constructor solves for `e0123`:
+
+```rust
+impl<T: Float> Motor<T> {
+    pub fn new(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T) -> Self {
+        // Solve: e0123 = -(e23*e01 + e31*e02 + e12*e03) / s
+        let e0123 = -(e23 * e01 + e31 * e02 + e12 * e03) / s;
+        Self { s, e23, e31, e12, e01, e02, e03, e0123 }
+    }
+}
+```
+
+### What About Unit Norm?
+
+The unit norm constraint is different - it's a normalization constraint, not a projection constraint:
+
+```toml
+[[types.Motor.constraints]]
+name = "unit"
+expression = "s*s + e23*e23 + e31*e31 + e12*e12 = 1"
+solve_for = "s"
+sign = "positive"
+```
+
+For this, we need to normalize *before* calling `new()`:
+
+```rust
 pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
     // ... compute product terms ...
 
-    // Normalize to maintain invariants
+    // Normalize weight (unit constraint)
     let wn = (s * s + e23 * e23 + e31 * e31 + e12 * e12).sqrt();
     let s = s / wn;
     let e23 = e23 / wn;
@@ -72,285 +86,140 @@ pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
     let e02 = e02 / wn;
     let e03 = e03 / wn;
 
-    // Project e0123 to satisfy Study condition
-    let e0123 = -(e23 * e01 + e31 * e02 + e12 * e03) / s;
-
-    Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
+    // new() will solve for e0123 from Study constraint
+    Motor::new(s, e23, e31, e12, e01, e02, e03)
 }
-```
-
-**Pros:**
-- Automatic, no user intervention needed
-- Invariants always maintained
-- Small overhead per operation (sqrt + division)
-
-**Cons:**
-- Slightly slower (but typically negligible)
-- May not be desired for intermediate calculations
-
-### Option B: Separate Normalized and Raw Products
-
-Generate both variants:
-
-```rust
-// Raw product (for advanced users, intermediate calculations)
-pub fn geometric_motor_motor_raw<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
-    // ... compute without normalization ...
-    Motor::new_unchecked(...)
-}
-
-// Normalized product (default, maintains invariants)
-pub fn geometric_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
-    geometric_motor_motor_raw(a, b).normalized()
-}
-```
-
-**Pros:**
-- Flexibility for advanced users
-- Clear intent in function names
-
-**Cons:**
-- API surface doubles
-- Users might accidentally use `_raw` variants
-
-### Option C: Configurable via TOML
-
-Allow per-type configuration:
-
-```toml
-[types.Motor]
-grades = [0, 2, 4]
-versor = true
-constraints = [...]
-
-# New: normalization policy for products
-normalization = "always"  # or "never" or "explicit"
 ```
 
 ## Implementation Plan
 
-### Phase 1: Add Normalization Functions to Generated Types
+### Phase 1: Categorize Constraint Types
 
-For each constrained type, generate a `normalize()` method that enforces all constraints:
+Constraints fall into two categories:
 
-```rust
-impl<T: Float> Motor<T> {
-    /// Normalize to satisfy all constraints (unit norm + Study condition).
-    ///
-    /// This should be called after operations that may cause drift.
-    #[inline]
-    pub fn normalize(&self) -> Self {
-        // 1. Normalize weight norm
-        let wn = self.weight_norm();
-        if wn < T::epsilon() {
-            return *self;
-        }
+| Type | Description | Example | Handling |
+|------|-------------|---------|----------|
+| **Projection** | Solve for one field from others | Study: `e0123 = f(s, e23, ...)` | Use `new()` constructor |
+| **Normalization** | Scale all fields to satisfy | Unit: `s² + e23² + ... = 1` | Normalize before `new()` |
 
-        let s = self.s() / wn;
-        let e23 = self.e23() / wn;
-        let e31 = self.e31() / wn;
-        let e12 = self.e12() / wn;
-        let e01 = self.e01() / wn;
-        let e02 = self.e02() / wn;
-        let e03 = self.e03() / wn;
-
-        // 2. Project e0123 to satisfy Study condition
-        let e0123 = if s.abs() > T::epsilon() {
-            -(e23 * e01 + e31 * e02 + e12 * e03) / s
-        } else {
-            T::zero()
-        };
-
-        Self::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
-    }
-}
-```
-
-### Phase 2: Update Product Generation
-
-Modify `generate_product_function()` to optionally include normalization:
-
-```rust
-fn generate_product_function(
-    &self,
-    lhs: &TypeSpec,
-    rhs: &TypeSpec,
-    output: &TypeSpec,
-    kind: ProductKind,
-) -> TokenStream {
-    let terms = self.compute_terms(lhs, rhs, output, kind);
-    let construction = self.generate_construction(&terms, output);
-
-    // If output type has constraints, wrap in normalization
-    if output.has_constraints() && self.should_normalize(kind) {
-        quote! {
-            pub fn #fn_name<T: Float>(a: &#lhs_ty<T>, b: &#rhs_ty<T>) -> #output_ty<T> {
-                #construction.normalize()
-            }
-        }
-    } else {
-        quote! {
-            pub fn #fn_name<T: Float>(a: &#lhs_ty<T>, b: &#rhs_ty<T>) -> #output_ty<T> {
-                #construction
-            }
-        }
-    }
-}
-```
-
-### Phase 3: TOML Configuration
-
-Add normalization policy to type specs:
-
-```toml
-[types.Motor]
-grades = [0, 2, 4]
-versor = true
-
-# Normalization policy for this type
-[types.Motor.normalization]
-# When to normalize products that output this type
-products = "always"  # "always", "never", "configurable"
-
-# Constraints to enforce during normalization
-constraints = ["unit", "study"]
-
-[types.Line]
-grades = [2]
-
-[types.Line.normalization]
-products = "never"  # Lines don't need normalization typically
-```
-
-### Phase 4: Update Constraint Specification
-
-Extend constraint spec to include normalization formula:
+Update constraint spec to indicate type:
 
 ```toml
 [[types.Motor.constraints]]
 name = "unit"
 expression = "s*s + e23*e23 + e31*e31 + e12*e12 = 1"
-solve_for = "s"
-sign = "positive"
-# New: normalization formula
-normalize = "divide_by_sqrt"  # Divide all components by sqrt of LHS
+constraint_type = "normalization"  # NEW
+normalize_fields = ["s", "e23", "e31", "e12", "e01", "e02", "e03"]
 
 [[types.Motor.constraints]]
 name = "study"
 expression = "s*e0123 + e23*e01 + e31*e02 + e12*e03 = 0"
+constraint_type = "projection"  # NEW (default)
 solve_for = "e0123"
-# New: normalization happens after unit constraint
-normalize_order = 2
 ```
 
-## Affected Products
+### Phase 2: Update Product Generation
 
-Products that output constrained types and need normalization:
+Modify product generation to:
 
-| Product | Output Type | Constraints |
-|---------|-------------|-------------|
-| `geometric_motor_motor` | Motor | unit + study |
-| `geometric_flector_flector` | Motor | unit + study |
-| `sandwich_motor_motor` | Motor | unit + study |
-| `antisandwich_motor_motor` | Motor | unit + study |
-| `geometric_rotor_rotor` | Rotor | unit |
-| `sandwich_rotor_*` | Rotor | unit |
-| `exterior_point_point` | Line | plücker |
+1. Identify normalization constraints on output type
+2. Generate normalization code for those constraints
+3. Call `new()` instead of `new_unchecked()`
 
-## Performance Considerations
+```rust
+fn generate_product_function(&self, ..., output: &TypeSpec) -> TokenStream {
+    let terms = self.compute_terms(...);
 
-### Cost of Normalization
+    // Get normalization constraints
+    let norm_constraints = output.constraints
+        .iter()
+        .filter(|c| c.constraint_type == ConstraintType::Normalization);
 
-Per motor normalization:
-- 4 multiplications (for weight norm squared)
-- 1 sqrt
-- 8 divisions (normalize components)
-- 4 multiplications + 2 additions (for Study projection)
+    // Generate normalization code
+    let normalization = self.generate_normalization(norm_constraints);
 
-**Total:** ~20 FLOPs per normalization
+    // Get free fields (not solved by projection constraints)
+    let free_fields = output.free_fields();
 
-For typical use cases (transforms at 60fps), this is negligible.
+    quote! {
+        pub fn #fn_name<T: Float>(a: &#lhs<T>, b: &#rhs<T>) -> #output<T> {
+            #terms
+            #normalization
+            #output::new(#(#free_fields),*)
+        }
+    }
+}
+```
 
-### When NOT to Normalize
+### Phase 3: Handle Edge Cases
 
-Some operations don't need normalization:
-- Intermediate calculations that will be normalized at the end
-- Read-only inspections (no modification)
-- Known-clean inputs (e.g., identity motor)
+**Types with only projection constraints (e.g., Line with Plücker):**
+```rust
+// Just use new(), no normalization needed
+pub fn exterior_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Line<T> {
+    // ... compute terms ...
+    Line::new(e01, e02, e23, e31, e12)  // e03 solved from Plücker
+}
+```
 
-The `_raw` variant (Option B) allows bypassing for these cases.
+**Types with no constraints (e.g., Point, Plane):**
+```rust
+// Can use new() directly (same as new_unchecked for unconstrained types)
+pub fn exterior_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Plane<T> {
+    // ... compute terms ...
+    Plane::new(e023, e031, e012, e123)
+}
+```
+
+**Types with multiple normalization constraints:**
+```rust
+// Apply normalizations in order specified by constraint ordering
+```
 
 ## Deliverables
 
-- [ ] Add normalization policy to TypeSpec
-- [ ] Generate `normalize()` method for constrained types
-- [ ] Update product generation to call normalize when needed
-- [ ] Add TOML configuration for normalization policy
-- [ ] Generate `_raw` variants for advanced users (optional)
-- [ ] Update existing extension methods to use generated products
-- [ ] Add tests verifying constraints are maintained after many operations
-- [ ] Document normalization behavior in generated code
+- [ ] Add `constraint_type` field to constraint spec (default: "projection")
+- [ ] Add `normalize_fields` field for normalization constraints
+- [ ] Update product generation to use `new()` instead of `new_unchecked()`
+- [ ] Generate normalization code for normalization constraints
+- [ ] Update existing TOML files with constraint types
+- [ ] Regenerate all algebras
+- [ ] Add stress tests verifying constraints maintained after many operations
+
+## Files Changed
+
+| File | Action |
+|------|--------|
+| `crates/clifford-codegen/src/spec/ir.rs` | Add ConstraintType enum, normalize_fields |
+| `crates/clifford-codegen/src/spec/raw.rs` | Add raw constraint_type field |
+| `crates/clifford-codegen/src/spec/parser.rs` | Parse constraint_type |
+| `crates/clifford-codegen/src/codegen/products.rs` | Use new(), add normalization |
+| `algebras/*.toml` | Add constraint_type to constraints |
+| `src/generated/*/products.rs` | Regenerate |
 
 ## Testing Strategy
-
-### Stress Tests
 
 ```rust
 proptest! {
     #[test]
-    fn motor_composition_maintains_study_condition(
+    fn motor_composition_maintains_constraints(
         motors in prop::collection::vec(any::<Motor<f64>>(), 100..200)
     ) {
         let mut result = Motor::identity();
         for m in motors {
-            result = result.compose(&m);
+            result = geometric_motor_motor(&result, &m);
         }
 
-        // Should still satisfy constraints
+        // Constraints should be satisfied
         prop_assert!(result.study_residual().abs() < 1e-10);
         prop_assert!((result.weight_norm() - 1.0).abs() < 1e-10);
     }
 }
 ```
 
-### Comparison Tests
-
-```rust
-#[test]
-fn normalized_vs_raw_products() {
-    let a = Motor::from_rotation_x(0.1);
-    let b = Motor::from_translation(1.0, 2.0, 3.0);
-
-    // Both should give same result for clean inputs
-    let normalized = geometric_motor_motor(&a, &b);
-    let raw = geometric_motor_motor_raw(&a, &b);
-
-    assert!(abs_diff_eq!(normalized, raw, epsilon = 1e-14));
-}
-```
-
 ## Success Criteria
 
-1. Generated products maintain type constraints within floating-point tolerance
-2. No `new_unchecked` in products that output constrained types (except in `_raw` variants)
-3. Stress tests pass with 1000+ sequential operations
-4. Performance regression < 5% for typical workloads
-
-## Files Changed
-
-| File | Action |
-|------|--------|
-| `crates/clifford-codegen/src/codegen/products.rs` | Add normalization to product generation |
-| `crates/clifford-codegen/src/codegen/types.rs` | Generate normalize() methods |
-| `crates/clifford-codegen/src/spec/ir.rs` | Add normalization policy to TypeSpec |
-| `crates/clifford-codegen/src/spec/raw.rs` | Add raw normalization fields |
-| `crates/clifford-codegen/src/spec/parser.rs` | Parse normalization config |
-| `algebras/*.toml` | Add normalization configuration |
-| `src/generated/*/products.rs` | Regenerate with normalization |
-| `src/generated/*/types.rs` | Regenerate with normalize() methods |
-
-## References
-
-- [Geometric Algebra for Computer Science](https://geometricalgebra.org/) - Numerical stability
-- [Quaternion normalization](https://www.3dgep.com/understanding-quaternions/) - Similar problem in quaternion math
-- Current `Motor::normalized()` implementation in extensions.rs
+1. No `new_unchecked` in generated products for constrained types
+2. All constraint residuals < 1e-10 after 1000+ operations
+3. Generated products use `new()` which applies constraint solving
+4. Normalization constraints are applied before `new()` call
