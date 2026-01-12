@@ -52,6 +52,7 @@ mod proptest;
 mod sign;
 mod signature;
 mod table;
+mod versor;
 #[cfg(test)]
 mod verification;
 
@@ -66,3 +67,4 @@ pub use grade::{
 pub use sign::basis_product;
 pub use signature::Algebra;
 pub use table::ProductTable;
+pub use versor::{VersorInfo, VersorParity, versor_parity};

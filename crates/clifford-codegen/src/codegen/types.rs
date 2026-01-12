@@ -276,6 +276,7 @@ impl<'a> TypeGenerator<'a> {
         let unit_elements = self.generate_unit_elements(ty);
         let norm_methods = self.generate_norm_methods(ty);
         let reverse = self.generate_reverse(ty);
+        let transform_methods = self.generate_transform_methods(ty);
 
         quote! {
             impl<T: Float> #name<T> {
@@ -286,6 +287,7 @@ impl<'a> TypeGenerator<'a> {
                 #unit_elements
                 #norm_methods
                 #reverse
+                #transform_methods
             }
         }
     }
@@ -988,6 +990,58 @@ impl<'a> TypeGenerator<'a> {
                 Self::#constructor(#(#reversed_values),*)
             }
         }
+    }
+
+    /// Generates transform methods for versor types.
+    ///
+    /// For types marked as versors, generates `transform_*` methods for each
+    /// target type that can be transformed via the sandwich product.
+    fn generate_transform_methods(&self, ty: &TypeSpec) -> TokenStream {
+        // Only generate for versor types
+        let versor_spec = match &ty.versor {
+            Some(spec) => spec,
+            None => return quote! {},
+        };
+
+        // Get targets - either explicit or inferred
+        let targets = if versor_spec.sandwich_targets.is_empty() {
+            // Auto-detect would require more context - for now, skip if empty
+            return quote! {};
+        } else {
+            &versor_spec.sandwich_targets
+        };
+
+        let versor_name_lower = ty.name.to_lowercase();
+        let methods: Vec<TokenStream> = targets
+            .iter()
+            .filter_map(|target_name| {
+                let target_type = self.spec.types.iter().find(|t| &t.name == target_name)?;
+                if target_type.alias_of.is_some() {
+                    return None;
+                }
+
+                let target_ident = format_ident!("{}", target_name);
+                let target_name_lower = target_name.to_lowercase();
+                let method_name = format_ident!("transform_{}", target_name_lower);
+                let sandwich_fn = format_ident!("sandwich_{}_{}", versor_name_lower, target_name_lower);
+
+                let doc = format!(
+                    "Transforms a {} by this versor via sandwich product.\n\n\
+                     Computes `self * {} * self.reverse()`.",
+                    target_name, target_name_lower
+                );
+
+                Some(quote! {
+                    #[doc = #doc]
+                    #[inline]
+                    pub fn #method_name(&self, x: &#target_ident<T>) -> #target_ident<T> {
+                        super::products::#sandwich_fn(self, x)
+                    }
+                })
+            })
+            .collect();
+
+        quote! { #(#methods)* }
     }
 
     /// Generates the Default implementation.

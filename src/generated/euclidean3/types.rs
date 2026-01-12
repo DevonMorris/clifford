@@ -254,6 +254,21 @@ impl<T: Float> Rotor<T> {
     pub fn reverse(&self) -> Self {
         Self::new_unchecked(self.s, -self.xy, -self.xz, -self.yz)
     }
+    #[doc = "Transforms a Vector by this versor via sandwich product.\n\nComputes `self * vector * self.reverse()`."]
+    #[inline]
+    pub fn transform_vector(&self, x: &Vector<T>) -> Vector<T> {
+        super::products::sandwich_rotor_vector(self, x)
+    }
+    #[doc = "Transforms a Bivector by this versor via sandwich product.\n\nComputes `self * bivector * self.reverse()`."]
+    #[inline]
+    pub fn transform_bivector(&self, x: &Bivector<T>) -> Bivector<T> {
+        super::products::sandwich_rotor_bivector(self, x)
+    }
+    #[doc = "Transforms a Rotor by this versor via sandwich product.\n\nComputes `self * rotor * self.reverse()`."]
+    #[inline]
+    pub fn transform_rotor(&self, x: &Rotor<T>) -> Rotor<T> {
+        super::products::sandwich_rotor_rotor(self, x)
+    }
 }
 impl<T: Float> Default for Rotor<T> {
     fn default() -> Self {

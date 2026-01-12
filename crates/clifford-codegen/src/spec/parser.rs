@@ -10,7 +10,7 @@ use crate::discovery::{ProductType, infer_all_products};
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
-    SignConvention, SignatureSpec, TypeSpec, UserConstraint, normalize_constraint_expr,
+    SignConvention, SignatureSpec, TypeSpec, UserConstraint, VersorSpec, normalize_constraint_expr,
 };
 use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec, RawUserConstraint};
 
@@ -376,6 +376,20 @@ fn parse_type(
     let user_constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
     constraints.extend(user_constraints);
 
+    // Parse versor information
+    let versor = if raw.versor {
+        Some(VersorSpec {
+            is_unit: constraints.iter().any(|c| c.name == "unit"),
+            sandwich_targets: raw
+                .sandwich
+                .as_ref()
+                .map(|s| s.targets.clone())
+                .unwrap_or_default(),
+        })
+    } else {
+        None
+    };
+
     Ok(TypeSpec {
         name: name.to_string(),
         grades: raw.grades.clone(),
@@ -383,6 +397,7 @@ fn parse_type(
         fields,
         alias_of: raw.alias_of.clone(),
         constraints,
+        versor,
     })
 }
 

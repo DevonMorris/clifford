@@ -276,6 +276,7 @@ mod tests {
                 enforce: None,
                 has_domain_restriction: true,
             }],
+            versor: None,
         }
     }
 

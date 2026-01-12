@@ -238,3 +238,142 @@ pub fn outer_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Bivector<T
         -(b.y() * a.z()) + b.z() * a.y(),
     )
 }
+#[doc = "Sandwich product: Rotor * Vector * rev(Rotor) -> Vector"]
+#[inline]
+pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        v.s() * x.z() * v.xz() + v.xy() * x.z() * v.yz() - v.xz() * x.y() * v.yz()
+            + v.xz() * x.z() * v.s()
+            + v.xy() * x.y() * v.s()
+            + v.yz() * x.x() * v.yz()
+            + v.yz() * x.z() * v.xy()
+            - v.yz() * x.y() * v.xz()
+            - v.xz() * x.x() * v.xz()
+            + v.s() * x.x() * v.s()
+            + v.s() * x.y() * v.xy()
+            - v.xy() * x.x() * v.xy(),
+        -(v.xy() * x.z() * v.xz()) - v.yz() * x.y() * v.yz() - v.xz() * x.x() * v.yz()
+            + v.s() * x.y() * v.s()
+            - v.s() * x.x() * v.xy()
+            - v.xy() * x.x() * v.s()
+            + v.xz() * x.y() * v.xz()
+            - v.xy() * x.y() * v.xy()
+            + v.yz() * x.z() * v.s()
+            - v.xz() * x.z() * v.xy()
+            + v.s() * x.z() * v.yz()
+            - v.yz() * x.x() * v.xz(),
+        v.xy() * x.z() * v.xy() - v.xz() * x.y() * v.xy()
+            + v.s() * x.z() * v.s()
+            + v.yz() * x.x() * v.xy()
+            + v.xy() * x.x() * v.yz()
+            - v.yz() * x.y() * v.s()
+            - v.s() * x.y() * v.yz()
+            - v.yz() * x.z() * v.yz()
+            - v.xz() * x.x() * v.s()
+            - v.s() * x.x() * v.xz()
+            - v.xz() * x.z() * v.xz()
+            - v.xy() * x.y() * v.xz(),
+    )
+}
+#[doc = "Sandwich product: Rotor * Bivector * rev(Rotor) -> Bivector"]
+#[inline]
+pub fn sandwich_rotor_bivector<T: Float>(v: &Rotor<T>, x: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(
+        v.s() * x.xy() * v.s() - v.xz() * x.yz() * v.s()
+            + v.yz() * x.yz() * v.xy()
+            + v.xy() * x.yz() * v.yz()
+            + v.s() * x.xz() * v.yz()
+            - v.s() * x.yz() * v.xz()
+            - v.yz() * x.xy() * v.yz()
+            + v.yz() * x.xz() * v.s()
+            + v.xz() * x.xz() * v.xy()
+            + v.xy() * x.xz() * v.xz()
+            + v.xy() * x.xy() * v.xy()
+            - v.xz() * x.xy() * v.xz(),
+        -(v.yz() * x.xy() * v.s())
+            + v.xz() * x.yz() * v.yz()
+            + v.s() * x.xz() * v.s()
+            + v.s() * x.yz() * v.xy()
+            - v.xy() * x.xz() * v.xy()
+            + v.xz() * x.xy() * v.xy()
+            - v.yz() * x.xz() * v.yz()
+            + v.xy() * x.xy() * v.xz()
+            + v.xy() * x.yz() * v.s()
+            + v.xz() * x.xz() * v.xz()
+            + v.yz() * x.yz() * v.xz()
+            - v.s() * x.xy() * v.yz(),
+        v.xz() * x.xz() * v.yz() + v.yz() * x.yz() * v.yz() - v.xy() * x.yz() * v.xy()
+            + v.xz() * x.xy() * v.s()
+            + v.s() * x.xy() * v.xz()
+            - v.xz() * x.yz() * v.xz()
+            + v.yz() * x.xy() * v.xy()
+            + v.yz() * x.xz() * v.xz()
+            - v.s() * x.xz() * v.xy()
+            + v.xy() * x.xy() * v.yz()
+            - v.xy() * x.xz() * v.s()
+            + v.s() * x.yz() * v.s(),
+    )
+}
+#[doc = "Sandwich product: Rotor * Rotor * rev(Rotor) -> Rotor"]
+#[inline]
+pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(
+        -(v.xz() * x.yz() * v.xy()) + v.yz() * x.s() * v.yz() + v.xy() * x.s() * v.xy()
+            - v.xy() * x.xz() * v.yz()
+            - v.yz() * x.xy() * v.xz()
+            + v.xz() * x.s() * v.xz()
+            - v.xz() * x.xz() * v.s()
+            - v.yz() * x.yz() * v.s()
+            + v.yz() * x.xz() * v.xy()
+            + v.xz() * x.xy() * v.yz()
+            + v.s() * x.xy() * v.xy()
+            - v.xy() * x.xy() * v.s()
+            + v.s() * x.s() * v.s()
+            + v.s() * x.xz() * v.xz()
+            + v.s() * x.yz() * v.yz()
+            + v.xy() * x.yz() * v.xz(),
+        v.xy() * x.xy() * v.xy() - v.xz() * x.xy() * v.xz() - v.yz() * x.s() * v.xz()
+            + v.xy() * x.s() * v.s()
+            + v.xy() * x.yz() * v.yz()
+            + v.yz() * x.xz() * v.s()
+            + v.xz() * x.s() * v.yz()
+            + v.s() * x.xz() * v.yz()
+            + v.yz() * x.yz() * v.xy()
+            - v.xz() * x.yz() * v.s()
+            + v.xy() * x.xz() * v.xz()
+            - v.s() * x.yz() * v.xz()
+            - v.s() * x.s() * v.xy()
+            + v.xz() * x.xz() * v.xy()
+            - v.yz() * x.xy() * v.yz()
+            + v.s() * x.xy() * v.s(),
+        -(v.s() * x.s() * v.xz()) + v.xz() * x.xy() * v.xy() - v.yz() * x.xy() * v.s()
+            + v.xy() * x.xy() * v.xz()
+            + v.yz() * x.s() * v.xy()
+            - v.xy() * x.xz() * v.xy()
+            - v.s() * x.xy() * v.yz()
+            + v.s() * x.xz() * v.s()
+            - v.xy() * x.s() * v.yz()
+            + v.yz() * x.yz() * v.xz()
+            + v.xy() * x.yz() * v.s()
+            + v.xz() * x.xz() * v.xz()
+            - v.yz() * x.xz() * v.yz()
+            + v.xz() * x.s() * v.s()
+            + v.xz() * x.yz() * v.yz()
+            + v.s() * x.yz() * v.xy(),
+        v.s() * x.yz() * v.s() - v.xz() * x.s() * v.xy()
+            + v.xz() * x.xz() * v.yz()
+            + v.s() * x.xy() * v.xz()
+            + v.xy() * x.xy() * v.yz()
+            - v.s() * x.s() * v.yz()
+            + v.xy() * x.s() * v.xz()
+            - v.xy() * x.yz() * v.xy()
+            - v.xy() * x.xz() * v.s()
+            + v.yz() * x.yz() * v.yz()
+            - v.s() * x.xz() * v.xy()
+            + v.yz() * x.s() * v.s()
+            + v.yz() * x.xy() * v.xy()
+            - v.xz() * x.yz() * v.xz()
+            + v.xz() * x.xy() * v.s()
+            + v.yz() * x.xz() * v.xz(),
+    )
+}
