@@ -260,12 +260,12 @@ impl<T: Float> Rotor<T> {
         };
 
         let theta = dot.acos();
+        let sin_theta = theta.sin();
 
-        if theta.abs() < T::epsilon() {
+        // Fall back to lerp when sin_theta is near zero (rotors nearly identical or opposite)
+        if sin_theta.abs() < T::epsilon() {
             return self.lerp(other, t);
         }
-
-        let sin_theta = theta.sin();
         let s1 = ((T::one() - t) * theta).sin() / sin_theta;
         let s2 = (t * theta).sin() / sin_theta;
 
