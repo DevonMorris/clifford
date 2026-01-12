@@ -327,7 +327,7 @@ fn generate_mod_file(
 
     let mut mods = vec![
         quote! { pub mod types; },
-        quote! { #[allow(dead_code)] pub mod products; },
+        quote! { pub mod products; },
         quote! { pub mod traits; },
         quote! { pub mod conversions; },
     ];

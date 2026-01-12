@@ -56,5 +56,8 @@ mod rerun;
 // Re-export generated types
 pub use generated::types::{Bivector, Rotor, Scalar, Trivector, Vector};
 
+// Re-export products module for direct access to algebraic products
+pub use generated::products;
+
 // Re-export Even as alias from extensions
 pub use extensions::Even;

@@ -1,6 +1,6 @@
 # PRD-17.7: Expose Generated Products in Public API
 
-**Status**: Draft
+**Status**: Complete
 **Parent**: [PRD-17](prd-17-codegen-products.md)
 **Goal**: Remove dead code suppression by exposing generated products in the public API
 

@@ -76,3 +76,6 @@ pub mod arbitrary;
 
 // Re-export generated types
 pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};
+
+// Re-export products module for direct access to algebraic products
+pub use generated::products;
