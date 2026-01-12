@@ -13,6 +13,7 @@
 | [PRD-17.4](prd-17.4-guidance-updates.md) | **Complete** | Guidance Updates (CLAUDE.md, agents) |
 | [PRD-17.5](prd-17.5-regenerate-algebras.md) | **Complete** | Regenerate All Algebras |
 | [PRD-17.6](prd-17.6-antiproduct.md) | Draft | Geometric Antiproduct for PGA Transformations |
+| [PRD-17.7](prd-17.7-public-products-api.md) | Draft | Expose Generated Products in Public API |
 
 ## Problem Statement
 
