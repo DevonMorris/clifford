@@ -536,6 +536,62 @@ impl<T: Float> Line<T> {
 
         (nx * nx + ny * ny + nz * nz).sqrt() / (dir_norm * pw.abs())
     }
+
+    /// Meet with a plane to find intersection point (alias for meet_plane).
+    #[inline]
+    pub fn meet(&self, plane: &Plane<T>) -> Point<T> {
+        self.meet_plane(plane)
+    }
+
+    /// Closest point on this line to a given point.
+    ///
+    /// Projects the point onto the line and returns the closest point on the line.
+    pub fn closest_point(&self, p: &Point<T>) -> Point<T> {
+        let d = self.direction();
+        let m = self.moment();
+        let d_sq = d.x() * d.x() + d.y() * d.y() + d.z() * d.z();
+
+        if d_sq < T::epsilon() {
+            return Point::origin();
+        }
+
+        // A point on the line: P_line = d × m / |d|²
+        let line_pt_x = (d.y() * m.z() - d.z() * m.y()) / d_sq;
+        let line_pt_y = (d.z() * m.x() - d.x() * m.z()) / d_sq;
+        let line_pt_z = (d.x() * m.y() - d.y() * m.x()) / d_sq;
+
+        // Vector from line point to given point
+        let px = p.x() - line_pt_x;
+        let py = p.y() - line_pt_y;
+        let pz = p.z() - line_pt_z;
+
+        // Project onto direction
+        let t = (px * d.x() + py * d.y() + pz * d.z()) / d_sq;
+
+        Point::from_cartesian(
+            line_pt_x + t * d.x(),
+            line_pt_y + t * d.y(),
+            line_pt_z + t * d.z(),
+        )
+    }
+
+    /// Left contraction onto a plane (returns point).
+    ///
+    /// Computes L ⌋ Π where L is a line (grade-2) and Π is a plane (grade-3).
+    /// The result is a point (grade-1), which is the grade-1 part of the
+    /// geometric product Line * Plane.
+    #[inline]
+    pub fn left_contract_plane(&self, plane: &Plane<T>) -> Point<T> {
+        // Extract from geometric product Line * Plane -> Flector
+        // The point (grade-1) part is the left contraction
+        let e1 = -(plane.e023() * self.e03());
+        let e2 = plane.e023() * self.e02();
+        let e3 = -(plane.e023() * self.e01());
+        let e0 = -(plane.e031() * self.e01())
+            - (plane.e012() * self.e02())
+            - (plane.e123() * self.e03());
+        Point::new(e1, e2, e3, e0)
+    }
 }
 
 // ============================================================================
@@ -648,17 +704,18 @@ impl<T: Float> Plane<T> {
         let n2z = other.e012();
         let d2 = other.e123();
 
-        // Direction = n1 × n2
-        let e23 = n1y * n2z - n1z * n2y;
-        let e31 = n1z * n2x - n1x * n2z;
-        let e12 = n1x * n2y - n1y * n2x;
+        // Direction = n1 × n2 (stored in e01, e02, e03 for Line)
+        let dir_x = n1y * n2z - n1z * n2y;
+        let dir_y = n1z * n2x - n1x * n2z;
+        let dir_z = n1x * n2y - n1y * n2x;
 
-        // Moment from plane offsets
-        let e01 = n1x * d2 - n2x * d1;
-        let e02 = n1y * d2 - n2y * d1;
-        let e03 = n1z * d2 - n2z * d1;
+        // Moment from plane offsets (stored in e23, e31, e12 for Line)
+        let mom_x = n1x * d2 - n2x * d1;
+        let mom_y = n1y * d2 - n2y * d1;
+        let mom_z = n1z * d2 - n2z * d1;
 
-        Line::new_unchecked(e23, e31, e12, e01, e02, e03)
+        // Line::new_unchecked(e01, e02, e03, e23, e31, e12)
+        Line::new_unchecked(dir_x, dir_y, dir_z, mom_x, mom_y, mom_z)
     }
 
     /// Angle between two planes (in radians).

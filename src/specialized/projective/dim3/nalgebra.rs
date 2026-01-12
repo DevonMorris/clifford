@@ -89,22 +89,16 @@ where
     /// # Note
     ///
     /// This extracts the rotation from the motor's rotation bivector and
-    /// the translation from the translation bivector. For motors that are
-    /// not simple rotation+translation compositions, the extraction may
-    /// be approximate.
+    /// the translation using the full formula that accounts for rotation-translation
+    /// interaction in composed motors.
     fn from(m: Motor<T>) -> Self {
         // Extract rotation as quaternion
         let q: na::UnitQuaternion<T> = m.into();
 
-        // Extract translation
-        // For a composed motor R*T, the translation extraction is:
-        // t = 2 * (s*e0i + cross terms from rotation-translation interaction)
-        // For simplicity, we extract as if it's a pure translation
-        let tx = m.e01() * T::TWO;
-        let ty = m.e02() * T::TWO;
-        let tz = m.e03() * T::TWO;
+        // Extract translation using the full formula that handles composed motors
+        let t = m.translation();
 
-        na::Isometry3::from_parts(na::Translation3::new(tx, ty, tz), q)
+        na::Isometry3::from_parts(na::Translation3::new(t.x(), t.y(), t.z()), q)
     }
 }
 
