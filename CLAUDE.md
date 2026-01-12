@@ -449,6 +449,27 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 
 **Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
 
+#### Constraints vs. Product Outputs
+
+**Important distinction:** Type constraints (Study condition, Plucker condition, etc.) apply to *normalized, valid instances* of a type, NOT to algebraic product results.
+
+Generated products use `new_unchecked()` for constrained types because:
+1. **Product outputs are algebraically correct** - The formulas are derived from the multiplication table
+2. **Constraint solving would modify results** - e.g., computing `e0123` via Study condition when the product naturally produces `e0123 = 0`
+3. **Constraints apply to normalized instances** - A `Motor` from a product is "motor-shaped", not necessarily constraint-satisfying
+
+**When constraints matter:**
+- `Motor::normalize()` - explicit re-normalization when drift accumulates
+- Factory methods like `Motor::from_translation()` - guarantee validity by construction
+- `Motor::try_from_components()` - validate user inputs
+
+**When constraints don't apply:**
+- Product outputs (`geometric_motor_motor`, etc.)
+- Intermediate computations
+- Any operation where the algebraic result is what's needed
+
+See [PRD-17.8](docs/prd/prd-17.8-product-normalization.md) for detailed investigation.
+
 #### Using Generated Products in Extensions
 
 When implementing domain-specific methods in extension files (`extensions.rs`), **always use generated products** instead of manual formulas:

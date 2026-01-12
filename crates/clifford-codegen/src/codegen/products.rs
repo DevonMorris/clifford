@@ -234,8 +234,12 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates a constructor call for the given type.
     ///
-    /// For types with solve_for fields (constrained types), uses `new_unchecked`
-    /// to preserve the computed product values. For unconstrained types, uses `new`.
+    /// For types with constraints (solve_for fields), uses `new_unchecked` because:
+    /// 1. Product outputs are mathematically correct as computed
+    /// 2. Constraint solving would incorrectly modify the algebraic result
+    /// 3. Constraints apply to *normalized* instances, not intermediate results
+    ///
+    /// For unconstrained types, uses the standard `new` constructor.
     fn generate_constructor_call(
         &self,
         ty: &TypeSpec,

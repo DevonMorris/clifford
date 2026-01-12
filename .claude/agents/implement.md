@@ -293,9 +293,27 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 ### What Codegen Handles
 
 - **Products**: Geometric, exterior, interior, left/right contraction - all generated correctly
-- **Constraints**: Study conditions, Plücker conditions, unit norm - solved automatically
+- **Constraints**: Study conditions, Plucker conditions, unit norm - solved automatically
 - **Constructors**: `new()`, `new_checked()`, `new_unchecked()` with proper constraint solving
 - **Verification tests**: Property-based tests comparing against generic Multivector
+
+### Constraints vs. Product Outputs
+
+**Important:** Type constraints apply to *normalized, valid instances*, NOT to algebraic product results.
+
+Generated products use `new_unchecked()` for constrained types because:
+1. Product outputs are algebraically correct as computed
+2. Constraint solving would incorrectly modify the results
+3. A `Motor` from a product is "motor-shaped", not necessarily constraint-satisfying
+
+**When constraints matter:**
+- `Motor::normalize()` - explicit re-normalization
+- Factory methods like `Motor::from_translation()` - valid by construction
+- `Motor::try_from_components()` - validate user inputs
+
+**When constraints don't apply:**
+- Product outputs (they are algebraically correct)
+- Intermediate computations
 
 ### When Adding New Algebras
 
