@@ -13,7 +13,6 @@ use crate::algebra::Multivector;
 use crate::basis::Blade;
 use crate::scalar::Float;
 use crate::signature::Projective3;
-use crate::specialized::euclidean::dim3::Bivector as EuclideanBivector;
 use crate::specialized::euclidean::dim3::Rotor as EuclideanRotor;
 use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
@@ -376,8 +375,7 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     #[inline]
     fn from(m: Motor<T>) -> Self {
         // Inverse mapping: e12 -> xy, -e31 -> xz, e23 -> yz
-        let b = EuclideanBivector::new(m.e12(), -m.e31(), m.e23());
-        EuclideanRotor::new(m.s(), b).normalized()
+        EuclideanRotor::new(m.s(), m.e12(), -m.e31(), m.e23()).normalized()
     }
 }
 
@@ -467,8 +465,8 @@ impl std::error::Error for ConversionError {}
 mod tests {
     use super::*;
     use crate::specialized::euclidean::dim3::Bivector as EucBivector;
+    use crate::specialized::euclidean::dim3::Rotor as EucRotor;
     use crate::specialized::euclidean::dim3::Vector;
-    use crate::specialized::euclidean::dim3::arbitrary::UnitRotor;
     use crate::specialized::projective::dim3::arbitrary::UnitMotor;
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
@@ -683,10 +681,11 @@ mod tests {
         /// Tests Rotor -> Motor -> Rotor roundtrip preserves rotation behavior.
         #[test]
         fn rotor_motor_roundtrip(
-            r in any::<UnitRotor<f64>>(),
+            r in any::<EucRotor<f64>>(),
             vx in -10.0f64..10.0, vy in -10.0f64..10.0, vz in -10.0f64..10.0,
         ) {
-            let motor: Motor<f64> = (*r).into();
+            let r = r.normalized();
+            let motor: Motor<f64> = r.into();
             let back: EuclideanRotor<f64> = motor.into();
 
             // Compare by rotating a vector
@@ -731,10 +730,11 @@ mod tests {
         /// Tests that Rotor rotation matches Motor rotation.
         #[test]
         fn rotor_motor_rotation_equivalence(
-            r in any::<UnitRotor<f64>>(),
+            r in any::<EucRotor<f64>>(),
             x in -10.0f64..10.0, y in -10.0f64..10.0, z in -10.0f64..10.0,
         ) {
-            let motor: Motor<f64> = (*r).into();
+            let r = r.normalized();
+            let motor: Motor<f64> = r.into();
 
             // Rotate with Euclidean rotor
             let v = Vector::new(x, y, z);

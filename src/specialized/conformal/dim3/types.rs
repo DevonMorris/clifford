@@ -3194,7 +3194,7 @@ impl<T: Float> Rotor<T> {
     /// ```
     #[inline]
     pub fn new(s: T, b: Bivector<T>) -> Self {
-        Self(EuclideanRotor::new(s, b))
+        Self(EuclideanRotor::new(s, b.xy(), b.xz(), b.yz()))
     }
 
     /// Creates a rotor from an angle and rotation plane.

@@ -24,6 +24,33 @@ Euclidean 2D is simpler than 3D with 3 types (Vector, Bivector, Rotor). This mig
 - No `dual()` on bivector (trivial in 2D)
 - Simpler rotor formulas
 
+## Lessons Learned from PRD-15.1
+
+The following lessons were learned during the Euclidean 3D migration:
+
+1. **Flat field constructors**: Generated types use flat fields, not nested types. For example:
+   - Old: `Rotor::new(s, Bivector::new(xy, xz, yz))`
+   - New: `Rotor::new(s, xy, xz, yz)`
+
+2. **Remove wrapper types**: Don't create wrapper types like `UnitVector`, `UnitRotor`, `NonZeroVector`. Instead:
+   - Use `any::<Type<f64>>()` with `.normalized()` in tests
+   - The generated Arbitrary implementations are sufficient
+
+3. **Generated conversions handle From traits**: The generated `conversions.rs` includes:
+   - `From<Type> for Multivector<T, Signature>`
+   - `From<Multivector<T, Signature>> for Type` (via `from_multivector_unchecked`)
+   - Don't create a separate hand-written `conversions.rs`
+
+4. **Doc tests need explicit type annotations**: Generic types need turbofish syntax:
+   - ✓ `Vector::<f64>::unit_x()`
+   - ✗ `Vector::unit_x()` (fails with "type annotations needed")
+
+5. **Update dependent modules**: Modules that import types from the migrated module need their API calls updated to match the new constructor signatures.
+
+6. **extensions.rs pattern**: Domain-specific methods (dot, wedge, cross, from_angle, rotate, etc.) go in `extensions.rs`, importing from `generated/products` and `generated/types`.
+
+7. **No arbitrary.rs needed**: The generated code includes Arbitrary implementations for all types. Delete any hand-written arbitrary.rs.
+
 ## Phase 1: Update TOML Specification
 
 ### Deliverable: `algebras/euclidean2.toml`
@@ -458,16 +485,13 @@ impl<T: Float> Rotor<T> {
 //! let rotated = r.rotate(v);
 //! ```
 
+// Generated code (do not edit manually)
 mod generated;
+
+// Domain-specific extensions
 mod extensions;
-mod ops;
-mod conversions;
 
-pub use generated::types::{Bivector, Even, Rotor, Vector};
-pub use conversions::CONVERSION_TOLERANCE;
-
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
+// Note: conversions.rs and arbitrary.rs are NOT needed - generated code handles these
 
 #[cfg(any(
     feature = "nalgebra-0_32",
@@ -476,8 +500,14 @@ pub mod arbitrary;
 ))]
 mod nalgebra;
 
-#[cfg(feature = "rerun")]
+#[cfg(feature = "rerun-0_28")]
 mod rerun;
+
+// Re-export generated types
+pub use generated::types::{Bivector, Rotor, Scalar, Vector};
+
+// Re-export Even alias from extensions
+pub use extensions::Even;
 
 #[cfg(test)]
 mod tests;
@@ -614,9 +644,6 @@ use crate::test_utils::ABS_DIFF_EQ_EPS;
 use approx::abs_diff_eq;
 use proptest::prelude::*;
 
-#[cfg(any(test, feature = "proptest-support"))]
-use super::arbitrary::{NonZeroVector, UnitRotor};
-
 proptest! {
     /// Generated geometric product matches generic Multivector.
     #[test]
@@ -637,12 +664,13 @@ proptest! {
     /// Generated sandwich product matches explicit R * v * R̃.
     #[test]
     fn rotor_sandwich_matches_explicit(
-        r in any::<UnitRotor<f64>>(),
+        r in any::<Rotor<f64>>(),
         v in any::<Vector<f64>>(),
     ) {
+        let r = r.normalized();  // Use normalized() instead of wrapper type
         let sandwich = r.rotate(v);
 
-        let mv_r = Multivector::<f64, Euclidean2>::from(**r);
+        let mv_r = Multivector::<f64, Euclidean2>::from(r);
         let mv_v = Multivector::<f64, Euclidean2>::from(v);
         let explicit = &(&mv_r * &mv_v) * &mv_r.reverse();
         let explicit_vec = Vector::from_multivector_unchecked(&explicit);
@@ -653,9 +681,10 @@ proptest! {
     /// Rotation preserves vector norm.
     #[test]
     fn rotation_preserves_norm(
-        r in any::<UnitRotor<f64>>(),
+        r in any::<Rotor<f64>>(),
         v in any::<Vector<f64>>(),
     ) {
+        let r = r.normalized();  // Use normalized() instead of wrapper type
         let rotated = r.rotate(v);
         prop_assert!(abs_diff_eq!(v.norm(), rotated.norm(), epsilon = ABS_DIFF_EQ_EPS));
     }
@@ -698,6 +727,9 @@ proptest! {
 | `src/specialized/euclidean/dim2/mod.rs` | Update |
 | `src/specialized/euclidean/dim2/generated/` | Create |
 | `src/specialized/euclidean/dim2/extensions.rs` | Create |
-| `src/specialized/euclidean/dim2/ops.rs` | Update |
-| `src/specialized/euclidean/dim2/types.rs` | Delete |
-| `src/specialized/euclidean/dim2/tests.rs` | Create |
+| `src/specialized/euclidean/dim2/nalgebra.rs` | Update (new constructor API) |
+| `src/specialized/euclidean/dim2/rerun.rs` | Update (new Arbitrary API) |
+| `src/specialized/euclidean/dim2/types.rs` | Delete (replaced by generated) |
+| `src/specialized/euclidean/dim2/ops.rs` | Delete (replaced by generated traits) |
+| `src/specialized/euclidean/dim2/arbitrary.rs` | Delete (generated handles this) |
+| `src/specialized/euclidean/dim2/conversions.rs` | Delete (generated handles this) |

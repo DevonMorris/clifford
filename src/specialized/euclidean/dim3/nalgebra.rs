@@ -339,7 +339,7 @@ impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
         // Inverse mapping: s=w, xy=k, xz=-j, yz=i
-        Rotor::new(q.w, Bivector::new(q.k, -q.j, q.i))
+        Rotor::new(q.w, q.k, -q.j, q.i)
     }
 }
 
@@ -405,36 +405,30 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::euclidean::dim3::arbitrary::UnitRotor;
-
     proptest! {
         #[test]
-        fn vector_roundtrip(x in -100.0..100.0, y in -100.0..100.0, z in -100.0..100.0) {
-            let v = Vector::new(x, y, z);
+        fn vector_roundtrip(v in any::<Vector<f64>>()) {
             let na_v: na::Vector3<f64> = v.into();
             let back: Vector<f64> = na_v.into();
             prop_assert!(abs_diff_eq!(v, back, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn bivector_dual_roundtrip(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
-            let b = Bivector::new(xy, xz, yz);
+        fn bivector_dual_roundtrip(b in any::<Bivector<f64>>()) {
             let na_v: na::Vector3<f64> = b.into();
             let back: Bivector<f64> = na_v.into();
             prop_assert!(abs_diff_eq!(b, back, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn bivector_matrix_roundtrip(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
-            let b = Bivector::new(xy, xz, yz);
+        fn bivector_matrix_roundtrip(b in any::<Bivector<f64>>()) {
             let m: na::Matrix3<f64> = b.into();
             let back: Bivector<f64> = m.try_into().unwrap();
             prop_assert!(abs_diff_eq!(b, back, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
-        fn bivector_matrix_is_antisymmetric(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
-            let b = Bivector::new(xy, xz, yz);
+        fn bivector_matrix_is_antisymmetric(b in any::<Bivector<f64>>()) {
             let m: na::Matrix3<f64> = b.into();
 
             // Check M + M^T = 0
@@ -447,8 +441,10 @@ mod tests {
         }
 
         #[test]
-        fn rotor_quaternion_roundtrip(r in any::<UnitRotor<f64>>()) {
-            let q: na::UnitQuaternion<f64> = (*r).into();
+        fn rotor_quaternion_roundtrip(r in any::<Rotor<f64>>()) {
+            // Normalize for this test
+            let r = r.normalized();
+            let q: na::UnitQuaternion<f64> = r.into();
             let back: Rotor<f64> = q.into();
 
             // Rotors have double cover: r and -r represent the same rotation
@@ -460,8 +456,9 @@ mod tests {
         }
 
         #[test]
-        fn rotor_rotation3_roundtrip(r in any::<UnitRotor<f64>>()) {
-            let rot: na::Rotation3<f64> = (*r).into();
+        fn rotor_rotation3_roundtrip(r in any::<Rotor<f64>>()) {
+            let r = r.normalized();
+            let rot: na::Rotation3<f64> = r.into();
             let back: Rotor<f64> = rot.into();
 
             let test_v = Vector::new(1.0, 2.0, 3.0);
@@ -472,19 +469,17 @@ mod tests {
 
         #[test]
         fn rotor_quaternion_rotation_equivalence(
-            r in any::<UnitRotor<f64>>(),
-            x in -100.0..100.0,
-            y in -100.0..100.0,
-            z in -100.0..100.0,
+            r in any::<Rotor<f64>>(),
+            v in any::<Vector<f64>>(),
         ) {
-            let v = Vector::new(x, y, z);
+            let r = r.normalized();
             let na_v: na::Vector3<f64> = v.into();
 
             // Rotate with clifford rotor
             let rotated_ga = r.rotate(v);
 
             // Rotate with nalgebra quaternion
-            let q: na::UnitQuaternion<f64> = (*r).into();
+            let q: na::UnitQuaternion<f64> = r.into();
             let rotated_na = q * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();
@@ -492,9 +487,7 @@ mod tests {
         }
 
         #[test]
-        fn bivector_dual_matches_method(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
-            let b = Bivector::new(xy, xz, yz);
-
+        fn bivector_dual_matches_method(b in any::<Bivector<f64>>()) {
             // Conversion to nalgebra should match the dual() method
             let na_v: na::Vector3<f64> = b.into();
             let dual_v = b.dual();

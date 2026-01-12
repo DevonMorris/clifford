@@ -26,6 +26,35 @@ Projective 3D is the most complex algebra with 5 types and geometric constraints
 3. **Complex products**: 8-component motor composition
 4. **Sandwich products**: Motor transformations of points, lines, planes
 
+## Lessons Learned from PRD-15.1
+
+The following lessons were learned during the Euclidean 3D migration:
+
+1. **Flat field constructors**: Generated types use flat fields, not nested types. For example:
+   - Old: `Rotor::new(s, Bivector::new(xy, xz, yz))`
+   - New: `Rotor::new(s, xy, xz, yz)`
+
+2. **Remove wrapper types**: Don't create wrapper types like `UnitVector`, `UnitRotor`, `NonZeroVector`. Instead:
+   - Use `any::<Type<f64>>()` with `.normalized()` in tests
+   - The generated Arbitrary implementations are sufficient
+
+3. **Generated conversions handle From traits**: The generated `conversions.rs` includes:
+   - `From<Type> for Multivector<T, Signature>`
+   - `From<Multivector<T, Signature>> for Type` (via `from_multivector_unchecked`)
+   - Don't create a separate hand-written `conversions.rs`
+
+4. **Doc tests need explicit type annotations**: Generic types need turbofish syntax:
+   - ✓ `Vector::<f64>::unit_x()`
+   - ✗ `Vector::unit_x()` (fails with "type annotations needed")
+
+5. **Update dependent modules**: Modules that import types from the migrated module need their API calls updated to match the new constructor signatures. For example, projective/dim3/conversions.rs needed updates when euclidean/dim3 Rotor changed.
+
+6. **extensions.rs pattern**: Domain-specific methods (transform_point, compose, from_axis_angle, etc.) go in `extensions.rs`, importing from `generated/products` and `generated/types`.
+
+7. **No arbitrary.rs needed**: The generated code includes Arbitrary implementations for all types. Delete any hand-written arbitrary.rs.
+
+8. **Imports may conflict**: If both hand-written and generated code define the same From impls or Arbitrary impls, you'll get conflicts. Remove the hand-written versions entirely.
+
 ## Phase 1: Create TOML Specification
 
 ### Deliverable: `algebras/projective3.toml`
@@ -1100,6 +1129,9 @@ proptest! {
 | `src/specialized/projective/dim3/mod.rs` | Update |
 | `src/specialized/projective/dim3/generated/` | Create |
 | `src/specialized/projective/dim3/extensions.rs` | Create |
-| `src/specialized/projective/dim3/ops.rs` | Update |
-| `src/specialized/projective/dim3/types.rs` | Delete |
-| `src/specialized/projective/dim3/tests.rs` | Create |
+| `src/specialized/projective/dim3/nalgebra.rs` | Update (new constructor API) |
+| `src/specialized/projective/dim3/rerun.rs` | Update (new Arbitrary API) |
+| `src/specialized/projective/dim3/types.rs` | Delete (replaced by generated) |
+| `src/specialized/projective/dim3/ops.rs` | Delete (replaced by generated traits) |
+| `src/specialized/projective/dim3/arbitrary.rs` | Delete (generated handles this) |
+| `src/specialized/projective/dim3/conversions.rs` | Delete (generated handles this) |
