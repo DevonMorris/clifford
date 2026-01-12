@@ -1086,9 +1086,9 @@ impl<T: Float> Motor<T> {
 
     /// Transform a point by this motor.
     ///
-    /// Uses the PGA-specific transformation formula from Rigid Geometric Algebra.
-    /// The standard antisandwich formula fails due to e0² = 0, so we use the
-    /// explicit coordinate formula:
+    /// Uses the PGA-specific coordinate formula from Rigid Geometric Algebra.
+    /// The generic antisandwich formula fails in PGA due to the degenerate
+    /// metric (e₀² = 0), so we use the explicit formula:
     ///
     /// ```text
     /// a = v × p_xyz + pw * m
@@ -1097,6 +1097,8 @@ impl<T: Float> Motor<T> {
     /// ```
     ///
     /// where v = (e23, e31, e12), m = (e01, e02, e03).
+    ///
+    /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_products>
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
         let two = T::TWO;
@@ -1138,9 +1140,8 @@ impl<T: Float> Motor<T> {
 
     /// Transform a line via sandwich product.
     ///
-    /// In PGA, lines (grade-2 bivectors) transform via the regular sandwich
-    /// product, not the antisandwich. This is because lines are self-dual
-    /// geometric objects.
+    /// Lines (grade-2 bivectors) transform via the regular sandwich product
+    /// in PGA because they are self-dual geometric objects.
     #[inline]
     pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
         products::sandwich_motor_line(self, line)
@@ -1148,10 +1149,8 @@ impl<T: Float> Motor<T> {
 
     /// Transform a plane via sandwich product.
     ///
-    /// In PGA, planes (grade-3 trivectors) transform via the regular sandwich
-    /// product. While planes are theoretically dual to points, the degenerate
-    /// metric (e0² = 0) breaks the antiproduct formula, so we use the regular
-    /// sandwich which works correctly.
+    /// Planes (grade-3 trivectors) transform via the regular sandwich product
+    /// in PGA because the degenerate metric breaks the antiproduct formula.
     #[inline]
     pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
         products::sandwich_motor_plane(self, plane)
