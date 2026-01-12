@@ -53,9 +53,6 @@ pub use nalgebra::NalgebraConversionError;
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
-
 // Re-export generated types
 pub use generated::types::{Bivector, Rotor, Scalar, Trivector, Vector};
 
