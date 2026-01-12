@@ -25,6 +25,51 @@ Projective 2D is simpler than 3D with 3 types (Point, Line, Motor). This migrati
 - Study condition is trivial: `s·e₀₁₂ = 0` (e012 is always 0)
 - No Plücker condition (2D lines are always valid)
 
+## Lessons Learned from PRD-15.1
+
+The following lessons were learned during the Euclidean 3D migration:
+
+1. **Flat field constructors**: Generated types use flat fields, not nested types. For example:
+   - Old: `Rotor::new(s, Bivector::new(xy, xz, yz))`
+   - New: `Rotor::new(s, xy, xz, yz)`
+
+2. **Remove wrapper types**: Don't create wrapper types like `UnitVector`, `UnitRotor`, `NonZeroVector`. Instead:
+   - Use `any::<Type<f64>>()` with `.normalized()` in tests
+   - The generated Arbitrary implementations are sufficient
+
+3. **Generated conversions handle From traits**: The generated `conversions.rs` includes:
+   - `From<Type> for Multivector<T, Signature>`
+   - `From<Multivector<T, Signature>> for Type` (via `from_multivector_unchecked`)
+   - Don't create a separate hand-written `conversions.rs`
+
+4. **Doc tests need explicit type annotations**: Generic types need turbofish syntax:
+   - ✓ `Point::<f64>::origin()`
+   - ✗ `Point::origin()` (fails with "type annotations needed")
+
+5. **Update dependent modules**: Modules that import types from the migrated module need their API calls updated to match the new constructor signatures.
+
+6. **extensions.rs pattern**: Domain-specific methods (transform_point, compose, from_rotation, join, meet, etc.) go in `extensions.rs`, importing from `generated/products` and `generated/types`.
+
+7. **No arbitrary.rs needed**: The generated code includes Arbitrary implementations for all types. Delete any hand-written arbitrary.rs.
+
+8. **Imports may conflict**: If both hand-written and generated code define the same From impls or Arbitrary impls, you'll get conflicts. Remove the hand-written versions entirely.
+
+9. **Unit constraint as type-level invariant**: For types that must satisfy a unit constraint (like Rotor, Motor), use `solve_for` in the TOML constraint to make the constraint a type-level invariant:
+   ```toml
+   constraints = [
+       { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1", solve_for = "s" }
+   ]
+   ```
+   This generates:
+   - `new(xy, xz, yz) -> Option<Self>` - computes `s` from constraint, returns `None` if invalid
+   - `new_unchecked(s, xy, xz, yz) -> Self` - bypasses check for when constraint is guaranteed
+
+10. **Use new_unchecked for internal operations**: When operations mathematically preserve a constraint (like motor composition, conversions from Euclidean types), use `new_unchecked` since the constraint is guaranteed by construction.
+
+11. **nalgebra interop tests in nalgebra.rs**: Keep nalgebra conversion tests in the nalgebra.rs file using generated Arbitrary impls, not in a separate arbitrary.rs with wrapper types
+
+12. **Use `normalize()` from generated code**: Don't add a `normalized()` method to extensions.rs - the generated code already provides `normalize()` and `try_normalize()` methods. Use these consistently
+
 ## Phase 1: Create TOML Specification
 
 ### Deliverable: `algebras/projective2.toml`
@@ -1110,9 +1155,12 @@ proptest! {
 | `src/specialized/projective/dim2/mod.rs` | Update |
 | `src/specialized/projective/dim2/generated/` | Create |
 | `src/specialized/projective/dim2/extensions.rs` | Create |
-| `src/specialized/projective/dim2/ops.rs` | Update |
-| `src/specialized/projective/dim2/types.rs` | Delete |
-| `src/specialized/projective/dim2/tests.rs` | Create |
+| `src/specialized/projective/dim2/nalgebra.rs` | Update (new constructor API) |
+| `src/specialized/projective/dim2/rerun.rs` | Update (new Arbitrary API) |
+| `src/specialized/projective/dim2/types.rs` | Delete (replaced by generated) |
+| `src/specialized/projective/dim2/ops.rs` | Delete (replaced by generated traits) |
+| `src/specialized/projective/dim2/arbitrary.rs` | Delete (generated handles this) |
+| `src/specialized/projective/dim2/conversions.rs` | Delete (generated handles this) |
 
 ## Summary
 

@@ -85,31 +85,19 @@ proptest! {
 proptest! {
     #[test]
     fn vec3_arbitrary_accessible(v in any::<dim3::Vector<f64>>()) {
-        // Verify Vector arbitrary is accessible
+        // Verify Vector arbitrary is accessible from generated code
         let _ = v.norm();
     }
 
     #[test]
     fn bivec3_arbitrary_accessible(b in any::<dim3::Bivector<f64>>()) {
-        // Verify Bivector arbitrary is accessible
+        // Verify Bivector arbitrary is accessible from generated code
         let _ = b.norm();
     }
 
     #[test]
-    fn non_zero_vec3_arbitrary_accessible(v in any::<dim3::arbitrary::NonZeroVector<f64>>()) {
-        // Verify NonZeroVector wrapper is accessible and has non-zero norm
-        prop_assert!(v.norm_squared() > 0.01);
-    }
-
-    #[test]
-    fn unit_vec3_arbitrary_accessible(v in any::<dim3::arbitrary::UnitVector<f64>>()) {
-        // Verify UnitVector wrapper is accessible and has unit norm
-        prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-    }
-
-    #[test]
-    fn unit_rotor3_arbitrary_accessible(r in any::<dim3::arbitrary::UnitRotor<f64>>()) {
-        // Verify UnitRotor wrapper is accessible and has unit norm
-        prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    fn rotor3_arbitrary_accessible(r in any::<dim3::Rotor<f64>>()) {
+        // Verify Rotor arbitrary is accessible from generated code
+        let _ = r.norm();
     }
 }

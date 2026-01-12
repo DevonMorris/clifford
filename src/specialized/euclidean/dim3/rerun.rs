@@ -160,7 +160,7 @@ impl From<Rotor<f32>> for rerun::components::RotationQuat {
     /// ```
     #[inline]
     fn from(rotor: Rotor<f32>) -> Self {
-        let r = rotor.normalized();
+        let r = rotor.normalize();
         // Mapping: (x, y, z, w) = (yz, -xz, xy, s)
         let quat = rerun::Quaternion::from_xyzw([r.b().yz(), -r.b().xz(), r.b().xy(), r.s()]);
         rerun::components::RotationQuat(quat)
@@ -199,45 +199,28 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::euclidean::dim3::arbitrary::UnitRotor;
-
     /// Epsilon for f32 comparisons.
     const EPS: f32 = 1e-5;
 
     proptest! {
         #[test]
-        fn vector_to_vec3d_preserves_components(
-            x in -100.0f32..100.0,
-            y in -100.0f32..100.0,
-            z in -100.0f32..100.0,
-        ) {
-            let v = Vector::new(x, y, z);
+        fn vector_to_vec3d_preserves_components(v in any::<Vector<f32>>()) {
             let rerun_v: rerun::Vec3D = v.into();
-            prop_assert!(abs_diff_eq!(rerun_v.x(), x, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(rerun_v.y(), y, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(rerun_v.z(), z, epsilon = EPS));
+            prop_assert!(abs_diff_eq!(rerun_v.x(), v.x(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(rerun_v.y(), v.y(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(rerun_v.z(), v.z(), epsilon = EPS));
         }
 
         #[test]
-        fn as_position_to_position3d_preserves_components(
-            x in -100.0f32..100.0,
-            y in -100.0f32..100.0,
-            z in -100.0f32..100.0,
-        ) {
-            let v = Vector::new(x, y, z);
+        fn as_position_to_position3d_preserves_components(v in any::<Vector<f32>>()) {
             let pos: rerun::Position3D = AsPosition(v).into();
-            prop_assert!(abs_diff_eq!(pos.x(), x, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(pos.y(), y, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(pos.z(), z, epsilon = EPS));
+            prop_assert!(abs_diff_eq!(pos.x(), v.x(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(pos.y(), v.y(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(pos.z(), v.z(), epsilon = EPS));
         }
 
         #[test]
-        fn bivector_to_vec3d_matches_dual(
-            xy in -100.0f32..100.0,
-            xz in -100.0f32..100.0,
-            yz in -100.0f32..100.0,
-        ) {
-            let b = Bivector::new(xy, xz, yz);
+        fn bivector_to_vec3d_matches_dual(b in any::<Bivector<f32>>()) {
             let rerun_v: rerun::Vec3D = b.into();
             let dual = b.dual();
 
@@ -247,13 +230,13 @@ mod tests {
         }
 
         #[test]
-        fn rotor_to_quaternion_does_not_panic(r in any::<UnitRotor<f32>>()) {
-            let _quat: rerun::components::RotationQuat = (*r).into();
+        fn rotor_to_quaternion_does_not_panic(r in any::<Rotor<f32>>()) {
+            let _quat: rerun::components::RotationQuat = r.into();
         }
 
         #[test]
-        fn rotor_to_transform3d_does_not_panic(r in any::<UnitRotor<f32>>()) {
-            let _t: rerun::Transform3D = (*r).into();
+        fn rotor_to_transform3d_does_not_panic(r in any::<Rotor<f32>>()) {
+            let _t: rerun::Transform3D = r.into();
         }
     }
 

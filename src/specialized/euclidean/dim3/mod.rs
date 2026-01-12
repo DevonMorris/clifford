@@ -30,12 +30,11 @@
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
-mod conversions;
-mod ops;
-mod types;
+// Generated code (do not edit manually)
+mod generated;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
+// Domain-specific extensions
+mod extensions;
 
 #[cfg(any(
     feature = "nalgebra-0_32",
@@ -54,5 +53,8 @@ pub use nalgebra::NalgebraConversionError;
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-pub use conversions::{ConversionError, Specialized};
-pub use types::*;
+// Re-export generated types
+pub use generated::types::{Bivector, Rotor, Scalar, Trivector, Vector};
+
+// Re-export Even as alias from extensions
+pub use extensions::Even;
