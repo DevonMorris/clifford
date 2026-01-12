@@ -38,8 +38,8 @@ impl<T: Float + na::Scalar> From<na::Vector2<T>> for Vector<T> {
     ///
     /// let na_v = Vector2::new(1.0, 2.0);
     /// let v: Vector<f64> = na_v.into();
-    /// assert_eq!(v.x, 1.0);
-    /// assert_eq!(v.y, 2.0);
+    /// assert_eq!(v.x(), 1.0);
+    /// assert_eq!(v.y(), 2.0);
     /// ```
     #[inline]
     fn from(v: na::Vector2<T>) -> Self {
@@ -138,12 +138,9 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::euclidean::dim2::arbitrary::UnitRotor;
-
     proptest! {
         #[test]
-        fn vector_roundtrip(x in -100.0..100.0, y in -100.0..100.0) {
-            let v = Vector::new(x, y);
+        fn vector_roundtrip(v in any::<Vector<f64>>()) {
             let na_v: na::Vector2<f64> = v.into();
             let back: Vector<f64> = na_v.into();
             prop_assert!(abs_diff_eq!(v, back, epsilon = ABS_DIFF_EQ_EPS));
@@ -161,18 +158,17 @@ mod tests {
 
         #[test]
         fn rotor_rotation_equivalence(
-            r in any::<UnitRotor<f64>>(),
-            x in -100.0..100.0,
-            y in -100.0..100.0,
+            r in any::<Rotor<f64>>(),
+            v in any::<Vector<f64>>(),
         ) {
-            let v = Vector::new(x, y);
+            let r = r.normalize();
             let na_v: na::Vector2<f64> = v.into();
 
             // Rotate with clifford rotor
             let rotated_ga = r.rotate(v);
 
             // Rotate with nalgebra Rotation2
-            let rotation: na::Rotation2<f64> = (*r).into();
+            let rotation: na::Rotation2<f64> = r.into();
             let rotated_na = rotation * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();

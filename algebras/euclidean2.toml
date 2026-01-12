@@ -31,8 +31,11 @@ fields = ["xy"]
 
 [types.Rotor]
 grades = [0, 2]
-description = "2D rotor (even subalgebra element)"
+description = "2D rotor (unit versor for rotations)"
 fields = ["s", "xy"]
+constraints = [
+    { name = "unit", expression = "s*s + xy*xy = 1", solve_for = "s" }
+]
 
 [options]
 generate_serde = true

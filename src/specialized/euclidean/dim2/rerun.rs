@@ -107,7 +107,7 @@ impl From<Rotor<f32>> for rerun::components::RotationAxisAngle {
     /// ```
     #[inline]
     fn from(rotor: Rotor<f32>) -> Self {
-        let r = rotor.normalized();
+        let r = rotor.normalize();
         let angle = r.angle();
         // Z-axis rotation
         rerun::components::RotationAxisAngle::new(rerun::Vec3D::new(0.0, 0.0, 1.0), angle)
@@ -146,38 +146,29 @@ mod tests {
     use proptest::prelude::*;
     use std::f32::consts::{FRAC_PI_2, PI};
 
-    use crate::specialized::euclidean::dim2::arbitrary::UnitRotor;
-
     /// Epsilon for f32 comparisons.
     const EPS: f32 = 1e-5;
 
     proptest! {
         #[test]
-        fn vector_to_vec2d_preserves_components(
-            x in -100.0f32..100.0,
-            y in -100.0f32..100.0,
-        ) {
-            let v = Vector::new(x, y);
+        fn vector_to_vec2d_preserves_components(v in any::<Vector<f32>>()) {
             let rerun_v: rerun::Vec2D = v.into();
-            prop_assert!(abs_diff_eq!(rerun_v.x(), x, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(rerun_v.y(), y, epsilon = EPS));
+            prop_assert!(abs_diff_eq!(rerun_v.x(), v.x(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(rerun_v.y(), v.y(), epsilon = EPS));
         }
 
         #[test]
-        fn as_position_to_position2d_preserves_components(
-            x in -100.0f32..100.0,
-            y in -100.0f32..100.0,
-        ) {
-            let v = Vector::new(x, y);
+        fn as_position_to_position2d_preserves_components(v in any::<Vector<f32>>()) {
             let pos: rerun::Position2D = AsPosition(v).into();
-            prop_assert!(abs_diff_eq!(pos.x(), x, epsilon = EPS));
-            prop_assert!(abs_diff_eq!(pos.y(), y, epsilon = EPS));
+            prop_assert!(abs_diff_eq!(pos.x(), v.x(), epsilon = EPS));
+            prop_assert!(abs_diff_eq!(pos.y(), v.y(), epsilon = EPS));
         }
 
         #[test]
-        fn rotor_to_axis_angle_preserves_angle(r in any::<UnitRotor<f32>>()) {
+        fn rotor_to_axis_angle_preserves_angle(r in any::<Rotor<f32>>()) {
+            let r = r.normalize();
             let original_angle = r.angle();
-            let rot: rerun::components::RotationAxisAngle = (*r).into();
+            let rot: rerun::components::RotationAxisAngle = r.into();
 
             // The angle should be preserved (possibly with 2π periodicity)
             let rerun_angle = rot.angle.radians();
@@ -187,8 +178,9 @@ mod tests {
         }
 
         #[test]
-        fn rotor_to_transform3d_does_not_panic(r in any::<UnitRotor<f32>>()) {
-            let _t: rerun::Transform3D = (*r).into();
+        fn rotor_to_transform3d_does_not_panic(r in any::<Rotor<f32>>()) {
+            let r = r.normalize();
+            let _t: rerun::Transform3D = r.into();
         }
     }
 

@@ -318,7 +318,8 @@ impl<T: Float> From<Motor<T>> for EuclideanRotor<T> {
     /// ```
     #[inline]
     fn from(m: Motor<T>) -> Self {
-        EuclideanRotor::new(m.s(), m.e12()).normalized()
+        // Unit motor's rotation part is already unit, no normalization needed
+        EuclideanRotor::new_unchecked(m.s(), m.e12())
     }
 }
 
