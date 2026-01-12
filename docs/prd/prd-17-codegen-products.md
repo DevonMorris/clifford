@@ -12,8 +12,9 @@
 | [PRD-17.3](prd-17.3-field-documentation.md) | **Complete** | Field Documentation Fix (use TOML field names) |
 | [PRD-17.4](prd-17.4-guidance-updates.md) | **Complete** | Guidance Updates (CLAUDE.md, agents) |
 | [PRD-17.5](prd-17.5-regenerate-algebras.md) | **Complete** | Regenerate All Algebras |
-| [PRD-17.6](prd-17.6-antiproduct.md) | Draft | Geometric Antiproduct for PGA Transformations |
+| [PRD-17.6](prd-17.6-antiproduct.md) | Draft | Complete Anti-Product Suite (antiproduct, antiscalar, dual, antidual) |
 | [PRD-17.7](prd-17.7-public-products-api.md) | **Complete** | Expose Generated Products in Public API |
+| [PRD-17.8](prd-17.8-product-normalization.md) | Draft | Product Normalization (remove new_unchecked, maintain constraints) |
 
 ## Problem Statement
 
