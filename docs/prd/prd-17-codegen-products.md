@@ -8,10 +8,11 @@
 | PRD | Status | Description |
 |-----|--------|-------------|
 | [PRD-17.1](prd-17.1-missing-products.md) | Draft | Missing Product Generation (interior, left/right contraction, scalar) |
-| [PRD-17.2](prd-17.2-exterior-naming.md) | Draft | Exterior Product Naming (rename outer → exterior) |
-| [PRD-17.3](prd-17.3-field-documentation.md) | Draft | Field Documentation Fix (use TOML field names) |
+| [PRD-17.2](prd-17.2-exterior-naming.md) | **Complete** | Exterior Product Naming (rename outer → exterior) |
+| [PRD-17.3](prd-17.3-field-documentation.md) | **Complete** | Field Documentation Fix (use TOML field names) |
 | [PRD-17.4](prd-17.4-guidance-updates.md) | **Complete** | Guidance Updates (CLAUDE.md, agents) |
-| [PRD-17.5](prd-17.5-regenerate-algebras.md) | Draft | Regenerate All Algebras |
+| [PRD-17.5](prd-17.5-regenerate-algebras.md) | **Complete** | Regenerate All Algebras |
+| [PRD-17.6](prd-17.6-antiproduct.md) | Draft | Geometric Antiproduct for PGA Transformations |
 
 ## Problem Statement
 
