@@ -19,8 +19,8 @@ use std::collections::BTreeSet;
 pub enum ProductType {
     /// Geometric product: `a * b`
     Geometric,
-    /// Outer (wedge) product: `a ∧ b`
-    Outer,
+    /// Exterior (wedge) product: `a ∧ b`
+    Exterior,
     /// Inner product: `a · b`
     Inner,
     /// Left contraction: `a ⌋ b`
@@ -32,7 +32,7 @@ impl ProductType {
     pub fn all() -> &'static [ProductType] {
         &[
             ProductType::Geometric,
-            ProductType::Outer,
+            ProductType::Exterior,
             ProductType::Inner,
             ProductType::LeftContraction,
         ]
@@ -42,7 +42,7 @@ impl ProductType {
     pub fn toml_name(&self) -> &'static str {
         match self {
             ProductType::Geometric => "geometric",
-            ProductType::Outer => "outer",
+            ProductType::Exterior => "exterior",
             ProductType::Inner => "inner",
             ProductType::LeftContraction => "left_contraction",
         }
@@ -87,7 +87,7 @@ pub struct ProductResult {
 /// assert_eq!(output, vec![0, 2]);
 ///
 /// // Vector ∧ Vector produces bivector (grade 2)
-/// let output = infer_output_grades(&[1], &[1], ProductType::Outer, &algebra);
+/// let output = infer_output_grades(&[1], &[1], ProductType::Exterior, &algebra);
 /// assert_eq!(output, vec![2]);
 /// ```
 pub fn infer_output_grades(
@@ -107,7 +107,7 @@ pub fn infer_output_grades(
                         output_set.insert(g);
                     }
                 }
-                ProductType::Outer => {
+                ProductType::Exterior => {
                     if let Some(g) = outer_grade(ga, gb, dim) {
                         output_set.insert(g);
                     }
@@ -169,7 +169,7 @@ pub fn infer_output_grades_precise(
             // Check if this product should be included based on product type
             let include = match product_type {
                 ProductType::Geometric => true,
-                ProductType::Outer => {
+                ProductType::Exterior => {
                     // Outer product: only grade ga + gb terms
                     result_grade == ga + gb
                 }
@@ -338,7 +338,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Vector ∧ Vector = Bivector
-        let output = infer_output_grades(&[1], &[1], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[1], &[1], ProductType::Exterior, &algebra);
         assert_eq!(output, vec![2]);
     }
 
@@ -347,7 +347,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Vector ∧ Bivector = Trivector
-        let output = infer_output_grades(&[1], &[2], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[1], &[2], ProductType::Exterior, &algebra);
         assert_eq!(output, vec![3]);
     }
 
@@ -356,7 +356,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Bivector ∧ Bivector = 0 in 3D (grade 4 > dim 3)
-        let output = infer_output_grades(&[2], &[2], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[2], &[2], ProductType::Exterior, &algebra);
         assert!(output.is_empty());
     }
 
@@ -435,7 +435,14 @@ mod tests {
         assert!(!result.is_zero);
 
         // Vector ∧ Vector should match Entity_2 (grade 2)
-        let result = infer_product(&[1], &[1], ProductType::Outer, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1],
+            &[1],
+            ProductType::Exterior,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![2]);
         assert_eq!(result.matching_entity, Some("Entity_2".to_string()));
         assert!(!result.is_zero);
@@ -503,7 +510,14 @@ mod tests {
         let entities = vec![(vec![2], "Entity_2".to_string())];
 
         // Bivector ∧ Bivector = 0 in 3D
-        let result = infer_product(&[2], &[2], ProductType::Outer, &entities, &algebra, &table);
+        let result = infer_product(
+            &[2],
+            &[2],
+            ProductType::Exterior,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert!(result.output_grades.is_empty());
         assert!(result.matching_entity.is_none());
         assert!(result.is_zero);

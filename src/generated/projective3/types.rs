@@ -19,15 +19,15 @@ pub struct Flector<T: Float> {
     e2: T,
     #[doc = "Coefficient of `e3`."]
     e3: T,
-    #[doc = "Coefficient of `e4`."]
+    #[doc = "Coefficient of `e0`."]
     e0: T,
-    #[doc = "Coefficient of `e1e2e3`."]
+    #[doc = "Coefficient of `e023`."]
     e023: T,
-    #[doc = "Coefficient of `e1e2e4`."]
+    #[doc = "Coefficient of `e031`."]
     e031: T,
-    #[doc = "Coefficient of `e1e3e4`."]
+    #[doc = "Coefficient of `e012`."]
     e012: T,
-    #[doc = "Coefficient of `e2e3e4`."]
+    #[doc = "Coefficient of `e123`."]
     e123: T,
 }
 impl<T: Float> Flector<T> {
@@ -102,42 +102,42 @@ impl<T: Float> Flector<T> {
             e123,
         }
     }
-    #[doc = "Returns the e1 component (coefficient of `e1`)."]
+    #[doc = "Returns the `e1` coefficient."]
     #[inline]
     pub fn e1(&self) -> T {
         self.e1
     }
-    #[doc = "Returns the e2 component (coefficient of `e2`)."]
+    #[doc = "Returns the `e2` coefficient."]
     #[inline]
     pub fn e2(&self) -> T {
         self.e2
     }
-    #[doc = "Returns the e3 component (coefficient of `e3`)."]
+    #[doc = "Returns the `e3` coefficient."]
     #[inline]
     pub fn e3(&self) -> T {
         self.e3
     }
-    #[doc = "Returns the e0 component (coefficient of `e4`)."]
+    #[doc = "Returns the `e0` coefficient."]
     #[inline]
     pub fn e0(&self) -> T {
         self.e0
     }
-    #[doc = "Returns the e023 component (coefficient of `e1e2e3`)."]
+    #[doc = "Returns the `e023` coefficient."]
     #[inline]
     pub fn e023(&self) -> T {
         self.e023
     }
-    #[doc = "Returns the e031 component (coefficient of `e1e2e4`)."]
+    #[doc = "Returns the `e031` coefficient."]
     #[inline]
     pub fn e031(&self) -> T {
         self.e031
     }
-    #[doc = "Returns the e012 component (coefficient of `e1e3e4`)."]
+    #[doc = "Returns the `e012` coefficient."]
     #[inline]
     pub fn e012(&self) -> T {
         self.e012
     }
-    #[doc = "Returns the e123 component (coefficient of `e2e3e4`)."]
+    #[doc = "Returns the `e123` coefficient."]
     #[inline]
     pub fn e123(&self) -> T {
         self.e123
@@ -261,17 +261,17 @@ impl<T: Float> Default for Flector<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Line<T: Float> {
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `e01`."]
     e01: T,
-    #[doc = "Coefficient of `e1e3`."]
+    #[doc = "Coefficient of `e02`."]
     e02: T,
-    #[doc = "Coefficient of `e2e3`."]
+    #[doc = "Coefficient of `e03`."]
     e03: T,
-    #[doc = "Coefficient of `e1e4`."]
+    #[doc = "Coefficient of `e23`."]
     e23: T,
-    #[doc = "Coefficient of `e2e4`."]
+    #[doc = "Coefficient of `e31`."]
     e31: T,
-    #[doc = "Coefficient of `e3e4`."]
+    #[doc = "Coefficient of `e12`."]
     e12: T,
 }
 impl<T: Float> Line<T> {
@@ -338,32 +338,32 @@ impl<T: Float> Line<T> {
             e12,
         }
     }
-    #[doc = "Returns the e01 component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `e01` coefficient."]
     #[inline]
     pub fn e01(&self) -> T {
         self.e01
     }
-    #[doc = "Returns the e02 component (coefficient of `e1e3`)."]
+    #[doc = "Returns the `e02` coefficient."]
     #[inline]
     pub fn e02(&self) -> T {
         self.e02
     }
-    #[doc = "Returns the e03 component (coefficient of `e2e3`)."]
+    #[doc = "Returns the `e03` coefficient."]
     #[inline]
     pub fn e03(&self) -> T {
         self.e03
     }
-    #[doc = "Returns the e23 component (coefficient of `e1e4`)."]
+    #[doc = "Returns the `e23` coefficient."]
     #[inline]
     pub fn e23(&self) -> T {
         self.e23
     }
-    #[doc = "Returns the e31 component (coefficient of `e2e4`)."]
+    #[doc = "Returns the `e31` coefficient."]
     #[inline]
     pub fn e31(&self) -> T {
         self.e31
     }
-    #[doc = "Returns the e12 component (coefficient of `e3e4`)."]
+    #[doc = "Returns the `e12` coefficient."]
     #[inline]
     pub fn e12(&self) -> T {
         self.e12
@@ -530,19 +530,19 @@ impl<T: Float> Default for Line<T> {
 pub struct Motor<T: Float> {
     #[doc = "Coefficient of `s`."]
     s: T,
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `e23`."]
     e23: T,
-    #[doc = "Coefficient of `e1e3`."]
+    #[doc = "Coefficient of `e31`."]
     e31: T,
-    #[doc = "Coefficient of `e2e3`."]
+    #[doc = "Coefficient of `e12`."]
     e12: T,
-    #[doc = "Coefficient of `e1e4`."]
+    #[doc = "Coefficient of `e01`."]
     e01: T,
-    #[doc = "Coefficient of `e2e4`."]
+    #[doc = "Coefficient of `e02`."]
     e02: T,
-    #[doc = "Coefficient of `e3e4`."]
+    #[doc = "Coefficient of `e03`."]
     e03: T,
-    #[doc = "Coefficient of `e1e2e3e4`."]
+    #[doc = "Coefficient of `e0123`."]
     e0123: T,
 }
 impl<T: Float> Motor<T> {
@@ -630,42 +630,42 @@ impl<T: Float> Motor<T> {
             e0123,
         }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s
     }
-    #[doc = "Returns the e23 component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `e23` coefficient."]
     #[inline]
     pub fn e23(&self) -> T {
         self.e23
     }
-    #[doc = "Returns the e31 component (coefficient of `e1e3`)."]
+    #[doc = "Returns the `e31` coefficient."]
     #[inline]
     pub fn e31(&self) -> T {
         self.e31
     }
-    #[doc = "Returns the e12 component (coefficient of `e2e3`)."]
+    #[doc = "Returns the `e12` coefficient."]
     #[inline]
     pub fn e12(&self) -> T {
         self.e12
     }
-    #[doc = "Returns the e01 component (coefficient of `e1e4`)."]
+    #[doc = "Returns the `e01` coefficient."]
     #[inline]
     pub fn e01(&self) -> T {
         self.e01
     }
-    #[doc = "Returns the e02 component (coefficient of `e2e4`)."]
+    #[doc = "Returns the `e02` coefficient."]
     #[inline]
     pub fn e02(&self) -> T {
         self.e02
     }
-    #[doc = "Returns the e03 component (coefficient of `e3e4`)."]
+    #[doc = "Returns the `e03` coefficient."]
     #[inline]
     pub fn e03(&self) -> T {
         self.e03
     }
-    #[doc = "Returns the e0123 component (coefficient of `e1e2e3e4`)."]
+    #[doc = "Returns the `e0123` coefficient."]
     #[inline]
     pub fn e0123(&self) -> T {
         self.e0123
@@ -803,13 +803,13 @@ impl<T: Float> Default for Motor<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Plane<T: Float> {
-    #[doc = "Coefficient of `e1e2e3`."]
+    #[doc = "Coefficient of `e023`."]
     e023: T,
-    #[doc = "Coefficient of `e1e2e4`."]
+    #[doc = "Coefficient of `e031`."]
     e031: T,
-    #[doc = "Coefficient of `e1e3e4`."]
+    #[doc = "Coefficient of `e012`."]
     e012: T,
-    #[doc = "Coefficient of `e2e3e4`."]
+    #[doc = "Coefficient of `e123`."]
     e123: T,
 }
 impl<T: Float> Plane<T> {
@@ -823,22 +823,22 @@ impl<T: Float> Plane<T> {
             e123,
         }
     }
-    #[doc = "Returns the e023 component (coefficient of `e1e2e3`)."]
+    #[doc = "Returns the `e023` coefficient."]
     #[inline]
     pub fn e023(&self) -> T {
         self.e023
     }
-    #[doc = "Returns the e031 component (coefficient of `e1e2e4`)."]
+    #[doc = "Returns the `e031` coefficient."]
     #[inline]
     pub fn e031(&self) -> T {
         self.e031
     }
-    #[doc = "Returns the e012 component (coefficient of `e1e3e4`)."]
+    #[doc = "Returns the `e012` coefficient."]
     #[inline]
     pub fn e012(&self) -> T {
         self.e012
     }
-    #[doc = "Returns the e123 component (coefficient of `e2e3e4`)."]
+    #[doc = "Returns the `e123` coefficient."]
     #[inline]
     pub fn e123(&self) -> T {
         self.e123
@@ -939,7 +939,7 @@ pub struct Point<T: Float> {
     e2: T,
     #[doc = "Coefficient of `e3`."]
     e3: T,
-    #[doc = "Coefficient of `e4`."]
+    #[doc = "Coefficient of `e0`."]
     e0: T,
 }
 impl<T: Float> Point<T> {
@@ -948,22 +948,22 @@ impl<T: Float> Point<T> {
     pub fn new(e1: T, e2: T, e3: T, e0: T) -> Self {
         Self { e1, e2, e3, e0 }
     }
-    #[doc = "Returns the e1 component (coefficient of `e1`)."]
+    #[doc = "Returns the `e1` coefficient."]
     #[inline]
     pub fn e1(&self) -> T {
         self.e1
     }
-    #[doc = "Returns the e2 component (coefficient of `e2`)."]
+    #[doc = "Returns the `e2` coefficient."]
     #[inline]
     pub fn e2(&self) -> T {
         self.e2
     }
-    #[doc = "Returns the e3 component (coefficient of `e3`)."]
+    #[doc = "Returns the `e3` coefficient."]
     #[inline]
     pub fn e3(&self) -> T {
         self.e3
     }
-    #[doc = "Returns the e0 component (coefficient of `e4`)."]
+    #[doc = "Returns the `e0` coefficient."]
     #[inline]
     pub fn e0(&self) -> T {
         self.e0
@@ -1055,7 +1055,7 @@ impl<T: Float> Default for Point<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Quadvector<T: Float> {
-    #[doc = "Coefficient of `e1e2e3e4`."]
+    #[doc = "Coefficient of `e0123`."]
     e0123: T,
 }
 impl<T: Float> Quadvector<T> {
@@ -1064,7 +1064,7 @@ impl<T: Float> Quadvector<T> {
     pub fn new(e0123: T) -> Self {
         Self { e0123 }
     }
-    #[doc = "Returns the e0123 component (coefficient of `e1e2e3e4`)."]
+    #[doc = "Returns the `e0123` coefficient."]
     #[inline]
     pub fn e0123(&self) -> T {
         self.e0123
@@ -1150,7 +1150,7 @@ impl<T: Float> Scalar<T> {
     pub fn new(s: T) -> Self {
         Self { s }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s

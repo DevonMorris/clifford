@@ -190,13 +190,18 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
-        // Outer product (using BitXor) - only for explicit products
-        for entry in &self.spec.products.outer {
+        // Exterior product (using BitXor) - only for explicit products
+        for entry in &self.spec.products.exterior {
             // Only generate if lhs matches this type
             if entry.lhs == ty.name {
                 if let Some(other) = self.find_type(&entry.rhs) {
                     if let Some(output_type) = self.find_type(&entry.output) {
-                        impls.push(self.generate_outer_from_entry(ty, other, output_type, entry));
+                        impls.push(self.generate_exterior_from_entry(
+                            ty,
+                            other,
+                            output_type,
+                            entry,
+                        ));
                     }
                 }
             }
@@ -375,8 +380,8 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates outer product (Type ^ Other -> Output) from a product entry.
-    fn generate_outer_from_entry(
+    /// Generates exterior product (Type ^ Other -> Output) from a product entry.
+    fn generate_exterior_from_entry(
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
@@ -387,7 +392,7 @@ impl<'a> TraitsGenerator<'a> {
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
         let fn_name = format_ident!(
-            "outer_{}_{}",
+            "exterior_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
@@ -650,7 +655,7 @@ impl<'a> TraitsGenerator<'a> {
         let signature_name = self.generate_signature_name();
         let add_sub_tests = self.generate_add_sub_verification_tests_raw();
         let geometric_tests = self.generate_geometric_verification_tests_raw();
-        let outer_tests = self.generate_outer_verification_tests_raw();
+        let exterior_tests = self.generate_exterior_verification_tests_raw();
 
         format!(
             r#"
@@ -670,12 +675,12 @@ mod verification_tests {{
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{geometric}{outer}}}
+{add_sub}{geometric}{exterior}}}
 "#,
             sig = signature_name,
             add_sub = add_sub_tests,
             geometric = geometric_tests,
-            outer = outer_tests,
+            exterior = exterior_tests,
         )
     }
 
@@ -827,17 +832,17 @@ mod verification_tests {{
             .collect()
     }
 
-    /// Generates outer product verification tests as a formatted string.
-    fn generate_outer_verification_tests_raw(&self) -> String {
+    /// Generates exterior product verification tests as a formatted string.
+    fn generate_exterior_verification_tests_raw(&self) -> String {
         // Only generate tests for products explicitly listed in the TOML
-        if self.spec.products.outer.is_empty() {
+        if self.spec.products.exterior.is_empty() {
             return String::new();
         }
 
         let signature_name = self.generate_signature_name();
         self.spec
             .products
-            .outer
+            .exterior
             .iter()
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
@@ -848,17 +853,17 @@ mod verification_tests {{
                     r#"
     proptest! {{
         #[test]
-        fn outer_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+        fn exterior_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = outer_{lhs_lower}_{rhs_lower}(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: {out}<f64> = exterior_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={{:?}}, generic={{:?}}",
+                "Exterior product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
         }}
@@ -952,7 +957,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_outer() {
+    fn generates_exterior() {
         let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -963,7 +968,7 @@ mod tests {
 
         // Vector ^ Vector should produce Bivector
         assert!(code.contains("BitXor"));
-        assert!(code.contains("outer_vector_vector"));
+        assert!(code.contains("exterior_vector_vector"));
     }
 
     #[test]

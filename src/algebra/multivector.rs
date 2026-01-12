@@ -787,9 +787,9 @@ impl<T: Float, S: Signature> Multivector<T, S> {
 // ============================================================================
 
 impl<T: Float, S: Signature> Multivector<T, S> {
-    /// Computes the outer (wedge) product: `a ∧ b`.
+    /// Computes the exterior (wedge) product: `a ∧ b`.
     ///
-    /// The outer product extracts the grade-raising part of the geometric product.
+    /// The exterior product extracts the grade-raising part of the geometric product.
     /// For a grade-k blade A and grade-j blade B, the result has grade k + j.
     ///
     /// # Properties
@@ -815,14 +815,14 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
     ///
     /// // e₁ ∧ e₂ = e₁₂ (bivector)
-    /// let e12 = e1.outer(&e2);
+    /// let e12 = e1.exterior(&e2);
     /// assert_eq!(e12.grade(1e-10), Some(2));
     ///
     /// // Anticommutativity: e₂ ∧ e₁ = -e₁₂
-    /// let e21 = e2.outer(&e1);
+    /// let e21 = e2.exterior(&e1);
     /// assert!(abs_diff_eq!(e21, -&e12, epsilon = 1e-10));
     /// ```
-    pub fn outer(&self, other: &Self) -> Self {
+    pub fn exterior(&self, other: &Self) -> Self {
         let mut result = Self::zero();
 
         for i in 0..S::NumBlades::USIZE {
@@ -851,6 +851,16 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         result
     }
 
+    /// Deprecated alias for [`exterior`](Self::exterior).
+    ///
+    /// Use [`exterior`](Self::exterior) instead. This method will be removed
+    /// in a future version.
+    #[deprecated(since = "0.2.0", note = "use `exterior` instead")]
+    #[inline]
+    pub fn outer(&self, other: &Self) -> Self {
+        self.exterior(other)
+    }
+
     /// Computes the left contraction: `A ⌋ B`.
     ///
     /// The left contraction extracts the grade-lowering part of the geometric
@@ -870,7 +880,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-    /// let e12 = e1.outer(&e2);
+    /// let e12 = e1.exterior(&e2);
     ///
     /// // Vector left-contracted with bivector gives vector
     /// let result = e1.left_contract(&e12);
@@ -929,7 +939,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-    /// let e12 = e1.outer(&e2);
+    /// let e12 = e1.exterior(&e2);
     ///
     /// // Bivector right-contracted with vector gives vector
     /// let result = e12.right_contract(&e1);
@@ -1056,15 +1066,15 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     ///
     /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-    /// let e12 = e1.outer(&e2);
-    /// let e23 = e2.outer(&Multivector::basis_vector(2));
+    /// let e12 = e1.exterior(&e2);
+    /// let e23 = e2.exterior(&Multivector::basis_vector(2));
     ///
     /// // Meet of two planes sharing e2 should give e2 direction
     /// let meet = e12.regressive(&e23);
     /// assert_eq!(meet.grade(1e-10), Some(1));
     /// ```
     pub fn regressive(&self, other: &Self) -> Self {
-        self.dual().outer(&other.dual()).undual()
+        self.dual().exterior(&other.dual()).undual()
     }
 
     /// Computes the sandwich product: `R x R̃`.
@@ -1215,10 +1225,10 @@ impl<T: Float, S: Signature> Div<T> for Multivector<T, S> {
 // Wedge Product (BitXor)
 // ============================================================================
 
-/// Wedge (outer) product via `^` operator.
+/// Wedge (exterior) product via `^` operator.
 ///
 /// The `^` operator provides ergonomic syntax for the wedge product:
-/// `a ^ b` is equivalent to `a.outer(&b)`.
+/// `a ^ b` is equivalent to `a.exterior(&b)`.
 ///
 /// # Example
 ///
@@ -1242,7 +1252,7 @@ impl<T: Float, S: Signature> BitXor for &Multivector<T, S> {
     type Output = Multivector<T, S>;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        self.outer(rhs)
+        self.exterior(rhs)
     }
 }
 
@@ -1250,7 +1260,7 @@ impl<T: Float, S: Signature> BitXor for Multivector<T, S> {
     type Output = Multivector<T, S>;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        self.outer(&rhs)
+        self.exterior(&rhs)
     }
 }
 
@@ -1258,7 +1268,7 @@ impl<T: Float, S: Signature> BitXor<&Multivector<T, S>> for Multivector<T, S> {
     type Output = Multivector<T, S>;
 
     fn bitxor(self, rhs: &Multivector<T, S>) -> Self::Output {
-        self.outer(rhs)
+        self.exterior(rhs)
     }
 }
 
@@ -1266,7 +1276,7 @@ impl<T: Float, S: Signature> BitXor<Multivector<T, S>> for &Multivector<T, S> {
     type Output = Multivector<T, S>;
 
     fn bitxor(self, rhs: Multivector<T, S>) -> Self::Output {
-        self.outer(&rhs)
+        self.exterior(&rhs)
     }
 }
 
@@ -1789,16 +1799,16 @@ mod tests {
         }
 
         // ====================================================================
-        // Outer product tests
+        // Exterior product tests
         // ====================================================================
 
         #[test]
-        fn outer_anticommutative_vectors(
+        fn exterior_anticommutative_vectors(
             a in any::<VectorE3>(),
             b in any::<VectorE3>(),
         ) {
-            let ab = a.outer(&*b);
-            let ba = b.outer(&*a);
+            let ab = a.exterior(&*b);
+            let ba = b.exterior(&*a);
             prop_assert!(abs_diff_eq!(ab, -&ba, epsilon = ABS_DIFF_EQ_EPS));
         }
 
@@ -1808,8 +1818,8 @@ mod tests {
             b in any::<Multivector<f64, Euclidean3>>(),
             c in any::<Multivector<f64, Euclidean3>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
@@ -1818,7 +1828,7 @@ mod tests {
             a in any::<VectorE3>(),
             b in any::<VectorE3>(),
         ) {
-            let wedge = a.outer(&*b);
+            let wedge = a.exterior(&*b);
             // Result should have no scalar or vector parts
             prop_assert!(wedge.grade_select(0).is_zero(ABS_DIFF_EQ_EPS));
             prop_assert!(wedge.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));

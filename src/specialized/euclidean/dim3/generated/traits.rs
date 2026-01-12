@@ -89,21 +89,21 @@ impl<T: Float> BitXor<Rotor<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bitxor(self, rhs: Rotor<T>) -> Bivector<T> {
-        outer_bivector_rotor(&self, &rhs)
+        exterior_bivector_rotor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Bivector<T> {
-        outer_bivector_scalar(&self, &rhs)
+        exterior_bivector_scalar(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Vector<T>> for Bivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Vector<T>) -> Trivector<T> {
-        outer_bivector_vector(&self, &rhs)
+        exterior_bivector_vector(&self, &rhs)
     }
 }
 impl<T: Float> Add for Rotor<T> {
@@ -183,28 +183,28 @@ impl<T: Float> BitXor<Bivector<T>> for Rotor<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bitxor(self, rhs: Bivector<T>) -> Bivector<T> {
-        outer_rotor_bivector(&self, &rhs)
+        exterior_rotor_bivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Rotor<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn bitxor(self, rhs: Rotor<T>) -> Rotor<T> {
-        outer_rotor_rotor(&self, &rhs)
+        exterior_rotor_rotor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Rotor<T> {
-        outer_rotor_scalar(&self, &rhs)
+        exterior_rotor_scalar(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Trivector<T>> for Rotor<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Trivector<T>) -> Trivector<T> {
-        outer_rotor_trivector(&self, &rhs)
+        exterior_rotor_trivector(&self, &rhs)
     }
 }
 impl<T: Float> Add for Scalar<T> {
@@ -288,35 +288,35 @@ impl<T: Float> BitXor<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bitxor(self, rhs: Bivector<T>) -> Bivector<T> {
-        outer_scalar_bivector(&self, &rhs)
+        exterior_scalar_bivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
     #[inline]
     fn bitxor(self, rhs: Rotor<T>) -> Rotor<T> {
-        outer_scalar_rotor(&self, &rhs)
+        exterior_scalar_rotor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Scalar<T> {
-        outer_scalar_scalar(&self, &rhs)
+        exterior_scalar_scalar(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Trivector<T>) -> Trivector<T> {
-        outer_scalar_trivector(&self, &rhs)
+        exterior_scalar_trivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn bitxor(self, rhs: Vector<T>) -> Vector<T> {
-        outer_scalar_vector(&self, &rhs)
+        exterior_scalar_vector(&self, &rhs)
     }
 }
 impl<T: Float> Add for Trivector<T> {
@@ -393,14 +393,14 @@ impl<T: Float> BitXor<Rotor<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Rotor<T>) -> Trivector<T> {
-        outer_trivector_rotor(&self, &rhs)
+        exterior_trivector_rotor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Trivector<T> {
-        outer_trivector_scalar(&self, &rhs)
+        exterior_trivector_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Vector<T> {
@@ -470,21 +470,21 @@ impl<T: Float> BitXor<Bivector<T>> for Vector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bitxor(self, rhs: Bivector<T>) -> Trivector<T> {
-        outer_vector_bivector(&self, &rhs)
+        exterior_vector_bivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Vector<T> {
-        outer_vector_scalar(&self, &rhs)
+        exterior_vector_scalar(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bitxor(self, rhs: Vector<T>) -> Bivector<T> {
-        outer_vector_vector(&self, &rhs)
+        exterior_vector_vector(&self, &rhs)
     }
 }
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Bivector<T> {
@@ -1324,17 +1324,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_bivector_rotor_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
+        fn exterior_bivector_rotor_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Bivector<f64> = outer_bivector_rotor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Bivector<f64> = exterior_bivector_rotor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1342,17 +1342,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Bivector<f64> = outer_bivector_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Bivector<f64> = exterior_bivector_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1360,17 +1360,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_bivector_vector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+        fn exterior_bivector_vector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_bivector_vector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_bivector_vector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1378,17 +1378,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_rotor_bivector_bivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
+        fn exterior_rotor_bivector_bivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Bivector<f64> = outer_rotor_bivector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Bivector<f64> = exterior_rotor_bivector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1396,17 +1396,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+        fn exterior_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Rotor<f64> = outer_rotor_rotor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Rotor<f64> = exterior_rotor_rotor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1414,17 +1414,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_rotor_scalar_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_rotor_scalar_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Rotor<f64> = outer_rotor_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Rotor<f64> = exterior_rotor_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1432,17 +1432,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_rotor_trivector_trivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Trivector<f64>>()) {
+        fn exterior_rotor_trivector_trivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Trivector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_rotor_trivector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_rotor_trivector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1450,17 +1450,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+        fn exterior_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Bivector<f64> = outer_scalar_bivector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Bivector<f64> = exterior_scalar_bivector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1468,17 +1468,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_rotor_rotor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
+        fn exterior_scalar_rotor_rotor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Rotor<f64> = outer_scalar_rotor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Rotor<f64> = exterior_scalar_rotor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1486,17 +1486,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Scalar<f64> = outer_scalar_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Scalar<f64> = exterior_scalar_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1504,17 +1504,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_trivector_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+        fn exterior_scalar_trivector_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_scalar_trivector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_scalar_trivector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1522,17 +1522,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+        fn exterior_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Vector<f64> = outer_scalar_vector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Vector<f64> = exterior_scalar_vector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1540,17 +1540,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_trivector_rotor_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Rotor<f64>>()) {
+        fn exterior_trivector_rotor_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Rotor<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_trivector_rotor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_trivector_rotor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1558,17 +1558,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_trivector_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_trivector_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1576,17 +1576,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_vector_bivector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+        fn exterior_vector_bivector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Trivector<f64> = outer_vector_bivector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Trivector<f64> = exterior_vector_bivector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1594,17 +1594,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Vector<f64> = outer_vector_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Vector<f64> = exterior_vector_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -1612,17 +1612,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+        fn exterior_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
             let mv_a: Multivector<f64, Euclidean3> = a.into();
             let mv_b: Multivector<f64, Euclidean3> = b.into();
 
-            let specialized_result: Bivector<f64> = outer_vector_vector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Bivector<f64> = exterior_vector_vector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }

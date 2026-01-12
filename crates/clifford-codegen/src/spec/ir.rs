@@ -209,8 +209,8 @@ pub struct FieldSpec {
 pub struct ProductsSpec {
     /// Geometric product entries.
     pub geometric: Vec<ProductEntry>,
-    /// Outer (wedge) product entries.
-    pub outer: Vec<ProductEntry>,
+    /// Exterior (wedge) product entries.
+    pub exterior: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.

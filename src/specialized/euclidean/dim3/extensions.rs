@@ -47,7 +47,7 @@ impl<T: Float> Vector<T> {
     /// ```
     #[inline]
     pub fn wedge(self, other: Self) -> Bivector<T> {
-        products::outer_vector_vector(&self, &other)
+        products::exterior_vector_vector(&self, &other)
     }
 
     /// Cross product: `a × b`.

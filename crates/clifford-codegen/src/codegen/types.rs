@@ -252,9 +252,8 @@ impl<'a> TypeGenerator<'a> {
             .iter()
             .map(|field| {
                 let name = format_ident!("{}", field.name);
-                let blade = Blade::from_index(field.blade_index);
-                let blade_name = self.algebra.blade_name(blade);
-                let doc = format!("Coefficient of `{}`.", blade_name);
+                // Use the field name from the TOML spec, not the computed blade name
+                let doc = format!("Coefficient of `{}`.", field.name);
 
                 quote! {
                     #[doc = #doc]
@@ -737,12 +736,8 @@ impl<'a> TypeGenerator<'a> {
             .iter()
             .map(|field| {
                 let name = format_ident!("{}", field.name);
-                let blade = Blade::from_index(field.blade_index);
-                let blade_name = self.algebra.blade_name(blade);
-                let doc = format!(
-                    "Returns the {} component (coefficient of `{}`).",
-                    field.name, blade_name
-                );
+                // Use the field name from the TOML spec, not the computed blade name
+                let doc = format!("Returns the `{}` coefficient.", field.name);
 
                 quote! {
                     #[doc = #doc]

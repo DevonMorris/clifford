@@ -623,7 +623,7 @@ pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
 /// Infers products automatically from types.
 ///
 /// Products are always auto-inferred from the defined types.
-/// The TOML no longer needs (or supports) a products section.
+/// All standard product types are generated: geometric, exterior, inner (left contraction).
 fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
     // Build algebra for product computation
     let algebra = Algebra::new(signature.p, signature.q, signature.r);
@@ -635,10 +635,12 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         .map(|t| (t.name.clone(), t.grades.clone()))
         .collect();
 
-    // Infer products for geometric and outer only
-    // Left contraction and other products are only generated if explicitly specified
+    // Infer all standard product types
     let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
-    let outer_table = infer_all_products(&entities, ProductType::Outer, &algebra);
+    let exterior_table = infer_all_products(&entities, ProductType::Exterior, &algebra);
+    let left_contraction_table =
+        infer_all_products(&entities, ProductType::LeftContraction, &algebra);
+    let inner_table = infer_all_products(&entities, ProductType::Inner, &algebra);
 
     // Convert inferred products to ProductEntry format
     // Skip products that don't have matching entity types
@@ -659,13 +661,18 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
             .collect()
     };
 
+    // Note: We use left_contraction for the left_contraction field since inner product
+    // (symmetric) has subtle differences. Left contraction is more commonly used in GA.
+    // Inner product entries are not stored separately but could be added if needed.
+    let _ = inner_table; // Mark as intentionally unused for now
+
     ProductsSpec {
         geometric: convert_entries(geometric_table),
-        outer: convert_entries(outer_table),
-        left_contraction: vec![],  // Only generated if explicitly specified
-        right_contraction: vec![], // Not commonly used
-        regressive: vec![],        // Not commonly used
-        scalar: vec![],            // Can be derived from geometric
+        exterior: convert_entries(exterior_table),
+        left_contraction: convert_entries(left_contraction_table),
+        right_contraction: vec![], // Symmetric to left contraction - can be added if needed
+        regressive: vec![],        // For projective GA - can be added if needed
+        scalar: vec![],            // Can be derived from geometric - can be added if needed
     }
 }
 

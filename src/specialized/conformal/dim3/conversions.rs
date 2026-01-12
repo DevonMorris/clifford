@@ -566,7 +566,7 @@ mod tests {
             let e_inf = Conformal3::e_infinity::<f64>();
 
             // Compute P ∧ e∞
-            let wedge = mv_point.outer(&e_inf);
+            let wedge = mv_point.exterior(&e_inf);
 
             let mv_fp: Multivector<f64, Conformal3> = fp.into();
 

@@ -27,134 +27,202 @@ pub fn geometric_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Ve
 #[doc = "Geometric product: Rotor * Bivector -> Rotor"]
 #[inline]
 pub fn geometric_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
-    Rotor::new_unchecked(-(a.xy() * b.xy()), a.s() * b.xy())
+    Rotor::new_unchecked(-(a.xy() * b.xy()), b.xy() * a.s())
 }
 #[doc = "Geometric product: Rotor * Rotor -> Rotor"]
 #[inline]
 pub fn geometric_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
     Rotor::new_unchecked(
-        a.s() * b.s() - a.xy() * b.xy(),
-        a.s() * b.xy() + a.xy() * b.s(),
+        -(a.xy() * b.xy()) + b.s() * a.s(),
+        a.xy() * b.s() + b.xy() * a.s(),
     )
 }
 #[doc = "Geometric product: Rotor * Scalar -> Rotor"]
 #[inline]
 pub fn geometric_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.s() * b.s(), a.xy() * b.s())
+    Rotor::new_unchecked(b.s() * a.s(), a.xy() * b.s())
 }
 #[doc = "Geometric product: Rotor * Vector -> Vector"]
 #[inline]
 pub fn geometric_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
     Vector::new(
-        a.s() * b.x() + a.xy() * b.y(),
-        a.s() * b.y() - a.xy() * b.x(),
+        a.xy() * b.y() + b.x() * a.s(),
+        -(a.xy() * b.x()) + b.y() * a.s(),
     )
 }
 #[doc = "Geometric product: Scalar * Bivector -> Bivector"]
 #[inline]
 pub fn geometric_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(a.s() * b.xy())
+    Bivector::new(b.xy() * a.s())
 }
 #[doc = "Geometric product: Scalar * Rotor -> Rotor"]
 #[inline]
 pub fn geometric_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.s() * b.s(), a.s() * b.xy())
+    Rotor::new_unchecked(b.s() * a.s(), b.xy() * a.s())
 }
 #[doc = "Geometric product: Scalar * Scalar -> Scalar"]
 #[inline]
 pub fn geometric_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
-    Scalar::new(a.s() * b.s())
+    Scalar::new(b.s() * a.s())
 }
 #[doc = "Geometric product: Scalar * Vector -> Vector"]
 #[inline]
 pub fn geometric_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector<T> {
-    Vector::new(a.s() * b.x(), a.s() * b.y())
+    Vector::new(b.x() * a.s(), b.y() * a.s())
 }
 #[doc = "Geometric product: Vector * Bivector -> Vector"]
 #[inline]
 pub fn geometric_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Vector<T> {
-    Vector::new(-(a.y() * b.xy()), a.x() * b.xy())
+    Vector::new(-(b.xy() * a.y()), b.xy() * a.x())
 }
 #[doc = "Geometric product: Vector * Rotor -> Vector"]
 #[inline]
 pub fn geometric_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
     Vector::new(
-        a.x() * b.s() - a.y() * b.xy(),
-        a.x() * b.xy() + a.y() * b.s(),
+        -(b.xy() * a.y()) + b.s() * a.x(),
+        b.xy() * a.x() + b.s() * a.y(),
     )
 }
 #[doc = "Geometric product: Vector * Scalar -> Vector"]
 #[inline]
 pub fn geometric_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
-    Vector::new(a.x() * b.s(), a.y() * b.s())
+    Vector::new(b.s() * a.x(), b.s() * a.y())
 }
 #[doc = "Geometric product: Vector * Vector -> Rotor"]
 #[inline]
 pub fn geometric_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.x() * b.x() + a.y() * b.y(), a.x() * b.y() - a.y() * b.x())
+    Rotor::new_unchecked(
+        b.x() * a.x() + b.y() * a.y(),
+        -(b.x() * a.y()) + b.y() * a.x(),
+    )
 }
-#[doc = "Outer product: Bivector ^ Rotor -> Bivector"]
+#[doc = "Exterior product: Bivector ^ Rotor -> Bivector"]
 #[inline]
-pub fn outer_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Bivector<T> {
+pub fn exterior_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Bivector<T> {
     Bivector::new(a.xy() * b.s())
 }
-#[doc = "Outer product: Bivector ^ Scalar -> Bivector"]
+#[doc = "Exterior product: Bivector ^ Scalar -> Bivector"]
 #[inline]
-pub fn outer_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
+pub fn exterior_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
     Bivector::new(a.xy() * b.s())
 }
-#[doc = "Outer product: Rotor ^ Bivector -> Bivector"]
+#[doc = "Exterior product: Rotor ^ Bivector -> Bivector"]
 #[inline]
-pub fn outer_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(a.s() * b.xy())
+pub fn exterior_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(b.xy() * a.s())
 }
-#[doc = "Outer product: Rotor ^ Rotor -> Rotor"]
+#[doc = "Exterior product: Rotor ^ Rotor -> Rotor"]
 #[inline]
-pub fn outer_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.s() * b.s(), a.s() * b.xy() + a.xy() * b.s())
+pub fn exterior_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), a.xy() * b.s() + b.xy() * a.s())
 }
-#[doc = "Outer product: Rotor ^ Scalar -> Rotor"]
+#[doc = "Exterior product: Rotor ^ Scalar -> Rotor"]
 #[inline]
-pub fn outer_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.s() * b.s(), a.xy() * b.s())
+pub fn exterior_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), a.xy() * b.s())
 }
-#[doc = "Outer product: Rotor ^ Vector -> Vector"]
+#[doc = "Exterior product: Rotor ^ Vector -> Vector"]
 #[inline]
-pub fn outer_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
-    Vector::new(a.s() * b.x(), a.s() * b.y())
+pub fn exterior_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(b.x() * a.s(), b.y() * a.s())
 }
-#[doc = "Outer product: Scalar ^ Bivector -> Bivector"]
+#[doc = "Exterior product: Scalar ^ Bivector -> Bivector"]
 #[inline]
-pub fn outer_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
-    Bivector::new(a.s() * b.xy())
+pub fn exterior_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(b.xy() * a.s())
 }
-#[doc = "Outer product: Scalar ^ Rotor -> Rotor"]
+#[doc = "Exterior product: Scalar ^ Rotor -> Rotor"]
 #[inline]
-pub fn outer_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
-    Rotor::new_unchecked(a.s() * b.s(), a.s() * b.xy())
+pub fn exterior_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), b.xy() * a.s())
 }
-#[doc = "Outer product: Scalar ^ Scalar -> Scalar"]
+#[doc = "Exterior product: Scalar ^ Scalar -> Scalar"]
 #[inline]
-pub fn outer_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
-    Scalar::new(a.s() * b.s())
+pub fn exterior_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
 }
-#[doc = "Outer product: Scalar ^ Vector -> Vector"]
+#[doc = "Exterior product: Scalar ^ Vector -> Vector"]
 #[inline]
-pub fn outer_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector<T> {
-    Vector::new(a.s() * b.x(), a.s() * b.y())
+pub fn exterior_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(b.x() * a.s(), b.y() * a.s())
 }
-#[doc = "Outer product: Vector ^ Rotor -> Vector"]
+#[doc = "Exterior product: Vector ^ Rotor -> Vector"]
 #[inline]
-pub fn outer_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
-    Vector::new(a.x() * b.s(), a.y() * b.s())
+pub fn exterior_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
+    Vector::new(b.s() * a.x(), b.s() * a.y())
 }
-#[doc = "Outer product: Vector ^ Scalar -> Vector"]
+#[doc = "Exterior product: Vector ^ Scalar -> Vector"]
 #[inline]
-pub fn outer_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
-    Vector::new(a.x() * b.s(), a.y() * b.s())
+pub fn exterior_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
+    Vector::new(b.s() * a.x(), b.s() * a.y())
 }
-#[doc = "Outer product: Vector ^ Vector -> Bivector"]
+#[doc = "Exterior product: Vector ^ Vector -> Bivector"]
 #[inline]
-pub fn outer_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Bivector<T> {
-    Bivector::new(a.x() * b.y() - a.y() * b.x())
+pub fn exterior_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(-(b.x() * a.y()) + b.y() * a.x())
+}
+#[doc = "Left contraction: Bivector | Bivector -> Scalar"]
+#[inline]
+pub fn left_contract_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.xy() * b.xy()))
+}
+#[doc = "Left contraction: Bivector | Rotor -> Scalar"]
+#[inline]
+pub fn left_contract_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Scalar<T> {
+    Scalar::new(-(a.xy() * b.xy()))
+}
+#[doc = "Left contraction: Rotor | Bivector -> Rotor"]
+#[inline]
+pub fn left_contract_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
+    Rotor::new_unchecked(-(a.xy() * b.xy()), b.xy() * a.s())
+}
+#[doc = "Left contraction: Rotor | Rotor -> Rotor"]
+#[inline]
+pub fn left_contract_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(-(a.xy() * b.xy()) + b.s() * a.s(), b.xy() * a.s())
+}
+#[doc = "Left contraction: Rotor | Scalar -> Scalar"]
+#[inline]
+pub fn left_contract_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
+}
+#[doc = "Left contraction: Rotor | Vector -> Vector"]
+#[inline]
+pub fn left_contract_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(b.x() * a.s(), b.y() * a.s())
+}
+#[doc = "Left contraction: Scalar | Bivector -> Bivector"]
+#[inline]
+pub fn left_contract_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(b.xy() * a.s())
+}
+#[doc = "Left contraction: Scalar | Rotor -> Rotor"]
+#[inline]
+pub fn left_contract_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new_unchecked(b.s() * a.s(), b.xy() * a.s())
+}
+#[doc = "Left contraction: Scalar | Scalar -> Scalar"]
+#[inline]
+pub fn left_contract_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
+}
+#[doc = "Left contraction: Scalar | Vector -> Vector"]
+#[inline]
+pub fn left_contract_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(b.x() * a.s(), b.y() * a.s())
+}
+#[doc = "Left contraction: Vector | Bivector -> Vector"]
+#[inline]
+pub fn left_contract_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Vector<T> {
+    Vector::new(-(b.xy() * a.y()), b.xy() * a.x())
+}
+#[doc = "Left contraction: Vector | Rotor -> Vector"]
+#[inline]
+pub fn left_contract_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
+    Vector::new(-(b.xy() * a.y()), b.xy() * a.x())
+}
+#[doc = "Left contraction: Vector | Vector -> Scalar"]
+#[inline]
+pub fn left_contract_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
+    Scalar::new(b.x() * a.x() + b.y() * a.y())
 }

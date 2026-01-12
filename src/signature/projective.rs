@@ -417,8 +417,8 @@ mod tests {
             b in any::<Multivector<f64, Projective2>>(),
             c in any::<Multivector<f64, Projective2>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
@@ -515,8 +515,8 @@ mod tests {
             b in any::<Multivector<f64, Projective3>>(),
             c in any::<Multivector<f64, Projective3>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
@@ -638,7 +638,7 @@ mod tests {
                 let na_cross = na_a.cross(&na_b);
 
                 // The wedge product a∧b gives a bivector
-                let wedge = pga_a.outer(&pga_b);
+                let wedge = pga_a.exterior(&pga_b);
 
                 // In 3D Euclidean subspace, the bivector components are related to cross product:
                 // e₁₂ component = ax*by - ay*bx = (a×b)_z
@@ -730,7 +730,7 @@ mod tests {
                 let na_cross = na_a.cross(&na_b);
 
                 // The wedge product a∧b gives a bivector
-                let wedge = pga_a.outer(&pga_b);
+                let wedge = pga_a.exterior(&pga_b);
 
                 // In 3D Euclidean subspace, the bivector components are related to cross product:
                 // e₁₂ component = ax*by - ay*bx = (a×b)_z

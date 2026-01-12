@@ -718,9 +718,9 @@ pub fn geometric_scalar_quadvector<T: Float>(a: &Scalar<T>, b: &Quadvector<T>) -
 pub fn geometric_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
     Scalar::new(b.s() * a.s())
 }
-#[doc = "Outer product: Flector ^ Line -> Plane"]
+#[doc = "Exterior product: Flector ^ Line -> Plane"]
 #[inline]
-pub fn outer_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Plane<T> {
+pub fn exterior_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Plane<T> {
     Plane::new(
         -(a.e2() * b.e02()) + a.e3() * b.e01() + a.e1() * b.e03(),
         -(a.e2() * b.e23()) + a.e1() * b.e31() + a.e0() * b.e01(),
@@ -728,9 +728,9 @@ pub fn outer_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Plane<T> {
         a.e2() * b.e12() + -(a.e3() * b.e31()) + a.e0() * b.e03(),
     )
 }
-#[doc = "Outer product: Flector ^ Motor -> Flector"]
+#[doc = "Exterior product: Flector ^ Motor -> Flector"]
 #[inline]
-pub fn outer_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
+pub fn exterior_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
     Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
@@ -742,16 +742,16 @@ pub fn outer_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T>
         a.e2() * b.e03() + -(a.e3() * b.e02()) + a.e0() * b.e12() + a.e123() * b.s(),
     )
 }
-#[doc = "Outer product: Flector ^ Plane -> Quadvector"]
+#[doc = "Exterior product: Flector ^ Plane -> Quadvector"]
 #[inline]
-pub fn outer_flector_plane<T: Float>(a: &Flector<T>, b: &Plane<T>) -> Quadvector<T> {
+pub fn exterior_flector_plane<T: Float>(a: &Flector<T>, b: &Plane<T>) -> Quadvector<T> {
     Quadvector::new(
         -(a.e2() * b.e012()) + a.e3() * b.e031() + a.e1() * b.e123() + -(a.e0() * b.e023()),
     )
 }
-#[doc = "Outer product: Flector ^ Scalar -> Flector"]
+#[doc = "Exterior product: Flector ^ Scalar -> Flector"]
 #[inline]
-pub fn outer_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<T> {
+pub fn exterior_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<T> {
     Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
@@ -763,9 +763,9 @@ pub fn outer_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<
         a.e123() * b.s(),
     )
 }
-#[doc = "Outer product: Line ^ Flector -> Plane"]
+#[doc = "Exterior product: Line ^ Flector -> Plane"]
 #[inline]
-pub fn outer_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Plane<T> {
+pub fn exterior_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Plane<T> {
     Plane::new(
         -(b.e2() * a.e02()) + b.e3() * a.e01() + b.e1() * a.e03(),
         -(b.e2() * a.e23()) + b.e1() * a.e31() + b.e0() * a.e01(),
@@ -773,9 +773,9 @@ pub fn outer_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Plane<T> {
         b.e2() * a.e12() + -(b.e3() * a.e31()) + b.e0() * a.e03(),
     )
 }
-#[doc = "Outer product: Line ^ Line -> Quadvector"]
+#[doc = "Exterior product: Line ^ Line -> Quadvector"]
 #[inline]
-pub fn outer_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Quadvector<T> {
+pub fn exterior_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Quadvector<T> {
     Quadvector::new(
         -(b.e02() * a.e31())
             + -(b.e31() * a.e02())
@@ -785,9 +785,9 @@ pub fn outer_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Quadvector<T> {
             + b.e12() * a.e01(),
     )
 }
-#[doc = "Outer product: Line ^ Point -> Plane"]
+#[doc = "Exterior product: Line ^ Point -> Plane"]
 #[inline]
-pub fn outer_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Plane<T> {
+pub fn exterior_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Plane<T> {
     Plane::new(
         -(b.e2() * a.e02()) + b.e3() * a.e01() + b.e1() * a.e03(),
         -(b.e2() * a.e23()) + b.e1() * a.e31() + b.e0() * a.e01(),
@@ -795,9 +795,9 @@ pub fn outer_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Plane<T> {
         b.e2() * a.e12() + -(b.e3() * a.e31()) + b.e0() * a.e03(),
     )
 }
-#[doc = "Outer product: Line ^ Scalar -> Line"]
+#[doc = "Exterior product: Line ^ Scalar -> Line"]
 #[inline]
-pub fn outer_line_scalar<T: Float>(a: &Line<T>, b: &Scalar<T>) -> Line<T> {
+pub fn exterior_line_scalar<T: Float>(a: &Line<T>, b: &Scalar<T>) -> Line<T> {
     Line::new_unchecked(
         b.s() * a.e01(),
         b.s() * a.e02(),
@@ -807,9 +807,9 @@ pub fn outer_line_scalar<T: Float>(a: &Line<T>, b: &Scalar<T>) -> Line<T> {
         b.s() * a.e12(),
     )
 }
-#[doc = "Outer product: Motor ^ Flector -> Flector"]
+#[doc = "Exterior product: Motor ^ Flector -> Flector"]
 #[inline]
-pub fn outer_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T> {
+pub fn exterior_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T> {
     Flector::new_unchecked(
         b.e1() * a.s(),
         b.e2() * a.s(),
@@ -821,9 +821,9 @@ pub fn outer_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T>
         b.e2() * a.e03() + -(b.e3() * a.e02()) + b.e0() * a.e12() + b.e123() * a.s(),
     )
 }
-#[doc = "Outer product: Motor ^ Motor -> Motor"]
+#[doc = "Exterior product: Motor ^ Motor -> Motor"]
 #[inline]
-pub fn outer_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
+pub fn exterior_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
     Motor::new_unchecked(
         b.s() * a.s(),
         b.e23() * a.s() + b.s() * a.e23(),
@@ -842,9 +842,9 @@ pub fn outer_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
             + b.e0123() * a.s(),
     )
 }
-#[doc = "Outer product: Motor ^ Plane -> Plane"]
+#[doc = "Exterior product: Motor ^ Plane -> Plane"]
 #[inline]
-pub fn outer_motor_plane<T: Float>(a: &Motor<T>, b: &Plane<T>) -> Plane<T> {
+pub fn exterior_motor_plane<T: Float>(a: &Motor<T>, b: &Plane<T>) -> Plane<T> {
     Plane::new(
         b.e023() * a.s(),
         b.e031() * a.s(),
@@ -852,9 +852,9 @@ pub fn outer_motor_plane<T: Float>(a: &Motor<T>, b: &Plane<T>) -> Plane<T> {
         b.e123() * a.s(),
     )
 }
-#[doc = "Outer product: Motor ^ Point -> Flector"]
+#[doc = "Exterior product: Motor ^ Point -> Flector"]
 #[inline]
-pub fn outer_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
+pub fn exterior_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
     Flector::new_unchecked(
         b.e1() * a.s(),
         b.e2() * a.s(),
@@ -866,14 +866,14 @@ pub fn outer_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
         b.e2() * a.e03() + -(b.e3() * a.e02()) + b.e0() * a.e12(),
     )
 }
-#[doc = "Outer product: Motor ^ Quadvector -> Quadvector"]
+#[doc = "Exterior product: Motor ^ Quadvector -> Quadvector"]
 #[inline]
-pub fn outer_motor_quadvector<T: Float>(a: &Motor<T>, b: &Quadvector<T>) -> Quadvector<T> {
+pub fn exterior_motor_quadvector<T: Float>(a: &Motor<T>, b: &Quadvector<T>) -> Quadvector<T> {
     Quadvector::new(b.e0123() * a.s())
 }
-#[doc = "Outer product: Motor ^ Scalar -> Motor"]
+#[doc = "Exterior product: Motor ^ Scalar -> Motor"]
 #[inline]
-pub fn outer_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
+pub fn exterior_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
     Motor::new_unchecked(
         b.s() * a.s(),
         b.s() * a.e23(),
@@ -885,16 +885,16 @@ pub fn outer_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
         b.s() * a.e0123(),
     )
 }
-#[doc = "Outer product: Plane ^ Flector -> Quadvector"]
+#[doc = "Exterior product: Plane ^ Flector -> Quadvector"]
 #[inline]
-pub fn outer_plane_flector<T: Float>(a: &Plane<T>, b: &Flector<T>) -> Quadvector<T> {
+pub fn exterior_plane_flector<T: Float>(a: &Plane<T>, b: &Flector<T>) -> Quadvector<T> {
     Quadvector::new(
         -(a.e031() * b.e3()) + a.e012() * b.e2() + a.e023() * b.e0() + -(a.e123() * b.e1()),
     )
 }
-#[doc = "Outer product: Plane ^ Motor -> Plane"]
+#[doc = "Exterior product: Plane ^ Motor -> Plane"]
 #[inline]
-pub fn outer_plane_motor<T: Float>(a: &Plane<T>, b: &Motor<T>) -> Plane<T> {
+pub fn exterior_plane_motor<T: Float>(a: &Plane<T>, b: &Motor<T>) -> Plane<T> {
     Plane::new(
         a.e023() * b.s(),
         a.e031() * b.s(),
@@ -902,16 +902,16 @@ pub fn outer_plane_motor<T: Float>(a: &Plane<T>, b: &Motor<T>) -> Plane<T> {
         a.e123() * b.s(),
     )
 }
-#[doc = "Outer product: Plane ^ Point -> Quadvector"]
+#[doc = "Exterior product: Plane ^ Point -> Quadvector"]
 #[inline]
-pub fn outer_plane_point<T: Float>(a: &Plane<T>, b: &Point<T>) -> Quadvector<T> {
+pub fn exterior_plane_point<T: Float>(a: &Plane<T>, b: &Point<T>) -> Quadvector<T> {
     Quadvector::new(
         -(a.e031() * b.e3()) + a.e012() * b.e2() + a.e023() * b.e0() + -(a.e123() * b.e1()),
     )
 }
-#[doc = "Outer product: Plane ^ Scalar -> Plane"]
+#[doc = "Exterior product: Plane ^ Scalar -> Plane"]
 #[inline]
-pub fn outer_plane_scalar<T: Float>(a: &Plane<T>, b: &Scalar<T>) -> Plane<T> {
+pub fn exterior_plane_scalar<T: Float>(a: &Plane<T>, b: &Scalar<T>) -> Plane<T> {
     Plane::new(
         a.e023() * b.s(),
         a.e031() * b.s(),
@@ -919,9 +919,9 @@ pub fn outer_plane_scalar<T: Float>(a: &Plane<T>, b: &Scalar<T>) -> Plane<T> {
         a.e123() * b.s(),
     )
 }
-#[doc = "Outer product: Point ^ Line -> Plane"]
+#[doc = "Exterior product: Point ^ Line -> Plane"]
 #[inline]
-pub fn outer_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Plane<T> {
+pub fn exterior_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Plane<T> {
     Plane::new(
         -(a.e2() * b.e02()) + a.e3() * b.e01() + a.e1() * b.e03(),
         -(a.e2() * b.e23()) + a.e1() * b.e31() + a.e0() * b.e01(),
@@ -929,9 +929,9 @@ pub fn outer_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Plane<T> {
         a.e2() * b.e12() + -(a.e3() * b.e31()) + a.e0() * b.e03(),
     )
 }
-#[doc = "Outer product: Point ^ Motor -> Flector"]
+#[doc = "Exterior product: Point ^ Motor -> Flector"]
 #[inline]
-pub fn outer_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Flector<T> {
+pub fn exterior_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Flector<T> {
     Flector::new_unchecked(
         a.e1() * b.s(),
         a.e2() * b.s(),
@@ -943,16 +943,16 @@ pub fn outer_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Flector<T> {
         a.e2() * b.e03() + -(a.e3() * b.e02()) + a.e0() * b.e12(),
     )
 }
-#[doc = "Outer product: Point ^ Plane -> Quadvector"]
+#[doc = "Exterior product: Point ^ Plane -> Quadvector"]
 #[inline]
-pub fn outer_point_plane<T: Float>(a: &Point<T>, b: &Plane<T>) -> Quadvector<T> {
+pub fn exterior_point_plane<T: Float>(a: &Point<T>, b: &Plane<T>) -> Quadvector<T> {
     Quadvector::new(
         -(a.e2() * b.e012()) + a.e3() * b.e031() + a.e1() * b.e123() + -(a.e0() * b.e023()),
     )
 }
-#[doc = "Outer product: Point ^ Point -> Line"]
+#[doc = "Exterior product: Point ^ Point -> Line"]
 #[inline]
-pub fn outer_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Line<T> {
+pub fn exterior_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Line<T> {
     Line::new_unchecked(
         -(a.e2() * b.e1()) + a.e1() * b.e2(),
         -(a.e3() * b.e1()) + a.e1() * b.e3(),
@@ -962,9 +962,9 @@ pub fn outer_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Line<T> {
         a.e3() * b.e0() + -(a.e0() * b.e3()),
     )
 }
-#[doc = "Outer product: Point ^ Scalar -> Point"]
+#[doc = "Exterior product: Point ^ Scalar -> Point"]
 #[inline]
-pub fn outer_point_scalar<T: Float>(a: &Point<T>, b: &Scalar<T>) -> Point<T> {
+pub fn exterior_point_scalar<T: Float>(a: &Point<T>, b: &Scalar<T>) -> Point<T> {
     Point::new(
         a.e1() * b.s(),
         a.e2() * b.s(),
@@ -972,19 +972,19 @@ pub fn outer_point_scalar<T: Float>(a: &Point<T>, b: &Scalar<T>) -> Point<T> {
         a.e0() * b.s(),
     )
 }
-#[doc = "Outer product: Quadvector ^ Motor -> Quadvector"]
+#[doc = "Exterior product: Quadvector ^ Motor -> Quadvector"]
 #[inline]
-pub fn outer_quadvector_motor<T: Float>(a: &Quadvector<T>, b: &Motor<T>) -> Quadvector<T> {
+pub fn exterior_quadvector_motor<T: Float>(a: &Quadvector<T>, b: &Motor<T>) -> Quadvector<T> {
     Quadvector::new(b.s() * a.e0123())
 }
-#[doc = "Outer product: Quadvector ^ Scalar -> Quadvector"]
+#[doc = "Exterior product: Quadvector ^ Scalar -> Quadvector"]
 #[inline]
-pub fn outer_quadvector_scalar<T: Float>(a: &Quadvector<T>, b: &Scalar<T>) -> Quadvector<T> {
+pub fn exterior_quadvector_scalar<T: Float>(a: &Quadvector<T>, b: &Scalar<T>) -> Quadvector<T> {
     Quadvector::new(b.s() * a.e0123())
 }
-#[doc = "Outer product: Scalar ^ Flector -> Flector"]
+#[doc = "Exterior product: Scalar ^ Flector -> Flector"]
 #[inline]
-pub fn outer_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<T> {
+pub fn exterior_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<T> {
     Flector::new_unchecked(
         b.e1() * a.s(),
         b.e2() * a.s(),
@@ -996,9 +996,9 @@ pub fn outer_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<
         b.e123() * a.s(),
     )
 }
-#[doc = "Outer product: Scalar ^ Line -> Line"]
+#[doc = "Exterior product: Scalar ^ Line -> Line"]
 #[inline]
-pub fn outer_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Line<T> {
+pub fn exterior_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Line<T> {
     Line::new_unchecked(
         b.e01() * a.s(),
         b.e02() * a.s(),
@@ -1008,9 +1008,9 @@ pub fn outer_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Line<T> {
         b.e12() * a.s(),
     )
 }
-#[doc = "Outer product: Scalar ^ Motor -> Motor"]
+#[doc = "Exterior product: Scalar ^ Motor -> Motor"]
 #[inline]
-pub fn outer_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
+pub fn exterior_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
     Motor::new_unchecked(
         b.s() * a.s(),
         b.e23() * a.s(),
@@ -1022,9 +1022,9 @@ pub fn outer_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
         b.e0123() * a.s(),
     )
 }
-#[doc = "Outer product: Scalar ^ Plane -> Plane"]
+#[doc = "Exterior product: Scalar ^ Plane -> Plane"]
 #[inline]
-pub fn outer_scalar_plane<T: Float>(a: &Scalar<T>, b: &Plane<T>) -> Plane<T> {
+pub fn exterior_scalar_plane<T: Float>(a: &Scalar<T>, b: &Plane<T>) -> Plane<T> {
     Plane::new(
         b.e023() * a.s(),
         b.e031() * a.s(),
@@ -1032,9 +1032,9 @@ pub fn outer_scalar_plane<T: Float>(a: &Scalar<T>, b: &Plane<T>) -> Plane<T> {
         b.e123() * a.s(),
     )
 }
-#[doc = "Outer product: Scalar ^ Point -> Point"]
+#[doc = "Exterior product: Scalar ^ Point -> Point"]
 #[inline]
-pub fn outer_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Point<T> {
+pub fn exterior_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Point<T> {
     Point::new(
         b.e1() * a.s(),
         b.e2() * a.s(),
@@ -1042,78 +1042,358 @@ pub fn outer_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Point<T> {
         b.e0() * a.s(),
     )
 }
-#[doc = "Outer product: Scalar ^ Quadvector -> Quadvector"]
+#[doc = "Exterior product: Scalar ^ Quadvector -> Quadvector"]
 #[inline]
-pub fn outer_scalar_quadvector<T: Float>(a: &Scalar<T>, b: &Quadvector<T>) -> Quadvector<T> {
+pub fn exterior_scalar_quadvector<T: Float>(a: &Scalar<T>, b: &Quadvector<T>) -> Quadvector<T> {
     Quadvector::new(b.e0123() * a.s())
 }
-#[doc = "Outer product: Scalar ^ Scalar -> Scalar"]
+#[doc = "Exterior product: Scalar ^ Scalar -> Scalar"]
 #[inline]
-pub fn outer_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+pub fn exterior_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
+}
+#[doc = "Left contraction: Flector | Line -> Point"]
+#[inline]
+pub fn left_contract_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Point<T> {
+    Point::new(
+        -(a.e2() * b.e01()) + -(a.e3() * b.e02()),
+        -(a.e3() * b.e03()) + a.e1() * b.e01(),
+        a.e2() * b.e03() + a.e1() * b.e02(),
+        a.e2() * b.e31() + a.e3() * b.e12() + a.e1() * b.e23(),
+    )
+}
+#[doc = "Left contraction: Flector | Motor -> Flector"]
+#[inline]
+pub fn left_contract_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        -(a.e2() * b.e23()) + -(a.e3() * b.e31()),
+        -(a.e3() * b.e12()) + a.e1() * b.e23(),
+        a.e2() * b.e12() + a.e1() * b.e31(),
+        a.e2() * b.e02() + a.e3() * b.e03() + a.e1() * b.e01() + -(a.e023() * b.e0123()),
+        T::zero(),
+        a.e3() * b.e0123(),
+        -(a.e2() * b.e0123()),
+        a.e1() * b.e0123(),
+    )
+}
+#[doc = "Left contraction: Flector | Point -> Scalar"]
+#[inline]
+pub fn left_contract_flector_point<T: Float>(a: &Flector<T>, b: &Point<T>) -> Scalar<T> {
+    Scalar::new(a.e2() * b.e2() + a.e3() * b.e3() + a.e1() * b.e1())
+}
+#[doc = "Left contraction: Flector | Quadvector -> Flector"]
+#[inline]
+pub fn left_contract_flector_quadvector<T: Float>(a: &Flector<T>, b: &Quadvector<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        -(a.e023() * b.e0123()),
+        T::zero(),
+        a.e3() * b.e0123(),
+        -(a.e2() * b.e0123()),
+        a.e1() * b.e0123(),
+    )
+}
+#[doc = "Left contraction: Line | Flector -> Point"]
+#[inline]
+pub fn left_contract_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Point<T> {
+    Point::new(
+        -(b.e023() * a.e03()),
+        b.e023() * a.e02(),
+        -(b.e023() * a.e01()),
+        -(b.e031() * a.e01()) + -(b.e012() * a.e02()) + -(b.e123() * a.e03()),
+    )
+}
+#[doc = "Left contraction: Line | Line -> Scalar"]
+#[inline]
+pub fn left_contract_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Scalar<T> {
+    Scalar::new(-(b.e02() * a.e02()) + -(b.e01() * a.e01()) + -(b.e03() * a.e03()))
+}
+#[doc = "Left contraction: Line | Plane -> Point"]
+#[inline]
+pub fn left_contract_line_plane<T: Float>(a: &Line<T>, b: &Plane<T>) -> Point<T> {
+    Point::new(
+        -(b.e023() * a.e03()),
+        b.e023() * a.e02(),
+        -(b.e023() * a.e01()),
+        -(b.e031() * a.e01()) + -(b.e012() * a.e02()) + -(b.e123() * a.e03()),
+    )
+}
+#[doc = "Left contraction: Line | Quadvector -> Line"]
+#[inline]
+pub fn left_contract_line_quadvector<T: Float>(a: &Line<T>, b: &Quadvector<T>) -> Line<T> {
+    Line::new_unchecked(
+        T::zero(),
+        T::zero(),
+        T::zero(),
+        -(b.e0123() * a.e03()),
+        b.e0123() * a.e02(),
+        -(b.e0123() * a.e01()),
+    )
+}
+#[doc = "Left contraction: Motor | Flector -> Flector"]
+#[inline]
+pub fn left_contract_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        b.e1() * a.s() + -(b.e023() * a.e12()),
+        b.e2() * a.s() + b.e023() * a.e31(),
+        b.e3() * a.s() + -(b.e023() * a.e23()),
+        -(b.e031() * a.e23()) + -(b.e012() * a.e31()) + b.e0() * a.s() + -(b.e123() * a.e12()),
+        b.e023() * a.s(),
+        b.e031() * a.s(),
+        b.e012() * a.s(),
+        b.e123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Motor | Motor -> Motor"]
+#[inline]
+pub fn left_contract_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new_unchecked(
+        -(b.e31() * a.e31()) + -(b.e23() * a.e23()) + -(b.e12() * a.e12()) + b.s() * a.s(),
+        b.e23() * a.s(),
+        b.e31() * a.s(),
+        b.e12() * a.s(),
+        b.e01() * a.s() + -(b.e0123() * a.e12()),
+        b.e02() * a.s() + b.e0123() * a.e31(),
+        b.e03() * a.s() + -(b.e0123() * a.e23()),
+        b.e0123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Motor | Plane -> Flector"]
+#[inline]
+pub fn left_contract_motor_plane<T: Float>(a: &Motor<T>, b: &Plane<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        -(b.e023() * a.e12()),
+        b.e023() * a.e31(),
+        -(b.e023() * a.e23()),
+        -(b.e031() * a.e23()) + -(b.e012() * a.e31()) + -(b.e123() * a.e12()),
+        b.e023() * a.s(),
+        b.e031() * a.s(),
+        b.e012() * a.s(),
+        b.e123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Motor | Point -> Point"]
+#[inline]
+pub fn left_contract_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Point<T> {
+    Point::new(
+        b.e1() * a.s(),
+        b.e2() * a.s(),
+        b.e3() * a.s(),
+        b.e0() * a.s(),
+    )
+}
+#[doc = "Left contraction: Motor | Scalar -> Scalar"]
+#[inline]
+pub fn left_contract_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(b.s() * a.s())
+}
+#[doc = "Left contraction: Plane | Flector -> Scalar"]
+#[inline]
+pub fn left_contract_plane_flector<T: Float>(a: &Plane<T>, b: &Flector<T>) -> Scalar<T> {
+    Scalar::new(-(a.e023() * b.e023()))
+}
+#[doc = "Left contraction: Plane | Motor -> Point"]
+#[inline]
+pub fn left_contract_plane_motor<T: Float>(a: &Plane<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(T::zero(), T::zero(), T::zero(), -(a.e023() * b.e0123()))
+}
+#[doc = "Left contraction: Plane | Plane -> Scalar"]
+#[inline]
+pub fn left_contract_plane_plane<T: Float>(a: &Plane<T>, b: &Plane<T>) -> Scalar<T> {
+    Scalar::new(-(a.e023() * b.e023()))
+}
+#[doc = "Left contraction: Plane | Quadvector -> Point"]
+#[inline]
+pub fn left_contract_plane_quadvector<T: Float>(a: &Plane<T>, b: &Quadvector<T>) -> Point<T> {
+    Point::new(T::zero(), T::zero(), T::zero(), -(a.e023() * b.e0123()))
+}
+#[doc = "Left contraction: Point | Line -> Point"]
+#[inline]
+pub fn left_contract_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Point<T> {
+    Point::new(
+        -(a.e2() * b.e01()) + -(a.e3() * b.e02()),
+        -(a.e3() * b.e03()) + a.e1() * b.e01(),
+        a.e2() * b.e03() + a.e1() * b.e02(),
+        a.e2() * b.e31() + a.e3() * b.e12() + a.e1() * b.e23(),
+    )
+}
+#[doc = "Left contraction: Point | Motor -> Flector"]
+#[inline]
+pub fn left_contract_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        -(a.e2() * b.e23()) + -(a.e3() * b.e31()),
+        -(a.e3() * b.e12()) + a.e1() * b.e23(),
+        a.e2() * b.e12() + a.e1() * b.e31(),
+        a.e2() * b.e02() + a.e3() * b.e03() + a.e1() * b.e01(),
+        T::zero(),
+        a.e3() * b.e0123(),
+        -(a.e2() * b.e0123()),
+        a.e1() * b.e0123(),
+    )
+}
+#[doc = "Left contraction: Point | Plane -> Line"]
+#[inline]
+pub fn left_contract_point_plane<T: Float>(a: &Point<T>, b: &Plane<T>) -> Line<T> {
+    Line::new_unchecked(
+        a.e3() * b.e023(),
+        -(a.e2() * b.e023()),
+        a.e1() * b.e023(),
+        -(a.e2() * b.e031()) + -(a.e3() * b.e012()),
+        -(a.e3() * b.e123()) + a.e1() * b.e031(),
+        a.e2() * b.e123() + a.e1() * b.e012(),
+    )
+}
+#[doc = "Left contraction: Point | Point -> Scalar"]
+#[inline]
+pub fn left_contract_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Scalar<T> {
+    Scalar::new(a.e2() * b.e2() + a.e3() * b.e3() + a.e1() * b.e1())
+}
+#[doc = "Left contraction: Point | Quadvector -> Plane"]
+#[inline]
+pub fn left_contract_point_quadvector<T: Float>(a: &Point<T>, b: &Quadvector<T>) -> Plane<T> {
+    Plane::new(
+        T::zero(),
+        a.e3() * b.e0123(),
+        -(a.e2() * b.e0123()),
+        a.e1() * b.e0123(),
+    )
+}
+#[doc = "Left contraction: Scalar | Flector -> Flector"]
+#[inline]
+pub fn left_contract_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Flector<T> {
+    Flector::new_unchecked(
+        b.e1() * a.s(),
+        b.e2() * a.s(),
+        b.e3() * a.s(),
+        b.e0() * a.s(),
+        b.e023() * a.s(),
+        b.e031() * a.s(),
+        b.e012() * a.s(),
+        b.e123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Scalar | Line -> Line"]
+#[inline]
+pub fn left_contract_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Line<T> {
+    Line::new_unchecked(
+        b.e01() * a.s(),
+        b.e02() * a.s(),
+        b.e03() * a.s(),
+        b.e23() * a.s(),
+        b.e31() * a.s(),
+        b.e12() * a.s(),
+    )
+}
+#[doc = "Left contraction: Scalar | Motor -> Motor"]
+#[inline]
+pub fn left_contract_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new_unchecked(
+        b.s() * a.s(),
+        b.e23() * a.s(),
+        b.e31() * a.s(),
+        b.e12() * a.s(),
+        b.e01() * a.s(),
+        b.e02() * a.s(),
+        b.e03() * a.s(),
+        b.e0123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Scalar | Plane -> Plane"]
+#[inline]
+pub fn left_contract_scalar_plane<T: Float>(a: &Scalar<T>, b: &Plane<T>) -> Plane<T> {
+    Plane::new(
+        b.e023() * a.s(),
+        b.e031() * a.s(),
+        b.e012() * a.s(),
+        b.e123() * a.s(),
+    )
+}
+#[doc = "Left contraction: Scalar | Point -> Point"]
+#[inline]
+pub fn left_contract_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Point<T> {
+    Point::new(
+        b.e1() * a.s(),
+        b.e2() * a.s(),
+        b.e3() * a.s(),
+        b.e0() * a.s(),
+    )
+}
+#[doc = "Left contraction: Scalar | Quadvector -> Quadvector"]
+#[inline]
+pub fn left_contract_scalar_quadvector<T: Float>(
+    a: &Scalar<T>,
+    b: &Quadvector<T>,
+) -> Quadvector<T> {
+    Quadvector::new(b.e0123() * a.s())
+}
+#[doc = "Left contraction: Scalar | Scalar -> Scalar"]
+#[inline]
+pub fn left_contract_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
     Scalar::new(b.s() * a.s())
 }
 #[doc = "Sandwich product: Flector * Point * rev(Flector) -> Point"]
 #[inline]
 pub fn sandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.e2() * x.e2() * v.e1() - v.e3() * x.e1() * v.e3()
-            + v.e2() * x.e3() * v.e023()
-            + v.e1() * x.e3() * v.e3()
-            - v.e3() * x.e2() * v.e023()
+        -(v.e2() * x.e1() * v.e2())
             + v.e1() * x.e2() * v.e2()
-            + v.e023() * x.e1() * v.e023()
-            + v.e1() * x.e1() * v.e1()
-            - v.e2() * x.e1() * v.e2()
             + v.e3() * x.e3() * v.e1()
+            + v.e023() * x.e1() * v.e023()
+            + v.e1() * x.e3() * v.e3()
             - v.e023() * x.e2() * v.e3()
-            + v.e023() * x.e3() * v.e2(),
-        -(v.e1() * x.e2() * v.e1())
+            + v.e1() * x.e1() * v.e1()
+            + v.e023() * x.e3() * v.e2()
+            + v.e2() * x.e2() * v.e1()
+            + v.e2() * x.e3() * v.e023()
+            - v.e3() * x.e1() * v.e3()
+            - v.e3() * x.e2() * v.e023(),
+        v.e2() * x.e2() * v.e2() - v.e3() * x.e2() * v.e3() + v.e2() * x.e1() * v.e1()
+            - v.e1() * x.e3() * v.e023()
+            - v.e1() * x.e2() * v.e1()
+            + v.e3() * x.e3() * v.e2()
+            - v.e023() * x.e3() * v.e1()
+            + v.e023() * x.e2() * v.e023()
+            + v.e023() * x.e1() * v.e3()
             + v.e1() * x.e1() * v.e2()
             + v.e3() * x.e1() * v.e023()
-            + v.e2() * x.e3() * v.e3()
-            + v.e3() * x.e3() * v.e2()
-            + v.e2() * x.e1() * v.e1()
-            - v.e3() * x.e2() * v.e3()
-            + v.e2() * x.e2() * v.e2()
-            - v.e1() * x.e3() * v.e023()
-            + v.e023() * x.e1() * v.e3()
-            + v.e023() * x.e2() * v.e023()
-            - v.e023() * x.e3() * v.e1(),
-        v.e2() * x.e2() * v.e3() - v.e2() * x.e3() * v.e2() + v.e1() * x.e2() * v.e023()
+            + v.e2() * x.e3() * v.e3(),
+        v.e023() * x.e2() * v.e1() + v.e1() * x.e2() * v.e023() + v.e3() * x.e3() * v.e3()
+            - v.e2() * x.e3() * v.e2()
+            + v.e3() * x.e2() * v.e2()
+            + v.e1() * x.e1() * v.e3()
+            + v.e2() * x.e2() * v.e3()
+            - v.e2() * x.e1() * v.e023()
+            + v.e3() * x.e1() * v.e1()
             - v.e1() * x.e3() * v.e1()
             - v.e023() * x.e1() * v.e2()
-            + v.e3() * x.e2() * v.e2()
-            + v.e023() * x.e2() * v.e1()
-            + v.e3() * x.e3() * v.e3()
-            - v.e2() * x.e1() * v.e023()
-            + v.e023() * x.e3() * v.e023()
-            + v.e3() * x.e1() * v.e1()
-            + v.e1() * x.e1() * v.e3(),
-        v.e0() * x.e3() * v.e3() - v.e031() * x.e1() * v.e2() + v.e0() * x.e2() * v.e2()
-            - v.e2() * x.e0() * v.e2()
-            - v.e023() * x.e2() * v.e012()
-            - v.e012() * x.e1() * v.e3()
-            + v.e2() * x.e3() * v.e123()
-            - v.e123() * x.e2() * v.e3()
-            - v.e1() * x.e0() * v.e1()
-            - v.e012() * x.e2() * v.e023()
-            - v.e3() * x.e2() * v.e123()
-            + v.e023() * x.e1() * v.e123()
-            - v.e3() * x.e0() * v.e3()
+            + v.e023() * x.e3() * v.e023(),
+        -(v.e023() * x.e0() * v.e023()) + v.e031() * x.e2() * v.e1() - v.e012() * x.e1() * v.e3()
             + v.e023() * x.e3() * v.e031()
-            - v.e3() * x.e1() * v.e012()
             + v.e031() * x.e3() * v.e023()
-            + v.e031() * x.e2() * v.e1()
-            - v.e023() * x.e0() * v.e023()
-            + v.e1() * x.e1() * v.e0()
-            + v.e123() * x.e1() * v.e023()
-            + v.e123() * x.e3() * v.e2()
-            - v.e2() * x.e1() * v.e031()
-            + v.e1() * x.e3() * v.e012()
-            + v.e2() * x.e2() * v.e0()
-            + v.e3() * x.e3() * v.e0()
             + v.e012() * x.e3() * v.e1()
+            + v.e2() * x.e2() * v.e0()
+            - v.e023() * x.e2() * v.e012()
+            - v.e012() * x.e2() * v.e023()
+            - v.e123() * x.e2() * v.e3()
+            + v.e123() * x.e3() * v.e2()
+            + v.e0() * x.e2() * v.e2()
+            + v.e1() * x.e1() * v.e0()
+            - v.e2() * x.e0() * v.e2()
+            - v.e3() * x.e2() * v.e123()
+            - v.e3() * x.e1() * v.e012()
+            + v.e3() * x.e3() * v.e0()
+            - v.e031() * x.e1() * v.e2()
+            + v.e2() * x.e3() * v.e123()
+            + v.e123() * x.e1() * v.e023()
+            + v.e1() * x.e3() * v.e012()
+            - v.e1() * x.e0() * v.e1()
             + v.e1() * x.e2() * v.e031()
+            - v.e2() * x.e1() * v.e031()
+            + v.e0() * x.e3() * v.e3()
+            - v.e3() * x.e0() * v.e3()
+            + v.e023() * x.e1() * v.e123()
             + v.e0() * x.e1() * v.e1(),
     )
 }
@@ -1121,1489 +1401,1499 @@ pub fn sandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Point<T
 #[inline]
 pub fn sandwich_flector_line<T: Float>(v: &Flector<T>, x: &Line<T>) -> Line<T> {
     Line::new_unchecked(
-        -(v.e1() * x.e02() * v.e023()) + v.e3() * x.e03() * v.e1() + v.e023() * x.e01() * v.e023()
-            - v.e1() * x.e01() * v.e1()
+        -(v.e023() * x.e02() * v.e1()) - v.e1() * x.e01() * v.e1()
             + v.e3() * x.e01() * v.e3()
-            + v.e1() * x.e03() * v.e3()
+            + v.e023() * x.e01() * v.e023()
+            - v.e3() * x.e02() * v.e2()
             - v.e2() * x.e02() * v.e3()
             - v.e2() * x.e03() * v.e023()
-            - v.e3() * x.e02() * v.e2()
+            - v.e1() * x.e02() * v.e023()
+            + v.e3() * x.e03() * v.e1()
             - v.e2() * x.e01() * v.e2()
-            - v.e023() * x.e02() * v.e1()
+            + v.e1() * x.e03() * v.e3()
             - v.e023() * x.e03() * v.e2(),
-        -(v.e3() * x.e01() * v.e2()) + v.e1() * x.e01() * v.e023()
-            - v.e3() * x.e02() * v.e3()
-            - v.e2() * x.e03() * v.e1()
-            - v.e3() * x.e03() * v.e023()
-            + v.e2() * x.e02() * v.e2()
+        -(v.e3() * x.e02() * v.e3()) - v.e2() * x.e01() * v.e3()
             + v.e023() * x.e01() * v.e1()
-            - v.e023() * x.e03() * v.e3()
-            - v.e2() * x.e01() * v.e3()
-            - v.e1() * x.e03() * v.e2()
             + v.e023() * x.e02() * v.e023()
+            - v.e023() * x.e03() * v.e3()
+            + v.e1() * x.e01() * v.e023()
+            - v.e2() * x.e03() * v.e1()
+            + v.e2() * x.e02() * v.e2()
+            - v.e1() * x.e03() * v.e2()
+            - v.e3() * x.e03() * v.e023()
+            - v.e3() * x.e01() * v.e2()
             - v.e1() * x.e02() * v.e1(),
-        v.e1() * x.e01() * v.e3() + v.e3() * x.e02() * v.e023()
-            - v.e1() * x.e02() * v.e2()
-            - v.e3() * x.e03() * v.e3()
-            + v.e023() * x.e01() * v.e2()
-            + v.e023() * x.e02() * v.e3()
+        -(v.e1() * x.e02() * v.e2()) - v.e3() * x.e03() * v.e3()
             + v.e023() * x.e03() * v.e023()
-            - v.e2() * x.e02() * v.e1()
-            - v.e2() * x.e03() * v.e2()
-            + v.e1() * x.e03() * v.e1()
             + v.e2() * x.e01() * v.e023()
+            + v.e023() * x.e01() * v.e2()
+            - v.e2() * x.e02() * v.e1()
+            + v.e1() * x.e01() * v.e3()
+            + v.e1() * x.e03() * v.e1()
+            + v.e023() * x.e02() * v.e3()
+            - v.e2() * x.e03() * v.e2()
+            + v.e3() * x.e02() * v.e023()
             + v.e3() * x.e01() * v.e1(),
-        v.e1() * x.e03() * v.e123() + v.e2() * x.e23() * v.e2() - v.e3() * x.e12() * v.e1()
-            + v.e023() * x.e31() * v.e3()
-            - v.e2() * x.e31() * v.e1()
-            + v.e1() * x.e01() * v.e031()
-            + v.e1() * x.e02() * v.e012()
-            - v.e023() * x.e12() * v.e2()
-            - v.e0() * x.e03() * v.e023()
-            - v.e2() * x.e12() * v.e023()
-            - v.e123() * x.e02() * v.e2()
-            - v.e0() * x.e01() * v.e2()
-            - v.e0() * x.e02() * v.e3()
-            - v.e1() * x.e12() * v.e3()
-            + v.e012() * x.e02() * v.e1()
-            - v.e023() * x.e23() * v.e023()
-            + v.e031() * x.e02() * v.e023()
-            - v.e2() * x.e01() * v.e0()
-            + v.e3() * x.e23() * v.e3()
-            - v.e012() * x.e01() * v.e023()
-            - v.e1() * x.e23() * v.e1()
-            - v.e2() * x.e02() * v.e123()
-            + v.e3() * x.e01() * v.e123()
-            - v.e031() * x.e03() * v.e3()
-            + v.e123() * x.e01() * v.e3()
+        -(v.e1() * x.e12() * v.e3()) - v.e023() * x.e12() * v.e2()
             + v.e3() * x.e31() * v.e023()
-            - v.e3() * x.e02() * v.e0()
+            + v.e123() * x.e03() * v.e1()
+            - v.e2() * x.e31() * v.e1()
+            - v.e2() * x.e12() * v.e023()
+            + v.e3() * x.e01() * v.e123()
+            + v.e1() * x.e01() * v.e031()
+            + v.e1() * x.e03() * v.e123()
+            - v.e0() * x.e01() * v.e2()
             + v.e023() * x.e02() * v.e031()
-            - v.e3() * x.e03() * v.e031()
-            - v.e1() * x.e31() * v.e2()
-            + v.e012() * x.e03() * v.e2()
+            + v.e023() * x.e31() * v.e3()
             + v.e031() * x.e01() * v.e1()
             - v.e023() * x.e01() * v.e012()
-            + v.e123() * x.e03() * v.e1()
+            + v.e012() * x.e02() * v.e1()
+            - v.e023() * x.e23() * v.e023()
             - v.e023() * x.e03() * v.e0()
-            + v.e2() * x.e03() * v.e012(),
-        -(v.e012() * x.e01() * v.e3()) - v.e023() * x.e01() * v.e123()
-            + v.e123() * x.e02() * v.e1()
-            + v.e2() * x.e03() * v.e123()
-            - v.e2() * x.e12() * v.e3()
-            + v.e1() * x.e02() * v.e123()
-            + v.e2() * x.e01() * v.e031()
+            + v.e2() * x.e23() * v.e2()
+            + v.e2() * x.e03() * v.e012()
+            - v.e012() * x.e01() * v.e023()
+            + v.e1() * x.e02() * v.e012()
+            + v.e012() * x.e03() * v.e2()
+            - v.e3() * x.e03() * v.e031()
+            + v.e123() * x.e01() * v.e3()
+            - v.e1() * x.e23() * v.e1()
+            - v.e1() * x.e31() * v.e2()
+            - v.e0() * x.e02() * v.e3()
+            - v.e2() * x.e02() * v.e123()
+            - v.e123() * x.e02() * v.e2()
+            - v.e2() * x.e01() * v.e0()
+            - v.e031() * x.e03() * v.e3()
+            + v.e3() * x.e23() * v.e3()
+            + v.e031() * x.e02() * v.e023()
+            - v.e0() * x.e03() * v.e023()
+            - v.e3() * x.e02() * v.e0()
+            - v.e3() * x.e12() * v.e1(),
+        -(v.e1() * x.e23() * v.e2()) + v.e031() * x.e03() * v.e023() + v.e1() * x.e02() * v.e123()
+            - v.e1() * x.e03() * v.e012()
+            - v.e123() * x.e01() * v.e023()
+            + v.e123() * x.e03() * v.e2()
             + v.e023() * x.e03() * v.e031()
-            - v.e3() * x.e03() * v.e0()
-            - v.e012() * x.e03() * v.e1()
-            - v.e3() * x.e12() * v.e2()
-            - v.e2() * x.e31() * v.e2()
-            - v.e0() * x.e03() * v.e3()
-            - v.e2() * x.e23() * v.e1()
-            - v.e1() * x.e23() * v.e2()
             - v.e3() * x.e23() * v.e023()
             + v.e3() * x.e31() * v.e3()
-            + v.e0() * x.e02() * v.e023()
-            + v.e023() * x.e12() * v.e1()
-            - v.e123() * x.e01() * v.e023()
-            - v.e1() * x.e03() * v.e012()
-            + v.e1() * x.e31() * v.e1()
-            + v.e023() * x.e02() * v.e0()
-            + v.e031() * x.e03() * v.e023()
-            + v.e123() * x.e03() * v.e2()
-            + v.e1() * x.e12() * v.e023()
+            + v.e123() * x.e02() * v.e1()
+            + v.e2() * x.e03() * v.e123()
+            + v.e012() * x.e02() * v.e2()
+            - v.e2() * x.e23() * v.e1()
             - v.e3() * x.e01() * v.e012()
-            + v.e0() * x.e01() * v.e1()
-            - v.e023() * x.e23() * v.e3()
-            + v.e3() * x.e02() * v.e031()
-            + v.e2() * x.e02() * v.e012()
-            + v.e031() * x.e01() * v.e2()
-            + v.e1() * x.e01() * v.e0()
             + v.e031() * x.e02() * v.e3()
+            - v.e012() * x.e03() * v.e1()
+            + v.e023() * x.e02() * v.e0()
+            - v.e023() * x.e01() * v.e123()
+            + v.e2() * x.e02() * v.e012()
+            + v.e2() * x.e01() * v.e031()
+            - v.e023() * x.e23() * v.e3()
+            - v.e3() * x.e12() * v.e2()
+            + v.e1() * x.e31() * v.e1()
+            + v.e1() * x.e12() * v.e023()
+            + v.e1() * x.e01() * v.e0()
+            - v.e3() * x.e03() * v.e0()
             - v.e023() * x.e31() * v.e023()
-            + v.e012() * x.e02() * v.e2(),
-        v.e3() * x.e03() * v.e123() - v.e023() * x.e01() * v.e0()
-            + v.e023() * x.e23() * v.e2()
-            + v.e2() * x.e03() * v.e0()
-            + v.e1() * x.e02() * v.e0()
+            + v.e031() * x.e01() * v.e2()
+            + v.e0() * x.e02() * v.e023()
+            + v.e3() * x.e02() * v.e031()
+            + v.e023() * x.e12() * v.e1()
+            - v.e012() * x.e01() * v.e3()
+            + v.e0() * x.e01() * v.e1()
+            - v.e2() * x.e12() * v.e3()
+            - v.e0() * x.e03() * v.e3()
+            - v.e2() * x.e31() * v.e2(),
+        v.e0() * x.e02() * v.e1() - v.e3() * x.e31() * v.e2()
             + v.e031() * x.e03() * v.e1()
             + v.e2() * x.e23() * v.e023()
-            - v.e023() * x.e12() * v.e023()
-            - v.e2() * x.e02() * v.e031()
-            + v.e3() * x.e01() * v.e031()
-            - v.e0() * x.e01() * v.e023()
-            + v.e2() * x.e01() * v.e012()
-            - v.e3() * x.e23() * v.e1()
-            + v.e2() * x.e12() * v.e2()
-            + v.e1() * x.e12() * v.e1()
-            + v.e0() * x.e02() * v.e1()
-            + v.e123() * x.e03() * v.e3()
-            - v.e123() * x.e01() * v.e1()
-            + v.e012() * x.e01() * v.e2()
-            + v.e1() * x.e03() * v.e031()
-            - v.e023() * x.e31() * v.e1()
-            - v.e1() * x.e31() * v.e023()
-            - v.e3() * x.e31() * v.e2()
-            - v.e2() * x.e31() * v.e3()
-            + v.e031() * x.e01() * v.e3()
-            + v.e012() * x.e02() * v.e3()
-            - v.e123() * x.e02() * v.e023()
-            - v.e1() * x.e23() * v.e3()
-            - v.e023() * x.e02() * v.e123()
-            + v.e023() * x.e03() * v.e012()
-            - v.e1() * x.e01() * v.e123()
-            - v.e3() * x.e12() * v.e3()
-            - v.e031() * x.e02() * v.e2()
-            + v.e0() * x.e03() * v.e2()
             + v.e3() * x.e02() * v.e012()
-            + v.e012() * x.e03() * v.e023(),
+            + v.e123() * x.e03() * v.e3()
+            - v.e1() * x.e23() * v.e3()
+            - v.e0() * x.e01() * v.e023()
+            + v.e1() * x.e03() * v.e031()
+            + v.e1() * x.e12() * v.e1()
+            + v.e1() * x.e02() * v.e0()
+            + v.e023() * x.e03() * v.e012()
+            + v.e023() * x.e23() * v.e2()
+            + v.e012() * x.e02() * v.e3()
+            - v.e2() * x.e02() * v.e031()
+            + v.e2() * x.e03() * v.e0()
+            - v.e3() * x.e12() * v.e3()
+            - v.e023() * x.e31() * v.e1()
+            + v.e2() * x.e01() * v.e012()
+            + v.e031() * x.e01() * v.e3()
+            - v.e1() * x.e01() * v.e123()
+            - v.e1() * x.e31() * v.e023()
+            - v.e2() * x.e31() * v.e3()
+            + v.e3() * x.e01() * v.e031()
+            - v.e023() * x.e01() * v.e0()
+            + v.e0() * x.e03() * v.e2()
+            + v.e012() * x.e03() * v.e023()
+            - v.e123() * x.e01() * v.e1()
+            - v.e031() * x.e02() * v.e2()
+            + v.e3() * x.e03() * v.e123()
+            - v.e023() * x.e02() * v.e123()
+            - v.e023() * x.e12() * v.e023()
+            + v.e2() * x.e12() * v.e2()
+            + v.e012() * x.e01() * v.e2()
+            - v.e3() * x.e23() * v.e1()
+            - v.e123() * x.e02() * v.e023(),
     )
 }
 #[doc = "Sandwich product: Flector * Plane * rev(Flector) -> Plane"]
 #[inline]
 pub fn sandwich_flector_plane<T: Float>(v: &Flector<T>, x: &Plane<T>) -> Plane<T> {
     Plane::new(
-        v.e2() * x.e023() * v.e2()
-            + v.e3() * x.e023() * v.e3()
+        v.e1() * x.e023() * v.e1()
             + v.e023() * x.e023() * v.e023()
-            + v.e1() * x.e023() * v.e1(),
-        v.e2() * x.e031() * v.e2() - v.e023() * x.e031() * v.e023()
+            + v.e2() * x.e023() * v.e2()
+            + v.e3() * x.e023() * v.e3(),
+        v.e2() * x.e012() * v.e3()
             + v.e023() * x.e012() * v.e1()
-            + v.e3() * x.e012() * v.e2()
-            + v.e1() * x.e012() * v.e023()
+            + v.e1() * x.e031() * v.e1()
             + v.e031() * x.e023() * v.e023()
-            - v.e1() * x.e123() * v.e3()
-            - v.e123() * x.e023() * v.e2()
-            + v.e023() * x.e123() * v.e2()
-            + v.e2() * x.e012() * v.e3()
-            + v.e3() * x.e023() * v.e0()
-            + v.e0() * x.e023() * v.e3()
-            - v.e012() * x.e023() * v.e1()
-            + v.e2() * x.e123() * v.e023()
-            - v.e2() * x.e023() * v.e123()
-            + v.e023() * x.e023() * v.e031()
-            - v.e3() * x.e123() * v.e1()
-            - v.e1() * x.e023() * v.e012()
             - v.e3() * x.e031() * v.e3()
-            + v.e1() * x.e031() * v.e1(),
-        -(v.e2() * x.e023() * v.e0()) - v.e023() * x.e012() * v.e023()
-            + v.e031() * x.e023() * v.e1()
-            - v.e1() * x.e031() * v.e023()
-            + v.e023() * x.e123() * v.e3()
-            + v.e1() * x.e123() * v.e2()
-            + v.e1() * x.e023() * v.e031()
-            + v.e012() * x.e023() * v.e023()
-            - v.e023() * x.e031() * v.e1()
-            + v.e3() * x.e031() * v.e2()
-            + v.e1() * x.e012() * v.e1()
-            + v.e3() * x.e012() * v.e3()
+            + v.e1() * x.e012() * v.e023()
+            - v.e2() * x.e023() * v.e123()
+            + v.e2() * x.e123() * v.e023()
+            - v.e1() * x.e023() * v.e012()
+            - v.e023() * x.e031() * v.e023()
+            + v.e023() * x.e123() * v.e2()
+            + v.e3() * x.e023() * v.e0()
+            + v.e2() * x.e031() * v.e2()
+            + v.e0() * x.e023() * v.e3()
+            + v.e3() * x.e012() * v.e2()
+            - v.e123() * x.e023() * v.e2()
+            - v.e3() * x.e123() * v.e1()
+            - v.e1() * x.e123() * v.e3()
+            + v.e023() * x.e023() * v.e031()
+            - v.e012() * x.e023() * v.e1(),
+        v.e031() * x.e023() * v.e1() - v.e3() * x.e023() * v.e123() + v.e1() * x.e123() * v.e2()
             - v.e2() * x.e012() * v.e2()
+            + v.e3() * x.e123() * v.e023()
+            + v.e023() * x.e123() * v.e3()
+            - v.e023() * x.e012() * v.e023()
+            + v.e023() * x.e023() * v.e012()
+            + v.e2() * x.e123() * v.e1()
+            + v.e012() * x.e023() * v.e023()
+            + v.e1() * x.e023() * v.e031()
+            - v.e1() * x.e031() * v.e023()
+            + v.e2() * x.e031() * v.e3()
+            + v.e1() * x.e012() * v.e1()
             - v.e123() * x.e023() * v.e3()
             - v.e0() * x.e023() * v.e2()
-            + v.e023() * x.e023() * v.e012()
-            - v.e3() * x.e023() * v.e123()
-            + v.e3() * x.e123() * v.e023()
-            + v.e2() * x.e123() * v.e1()
-            + v.e2() * x.e031() * v.e3(),
-        v.e031() * x.e023() * v.e2() + v.e3() * x.e023() * v.e012() - v.e3() * x.e012() * v.e023()
-            + v.e3() * x.e123() * v.e3()
-            + v.e012() * x.e023() * v.e3()
-            - v.e1() * x.e123() * v.e1()
-            + v.e123() * x.e023() * v.e023()
-            + v.e1() * x.e023() * v.e0()
-            - v.e2() * x.e031() * v.e023()
-            + v.e1() * x.e012() * v.e2()
-            - v.e023() * x.e031() * v.e2()
-            - v.e1() * x.e031() * v.e3()
-            + v.e2() * x.e123() * v.e2()
-            + v.e2() * x.e012() * v.e1()
-            + v.e0() * x.e023() * v.e1()
+            - v.e023() * x.e031() * v.e1()
+            + v.e3() * x.e031() * v.e2()
+            - v.e2() * x.e023() * v.e0()
+            + v.e3() * x.e012() * v.e3(),
+        -(v.e2() * x.e031() * v.e023())
+            + v.e3() * x.e023() * v.e012()
             + v.e2() * x.e023() * v.e031()
-            - v.e3() * x.e031() * v.e1()
-            - v.e023() * x.e012() * v.e3()
             - v.e023() * x.e123() * v.e023()
-            + v.e023() * x.e023() * v.e123(),
+            - v.e1() * x.e123() * v.e1()
+            + v.e031() * x.e023() * v.e2()
+            + v.e023() * x.e023() * v.e123()
+            - v.e3() * x.e012() * v.e023()
+            + v.e0() * x.e023() * v.e1()
+            + v.e123() * x.e023() * v.e023()
+            - v.e023() * x.e031() * v.e2()
+            - v.e3() * x.e031() * v.e1()
+            + v.e2() * x.e123() * v.e2()
+            - v.e023() * x.e012() * v.e3()
+            + v.e012() * x.e023() * v.e3()
+            + v.e2() * x.e012() * v.e1()
+            + v.e1() * x.e023() * v.e0()
+            - v.e1() * x.e031() * v.e3()
+            + v.e3() * x.e123() * v.e3()
+            + v.e1() * x.e012() * v.e2(),
     )
 }
 #[doc = "Sandwich product: Flector * Motor * rev(Flector) -> Motor"]
 #[inline]
 pub fn sandwich_flector_motor<T: Float>(v: &Flector<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new_unchecked(
-        -(v.e2() * x.e23() * v.e1()) + v.e2() * x.s() * v.e2() - v.e2() * x.e31() * v.e023()
-            + v.e023() * x.s() * v.e023()
-            + v.e1() * x.e23() * v.e2()
+        v.e1() * x.e23() * v.e2() - v.e2() * x.e31() * v.e023()
+            + v.e1() * x.e12() * v.e023()
             + v.e2() * x.e12() * v.e3()
             + v.e3() * x.s() * v.e3()
-            - v.e3() * x.e12() * v.e2()
-            + v.e1() * x.s() * v.e1()
-            + v.e1() * x.e31() * v.e3()
             - v.e3() * x.e31() * v.e1()
             + v.e023() * x.e31() * v.e2()
-            + v.e3() * x.e23() * v.e023()
+            + v.e2() * x.s() * v.e2()
+            - v.e2() * x.e23() * v.e1()
+            + v.e023() * x.s() * v.e023()
+            - v.e3() * x.e12() * v.e2()
             - v.e023() * x.e12() * v.e1()
-            + v.e1() * x.e12() * v.e023()
+            + v.e3() * x.e23() * v.e023()
+            + v.e1() * x.e31() * v.e3()
+            + v.e1() * x.s() * v.e1()
             - v.e023() * x.e23() * v.e3(),
-        -(v.e3() * x.s() * v.e023()) - v.e1() * x.e23() * v.e1() - v.e1() * x.e31() * v.e023()
-            + v.e023() * x.s() * v.e3()
-            - v.e2() * x.s() * v.e1()
-            + v.e023() * x.e23() * v.e023()
-            + v.e1() * x.s() * v.e2()
+        -(v.e023() * x.e31() * v.e1())
             - v.e3() * x.e31() * v.e2()
-            + v.e3() * x.e12() * v.e1()
-            - v.e023() * x.e31() * v.e1()
-            - v.e023() * x.e12() * v.e2()
-            + v.e1() * x.e12() * v.e3()
-            - v.e2() * x.e12() * v.e023()
             - v.e2() * x.e31() * v.e3()
-            - v.e2() * x.e23() * v.e2()
-            + v.e3() * x.e23() * v.e3(),
-        v.e1() * x.s() * v.e3()
-            - v.e2() * x.e23() * v.e3()
-            - v.e2() * x.e12() * v.e1()
-            - v.e3() * x.e23() * v.e2()
-            + v.e2() * x.s() * v.e023()
-            + v.e023() * x.e23() * v.e1()
-            + v.e023() * x.e31() * v.e023()
-            - v.e023() * x.e12() * v.e3()
-            + v.e1() * x.e23() * v.e023()
+            - v.e023() * x.e12() * v.e2()
+            - v.e1() * x.e23() * v.e1()
+            + v.e3() * x.e12() * v.e1()
+            + v.e023() * x.s() * v.e3()
+            - v.e3() * x.s() * v.e023()
+            + v.e1() * x.s() * v.e2()
+            + v.e023() * x.e23() * v.e023()
+            - v.e2() * x.e12() * v.e023()
+            - v.e1() * x.e31() * v.e023()
+            + v.e3() * x.e23() * v.e3()
+            + v.e1() * x.e12() * v.e3()
+            - v.e2() * x.s() * v.e1()
+            - v.e2() * x.e23() * v.e2(),
+        -(v.e1() * x.e12() * v.e2()) + v.e1() * x.s() * v.e3()
             - v.e3() * x.s() * v.e1()
-            - v.e3() * x.e12() * v.e023()
-            - v.e3() * x.e31() * v.e3()
             - v.e1() * x.e31() * v.e1()
+            - v.e2() * x.e12() * v.e1()
+            + v.e023() * x.e31() * v.e023()
+            + v.e2() * x.s() * v.e023()
             + v.e2() * x.e31() * v.e2()
-            - v.e1() * x.e12() * v.e2()
-            - v.e023() * x.s() * v.e2(),
-        v.e3() * x.e31() * v.e023() - v.e1() * x.s() * v.e023() + v.e023() * x.e31() * v.e3()
-            - v.e2() * x.e31() * v.e1()
-            + v.e1() * x.e23() * v.e3()
-            - v.e3() * x.e12() * v.e3()
-            + v.e023() * x.e23() * v.e2()
-            - v.e1() * x.e31() * v.e2()
-            + v.e023() * x.s() * v.e1()
-            + v.e3() * x.e23() * v.e1()
+            + v.e1() * x.e23() * v.e023()
+            + v.e023() * x.e23() * v.e1()
+            - v.e2() * x.e23() * v.e3()
+            - v.e3() * x.e23() * v.e2()
+            - v.e023() * x.s() * v.e2()
+            - v.e023() * x.e12() * v.e3()
+            - v.e3() * x.e12() * v.e023()
+            - v.e3() * x.e31() * v.e3(),
+        v.e023() * x.e23() * v.e2() - v.e2() * x.e12() * v.e2() - v.e3() * x.e12() * v.e3()
             + v.e023() * x.e12() * v.e023()
-            + v.e1() * x.e12() * v.e1()
+            + v.e023() * x.s() * v.e1()
+            + v.e3() * x.e31() * v.e023()
             + v.e2() * x.e23() * v.e023()
-            - v.e2() * x.e12() * v.e2()
+            + v.e2() * x.s() * v.e3()
+            - v.e2() * x.e31() * v.e1()
+            - v.e1() * x.s() * v.e023()
+            + v.e1() * x.e12() * v.e1()
+            + v.e023() * x.e31() * v.e3()
+            + v.e1() * x.e23() * v.e3()
+            - v.e1() * x.e31() * v.e2()
             - v.e3() * x.s() * v.e2()
-            + v.e2() * x.s() * v.e3(),
-        -(v.e3() * x.e31() * v.e0()) - v.e0() * x.e31() * v.e3()
-            + v.e031() * x.e23() * v.e1()
-            + v.e2() * x.s() * v.e031()
-            + v.e2() * x.e12() * v.e012()
-            - v.e0() * x.s() * v.e1()
-            - v.e023() * x.e03() * v.e2()
-            - v.e2() * x.e31() * v.e123()
-            - v.e031() * x.s() * v.e2()
-            - v.e3() * x.e12() * v.e031()
-            - v.e2() * x.e23() * v.e0()
-            - v.e2() * x.e03() * v.e023()
-            - v.e1() * x.e01() * v.e1()
-            + v.e023() * x.e31() * v.e031()
-            + v.e2() * x.e01() * v.e2()
-            - v.e3() * x.e03() * v.e1()
-            - v.e1() * x.e02() * v.e2()
-            + v.e3() * x.e23() * v.e123()
-            - v.e3() * x.e0123() * v.e2()
-            - v.e023() * x.e01() * v.e023()
-            + v.e1() * x.e23() * v.e031()
+            + v.e3() * x.e23() * v.e1(),
+        v.e2() * x.e0123() * v.e3()
+            - v.e0() * x.e31() * v.e3()
             - v.e0() * x.e12() * v.e023()
-            - v.e2() * x.e02() * v.e1()
-            - v.e023() * x.e23() * v.e012()
-            + v.e1() * x.e12() * v.e123()
-            - v.e023() * x.e12() * v.e0()
-            + v.e023() * x.e02() * v.e3()
-            - v.e0() * x.e23() * v.e2()
-            + v.e3() * x.e02() * v.e023()
-            - v.e012() * x.e23() * v.e023()
-            - v.e1() * x.e0123() * v.e023()
-            + v.e3() * x.s() * v.e012()
-            + v.e012() * x.e12() * v.e2()
-            - v.e123() * x.s() * v.e023()
+            - v.e1() * x.e02() * v.e2()
+            + v.e2() * x.s() * v.e031()
             + v.e023() * x.e0123() * v.e1()
+            - v.e0() * x.s() * v.e1()
+            + v.e012() * x.e31() * v.e1()
+            + v.e012() * x.e12() * v.e2()
+            + v.e123() * x.e12() * v.e1()
+            - v.e3() * x.e31() * v.e0()
+            - v.e1() * x.e01() * v.e1()
+            - v.e023() * x.e23() * v.e012()
+            + v.e031() * x.e31() * v.e023()
+            + v.e2() * x.e12() * v.e012()
+            - v.e2() * x.e03() * v.e023()
+            - v.e1() * x.e03() * v.e3()
+            + v.e023() * x.e31() * v.e031()
+            - v.e023() * x.e01() * v.e023()
+            + v.e023() * x.e02() * v.e3()
             + v.e123() * x.e23() * v.e3()
             - v.e123() * x.e31() * v.e2()
-            - v.e012() * x.s() * v.e3()
+            + v.e1() * x.e12() * v.e123()
+            - v.e3() * x.e12() * v.e031()
             + v.e1() * x.s() * v.e0()
-            + v.e031() * x.e31() * v.e023()
-            + v.e012() * x.e31() * v.e1()
-            + v.e123() * x.e12() * v.e1()
-            + v.e3() * x.e01() * v.e3()
-            + v.e1() * x.e31() * v.e012()
+            - v.e1() * x.e0123() * v.e023()
+            - v.e2() * x.e31() * v.e123()
+            + v.e2() * x.e01() * v.e2()
+            + v.e3() * x.s() * v.e012()
             + v.e023() * x.s() * v.e123()
+            - v.e2() * x.e23() * v.e0()
+            - v.e023() * x.e03() * v.e2()
             - v.e031() * x.e12() * v.e3()
-            - v.e1() * x.e03() * v.e3()
-            + v.e2() * x.e0123() * v.e3(),
-        v.e0() * x.e23() * v.e1() - v.e012() * x.e12() * v.e1() - v.e012() * x.e23() * v.e3()
-            + v.e123() * x.e12() * v.e2()
-            + v.e1() * x.e23() * v.e0()
-            + v.e012() * x.e31() * v.e2()
-            - v.e3() * x.e23() * v.e012()
-            - v.e2() * x.e02() * v.e2()
-            - v.e0() * x.e12() * v.e3()
-            + v.e1() * x.e31() * v.e123()
-            - v.e1() * x.e12() * v.e012()
-            - v.e3() * x.e03() * v.e2()
-            - v.e023() * x.e01() * v.e3()
-            + v.e3() * x.e02() * v.e3()
-            + v.e3() * x.s() * v.e123()
-            + v.e3() * x.e0123() * v.e1()
-            + v.e2() * x.e31() * v.e012()
-            + v.e031() * x.e31() * v.e3()
-            + v.e2() * x.e23() * v.e031()
-            + v.e0() * x.e31() * v.e023()
-            + v.e3() * x.e31() * v.e031()
-            - v.e0() * x.s() * v.e2()
-            + v.e2() * x.s() * v.e0()
-            - v.e023() * x.s() * v.e012()
-            + v.e1() * x.e03() * v.e023()
+            - v.e023() * x.e12() * v.e0()
+            - v.e123() * x.s() * v.e023()
+            + v.e3() * x.e23() * v.e123()
+            - v.e3() * x.e0123() * v.e2()
+            - v.e012() * x.e23() * v.e023()
+            + v.e3() * x.e02() * v.e023()
+            + v.e3() * x.e01() * v.e3()
+            - v.e2() * x.e02() * v.e1()
+            - v.e031() * x.s() * v.e2()
+            + v.e1() * x.e23() * v.e031()
+            + v.e031() * x.e23() * v.e1()
+            - v.e0() * x.e23() * v.e2()
+            + v.e1() * x.e31() * v.e012()
+            - v.e012() * x.s() * v.e3()
+            - v.e3() * x.e03() * v.e1(),
+        -(v.e2() * x.e02() * v.e2()) + v.e0() * x.e23() * v.e1()
             - v.e2() * x.e03() * v.e3()
-            + v.e023() * x.e31() * v.e0()
-            + v.e023() * x.e03() * v.e1()
-            - v.e1() * x.e01() * v.e2()
-            - v.e2() * x.e0123() * v.e023()
-            - v.e3() * x.e12() * v.e0()
-            + v.e2() * x.e12() * v.e123()
-            + v.e023() * x.e0123() * v.e2()
-            + v.e031() * x.s() * v.e1()
-            + v.e031() * x.e23() * v.e2()
-            - v.e123() * x.s() * v.e3()
-            + v.e1() * x.e02() * v.e1()
             - v.e023() * x.e23() * v.e123()
-            + v.e012() * x.s() * v.e023()
-            - v.e1() * x.s() * v.e031()
+            - v.e0() * x.s() * v.e2()
+            - v.e012() * x.e23() * v.e3()
             - v.e1() * x.e0123() * v.e3()
-            - v.e2() * x.e01() * v.e1()
-            + v.e023() * x.e12() * v.e031()
-            - v.e023() * x.e02() * v.e023()
-            + v.e031() * x.e12() * v.e023()
+            + v.e023() * x.e31() * v.e0()
+            - v.e023() * x.e01() * v.e3()
+            - v.e123() * x.s() * v.e3()
+            - v.e3() * x.e23() * v.e012()
+            + v.e023() * x.e03() * v.e1()
+            - v.e1() * x.s() * v.e031()
+            + v.e1() * x.e02() * v.e1()
+            + v.e031() * x.s() * v.e1()
+            - v.e1() * x.e12() * v.e012()
+            + v.e3() * x.e0123() * v.e1()
+            + v.e2() * x.s() * v.e0()
+            + v.e0() * x.e31() * v.e023()
+            + v.e031() * x.e31() * v.e3()
             + v.e123() * x.e31() * v.e1()
+            - v.e2() * x.e0123() * v.e023()
+            + v.e012() * x.e31() * v.e2()
+            - v.e023() * x.s() * v.e012()
+            - v.e0() * x.e12() * v.e3()
+            + v.e2() * x.e23() * v.e031()
+            - v.e1() * x.e01() * v.e2()
+            - v.e3() * x.e12() * v.e0()
+            + v.e3() * x.e02() * v.e3()
+            + v.e1() * x.e31() * v.e123()
+            + v.e031() * x.e12() * v.e023()
+            - v.e2() * x.e01() * v.e1()
+            - v.e3() * x.e01() * v.e023()
+            + v.e2() * x.e12() * v.e123()
+            + v.e3() * x.s() * v.e123()
+            + v.e023() * x.e12() * v.e031()
+            + v.e023() * x.e0123() * v.e2()
+            + v.e1() * x.e23() * v.e0()
+            - v.e023() * x.e02() * v.e023()
+            + v.e031() * x.e23() * v.e2()
+            + v.e012() * x.s() * v.e023()
+            + v.e1() * x.e03() * v.e023()
             - v.e123() * x.e23() * v.e023()
-            - v.e3() * x.e01() * v.e023(),
-        -(v.e1() * x.e02() * v.e023()) + v.e3() * x.e23() * v.e031() + v.e1() * x.e12() * v.e031()
-            - v.e023() * x.e23() * v.e0()
-            - v.e023() * x.e31() * v.e123()
-            + v.e023() * x.e01() * v.e2()
-            + v.e012() * x.s() * v.e1()
-            + v.e2() * x.e01() * v.e023()
-            + v.e2() * x.e03() * v.e2()
-            - v.e3() * x.e0123() * v.e023()
-            - v.e3() * x.e02() * v.e2()
-            + v.e3() * x.e12() * v.e123()
-            - v.e0() * x.s() * v.e3()
-            - v.e023() * x.e03() * v.e023()
-            + v.e1() * x.e03() * v.e1()
-            - v.e031() * x.s() * v.e023()
-            - v.e2() * x.s() * v.e123()
-            + v.e031() * x.e12() * v.e1()
-            - v.e1() * x.s() * v.e012()
-            + v.e0() * x.e31() * v.e1()
-            + v.e012() * x.e23() * v.e2()
-            + v.e123() * x.s() * v.e2()
-            + v.e2() * x.e23() * v.e012()
-            - v.e3() * x.e03() * v.e3()
-            - v.e2() * x.e02() * v.e3()
-            + v.e023() * x.e12() * v.e012()
-            + v.e012() * x.e31() * v.e3()
-            - v.e1() * x.e01() * v.e3()
-            - v.e031() * x.e31() * v.e2()
-            + v.e1() * x.e31() * v.e0()
-            + v.e023() * x.s() * v.e031()
-            - v.e023() * x.e02() * v.e1()
-            + v.e023() * x.e0123() * v.e3()
-            + v.e031() * x.e23() * v.e3()
-            - v.e2() * x.e0123() * v.e1()
-            - v.e123() * x.e23() * v.e1()
-            - v.e1() * x.e23() * v.e123()
-            - v.e123() * x.e31() * v.e023()
-            + v.e1() * x.e0123() * v.e2()
-            + v.e012() * x.e12() * v.e023()
+            - v.e3() * x.e03() * v.e2()
+            + v.e3() * x.e31() * v.e031()
+            - v.e012() * x.e12() * v.e1()
+            + v.e123() * x.e12() * v.e2()
+            + v.e2() * x.e31() * v.e012(),
+        v.e1() * x.e12() * v.e031()
             + v.e123() * x.e12() * v.e3()
-            + v.e0() * x.e12() * v.e2()
-            - v.e0() * x.e23() * v.e023()
-            - v.e3() * x.e01() * v.e1()
-            + v.e3() * x.e31() * v.e012()
+            + v.e1() * x.e03() * v.e1()
+            + v.e2() * x.e23() * v.e012()
             + v.e2() * x.e12() * v.e0()
+            + v.e0() * x.e31() * v.e1()
+            - v.e2() * x.s() * v.e123()
+            - v.e0() * x.e23() * v.e023()
+            - v.e031() * x.e31() * v.e2()
+            + v.e031() * x.e12() * v.e1()
+            - v.e023() * x.e23() * v.e0()
+            - v.e023() * x.e02() * v.e1()
+            - v.e1() * x.e01() * v.e3()
+            + v.e1() * x.e0123() * v.e2()
+            - v.e2() * x.e02() * v.e3()
+            + v.e3() * x.e23() * v.e031()
+            - v.e023() * x.e31() * v.e123()
+            + v.e012() * x.s() * v.e1()
+            - v.e2() * x.e31() * v.e031()
+            + v.e123() * x.s() * v.e2()
+            - v.e1() * x.s() * v.e012()
+            - v.e3() * x.e03() * v.e3()
+            - v.e3() * x.e0123() * v.e023()
+            + v.e012() * x.e12() * v.e023()
+            - v.e031() * x.s() * v.e023()
+            - v.e123() * x.e23() * v.e1()
+            + v.e2() * x.e03() * v.e2()
+            + v.e3() * x.e31() * v.e012()
+            + v.e023() * x.e01() * v.e2()
+            - v.e0() * x.s() * v.e3()
+            + v.e023() * x.s() * v.e031()
+            + v.e023() * x.e0123() * v.e3()
+            + v.e3() * x.e12() * v.e123()
+            + v.e012() * x.e31() * v.e3()
+            - v.e1() * x.e02() * v.e023()
+            - v.e3() * x.e01() * v.e1()
             + v.e3() * x.s() * v.e0()
-            - v.e2() * x.e31() * v.e031(),
-        v.e031() * x.e31() * v.e1() + v.e023() * x.s() * v.e0()
-            - v.e023() * x.e03() * v.e3()
+            + v.e2() * x.e01() * v.e023()
+            - v.e123() * x.e31() * v.e023()
+            - v.e3() * x.e02() * v.e2()
+            - v.e2() * x.e0123() * v.e1()
+            - v.e1() * x.e23() * v.e123()
+            + v.e1() * x.e31() * v.e0()
+            - v.e023() * x.e03() * v.e023()
+            + v.e023() * x.e12() * v.e012()
+            + v.e012() * x.e23() * v.e2()
+            + v.e0() * x.e12() * v.e2()
+            + v.e031() * x.e23() * v.e3(),
+        v.e2() * x.e23() * v.e123()
+            + v.e0() * x.e31() * v.e2()
+            + v.e3() * x.e03() * v.e023()
+            + v.e023() * x.e12() * v.e123()
+            - v.e031() * x.e23() * v.e023()
+            + v.e2() * x.e02() * v.e023()
+            - v.e023() * x.e01() * v.e1()
             - v.e123() * x.e23() * v.e2()
             - v.e123() * x.e12() * v.e023()
-            + v.e023() * x.e31() * v.e012()
-            - v.e012() * x.e31() * v.e023()
-            + v.e2() * x.e01() * v.e3()
-            + v.e0() * x.s() * v.e023()
-            - v.e0() * x.e12() * v.e1()
-            - v.e012() * x.e23() * v.e1()
-            + v.e3() * x.e03() * v.e023()
-            - v.e1() * x.e02() * v.e3()
-            + v.e012() * x.s() * v.e2()
-            - v.e123() * x.s() * v.e1()
-            + v.e2() * x.e23() * v.e123()
-            - v.e2() * x.e31() * v.e0()
-            - v.e023() * x.e02() * v.e2()
-            - v.e1() * x.e31() * v.e031()
-            - v.e2() * x.e0123() * v.e2()
-            - v.e3() * x.e12() * v.e012()
-            + v.e1() * x.e03() * v.e2()
-            + v.e2() * x.e02() * v.e023()
-            + v.e1() * x.e12() * v.e0()
-            + v.e3() * x.e23() * v.e0()
-            - v.e3() * x.e0123() * v.e3()
-            - v.e2() * x.e12() * v.e031()
-            + v.e3() * x.e02() * v.e1()
-            - v.e0() * x.e23() * v.e3()
-            + v.e023() * x.e23() * v.e031()
             - v.e2() * x.e03() * v.e1()
+            + v.e031() * x.e31() * v.e1()
+            - v.e1() * x.e02() * v.e3()
+            - v.e2() * x.e12() * v.e031()
+            + v.e023() * x.e23() * v.e031()
             - v.e023() * x.e0123() * v.e023()
-            - v.e123() * x.e31() * v.e3()
-            + v.e2() * x.s() * v.e012()
-            - v.e3() * x.s() * v.e031()
-            + v.e1() * x.e01() * v.e023()
-            + v.e1() * x.e23() * v.e012()
-            - v.e3() * x.e01() * v.e2()
-            + v.e3() * x.e31() * v.e123()
-            - v.e031() * x.s() * v.e3()
-            + v.e0() * x.e31() * v.e2()
             - v.e1() * x.e0123() * v.e1()
-            - v.e1() * x.s() * v.e123()
-            + v.e023() * x.e12() * v.e123()
-            - v.e023() * x.e01() * v.e1()
-            - v.e031() * x.e23() * v.e023()
+            + v.e1() * x.e01() * v.e023()
+            - v.e123() * x.s() * v.e1()
+            + v.e1() * x.e23() * v.e012()
             + v.e031() * x.e12() * v.e2()
-            + v.e012() * x.e12() * v.e3(),
+            + v.e2() * x.e01() * v.e3()
+            - v.e2() * x.e0123() * v.e2()
+            + v.e3() * x.e23() * v.e0()
+            + v.e1() * x.e12() * v.e0()
+            + v.e012() * x.s() * v.e2()
+            - v.e023() * x.e02() * v.e2()
+            - v.e3() * x.e0123() * v.e3()
+            - v.e023() * x.e03() * v.e3()
+            + v.e3() * x.e31() * v.e123()
+            + v.e3() * x.e02() * v.e1()
+            + v.e023() * x.s() * v.e0()
+            + v.e023() * x.e31() * v.e012()
+            + v.e012() * x.e12() * v.e3()
+            - v.e3() * x.e01() * v.e2()
+            - v.e0() * x.e23() * v.e3()
+            - v.e031() * x.s() * v.e3()
+            - v.e123() * x.e31() * v.e3()
+            + v.e1() * x.e03() * v.e2()
+            - v.e1() * x.s() * v.e123()
+            - v.e1() * x.e31() * v.e031()
+            - v.e3() * x.s() * v.e031()
+            + v.e0() * x.s() * v.e023()
+            - v.e3() * x.e12() * v.e012()
+            - v.e0() * x.e12() * v.e1()
+            + v.e2() * x.s() * v.e012()
+            - v.e012() * x.e23() * v.e1()
+            - v.e012() * x.e31() * v.e023()
+            - v.e2() * x.e31() * v.e0(),
     )
 }
 #[doc = "Sandwich product: Flector * Flector * rev(Flector) -> Flector"]
 #[inline]
 pub fn sandwich_flector_flector<T: Float>(v: &Flector<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new_unchecked(
-        -(v.e3() * x.e2() * v.e023())
-            + v.e023() * x.e1() * v.e023()
-            + v.e3() * x.e023() * v.e2()
-            + v.e2() * x.e3() * v.e023()
+        -(v.e023() * x.e2() * v.e3())
             - v.e3() * x.e1() * v.e3()
-            - v.e2() * x.e023() * v.e3()
-            + v.e1() * x.e1() * v.e1()
-            - v.e023() * x.e2() * v.e3()
-            + v.e2() * x.e2() * v.e1()
-            + v.e1() * x.e3() * v.e3()
-            + v.e1() * x.e2() * v.e2()
+            - v.e3() * x.e2() * v.e023()
             - v.e023() * x.e023() * v.e1()
+            + v.e1() * x.e3() * v.e3()
             + v.e3() * x.e3() * v.e1()
+            + v.e023() * x.e1() * v.e023()
+            + v.e1() * x.e1() * v.e1()
             + v.e023() * x.e3() * v.e2()
+            + v.e2() * x.e3() * v.e023()
             + v.e1() * x.e023() * v.e023()
+            - v.e2() * x.e023() * v.e3()
+            + v.e1() * x.e2() * v.e2()
+            + v.e2() * x.e2() * v.e1()
+            + v.e3() * x.e023() * v.e2()
             - v.e2() * x.e1() * v.e2(),
-        v.e2() * x.e3() * v.e3() - v.e3() * x.e2() * v.e3()
-            + v.e3() * x.e3() * v.e2()
-            + v.e2() * x.e023() * v.e023()
-            + v.e023() * x.e2() * v.e023()
-            - v.e023() * x.e023() * v.e2()
-            + v.e023() * x.e1() * v.e3()
-            + v.e2() * x.e1() * v.e1()
-            - v.e1() * x.e2() * v.e1()
-            + v.e3() * x.e1() * v.e023()
-            + v.e1() * x.e023() * v.e3()
-            + v.e1() * x.e1() * v.e2()
-            - v.e3() * x.e023() * v.e1()
-            + v.e2() * x.e2() * v.e2()
+        v.e1() * x.e023() * v.e3() - v.e023() * x.e3() * v.e1() + v.e1() * x.e1() * v.e2()
             - v.e1() * x.e3() * v.e023()
-            - v.e023() * x.e3() * v.e1(),
-        v.e3() * x.e2() * v.e2() + v.e1() * x.e2() * v.e023() + v.e3() * x.e3() * v.e3()
-            - v.e2() * x.e3() * v.e2()
-            - v.e1() * x.e3() * v.e1()
-            + v.e1() * x.e1() * v.e3()
+            + v.e3() * x.e1() * v.e023()
+            + v.e3() * x.e3() * v.e2()
+            - v.e023() * x.e023() * v.e2()
+            + v.e2() * x.e3() * v.e3()
+            + v.e2() * x.e2() * v.e2()
+            - v.e1() * x.e2() * v.e1()
+            - v.e3() * x.e023() * v.e1()
+            - v.e3() * x.e2() * v.e3()
+            + v.e2() * x.e1() * v.e1()
+            + v.e023() * x.e1() * v.e3()
+            + v.e2() * x.e023() * v.e023()
+            + v.e023() * x.e2() * v.e023(),
+        -(v.e023() * x.e023() * v.e3()) - v.e023() * x.e1() * v.e2() - v.e1() * x.e3() * v.e1()
             + v.e023() * x.e3() * v.e023()
-            - v.e023() * x.e1() * v.e2()
-            - v.e2() * x.e1() * v.e023()
-            + v.e3() * x.e1() * v.e1()
-            + v.e023() * x.e2() * v.e1()
-            + v.e3() * x.e023() * v.e023()
+            + v.e1() * x.e2() * v.e023()
+            - v.e2() * x.e3() * v.e2()
             - v.e1() * x.e023() * v.e2()
+            + v.e3() * x.e1() * v.e1()
+            + v.e3() * x.e3() * v.e3()
             + v.e2() * x.e023() * v.e1()
+            + v.e3() * x.e2() * v.e2()
+            + v.e3() * x.e023() * v.e023()
             + v.e2() * x.e2() * v.e3()
-            - v.e023() * x.e023() * v.e3(),
-        -(v.e2() * x.e1() * v.e031())
-            + v.e123() * x.e3() * v.e2()
-            + v.e3() * x.e123() * v.e2()
-            + v.e3() * x.e023() * v.e031()
-            + v.e2() * x.e031() * v.e1()
-            + v.e123() * x.e1() * v.e023()
-            - v.e1() * x.e031() * v.e2()
-            + v.e1() * x.e1() * v.e0()
-            - v.e023() * x.e0() * v.e023()
-            - v.e1() * x.e012() * v.e3()
-            - v.e1() * x.e0() * v.e1()
-            - v.e2() * x.e123() * v.e3()
-            - v.e031() * x.e1() * v.e2()
-            - v.e2() * x.e0() * v.e2()
-            - v.e3() * x.e031() * v.e023()
-            + v.e1() * x.e3() * v.e012()
-            + v.e1() * x.e2() * v.e031()
-            - v.e3() * x.e2() * v.e123()
-            + v.e0() * x.e2() * v.e2()
-            - v.e023() * x.e012() * v.e2()
-            + v.e031() * x.e3() * v.e023()
-            - v.e123() * x.e2() * v.e3()
-            - v.e2() * x.e023() * v.e012()
-            + v.e023() * x.e031() * v.e3()
-            - v.e3() * x.e1() * v.e012()
-            - v.e123() * x.e023() * v.e1()
-            + v.e2() * x.e3() * v.e123()
-            + v.e0() * x.e3() * v.e3()
+            + v.e023() * x.e2() * v.e1()
+            + v.e1() * x.e1() * v.e3()
+            - v.e2() * x.e1() * v.e023(),
+        v.e031() * x.e3() * v.e023()
             + v.e2() * x.e2() * v.e0()
-            + v.e3() * x.e3() * v.e0()
-            - v.e012() * x.e1() * v.e3()
-            + v.e0() * x.e1() * v.e1()
-            + v.e2() * x.e012() * v.e023()
-            - v.e3() * x.e0() * v.e3()
-            + v.e023() * x.e3() * v.e031()
-            + v.e1() * x.e023() * v.e123()
-            - v.e1() * x.e123() * v.e023()
-            + v.e3() * x.e012() * v.e1()
-            + v.e0() * x.e023() * v.e023()
-            + v.e023() * x.e123() * v.e1()
-            - v.e023() * x.e2() * v.e012()
-            - v.e031() * x.e023() * v.e3()
-            - v.e023() * x.e023() * v.e0()
-            - v.e012() * x.e2() * v.e023()
-            + v.e031() * x.e2() * v.e1()
-            + v.e012() * x.e3() * v.e1()
+            + v.e0() * x.e2() * v.e2()
             + v.e012() * x.e023() * v.e2()
-            + v.e023() * x.e1() * v.e123(),
-        -(v.e1() * x.e3() * v.e2()) - v.e2() * x.e1() * v.e3() + v.e3() * x.e1() * v.e2()
-            - v.e1() * x.e1() * v.e023()
-            + v.e2() * x.e3() * v.e1()
-            - v.e3() * x.e2() * v.e1()
-            + v.e023() * x.e023() * v.e023()
-            + v.e1() * x.e2() * v.e3()
-            + v.e023() * x.e2() * v.e2()
-            + v.e023() * x.e3() * v.e3()
-            + v.e2() * x.e023() * v.e2()
-            + v.e3() * x.e023() * v.e3()
+            + v.e023() * x.e1() * v.e123()
+            + v.e3() * x.e023() * v.e031()
+            + v.e3() * x.e3() * v.e0()
+            + v.e2() * x.e031() * v.e1()
+            - v.e1() * x.e012() * v.e3()
+            - v.e031() * x.e023() * v.e3()
+            - v.e2() * x.e023() * v.e012()
+            - v.e1() * x.e123() * v.e023()
+            + v.e1() * x.e2() * v.e031()
+            + v.e2() * x.e012() * v.e023()
+            + v.e0() * x.e023() * v.e023()
+            - v.e3() * x.e031() * v.e023()
+            + v.e023() * x.e123() * v.e1()
+            + v.e023() * x.e3() * v.e031()
+            - v.e012() * x.e2() * v.e023()
+            + v.e1() * x.e023() * v.e123()
+            + v.e031() * x.e2() * v.e1()
+            - v.e123() * x.e023() * v.e1()
+            + v.e0() * x.e3() * v.e3()
+            - v.e2() * x.e1() * v.e031()
+            - v.e2() * x.e123() * v.e3()
+            - v.e1() * x.e0() * v.e1()
+            - v.e1() * x.e031() * v.e2()
+            - v.e3() * x.e2() * v.e123()
+            - v.e023() * x.e2() * v.e012()
+            - v.e023() * x.e0() * v.e023()
+            - v.e023() * x.e012() * v.e2()
+            - v.e031() * x.e1() * v.e2()
+            + v.e0() * x.e1() * v.e1()
+            + v.e012() * x.e3() * v.e1()
+            - v.e023() * x.e023() * v.e0()
+            + v.e123() * x.e1() * v.e023()
+            + v.e2() * x.e3() * v.e123()
+            - v.e123() * x.e2() * v.e3()
+            - v.e012() * x.e1() * v.e3()
+            + v.e1() * x.e1() * v.e0()
+            - v.e3() * x.e0() * v.e3()
+            + v.e3() * x.e012() * v.e1()
+            - v.e3() * x.e1() * v.e012()
+            + v.e023() * x.e031() * v.e3()
+            + v.e3() * x.e123() * v.e2()
+            + v.e123() * x.e3() * v.e2()
+            - v.e2() * x.e0() * v.e2()
+            + v.e1() * x.e3() * v.e012(),
+        -(v.e1() * x.e3() * v.e2()) + v.e2() * x.e3() * v.e1() - v.e3() * x.e2() * v.e1()
             + v.e023() * x.e1() * v.e1()
-            + v.e1() * x.e023() * v.e1()
+            + v.e1() * x.e2() * v.e3()
+            + v.e023() * x.e023() * v.e023()
+            + v.e023() * x.e2() * v.e2()
             - v.e3() * x.e3() * v.e023()
-            - v.e2() * x.e2() * v.e023(),
-        -(v.e012() * x.e023() * v.e1()) - v.e123() * x.e3() * v.e1() - v.e123() * x.e023() * v.e2()
-            + v.e031() * x.e1() * v.e1()
-            + v.e3() * x.e012() * v.e2()
-            - v.e023() * x.e0() * v.e3()
-            - v.e3() * x.e3() * v.e031()
-            + v.e031() * x.e2() * v.e2()
-            + v.e1() * x.e2() * v.e0()
-            + v.e1() * x.e012() * v.e023()
-            - v.e3() * x.e1() * v.e123()
-            + v.e3() * x.e2() * v.e012()
-            + v.e2() * x.e012() * v.e3()
-            - v.e1() * x.e1() * v.e031()
+            - v.e1() * x.e1() * v.e023()
+            - v.e2() * x.e1() * v.e3()
+            + v.e2() * x.e023() * v.e2()
+            + v.e1() * x.e023() * v.e1()
+            + v.e3() * x.e1() * v.e2()
+            - v.e2() * x.e2() * v.e023()
+            + v.e023() * x.e3() * v.e3()
+            + v.e3() * x.e023() * v.e3(),
+        -(v.e012() * x.e2() * v.e3())
             - v.e2() * x.e1() * v.e0()
-            - v.e3() * x.e123() * v.e1()
-            + v.e2() * x.e0() * v.e1()
-            + v.e1() * x.e3() * v.e123()
-            - v.e0() * x.e3() * v.e023()
-            + v.e023() * x.e3() * v.e0()
-            + v.e012() * x.e3() * v.e2()
-            + v.e123() * x.e2() * v.e023()
-            + v.e031() * x.e023() * v.e023()
-            - v.e1() * x.e023() * v.e012()
-            + v.e1() * x.e031() * v.e1()
-            - v.e1() * x.e123() * v.e3()
-            - v.e3() * x.e031() * v.e3()
-            - v.e1() * x.e0() * v.e2()
-            - v.e2() * x.e3() * v.e012()
-            + v.e2() * x.e031() * v.e2()
-            + v.e3() * x.e0() * v.e023()
-            - v.e023() * x.e2() * v.e123()
-            + v.e0() * x.e1() * v.e2()
-            + v.e023() * x.e012() * v.e1()
-            + v.e123() * x.e1() * v.e3()
-            + v.e023() * x.e023() * v.e031()
-            - v.e2() * x.e2() * v.e031()
-            + v.e023() * x.e123() * v.e2()
-            + v.e3() * x.e023() * v.e0()
             - v.e2() * x.e023() * v.e123()
-            + v.e2() * x.e123() * v.e023()
-            - v.e0() * x.e2() * v.e1()
-            + v.e0() * x.e023() * v.e3()
+            - v.e1() * x.e123() * v.e3()
+            + v.e023() * x.e3() * v.e0()
+            + v.e1() * x.e2() * v.e0()
             + v.e031() * x.e3() * v.e3()
-            - v.e023() * x.e1() * v.e012()
+            + v.e2() * x.e012() * v.e3()
+            + v.e3() * x.e2() * v.e012()
+            + v.e3() * x.e023() * v.e0()
+            + v.e031() * x.e023() * v.e023()
             + v.e012() * x.e1() * v.e023()
-            - v.e012() * x.e2() * v.e3()
-            - v.e023() * x.e031() * v.e023(),
-        v.e012() * x.e3() * v.e3() + v.e3() * x.e123() * v.e023()
-            - v.e1() * x.e031() * v.e023()
-            - v.e0() * x.e023() * v.e2()
-            - v.e023() * x.e031() * v.e1()
-            + v.e123() * x.e3() * v.e023()
-            + v.e1() * x.e123() * v.e2()
-            - v.e123() * x.e1() * v.e2()
-            + v.e023() * x.e123() * v.e3()
-            - v.e123() * x.e023() * v.e3()
-            - v.e031() * x.e1() * v.e023()
-            - v.e1() * x.e1() * v.e012()
-            + v.e1() * x.e023() * v.e031()
-            + v.e023() * x.e0() * v.e2()
-            + v.e031() * x.e023() * v.e1()
-            + v.e012() * x.e023() * v.e023()
-            + v.e3() * x.e0() * v.e1()
-            - v.e023() * x.e3() * v.e123()
-            - v.e1() * x.e2() * v.e123()
-            - v.e3() * x.e1() * v.e0()
-            + v.e3() * x.e012() * v.e3()
-            + v.e023() * x.e023() * v.e012()
-            - v.e023() * x.e012() * v.e023()
-            + v.e031() * x.e2() * v.e3()
-            + v.e1() * x.e012() * v.e1()
-            - v.e0() * x.e3() * v.e1()
-            - v.e031() * x.e3() * v.e2()
-            + v.e0() * x.e2() * v.e023()
-            + v.e012() * x.e1() * v.e1()
-            + v.e012() * x.e2() * v.e2()
-            - v.e2() * x.e2() * v.e012()
-            + v.e2() * x.e1() * v.e123()
-            + v.e2() * x.e123() * v.e1()
-            - v.e2() * x.e0() * v.e023()
-            + v.e1() * x.e3() * v.e0()
+            - v.e3() * x.e3() * v.e031()
+            - v.e012() * x.e023() * v.e1()
+            + v.e031() * x.e2() * v.e2()
+            - v.e123() * x.e023() * v.e2()
+            + v.e023() * x.e123() * v.e2()
+            - v.e1() * x.e1() * v.e031()
+            - v.e3() * x.e123() * v.e1()
+            - v.e023() * x.e1() * v.e012()
+            - v.e1() * x.e023() * v.e012()
+            - v.e0() * x.e2() * v.e1()
+            - v.e2() * x.e2() * v.e031()
+            + v.e031() * x.e1() * v.e1()
+            - v.e123() * x.e3() * v.e1()
+            - v.e023() * x.e0() * v.e3()
+            + v.e0() * x.e1() * v.e2()
+            + v.e1() * x.e3() * v.e123()
+            + v.e2() * x.e031() * v.e2()
+            + v.e1() * x.e031() * v.e1()
+            + v.e023() * x.e023() * v.e031()
+            - v.e023() * x.e031() * v.e023()
+            + v.e123() * x.e1() * v.e3()
+            - v.e0() * x.e3() * v.e023()
+            - v.e1() * x.e0() * v.e2()
+            + v.e012() * x.e3() * v.e2()
+            + v.e023() * x.e012() * v.e1()
+            - v.e3() * x.e031() * v.e3()
+            + v.e0() * x.e023() * v.e3()
+            + v.e2() * x.e123() * v.e023()
+            + v.e1() * x.e012() * v.e023()
+            - v.e2() * x.e3() * v.e012()
+            + v.e2() * x.e0() * v.e1()
+            - v.e3() * x.e1() * v.e123()
+            + v.e3() * x.e0() * v.e023()
+            + v.e3() * x.e012() * v.e2()
+            - v.e023() * x.e2() * v.e123()
+            + v.e123() * x.e2() * v.e023(),
+        v.e3() * x.e0() * v.e1()
             - v.e3() * x.e023() * v.e123()
-            + v.e123() * x.e2() * v.e1()
-            + v.e2() * x.e3() * v.e031()
-            - v.e1() * x.e0() * v.e3()
-            - v.e3() * x.e2() * v.e031()
-            - v.e2() * x.e012() * v.e2()
-            + v.e023() * x.e1() * v.e031()
-            + v.e3() * x.e031() * v.e2()
-            + v.e0() * x.e1() * v.e3()
-            - v.e023() * x.e2() * v.e0()
-            - v.e3() * x.e3() * v.e012()
+            - v.e123() * x.e023() * v.e3()
+            - v.e023() * x.e031() * v.e1()
             - v.e2() * x.e023() * v.e0()
-            + v.e2() * x.e031() * v.e3(),
-        -(v.e2() * x.e031() * v.e023()) - v.e1() * x.e123() * v.e1()
-            + v.e012() * x.e023() * v.e3()
-            + v.e123() * x.e023() * v.e023()
-            + v.e023() * x.e3() * v.e012()
-            + v.e1() * x.e2() * v.e012()
-            + v.e3() * x.e0() * v.e2()
-            + v.e3() * x.e123() * v.e3()
-            + v.e2() * x.e123() * v.e2()
-            + v.e2() * x.e012() * v.e1()
-            - v.e2() * x.e1() * v.e012()
-            - v.e0() * x.e1() * v.e023()
-            + v.e023() * x.e023() * v.e123()
-            + v.e1() * x.e023() * v.e0()
-            - v.e1() * x.e3() * v.e031()
-            - v.e0() * x.e3() * v.e2()
-            + v.e023() * x.e2() * v.e031()
-            + v.e3() * x.e1() * v.e031()
-            - v.e031() * x.e2() * v.e023()
-            + v.e031() * x.e3() * v.e1()
-            + v.e023() * x.e1() * v.e0()
-            + v.e0() * x.e023() * v.e1()
-            - v.e023() * x.e012() * v.e3()
-            - v.e023() * x.e123() * v.e023()
-            - v.e012() * x.e2() * v.e1()
-            + v.e123() * x.e2() * v.e2()
-            + v.e123() * x.e3() * v.e3()
-            - v.e2() * x.e0() * v.e3()
-            + v.e2() * x.e3() * v.e0()
-            - v.e2() * x.e2() * v.e123()
-            - v.e023() * x.e031() * v.e2()
-            + v.e1() * x.e0() * v.e023()
-            - v.e3() * x.e012() * v.e023()
-            + v.e123() * x.e1() * v.e1()
-            + v.e0() * x.e2() * v.e3()
-            - v.e023() * x.e0() * v.e1()
-            + v.e012() * x.e1() * v.e2()
-            - v.e1() * x.e1() * v.e123()
-            - v.e3() * x.e2() * v.e0()
-            + v.e031() * x.e023() * v.e2()
-            - v.e012() * x.e3() * v.e023()
+            - v.e2() * x.e2() * v.e012()
+            + v.e0() * x.e2() * v.e023()
+            + v.e2() * x.e031() * v.e3()
+            + v.e2() * x.e1() * v.e123()
+            - v.e031() * x.e1() * v.e023()
+            - v.e123() * x.e1() * v.e2()
+            - v.e1() * x.e2() * v.e123()
+            + v.e023() * x.e0() * v.e2()
+            + v.e012() * x.e2() * v.e2()
+            - v.e1() * x.e0() * v.e3()
+            + v.e3() * x.e012() * v.e3()
+            + v.e1() * x.e123() * v.e2()
+            - v.e3() * x.e3() * v.e012()
+            + v.e012() * x.e3() * v.e3()
+            - v.e0() * x.e3() * v.e1()
+            - v.e023() * x.e3() * v.e123()
+            + v.e023() * x.e023() * v.e012()
+            + v.e3() * x.e123() * v.e023()
+            + v.e3() * x.e031() * v.e2()
+            + v.e023() * x.e123() * v.e3()
+            - v.e2() * x.e012() * v.e2()
+            - v.e023() * x.e012() * v.e023()
+            - v.e1() * x.e031() * v.e023()
+            + v.e012() * x.e1() * v.e1()
+            - v.e2() * x.e0() * v.e023()
+            + v.e1() * x.e023() * v.e031()
+            - v.e3() * x.e1() * v.e0()
+            + v.e2() * x.e123() * v.e1()
+            + v.e0() * x.e1() * v.e3()
+            + v.e023() * x.e1() * v.e031()
+            - v.e023() * x.e2() * v.e0()
+            + v.e031() * x.e023() * v.e1()
+            - v.e0() * x.e023() * v.e2()
+            - v.e3() * x.e2() * v.e031()
+            + v.e2() * x.e3() * v.e031()
+            + v.e012() * x.e023() * v.e023()
+            - v.e031() * x.e3() * v.e2()
+            + v.e123() * x.e2() * v.e1()
+            + v.e123() * x.e3() * v.e023()
+            - v.e1() * x.e1() * v.e012()
+            + v.e1() * x.e3() * v.e0()
+            + v.e1() * x.e012() * v.e1()
+            + v.e031() * x.e2() * v.e3(),
+        -(v.e2() * x.e1() * v.e012()) - v.e023() * x.e031() * v.e2()
             + v.e2() * x.e023() * v.e031()
-            + v.e3() * x.e023() * v.e012()
-            - v.e031() * x.e1() * v.e3()
-            - v.e3() * x.e031() * v.e1()
-            + v.e1() * x.e012() * v.e2()
+            + v.e2() * x.e3() * v.e0()
+            + v.e3() * x.e0() * v.e2()
+            + v.e023() * x.e3() * v.e012()
+            - v.e0() * x.e3() * v.e2()
+            + v.e123() * x.e3() * v.e3()
+            + v.e123() * x.e023() * v.e023()
+            + v.e031() * x.e3() * v.e1()
             - v.e1() * x.e031() * v.e3()
-            - v.e3() * x.e3() * v.e123(),
+            - v.e2() * x.e2() * v.e123()
+            + v.e1() * x.e023() * v.e0()
+            - v.e012() * x.e3() * v.e023()
+            + v.e1() * x.e2() * v.e012()
+            - v.e3() * x.e2() * v.e0()
+            - v.e3() * x.e012() * v.e023()
+            - v.e031() * x.e1() * v.e3()
+            - v.e023() * x.e0() * v.e1()
+            - v.e031() * x.e2() * v.e023()
+            - v.e3() * x.e3() * v.e123()
+            - v.e1() * x.e1() * v.e123()
+            + v.e1() * x.e012() * v.e2()
+            + v.e023() * x.e1() * v.e0()
+            - v.e2() * x.e0() * v.e3()
+            + v.e2() * x.e012() * v.e1()
+            + v.e0() * x.e2() * v.e3()
+            + v.e3() * x.e1() * v.e031()
+            + v.e0() * x.e023() * v.e1()
+            - v.e2() * x.e031() * v.e023()
+            - v.e3() * x.e031() * v.e1()
+            + v.e012() * x.e1() * v.e2()
+            - v.e023() * x.e012() * v.e3()
+            - v.e012() * x.e2() * v.e1()
+            + v.e3() * x.e123() * v.e3()
+            - v.e1() * x.e3() * v.e031()
+            + v.e1() * x.e0() * v.e023()
+            + v.e012() * x.e023() * v.e3()
+            + v.e023() * x.e2() * v.e031()
+            + v.e031() * x.e023() * v.e2()
+            + v.e123() * x.e1() * v.e1()
+            + v.e123() * x.e2() * v.e2()
+            - v.e0() * x.e1() * v.e023()
+            - v.e1() * x.e123() * v.e1()
+            + v.e2() * x.e123() * v.e2()
+            + v.e023() * x.e023() * v.e123()
+            - v.e023() * x.e123() * v.e023()
+            + v.e3() * x.e023() * v.e012(),
     )
 }
 #[doc = "Sandwich product: Motor * Point * rev(Motor) -> Point"]
 #[inline]
 pub fn sandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        -(v.e12() * x.e2() * v.e31())
-            + v.e12() * x.e3() * v.e23()
+        v.e12() * x.e3() * v.e23() + v.s() * x.e3() * v.e31() - v.e31() * x.e1() * v.e31()
             + v.e23() * x.e3() * v.e12()
-            + v.e31() * x.e3() * v.s()
-            + v.s() * x.e2() * v.e23()
-            + v.s() * x.e3() * v.e31()
-            + v.e23() * x.e2() * v.s()
-            - v.e31() * x.e1() * v.e31()
-            + v.s() * x.e1() * v.s()
             - v.e23() * x.e1() * v.e23()
+            + v.e31() * x.e3() * v.s()
             - v.e31() * x.e2() * v.e12()
-            + v.e12() * x.e1() * v.e12(),
-        -(v.e31() * x.e1() * v.e12()) - v.e12() * x.e2() * v.e12() + v.e12() * x.e3() * v.s()
-            - v.e23() * x.e1() * v.s()
-            - v.e12() * x.e1() * v.e31()
+            + v.s() * x.e2() * v.e23()
+            + v.e12() * x.e1() * v.e12()
+            - v.e12() * x.e2() * v.e31()
+            + v.e23() * x.e2() * v.s()
+            + v.s() * x.e1() * v.s(),
+        -(v.e31() * x.e3() * v.e23()) - v.e23() * x.e1() * v.s()
+            + v.e31() * x.e2() * v.e31()
             + v.s() * x.e2() * v.s()
             - v.e23() * x.e3() * v.e31()
-            - v.e23() * x.e2() * v.e23()
-            + v.e31() * x.e2() * v.e31()
-            - v.e31() * x.e3() * v.e23()
+            + v.e12() * x.e3() * v.s()
             + v.s() * x.e3() * v.e12()
+            - v.e23() * x.e2() * v.e23()
+            - v.e12() * x.e2() * v.e12()
+            - v.e31() * x.e1() * v.e12()
+            - v.e12() * x.e1() * v.e31()
             - v.s() * x.e1() * v.e23(),
-        v.e12() * x.e1() * v.e23()
-            - v.e23() * x.e2() * v.e31()
+        -(v.s() * x.e2() * v.e12()) - v.e23() * x.e2() * v.e31() + v.e23() * x.e3() * v.e23()
             - v.e31() * x.e1() * v.s()
-            - v.e31() * x.e3() * v.e31()
-            - v.e12() * x.e3() * v.e12()
-            + v.e23() * x.e3() * v.e23()
-            - v.s() * x.e1() * v.e31()
-            - v.s() * x.e2() * v.e12()
             + v.s() * x.e3() * v.s()
             - v.e31() * x.e2() * v.e23()
-            - v.e12() * x.e2() * v.s()
-            + v.e23() * x.e1() * v.e12(),
-        v.e03() * x.e2() * v.e12() - v.e0123() * x.e3() * v.e23() - v.e0123() * x.e1() * v.e12()
-            + v.e31() * x.e0() * v.e31()
-            - v.e03() * x.e3() * v.s()
-            + v.e0123() * x.e2() * v.e31()
-            + v.e02() * x.e1() * v.e23()
-            + v.e12() * x.e0() * v.e12()
-            + v.e23() * x.e1() * v.e02()
-            - v.e31() * x.e3() * v.e01()
-            + v.e31() * x.e1() * v.e03()
-            - v.s() * x.e1() * v.e01()
-            - v.e23() * x.e3() * v.e0123()
-            + v.e23() * x.e0() * v.e23()
-            - v.s() * x.e3() * v.e03()
-            - v.s() * x.e2() * v.e02()
-            - v.e23() * x.e2() * v.e01()
-            + v.e31() * x.e2() * v.e0123()
-            + v.e12() * x.e2() * v.e03()
-            - v.e12() * x.e3() * v.e02()
-            - v.e01() * x.e1() * v.s()
-            + v.s() * x.e0() * v.s()
-            - v.e01() * x.e2() * v.e23()
-            - v.e01() * x.e3() * v.e31()
+            + v.e23() * x.e1() * v.e12()
+            - v.e31() * x.e3() * v.e31()
+            - v.e12() * x.e3() * v.e12()
+            + v.e12() * x.e1() * v.e23()
+            - v.s() * x.e1() * v.e31()
+            - v.e12() * x.e2() * v.s(),
+        -(v.e12() * x.e3() * v.e02()) + v.e02() * x.e1() * v.e23()
+            - v.e0123() * x.e1() * v.e12()
             - v.e02() * x.e3() * v.e12()
+            - v.s() * x.e3() * v.e03()
+            - v.e01() * x.e1() * v.s()
+            + v.e03() * x.e2() * v.e12()
+            - v.s() * x.e2() * v.e02()
+            - v.e01() * x.e3() * v.e31()
+            - v.e0123() * x.e3() * v.e23()
+            + v.s() * x.e0() * v.s()
+            + v.e31() * x.e2() * v.e0123()
+            - v.s() * x.e1() * v.e01()
+            + v.e31() * x.e0() * v.e31()
+            + v.e03() * x.e1() * v.e31()
+            + v.e23() * x.e1() * v.e02()
+            - v.e01() * x.e2() * v.e23()
+            + v.e23() * x.e0() * v.e23()
+            + v.e31() * x.e1() * v.e03()
+            + v.e12() * x.e0() * v.e12()
+            - v.e03() * x.e3() * v.s()
+            - v.e23() * x.e2() * v.e01()
             - v.e12() * x.e1() * v.e0123()
+            - v.e23() * x.e3() * v.e0123()
             - v.e02() * x.e2() * v.s()
-            + v.e03() * x.e1() * v.e31(),
+            + v.e0123() * x.e2() * v.e31()
+            - v.e31() * x.e3() * v.e01()
+            + v.e12() * x.e2() * v.e03(),
     )
 }
 #[doc = "Sandwich product: Motor * Line * rev(Motor) -> Line"]
 #[inline]
 pub fn sandwich_motor_line<T: Float>(v: &Motor<T>, x: &Line<T>) -> Line<T> {
     Line::new_unchecked(
-        v.e12() * x.e03() * v.e23() - v.e12() * x.e01() * v.e12()
-            + v.e23() * x.e02() * v.e31()
-            + v.e31() * x.e02() * v.e23()
-            + v.e23() * x.e01() * v.e23()
+        v.s() * x.e02() * v.e12() - v.e31() * x.e01() * v.e31() - v.e31() * x.e03() * v.s()
             + v.e23() * x.e03() * v.e12()
-            - v.e31() * x.e03() * v.s()
+            - v.s() * x.e03() * v.e31()
+            - v.e12() * x.e01() * v.e12()
+            + v.e31() * x.e02() * v.e23()
+            + v.e23() * x.e02() * v.e31()
             + v.e12() * x.e02() * v.s()
-            + v.s() * x.e02() * v.e12()
+            + v.e12() * x.e03() * v.e23()
             + v.s() * x.e01() * v.s()
-            - v.e31() * x.e01() * v.e31()
-            - v.s() * x.e03() * v.e31(),
-        -(v.e12() * x.e02() * v.e12()) + v.e12() * x.e03() * v.e31() - v.s() * x.e01() * v.e12()
-            + v.e31() * x.e03() * v.e12()
+            + v.e23() * x.e01() * v.e23(),
+        -(v.s() * x.e01() * v.e12()) + v.e23() * x.e01() * v.e31() - v.e23() * x.e02() * v.e23()
+            + v.e31() * x.e02() * v.e31()
             + v.s() * x.e03() * v.e23()
-            - v.e23() * x.e02() * v.e23()
-            - v.e12() * x.e01() * v.s()
             + v.s() * x.e02() * v.s()
             + v.e31() * x.e01() * v.e23()
-            + v.e31() * x.e02() * v.e31()
+            + v.e31() * x.e03() * v.e12()
+            - v.e12() * x.e01() * v.s()
+            - v.e12() * x.e02() * v.e12()
             + v.e23() * x.e03() * v.s()
-            + v.e23() * x.e01() * v.e31(),
-        -(v.e23() * x.e03() * v.e23()) + v.e31() * x.e01() * v.s() + v.e31() * x.e02() * v.e12()
-            - v.e31() * x.e03() * v.e31()
-            + v.e12() * x.e03() * v.e12()
-            - v.s() * x.e02() * v.e23()
-            + v.e23() * x.e01() * v.e12()
+            + v.e12() * x.e03() * v.e31(),
+        v.e12() * x.e02() * v.e31() + v.e23() * x.e01() * v.e12() - v.e23() * x.e02() * v.s()
             + v.s() * x.e03() * v.s()
-            - v.e23() * x.e02() * v.s()
+            - v.e31() * x.e03() * v.e31()
+            + v.s() * x.e01() * v.e31()
             + v.e12() * x.e01() * v.e23()
-            + v.e12() * x.e02() * v.e31()
-            + v.s() * x.e01() * v.e31(),
-        v.e12() * x.e01() * v.e03()
-            - v.e31() * x.e01() * v.e0123()
-            - v.e12() * x.e31() * v.e31()
-            - v.s() * x.e01() * v.e02()
-            + v.s() * x.e12() * v.e31()
-            + v.e12() * x.e03() * v.e01()
-            + v.e0123() * x.e02() * v.e23()
-            + v.e03() * x.e01() * v.e12()
-            - v.s() * x.e03() * v.e0123()
-            + v.s() * x.e31() * v.e23()
-            - v.e23() * x.e23() * v.e23()
-            - v.e31() * x.e31() * v.e12()
-            + v.e31() * x.e12() * v.s()
-            - v.e0123() * x.e01() * v.e31()
-            + v.e23() * x.e01() * v.e01()
-            - v.e03() * x.e02() * v.s()
+            - v.s() * x.e02() * v.e23()
+            + v.e31() * x.e02() * v.e12()
+            + v.e12() * x.e03() * v.e12()
+            + v.e31() * x.e01() * v.s()
+            - v.e23() * x.e03() * v.e23(),
+        v.e0123() * x.e02() * v.e23() - v.e31() * x.e01() * v.e0123() + v.s() * x.e23() * v.s()
+            - v.e0123() * x.e03() * v.s()
             - v.e02() * x.e01() * v.s()
-            - v.e02() * x.e02() * v.e12()
-            - v.s() * x.e02() * v.e03()
-            - v.e31() * x.e23() * v.e31()
-            + v.e12() * x.e23() * v.e12()
-            + v.e01() * x.e02() * v.e31()
-            + v.e31() * x.e03() * v.e02()
+            - v.s() * x.e01() * v.e02()
             - v.e12() * x.e02() * v.e02()
-            - v.e03() * x.e03() * v.e23()
-            + v.e01() * x.e03() * v.e12()
-            - v.e23() * x.e03() * v.e03()
-            + v.e23() * x.e02() * v.e0123()
-            + v.e23() * x.e31() * v.s()
-            + v.e23() * x.e12() * v.e12()
-            + v.e02() * x.e03() * v.e31()
-            + v.s() * x.e23() * v.s()
-            + v.e31() * x.e02() * v.e01()
-            + v.e12() * x.e12() * v.e23()
+            - v.s() * x.e02() * v.e03()
+            + v.e31() * x.e03() * v.e02()
             + v.e01() * x.e01() * v.e23()
-            - v.e0123() * x.e03() * v.s(),
-        -(v.e0123() * x.e01() * v.e12()) - v.e31() * x.e12() * v.e23()
-            + v.e23() * x.e03() * v.e0123()
-            + v.e01() * x.e01() * v.s()
-            + v.e12() * x.e03() * v.e02()
-            + v.e02() * x.e02() * v.e31()
-            - v.e23() * x.e23() * v.s()
-            + v.e31() * x.e31() * v.e31()
+            + v.e31() * x.e12() * v.s()
+            + v.e01() * x.e03() * v.e12()
+            - v.e31() * x.e31() * v.e12()
+            + v.e12() * x.e23() * v.e12()
+            + v.e23() * x.e02() * v.e0123()
+            - v.e12() * x.e31() * v.e31()
+            - v.e02() * x.e02() * v.e12()
+            - v.s() * x.e03() * v.e0123()
+            + v.s() * x.e12() * v.e31()
+            + v.e12() * x.e01() * v.e03()
+            + v.e12() * x.e12() * v.e23()
+            - v.e23() * x.e23() * v.e23()
+            - v.e03() * x.e03() * v.e23()
+            - v.e0123() * x.e01() * v.e31()
+            + v.s() * x.e31() * v.e23()
+            - v.e23() * x.e03() * v.e03()
+            + v.e23() * x.e12() * v.e12()
+            + v.e23() * x.e31() * v.s()
+            + v.e23() * x.e01() * v.e01()
+            + v.e12() * x.e03() * v.e01()
+            + v.e03() * x.e01() * v.e12()
+            - v.e31() * x.e23() * v.e31()
+            + v.e31() * x.e02() * v.e01()
+            - v.e03() * x.e02() * v.s()
+            + v.e02() * x.e03() * v.e31()
+            + v.e01() * x.e02() * v.e31(),
+        -(v.e23() * x.e12() * v.e31()) + v.e02() * x.e01() * v.e23() - v.e23() * x.e31() * v.e23()
+            + v.e31() * x.e02() * v.e02()
             - v.e12() * x.e01() * v.e0123()
-            - v.e12() * x.e23() * v.e31()
             + v.e03() * x.e02() * v.e23()
-            + v.s() * x.e12() * v.e12()
-            - v.e12() * x.e31() * v.e12()
+            - v.e31() * x.e01() * v.e03()
+            - v.e31() * x.e03() * v.e01()
+            - v.e03() * x.e03() * v.s()
             + v.s() * x.e02() * v.e0123()
-            + v.e02() * x.e01() * v.e23()
-            - v.e23() * x.e31() * v.e23()
+            + v.e0123() * x.e02() * v.s()
+            + v.e31() * x.e31() * v.e31()
+            - v.s() * x.e23() * v.e23()
             + v.e23() * x.e01() * v.e02()
+            - v.e01() * x.e03() * v.e31()
+            + v.s() * x.e01() * v.e01()
+            - v.e03() * x.e01() * v.e31()
+            + v.e23() * x.e02() * v.e03()
             + v.e02() * x.e03() * v.e12()
             - v.e31() * x.e23() * v.e12()
-            - v.e03() * x.e03() * v.s()
-            - v.e01() * x.e03() * v.e31()
-            + v.e0123() * x.e02() * v.s()
-            - v.s() * x.e03() * v.e03()
-            - v.e31() * x.e03() * v.e01()
-            + v.e12() * x.e12() * v.s()
-            - v.e31() * x.e01() * v.e03()
-            + v.e31() * x.e02() * v.e02()
-            + v.e01() * x.e02() * v.e12()
-            - v.e03() * x.e01() * v.e31()
+            - v.e0123() * x.e01() * v.e12()
             + v.e0123() * x.e03() * v.e23()
-            - v.s() * x.e23() * v.e23()
-            - v.e23() * x.e12() * v.e31()
-            + v.s() * x.e01() * v.e01()
-            + v.s() * x.e31() * v.s()
             + v.e12() * x.e02() * v.e01()
-            + v.e23() * x.e02() * v.e03(),
-        v.e03() * x.e02() * v.e31() + v.e12() * x.e23() * v.e23() + v.s() * x.e12() * v.s()
-            - v.e01() * x.e01() * v.e12()
-            - v.e31() * x.e12() * v.e31()
-            + v.e23() * x.e23() * v.e12()
-            + v.s() * x.e03() * v.e02()
-            + v.e23() * x.e03() * v.e01()
-            - v.s() * x.e23() * v.e31()
-            - v.e12() * x.e02() * v.e0123()
-            + v.e03() * x.e03() * v.e12()
-            + v.e01() * x.e03() * v.e23()
-            - v.e31() * x.e23() * v.s()
-            - v.e02() * x.e02() * v.e23()
-            - v.e0123() * x.e02() * v.e12()
-            - v.e23() * x.e02() * v.e02()
-            - v.e12() * x.e01() * v.e01()
-            + v.e23() * x.e12() * v.e23()
-            + v.e23() * x.e01() * v.e03()
-            - v.s() * x.e01() * v.e0123()
+            + v.e01() * x.e01() * v.s()
+            - v.e31() * x.e12() * v.e23()
+            - v.e12() * x.e23() * v.e31()
+            - v.s() * x.e03() * v.e03()
+            + v.s() * x.e31() * v.s()
+            + v.e01() * x.e02() * v.e12()
+            + v.e12() * x.e03() * v.e02()
+            - v.e12() * x.e31() * v.e12()
+            + v.e12() * x.e12() * v.s()
+            + v.e23() * x.e03() * v.e0123()
+            - v.e23() * x.e23() * v.s()
+            + v.e02() * x.e02() * v.e31()
+            + v.s() * x.e12() * v.e12(),
+        v.e23() * x.e23() * v.e12() + v.s() * x.e12() * v.s() + v.e31() * x.e03() * v.e0123()
             - v.e31() * x.e31() * v.e23()
-            - v.e12() * x.e31() * v.s()
-            - v.e12() * x.e12() * v.e12()
-            + v.s() * x.e02() * v.e01()
-            - v.e23() * x.e31() * v.e31()
-            - v.s() * x.e31() * v.e12()
-            + v.e02() * x.e03() * v.s()
-            + v.e0123() * x.e03() * v.e31()
-            + v.e31() * x.e02() * v.e03()
-            - v.e0123() * x.e01() * v.s()
-            + v.e31() * x.e01() * v.e02()
-            + v.e03() * x.e01() * v.e23()
-            + v.e02() * x.e01() * v.e31()
+            - v.e31() * x.e12() * v.e31()
+            - v.e12() * x.e01() * v.e01()
             + v.e01() * x.e02() * v.s()
-            + v.e31() * x.e03() * v.e0123()
-            + v.e12() * x.e03() * v.e03(),
+            + v.e03() * x.e01() * v.e23()
+            - v.e12() * x.e31() * v.s()
+            + v.e03() * x.e02() * v.e31()
+            - v.s() * x.e01() * v.e0123()
+            - v.s() * x.e23() * v.e31()
+            + v.e01() * x.e03() * v.e23()
+            - v.s() * x.e31() * v.e12()
+            - v.e0123() * x.e02() * v.e12()
+            + v.e02() * x.e03() * v.s()
+            - v.e12() * x.e02() * v.e0123()
+            - v.e23() * x.e31() * v.e31()
+            - v.e31() * x.e23() * v.s()
+            + v.e31() * x.e01() * v.e02()
+            + v.e23() * x.e12() * v.e23()
+            - v.e12() * x.e12() * v.e12()
+            - v.e01() * x.e01() * v.e12()
+            + v.e23() * x.e01() * v.e03()
+            + v.e0123() * x.e03() * v.e31()
+            + v.s() * x.e02() * v.e01()
+            + v.s() * x.e03() * v.e02()
+            + v.e12() * x.e23() * v.e23()
+            + v.e03() * x.e03() * v.e12()
+            + v.e12() * x.e03() * v.e03()
+            + v.e02() * x.e01() * v.e31()
+            - v.e0123() * x.e01() * v.s()
+            + v.e23() * x.e03() * v.e01()
+            - v.e02() * x.e02() * v.e23()
+            - v.e23() * x.e02() * v.e02()
+            + v.e31() * x.e02() * v.e03(),
     )
 }
 #[doc = "Sandwich product: Motor * Plane * rev(Motor) -> Plane"]
 #[inline]
 pub fn sandwich_motor_plane<T: Float>(v: &Motor<T>, x: &Plane<T>) -> Plane<T> {
     Plane::new(
-        v.e31() * x.e023() * v.e31()
-            + v.s() * x.e023() * v.s()
-            + v.e23() * x.e023() * v.e23()
-            + v.e12() * x.e023() * v.e12(),
-        -(v.e0123() * x.e023() * v.e23()) - v.e31() * x.e123() * v.s() - v.s() * x.e123() * v.e31()
-            + v.e31() * x.e023() * v.e01()
-            + v.e31() * x.e012() * v.e23()
-            + v.s() * x.e031() * v.s()
-            + v.e23() * x.e123() * v.e12()
-            - v.s() * x.e023() * v.e03()
+        v.e23() * x.e023() * v.e23()
+            + v.e12() * x.e023() * v.e12()
+            + v.e31() * x.e023() * v.e31()
+            + v.s() * x.e023() * v.s(),
+        -(v.e31() * x.e123() * v.s()) + v.e01() * x.e023() * v.e31()
             - v.e03() * x.e023() * v.s()
-            + v.s() * x.e012() * v.e12()
-            - v.e31() * x.e031() * v.e31()
-            + v.e12() * x.e123() * v.e23()
-            + v.e02() * x.e023() * v.e12()
-            - v.e23() * x.e023() * v.e0123()
-            + v.e23() * x.e012() * v.e31()
-            + v.e12() * x.e012() * v.s()
-            + v.e01() * x.e023() * v.e31()
+            - v.e12() * x.e031() * v.e12()
+            + v.s() * x.e031() * v.s()
             + v.e12() * x.e023() * v.e02()
+            + v.e23() * x.e012() * v.e31()
+            - v.e31() * x.e031() * v.e31()
+            + v.e31() * x.e023() * v.e01()
+            - v.e23() * x.e023() * v.e0123()
+            + v.e02() * x.e023() * v.e12()
+            + v.e12() * x.e012() * v.s()
+            + v.e31() * x.e012() * v.e23()
+            - v.e0123() * x.e023() * v.e23()
+            - v.s() * x.e123() * v.e31()
+            + v.e12() * x.e123() * v.e23()
             + v.e23() * x.e031() * v.e23()
-            - v.e12() * x.e031() * v.e12(),
-        v.e31() * x.e031() * v.e23() - v.e23() * x.e023() * v.e01() + v.e31() * x.e012() * v.e31()
-            - v.e12() * x.e031() * v.s()
-            + v.e12() * x.e123() * v.e31()
-            + v.s() * x.e012() * v.s()
-            - v.s() * x.e031() * v.e12()
-            + v.s() * x.e023() * v.e02()
-            + v.e23() * x.e031() * v.e31()
-            - v.e23() * x.e012() * v.e23()
-            + v.e23() * x.e123() * v.s()
+            - v.s() * x.e023() * v.e03()
+            + v.s() * x.e012() * v.e12()
+            + v.e23() * x.e123() * v.e12(),
+        -(v.e12() * x.e012() * v.e12()) + v.e03() * x.e023() * v.e12()
+            - v.e23() * x.e023() * v.e01()
+            - v.e0123() * x.e023() * v.e31()
             - v.e01() * x.e023() * v.e23()
+            - v.s() * x.e031() * v.e12()
+            + v.s() * x.e012() * v.s()
             + v.e31() * x.e123() * v.e12()
+            - v.e31() * x.e023() * v.e0123()
+            + v.e12() * x.e023() * v.e03()
+            + v.s() * x.e023() * v.e02()
+            - v.e23() * x.e012() * v.e23()
+            + v.e31() * x.e012() * v.e31()
+            + v.e23() * x.e123() * v.s()
             + v.e02() * x.e023() * v.s()
             + v.s() * x.e123() * v.e23()
-            + v.e03() * x.e023() * v.e12()
-            - v.e0123() * x.e023() * v.e31()
-            - v.e12() * x.e012() * v.e12()
-            - v.e31() * x.e023() * v.e0123()
-            + v.e12() * x.e023() * v.e03(),
-        -(v.e23() * x.e023() * v.e02())
-            - v.e12() * x.e023() * v.e0123()
-            - v.e23() * x.e123() * v.e23()
+            - v.e12() * x.e031() * v.s()
+            + v.e31() * x.e031() * v.e23()
+            + v.e23() * x.e031() * v.e31()
+            + v.e12() * x.e123() * v.e31(),
+        -(v.e23() * x.e012() * v.s()) - v.e31() * x.e023() * v.e03() - v.e03() * x.e023() * v.e31()
+            + v.e12() * x.e031() * v.e23()
+            + v.e31() * x.e031() * v.s()
             - v.e01() * x.e023() * v.s()
             + v.e23() * x.e031() * v.e12()
-            + v.s() * x.e031() * v.e31()
-            - v.e23() * x.e012() * v.s()
-            + v.e31() * x.e031() * v.s()
-            + v.e12() * x.e123() * v.e12()
-            - v.e03() * x.e023() * v.e31()
-            - v.s() * x.e023() * v.e01()
-            - v.e31() * x.e123() * v.e31()
-            - v.e02() * x.e023() * v.e23()
-            - v.e0123() * x.e023() * v.e12()
-            + v.e31() * x.e012() * v.e12()
-            + v.e12() * x.e031() * v.e23()
             + v.s() * x.e123() * v.s()
-            - v.s() * x.e012() * v.e23()
+            + v.e31() * x.e012() * v.e12()
+            - v.e12() * x.e023() * v.e0123()
+            - v.e23() * x.e023() * v.e02()
+            - v.e23() * x.e123() * v.e23()
             + v.e12() * x.e012() * v.e31()
-            - v.e31() * x.e023() * v.e03(),
+            - v.e02() * x.e023() * v.e23()
+            - v.s() * x.e012() * v.e23()
+            - v.e0123() * x.e023() * v.e12()
+            + v.s() * x.e031() * v.e31()
+            - v.e31() * x.e123() * v.e31()
+            - v.s() * x.e023() * v.e01()
+            + v.e12() * x.e123() * v.e12(),
     )
 }
 #[doc = "Sandwich product: Motor * Motor * rev(Motor) -> Motor"]
 #[inline]
 pub fn sandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new_unchecked(
-        -(v.e12() * x.e12() * v.s()) + v.s() * x.s() * v.s()
-            - v.e31() * x.e31() * v.s()
-            - v.e23() * x.e23() * v.s()
-            + v.e12() * x.s() * v.e12()
-            + v.e23() * x.e12() * v.e31()
+        -(v.e31() * x.e12() * v.e23())
             + v.e23() * x.s() * v.e23()
-            - v.e23() * x.e31() * v.e12()
-            - v.e12() * x.e23() * v.e31()
-            + v.e12() * x.e31() * v.e23()
-            + v.e31() * x.s() * v.e31()
+            + v.s() * x.s() * v.s()
             + v.s() * x.e31() * v.e31()
-            + v.s() * x.e23() * v.e23()
-            + v.s() * x.e12() * v.e12()
+            - v.e23() * x.e31() * v.e12()
             + v.e31() * x.e23() * v.e12()
-            - v.e31() * x.e12() * v.e23(),
-        -(v.s() * x.s() * v.e23())
-            + v.e31() * x.e31() * v.e23()
-            + v.e12() * x.e31() * v.s()
-            + v.e23() * x.e31() * v.e31()
-            + v.e23() * x.e12() * v.e12()
-            + v.s() * x.e23() * v.s()
-            - v.e31() * x.e12() * v.s()
-            + v.s() * x.e31() * v.e12()
-            - v.e12() * x.e23() * v.e12()
+            + v.e12() * x.s() * v.e12()
+            + v.s() * x.e12() * v.e12()
+            - v.e31() * x.e31() * v.s()
+            + v.s() * x.e23() * v.e23()
+            + v.e23() * x.e12() * v.e31()
+            + v.e31() * x.s() * v.e31()
+            - v.e12() * x.e12() * v.s()
+            - v.e23() * x.e23() * v.s()
+            - v.e12() * x.e23() * v.e31()
+            + v.e12() * x.e31() * v.e23(),
+        v.s() * x.e23() * v.s() + v.e12() * x.e12() * v.e23() - v.s() * x.e12() * v.e31()
             + v.e23() * x.e23() * v.e23()
-            - v.e31() * x.e23() * v.e31()
-            - v.s() * x.e12() * v.e31()
-            + v.e23() * x.s() * v.s()
             - v.e12() * x.s() * v.e31()
-            + v.e12() * x.e12() * v.e23()
-            + v.e31() * x.s() * v.e12(),
-        v.s() * x.e31() * v.s() - v.s() * x.s() * v.e31()
-            + v.e12() * x.s() * v.e23()
-            + v.s() * x.e12() * v.e23()
+            + v.s() * x.e31() * v.e12()
+            + v.e23() * x.e12() * v.e12()
+            - v.e31() * x.e23() * v.e31()
+            - v.e12() * x.e23() * v.e12()
+            + v.e23() * x.s() * v.s()
+            + v.e31() * x.s() * v.e12()
+            - v.s() * x.s() * v.e23()
+            + v.e12() * x.e31() * v.s()
+            - v.e31() * x.e12() * v.s()
+            + v.e23() * x.e31() * v.e31()
+            + v.e31() * x.e31() * v.e23(),
+        v.s() * x.e12() * v.e23() - v.e12() * x.e31() * v.e12()
             + v.e31() * x.e31() * v.e31()
-            - v.e23() * x.s() * v.e12()
-            + v.e12() * x.e12() * v.e31()
             + v.e31() * x.s() * v.s()
-            + v.e31() * x.e12() * v.e12()
-            + v.e23() * x.e12() * v.s()
-            + v.e31() * x.e23() * v.e23()
-            - v.e12() * x.e31() * v.e12()
-            - v.e23() * x.e31() * v.e23()
-            - v.s() * x.e23() * v.e12()
+            + v.e23() * x.e23() * v.e31()
             - v.e12() * x.e23() * v.s()
-            + v.e23() * x.e23() * v.e31(),
-        v.e31() * x.e31() * v.e12() + v.s() * x.e12() * v.s()
-            - v.e23() * x.e12() * v.e23()
-            - v.e23() * x.e31() * v.s()
-            - v.s() * x.s() * v.e12()
-            - v.s() * x.e31() * v.e23()
-            + v.e12() * x.e23() * v.e23()
-            - v.e31() * x.s() * v.e23()
-            + v.e31() * x.e23() * v.s()
-            + v.e12() * x.e12() * v.e12()
-            - v.e31() * x.e12() * v.e31()
-            + v.e23() * x.e23() * v.e12()
+            - v.e23() * x.s() * v.e12()
+            + v.e12() * x.s() * v.e23()
+            + v.e23() * x.e12() * v.s()
+            - v.e23() * x.e31() * v.e23()
+            + v.e31() * x.e12() * v.e12()
+            + v.s() * x.e31() * v.s()
+            + v.e31() * x.e23() * v.e23()
+            + v.e12() * x.e12() * v.e31()
+            - v.s() * x.s() * v.e31()
+            - v.s() * x.e23() * v.e12(),
+        v.e23() * x.s() * v.e31()
             + v.e12() * x.s() * v.s()
-            + v.e23() * x.s() * v.e31()
+            + v.s() * x.e23() * v.e31()
+            + v.s() * x.e12() * v.s()
+            - v.s() * x.e31() * v.e23()
+            + v.e31() * x.e31() * v.e12()
+            - v.e23() * x.e31() * v.s()
+            - v.e23() * x.e12() * v.e23()
             + v.e12() * x.e31() * v.e31()
-            + v.s() * x.e23() * v.e31(),
-        v.e02() * x.s() * v.e23() - v.e03() * x.e12() * v.e23() + v.e0123() * x.e31() * v.e23()
-            - v.e0123() * x.e12() * v.s()
-            - v.e31() * x.s() * v.e03()
-            + v.e01() * x.e23() * v.e23()
-            + v.s() * x.e02() * v.e23()
-            - v.e02() * x.e23() * v.s()
-            + v.e02() * x.e12() * v.e31()
-            - v.e23() * x.e12() * v.e03()
-            - v.e23() * x.e0123() * v.e31()
-            - v.e31() * x.e02() * v.e12()
-            + v.e01() * x.s() * v.s()
-            - v.e0123() * x.e23() * v.e31()
-            - v.s() * x.s() * v.e01()
-            + v.e23() * x.e03() * v.e12()
-            + v.e23() * x.e31() * v.e0123()
-            - v.e12() * x.e02() * v.e31()
-            + v.e01() * x.e31() * v.e31()
-            - v.e12() * x.s() * v.e0123()
-            - v.e12() * x.e0123() * v.s()
-            - v.e31() * x.e01() * v.e31()
-            - v.s() * x.e23() * v.e02()
-            - v.e12() * x.e31() * v.e02()
-            + v.s() * x.e0123() * v.e12()
-            + v.s() * x.e03() * v.e31()
-            + v.e31() * x.e12() * v.e02()
-            + v.e31() * x.e0123() * v.e23()
-            - v.e23() * x.s() * v.e02()
-            - v.s() * x.e31() * v.e03()
-            + v.e0123() * x.s() * v.e12()
-            - v.e31() * x.e23() * v.e0123()
-            + v.e31() * x.e31() * v.e01()
-            - v.e03() * x.e31() * v.s()
-            + v.e23() * x.e23() * v.e01()
-            + v.e23() * x.e02() * v.s()
-            + v.s() * x.e01() * v.s()
-            + v.e12() * x.e01() * v.e12()
-            + v.e03() * x.e23() * v.e12()
-            - v.s() * x.e12() * v.e0123()
-            - v.e23() * x.e01() * v.e23()
+            - v.e31() * x.e12() * v.e31()
+            + v.e31() * x.e23() * v.s()
+            + v.e12() * x.e23() * v.e23()
+            + v.e23() * x.e23() * v.e12()
+            - v.e31() * x.s() * v.e23()
+            + v.e12() * x.e12() * v.e12()
+            - v.s() * x.s() * v.e12(),
+        -(v.e31() * x.e01() * v.e31()) + v.e23() * x.e03() * v.e12() - v.e12() * x.e0123() * v.s()
             + v.e01() * x.e12() * v.e12()
-            + v.e31() * x.e03() * v.s()
-            + v.e03() * x.s() * v.e31()
+            - v.e12() * x.s() * v.e0123()
+            - v.e0123() * x.e12() * v.s()
+            - v.s() * x.e23() * v.e02()
+            - v.e23() * x.e12() * v.e03()
+            - v.s() * x.e31() * v.e03()
+            - v.e31() * x.s() * v.e03()
+            + v.e31() * x.e0123() * v.e23()
+            - v.e03() * x.e31() * v.s()
+            + v.e03() * x.e23() * v.e12()
+            + v.e02() * x.e12() * v.e31()
+            - v.e31() * x.e02() * v.e12()
             + v.e12() * x.e03() * v.e23()
+            + v.e0123() * x.e31() * v.e23()
+            + v.s() * x.e03() * v.e31()
+            + v.e01() * x.e31() * v.e31()
+            - v.e02() * x.e23() * v.s()
+            + v.e23() * x.e02() * v.s()
+            + v.e31() * x.e31() * v.e01()
+            + v.e12() * x.e12() * v.e01()
+            - v.e12() * x.e02() * v.e31()
+            - v.e03() * x.e12() * v.e23()
+            + v.e02() * x.s() * v.e23()
+            - v.s() * x.e12() * v.e0123()
+            + v.e01() * x.e23() * v.e23()
+            - v.e0123() * x.e23() * v.e31()
+            + v.s() * x.e01() * v.s()
+            + v.e31() * x.e12() * v.e02()
+            + v.e03() * x.s() * v.e31()
+            + v.s() * x.e0123() * v.e12()
+            - v.e31() * x.e23() * v.e0123()
+            + v.e23() * x.e31() * v.e0123()
+            + v.s() * x.e02() * v.e23()
+            + v.e23() * x.e23() * v.e01()
+            - v.e12() * x.e31() * v.e02()
+            - v.e23() * x.s() * v.e02()
+            - v.e23() * x.e0123() * v.e31()
+            + v.e12() * x.e01() * v.e12()
+            + v.e31() * x.e03() * v.s()
+            + v.e01() * x.s() * v.s()
             - v.e02() * x.e31() * v.e12()
-            + v.e12() * x.e23() * v.e03()
-            + v.e12() * x.e12() * v.e01(),
-        -(v.e31() * x.e23() * v.e03()) + v.e02() * x.e31() * v.e31()
-            - v.e03() * x.e12() * v.s()
-            - v.e0123() * x.s() * v.e31()
-            - v.s() * x.e0123() * v.e31()
-            + v.e02() * x.e23() * v.e23()
-            - v.e0123() * x.e23() * v.e12()
-            + v.e12() * x.e03() * v.s()
-            + v.e0123() * x.e31() * v.s()
-            + v.e03() * x.e31() * v.e23()
+            + v.e0123() * x.s() * v.e12()
+            - v.e23() * x.e01() * v.e23()
+            - v.s() * x.s() * v.e01()
+            + v.e12() * x.e23() * v.e03(),
+        -(v.e01() * x.e12() * v.e31()) + v.e02() * x.s() * v.s() + v.e03() * x.s() * v.e12()
             - v.e23() * x.e0123() * v.e12()
             + v.e12() * x.e12() * v.e02()
-            + v.s() * x.e02() * v.s()
-            + v.e12() * x.e0123() * v.e23()
+            + v.e23() * x.e23() * v.e02()
+            + v.e23() * x.e12() * v.e0123()
             - v.s() * x.e01() * v.e23()
-            + v.s() * x.e03() * v.e12()
-            + v.e31() * x.e31() * v.e02()
-            + v.e02() * x.s() * v.s()
-            - v.s() * x.e12() * v.e03()
-            + v.e02() * x.e12() * v.e12()
-            + v.e31() * x.e02() * v.e31()
-            + v.e03() * x.s() * v.e12()
-            - v.e23() * x.e01() * v.s()
             - v.e12() * x.e02() * v.e12()
             - v.e03() * x.e23() * v.e31()
-            + v.e01() * x.e23() * v.s()
-            - v.e23() * x.e03() * v.e31()
-            + v.e01() * x.e31() * v.e12()
-            + v.e0123() * x.e12() * v.e23()
-            + v.s() * x.e31() * v.e0123()
-            + v.e23() * x.e31() * v.e03()
-            - v.e31() * x.e01() * v.e12()
-            - v.e31() * x.e03() * v.e23()
-            + v.e31() * x.e0123() * v.s()
-            + v.s() * x.e23() * v.e01()
-            - v.e31() * x.e12() * v.e01()
-            - v.e01() * x.s() * v.e23()
-            + v.e23() * x.s() * v.e01()
-            - v.s() * x.s() * v.e02()
-            - v.e23() * x.e02() * v.e23()
-            - v.e12() * x.s() * v.e03()
-            + v.e23() * x.e12() * v.e0123()
-            - v.e12() * x.e23() * v.e0123()
-            + v.e23() * x.e23() * v.e02()
             - v.e12() * x.e01() * v.e31()
-            - v.e01() * x.e12() * v.e31()
+            - v.e03() * x.e12() * v.s()
+            + v.e0123() * x.e31() * v.s()
+            - v.e23() * x.e01() * v.s()
+            - v.s() * x.e12() * v.e03()
+            + v.s() * x.e03() * v.e12()
+            - v.e23() * x.e02() * v.e23()
+            + v.e31() * x.e31() * v.e02()
+            - v.e31() * x.e01() * v.e12()
+            - v.e31() * x.e23() * v.e03()
+            + v.e31() * x.e0123() * v.s()
+            + v.e23() * x.e31() * v.e03()
+            - v.e01() * x.s() * v.e23()
+            + v.e12() * x.e03() * v.s()
+            + v.e02() * x.e31() * v.e31()
+            - v.e0123() * x.e23() * v.e12()
+            + v.e12() * x.e0123() * v.e23()
+            + v.e02() * x.e23() * v.e23()
+            + v.s() * x.e02() * v.s()
+            + v.e02() * x.e12() * v.e12()
+            - v.e23() * x.e03() * v.e31()
+            - v.e0123() * x.s() * v.e31()
+            + v.e01() * x.e23() * v.s()
+            + v.e0123() * x.e12() * v.e23()
+            - v.s() * x.e0123() * v.e31()
+            + v.e23() * x.s() * v.e01()
             + v.e12() * x.e31() * v.e01()
-            + v.e31() * x.s() * v.e0123(),
-        -(v.e01() * x.s() * v.e31()) + v.e0123() * x.e12() * v.e31() + v.s() * x.e12() * v.e02()
-            - v.e02() * x.s() * v.e12()
-            + v.e02() * x.e23() * v.e31()
-            + v.s() * x.e03() * v.s()
-            + v.e12() * x.s() * v.e02()
-            - v.e23() * x.e0123() * v.s()
-            - v.e23() * x.s() * v.e0123()
-            - v.e12() * x.e03() * v.e12()
-            - v.e23() * x.e31() * v.e02()
-            - v.s() * x.s() * v.e03()
-            - v.s() * x.e23() * v.e0123()
-            + v.e31() * x.s() * v.e01()
-            + v.e31() * x.e31() * v.e03()
-            + v.e23() * x.e03() * v.e23()
-            + v.e31() * x.e12() * v.e0123()
-            - v.e31() * x.e02() * v.e23()
-            - v.e12() * x.e02() * v.s()
-            + v.e01() * x.e12() * v.e23()
-            + v.e02() * x.e12() * v.s()
-            + v.e12() * x.e01() * v.e23()
-            - v.e02() * x.e31() * v.e23()
-            + v.e03() * x.s() * v.s()
-            + v.e03() * x.e23() * v.e23()
-            - v.s() * x.e02() * v.e12()
+            + v.e03() * x.e31() * v.e23()
+            + v.s() * x.e31() * v.e0123()
+            - v.e12() * x.s() * v.e03()
+            + v.s() * x.e23() * v.e01()
+            + v.e01() * x.e31() * v.e12()
+            + v.e31() * x.e02() * v.e31()
+            - v.e31() * x.e03() * v.e23()
+            - v.e12() * x.e23() * v.e0123()
+            + v.e31() * x.s() * v.e0123()
+            - v.e31() * x.e12() * v.e01()
+            - v.s() * x.s() * v.e02(),
+        v.e31() * x.s() * v.e01()
             + v.e12() * x.e0123() * v.e31()
-            + v.s() * x.e0123() * v.e23()
-            - v.e31() * x.e0123() * v.e12()
-            + v.e01() * x.e31() * v.s()
-            - v.e31() * x.e01() * v.s()
-            + v.e31() * x.e23() * v.e02()
-            - v.s() * x.e01() * v.e31()
-            + v.e23() * x.e01() * v.e12()
-            + v.e23() * x.e12() * v.e01()
-            - v.e31() * x.e03() * v.e31()
-            + v.e12() * x.e12() * v.e03()
+            + v.e12() * x.e01() * v.e23()
             + v.e03() * x.e12() * v.e12()
-            + v.e0123() * x.s() * v.e23()
-            + v.e23() * x.e23() * v.e03()
-            - v.e12() * x.e31() * v.e0123()
+            - v.e31() * x.e02() * v.e23()
+            + v.e03() * x.s() * v.s()
+            - v.e31() * x.e03() * v.e31()
+            + v.s() * x.e0123() * v.e23()
+            - v.s() * x.e01() * v.e31()
+            - v.s() * x.s() * v.e03()
+            - v.e31() * x.e01() * v.s()
+            + v.e02() * x.e23() * v.e31()
+            + v.s() * x.e31() * v.e01()
+            - v.e31() * x.e0123() * v.e12()
+            + v.e12() * x.s() * v.e02()
             - v.e01() * x.e23() * v.e12()
             + v.e03() * x.e31() * v.e31()
-            - v.e23() * x.e02() * v.e31()
+            + v.e23() * x.e01() * v.e12()
+            + v.s() * x.e12() * v.e02()
+            + v.e23() * x.e12() * v.e01()
+            + v.e12() * x.e12() * v.e03()
+            - v.e23() * x.e0123() * v.s()
             - v.e0123() * x.e23() * v.s()
+            + v.e0123() * x.s() * v.e23()
+            - v.e23() * x.e31() * v.e02()
             - v.e0123() * x.e31() * v.e12()
+            + v.e31() * x.e23() * v.e02()
+            - v.e01() * x.s() * v.e31()
+            - v.e23() * x.s() * v.e0123()
+            + v.e01() * x.e31() * v.s()
+            - v.e12() * x.e31() * v.e0123()
+            - v.e23() * x.e02() * v.e31()
+            + v.s() * x.e03() * v.s()
+            + v.e31() * x.e31() * v.e03()
+            + v.e31() * x.e12() * v.e0123()
             - v.e12() * x.e23() * v.e01()
-            + v.s() * x.e31() * v.e01(),
-        v.e02() * x.s() * v.e31() + v.e31() * x.e12() * v.e03()
-            - v.e31() * x.e03() * v.e12()
-            - v.e12() * x.e23() * v.e02()
-            + v.s() * x.e02() * v.e31()
-            + v.s() * x.e0123() * v.s()
-            + v.e23() * x.e03() * v.s()
-            - v.e31() * x.e31() * v.e0123()
-            + v.e23() * x.e12() * v.e02()
-            + v.e23() * x.e31() * v.e01()
+            + v.e01() * x.e12() * v.e23()
+            + v.e02() * x.e12() * v.s()
+            + v.e03() * x.e23() * v.e23()
+            + v.e23() * x.e03() * v.e23()
+            + v.e0123() * x.e12() * v.e31()
+            - v.s() * x.e23() * v.e0123()
+            + v.e23() * x.e23() * v.e03()
+            - v.s() * x.e02() * v.e12()
+            - v.e12() * x.e02() * v.s()
+            - v.e02() * x.s() * v.e12()
+            - v.e12() * x.e03() * v.e12()
+            - v.e02() * x.e31() * v.e23(),
+        -(v.s() * x.e01() * v.e12()) - v.e23() * x.e01() * v.e31()
             + v.e31() * x.s() * v.e02()
-            - v.e12() * x.e31() * v.e03()
-            - v.e12() * x.e12() * v.e0123()
-            - v.e01() * x.s() * v.e12()
-            - v.s() * x.e23() * v.e03()
-            - v.s() * x.e12() * v.e01()
-            - v.e23() * x.e23() * v.e0123()
-            - v.e23() * x.e01() * v.e31()
-            + v.s() * x.s() * v.e0123()
-            + v.e23() * x.e0123() * v.e23()
-            - v.e31() * x.e23() * v.e01()
-            - v.e31() * x.e02() * v.s()
-            + v.e12() * x.e03() * v.e31()
-            + v.e01() * x.e23() * v.e31()
             + v.e01() * x.e12() * v.s()
-            - v.e02() * x.e31() * v.s()
-            + v.e12() * x.e0123() * v.e12()
-            - v.e02() * x.e12() * v.e23()
-            + v.e12() * x.e02() * v.e23()
             - v.e03() * x.s() * v.e23()
-            - v.s() * x.e01() * v.e12()
             + v.e03() * x.e23() * v.s()
             - v.e23() * x.e02() * v.e12()
+            - v.e31() * x.e31() * v.e0123()
+            - v.e12() * x.e12() * v.e0123()
+            - v.e31() * x.e02() * v.s()
+            + v.e23() * x.e03() * v.s()
+            + v.e12() * x.e02() * v.e23()
+            - v.e02() * x.e31() * v.s()
             - v.e03() * x.e12() * v.e31()
-            + v.e0123() * x.s() * v.s()
-            - v.e12() * x.s() * v.e01()
-            + v.e03() * x.e31() * v.e12()
-            + v.e12() * x.e01() * v.s()
-            - v.s() * x.e03() * v.e23()
-            + v.e31() * x.e0123() * v.e31()
-            - v.e01() * x.e31() * v.e23()
             + v.e0123() * x.e12() * v.e12()
-            + v.s() * x.e31() * v.e02()
+            - v.e12() * x.e31() * v.e03()
+            - v.e31() * x.e23() * v.e01()
             + v.e0123() * x.e31() * v.e31()
-            + v.e02() * x.e23() * v.e12()
+            + v.e12() * x.e03() * v.e31()
+            - v.e12() * x.e23() * v.e02()
+            + v.e23() * x.e12() * v.e02()
+            + v.e31() * x.e01() * v.e23()
+            + v.s() * x.s() * v.e0123()
+            + v.e23() * x.e31() * v.e01()
+            + v.s() * x.e31() * v.e02()
             - v.e23() * x.s() * v.e03()
+            - v.e01() * x.e31() * v.e23()
             + v.e0123() * x.e23() * v.e23()
-            + v.e31() * x.e01() * v.e23(),
+            + v.e23() * x.e0123() * v.e23()
+            - v.e23() * x.e23() * v.e0123()
+            + v.e31() * x.e12() * v.e03()
+            + v.e31() * x.e0123() * v.e31()
+            - v.s() * x.e12() * v.e01()
+            - v.s() * x.e23() * v.e03()
+            + v.e12() * x.e01() * v.s()
+            - v.e31() * x.e03() * v.e12()
+            + v.e12() * x.e0123() * v.e12()
+            + v.e02() * x.s() * v.e31()
+            + v.e02() * x.e23() * v.e12()
+            - v.e02() * x.e12() * v.e23()
+            + v.e0123() * x.s() * v.s()
+            - v.s() * x.e03() * v.e23()
+            - v.e01() * x.s() * v.e12()
+            + v.s() * x.e02() * v.e31()
+            - v.e12() * x.s() * v.e01()
+            + v.s() * x.e0123() * v.s()
+            + v.e03() * x.e31() * v.e12()
+            + v.e01() * x.e23() * v.e31(),
     )
 }
 #[doc = "Sandwich product: Motor * Flector * rev(Motor) -> Flector"]
 #[inline]
 pub fn sandwich_motor_flector<T: Float>(v: &Motor<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new_unchecked(
-        v.s() * x.e2() * v.e23() + v.s() * x.e023() * v.e12()
-            - v.e23() * x.e1() * v.e23()
+        v.e23() * x.e2() * v.s() - v.e31() * x.e2() * v.e12()
+            + v.s() * x.e3() * v.e31()
+            + v.s() * x.e1() * v.s()
+            + v.e12() * x.e3() * v.e23()
+            + v.s() * x.e023() * v.e12()
             - v.e23() * x.e023() * v.e31()
             - v.e12() * x.e2() * v.e31()
-            + v.e12() * x.e3() * v.e23()
-            + v.s() * x.e3() * v.e31()
-            + v.e23() * x.e2() * v.s()
-            + v.e23() * x.e3() * v.e12()
-            + v.e12() * x.e1() * v.e12()
-            + v.s() * x.e1() * v.s()
-            + v.e31() * x.e3() * v.s()
             + v.e31() * x.e023() * v.e23()
+            - v.e23() * x.e1() * v.e23()
+            + v.e12() * x.e1() * v.e12()
+            + v.e31() * x.e3() * v.s()
             - v.e12() * x.e023() * v.s()
-            - v.e31() * x.e2() * v.e12()
-            - v.e31() * x.e1() * v.e31(),
-        -(v.s() * x.e1() * v.e23()) - v.e23() * x.e1() * v.s() - v.e12() * x.e1() * v.e31()
-            + v.s() * x.e2() * v.s()
-            - v.e23() * x.e023() * v.e12()
-            - v.e31() * x.e1() * v.e12()
-            - v.e31() * x.e3() * v.e23()
+            - v.e31() * x.e1() * v.e31()
+            + v.e23() * x.e3() * v.e12()
+            + v.s() * x.e2() * v.e23(),
+        -(v.e31() * x.e3() * v.e23())
             - v.e23() * x.e2() * v.e23()
-            - v.e23() * x.e3() * v.e31()
-            + v.e12() * x.e3() * v.s()
+            - v.e23() * x.e023() * v.e12()
             - v.e12() * x.e2() * v.e12()
-            + v.e31() * x.e023() * v.s()
-            + v.e31() * x.e2() * v.e31()
-            + v.s() * x.e3() * v.e12()
             + v.e12() * x.e023() * v.e23()
-            - v.s() * x.e023() * v.e31(),
-        -(v.e23() * x.e2() * v.e31()) + v.e23() * x.e3() * v.e23() - v.e12() * x.e2() * v.s()
-            + v.s() * x.e3() * v.s()
+            - v.e31() * x.e1() * v.e12()
+            + v.s() * x.e2() * v.s()
+            - v.e12() * x.e1() * v.e31()
+            + v.s() * x.e3() * v.e12()
+            - v.s() * x.e023() * v.e31()
+            - v.e23() * x.e1() * v.s()
+            - v.e23() * x.e3() * v.e31()
+            + v.e31() * x.e2() * v.e31()
+            + v.e31() * x.e023() * v.s()
+            + v.e12() * x.e3() * v.s()
+            - v.s() * x.e1() * v.e23(),
+        v.s() * x.e3() * v.s() - v.s() * x.e1() * v.e31()
             + v.s() * x.e023() * v.e23()
+            + v.e23() * x.e3() * v.e23()
+            - v.s() * x.e2() * v.e12()
+            + v.e23() * x.e1() * v.e12()
+            + v.e12() * x.e023() * v.e31()
+            - v.e23() * x.e023() * v.s()
+            - v.e31() * x.e3() * v.e31()
             - v.e12() * x.e3() * v.e12()
             - v.e31() * x.e1() * v.s()
-            - v.e23() * x.e023() * v.s()
-            - v.s() * x.e2() * v.e12()
+            - v.e23() * x.e2() * v.e31()
             - v.e31() * x.e2() * v.e23()
-            - v.e31() * x.e3() * v.e31()
-            - v.s() * x.e1() * v.e31()
-            + v.e23() * x.e1() * v.e12()
+            - v.e12() * x.e2() * v.s()
             + v.e12() * x.e1() * v.e23()
-            + v.e12() * x.e023() * v.e31()
             - v.e31() * x.e023() * v.e12(),
-        -(v.e12() * x.e123() * v.s()) - v.s() * x.e2() * v.e02() + v.e31() * x.e0() * v.e31()
-            - v.e01() * x.e2() * v.e23()
-            - v.e02() * x.e3() * v.e12()
-            + v.e31() * x.e1() * v.e03()
-            - v.e12() * x.e3() * v.e02()
-            - v.e23() * x.e2() * v.e01()
-            - v.e23() * x.e3() * v.e0123()
-            + v.e12() * x.e023() * v.e01()
-            - v.e01() * x.e023() * v.e12()
-            - v.e0123() * x.e1() * v.e12()
-            - v.s() * x.e1() * v.e01()
-            - v.e12() * x.e1() * v.e0123()
-            + v.e12() * x.e012() * v.e23()
-            - v.e01() * x.e1() * v.s()
-            + v.e03() * x.e2() * v.e12()
-            + v.e12() * x.e0() * v.e12()
-            - v.e23() * x.e012() * v.e12()
-            + v.e03() * x.e1() * v.e31()
-            + v.e0123() * x.e023() * v.s()
-            - v.e31() * x.e3() * v.e01()
-            + v.s() * x.e012() * v.e31()
-            + v.e23() * x.e1() * v.e02()
-            - v.e01() * x.e3() * v.e31()
-            - v.e0123() * x.e3() * v.e23()
-            - v.e03() * x.e3() * v.s()
+        v.e12() * x.e2() * v.e03()
             - v.s() * x.e023() * v.e0123()
-            + v.e31() * x.e2() * v.e0123()
-            - v.e12() * x.e031() * v.e31()
-            + v.e0123() * x.e2() * v.e31()
-            + v.e02() * x.e1() * v.e23()
-            - v.s() * x.e3() * v.e03()
-            + v.e02() * x.e023() * v.e31()
-            + v.s() * x.e0() * v.s()
-            + v.e31() * x.e031() * v.e12()
-            + v.e23() * x.e023() * v.e03()
-            - v.e31() * x.e012() * v.s()
-            + v.e12() * x.e2() * v.e03()
-            - v.e02() * x.e2() * v.s()
-            - v.e03() * x.e023() * v.e23()
-            + v.e23() * x.e0() * v.e23()
             - v.e31() * x.e123() * v.e23()
-            + v.s() * x.e031() * v.e23()
+            - v.e12() * x.e3() * v.e02()
+            - v.e01() * x.e3() * v.e31()
+            - v.e03() * x.e3() * v.s()
+            - v.s() * x.e3() * v.e03()
+            - v.s() * x.e2() * v.e02()
+            - v.e03() * x.e023() * v.e23()
+            - v.e31() * x.e023() * v.e02()
+            + v.e23() * x.e023() * v.e03()
+            + v.e31() * x.e2() * v.e0123()
+            - v.s() * x.e1() * v.e01()
+            - v.e01() * x.e2() * v.e23()
+            + v.s() * x.e012() * v.e31()
+            + v.e0123() * x.e2() * v.e31()
+            - v.e02() * x.e2() * v.s()
+            - v.e02() * x.e3() * v.e12()
+            - v.e0123() * x.e1() * v.e12()
+            - v.e12() * x.e123() * v.s()
+            - v.e12() * x.e031() * v.e31()
             + v.e23() * x.e123() * v.e31()
-            - v.e23() * x.e031() * v.s()
+            + v.e03() * x.e1() * v.e31()
+            + v.e12() * x.e012() * v.e23()
+            + v.e23() * x.e1() * v.e02()
+            - v.e12() * x.e1() * v.e0123()
+            + v.e12() * x.e023() * v.e01()
+            - v.e23() * x.e012() * v.e12()
+            - v.e01() * x.e023() * v.e12()
+            - v.e0123() * x.e3() * v.e23()
+            - v.e23() * x.e3() * v.e0123()
+            + v.e31() * x.e0() * v.e31()
+            + v.e03() * x.e2() * v.e12()
+            + v.e0123() * x.e023() * v.s()
+            + v.s() * x.e031() * v.e23()
             + v.s() * x.e123() * v.e12()
-            - v.e31() * x.e023() * v.e02(),
-        v.e12() * x.e3() * v.e31()
-            + v.s() * x.e023() * v.s()
-            + v.s() * x.e2() * v.e31()
+            + v.e02() * x.e023() * v.e31()
+            - v.e23() * x.e031() * v.s()
+            + v.s() * x.e0() * v.s()
+            - v.e31() * x.e3() * v.e01()
+            + v.e23() * x.e0() * v.e23()
+            + v.e31() * x.e1() * v.e03()
+            + v.e31() * x.e031() * v.e12()
+            + v.e12() * x.e0() * v.e12()
+            + v.e02() * x.e1() * v.e23()
+            - v.e23() * x.e2() * v.e01()
+            - v.e01() * x.e1() * v.s()
+            - v.e31() * x.e012() * v.s(),
+        -(v.s() * x.e1() * v.e12()) - v.e31() * x.e3() * v.e12() - v.e31() * x.e2() * v.s()
             + v.e12() * x.e1() * v.s()
-            + v.e23() * x.e3() * v.s()
-            - v.e23() * x.e2() * v.e12()
-            - v.e31() * x.e3() * v.e12()
-            + v.e31() * x.e023() * v.e31()
-            + v.e12() * x.e2() * v.e23()
-            - v.s() * x.e1() * v.e12()
             - v.e23() * x.e1() * v.e31()
+            + v.s() * x.e023() * v.s()
+            + v.e31() * x.e023() * v.e31()
+            - v.e23() * x.e2() * v.e12()
+            - v.s() * x.e3() * v.e23()
+            + v.e31() * x.e1() * v.e23()
+            + v.e12() * x.e2() * v.e23()
+            + v.s() * x.e2() * v.e31()
+            + v.e12() * x.e3() * v.e31()
             + v.e12() * x.e023() * v.e12()
             + v.e23() * x.e023() * v.e23()
-            - v.e31() * x.e2() * v.s()
-            + v.e31() * x.e1() * v.e23()
-            - v.s() * x.e3() * v.e23(),
-        -(v.e0123() * x.e023() * v.e23()) - v.e23() * x.e2() * v.e02()
-            + v.e31() * x.e023() * v.e01()
+            + v.e23() * x.e3() * v.s(),
+        v.e23() * x.e0() * v.s() + v.e31() * x.e0() * v.e12() - v.s() * x.e123() * v.e31()
             + v.e31() * x.e012() * v.e23()
-            + v.s() * x.e012() * v.e12()
-            + v.e12() * x.e023() * v.e02()
-            + v.s() * x.e3() * v.e0123()
-            + v.s() * x.e2() * v.e01()
-            + v.e23() * x.e031() * v.e23()
-            + v.e23() * x.e123() * v.e12()
-            + v.e12() * x.e123() * v.e23()
-            - v.e23() * x.e1() * v.e01()
-            + v.e23() * x.e0() * v.s()
-            + v.e12() * x.e3() * v.e01()
+            + v.e02() * x.e3() * v.e31()
+            + v.e02() * x.e023() * v.e12()
+            - v.e0123() * x.e3() * v.s()
+            - v.e0123() * x.e023() * v.e23()
+            - v.e12() * x.e1() * v.e03()
+            - v.e23() * x.e3() * v.e03()
+            - v.e23() * x.e023() * v.e0123()
+            + v.e12() * x.e012() * v.s()
+            - v.e31() * x.e031() * v.e31()
+            - v.e31() * x.e3() * v.e02()
+            - v.e12() * x.e031() * v.e12()
             - v.e01() * x.e3() * v.e12()
             + v.e02() * x.e1() * v.s()
-            + v.e02() * x.e3() * v.e31()
-            - v.e12() * x.e031() * v.e12()
-            + v.s() * x.e031() * v.s()
-            + v.e01() * x.e023() * v.e31()
-            - v.e12() * x.e1() * v.e03()
             - v.e12() * x.e2() * v.e0123()
-            - v.e12() * x.e0() * v.e31()
-            + v.e02() * x.e023() * v.e12()
-            - v.e03() * x.e2() * v.e31()
-            - v.e31() * x.e031() * v.e31()
-            + v.e0123() * x.e1() * v.e31()
-            - v.e23() * x.e3() * v.e03()
-            - v.e0123() * x.e3() * v.s()
-            + v.e31() * x.e2() * v.e03()
-            + v.e12() * x.e012() * v.s()
+            - v.s() * x.e0() * v.e23()
+            + v.e23() * x.e123() * v.e12()
             + v.e03() * x.e3() * v.e23()
+            + v.s() * x.e2() * v.e01()
+            - v.e23() * x.e1() * v.e01()
+            - v.e31() * x.e123() * v.s()
+            + v.e12() * x.e023() * v.e02()
+            + v.e01() * x.e1() * v.e23()
+            - v.e03() * x.e023() * v.s()
+            + v.e23() * x.e012() * v.e31()
+            - v.e03() * x.e2() * v.e31()
+            + v.e0123() * x.e1() * v.e31()
+            + v.s() * x.e3() * v.e0123()
+            + v.e31() * x.e023() * v.e01()
+            + v.e03() * x.e1() * v.e12()
+            + v.e0123() * x.e2() * v.e12()
             - v.s() * x.e023() * v.e03()
             - v.e31() * x.e1() * v.e0123()
-            - v.e23() * x.e023() * v.e0123()
+            + v.e12() * x.e3() * v.e01()
+            + v.e31() * x.e2() * v.e03()
+            + v.s() * x.e031() * v.s()
+            - v.e12() * x.e0() * v.e31()
+            + v.e01() * x.e023() * v.e31()
+            + v.e12() * x.e123() * v.e23()
+            - v.e23() * x.e2() * v.e02()
             + v.e02() * x.e2() * v.e23()
-            + v.e23() * x.e012() * v.e31()
-            + v.e01() * x.e1() * v.e23()
-            + v.e0123() * x.e2() * v.e12()
-            + v.e31() * x.e0() * v.e12()
-            - v.e03() * x.e023() * v.s()
-            - v.e31() * x.e123() * v.s()
-            - v.s() * x.e123() * v.e31()
-            - v.e01() * x.e2() * v.s()
+            + v.e23() * x.e031() * v.e23()
             - v.s() * x.e1() * v.e02()
-            + v.e03() * x.e1() * v.e12()
-            - v.e31() * x.e3() * v.e02()
-            - v.s() * x.e0() * v.e23(),
-        -(v.e02() * x.e1() * v.e12()) + v.e23() * x.e3() * v.e02()
-            - v.e12() * x.e2() * v.e01()
-            - v.e31() * x.e2() * v.e02()
-            - v.s() * x.e031() * v.e12()
-            - v.e23() * x.e0() * v.e12()
-            + v.e0123() * x.e2() * v.s()
-            - v.e23() * x.e2() * v.e03()
-            + v.e12() * x.e1() * v.e02()
-            - v.e23() * x.e012() * v.e23()
-            + v.e12() * x.e0() * v.e23()
-            - v.e0123() * x.e1() * v.e23()
-            + v.s() * x.e023() * v.e02()
+            - v.e01() * x.e2() * v.s()
+            + v.s() * x.e012() * v.e12(),
+        v.e03() * x.e1() * v.s()
             + v.s() * x.e012() * v.s()
-            - v.e12() * x.e012() * v.e12()
-            + v.e31() * x.e0() * v.s()
-            - v.s() * x.e0() * v.e31()
-            + v.e23() * x.e1() * v.e0123()
-            - v.e12() * x.e3() * v.e0123()
-            + v.e31() * x.e031() * v.e23()
-            + v.e12() * x.e023() * v.e03()
-            - v.e12() * x.e031() * v.s()
-            + v.e02() * x.e2() * v.e31()
-            - v.e02() * x.e3() * v.e23()
+            + v.e01() * x.e2() * v.e12()
             + v.e0123() * x.e3() * v.e12()
+            + v.e31() * x.e0() * v.s()
+            + v.e31() * x.e123() * v.e12()
+            - v.s() * x.e1() * v.e03()
+            + v.e23() * x.e3() * v.e02()
+            - v.e02() * x.e3() * v.e23()
+            - v.e31() * x.e2() * v.e02()
+            - v.e23() * x.e023() * v.e01()
+            - v.e23() * x.e012() * v.e23()
+            - v.e12() * x.e3() * v.e0123()
+            + v.e03() * x.e023() * v.e12()
+            - v.s() * x.e0() * v.e31()
+            - v.e31() * x.e023() * v.e0123()
+            - v.e31() * x.e1() * v.e01()
+            - v.s() * x.e031() * v.e12()
             - v.e01() * x.e3() * v.s()
             + v.e02() * x.e023() * v.s()
-            - v.e31() * x.e1() * v.e01()
+            - v.e23() * x.e2() * v.e03()
+            + v.e03() * x.e3() * v.e31()
+            - v.e12() * x.e2() * v.e01()
+            + v.s() * x.e023() * v.e02()
+            - v.e02() * x.e1() * v.e12()
             - v.s() * x.e2() * v.e0123()
             + v.s() * x.e123() * v.e23()
-            + v.e01() * x.e2() * v.e12()
+            + v.e23() * x.e031() * v.e31()
+            + v.e23() * x.e123() * v.s()
+            + v.e12() * x.e123() * v.e31()
+            + v.e0123() * x.e2() * v.s()
+            + v.e12() * x.e023() * v.e03()
+            + v.s() * x.e3() * v.e01()
+            - v.e0123() * x.e1() * v.e23()
+            + v.e12() * x.e0() * v.e23()
+            + v.e12() * x.e1() * v.e02()
+            - v.e12() * x.e012() * v.e12()
+            + v.e31() * x.e031() * v.e23()
+            + v.e02() * x.e2() * v.e31()
             - v.e01() * x.e023() * v.e23()
-            + v.e03() * x.e1() * v.s()
+            + v.e23() * x.e1() * v.e0123()
+            - v.e31() * x.e3() * v.e03()
+            - v.e12() * x.e031() * v.s()
+            - v.e23() * x.e0() * v.e12()
+            - v.e0123() * x.e023() * v.e31()
             + v.e03() * x.e2() * v.e23()
             + v.e01() * x.e1() * v.e31()
-            + v.e31() * x.e012() * v.e31()
-            + v.e03() * x.e023() * v.e12()
-            + v.e23() * x.e123() * v.s()
-            - v.e0123() * x.e023() * v.e31()
-            - v.e23() * x.e023() * v.e01()
-            + v.e31() * x.e123() * v.e12()
-            + v.e03() * x.e3() * v.e31()
-            + v.s() * x.e3() * v.e01()
-            - v.e31() * x.e3() * v.e03()
-            - v.s() * x.e1() * v.e03()
-            + v.e23() * x.e031() * v.e31()
-            + v.e12() * x.e123() * v.e31()
-            - v.e31() * x.e023() * v.e0123(),
-        -(v.s() * x.e2() * v.e03()) - v.e31() * x.e123() * v.e31()
-            + v.s() * x.e123() * v.s()
-            + v.e12() * x.e012() * v.e31()
-            - v.e31() * x.e0() * v.e23()
-            + v.e03() * x.e2() * v.s()
-            - v.e03() * x.e023() * v.e31()
-            - v.e31() * x.e1() * v.e02()
-            - v.e31() * x.e023() * v.e03()
-            - v.s() * x.e0() * v.e12()
-            + v.e23() * x.e031() * v.e12()
+            + v.e31() * x.e012() * v.e31(),
+        v.s() * x.e3() * v.e02() - v.e01() * x.e023() * v.s()
             + v.e02() * x.e2() * v.e12()
-            - v.e23() * x.e123() * v.e23()
+            + v.e23() * x.e031() * v.e12()
+            - v.s() * x.e023() * v.e01()
+            + v.e12() * x.e0() * v.s()
+            + v.s() * x.e123() * v.s()
+            - v.e03() * x.e023() * v.e31()
+            - v.e12() * x.e2() * v.e02()
+            + v.e12() * x.e123() * v.e12()
+            + v.e01() * x.e1() * v.e12()
+            - v.e02() * x.e023() * v.e23()
+            + v.e23() * x.e2() * v.e0123()
+            - v.e23() * x.e023() * v.e02()
+            - v.e0123() * x.e1() * v.s()
+            + v.e31() * x.e012() * v.e12()
+            + v.e03() * x.e3() * v.e12()
+            - v.e12() * x.e1() * v.e01()
+            + v.e03() * x.e2() * v.s()
+            - v.e0123() * x.e2() * v.e23()
+            - v.s() * x.e0() * v.e12()
+            - v.e31() * x.e0() * v.e23()
+            - v.e12() * x.e023() * v.e0123()
+            + v.e02() * x.e1() * v.e31()
+            - v.e23() * x.e3() * v.e01()
             + v.e01() * x.e3() * v.e23()
             + v.s() * x.e1() * v.e0123()
-            - v.e02() * x.e3() * v.s()
-            + v.e12() * x.e123() * v.e12()
-            + v.e31() * x.e012() * v.e12()
-            - v.e12() * x.e1() * v.e01()
-            + v.e01() * x.e1() * v.e12()
-            + v.e31() * x.e2() * v.e01()
-            + v.e03() * x.e3() * v.e12()
-            - v.e01() * x.e2() * v.e31()
             + v.e23() * x.e1() * v.e03()
-            - v.e12() * x.e023() * v.e0123()
-            - v.e23() * x.e023() * v.e02()
-            - v.e01() * x.e023() * v.s()
-            + v.e02() * x.e1() * v.e31()
-            - v.e02() * x.e023() * v.e23()
-            - v.e0123() * x.e023() * v.e12()
-            + v.e23() * x.e2() * v.e0123()
-            + v.e31() * x.e031() * v.s()
-            + v.s() * x.e3() * v.e02()
+            - v.e31() * x.e1() * v.e02()
+            - v.e01() * x.e2() * v.e31()
+            - v.e02() * x.e3() * v.s()
             + v.e12() * x.e031() * v.e23()
-            - v.e03() * x.e1() * v.e23()
-            - v.e0123() * x.e2() * v.e23()
-            - v.e23() * x.e012() * v.s()
+            - v.e31() * x.e023() * v.e03()
+            + v.e31() * x.e2() * v.e01()
             + v.e31() * x.e3() * v.e0123()
-            + v.e12() * x.e0() * v.s()
+            - v.e03() * x.e1() * v.e23()
+            - v.e0123() * x.e023() * v.e12()
             - v.e0123() * x.e3() * v.e31()
-            - v.s() * x.e012() * v.e23()
-            - v.s() * x.e023() * v.e01()
-            - v.e0123() * x.e1() * v.s()
-            + v.e23() * x.e0() * v.e31()
+            - v.s() * x.e2() * v.e03()
             - v.e12() * x.e3() * v.e03()
+            + v.e12() * x.e012() * v.e31()
+            - v.e23() * x.e012() * v.s()
             + v.s() * x.e031() * v.e31()
-            - v.e23() * x.e3() * v.e01()
-            - v.e12() * x.e2() * v.e02(),
+            - v.s() * x.e012() * v.e23()
+            - v.e31() * x.e123() * v.e31()
+            + v.e23() * x.e0() * v.e31()
+            - v.e23() * x.e123() * v.e23()
+            + v.e31() * x.e031() * v.s(),
     )
 }

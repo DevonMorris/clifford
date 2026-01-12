@@ -21,11 +21,11 @@ use crate::symbolic::{
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Outer product (wedge, grade-raising).
-    Outer,
+    /// Exterior product (wedge, grade-raising).
+    Exterior,
     /// Left contraction (inner product).
     LeftContraction,
-    /// Regressive product (dual of outer).
+    /// Regressive product (dual of exterior).
     Regressive,
     /// Scalar product (grade-0 part of geometric).
     Scalar,
@@ -59,7 +59,7 @@ struct SandwichTerm {
 ///
 /// The generator produces functions for:
 /// - Geometric products
-/// - Outer products (wedge)
+/// - Exterior products (wedge)
 /// - Inner products (left contraction)
 /// - Regressive products
 /// - Sandwich products
@@ -141,7 +141,7 @@ impl<'a> ProductGenerator<'a> {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let geometric = self.generate_all_geometric();
-        let outer = self.generate_all_outer();
+        let exterior = self.generate_all_exterior();
         let inner = self.generate_all_inner();
         let scalar = self.generate_all_scalar();
         let sandwich = self.generate_all_sandwich();
@@ -156,9 +156,9 @@ impl<'a> ProductGenerator<'a> {
             #geometric
 
             // ============================================================
-            // Outer Products (Wedge)
+            // Exterior Products (Wedge)
             // ============================================================
-            #outer
+            #exterior
 
             // ============================================================
             // Inner Products (Left Contraction)
@@ -284,29 +284,29 @@ impl<'a> ProductGenerator<'a> {
     }
 
     // ========================================================================
-    // Outer Products
+    // Exterior Products
     // ========================================================================
 
-    /// Generates all outer product functions.
-    fn generate_all_outer(&self) -> TokenStream {
+    /// Generates all exterior product functions.
+    fn generate_all_exterior(&self) -> TokenStream {
         // If no explicit products defined, generate nothing
-        if self.spec.products.outer.is_empty() {
+        if self.spec.products.exterior.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .outer
+            .exterior
             .iter()
-            .filter_map(|entry| self.generate_outer_from_entry(entry))
+            .filter_map(|entry| self.generate_exterior_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates an outer product from a product entry.
-    fn generate_outer_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+    /// Generates an exterior product from a product entry.
+    fn generate_exterior_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
         let type_a = self.find_type(&entry.lhs)?;
         let type_b = self.find_type(&entry.rhs)?;
         let output_type = self.find_type(&entry.output)?;
@@ -316,17 +316,17 @@ impl<'a> ProductGenerator<'a> {
         let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
-            "outer_{}_{}",
+            "exterior_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
 
         // Use symbolic simplification for expression generation
         let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Outer);
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Exterior);
 
         let doc = format!(
-            "Outer product: {} ^ {} -> {}",
+            "Exterior product: {} ^ {} -> {}",
             entry.lhs, entry.rhs, entry.output
         );
 
@@ -632,7 +632,7 @@ impl<'a> ProductGenerator<'a> {
             for &gb in &type_b.grades {
                 let result_grades = match kind {
                     ProductKind::Geometric => geometric_grades(ga, gb, dim),
-                    ProductKind::Outer => {
+                    ProductKind::Exterior => {
                         if let Some(g) = outer_grade(ga, gb, dim) {
                             vec![g]
                         } else {
@@ -701,7 +701,7 @@ impl<'a> ProductGenerator<'a> {
                 // Filter based on product kind
                 let include = match kind {
                     ProductKind::Geometric => true,
-                    ProductKind::Outer => {
+                    ProductKind::Exterior => {
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
                         let result_grade = Blade::from_index(result_blade).grade();
@@ -852,7 +852,7 @@ impl<'a> ProductGenerator<'a> {
         // Map ProductKind to SymbolicProductKind
         let symbolic_kind = match kind {
             ProductKind::Geometric => SymbolicProductKind::Geometric,
-            ProductKind::Outer => SymbolicProductKind::Outer,
+            ProductKind::Exterior => SymbolicProductKind::Exterior,
             ProductKind::LeftContraction => SymbolicProductKind::LeftContraction,
             _ => SymbolicProductKind::Geometric, // Fallback for other kinds
         };
@@ -1078,7 +1078,7 @@ mod tests {
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
 
-        let grades = generator.compute_output_grades(vector, vector, ProductKind::Outer);
+        let grades = generator.compute_output_grades(vector, vector, ProductKind::Exterior);
         // Vector ^ Vector produces grade 2
         assert_eq!(grades, vec![2]);
     }

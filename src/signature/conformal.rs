@@ -514,8 +514,8 @@ mod tests {
             b in any::<Multivector<f64, Conformal3>>(),
             c in any::<Multivector<f64, Conformal3>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 

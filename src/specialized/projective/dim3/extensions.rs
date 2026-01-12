@@ -192,7 +192,7 @@ impl<T: Float> Point<T> {
     #[inline]
     pub fn join(&self, other: &Point<T>) -> Line<T> {
         // P ∧ Q for P = (px, py, pz, pw) and Q = (qx, qy, qz, qw)
-        // Note: The generated outer_point_point has incorrect sign/ordering mapping,
+        // Note: The generated exterior_point_point has incorrect sign/ordering mapping,
         // so we use the explicit formula from the PGA literature.
         Line::new_unchecked(
             self.e0() * other.e1() - self.e1() * other.e0(), // e01
@@ -239,7 +239,7 @@ impl<T: Float> Point<T> {
     pub fn left_contract_line(&self, line: &Line<T>) -> Plane<T> {
         // P ⌋ L = P · L + P ∧ L (for grade-1 contracted with grade-2)
         // Result is grade 3 (plane)
-        products::outer_point_line(self, line)
+        products::exterior_point_line(self, line)
     }
 
     /// Left contraction onto a plane (returns scalar).
@@ -409,7 +409,7 @@ impl<T: Float> Line<T> {
     /// Join with a point to create a plane.
     #[inline]
     pub fn join_point(&self, point: &Point<T>) -> Plane<T> {
-        products::outer_line_point(self, point)
+        products::exterior_line_point(self, point)
     }
 
     /// Meet with a plane to find intersection point (regressive product).
@@ -1080,72 +1080,6 @@ impl<T: Float> Motor<T> {
             ab.e0123() + ba.e0123(),
         )
     }
-
-    /// Transform a point: `P' = M P M̃` (sandwich product).
-    ///
-    /// This uses an optimized formula from rigidgeometricalgebra.org that
-    /// correctly handles all motor types including composed rotation+translation.
-    ///
-    /// # Formula
-    ///
-    /// The sandwich product is computed as:
-    /// ```text
-    /// a = v × p + pw * m
-    /// p' = p + 2(s * a + v × a + e0123 * pw * v)
-    /// ```
-    /// where v = (e23, e31, e12) is the rotation bivector and
-    /// m = (e01, e02, e03) is the translation bivector.
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        let s = self.s();
-        let b23 = self.e23();
-        let b31 = self.e31();
-        let b12 = self.e12();
-        let b01 = self.e01();
-        let b02 = self.e02();
-        let b03 = self.e03();
-
-        let px = p.e1();
-        let py = p.e2();
-        let pz = p.e3();
-        let pw = p.e0();
-
-        let two = T::TWO;
-
-        // Compute intermediate vector a = v × p + pw * m
-        let ax = b31 * pz - b12 * py + pw * b01;
-        let ay = b12 * px - b23 * pz + pw * b02;
-        let az = b23 * py - b31 * px + pw * b03;
-
-        // Compute v × a
-        let vxa_x = b31 * az - b12 * ay;
-        let vxa_y = b12 * ax - b23 * az;
-        let vxa_z = b23 * ay - b31 * ax;
-
-        // Final transformation: p' = p + 2(s * a + v × a + e0123 * pw * v)
-        let i = self.e0123();
-        Point::new(
-            px + two * (s * ax + vxa_x + i * pw * b23),
-            py + two * (s * ay + vxa_y + i * pw * b31),
-            pz + two * (s * az + vxa_z + i * pw * b12),
-            pw,
-        )
-    }
-
-    /// Transform a line: `L' = M L M̃` (sandwich product).
-    ///
-    /// Uses the generated sandwich product.
-    #[inline]
-    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
-        products::sandwich_motor_line(self, line)
-    }
-
-    /// Transform a plane: `P' = M P M̃` (sandwich product).
-    ///
-    /// Uses the generated sandwich product.
-    #[inline]
-    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
-        products::sandwich_motor_plane(self, plane)
-    }
 }
 
 // ============================================================================
@@ -1259,59 +1193,5 @@ impl<T: Float> Flector<T> {
     #[inline]
     pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
         products::geometric_flector_flector(self, other)
-    }
-
-    /// Transform a point: `P' = F P F̃` (sandwich product).
-    ///
-    /// For pure plane reflections, uses the optimized formula:
-    /// `P' = P - 2 * ((P · n + d) / |n|²) * n`
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        let px = p.e1();
-        let py = p.e2();
-        let pz = p.e3();
-        let pw = p.e0();
-
-        // Plane components (grade 3)
-        let gx = self.e023(); // normal x
-        let gy = self.e031(); // normal y
-        let gz = self.e012(); // normal z
-        let gw = self.e123(); // distance parameter
-
-        // Point components of flector (grade 1)
-        let fx = self.e1();
-        let fy = self.e2();
-        let fz = self.e3();
-        let fw = self.e0();
-
-        let g_norm_sq = gx * gx + gy * gy + gz * gz;
-
-        if g_norm_sq < T::epsilon() {
-            // Degenerate plane, return original point
-            return *p;
-        }
-
-        // For pure reflection (common case), use optimized formula
-        if self.is_pure_reflection() {
-            // Dot product of point with plane normal + distance term
-            let dot = px * gx + py * gy + pz * gz + pw * gw;
-            let factor = T::TWO * dot / g_norm_sq;
-
-            return Point::new(px - factor * gx, py - factor * gy, pz - factor * gz, pw);
-        }
-
-        // General flector case (point + plane)
-        // Simplified: treat as pure plane reflection plus point contribution
-        let dot = px * gx + py * gy + pz * gz + pw * gw;
-        let factor = T::TWO * dot / g_norm_sq;
-
-        // Add point contribution (this creates glide/rotoreflection effect)
-        let scale = T::TWO / g_norm_sq;
-
-        Point::new(
-            px - factor * gx + scale * (fy * gz - fz * gy + fw * gx),
-            py - factor * gy + scale * (fz * gx - fx * gz + fw * gy),
-            pz - factor * gz + scale * (fx * gy - fy * gx + fw * gz),
-            pw,
-        )
     }
 }

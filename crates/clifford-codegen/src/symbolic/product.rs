@@ -17,8 +17,8 @@ use crate::spec::TypeSpec;
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Outer product (wedge, grade-raising).
-    Outer,
+    /// Exterior product (wedge, grade-raising).
+    Exterior,
     /// Left contraction (inner product).
     LeftContraction,
 }
@@ -144,7 +144,7 @@ impl<'a> SymbolicProduct<'a> {
                 // Filter based on product kind
                 let include = match kind {
                     ProductKind::Geometric => true,
-                    ProductKind::Outer => {
+                    ProductKind::Exterior => {
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
                         let result_grade = Blade::from_index(result_blade).grade();

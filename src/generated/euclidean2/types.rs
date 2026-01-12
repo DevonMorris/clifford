@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Bivector<T: Float> {
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `xy`."]
     xy: T,
 }
 impl<T: Float> Bivector<T> {
@@ -22,7 +22,7 @@ impl<T: Float> Bivector<T> {
     pub fn new(xy: T) -> Self {
         Self { xy }
     }
-    #[doc = "Returns the xy component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `xy` coefficient."]
     #[inline]
     pub fn xy(&self) -> T {
         self.xy
@@ -101,7 +101,7 @@ impl<T: Float> Default for Bivector<T> {
 pub struct Rotor<T: Float> {
     #[doc = "Coefficient of `s`."]
     s: T,
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `xy`."]
     xy: T,
 }
 impl<T: Float> Rotor<T> {
@@ -139,12 +139,12 @@ impl<T: Float> Rotor<T> {
     pub fn new_unchecked(s: T, xy: T) -> Self {
         Self { s, xy }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s
     }
-    #[doc = "Returns the xy component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `xy` coefficient."]
     #[inline]
     pub fn xy(&self) -> T {
         self.xy
@@ -230,7 +230,7 @@ impl<T: Float> Scalar<T> {
     pub fn new(s: T) -> Self {
         Self { s }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s
@@ -312,9 +312,9 @@ impl<T: Float> Default for Scalar<T> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Vector<T: Float> {
-    #[doc = "Coefficient of `e1`."]
+    #[doc = "Coefficient of `x`."]
     x: T,
-    #[doc = "Coefficient of `e2`."]
+    #[doc = "Coefficient of `y`."]
     y: T,
 }
 impl<T: Float> Vector<T> {
@@ -323,12 +323,12 @@ impl<T: Float> Vector<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
-    #[doc = "Returns the x component (coefficient of `e1`)."]
+    #[doc = "Returns the `x` coefficient."]
     #[inline]
     pub fn x(&self) -> T {
         self.x
     }
-    #[doc = "Returns the y component (coefficient of `e2`)."]
+    #[doc = "Returns the `y` coefficient."]
     #[inline]
     pub fn y(&self) -> T {
         self.y
