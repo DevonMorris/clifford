@@ -223,6 +223,12 @@ impl<T: Float> Rotor<T> {
     ///
     /// * `other` - Target rotor
     /// * `t` - Interpolation parameter in [0, 1]
+    ///
+    /// # Panics
+    ///
+    /// Panics if `self` and `other` are opposite rotors (s₁ ≈ -s₂, xy₁ ≈ -xy₂),
+    /// as the linear interpolation passes through zero at t ≈ 0.5.
+    /// Use [`slerp`](Self::slerp) for robust interpolation in all cases.
     #[inline]
     pub fn lerp(&self, other: Self, t: T) -> Self {
         Self::new_unchecked(
