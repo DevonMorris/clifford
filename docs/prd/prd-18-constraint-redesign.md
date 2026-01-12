@@ -285,6 +285,22 @@ pub type ProperFourVelocity<T> = Proper<FourVector<T>>;
 - [CGA Documentation](https://clifford.readthedocs.io/en/latest/tutorials/cga/index.html)
 - [PRD-17.8](prd-17.8-product-normalization.md) - Why products don't normalize
 
+## Sub-PRDs
+
+This PRD is broken into the following sub-PRDs:
+
+| Sub-PRD | Title | Status | Description |
+|---------|-------|--------|-------------|
+| [PRD-18.1](prd-18.1-normed-traits.md) | Normed Trait Hierarchy | Complete | Define `Normed`, `DegenerateNormed`, `IndefiniteNormed`, `ConformalNormed` traits |
+| [PRD-18.2](prd-18.2-wrappers.md) | Wrapper Types | Complete | Define `Unit<T>`, `Bulk<T>`, `Ideal<T>`, `Proper<T>` wrappers |
+| [PRD-18.3](prd-18.3-remove-constraints.md) | Remove User Constraints | Complete | Remove constraint sections from TOML parsing |
+| [PRD-18.4](prd-18.4-infer-constraints.md) | Infer Constraints | Complete | Add constraint inference from algebra structure |
+| [PRD-18.5](prd-18.5-simplify-constructors.md) | Simplify Constructors | Complete | Remove `new()`, keep only `new_unchecked()` and `new_checked()` |
+| [PRD-18.6](prd-18.6-arbitrary.md) | Bespoke Arbitrary | Complete | Generate `Arbitrary` implementations that satisfy constraints |
+| [PRD-18.7](prd-18.7-regenerate.md) | Regenerate Algebras | Complete | Regenerate all algebras with new constraint system |
+| [PRD-18.8](prd-18.8-generate-normed-impls.md) | Generate Normed Impls | Draft | Generate `impl Normed for Type<T>` in codegen |
+| [PRD-18.9](prd-18.9-generate-wrapper-aliases.md) | Generate Wrapper Aliases | Draft | Generate type aliases like `UnitVector<T> = Unit<Vector<T>>` |
+
 ## Dependencies
 
 - PRD-14 (Code Generator) - Base codegen infrastructure
