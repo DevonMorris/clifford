@@ -225,11 +225,8 @@ impl<T: Float> Flector<T> {
             self.e1, self.e2, self.e3, self.e0, -self.e023, -self.e031, -self.e012, -self.e123,
         )
     }
-    #[doc = "Transforms a Point by this versor via sandwich product.\n\nComputes `self * point * self.reverse()`."]
-    #[inline]
-    pub fn transform_point(&self, x: &Point<T>) -> Point<T> {
-        super::products::sandwich_flector_point(self, x)
-    }
+    // Note: transform_point is defined in extensions.rs with optimized formula
+
     #[doc = "Transforms a Line by this versor via sandwich product.\n\nComputes `self * line * self.reverse()`."]
     #[inline]
     pub fn transform_line(&self, x: &Line<T>) -> Line<T> {
@@ -767,21 +764,9 @@ impl<T: Float> Motor<T> {
             self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }
-    #[doc = "Transforms a Point by this versor via sandwich product.\n\nComputes `self * point * self.reverse()`."]
-    #[inline]
-    pub fn transform_point(&self, x: &Point<T>) -> Point<T> {
-        super::products::sandwich_motor_point(self, x)
-    }
-    #[doc = "Transforms a Line by this versor via sandwich product.\n\nComputes `self * line * self.reverse()`."]
-    #[inline]
-    pub fn transform_line(&self, x: &Line<T>) -> Line<T> {
-        super::products::sandwich_motor_line(self, x)
-    }
-    #[doc = "Transforms a Plane by this versor via sandwich product.\n\nComputes `self * plane * self.reverse()`."]
-    #[inline]
-    pub fn transform_plane(&self, x: &Plane<T>) -> Plane<T> {
-        super::products::sandwich_motor_plane(self, x)
-    }
+    // Note: transform_point, transform_line, transform_plane are defined in extensions.rs
+    // with optimized formulas from rigidgeometricalgebra.org
+
     #[doc = "Transforms a Motor by this versor via sandwich product.\n\nComputes `self * motor * self.reverse()`."]
     #[inline]
     pub fn transform_motor(&self, x: &Motor<T>) -> Motor<T> {

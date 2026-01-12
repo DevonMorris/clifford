@@ -9,7 +9,7 @@
 
 use crate::scalar::Float;
 
-use super::types::{Flector, Motor, Plane, Point};
+use super::generated::types::{Flector, Motor, Plane, Point};
 
 #[cfg(feature = "nalgebra-0_32")]
 use nalgebra_0_32 as na;
@@ -30,7 +30,7 @@ where
     ///
     /// The resulting point has homogeneous weight `w = 1`.
     fn from(p: na::Point3<T>) -> Self {
-        Point::new(p.x, p.y, p.z)
+        Point::from_cartesian(p.x, p.y, p.z)
     }
 }
 
@@ -44,7 +44,7 @@ where
     ///
     /// Returns an error if the point is at infinity (weight ≈ 0).
     fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
-        if p.e0.abs() < T::epsilon() {
+        if p.e0().abs() < T::epsilon() {
             return Err(PointConversionError::PointAtInfinity);
         }
         Ok(na::Point3::new(p.x(), p.y(), p.z()))
@@ -89,22 +89,16 @@ where
     /// # Note
     ///
     /// This extracts the rotation from the motor's rotation bivector and
-    /// the translation from the translation bivector. For motors that are
-    /// not simple rotation+translation compositions, the extraction may
-    /// be approximate.
+    /// the translation using the full formula that accounts for rotation-translation
+    /// interaction in composed motors.
     fn from(m: Motor<T>) -> Self {
         // Extract rotation as quaternion
         let q: na::UnitQuaternion<T> = m.into();
 
-        // Extract translation
-        // For a composed motor R*T, the translation extraction is:
-        // t = 2 * (s*e0i + cross terms from rotation-translation interaction)
-        // For simplicity, we extract as if it's a pure translation
-        let tx = m.e01() * T::TWO;
-        let ty = m.e02() * T::TWO;
-        let tz = m.e03() * T::TWO;
+        // Extract translation using the full formula that handles composed motors
+        let t = m.translation();
 
-        na::Isometry3::from_parts(na::Translation3::new(tx, ty, tz), q)
+        na::Isometry3::from_parts(na::Translation3::new(t.x(), t.y(), t.z()), q)
     }
 }
 
@@ -223,7 +217,7 @@ where
 
         // Create a pure plane reflection flector
         // nalgebra uses n · x = bias, PGA uses n · x + d = 0, so d = -bias
-        Flector::from_plane(Plane::from_normal_and_distance(
+        Flector::from_plane(&Plane::from_normal_and_distance(
             axis[0], axis[1], axis[2], -bias,
         ))
     }
@@ -247,7 +241,7 @@ where
     /// - [`FlectorConversionError::DegeneratePlane`]: The plane normal has zero length
     fn try_from(f: Flector<T>) -> Result<Self, Self::Error> {
         // Check if this is a pure plane reflection
-        if !f.is_pure_reflection(T::epsilon()) {
+        if !f.is_pure_reflection() {
             return Err(FlectorConversionError::NotPureReflection);
         }
 
@@ -261,7 +255,7 @@ where
         // Unitize the plane
         let unitized = plane.unitized();
         let n = unitized.normal();
-        let d = unitized.distance();
+        let d = unitized.distance_from_origin();
 
         // Create axis as unit vector
         let axis = na::Unit::new_unchecked(na::Vector3::new(n.x(), n.y(), n.z()));
@@ -310,7 +304,7 @@ mod tests {
     proptest! {
         #[test]
         fn point_roundtrip(x in -100.0f64..100.0, y in -100.0f64..100.0, z in -100.0f64..100.0) {
-            let pga_point = Point::new(x, y, z);
+            let pga_point = Point::from_cartesian(x, y, z);
             let na_point: na::Point3<f64> = pga_point.try_into().unwrap();
             let back: Point<f64> = na_point.into();
 
@@ -335,12 +329,12 @@ mod tests {
     fn identity_motor_preserves_points() {
         let motor = Motor::<f64>::identity();
         let points = [
-            Point::new(0.0, 0.0, 0.0),
-            Point::new(1.0, 0.0, 0.0),
-            Point::new(0.0, 1.0, 0.0),
-            Point::new(0.0, 0.0, 1.0),
-            Point::new(3.0, 4.0, 5.0),
-            Point::new(-2.5, 7.1, -1.3),
+            Point::from_cartesian(0.0, 0.0, 0.0),
+            Point::from_cartesian(1.0, 0.0, 0.0),
+            Point::from_cartesian(0.0, 1.0, 0.0),
+            Point::from_cartesian(0.0, 0.0, 1.0),
+            Point::from_cartesian(3.0, 4.0, 5.0),
+            Point::from_cartesian(-2.5, 7.1, -1.3),
         ];
 
         for p in points {
@@ -371,7 +365,7 @@ mod tests {
     fn pure_translation_concrete_cases() {
         // Translate (1, 2, 3) by (10, 20, 30) -> (11, 22, 33)
         let motor = Motor::from_translation(10.0, 20.0, 30.0);
-        let p = Point::new(1.0, 2.0, 3.0);
+        let p = Point::from_cartesian(1.0, 2.0, 3.0);
         let result = motor.transform_point(&p);
 
         assert!(abs_diff_eq!(result.x(), 11.0, epsilon = ABS_DIFF_EQ_EPS));
@@ -388,7 +382,7 @@ mod tests {
             let pga_trans = Motor::from_translation(dx, dy, dz);
             let na_trans = na::Translation3::new(dx, dy, dz);
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_trans.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -408,7 +402,7 @@ mod tests {
     fn rotation_z_90_degrees() {
         // (1, 0, 0) rotated 90° around Z -> (0, 1, 0)
         let motor = Motor::from_rotation_z(FRAC_PI_2);
-        let p = Point::new(1.0, 0.0, 0.0);
+        let p = Point::from_cartesian(1.0, 0.0, 0.0);
         let result = motor.transform_point(&p);
 
         assert!(
@@ -432,7 +426,7 @@ mod tests {
     fn rotation_x_90_degrees() {
         // (0, 1, 0) rotated 90° around X -> (0, 0, 1)
         let motor = Motor::from_rotation_x(FRAC_PI_2);
-        let p = Point::new(0.0, 1.0, 0.0);
+        let p = Point::from_cartesian(0.0, 1.0, 0.0);
         let result = motor.transform_point(&p);
 
         assert!(
@@ -456,7 +450,7 @@ mod tests {
     fn rotation_y_90_degrees() {
         // (0, 0, 1) rotated 90° around Y -> (1, 0, 0)
         let motor = Motor::from_rotation_y(FRAC_PI_2);
-        let p = Point::new(0.0, 0.0, 1.0);
+        let p = Point::from_cartesian(0.0, 0.0, 1.0);
         let result = motor.transform_point(&p);
 
         assert!(
@@ -489,7 +483,7 @@ mod tests {
             let pga_rot = Motor::from_rotation_z(angle);
             let na_rot = na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), angle);
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_rot.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -508,7 +502,7 @@ mod tests {
             let pga_rot = Motor::from_rotation_x(angle);
             let na_rot = na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), angle);
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_rot.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -527,7 +521,7 @@ mod tests {
             let pga_rot = Motor::from_rotation_y(angle);
             let na_rot = na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), angle);
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_rot.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -555,7 +549,7 @@ mod tests {
             let na_axis = na::Unit::new_normalize(na::Vector3::new(axis.x(), axis.y(), axis.z()));
             let na_rot = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_rot.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -578,7 +572,7 @@ mod tests {
         let translation = Motor::from_translation(1.0, 2.0, 3.0);
         let combined = rotation.compose(&translation);
 
-        let p = Point::new(1.0, 0.0, 0.0);
+        let p = Point::from_cartesian(1.0, 0.0, 0.0);
         let result = combined.transform_point(&p);
 
         assert!(
@@ -605,7 +599,7 @@ mod tests {
         let rotation = Motor::from_rotation_z(FRAC_PI_2);
         let combined = translation.compose(&rotation);
 
-        let p = Point::new(1.0, 0.0, 0.0);
+        let p = Point::from_cartesian(1.0, 0.0, 0.0);
         let result = combined.transform_point(&p);
 
         assert!(
@@ -634,7 +628,7 @@ mod tests {
         let rot_y = Motor::from_rotation_y(FRAC_PI_2);
         let combined = rot_x.compose(&rot_y);
 
-        let p = Point::new(1.0, 0.0, 0.0);
+        let p = Point::from_cartesian(1.0, 0.0, 0.0);
         let result = combined.transform_point(&p);
 
         assert!(
@@ -671,7 +665,7 @@ mod tests {
             let translation = Motor::from_translation(tx, ty, tz);
             let composed = rotation.compose(&translation);
 
-            let p = Point::new(px, py, pz);
+            let p = Point::from_cartesian(px, py, pz);
 
             // Composed transformation
             let result_composed = composed.transform_point(&p);
@@ -725,7 +719,7 @@ mod tests {
             // PGA: to match iso1 * iso2, we need motor2.compose(&motor1)
             // because compose applies left motor first
             let pga_composed = motor2.compose(&motor1);
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_composed.transform_point(&pga_point);
 
             prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
@@ -770,7 +764,7 @@ mod tests {
             let motor2 = rot2.compose(&trans2);
 
             let na_point = na::Point3::new(px, py, pz);
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
 
             // Method 1: nalgebra composed, then applied
             let na_composed = iso1 * iso2;
@@ -836,7 +830,7 @@ mod tests {
 
             // PGA: to match, we need motor3.compose(&motor2).compose(&motor1)
             let pga_composed = motor3.compose(&motor2).compose(&motor1);
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = pga_composed.transform_point(&pga_point);
 
             prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
@@ -874,7 +868,7 @@ mod tests {
             let back: Motor<f64> = q.into();
 
             // Compare by transforming a point
-            let p = Point::new(px, py, pz);
+            let p = Point::from_cartesian(px, py, pz);
             let result_orig = motor.transform_point(&p);
             let result_back = back.transform_point(&p);
 
@@ -929,7 +923,7 @@ mod tests {
             let q: na::UnitQuaternion<f64> = motor.into();
 
             // Transform with both
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
             let na_point = na::Point3::new(px, py, pz);
@@ -965,7 +959,7 @@ mod tests {
             let back: Motor<f64> = rot.into();
 
             // Compare by transforming a point
-            let p = Point::new(px, py, pz);
+            let p = Point::from_cartesian(px, py, pz);
             let result_orig = motor.transform_point(&p);
             let result_back = back.transform_point(&p);
 
@@ -998,7 +992,7 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = iso * na_point;
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
             prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
@@ -1028,7 +1022,7 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = iso * na_point;
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
             prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
@@ -1049,7 +1043,7 @@ mod tests {
             let na_point = na::Point3::new(px, py, pz);
             let na_result = iso * na_point;
 
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = motor.transform_point(&pga_point);
 
             prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
@@ -1081,7 +1075,7 @@ mod tests {
         let motor: Motor<f64> = iso.into();
 
         // Should be identity motor
-        let p = Point::new(1.0, 2.0, 3.0);
+        let p = Point::from_cartesian(1.0, 2.0, 3.0);
         let result = motor.transform_point(&p);
         assert!(abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(result.y(), 2.0, epsilon = ABS_DIFF_EQ_EPS));
@@ -1128,12 +1122,12 @@ mod tests {
         let flector: Flector<f64> = na_refl.into();
 
         // Should be a pure plane reflection through XY plane
-        assert!(flector.is_pure_reflection(ABS_DIFF_EQ_EPS));
+        assert!(flector.is_pure_reflection());
         let plane = flector.plane_part();
-        assert!(abs_diff_eq!(plane.e023, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // nx
-        assert!(abs_diff_eq!(plane.e031, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // ny
-        assert!(abs_diff_eq!(plane.e012, 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
-        assert!(abs_diff_eq!(plane.e123, 0.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+        assert!(abs_diff_eq!(plane.e023(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // nx
+        assert!(abs_diff_eq!(plane.e031(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // ny
+        assert!(abs_diff_eq!(plane.e012(), 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
+        assert!(abs_diff_eq!(plane.e123(), 0.0, epsilon = ABS_DIFF_EQ_EPS)); // d
     }
 
     #[test]
@@ -1145,11 +1139,11 @@ mod tests {
         let flector: Flector<f64> = na_refl.into();
 
         // Should be a pure plane reflection
-        assert!(flector.is_pure_reflection(ABS_DIFF_EQ_EPS));
+        assert!(flector.is_pure_reflection());
         let plane = flector.plane_part();
         // PGA plane: nz = 1, d = -5 (since n·x + d = 0 means z - 5 = 0)
-        assert!(abs_diff_eq!(plane.e012, 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
-        assert!(abs_diff_eq!(plane.e123, -5.0, epsilon = ABS_DIFF_EQ_EPS)); // d
+        assert!(abs_diff_eq!(plane.e012(), 1.0, epsilon = ABS_DIFF_EQ_EPS)); // nz
+        assert!(abs_diff_eq!(plane.e123(), -5.0, epsilon = ABS_DIFF_EQ_EPS)); // d
     }
 
     #[test]
@@ -1169,7 +1163,7 @@ mod tests {
     fn flector_to_reflection_offset_plane() {
         // Plane z = 5: nx·x + ny·y + nz·z + d = 0 => z - 5 = 0 => d = -5
         let plane = Plane::from_normal_and_distance(0.0, 0.0, 1.0, -5.0);
-        let flector = Flector::from_plane(plane);
+        let flector = Flector::from_plane(&plane);
         let na_refl: Reflection3<f64> = flector.try_into().unwrap();
 
         // nalgebra bias = n·P where P is on plane, so bias = 5
@@ -1183,7 +1177,8 @@ mod tests {
     #[test]
     fn non_pure_flector_conversion_fails() {
         // Create a flector with non-zero point component (not a pure reflection)
-        let flector = Flector::new(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+        // Create a flector with non-zero point component (e1=1) and plane component (e123=1)
+        let flector = Flector::new(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
         let result: Result<Reflection3<f64>, _> = flector.try_into();
         assert!(matches!(
             result,
@@ -1207,13 +1202,13 @@ mod tests {
             let (nx, ny, nz) = (nx / len, ny / len, nz / len);
 
             let plane = Plane::from_normal_and_distance(nx, ny, nz, d);
-            let flector = Flector::from_plane(plane);
+            let flector = Flector::from_plane(&plane);
 
             let na_refl: Reflection3<f64> = flector.try_into().unwrap();
             let back: Flector<f64> = na_refl.into();
 
             // Compare by transforming a point
-            let p = Point::new(px, py, pz);
+            let p = Point::from_cartesian(px, py, pz);
             let result_orig = flector.transform_point(&p);
             let result_back = back.transform_point(&p);
 
@@ -1238,7 +1233,7 @@ mod tests {
 
             // Create PGA flector
             let plane = Plane::from_normal_and_distance(nx, ny, nz, d);
-            let flector = Flector::from_plane(plane);
+            let flector = Flector::from_plane(&plane);
 
             // Create nalgebra reflection
             let axis = na::Unit::new_unchecked(na::Vector3::new(nx, ny, nz));
@@ -1247,7 +1242,7 @@ mod tests {
             let na_refl = na::Reflection::new_containing_point(axis, &point_on_plane);
 
             // Transform with PGA
-            let pga_point = Point::new(px, py, pz);
+            let pga_point = Point::from_cartesian(px, py, pz);
             let pga_result = flector.transform_point(&pga_point);
 
             // Transform with nalgebra
