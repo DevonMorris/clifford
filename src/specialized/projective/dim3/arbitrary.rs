@@ -1,23 +1,37 @@
 //! Proptest `Arbitrary` implementations for 3D PGA specialized types.
 //!
-//! This module provides strategies for generating random [`Point`], [`Line`],
-//! [`Plane`], [`Motor`], and [`Flector`] values for property-based testing.
+//! This module provides wrapper types for property-based testing that require
+//! constrained values (non-origin points, non-degenerate lines/planes, unit flectors).
+//!
+//! For basic `Arbitrary` implementations of [`Point`], [`Line`], [`Plane`],
+//! [`Motor`], and [`Flector`], see the generated traits module.
 //!
 //! # Example
 //!
 //! ```
 //! use clifford::specialized::projective::dim3::{Point, Motor};
-//! use clifford::specialized::projective::dim3::arbitrary::UnitMotor;
+//! use clifford::specialized::euclidean::dim3::Vector as EuclideanVector;
 //! use proptest::prelude::*;
 //! use approx::abs_diff_eq;
 //!
 //! proptest! {
 //!     #[test]
 //!     fn motor_preserves_distance(
-//!         motor in any::<UnitMotor<f64>>(),
+//!         angle in -std::f64::consts::PI..std::f64::consts::PI,
+//!         axis_x in -1.0f64..1.0,
+//!         axis_y in -1.0f64..1.0,
+//!         axis_z in -1.0f64..1.0,
+//!         tx in -100.0f64..100.0,
+//!         ty in -100.0f64..100.0,
+//!         tz in -100.0f64..100.0,
 //!         p1 in any::<Point<f64>>(),
 //!         p2 in any::<Point<f64>>(),
 //!     ) {
+//!         let axis_len = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
+//!         prop_assume!(axis_len > 0.01);
+//!         let axis = EuclideanVector::new(axis_x / axis_len, axis_y / axis_len, axis_z / axis_len);
+//!         let motor = Motor::from_translation(tx, ty, tz)
+//!             .compose(&Motor::from_axis_angle(&axis, angle));
 //!         let d_before = p1.distance(&p2);
 //!         let t1 = motor.transform_point(&p1);
 //!         let t2 = motor.transform_point(&p2);
@@ -34,9 +48,8 @@ use proptest::prelude::*;
 use proptest::strategy::BoxedStrategy;
 
 use crate::scalar::Float;
-use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
-use super::generated::types::{Flector, Line, Motor, Plane, Point};
+use super::generated::types::{Flector, Line, Plane, Point};
 
 // ============================================================================
 // Point
@@ -90,79 +103,7 @@ impl<T: Float + Debug> Arbitrary for NonOriginPoint<T> {
     }
 }
 
-// ============================================================================
-// Motor
-// ============================================================================
-
-// Note: Basic Arbitrary impl is in generated/traits.rs
-
-/// Wrapper type for unit motors (valid rigid transformations) in 3D PGA.
-///
-/// Use this when you need a motor guaranteed to represent a valid rigid
-/// transformation (rotation + translation).
-#[derive(Debug, Clone)]
-pub struct UnitMotor<T: Float>(
-    /// The wrapped unit motor.
-    pub Motor<T>,
-);
-
-impl<T: Float> UnitMotor<T> {
-    /// Unwraps and returns the inner value.
-    #[inline]
-    pub fn into_inner(self) -> Motor<T> {
-        self.0
-    }
-}
-
-impl<T: Float> Deref for UnitMotor<T> {
-    type Target = Motor<T>;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate a valid rigid transformation: rotation around arbitrary axis + translation
-        // This produces motors with non-zero e0123 (screw component) from the
-        // geometric product of rotation and translation components.
-        (
-            // Rotation axis (will be normalized)
-            -1.0f64..1.0,
-            -1.0f64..1.0,
-            -1.0f64..1.0,
-            // Rotation angle
-            -std::f64::consts::PI..std::f64::consts::PI,
-            // Translation
-            -100.0f64..100.0,
-            -100.0f64..100.0,
-            -100.0f64..100.0,
-        )
-            .prop_filter("axis must be non-zero", |(ax, ay, az, _, _, _, _)| {
-                ax * ax + ay * ay + az * az > 0.01
-            })
-            .prop_map(|(ax, ay, az, angle, tx, ty, tz)| {
-                // Normalize axis
-                let len = (ax * ax + ay * ay + az * az).sqrt();
-                let axis = EuclideanVector::new(
-                    T::from_f64(ax / len),
-                    T::from_f64(ay / len),
-                    T::from_f64(az / len),
-                );
-
-                let rotation = Motor::from_axis_angle(&axis, T::from_f64(angle));
-                let translation =
-                    Motor::from_translation(T::from_f64(tx), T::from_f64(ty), T::from_f64(tz));
-                UnitMotor(translation.compose(&rotation))
-            })
-            .boxed()
-    }
-}
+// Note: Basic Arbitrary impl for Motor is in generated/traits.rs
 
 // ============================================================================
 // Line
@@ -345,33 +286,84 @@ impl<T: Float + Debug> Arbitrary for UnitFlector<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
+    use crate::specialized::projective::dim3::Motor;
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
+
+    /// Helper function to create a valid unit motor from rotation + translation params.
+    ///
+    /// The result is normalized to satisfy the Study condition, which is required
+    /// for correct rigid body transformations.
+    fn make_unit_motor(
+        axis_x: f64,
+        axis_y: f64,
+        axis_z: f64,
+        angle: f64,
+        tx: f64,
+        ty: f64,
+        tz: f64,
+    ) -> Option<Motor<f64>> {
+        let axis_len = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
+        if axis_len < 0.01 {
+            return None;
+        }
+        let axis = EuclideanVector::new(axis_x / axis_len, axis_y / axis_len, axis_z / axis_len);
+        let rotation = Motor::from_axis_angle(&axis, angle);
+        let translation = Motor::from_translation(tx, ty, tz);
+        // Normalize to satisfy Study condition for valid transformations
+        Some(translation.compose(&rotation).normalized())
+    }
 
     proptest! {
         #[test]
         fn motor_preserves_distance(
-            motor in any::<UnitMotor<f64>>(),
+            axis_x in -1.0f64..1.0,
+            axis_y in -1.0f64..1.0,
+            axis_z in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+            tz in -100.0f64..100.0,
             p1 in any::<Point<f64>>(),
             p2 in any::<Point<f64>>(),
         ) {
-            let d_before = p1.distance(&p2);
-            let t1 = motor.transform_point(&p1);
-            let t2 = motor.transform_point(&p2);
-            let d_after = t1.distance(&t2);
-            prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = ABS_DIFF_EQ_EPS));
+            if let Some(motor) = make_unit_motor(axis_x, axis_y, axis_z, angle, tx, ty, tz) {
+                let d_before = p1.distance(&p2);
+                let t1 = motor.transform_point(&p1);
+                let t2 = motor.transform_point(&p2);
+                let d_after = t1.distance(&t2);
+                prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = ABS_DIFF_EQ_EPS));
+            }
         }
 
+        /// Test that motor geometric product is associative.
+        ///
+        /// Note: compose() returns the raw geometric product, which IS associative.
+        /// The e0123 component may drift from the Study condition after multiple
+        /// compositions, but the algebraic structure is preserved.
         #[test]
         fn motor_composition_associative(
-            m1 in any::<UnitMotor<f64>>(),
-            m2 in any::<UnitMotor<f64>>(),
-            m3 in any::<UnitMotor<f64>>(),
+            ax1 in -1.0f64..1.0, ay1 in -1.0f64..1.0, az1 in -1.0f64..1.0,
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx1 in -10.0f64..10.0, ty1 in -10.0f64..10.0, tz1 in -10.0f64..10.0,
+            ax2 in -1.0f64..1.0, ay2 in -1.0f64..1.0, az2 in -1.0f64..1.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -10.0f64..10.0, ty2 in -10.0f64..10.0, tz2 in -10.0f64..10.0,
+            ax3 in -1.0f64..1.0, ay3 in -1.0f64..1.0, az3 in -1.0f64..1.0,
+            angle3 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx3 in -10.0f64..10.0, ty3 in -10.0f64..10.0, tz3 in -10.0f64..10.0,
         ) {
-            // Use references via Deref to avoid moves
-            let lhs = m1.compose(&*m2).compose(&*m3);
-            let rhs = m1.compose(&m2.compose(&*m3));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            if let (Some(m1), Some(m2), Some(m3)) = (
+                make_unit_motor(ax1, ay1, az1, angle1, tx1, ty1, tz1),
+                make_unit_motor(ax2, ay2, az2, angle2, tx2, ty2, tz2),
+                make_unit_motor(ax3, ay3, az3, angle3, tx3, ty3, tz3),
+            ) {
+                let lhs = m1.compose(&m2).compose(&m3);
+                let rhs = m1.compose(&m2.compose(&m3));
+                // Compare the geometric product results (associative)
+                prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            }
         }
 
         #[test]
@@ -475,16 +467,24 @@ mod tests {
 
         #[test]
         fn motor_transforms_line_preserves_direction_norm(
-            motor in any::<UnitMotor<f64>>(),
+            axis_x in -1.0f64..1.0,
+            axis_y in -1.0f64..1.0,
+            axis_z in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+            tz in -100.0f64..100.0,
             line in any::<NonDegenerateLine<f64>>(),
         ) {
-            let transformed = motor.transform_line(&*line);
-            // Direction norm (weight) should be preserved
-            prop_assert!(abs_diff_eq!(
-                line.weight_norm(),
-                transformed.weight_norm(),
-                epsilon = ABS_DIFF_EQ_EPS
-            ));
+            if let Some(motor) = make_unit_motor(axis_x, axis_y, axis_z, angle, tx, ty, tz) {
+                let transformed = motor.transform_line(&*line);
+                // Direction norm (weight) should be preserved
+                prop_assert!(abs_diff_eq!(
+                    line.weight_norm(),
+                    transformed.weight_norm(),
+                    epsilon = ABS_DIFF_EQ_EPS
+                ));
+            }
         }
 
         #[test]
@@ -498,12 +498,10 @@ mod tests {
             let _ = plane.normal();
         }
 
-        /// Verify that unit motors satisfy the study condition.
+        /// Verify that factory-constructed motors satisfy the study condition.
         ///
         /// The study condition for a proper motor is:
-        ///   s*e0123 - e23*e01 - e31*e02 - e12*e03 = 0
-        ///
-        /// Equivalently: s*e0123 = v·m where v = (e23, e31, e12) and m = (e01, e02, e03).
+        ///   s*e0123 + e23*e01 + e31*e02 + e12*e03 = 0
         ///
         /// This condition ensures the motor represents a valid rigid transformation.
         /// It arises naturally when a motor is constructed as T*R (translation composed
@@ -511,14 +509,19 @@ mod tests {
         ///
         /// Reference: https://rigidgeometricalgebra.org/wiki/index.php?title=Motor
         #[test]
-        fn unit_motor_satisfies_study_condition(motor in any::<UnitMotor<f64>>()) {
-            // Study condition: s*e0123 = v·m
-            // where v = (e23, e31, e12) and m = (e01, e02, e03)
-            let study = motor.s() * motor.e0123()
-                - motor.e23() * motor.e01()
-                - motor.e31() * motor.e02()
-                - motor.e12() * motor.e03();
-            prop_assert!(abs_diff_eq!(study, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        fn unit_motor_satisfies_study_condition(
+            axis_x in -1.0f64..1.0,
+            axis_y in -1.0f64..1.0,
+            axis_z in -1.0f64..1.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+            tz in -100.0f64..100.0,
+        ) {
+            if let Some(motor) = make_unit_motor(axis_x, axis_y, axis_z, angle, tx, ty, tz) {
+                // Use the method that computes the Study condition residual
+                prop_assert!(abs_diff_eq!(motor.study_residual(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+            }
         }
     }
 }

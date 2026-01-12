@@ -903,59 +903,29 @@ impl<T: Float> Motor<T> {
     /// Compose motors: self then other.
     ///
     /// The result applies `self` first, then `other`.
-    /// With the explicit PGA formula, `self * other` applies self first.
+    /// This computes the geometric product `self * other`.
     ///
-    /// This uses an explicit formula derived from sympy to ensure correct composition.
+    /// Note: The geometric product is associative, so `(a.compose(b)).compose(c)`
+    /// equals `a.compose(b.compose(c))`. Normalization is NOT applied during
+    /// composition to preserve associativity. Call `normalized()` on the final
+    /// result if you need to ensure the Study condition after multiple compositions.
+    ///
+    /// For transformations, use [`compose_normalized`](Self::compose_normalized)
+    /// which ensures the result satisfies the Study condition.
     pub fn compose(&self, other: &Motor<T>) -> Motor<T> {
-        // M1 = other, M2 = self → result = self * other
-        let s1 = other.s();
-        let b23_1 = other.e23();
-        let b31_1 = other.e31();
-        let b12_1 = other.e12();
-        let d01_1 = other.e01();
-        let d02_1 = other.e02();
-        let d03_1 = other.e03();
-        let i1 = other.e0123();
+        products::geometric_motor_motor(self, other)
+    }
 
-        let s2 = self.s();
-        let b23_2 = self.e23();
-        let b31_2 = self.e31();
-        let b12_2 = self.e12();
-        let d01_2 = self.e01();
-        let d02_2 = self.e02();
-        let d03_2 = self.e03();
-        let i2 = self.e0123();
-
-        // Geometric product: self * other
-        let s = -b12_1 * b12_2 - b23_1 * b23_2 - b31_1 * b31_2 + s1 * s2;
-        let e23 = -b12_1 * b31_2 + b12_2 * b31_1 + b23_1 * s2 + b23_2 * s1;
-        let e31 = b12_1 * b23_2 - b12_2 * b23_1 + b31_1 * s2 + b31_2 * s1;
-        let e12 = b12_1 * s2 + b12_2 * s1 + b23_1 * b31_2 - b23_2 * b31_1;
-        let e01 = -i1 * b23_2 - i2 * b23_1 + d01_1 * s2 + d01_2 * s1 + d02_1 * b12_2
-            - d02_2 * b12_1
-            - d03_1 * b31_2
-            + d03_2 * b31_1;
-        let e02 = -i1 * b31_2 - i2 * b31_1 - d01_1 * b12_2
-            + d01_2 * b12_1
-            + d02_1 * s2
-            + d02_2 * s1
-            + d03_1 * b23_2
-            - d03_2 * b23_1;
-        let e03 = -i1 * b12_2 - i2 * b12_1 + d01_1 * b31_2 - d01_2 * b31_1 - d02_1 * b23_2
-            + d02_2 * b23_1
-            + d03_1 * s2
-            + d03_2 * s1;
-        let e0123 = i1 * s2
-            + i2 * s1
-            + d01_1 * b23_2
-            + d01_2 * b23_1
-            + d02_1 * b31_2
-            + d02_2 * b31_1
-            + d03_1 * b12_2
-            + d03_2 * b12_1;
-
-        // Normalize to enforce Study condition (required for correct transformations)
-        Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123).normalized()
+    /// Compose motors with normalization: self then other.
+    ///
+    /// This is equivalent to `self.compose(other).normalized()`.
+    /// Use this when you need a motor that correctly transforms geometric objects.
+    ///
+    /// Note: This is NOT associative due to the normalization step.
+    /// For algebraically correct composition without normalization, use [`compose`](Self::compose).
+    #[inline]
+    pub fn compose_normalized(&self, other: &Motor<T>) -> Motor<T> {
+        self.compose(other).normalized()
     }
 
     /// Inverse motor.
@@ -1166,16 +1136,25 @@ impl<T: Float> Motor<T> {
         Point::new(px_new, py_new, pz_new, pw)
     }
 
-    /// Transform a line via antisandwich product.
+    /// Transform a line via sandwich product.
+    ///
+    /// In PGA, lines (grade-2 bivectors) transform via the regular sandwich
+    /// product, not the antisandwich. This is because lines are self-dual
+    /// geometric objects.
     #[inline]
     pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
-        products::antisandwich_motor_line(self, line)
+        products::sandwich_motor_line(self, line)
     }
 
-    /// Transform a plane via antisandwich product.
+    /// Transform a plane via sandwich product.
+    ///
+    /// In PGA, planes (grade-3 trivectors) transform via the regular sandwich
+    /// product. While planes are theoretically dual to points, the degenerate
+    /// metric (e0² = 0) breaks the antiproduct formula, so we use the regular
+    /// sandwich which works correctly.
     #[inline]
     pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
-        products::antisandwich_motor_plane(self, plane)
+        products::sandwich_motor_plane(self, plane)
     }
 }
 

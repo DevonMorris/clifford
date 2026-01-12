@@ -149,7 +149,7 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::projective::dim3::arbitrary::UnitMotor;
+    use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
 
     /// Epsilon for f32 comparisons.
     const EPS: f32 = 1e-4;
@@ -187,8 +187,24 @@ mod tests {
         }
 
         #[test]
-        fn motor_to_transform3d_does_not_panic(m in any::<UnitMotor<f32>>()) {
-            let _t: rerun::Transform3D = (*m).into();
+        fn motor_to_transform3d_does_not_panic(
+            axis_x in -1.0f32..1.0,
+            axis_y in -1.0f32..1.0,
+            axis_z in -1.0f32..1.0,
+            angle in -std::f32::consts::PI..std::f32::consts::PI,
+            tx in -100.0f32..100.0,
+            ty in -100.0f32..100.0,
+            tz in -100.0f32..100.0,
+        ) {
+            let axis_len = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
+            if axis_len < 0.01 {
+                return Ok(());
+            }
+            let axis = EuclideanVector::new(axis_x / axis_len, axis_y / axis_len, axis_z / axis_len);
+            let rotation = Motor::from_axis_angle(&axis, angle);
+            let translation = Motor::from_translation(tx, ty, tz);
+            let motor = translation.compose(&rotation);
+            let _t: rerun::Transform3D = motor.into();
         }
     }
 

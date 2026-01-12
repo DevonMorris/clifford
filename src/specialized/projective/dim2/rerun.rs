@@ -142,8 +142,6 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::projective::dim2::arbitrary::UnitMotor;
-
     /// Epsilon for f32 comparisons.
     const EPS: f32 = 1e-4;
 
@@ -176,8 +174,15 @@ mod tests {
         }
 
         #[test]
-        fn motor_to_transform3d_does_not_panic(m in any::<UnitMotor<f32>>()) {
-            let _t: rerun::Transform3D = (*m).into();
+        fn motor_to_transform3d_does_not_panic(
+            angle in -std::f32::consts::PI..std::f32::consts::PI,
+            tx in -100.0f32..100.0,
+            ty in -100.0f32..100.0,
+        ) {
+            let rotation = Motor::from_rotation(angle);
+            let translation = Motor::from_translation(tx, ty);
+            let motor = translation.compose(&rotation);
+            let _t: rerun::Transform3D = motor.into();
         }
     }
 

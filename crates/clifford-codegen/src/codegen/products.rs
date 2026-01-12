@@ -951,12 +951,12 @@ impl<'a> ProductGenerator<'a> {
                     let v2_grade = Blade::from_index(v2_blade).grade();
                     let antigrade = dim - v2_grade;
                     #[allow(clippy::manual_is_multiple_of)]
-                    let antirev_sign: i8 =
-                        if (antigrade * antigrade.saturating_sub(1) / 2) % 2 == 0 {
-                            1
-                        } else {
-                            -1
-                        };
+                    let antirev_sign: i8 = if (antigrade * antigrade.saturating_sub(1) / 2) % 2 == 0
+                    {
+                        1
+                    } else {
+                        -1
+                    };
 
                     let (sign_vxr, result) = self.table.antiproduct(vx, v2_blade);
                     if sign_vxr == 0 {

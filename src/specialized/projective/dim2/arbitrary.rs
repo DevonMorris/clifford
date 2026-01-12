@@ -1,23 +1,29 @@
 //! Proptest `Arbitrary` implementations for 2D PGA specialized types.
 //!
-//! This module provides strategies for generating random [`Point`], [`Line`],
-//! and [`Motor`] values for property-based testing.
+//! This module provides wrapper types for property-based testing that require
+//! constrained values (non-origin points, non-degenerate lines).
+//!
+//! For basic `Arbitrary` implementations of [`Point`], [`Line`], and [`Motor`],
+//! see the types module.
 //!
 //! # Example
 //!
 //! ```
 //! use clifford::specialized::projective::dim2::{Point, Motor};
-//! use clifford::specialized::projective::dim2::arbitrary::UnitMotor;
 //! use proptest::prelude::*;
 //! use approx::abs_diff_eq;
 //!
 //! proptest! {
 //!     #[test]
 //!     fn motor_preserves_distance(
-//!         motor in any::<UnitMotor<f64>>(),
+//!         angle in -std::f64::consts::PI..std::f64::consts::PI,
+//!         tx in -100.0f64..100.0,
+//!         ty in -100.0f64..100.0,
 //!         p1 in any::<Point<f64>>(),
 //!         p2 in any::<Point<f64>>(),
 //!     ) {
+//!         let motor = Motor::from_translation(tx, ty)
+//!             .compose(&Motor::from_rotation(angle));
 //!         let d_before = p1.distance(&p2);
 //!         let t1 = motor.transform_point(&p1);
 //!         let t2 = motor.transform_point(&p2);
@@ -181,52 +187,8 @@ impl<T: Float + Debug> Arbitrary for Motor<T> {
     }
 }
 
-/// Wrapper type for unit motors (valid rigid transformations) in 2D PGA.
-///
-/// Use this when you need a motor guaranteed to represent a valid rigid
-/// transformation (rotation + translation).
-#[derive(Debug, Clone)]
-pub struct UnitMotor<T: Float>(
-    /// The wrapped unit motor.
-    pub Motor<T>,
-);
-
-impl<T: Float> UnitMotor<T> {
-    /// Unwraps and returns the inner value.
-    #[inline]
-    pub fn into_inner(self) -> Motor<T> {
-        self.0
-    }
-}
-
-impl<T: Float> Deref for UnitMotor<T> {
-    type Target = Motor<T>;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate a valid rigid transformation: rotation + translation
-        (
-            -std::f64::consts::PI..std::f64::consts::PI, // angle
-            -100.0f64..100.0,                            // tx
-            -100.0f64..100.0,                            // ty
-        )
-            .prop_map(|(angle, tx, ty)| {
-                let rotation = Motor::from_rotation(T::from_f64(angle));
-                let translation = Motor::from_translation(T::from_f64(tx), T::from_f64(ty));
-                UnitMotor(translation.compose(&rotation))
-            })
-            .boxed()
-    }
-}
+// Note: UnitMotor wrapper type was removed. Use inline motor construction
+// with Motor::from_rotation() and Motor::from_translation() in tests.
 
 #[cfg(test)]
 mod tests {
@@ -234,19 +196,34 @@ mod tests {
     use crate::test_utils::ABS_DIFF_EQ_EPS;
     use approx::abs_diff_eq;
 
+    /// Helper function to create a valid unit motor from rotation + translation.
+    fn make_unit_motor(angle: f64, tx: f64, ty: f64) -> Motor<f64> {
+        let rotation = Motor::from_rotation(angle);
+        let translation = Motor::from_translation(tx, ty);
+        translation.compose(&rotation)
+    }
+
     proptest! {
         #[test]
-        fn unit_motor_has_unit_norm(motor in any::<UnitMotor<f64>>()) {
+        fn unit_motor_has_unit_norm(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+        ) {
+            let motor = make_unit_motor(angle, tx, ty);
             // Unit motors should have norm ~1
             prop_assert!(abs_diff_eq!(motor.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
         }
 
         #[test]
         fn motor_preserves_distance(
-            motor in any::<UnitMotor<f64>>(),
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
             p1 in any::<Point<f64>>(),
             p2 in any::<Point<f64>>(),
         ) {
+            let motor = make_unit_motor(angle, tx, ty);
             let d_before = p1.distance(&p2);
             let t1 = motor.transform_point(&p1);
             let t2 = motor.transform_point(&p2);
@@ -256,9 +233,12 @@ mod tests {
 
         #[test]
         fn motor_inverse_roundtrip(
-            motor in any::<UnitMotor<f64>>(),
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
             point in any::<Point<f64>>(),
         ) {
+            let motor = make_unit_motor(angle, tx, ty);
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
@@ -268,13 +248,18 @@ mod tests {
 
         #[test]
         fn motor_composition_associative(
-            m1 in any::<UnitMotor<f64>>(),
-            m2 in any::<UnitMotor<f64>>(),
-            m3 in any::<UnitMotor<f64>>(),
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx1 in -10.0f64..10.0, ty1 in -10.0f64..10.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -10.0f64..10.0, ty2 in -10.0f64..10.0,
+            angle3 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx3 in -10.0f64..10.0, ty3 in -10.0f64..10.0,
         ) {
-            // Use references via Deref to avoid moves
-            let lhs = m1.compose(&*m2).compose(&*m3);
-            let rhs = m1.compose(&m2.compose(&*m3));
+            let m1 = make_unit_motor(angle1, tx1, ty1);
+            let m2 = make_unit_motor(angle2, tx2, ty2);
+            let m3 = make_unit_motor(angle3, tx3, ty3);
+            let lhs = m1.compose(&m2).compose(&m3);
+            let rhs = m1.compose(&m2.compose(&m3));
             prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
         }
 
