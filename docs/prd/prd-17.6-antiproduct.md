@@ -1,264 +1,371 @@
-# PRD-17.6: Geometric Antiproduct for PGA Transformations
+# PRD-17.6: Complete Anti-Product Suite for PGA
 
 **Status**: Draft
 **Parent**: [PRD-17](prd-17-codegen-products.md)
-**Goal**: Add geometric antiproduct support to fix PGA motor/flector transformations
+**Goal**: Complete the anti-product suite including antiproduct, antiscalar, antireverse, dual/antidual
 
-## Problem Statement
+## Current State
 
-The generated sandwich products for PGA (Projective Geometric Algebra) don't correctly transform points, lines, and planes. For example, a pure translation motor doesn't translate points:
+The codegen already implements core anti-product functionality:
 
-```rust
-let motor = Motor::from_translation(10.0, 20.0, 30.0);
-let p = Point::from_cartesian(1.0, 2.0, 3.0);
-let result = motor.transform_point(&p);
-// Expected: (11.0, 22.0, 33.0)
-// Actual: (1.0, 2.0, 3.0) - no translation!
+| Operation | Status | Location |
+|-----------|--------|----------|
+| `antiproduct()` | ✅ Implemented | `table.rs:318-336` |
+| `antisandwich_*_*()` | ✅ Generated | `products.rs:603-692` |
+| Antireverse sign | ✅ Used in antisandwich | `products.rs:926-980` |
+| `complement()` | ✅ Implemented | `table.rs:261-273` |
+
+**What's missing:**
+
+| Operation | Status | Notes |
+|-----------|--------|-------|
+| `antigeometric_*_*()` | ❌ Missing | Standalone antiproduct functions |
+| `antiscalar_*_*()` | ❌ Missing | Grade-n part of antigeometric |
+| `antiwedge_*_*()` | ❌ Missing | Exterior antiproduct (regressive) |
+| `reverse_*()` | ❌ Missing | Standalone reverse operation |
+| `antireverse_*()` | ❌ Missing | Standalone antireverse operation |
+| `dual_*()` | ❌ Missing | Bulk dual operation |
+| `antidual_*()` | ❌ Missing | Weight dual operation |
+| `Multivector::antiproduct()` | ❌ Missing | Generic method |
+| `Multivector::antiwedge()` | ❌ Missing | Generic method |
+| `Multivector::dual()` | ❌ Missing | Generic method |
+| `Multivector::antidual()` | ❌ Missing | Generic method |
+
+## Background: Anti-Operations from RGA Wiki
+
+Reference: [Rigid Geometric Algebra Wiki](https://rigidgeometricalgebra.org/wiki/)
+
+### Geometric Antiproduct (⊛)
+
+The geometric antiproduct is dual to the geometric product:
+
+```
+a ⊛ b = ∁(∁a * ∁b)
 ```
 
-### Root Cause
+Where `∁` is the complement (right complement: `u ∧ ū = I`).
 
-In PGA with degenerate metric (e0² = 0), the standard geometric product sandwich `M * P * rev(M)` doesn't correctly handle translations because:
-
-1. Translation components (e01, e02, e03) multiply with e0 (point's homogeneous coordinate)
-2. Since e0² = 0, terms like `e01 * e0 = e0*e1*e0 = -e0²*e1 = 0`
-3. Translation contributions vanish from spatial coordinates
-
-### Solution: Geometric Antiproduct
-
-According to [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor), PGA transformations should use the **geometric antiproduct** sandwich:
-
+**De Morgan Laws:**
 ```
-x' = Q ⊛ x ⊛ rev(Q)   // NOT: Q * x * rev(Q)
+∁(a * b) = ∁a ⊛ ∁b
+∁(a ⊛ b) = ∁a * ∁b
 ```
 
-Where `⊛` is the geometric antiproduct (also written as ⟑ or antidot).
-
-## Background: Antiproduct Theory
-
-### Duality Relationship
-
-The geometric antiproduct is **dual** to the geometric product. For elements a, b in Cl(p,q,r):
-
+**Grade rules:** For antigrade = n - grade:
 ```
-complement(a ⊙ b) = complement(a) ⊛ complement(b)
-complement(a ⊛ b) = complement(a) ⊙ complement(b)
+antigrade(a ⊛ b) follows geometric product rules for antigrade(a) * antigrade(b)
 ```
 
-Where:
-- `⊙` = geometric product
-- `⊛` = geometric antiproduct
-- `complement(x)` = dual of x (multiply by pseudoscalar)
+### Antiscalar Product
 
-### Metric for Antiproduct
+The antiscalar is the grade-n (pseudoscalar grade) part of the antigeometric product:
 
-The antiproduct uses "anti-basis vectors" with inverted metric:
-- Basis vectors that square to +1 in geometric product → anti-vectors square to +1
-- Basis vectors that square to -1 in geometric product → anti-vectors square to -1
-- **Degenerate basis (e0² = 0) → anti-vector squares to non-zero!**
+```
+antiscalar(a, b) = ⟨a ⊛ b⟩_n
+```
 
-This is why antiproduct works for PGA: the degenerate direction becomes non-degenerate.
+This is dual to the scalar product `⟨a * b⟩_0`.
 
-### Antiwedge Product
+### Antiwedge Product (∨)
 
-The **antiwedge** (exterior antiproduct) combines "empty dimensions":
+The antiwedge (regressive product) is dual to the exterior product:
 
+```
+a ∨ b = ∁(∁a ∧ ∁b)
+```
+
+**De Morgan Laws:**
+```
+∁(a ∧ b) = ∁a ∨ ∁b
+∁(a ∨ b) = ∁a ∧ ∁b
+```
+
+**Grade rule:**
 ```
 antigrade(a ∨ b) = antigrade(a) + antigrade(b)
 ```
 
-Where antigrade = n - grade for n-dimensional algebra.
+### Reverse and Antireverse
 
-De Morgan laws:
+**Reverse** (for grade-k blade):
 ```
-complement(a) ∨ complement(b) = complement(a ∧ b)
-complement(a) ∧ complement(b) = complement(a ∨ b)
+ũ = (-1)^(k(k-1)/2) * u
 ```
+
+**Antireverse** (for grade-k blade in n-dimensional algebra):
+```
+u̲ = (-1)^((n-k)(n-k-1)/2) * u
+```
+
+**Relationship:**
+```
+u̲ = (-1)^(k*(n-k)) * (-1)^(n(n-1)/2) * ũ
+```
+
+### Dual and Antidual
+
+**Bulk Dual (★):**
+```
+u★ = ũ ⊡ 𝟙
+```
+Where `⊡` is the "wedge dot" (scalar part of product with pseudoscalar).
+
+**Weight Dual (☆):**
+```
+u☆ = ũ ⊗ 1
+```
+Where `⊗` uses the antiproduct.
+
+**Double dual:**
+```
+u★★ = u☆☆ = (-1)^(gr(u)·ag(u)) · det(𝔤) · u
+```
+
+In PGA (det = 0): `u★★ = u☆☆ = 0`
 
 ## Implementation Plan
 
-### Phase 1: Multivector Antiproduct
+### Phase 1: Unary Operations in Codegen
 
-Add antiproduct method to generic Multivector for testing:
+Add generation for unary operations:
 
 ```rust
-impl<T: Float, S: Signature> Multivector<T, S> {
-    /// Geometric antiproduct: a ⊛ b = complement(complement(a) * complement(b))
-    ///
-    /// The antiproduct is dual to the geometric product. In PGA, it's used
-    /// for motor transformations because it correctly handles the degenerate
-    /// direction.
-    pub fn antiproduct(&self, other: &Self) -> Self {
-        // Method 1: Via complements (dual)
-        // a ⊛ b = dual(dual(a) * dual(b))
-        self.dual().geometric(&other.dual()).dual()
-    }
+// In codegen/unary.rs (new file)
 
-    /// Antiwedge product: a ∨ b = complement(complement(a) ∧ complement(b))
-    pub fn antiwedge(&self, other: &Self) -> Self {
-        self.dual().exterior(&other.dual()).dual()
-    }
+pub enum UnaryKind {
+    Reverse,      // ũ = (-1)^(k(k-1)/2) * u
+    Antireverse,  // u̲ = (-1)^((n-k)(n-k-1)/2) * u
+    Dual,         // u★ - bulk dual
+    Antidual,     // u☆ - weight dual
+    Complement,   // ∁u - right complement
 }
 ```
 
-### Phase 2: Codegen Antiproduct Products
+### Phase 2: Binary Antiproducts
 
-Add antiproduct generation to clifford-codegen:
+Add standalone antiproduct generation:
 
 ```rust
 pub enum ProductKind {
+    // Existing
     Geometric,
     Exterior,
     LeftContraction,
     Regressive,
     Scalar,
     // New
-    Antiproduct,   // Geometric antiproduct (⊛)
-    Antiwedge,     // Exterior antiproduct (∨)
+    Antigeometric,  // a ⊛ b = ∁(∁a * ∁b)
+    Antiwedge,      // a ∨ b = ∁(∁a ∧ ∁b) [same as Regressive]
+    Antiscalar,     // ⟨a ⊛ b⟩_n
 }
 ```
 
-#### Grade Rules for Antiproduct
+Note: `Antiwedge` is mathematically equivalent to `Regressive`, but we may want both names for clarity.
 
-The antiproduct output grades follow from the duality:
+### Phase 3: Multivector Methods
 
-```rust
-fn antiproduct_grades(grade_a: usize, grade_b: usize, dim: usize) -> Vec<usize> {
-    // antigrade(a ⊛ b) computed via geometric product of complements
-    let antigrade_a = dim - grade_a;
-    let antigrade_b = dim - grade_b;
-
-    // Geometric product of complements gives grades from |ag_a - ag_b| to ag_a + ag_b
-    geometric_grades(antigrade_a, antigrade_b)
-        .iter()
-        .map(|&g| dim - g)  // Convert antigrade back to grade
-        .collect()
-}
-```
-
-### Phase 3: Antiproduct Sandwich
-
-Add antiproduct sandwich generation for versors:
+Add methods to generic Multivector:
 
 ```rust
-/// Generates antiproduct sandwich: v ⊛ x ⊛ rev(v)
-fn generate_antiproduct_sandwich(
-    &self,
-    versor_type: &TypeSpec,
-    operand_type: &TypeSpec,
-) -> TokenStream {
-    // Similar to geometric sandwich but using antiproduct
+impl<T: Float, S: Signature> Multivector<T, S> {
+    /// Right complement: u ∧ ū = I
+    pub fn complement(&self) -> Self { ... }
+
+    /// Reverse: ũ = (-1)^(k(k-1)/2) * u per grade
+    pub fn reverse(&self) -> Self { ... }
+
+    /// Antireverse: u̲ = (-1)^((n-k)(n-k-1)/2) * u per grade
+    pub fn antireverse(&self) -> Self { ... }
+
+    /// Geometric antiproduct: a ⊛ b = ∁(∁a * ∁b)
+    pub fn antiproduct(&self, other: &Self) -> Self {
+        self.complement().geometric(&other.complement()).complement()
+    }
+
+    /// Antiwedge (regressive): a ∨ b = ∁(∁a ∧ ∁b)
+    pub fn antiwedge(&self, other: &Self) -> Self {
+        self.complement().exterior(&other.complement()).complement()
+    }
+
+    /// Bulk dual: u★ = reverse(u) contracted with pseudoscalar
+    pub fn dual(&self) -> Self { ... }
+
+    /// Weight antidual: u☆ = reverse(u) anticontracted with scalar
+    pub fn antidual(&self) -> Self { ... }
 }
 ```
 
 ### Phase 4: TOML Configuration
 
-Update algebra TOML to specify which sandwich type to use:
+Add product sections:
 
 ```toml
-[types.Motor]
-grades = [0, 2, 4]
-versor = true
-# Specify antiproduct sandwich for PGA
-sandwich = { product = "antiproduct", targets = ["Point", "Line", "Plane", "Motor", "Flector"] }
+[products]
+geometric = true
+exterior = true
+left_contraction = true
+scalar = true
+# New
+antigeometric = true
+antiwedge = true
+antiscalar = true
 
-[types.Flector]
-grades = [1, 3]
-versor = true
-sandwich = { product = "antiproduct", targets = ["Point", "Line", "Plane", "Motor", "Flector"] }
+[unary]
+reverse = true
+antireverse = true
+dual = true
+antidual = true
+complement = true
 ```
 
-### Phase 5: Verification Tests
+### Phase 5: Antisandwich Already Works
 
-Add tests comparing antiproduct sandwich against known-correct results:
+The antisandwich implementation already exists and uses the antiproduct correctly. Verify it works for all cases:
 
 ```rust
-proptest! {
-    #[test]
-    fn motor_translation_works(dx in -10.0..10.0, dy in -10.0..10.0, dz in -10.0..10.0,
-                               px in -10.0..10.0, py in -10.0..10.0, pz in -10.0..10.0) {
-        let motor = Motor::from_translation(dx, dy, dz);
-        let p = Point::from_cartesian(px, py, pz);
-        let result = motor.transform_point(&p);
+// Already generated: antisandwich_motor_point, antisandwich_flector_point, etc.
+// These use table.antiproduct() internally
+```
 
-        prop_assert!(abs_diff_eq!(result.x(), px + dx, epsilon = ABS_DIFF_EQ_EPS));
-        prop_assert!(abs_diff_eq!(result.y(), py + dy, epsilon = ABS_DIFF_EQ_EPS));
-        prop_assert!(abs_diff_eq!(result.z(), pz + dz, epsilon = ABS_DIFF_EQ_EPS));
-    }
+## Computing Antiproduct Tables
 
-    #[test]
-    fn antiproduct_sandwich_matches_multivector(
-        m in any::<Motor<f64>>(),
-        p in any::<Point<f64>>()
-    ) {
-        let specialized = m.transform_point(&p);
+The antiproduct table can be computed directly from the geometric product table:
 
-        let mv_m: Multivector<f64, Projective3> = m.into();
-        let mv_p: Multivector<f64, Projective3> = p.into();
-        let mv_result = mv_m.antiproduct(&mv_p).antiproduct(&mv_m.reverse());
+```rust
+impl ProductTable {
+    /// Precompute antiproduct table: a ⊛ b = ∁(∁a * ∁b)
+    fn compute_antiproduct_table(&self) -> Vec<(i8, usize)> {
+        let n = self.num_blades();
+        let mut table = vec![(0i8, 0usize); n * n];
 
-        let expected: Point<f64> = mv_result.into();
-        prop_assert!(abs_diff_eq!(specialized, expected, epsilon = ABS_DIFF_EQ_EPS));
+        for a in 0..n {
+            for b in 0..n {
+                // Get complements
+                let (sign_ca, comp_a) = self.complement(a);
+                let (sign_cb, comp_b) = self.complement(b);
+
+                // Geometric product of complements
+                let (sign_prod, prod) = self.geometric(comp_a, comp_b);
+                if sign_prod == 0 {
+                    table[a * n + b] = (0, 0);
+                    continue;
+                }
+
+                // Complement of result
+                let (sign_result, result) = self.complement(prod);
+
+                // Total sign
+                let total_sign = sign_ca * sign_cb * sign_prod * sign_result;
+                table[a * n + b] = (total_sign, result);
+            }
+        }
+
+        table
     }
 }
 ```
 
 ## Deliverables
 
-### Multivector Methods
+### Phase 1: Unary Operations
+- [ ] Add `UnaryKind` enum in codegen
+- [ ] Implement `generate_reverse()` function
+- [ ] Implement `generate_antireverse()` function
+- [ ] Implement `generate_complement()` function
+- [ ] Implement `generate_dual()` function
+- [ ] Implement `generate_antidual()` function
+- [ ] Update TOML parser for `[unary]` section
+
+### Phase 2: Binary Products
+- [ ] Add `ProductKind::Antigeometric` variant
+- [ ] Add `ProductKind::Antiscalar` variant
+- [ ] Implement antigeometric product generation
+- [ ] Implement antiscalar product generation
+- [ ] Update TOML parser for antiproduct sections
+
+### Phase 3: Multivector Methods
+- [ ] Add `Multivector::complement()` method
+- [ ] Add `Multivector::antireverse()` method
 - [ ] Add `Multivector::antiproduct()` method
 - [ ] Add `Multivector::antiwedge()` method
-- [ ] Add `Multivector::dual()` method (if not present)
-- [ ] Add tests for antiproduct algebraic properties
+- [ ] Add `Multivector::dual()` method
+- [ ] Add `Multivector::antidual()` method
+- [ ] Add property-based tests for De Morgan laws
+- [ ] Add property-based tests for double-dual identities
 
-### Codegen Updates
-- [ ] Add `ProductKind::Antiproduct` variant
-- [ ] Add `ProductKind::Antiwedge` variant
-- [ ] Implement antiproduct grade computation
-- [ ] Implement antiproduct term generation
-- [ ] Add antiproduct sandwich generation
-- [ ] Update TOML parser to support `sandwich.product` field
+### Phase 4: PGA Verification
+- [ ] Verify antisandwich produces correct transformations
+- [ ] Verify generated antigeometric matches Multivector::antiproduct
+- [ ] Re-enable nalgebra comparison tests (currently ignored)
 
-### PGA Fixes
-- [ ] Update projective3.toml to use antiproduct sandwich
-- [ ] Regenerate projective3 algebra
-- [ ] Verify all nalgebra comparison tests pass
-- [ ] Verify motor/flector transformation tests pass
+## Testing Strategy
 
-### Documentation
-- [ ] Document antiproduct in codegen
-- [ ] Add antiproduct examples to Multivector docs
-- [ ] Update CLAUDE.md with PGA transformation guidance
+### Algebraic Property Tests
+
+```rust
+proptest! {
+    // De Morgan law: ∁(a * b) = ∁a ⊛ ∁b
+    #[test]
+    fn de_morgan_geometric_antiproduct(a in any::<Mv>(), b in any::<Mv>()) {
+        let lhs = (a.geometric(&b)).complement();
+        let rhs = a.complement().antiproduct(&b.complement());
+        prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = EPS));
+    }
+
+    // Antireverse property: (ab)̲ = b̲ a̲
+    #[test]
+    fn antireverse_reverses_product(a in any::<Mv>(), b in any::<Mv>()) {
+        let lhs = (a.antiproduct(&b)).antireverse();
+        let rhs = b.antireverse().antiproduct(&a.antireverse());
+        prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = EPS));
+    }
+}
+```
+
+### Transformation Tests
+
+```rust
+proptest! {
+    // Motor translation via antisandwich
+    #[test]
+    fn motor_antisandwich_translates(dx: f64, dy: f64, dz: f64, p in any::<Point<f64>>()) {
+        let motor = Motor::from_translation(dx, dy, dz);
+        let result = antisandwich_motor_point(&motor, &p);
+
+        prop_assert!(abs_diff_eq!(result.x(), p.x() + dx, epsilon = EPS));
+        prop_assert!(abs_diff_eq!(result.y(), p.y() + dy, epsilon = EPS));
+        prop_assert!(abs_diff_eq!(result.z(), p.z() + dz, epsilon = EPS));
+    }
+}
+```
 
 ## Files Changed
 
 | File | Action |
 |------|--------|
-| `src/algebra/multivector.rs` | Add antiproduct, antiwedge methods |
-| `crates/clifford-codegen/src/codegen/products.rs` | Add antiproduct generation |
-| `crates/clifford-codegen/src/spec/ir.rs` | Add sandwich product type |
-| `crates/clifford-codegen/src/spec/parser.rs` | Parse sandwich.product field |
-| `algebras/projective3.toml` | Update to antiproduct sandwich |
-| `src/specialized/projective/dim3/generated/*` | Regenerate with antiproduct |
-
-## Testing Strategy
-
-1. **Unit tests**: Verify antiproduct algebraic identities
-2. **Property tests**: antiproduct sandwich matches Multivector computation
-3. **Nalgebra comparison**: Motor transformations match nalgebra Isometry3
-4. **Concrete cases**: Known transformations (90° rotations, axis translations)
+| `crates/clifford-codegen/src/codegen/unary.rs` | New - unary operation generation |
+| `crates/clifford-codegen/src/codegen/products.rs` | Update - add antiproduct kinds |
+| `crates/clifford-codegen/src/codegen/mod.rs` | Update - export unary module |
+| `crates/clifford-codegen/src/spec/ir.rs` | Update - add unary spec |
+| `crates/clifford-codegen/src/spec/parser.rs` | Update - parse unary section |
+| `crates/clifford-codegen/src/spec/raw.rs` | Update - raw unary fields |
+| `src/algebra/multivector.rs` | Update - add anti-methods |
+| `algebras/*.toml` | Update - add unary/antiproduct config |
+| `src/generated/*/products.rs` | Regenerate |
 
 ## Success Criteria
 
-1. `Motor::transform_point()` correctly translates points
-2. `Motor::transform_point()` correctly rotates points
-3. All nalgebra comparison tests pass
-4. Antiproduct has verification tests against Multivector
-5. Generated code uses antiproduct for PGA versors
+1. All De Morgan identities pass property tests
+2. All antisandwich transformations match nalgebra Isometry3
+3. Generated antiproducts match Multivector::antiproduct()
+4. Dual/antidual satisfy double-dual identity (within floating point for non-PGA)
+5. PGA nalgebra tests (currently ignored) pass
 
 ## References
 
-- [Rigid Geometric Algebra - Motor](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor)
-- [Rigid Geometric Algebra - Geometric Antiproduct](https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_antiproduct)
-- [Rigid Geometric Algebra - Antiwedge Product](https://rigidgeometricalgebra.org/wiki/index.php?title=Antiwedge_product)
-- [Look, Ma, No Matrices!](https://enkimute.github.io/LookMaNoMatrices/) - PGA tutorial
+- [RGA - Geometric Products](https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_products)
+- [RGA - Complements](https://rigidgeometricalgebra.org/wiki/index.php?title=Complements)
+- [RGA - Duals](https://rigidgeometricalgebra.org/wiki/index.php?title=Duals)
+- [RGA - Reverses](https://rigidgeometricalgebra.org/wiki/index.php?title=Reverses)
+- [RGA - Motor](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor)
+- [Look, Ma, No Matrices!](https://enkimute.github.io/LookMaNoMatrices/)
