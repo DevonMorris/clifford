@@ -345,7 +345,7 @@ impl<T: Float + Debug> Arbitrary for UnitFlector<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
+    use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::abs_diff_eq;
 
     proptest! {
@@ -359,7 +359,7 @@ mod tests {
             let t1 = motor.transform_point(&p1);
             let t2 = motor.transform_point(&p2);
             let d_after = t1.distance(&t2);
-            prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -371,7 +371,7 @@ mod tests {
             // Use references via Deref to avoid moves
             let lhs = m1.compose(&*m2).compose(&*m3);
             let rhs = m1.compose(&m2.compose(&*m3));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -391,9 +391,9 @@ mod tests {
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
-            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -409,9 +409,9 @@ mod tests {
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
-            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.z(), point.z(), epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -421,11 +421,11 @@ mod tests {
         ) {
             let line = Line::join(&*p1, &*p2);
             // Both points should have ~0 distance to the line (if line is non-degenerate)
-            if !line.is_zero(ABS_DIFF_EQ_EPS) {
+            if !line.is_zero(RELATIVE_EQ_EPS) {
                 let d1 = line.distance_to_point(&*p1);
                 let d2 = line.distance_to_point(&*p2);
-                prop_assert!(d1.abs() < ABS_DIFF_EQ_EPS);
-                prop_assert!(d2.abs() < ABS_DIFF_EQ_EPS);
+                prop_assert!(d1.abs() < RELATIVE_EQ_EPS);
+                prop_assert!(d2.abs() < RELATIVE_EQ_EPS);
             }
         }
 
@@ -436,7 +436,7 @@ mod tests {
         ) {
             let d12 = p1.dot(&p2);
             let d21 = p2.dot(&p1);
-            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(d12, d21, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -446,7 +446,7 @@ mod tests {
         ) {
             let d12 = l1.dot(&l2);
             let d21 = l2.dot(&l1);
-            prop_assert!(abs_diff_eq!(d12, d21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(d12, d21, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -456,7 +456,7 @@ mod tests {
         ) {
             let p12 = l1.plucker_inner(&*l2);
             let p21 = l2.plucker_inner(&*l1);
-            prop_assert!(abs_diff_eq!(p12, p21, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(p12, p21, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -468,9 +468,9 @@ mod tests {
             let once = flector.transform_point(&point);
             let twice = flector.transform_point(&once);
 
-            prop_assert!(abs_diff_eq!(twice.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(twice.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(twice.z(), point.z(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(twice.x(), point.x(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(twice.y(), point.y(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(twice.z(), point.z(), epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -483,7 +483,7 @@ mod tests {
             prop_assert!(abs_diff_eq!(
                 line.weight_norm(),
                 transformed.weight_norm(),
-                epsilon = ABS_DIFF_EQ_EPS
+                epsilon = RELATIVE_EQ_EPS
             ));
         }
 
@@ -518,7 +518,7 @@ mod tests {
                 - motor.e23() * motor.e01()
                 - motor.e31() * motor.e02()
                 - motor.e12() * motor.e03();
-            prop_assert!(abs_diff_eq!(study, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(study, 0.0, epsilon = RELATIVE_EQ_EPS));
         }
     }
 }

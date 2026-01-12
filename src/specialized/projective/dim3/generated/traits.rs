@@ -11,7 +11,7 @@ impl<T: Float> Add for Flector<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e1() + rhs.e1(),
             self.e2() + rhs.e2(),
             self.e3() + rhs.e3(),
@@ -27,7 +27,7 @@ impl<T: Float> Sub for Flector<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e1() - rhs.e1(),
             self.e2() - rhs.e2(),
             self.e3() - rhs.e3(),
@@ -43,7 +43,7 @@ impl<T: Float> Neg for Flector<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             -self.e1(),
             -self.e2(),
             -self.e3(),
@@ -129,35 +129,35 @@ impl<T: Float> BitXor<Line<T>> for Flector<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Line<T>) -> Plane<T> {
-        outer_flector_line(&self, &rhs)
+        exterior_flector_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Flector<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Flector<T> {
-        outer_flector_motor(&self, &rhs)
+        exterior_flector_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Plane<T>> for Flector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Plane<T>) -> Quadvector<T> {
-        outer_flector_plane(&self, &rhs)
+        exterior_flector_plane(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Flector<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Flector<T> {
-        outer_flector_scalar(&self, &rhs)
+        exterior_flector_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Line<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e01() + rhs.e01(),
             self.e02() + rhs.e02(),
             self.e03() + rhs.e03(),
@@ -171,7 +171,7 @@ impl<T: Float> Sub for Line<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e01() - rhs.e01(),
             self.e02() - rhs.e02(),
             self.e03() - rhs.e03(),
@@ -185,7 +185,7 @@ impl<T: Float> Neg for Line<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             -self.e01(),
             -self.e02(),
             -self.e03(),
@@ -269,35 +269,35 @@ impl<T: Float> BitXor<Flector<T>> for Line<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Flector<T>) -> Plane<T> {
-        outer_line_flector(&self, &rhs)
+        exterior_line_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Line<T>> for Line<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Line<T>) -> Quadvector<T> {
-        outer_line_line(&self, &rhs)
+        exterior_line_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Line<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Point<T>) -> Plane<T> {
-        outer_line_point(&self, &rhs)
+        exterior_line_point(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Line<T> {
-        outer_line_scalar(&self, &rhs)
+        exterior_line_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Motor<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.s() + rhs.s(),
             self.e23() + rhs.e23(),
             self.e31() + rhs.e31(),
@@ -313,7 +313,7 @@ impl<T: Float> Sub for Motor<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.s() - rhs.s(),
             self.e23() - rhs.e23(),
             self.e31() - rhs.e31(),
@@ -329,7 +329,7 @@ impl<T: Float> Neg for Motor<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             -self.s(),
             -self.e23(),
             -self.e31(),
@@ -408,42 +408,42 @@ impl<T: Float> BitXor<Flector<T>> for Motor<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Flector<T>) -> Flector<T> {
-        outer_motor_flector(&self, &rhs)
+        exterior_motor_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Motor<T> {
     type Output = Motor<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Motor<T> {
-        outer_motor_motor(&self, &rhs)
+        exterior_motor_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Plane<T>> for Motor<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Plane<T>) -> Plane<T> {
-        outer_motor_plane(&self, &rhs)
+        exterior_motor_plane(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Motor<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Point<T>) -> Flector<T> {
-        outer_motor_point(&self, &rhs)
+        exterior_motor_point(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Quadvector<T>> for Motor<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Quadvector<T>) -> Quadvector<T> {
-        outer_motor_quadvector(&self, &rhs)
+        exterior_motor_quadvector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Motor<T> {
     type Output = Motor<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Motor<T> {
-        outer_motor_scalar(&self, &rhs)
+        exterior_motor_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Plane<T> {
@@ -537,28 +537,28 @@ impl<T: Float> BitXor<Flector<T>> for Plane<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Flector<T>) -> Quadvector<T> {
-        outer_plane_flector(&self, &rhs)
+        exterior_plane_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Plane<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Plane<T> {
-        outer_plane_motor(&self, &rhs)
+        exterior_plane_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Plane<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Point<T>) -> Quadvector<T> {
-        outer_plane_point(&self, &rhs)
+        exterior_plane_point(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Plane<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Plane<T> {
-        outer_plane_scalar(&self, &rhs)
+        exterior_plane_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Point<T> {
@@ -652,35 +652,35 @@ impl<T: Float> BitXor<Line<T>> for Point<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Line<T>) -> Plane<T> {
-        outer_point_line(&self, &rhs)
+        exterior_point_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Point<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Flector<T> {
-        outer_point_motor(&self, &rhs)
+        exterior_point_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Plane<T>> for Point<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Plane<T>) -> Quadvector<T> {
-        outer_point_plane(&self, &rhs)
+        exterior_point_plane(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
     fn bitxor(self, rhs: Point<T>) -> Line<T> {
-        outer_point_point(&self, &rhs)
+        exterior_point_point(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Point<T> {
-        outer_point_scalar(&self, &rhs)
+        exterior_point_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Quadvector<T> {
@@ -764,14 +764,14 @@ impl<T: Float> BitXor<Motor<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Quadvector<T> {
-        outer_quadvector_motor(&self, &rhs)
+        exterior_quadvector_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Quadvector<T> {
-        outer_quadvector_scalar(&self, &rhs)
+        exterior_quadvector_scalar(&self, &rhs)
     }
 }
 impl<T: Float> Add for Scalar<T> {
@@ -869,49 +869,49 @@ impl<T: Float> BitXor<Flector<T>> for Scalar<T> {
     type Output = Flector<T>;
     #[inline]
     fn bitxor(self, rhs: Flector<T>) -> Flector<T> {
-        outer_scalar_flector(&self, &rhs)
+        exterior_scalar_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
     fn bitxor(self, rhs: Line<T>) -> Line<T> {
-        outer_scalar_line(&self, &rhs)
+        exterior_scalar_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Scalar<T> {
     type Output = Motor<T>;
     #[inline]
     fn bitxor(self, rhs: Motor<T>) -> Motor<T> {
-        outer_scalar_motor(&self, &rhs)
+        exterior_scalar_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Plane<T>> for Scalar<T> {
     type Output = Plane<T>;
     #[inline]
     fn bitxor(self, rhs: Plane<T>) -> Plane<T> {
-        outer_scalar_plane(&self, &rhs)
+        exterior_scalar_plane(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
     fn bitxor(self, rhs: Point<T>) -> Point<T> {
-        outer_scalar_point(&self, &rhs)
+        exterior_scalar_point(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Quadvector<T>> for Scalar<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bitxor(self, rhs: Quadvector<T>) -> Quadvector<T> {
-        outer_scalar_quadvector(&self, &rhs)
+        exterior_scalar_quadvector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Scalar<T> {
-        outer_scalar_scalar(&self, &rhs)
+        exterior_scalar_scalar(&self, &rhs)
     }
 }
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Flector<T> {
@@ -1236,8 +1236,9 @@ mod arbitrary_impls {
                 -100.0f64..100.0,
                 -100.0f64..100.0,
                 -100.0f64..100.0,
+                -100.0f64..100.0,
             )
-                .prop_map(|(x0, x1, x2, x3, x4, x5, x6)| {
+                .prop_map(|(x0, x1, x2, x3, x4, x5, x6, x7)| {
                     Flector::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
@@ -1246,6 +1247,7 @@ mod arbitrary_impls {
                         T::from_f64(x4),
                         T::from_f64(x5),
                         T::from_f64(x6),
+                        T::from_f64(x7),
                     )
                 })
                 .boxed()
@@ -1261,14 +1263,16 @@ mod arbitrary_impls {
                 -100.0f64..100.0,
                 -100.0f64..100.0,
                 -100.0f64..100.0,
+                -100.0f64..100.0,
             )
-                .prop_map(|(x0, x1, x2, x3, x4)| {
+                .prop_map(|(x0, x1, x2, x3, x4, x5)| {
                     Line::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
                         T::from_f64(x2),
                         T::from_f64(x3),
                         T::from_f64(x4),
+                        T::from_f64(x5),
                     )
                 })
                 .boxed()
@@ -1279,14 +1283,16 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (
-                -0.5f64..0.5,
-                -0.5f64..0.5,
-                -0.5f64..0.5,
-                -0.5f64..0.5,
-                -0.5f64..0.5,
-                -0.5f64..0.5,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
+                -100.0f64..100.0,
             )
-                .prop_filter_map("constraint satisfied", |(x0, x1, x2, x3, x4, x5)| {
+                .prop_map(|(x0, x1, x2, x3, x4, x5, x6, x7)| {
                     Motor::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
@@ -1294,6 +1300,8 @@ mod arbitrary_impls {
                         T::from_f64(x3),
                         T::from_f64(x4),
                         T::from_f64(x5),
+                        T::from_f64(x6),
+                        T::from_f64(x7),
                     )
                 })
                 .boxed()
@@ -1389,7 +1397,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1405,7 +1413,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1420,7 +1428,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1438,7 +1446,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1454,7 +1462,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1469,7 +1477,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1487,7 +1495,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1503,7 +1511,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1518,7 +1526,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1536,7 +1544,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1552,7 +1560,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1567,7 +1575,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1585,7 +1593,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1601,7 +1609,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1616,7 +1624,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1634,7 +1642,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1650,7 +1658,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1665,7 +1673,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1683,7 +1691,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1699,7 +1707,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1714,7 +1722,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1732,7 +1740,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1750,7 +1758,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1768,7 +1776,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1786,7 +1794,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1804,7 +1812,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1822,7 +1830,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1840,7 +1848,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1858,7 +1866,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1876,7 +1884,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1894,7 +1902,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1912,7 +1920,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1930,7 +1938,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1948,7 +1956,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1966,7 +1974,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -1984,7 +1992,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2002,7 +2010,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2020,7 +2028,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2038,7 +2046,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2056,7 +2064,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2074,7 +2082,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2092,7 +2100,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2110,7 +2118,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2128,7 +2136,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2146,7 +2154,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2164,7 +2172,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2182,7 +2190,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2200,7 +2208,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2218,7 +2226,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2236,7 +2244,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2254,7 +2262,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2272,7 +2280,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2290,7 +2298,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2308,7 +2316,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2326,7 +2334,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2344,7 +2352,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2362,7 +2370,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2380,7 +2388,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2398,7 +2406,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2416,7 +2424,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2434,7 +2442,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2452,7 +2460,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2470,7 +2478,7 @@ mod verification_tests {
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
@@ -2479,17 +2487,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_flector_line_plane_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_flector_line_plane_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_flector_line(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_flector_line(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2497,17 +2505,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_flector_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_flector_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2515,17 +2523,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_flector_plane_quadvector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Plane<f64>>()) {
+        fn exterior_flector_plane_quadvector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Plane<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_flector_plane(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_flector_plane(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2533,17 +2541,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_flector_scalar_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_flector_scalar_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_flector_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_flector_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2551,17 +2559,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_line_flector_plane_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_line_flector_plane_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_line_flector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_line_flector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2569,17 +2577,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_line_line_quadvector_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_line_line_quadvector_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_line_line(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_line_line(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2587,17 +2595,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_line_point_plane_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_line_point_plane_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_line_point(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_line_point(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2605,17 +2613,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_line_scalar_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_line_scalar_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Line<f64> = outer_line_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Line<f64> = exterior_line_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2623,17 +2631,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_motor_flector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_motor_flector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2641,17 +2649,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Motor<f64> = outer_motor_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Motor<f64> = exterior_motor_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2659,17 +2667,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_plane_plane_matches_multivector(a in any::<Motor<f64>>(), b in any::<Plane<f64>>()) {
+        fn exterior_motor_plane_plane_matches_multivector(a in any::<Motor<f64>>(), b in any::<Plane<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_motor_plane(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_motor_plane(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2677,17 +2685,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_point_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_motor_point_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_motor_point(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_motor_point(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2695,17 +2703,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_quadvector_quadvector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Quadvector<f64>>()) {
+        fn exterior_motor_quadvector_quadvector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Quadvector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_motor_quadvector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_motor_quadvector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2713,17 +2721,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_motor_scalar_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_motor_scalar_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Motor<f64> = outer_motor_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Motor<f64> = exterior_motor_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2731,17 +2739,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_plane_flector_quadvector_matches_multivector(a in any::<Plane<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_plane_flector_quadvector_matches_multivector(a in any::<Plane<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_plane_flector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_plane_flector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2749,17 +2757,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_plane_motor_plane_matches_multivector(a in any::<Plane<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_plane_motor_plane_matches_multivector(a in any::<Plane<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_plane_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_plane_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2767,17 +2775,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_plane_point_quadvector_matches_multivector(a in any::<Plane<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_plane_point_quadvector_matches_multivector(a in any::<Plane<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_plane_point(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_plane_point(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2785,17 +2793,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_plane_scalar_plane_matches_multivector(a in any::<Plane<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_plane_scalar_plane_matches_multivector(a in any::<Plane<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_plane_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_plane_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2803,17 +2811,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_point_line_plane_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_point_line_plane_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_point_line(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_point_line(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2821,17 +2829,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_point_motor_flector_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_point_motor_flector_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_point_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_point_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2839,17 +2847,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_point_plane_quadvector_matches_multivector(a in any::<Point<f64>>(), b in any::<Plane<f64>>()) {
+        fn exterior_point_plane_quadvector_matches_multivector(a in any::<Point<f64>>(), b in any::<Plane<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_point_plane(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_point_plane(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2857,17 +2865,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_point_point_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_point_point_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Line<f64> = outer_point_point(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Line<f64> = exterior_point_point(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2875,17 +2883,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_point_scalar_point_matches_multivector(a in any::<Point<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_point_scalar_point_matches_multivector(a in any::<Point<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Point<f64> = outer_point_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Point<f64> = exterior_point_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2893,17 +2901,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_quadvector_motor_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_quadvector_motor_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_quadvector_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_quadvector_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2911,17 +2919,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_quadvector_scalar_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_quadvector_scalar_quadvector_matches_multivector(a in any::<Quadvector<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_quadvector_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_quadvector_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2929,17 +2937,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_flector_flector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_scalar_flector_flector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Flector<f64> = outer_scalar_flector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Flector<f64> = exterior_scalar_flector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2947,17 +2955,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_line_line_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_scalar_line_line_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Line<f64> = outer_scalar_line(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Line<f64> = exterior_scalar_line(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2965,17 +2973,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_motor_motor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_scalar_motor_motor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Motor<f64> = outer_scalar_motor(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Motor<f64> = exterior_scalar_motor(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -2983,17 +2991,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_plane_plane_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Plane<f64>>()) {
+        fn exterior_scalar_plane_plane_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Plane<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Plane<f64> = outer_scalar_plane(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Plane<f64> = exterior_scalar_plane(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -3001,17 +3009,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_point_point_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_scalar_point_point_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Point<f64> = outer_scalar_point(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Point<f64> = exterior_scalar_point(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -3019,17 +3027,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_quadvector_quadvector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Quadvector<f64>>()) {
+        fn exterior_scalar_quadvector_quadvector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Quadvector<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Quadvector<f64> = outer_scalar_quadvector(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Quadvector<f64> = exterior_scalar_quadvector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }
@@ -3037,17 +3045,17 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn outer_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+        fn exterior_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
             let mv_a: Multivector<f64, Projective3> = a.into();
             let mv_b: Multivector<f64, Projective3> = b.into();
 
-            let specialized_result: Scalar<f64> = outer_scalar_scalar(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: Scalar<f64> = exterior_scalar_scalar(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective3> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={:?}, generic={:?}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
                 specialized_mv, generic_result
             );
         }

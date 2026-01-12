@@ -81,15 +81,6 @@ pub enum ParseError {
     #[error("unknown type reference: '{0}'")]
     UnknownType(String),
 
-    /// Invalid constraint kind.
-    #[error("unknown constraint kind: '{kind}' in type '{type_name}'")]
-    UnknownConstraintKind {
-        /// The type name.
-        type_name: String,
-        /// The unknown constraint kind.
-        kind: String,
-    },
-
     /// Type alias references itself.
     #[error("type '{type_name}' cannot alias itself")]
     SelfAlias {
@@ -102,52 +93,5 @@ pub enum ParseError {
     AliasCycle {
         /// The type name.
         type_name: String,
-    },
-
-    /// solve_for references a field that doesn't exist.
-    #[error("type '{type_name}' has solve_for = '{field}' but no such field exists")]
-    InvalidSolveFor {
-        /// The type name.
-        type_name: String,
-        /// The invalid field name.
-        field: String,
-    },
-
-    /// solve_for specified without a constraint.
-    #[error("type '{type_name}' has solve_for but no matching constraint")]
-    SolveForWithoutConstraint {
-        /// The type name.
-        type_name: String,
-    },
-
-    /// Independent constraints must have different solve_for fields.
-    #[error(
-        "type '{type_name}' has independent constraints but uses same solve_for field for both"
-    )]
-    IndependentConstraintsSameSolveFor {
-        /// The type name.
-        type_name: String,
-    },
-
-    /// Independent constraints require both solve_for fields.
-    #[error(
-        "type '{type_name}' has independent constraints but is missing one or both solve_for fields"
-    )]
-    IndependentConstraintsMissingSolveFor {
-        /// The type name.
-        type_name: String,
-    },
-
-    /// Invalid sign convention in user constraint.
-    #[error(
-        "type '{type_name}' constraint '{constraint_name}' has invalid sign '{sign}' (expected 'positive' or 'negative')"
-    )]
-    InvalidSignConvention {
-        /// The type name.
-        type_name: String,
-        /// The constraint name.
-        constraint_name: String,
-        /// The invalid sign value.
-        sign: String,
     },
 }

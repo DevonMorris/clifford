@@ -231,14 +231,14 @@ impl<T: Float + Debug> Arbitrary for UnitMotor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
+    use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::abs_diff_eq;
 
     proptest! {
         #[test]
         fn unit_motor_has_unit_norm(motor in any::<UnitMotor<f64>>()) {
             // Unit motors should have norm ~1
-            prop_assert!(abs_diff_eq!(motor.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(motor.norm(), 1.0, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -251,7 +251,7 @@ mod tests {
             let t1 = motor.transform_point(&p1);
             let t2 = motor.transform_point(&p2);
             let d_after = t1.distance(&t2);
-            prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(d_before, d_after, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -262,8 +262,8 @@ mod tests {
             let transformed = motor.transform_point(&point);
             let back = motor.inverse().transform_point(&transformed);
 
-            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.x(), point.x(), epsilon = RELATIVE_EQ_EPS));
+            prop_assert!(abs_diff_eq!(back.y(), point.y(), epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -275,7 +275,7 @@ mod tests {
             // Use references via Deref to avoid moves
             let lhs = m1.compose(&*m2).compose(&*m3);
             let rhs = m1.compose(&m2.compose(&*m3));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -287,8 +287,8 @@ mod tests {
             // Both points should have ~0 distance to the line
             let d1 = line.distance_to_point(&p1).abs();
             let d2 = line.distance_to_point(&p2).abs();
-            prop_assert!(d1 < ABS_DIFF_EQ_EPS || line.is_zero(ABS_DIFF_EQ_EPS));
-            prop_assert!(d2 < ABS_DIFF_EQ_EPS || line.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(d1 < RELATIVE_EQ_EPS || line.is_zero(RELATIVE_EQ_EPS));
+            prop_assert!(d2 < RELATIVE_EQ_EPS || line.is_zero(RELATIVE_EQ_EPS));
         }
     }
 }

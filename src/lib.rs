@@ -16,10 +16,12 @@ compile_error!(
 
 pub mod algebra;
 pub mod basis;
+pub mod norm;
 pub mod prelude;
 pub mod scalar;
 pub mod signature;
 pub mod specialized;
+pub mod wrappers;
 
 // ============================================================================
 // Error Types

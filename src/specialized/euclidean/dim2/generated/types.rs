@@ -22,6 +22,15 @@ impl<T: Float> Bivector<T> {
     pub fn new(xy: T) -> Self {
         Self { xy }
     }
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(xy: T) -> Self {
+        Self::new(xy)
+    }
     #[doc = "Returns the `xy` coefficient."]
     #[inline]
     pub fn xy(&self) -> T {
@@ -105,39 +114,19 @@ pub struct Rotor<T: Float> {
     xy: T,
 }
 impl<T: Float> Rotor<T> {
-    #[doc = "Creates a new element from 1 independent coefficients.\n\nThe `s` coefficient(s) are computed from geometric constraints.\n\nReturns `None` if the constraint cannot be satisfied (e.g., when the\nsqrt argument would be negative)."]
+    #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(xy: T) -> Option<Self> {
-        let sqrt_arg = T::from_i8(1) - xy * xy;
-        if sqrt_arg < T::zero() {
-            return None;
-        }
-        let s = sqrt_arg.sqrt();
-        Some(Self { s, xy })
+    pub fn new(s: T, xy: T) -> Self {
+        Self { s, xy }
     }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|s*s + xy*xy - 1| > tolerance`."]
-    #[inline]
-    pub fn new_checked(s: T, xy: T, tolerance: T) -> Result<Self, crate::ConstraintError> {
-        let residual_0 = (s * s + xy * xy) - (T::from_i8(1));
-        if residual_0.abs() > tolerance {
-            return Err(crate::ConstraintError::new(
-                "Rotor",
-                "s*s + xy*xy = 1",
-                residual_0.to_f64().unwrap_or(0.0),
-            ));
-        }
-        Ok(Self { s, xy })
-    }
-    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
-    #[doc = r" # Safety (Logical)"]
-    #[doc = r""]
-    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
-    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
-    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
     pub fn new_unchecked(s: T, xy: T) -> Self {
-        Self { s, xy }
+        Self::new(s, xy)
     }
     #[doc = "Returns the `s` coefficient."]
     #[inline]
@@ -152,12 +141,12 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new_unchecked(T::zero(), T::zero())
+        Self::new(T::zero(), T::zero())
     }
     #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
     #[inline]
     pub fn identity() -> Self {
-        Self::new_unchecked(T::one(), T::zero())
+        Self::new(T::one(), T::zero())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -195,7 +184,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new_unchecked(self.s * s, self.xy * s)
+        Self::new(self.s * s, self.xy * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -208,7 +197,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new_unchecked(self.s, -self.xy)
+        Self::new(self.s, -self.xy)
     }
 }
 impl<T: Float> Default for Rotor<T> {
@@ -229,6 +218,15 @@ impl<T: Float> Scalar<T> {
     #[inline]
     pub fn new(s: T) -> Self {
         Self { s }
+    }
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(s: T) -> Self {
+        Self::new(s)
     }
     #[doc = "Returns the `s` coefficient."]
     #[inline]
@@ -322,6 +320,15 @@ impl<T: Float> Vector<T> {
     #[inline]
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
+    }
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(x: T, y: T) -> Self {
+        Self::new(x, y)
     }
     #[doc = "Returns the `x` coefficient."]
     #[inline]

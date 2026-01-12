@@ -15,10 +15,14 @@
 
 pub use crate::algebra::Multivector;
 pub use crate::basis::Blade;
+pub use crate::norm::{
+    CausalCharacter, ConformalNormed, DegenerateNormed, IndefiniteNormed, Normed,
+};
 pub use crate::scalar::Float;
 pub use crate::signature::{
     Conformal2, Conformal3, Euclidean2, Euclidean3, Euclidean4, Projective2, Projective3, Signature,
 };
+pub use crate::wrappers::{Bulk, Ideal, Proper, Unit};
 
 // Re-export approx traits for approximate comparisons
 pub use approx::{AbsDiffEq, RelativeEq, UlpsEq};

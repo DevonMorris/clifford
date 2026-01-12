@@ -10,9 +10,9 @@ use crate::discovery::{ProductType, infer_all_products};
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
-    SignConvention, SignatureSpec, TypeSpec, UserConstraint, VersorSpec, normalize_constraint_expr,
+    SignatureSpec, TypeSpec, VersorSpec,
 };
-use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec, RawUserConstraint};
+use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -283,103 +283,15 @@ fn parse_type(
         }
     }
 
-    // Validate: geometric_solve_for requires geometric_constraint
-    if raw.geometric_solve_for.is_some() && raw.geometric_constraint.is_none() {
-        return Err(ParseError::SolveForWithoutConstraint {
-            type_name: name.to_string(),
-        });
-    }
-
-    // Validate: antiproduct_solve_for requires antiproduct_constraint
-    if raw.antiproduct_solve_for.is_some() && raw.antiproduct_constraint.is_none() {
-        return Err(ParseError::SolveForWithoutConstraint {
-            type_name: name.to_string(),
-        });
-    }
-
-    // Convert old-format constraints to unified format
-    let mut constraints = Vec::new();
-
-    // Handle old-format geometric/antiproduct constraints
-    if let Some(ref gc) = raw.geometric_constraint {
-        // Check if antiproduct constraint is the same (dependent)
-        let is_dependent = raw
-            .antiproduct_constraint
-            .as_ref()
-            .is_some_and(|ac| normalize_constraint_expr(gc) == normalize_constraint_expr(ac));
-
-        // Validate geometric_solve_for
-        if let Some(ref solve_for) = raw.geometric_solve_for {
-            let valid_field = fields.iter().any(|f| &f.name == solve_for);
-            if !valid_field {
-                return Err(ParseError::InvalidSolveFor {
-                    type_name: name.to_string(),
-                    field: solve_for.clone(),
-                });
-            }
-        }
-
-        // Add geometric constraint
-        constraints.push(UserConstraint {
-            name: "geometric".to_string(),
-            description: Some("Geometric product constraint".to_string()),
-            expression: gc.clone(),
-            solve_for: raw.geometric_solve_for.clone(),
-            sign: SignConvention::default(),
-            enforce: None,
-            has_domain_restriction: false,
-        });
-
-        // Add antiproduct constraint only if independent
-        if !is_dependent {
-            if let Some(ref ac) = raw.antiproduct_constraint {
-                // Validate antiproduct_solve_for
-                if let Some(ref solve_for) = raw.antiproduct_solve_for {
-                    let valid_field = fields.iter().any(|f| &f.name == solve_for);
-                    if !valid_field {
-                        return Err(ParseError::InvalidSolveFor {
-                            type_name: name.to_string(),
-                            field: solve_for.clone(),
-                        });
-                    }
-                }
-
-                // Check that solve_for fields differ
-                match (&raw.geometric_solve_for, &raw.antiproduct_solve_for) {
-                    (Some(gsf), Some(asf)) if gsf == asf => {
-                        return Err(ParseError::IndependentConstraintsSameSolveFor {
-                            type_name: name.to_string(),
-                        });
-                    }
-                    (None, _) | (_, None) => {
-                        return Err(ParseError::IndependentConstraintsMissingSolveFor {
-                            type_name: name.to_string(),
-                        });
-                    }
-                    _ => {} // Valid: different solve_for fields
-                }
-
-                constraints.push(UserConstraint {
-                    name: "antiproduct".to_string(),
-                    description: Some("Antiproduct constraint".to_string()),
-                    expression: ac.clone(),
-                    solve_for: raw.antiproduct_solve_for.clone(),
-                    sign: SignConvention::default(),
-                    enforce: None,
-                    has_domain_restriction: false,
-                });
-            }
-        }
-    }
-
-    // Parse and validate user constraints (new format)
-    let user_constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
-    constraints.extend(user_constraints);
+    // Constraints are now inferred automatically during code generation (Phase 4)
+    // No user-defined constraints are read from TOML
+    let constraints = Vec::new();
 
     // Parse versor information
     let versor = if raw.versor {
         Some(VersorSpec {
-            is_unit: constraints.iter().any(|c| c.name == "unit"),
+            // is_unit will be determined by inferred constraints in Phase 4
+            is_unit: false,
             sandwich_targets: raw
                 .sandwich
                 .as_ref()
@@ -399,85 +311,6 @@ fn parse_type(
         constraints,
         versor,
     })
-}
-
-/// Parses and validates user-defined constraints.
-fn parse_user_constraints(
-    raw_constraints: &[RawUserConstraint],
-    fields: &[FieldSpec],
-    type_name: &str,
-) -> Result<Vec<UserConstraint>, ParseError> {
-    let mut constraints = Vec::with_capacity(raw_constraints.len());
-
-    for raw in raw_constraints {
-        // Validate solve_for field if present
-        if let Some(ref solve_for) = raw.solve_for {
-            let valid_field = fields.iter().any(|f| &f.name == solve_for);
-            if !valid_field {
-                return Err(ParseError::InvalidSolveFor {
-                    type_name: type_name.to_string(),
-                    field: solve_for.clone(),
-                });
-            }
-        }
-
-        // Parse sign convention
-        let sign = match raw.sign.to_lowercase().as_str() {
-            "positive" => SignConvention::Positive,
-            "negative" => SignConvention::Negative,
-            _ => {
-                return Err(ParseError::InvalidSignConvention {
-                    type_name: type_name.to_string(),
-                    constraint_name: raw.name.clone(),
-                    sign: raw.sign.clone(),
-                });
-            }
-        };
-
-        // Detect if constraint has domain restrictions
-        // A constraint has domain restrictions if solving requires sqrt
-        // (detected by quadratic terms in the expression)
-        let has_domain_restriction = detect_domain_restriction(&raw.expression, &raw.solve_for);
-
-        constraints.push(UserConstraint {
-            name: raw.name.clone(),
-            description: raw.description.clone(),
-            expression: raw.expression.clone(),
-            solve_for: raw.solve_for.clone(),
-            sign,
-            enforce: raw.enforce.clone(),
-            has_domain_restriction,
-        });
-    }
-
-    Ok(constraints)
-}
-
-/// Detects if a constraint expression has domain restrictions when solved for a variable.
-///
-/// Returns true if:
-/// - The constraint involves squared terms of the solve_for variable
-/// - Solving would require taking a square root (potentially undefined for some inputs)
-fn detect_domain_restriction(expression: &str, solve_for: &Option<String>) -> bool {
-    let Some(var) = solve_for else {
-        return false;
-    };
-
-    // Check if the variable appears squared in the expression
-    // Patterns: "var*var", "var^2", "var**2"
-    let squared_patterns = [
-        format!("{}*{}", var, var),
-        format!("{}^2", var),
-        format!("{}**2", var),
-    ];
-
-    for pattern in &squared_patterns {
-        if expression.contains(pattern) {
-            return true;
-        }
-    }
-
-    false
 }
 
 /// Generates default field specs from blade indices.
@@ -623,7 +456,8 @@ pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
 /// Infers products automatically from types.
 ///
 /// Products are always auto-inferred from the defined types.
-/// All standard product types are generated: geometric, exterior, inner (left contraction).
+/// All standard product types are generated: geometric, exterior, inner, left/right contraction,
+/// regressive, scalar, antigeometric, and antiscalar.
 fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
     // Build algebra for product computation
     let algebra = Algebra::new(signature.p, signature.q, signature.r);
@@ -638,9 +472,15 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     // Infer all standard product types
     let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
     let exterior_table = infer_all_products(&entities, ProductType::Exterior, &algebra);
+    let inner_table = infer_all_products(&entities, ProductType::Inner, &algebra);
     let left_contraction_table =
         infer_all_products(&entities, ProductType::LeftContraction, &algebra);
-    let inner_table = infer_all_products(&entities, ProductType::Inner, &algebra);
+    let right_contraction_table =
+        infer_all_products(&entities, ProductType::RightContraction, &algebra);
+    let regressive_table = infer_all_products(&entities, ProductType::Regressive, &algebra);
+    let scalar_table = infer_all_products(&entities, ProductType::Scalar, &algebra);
+    let antigeometric_table = infer_all_products(&entities, ProductType::Antigeometric, &algebra);
+    let antiscalar_table = infer_all_products(&entities, ProductType::Antiscalar, &algebra);
 
     // Convert inferred products to ProductEntry format
     // Skip products that don't have matching entity types
@@ -669,11 +509,11 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         exterior: convert_entries(exterior_table),
         interior: convert_entries(inner_table), // Symmetric inner product
         left_contraction: convert_entries(left_contraction_table),
-        right_contraction: vec![], // Dual of left contraction - can be added if needed
-        regressive: vec![],        // For projective GA meet - can be added if needed
-        scalar: vec![],            // Grade-0 part of geometric - can be added if needed
-        antigeometric: vec![],     // For PGA antisandwich - can be added if needed
-        antiscalar: vec![],        // Grade-n part of antigeometric - can be added if needed
+        right_contraction: convert_entries(right_contraction_table),
+        regressive: convert_entries(regressive_table),
+        scalar: convert_entries(scalar_table),
+        antigeometric: convert_entries(antigeometric_table),
+        antiscalar: convert_entries(antiscalar_table),
     }
 }
 
@@ -767,194 +607,6 @@ mod tests {
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
         assert_eq!(rotor.grades, vec![0, 2]);
         assert_eq!(rotor.fields.len(), 2);
-    }
-
-    #[test]
-    fn parse_with_constraint() {
-        let spec = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Scalar]
-            grades = [0]
-
-            [types.Vector]
-            grades = [1]
-
-            [types.Bivector]
-            grades = [2]
-
-            [types.Rotor]
-            grades = [0, 2]
-            fields = ["s", "xy"]
-            geometric_constraint = "s * s + xy * xy = 1"
-            "#,
-        )
-        .unwrap();
-
-        let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        // Old format geometric_constraint is converted to a constraint
-        assert_eq!(rotor.constraints.len(), 1);
-        assert_eq!(rotor.constraints[0].name, "geometric");
-        assert_eq!(rotor.constraints[0].expression, "s * s + xy * xy = 1");
-    }
-
-    #[test]
-    fn parse_with_geometric_solve_for() {
-        let spec = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2", "e3"]
-            zero = ["e0"]
-
-            [types.Motor]
-            grades = [0, 2, 4]
-            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
-            geometric_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
-            geometric_solve_for = "e0123"
-            "#,
-        )
-        .unwrap();
-
-        let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
-        // Old format geometric_solve_for is converted to constraint.solve_for
-        assert_eq!(motor.constraints.len(), 1);
-        assert_eq!(motor.constraints[0].solve_for, Some("e0123".to_string()));
-    }
-
-    #[test]
-    fn reject_invalid_geometric_solve_for() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Rotor]
-            grades = [0, 2]
-            fields = ["s", "xy"]
-            geometric_constraint = "s * s + xy * xy = 1"
-            geometric_solve_for = "nonexistent"
-            "#,
-        );
-
-        assert!(matches!(result, Err(ParseError::InvalidSolveFor { .. })));
-    }
-
-    #[test]
-    fn reject_geometric_solve_for_without_constraint() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Rotor]
-            grades = [0, 2]
-            fields = ["s", "xy"]
-            geometric_solve_for = "xy"
-            "#,
-        );
-
-        assert!(matches!(
-            result,
-            Err(ParseError::SolveForWithoutConstraint { .. })
-        ));
-    }
-
-    #[test]
-    fn parse_independent_constraints() {
-        let spec = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2", "e3"]
-            zero = ["e0"]
-
-            [types.TestType]
-            grades = [0, 2, 4]
-            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
-            geometric_constraint = "s + e0123 = 0"
-            antiproduct_constraint = "e12 + e03 = 0"
-            geometric_solve_for = "e0123"
-            antiproduct_solve_for = "e03"
-            "#,
-        )
-        .unwrap();
-
-        let tt = spec.types.iter().find(|t| t.name == "TestType").unwrap();
-        // Independent constraints are both converted to separate constraints
-        assert_eq!(tt.constraints.len(), 2);
-        assert_eq!(tt.constraints[0].name, "geometric");
-        assert_eq!(tt.constraints[0].solve_for, Some("e0123".to_string()));
-        assert_eq!(tt.constraints[1].name, "antiproduct");
-        assert_eq!(tt.constraints[1].solve_for, Some("e03".to_string()));
-    }
-
-    #[test]
-    fn reject_independent_constraints_same_solve_for() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2", "e3"]
-            zero = ["e0"]
-
-            [types.TestType]
-            grades = [0, 2, 4]
-            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
-            geometric_constraint = "s + e0123 = 0"
-            antiproduct_constraint = "e12 + e03 = 0"
-            geometric_solve_for = "e0123"
-            antiproduct_solve_for = "e0123"
-            "#,
-        );
-
-        assert!(matches!(
-            result,
-            Err(ParseError::IndependentConstraintsSameSolveFor { .. })
-        ));
-    }
-
-    #[test]
-    fn reject_independent_constraints_missing_solve_for() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2", "e3"]
-            zero = ["e0"]
-
-            [types.TestType]
-            grades = [0, 2, 4]
-            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
-            geometric_constraint = "s + e0123 = 0"
-            antiproduct_constraint = "e12 + e03 = 0"
-            geometric_solve_for = "e0123"
-            "#,
-        );
-
-        assert!(matches!(
-            result,
-            Err(ParseError::IndependentConstraintsMissingSolveFor { .. })
-        ));
     }
 
     #[test]
@@ -1154,118 +806,26 @@ mod tests {
     }
 
     #[test]
-    fn parse_user_constraints() {
-        let spec = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
+    fn products_are_inferred_euclidean3() {
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
 
-            [signature]
-            positive = ["e1", "e2", "e3"]
-            zero = ["e0"]
-
-            [types.Motor]
-            grades = [0, 2, 4]
-            fields = ["s", "e12", "e13", "e23", "e01", "e02", "e03", "e0123"]
-            geometric_constraint = "2*s*e0123 - 2*e12*e03 + 2*e13*e02 - 2*e23*e01 = 0"
-            geometric_solve_for = "e0123"
-
-            [[types.Motor.constraints]]
-            name = "unit"
-            expression = "s*s + e12*e12 + e13*e13 + e23*e23 = 1"
-            solve_for = "s"
-            sign = "positive"
-            "#,
-        )
-        .unwrap();
-
-        let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
-        // Old format geometric_constraint is converted + user constraint
-        assert_eq!(motor.constraints.len(), 2);
-        // First constraint is from old format
-        assert_eq!(motor.constraints[0].name, "geometric");
-        assert_eq!(motor.constraints[0].solve_for, Some("e0123".to_string()));
-        // Second constraint is from new format
-        assert_eq!(motor.constraints[1].name, "unit");
-        assert_eq!(motor.constraints[1].solve_for, Some("s".to_string()));
-        assert_eq!(motor.constraints[1].sign, SignConvention::Positive);
-        assert!(motor.constraints[1].has_domain_restriction);
-    }
-
-    #[test]
-    fn parse_user_constraint_with_enforce() {
-        let spec = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Rotor]
-            grades = [0, 2]
-            fields = ["s", "xy"]
-
-            [[types.Rotor.constraints]]
-            name = "unit"
-            description = "Unit rotor constraint"
-            expression = "s*s + xy*xy = 1"
-            enforce = "normalize"
-            "#,
-        )
-        .unwrap();
-
-        let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        assert_eq!(rotor.constraints.len(), 1);
-        assert_eq!(rotor.constraints[0].name, "unit");
-        assert_eq!(rotor.constraints[0].solve_for, None);
-        assert_eq!(rotor.constraints[0].enforce, Some("normalize".to_string()));
-    }
-
-    #[test]
-    fn reject_invalid_sign_convention() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2"]
-
-            [types.Rotor]
-            grades = [0, 2]
-            fields = ["s", "xy"]
-
-            [[types.Rotor.constraints]]
-            name = "unit"
-            expression = "s*s + xy*xy = 1"
-            solve_for = "s"
-            sign = "invalid"
-            "#,
+        // All product types should be inferred
+        assert!(
+            !spec.products.geometric.is_empty(),
+            "Geometric products should be inferred"
         );
-
-        assert!(matches!(
-            result,
-            Err(ParseError::InvalidSignConvention { .. })
-        ));
-    }
-
-    #[test]
-    fn detect_domain_restriction() {
-        // Test the detection function directly
-        assert!(super::detect_domain_restriction(
-            "s*s + b*b = 1",
-            &Some("s".to_string())
-        ));
-        assert!(super::detect_domain_restriction(
-            "x^2 + y = 1",
-            &Some("x".to_string())
-        ));
-        assert!(!super::detect_domain_restriction(
-            "2*s*b = 0",
-            &Some("s".to_string())
-        ));
-        assert!(!super::detect_domain_restriction("s*s = 1", &None));
+        assert!(
+            !spec.products.exterior.is_empty(),
+            "Exterior products should be inferred"
+        );
+        assert!(
+            !spec.products.left_contraction.is_empty(),
+            "Left contraction products should be inferred"
+        );
+        assert!(
+            !spec.products.interior.is_empty(),
+            "Interior products should be inferred"
+        );
     }
 
     #[test]

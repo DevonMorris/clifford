@@ -27,6 +27,7 @@
 //! let result = verifier.verify(&input_constraints, &constraint, &output_fields);
 //! ```
 
+mod constraint_derive;
 mod constraint_simplify;
 mod parser;
 mod product;
@@ -35,6 +36,7 @@ mod solver;
 mod to_rust;
 mod verify;
 
+pub use constraint_derive::{ConstraintDeriver, DerivedConstraint};
 pub use constraint_simplify::ConstraintSimplifier;
 pub use parser::{ConstraintExpr, ConstraintParser, ParseError};
 pub use product::{ProductKind, SymbolicField, SymbolicProduct};

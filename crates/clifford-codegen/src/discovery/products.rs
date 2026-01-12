@@ -21,10 +21,20 @@ pub enum ProductType {
     Geometric,
     /// Exterior (wedge) product: `a ∧ b`
     Exterior,
-    /// Inner product: `a · b`
+    /// Inner product: `a · b` (symmetric)
     Inner,
     /// Left contraction: `a ⌋ b`
     LeftContraction,
+    /// Right contraction: `a ⌊ b`
+    RightContraction,
+    /// Regressive (meet) product: `a ∨ b`
+    Regressive,
+    /// Scalar product: grade-0 projection of geometric
+    Scalar,
+    /// Antigeometric product: `a ⊟ b`
+    Antigeometric,
+    /// Antiscalar product: grade-n projection of antigeometric
+    Antiscalar,
 }
 
 impl ProductType {
@@ -35,6 +45,11 @@ impl ProductType {
             ProductType::Exterior,
             ProductType::Inner,
             ProductType::LeftContraction,
+            ProductType::RightContraction,
+            ProductType::Regressive,
+            ProductType::Scalar,
+            ProductType::Antigeometric,
+            ProductType::Antiscalar,
         ]
     }
 
@@ -45,6 +60,11 @@ impl ProductType {
             ProductType::Exterior => "exterior",
             ProductType::Inner => "inner",
             ProductType::LeftContraction => "left_contraction",
+            ProductType::RightContraction => "right_contraction",
+            ProductType::Regressive => "regressive",
+            ProductType::Scalar => "scalar",
+            ProductType::Antigeometric => "antigeometric",
+            ProductType::Antiscalar => "antiscalar",
         }
     }
 }
@@ -120,6 +140,40 @@ pub fn infer_output_grades(
                         output_set.insert(g);
                     }
                 }
+                ProductType::RightContraction => {
+                    // Right contraction: grade(a) - grade(b) when gb <= ga
+                    if gb <= ga {
+                        output_set.insert(ga - gb);
+                    }
+                }
+                ProductType::Regressive => {
+                    // Regressive product: (a* ∧ b*)* where * is dual
+                    // Result grade = ga + gb - dim (when >= 0)
+                    let result = ga + gb;
+                    if result >= dim {
+                        output_set.insert(result - dim);
+                    }
+                }
+                ProductType::Scalar => {
+                    // Scalar product: only grade 0 from geometric
+                    if ga == gb {
+                        output_set.insert(0);
+                    }
+                }
+                ProductType::Antigeometric => {
+                    // Antigeometric: dual(dual(a) * dual(b))
+                    // Same grade structure as geometric, just different metric
+                    for g in geometric_grades(ga, gb, dim) {
+                        output_set.insert(g);
+                    }
+                }
+                ProductType::Antiscalar => {
+                    // Antiscalar: only grade dim from antigeometric
+                    if ga + gb >= dim && (ga + gb - dim).is_multiple_of(2) {
+                        // Can contribute to pseudoscalar
+                        output_set.insert(dim);
+                    }
+                }
             }
         }
     }
@@ -180,6 +234,27 @@ pub fn infer_output_grades_precise(
                 ProductType::LeftContraction => {
                     // Left contraction: only grade gb - ga terms (when ga <= gb)
                     ga <= gb && result_grade == gb - ga
+                }
+                ProductType::RightContraction => {
+                    // Right contraction: only grade ga - gb terms (when gb <= ga)
+                    gb <= ga && result_grade == ga - gb
+                }
+                ProductType::Regressive => {
+                    // Regressive product: (a* ∧ b*)* - result grade = ga + gb - dim
+                    let dim = algebra.dim();
+                    ga + gb >= dim && result_grade == ga + gb - dim
+                }
+                ProductType::Scalar => {
+                    // Scalar product: only grade 0 terms
+                    result_grade == 0
+                }
+                ProductType::Antigeometric => {
+                    // Antigeometric: same grade structure as geometric
+                    true
+                }
+                ProductType::Antiscalar => {
+                    // Antiscalar: only grade dim terms
+                    result_grade == algebra.dim()
                 }
             };
 

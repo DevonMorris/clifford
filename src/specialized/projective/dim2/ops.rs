@@ -379,7 +379,7 @@ impl<T: Float> Motor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
+    use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::abs_diff_eq;
 
     #[test]
@@ -391,8 +391,8 @@ mod tests {
         // Both points should be on the line (distance ~ 0)
         let d1 = line.distance_to_point(&p1);
         let d2 = line.distance_to_point(&p2);
-        assert!(abs_diff_eq!(d1.abs(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(d2.abs(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(d1.abs(), 0.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(d2.abs(), 0.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -403,8 +403,8 @@ mod tests {
         let intersection = x_axis.meet(&y_axis);
 
         let (x, y) = intersection.to_cartesian().unwrap();
-        assert!(abs_diff_eq!(x, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(y, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(x, 0.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(y, 0.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -413,8 +413,8 @@ mod tests {
         let m: Motor<f64> = Motor::identity();
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -423,8 +423,8 @@ mod tests {
         let m = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.x(), 0.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), 1.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -433,8 +433,8 @@ mod tests {
         let m = Motor::from_translation(3.0, 4.0);
         let result = m.transform_point(&p);
 
-        assert!(abs_diff_eq!(result.x(), 4.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 6.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.x(), 4.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), 6.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -450,8 +450,8 @@ mod tests {
         let result = composed.transform_point(&p);
 
         // (1,0) -> rotated to (0,1) -> translated to (1,3)
-        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), 3.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -462,8 +462,8 @@ mod tests {
         let transformed = m.transform_point(&p);
         let back = m.inverse().transform_point(&transformed);
 
-        assert!(abs_diff_eq!(back.x(), p.x(), epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(back.y(), p.y(), epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(back.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(back.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
     }
 
     // ========================================================================
@@ -477,7 +477,7 @@ mod tests {
         assert!(abs_diff_eq!(
             p.geometric_norm(),
             5.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
 
         // Origin has geometric norm 0
@@ -485,20 +485,20 @@ mod tests {
         assert!(abs_diff_eq!(
             origin.geometric_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
     }
 
     #[test]
     fn point_bulk_weight_norm() {
         let p = Point::new(3.0, 4.0);
-        assert!(abs_diff_eq!(p.bulk_norm(), 5.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(p.bulk_norm(), 5.0, epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(
             p.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(p.attitude(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(p.attitude(), 1.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -508,7 +508,7 @@ mod tests {
         assert!(abs_diff_eq!(
             x_axis.geometric_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
 
         // Line y = 3 has distance 3 from origin
@@ -517,7 +517,7 @@ mod tests {
         assert!(abs_diff_eq!(
             unitized.geometric_norm(),
             3.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
     }
 
@@ -528,18 +528,18 @@ mod tests {
         assert!(abs_diff_eq!(
             y_axis.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
         assert!(abs_diff_eq!(
             y_axis.bulk_norm(),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
 
         // Attitude should be the normal direction
         let att = y_axis.attitude();
-        assert!(abs_diff_eq!(att.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(att.x(), 1.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(att.y(), 0.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -548,9 +548,9 @@ mod tests {
         let rev = line.reverse();
 
         // Reverse negates all components
-        assert!(abs_diff_eq!(rev.e12, -1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e20, -2.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(rev.e01, -3.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e12, -1.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e20, -2.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(rev.e01, -3.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -563,13 +563,13 @@ mod tests {
         assert!(abs_diff_eq!(
             unitized.weight_norm(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
 
         // Normal should be unit length
         let n = unitized.normal();
         let norm = (n.x() * n.x() + n.y() * n.y()).sqrt();
-        assert!(abs_diff_eq!(norm, 1.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(norm, 1.0, epsilon = RELATIVE_EQ_EPS));
     }
 
     // ========================================================================
@@ -583,7 +583,7 @@ mod tests {
         assert!(abs_diff_eq!(
             x_axis.angle(&y_axis),
             std::f64::consts::FRAC_PI_2,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
     }
 
@@ -594,7 +594,7 @@ mod tests {
         assert!(abs_diff_eq!(
             x_axis.angle(&parallel),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
     }
 
@@ -605,7 +605,7 @@ mod tests {
         assert!(abs_diff_eq!(
             l1.angle(&l2),
             l2.angle(&l1),
-            epsilon = ABS_DIFF_EQ_EPS
+            epsilon = RELATIVE_EQ_EPS
         ));
     }
 
@@ -616,6 +616,6 @@ mod tests {
         let angle = l1.angle(&l2);
         // Angle should be in [0, π/2]
         assert!(angle >= 0.0);
-        assert!(angle <= std::f64::consts::FRAC_PI_2 + ABS_DIFF_EQ_EPS);
+        assert!(angle <= std::f64::consts::FRAC_PI_2 + RELATIVE_EQ_EPS);
     }
 }

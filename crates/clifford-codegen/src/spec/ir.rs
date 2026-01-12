@@ -176,23 +176,6 @@ impl TypeSpec {
     }
 }
 
-/// Normalizes a constraint expression for comparison.
-///
-/// This removes whitespace differences and sorts terms to allow
-/// comparing constraints that are mathematically equivalent.
-pub fn normalize_constraint_expr(expr: &str) -> String {
-    // Remove all whitespace
-    let mut normalized: String = expr.chars().filter(|c| !c.is_whitespace()).collect();
-
-    // Normalize multiplication: remove explicit * where implicit works
-    // e.g., "2*s" stays as "2*s" but we ensure consistent spacing
-    normalized = normalized.replace("+-", "-");
-    normalized = normalized.replace("-+", "-");
-    normalized = normalized.replace("--", "+");
-
-    normalized
-}
-
 /// A field in a type.
 #[derive(Debug, Clone)]
 pub struct FieldSpec {

@@ -7,8 +7,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade};
-use crate::spec::{AlgebraSpec, SignConvention, TypeSpec};
-use crate::symbolic::{ConstraintSolver, SolutionType, SolveResult};
+use crate::spec::{AlgebraSpec, TypeSpec};
 
 /// Generates Rust struct definitions for algebra types.
 ///
@@ -293,55 +292,11 @@ impl<'a> TypeGenerator<'a> {
 
     /// Generates constructors.
     ///
-    /// For types with `solve_for` fields:
-    /// - `new()` takes all fields except the solved-for ones and computes them
-    /// - `new_checked()` takes all fields and validates constraints
-    /// - `new_unchecked()` takes all fields without validation
-    ///
-    /// For types without `solve_for`:
-    /// - `new()` takes all fields (same as current behavior)
+    /// All types get:
+    /// - `new()` - the primary constructor that takes all fields
+    /// - `new_unchecked()` - alias for `new()` for backward compatibility with
+    ///   code that uses unchecked constructors for constrained types
     fn generate_constructor(&self, ty: &TypeSpec) -> TokenStream {
-        let solve_for_fields = ty.solve_for_fields();
-
-        if solve_for_fields.is_empty() {
-            // No solve_for - generate simple constructor
-            return self.generate_simple_constructor(ty);
-        }
-
-        // Collect solutions for all constraints with solve_for
-        let solver = ConstraintSolver::new();
-        let mut solutions = Vec::new();
-
-        for constraint in &ty.constraints {
-            if let Some(ref solve_for) = constraint.solve_for {
-                let positive_root = constraint.sign == SignConvention::Positive;
-                match solver.solve_with_sign(&constraint.expression, solve_for, positive_root) {
-                    Ok(solution) => solutions.push((solve_for.clone(), solution)),
-                    Err(e) => {
-                        let error_msg = format!(
-                            "/* constraint '{}' solve_for failed: {} */",
-                            constraint.name, e
-                        );
-                        let unchecked = self.generate_new_unchecked(ty);
-                        return quote! {
-                            #[doc = #error_msg]
-                            #unchecked
-                        };
-                    }
-                }
-            }
-        }
-
-        if solutions.is_empty() {
-            // No solutions - generate simple constructor
-            return self.generate_simple_constructor(ty);
-        }
-
-        self.generate_constrained_constructors_multi(ty, &solutions)
-    }
-
-    /// Generates a simple constructor (for types without solve_for).
-    fn generate_simple_constructor(&self, ty: &TypeSpec) -> TokenStream {
         let params: Vec<TokenStream> = ty
             .fields
             .iter()
@@ -359,6 +314,8 @@ impl<'a> TypeGenerator<'a> {
                 quote! { #name }
             })
             .collect();
+
+        let params2 = params.clone();
 
         quote! {
             /// Creates a new element from components.
@@ -366,367 +323,17 @@ impl<'a> TypeGenerator<'a> {
             pub fn new(#(#params),*) -> Self {
                 Self { #(#field_inits),* }
             }
-        }
-    }
 
-    /// Generates all three constructors for constrained types with multiple solve_for fields.
-    fn generate_constrained_constructors_multi(
-        &self,
-        ty: &TypeSpec,
-        solutions: &[(String, SolveResult)],
-    ) -> TokenStream {
-        let new_fn = self.generate_new_with_solve_multi(ty, solutions);
-        let new_checked = self.generate_new_checked(ty);
-        let new_unchecked = self.generate_new_unchecked(ty);
-
-        quote! {
-            #new_fn
-            #new_checked
-            #new_unchecked
-        }
-    }
-
-    /// Generates `new()` that computes all solved-for fields.
-    ///
-    /// For quadratic constraints (involving sqrt), returns `Option<Self>` since
-    /// the sqrt argument may be negative for some inputs.
-    fn generate_new_with_solve_multi(
-        &self,
-        ty: &TypeSpec,
-        solutions: &[(String, SolveResult)],
-    ) -> TokenStream {
-        let solve_for_names: Vec<&str> = solutions.iter().map(|(name, _)| name.as_str()).collect();
-
-        // Check if any solution requires sqrt (quadratic)
-        let has_quadratic = solutions
-            .iter()
-            .any(|(_, sol)| sol.solution_type == SolutionType::Quadratic);
-
-        // Parameters: all fields except solve_for fields
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .filter(|f| !solve_for_names.contains(&f.name.as_str()))
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        // Field initializers
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        // Generate computation expressions for each solve_for field
-        let compute_exprs: Vec<TokenStream> = solutions
-            .iter()
-            .map(|(solve_for, solution)| {
-                let solve_for_ident = format_ident!("{}", solve_for);
-
-                let numerator_expr: TokenStream = solution
-                    .numerator
-                    .parse()
-                    .unwrap_or_else(|_| quote! { T::zero() });
-
-                match solution.solution_type {
-                    SolutionType::Quadratic => {
-                        // Quadratic: var = sqrt(expr)
-                        if has_quadratic {
-                            let sign_expr = if solution.positive_root {
-                                quote! { sqrt_arg.sqrt() }
-                            } else {
-                                quote! { -sqrt_arg.sqrt() }
-                            };
-                            quote! {
-                                let sqrt_arg = #numerator_expr;
-                                if sqrt_arg < T::zero() {
-                                    return None; // No real solution
-                                }
-                                let #solve_for_ident = #sign_expr;
-                            }
-                        } else {
-                            // Shouldn't happen, but handle gracefully
-                            let sign_expr = if solution.positive_root {
-                                quote! { (#numerator_expr).sqrt() }
-                            } else {
-                                quote! { -(#numerator_expr).sqrt() }
-                            };
-                            quote! {
-                                let #solve_for_ident = #sign_expr;
-                            }
-                        }
-                    }
-                    SolutionType::Linear => {
-                        // Linear: var = expr / divisor
-                        if let Some(ref divisor) = solution.divisor {
-                            let divisor_ident: TokenStream =
-                                divisor.parse().unwrap_or_else(|_| quote! { T::one() });
-
-                            quote! {
-                                let #solve_for_ident = if (#divisor_ident).abs() > T::epsilon() {
-                                    (#numerator_expr) / (#divisor_ident)
-                                } else {
-                                    T::zero() // Canonical value for degenerate case
-                                };
-                            }
-                        } else {
-                            quote! {
-                                let #solve_for_ident = #numerator_expr;
-                            }
-                        }
-                    }
-                }
-            })
-            .collect();
-
-        // Generate doc comment
-        let solve_for_list = solve_for_names.join("`, `");
-
-        if has_quadratic {
-            let doc = format!(
-                "Creates a new element from {} independent coefficients.\n\n\
-                 The `{}` coefficient(s) are computed from geometric constraints.\n\n\
-                 Returns `None` if the constraint cannot be satisfied (e.g., when the\n\
-                 sqrt argument would be negative).",
-                ty.fields.len() - solutions.len(),
-                solve_for_list
-            );
-
-            quote! {
-                #[doc = #doc]
-                #[inline]
-                pub fn new(#(#params),*) -> Option<Self> {
-                    #(#compute_exprs)*
-                    Some(Self { #(#field_inits),* })
-                }
-            }
-        } else {
-            let doc = format!(
-                "Creates a new element from {} independent coefficients.\n\n\
-                 The `{}` coefficient(s) are computed from geometric constraints.\n\
-                 When divisors are zero (degenerate case), computed values default to zero.",
-                ty.fields.len() - solutions.len(),
-                solve_for_list
-            );
-
-            quote! {
-                #[doc = #doc]
-                #[inline]
-                pub fn new(#(#params),*) -> Self {
-                    #(#compute_exprs)*
-                    Self { #(#field_inits),* }
-                }
-            }
-        }
-    }
-
-    /// Generates `new_checked()` that validates ALL constraints.
-    fn generate_new_checked(&self, ty: &TypeSpec) -> TokenStream {
-        let type_name = &ty.name;
-
-        // All parameters
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        // Generate validation checks for ALL constraints
-        let validation_checks: Vec<TokenStream> = ty
-            .constraints
-            .iter()
-            .enumerate()
-            .map(|(i, constraint)| {
-                let constraint_expr = &constraint.expression;
-                let residual_expr = self.generate_residual_expr(constraint_expr, ty);
-                let residual_name = format_ident!("residual_{}", i);
-
-                quote! {
-                    let #residual_name = #residual_expr;
-                    if #residual_name.abs() > tolerance {
-                        return Err(crate::ConstraintError::new(
-                            #type_name,
-                            #constraint_expr,
-                            #residual_name.to_f64().unwrap_or(0.0),
-                        ));
-                    }
-                }
-            })
-            .collect();
-
-        // Generate doc with all constraints listed
-        let constraint_docs: Vec<String> = ty
-            .constraints
-            .iter()
-            .map(|c| self.constraint_to_residual_doc(&c.expression))
-            .collect();
-
-        let doc = if constraint_docs.is_empty() {
-            "Creates a new element from all coefficients with constraint validation.".to_string()
-        } else if constraint_docs.len() == 1 {
-            format!(
-                "Creates a new element from all coefficients with constraint validation.\n\n\
-                 Returns an error if the geometric constraint is not satisfied within\n\
-                 the given tolerance.\n\n\
-                 # Errors\n\n\
-                 Returns `ConstraintError` if `|{}| > tolerance`.",
-                constraint_docs[0]
-            )
-        } else {
-            let constraints_list = constraint_docs
-                .iter()
-                .map(|c| format!("- `|{}| > tolerance`", c))
-                .collect::<Vec<_>>()
-                .join("\n");
-            format!(
-                "Creates a new element from all coefficients with constraint validation.\n\n\
-                 Returns an error if any geometric constraint is not satisfied within\n\
-                 the given tolerance.\n\n\
-                 # Errors\n\n\
-                 Returns `ConstraintError` if any of:\n{}",
-                constraints_list
-            )
-        };
-
-        quote! {
-            #[doc = #doc]
-            #[inline]
-            pub fn new_checked(
-                #(#params,)*
-                tolerance: T,
-            ) -> Result<Self, crate::ConstraintError> {
-                #(#validation_checks)*
-
-                Ok(Self { #(#field_inits),* })
-            }
-        }
-    }
-
-    /// Converts a constraint expression to a residual doc string.
-    ///
-    /// For `s*s + e12*e12 = 1`, returns `s*s + e12*e12 - 1`.
-    /// For `2*s*e0123 = 0`, returns `2*s*e0123`.
-    fn constraint_to_residual_doc(&self, constraint: &str) -> String {
-        let parts: Vec<&str> = constraint.split('=').collect();
-        let lhs = parts.first().unwrap_or(&"").trim();
-        let rhs = parts.get(1).unwrap_or(&"0").trim();
-
-        if rhs == "0" {
-            lhs.to_string()
-        } else {
-            format!("{} - {}", lhs, rhs)
-        }
-    }
-
-    /// Generates `new_unchecked()` for raw construction.
-    fn generate_new_unchecked(&self, ty: &TypeSpec) -> TokenStream {
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        quote! {
-            /// Creates a new element from all coefficients without validation.
+            /// Creates a new element from components without validation.
             ///
-            /// # Safety (Logical)
-            ///
-            /// Caller must ensure the geometric constraint is satisfied.
-            /// Use this for performance-critical code, automatic differentiation,
-            /// or when coefficients come from trusted sources (e.g., product operations).
+            /// This is an alias for `new()`. It exists for consistency with types
+            /// that have geometric constraints, where unchecked construction is
+            /// used in performance-critical code or trusted contexts.
             #[inline]
-            pub fn new_unchecked(#(#params),*) -> Self {
-                Self { #(#field_inits),* }
+            pub fn new_unchecked(#(#params2),*) -> Self {
+                Self::new(#(#field_inits),*)
             }
         }
-    }
-
-    /// Generates the residual expression for constraint validation.
-    ///
-    /// For a constraint like `s*s + e12*e12 = 1`, generates `(lhs) - (rhs)`.
-    fn generate_residual_expr(&self, constraint: &str, ty: &TypeSpec) -> TokenStream {
-        // Parse constraint like "s*s + e12*e12 = 1" into LHS and RHS
-        let parts: Vec<&str> = constraint.split('=').collect();
-        let lhs = parts.first().unwrap_or(&"T::zero()").trim();
-        let rhs = parts.get(1).unwrap_or(&"0").trim();
-
-        let lhs_expr = self.constraint_to_rust_expr(lhs, ty);
-        let rhs_expr = self.constraint_to_rust_expr(rhs, ty);
-
-        // Generate: LHS - RHS
-        let combined = format!("({}) - ({})", lhs_expr, rhs_expr);
-        combined.parse().unwrap_or_else(|_| quote! { T::zero() })
-    }
-
-    /// Converts a constraint expression to Rust syntax.
-    fn constraint_to_rust_expr(&self, expr: &str, _ty: &TypeSpec) -> String {
-        // Convert "2*s*e0123" to "T::TWO * s * e0123"
-        // and "-2*e12*e03" to "-T::TWO * e12 * e03"
-
-        let trimmed = expr.trim();
-
-        // Handle standalone numeric constants (RHS values like "0" or "1")
-        if trimmed == "0" {
-            return "T::zero()".to_string();
-        }
-        if trimmed == "1" {
-            return "T::from_i8(1)".to_string();
-        }
-
-        // First normalize: add spaces around operators
-        let mut result = trimmed.to_string();
-        result = result.replace('*', " * ");
-        result = result.replace('+', " + ");
-        result = result.replace('-', " - ");
-
-        // Clean up double spaces
-        while result.contains("  ") {
-            result = result.replace("  ", " ");
-        }
-
-        // Now replace standalone numeric coefficients (at word boundaries)
-        // " 2 " -> " T::TWO "  and " - 2 " -> " - T::TWO "
-        result = result.replace(" 2 ", " T::TWO ");
-        result = result.replace(" - 2 ", " - T::TWO ");
-
-        // Handle start of expression: "2 * " -> "T::TWO * " and "- 2 * " -> "- T::TWO * "
-        if result.starts_with("2 ") {
-            result = format!("T::TWO {}", &result[2..]);
-        } else if result.starts_with("- 2 ") {
-            result = format!("- T::TWO {}", &result[4..]);
-        }
-
-        result.trim().to_string()
     }
 
     /// Generates accessor methods for each field.
@@ -752,22 +359,10 @@ impl<'a> TypeGenerator<'a> {
         quote! { #(#accessors)* }
     }
 
-    /// Generates the zero() method.
-    /// Returns the constructor name to use for the given type.
-    /// Uses `new_unchecked` for constrained types, `new` otherwise.
-    fn constructor_name(ty: &TypeSpec) -> TokenStream {
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        if has_constraints {
-            quote! { new_unchecked }
-        } else {
-            quote! { new }
-        }
-    }
-
     /// Generates the zero() method for a type.
     fn generate_zero(&self, ty: &TypeSpec) -> TokenStream {
         let zeros: Vec<TokenStream> = ty.fields.iter().map(|_| quote! { T::zero() }).collect();
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         quote! {
             /// Creates the zero element.
@@ -797,7 +392,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         quote! {
             /// Creates the identity element (scalar = 1, rest = 0).
@@ -815,7 +410,7 @@ impl<'a> TypeGenerator<'a> {
             return quote! {};
         }
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         let units: Vec<TokenStream> = ty
             .fields
@@ -861,7 +456,7 @@ impl<'a> TypeGenerator<'a> {
             .map(|f| format_ident!("{}", f.name))
             .collect();
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         // Compute norm squared based on metric signature.
         // For each blade, we need to consider the metric.
@@ -968,7 +563,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         quote! {
             /// Returns the reverse (reversion).

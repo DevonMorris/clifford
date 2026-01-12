@@ -239,7 +239,7 @@ impl<T: Float> Point<T> {
     pub fn left_contract_line(&self, line: &Line<T>) -> Plane<T> {
         // P ⌋ L = P · L + P ∧ L (for grade-1 contracted with grade-2)
         // Result is grade 3 (plane)
-        products::outer_point_line(self, line)
+        products::exterior_point_line(self, line)
     }
 
     /// Left contraction onto a plane (returns scalar).
@@ -409,7 +409,7 @@ impl<T: Float> Line<T> {
     /// Join with a point to create a plane.
     #[inline]
     pub fn join_point(&self, point: &Point<T>) -> Plane<T> {
-        products::outer_line_point(self, point)
+        products::exterior_line_point(self, point)
     }
 
     /// Meet with a plane to find intersection point (regressive product).
