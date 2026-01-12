@@ -572,8 +572,68 @@ mod tests {
         let translation = Motor::from_translation(1.0, 2.0, 3.0);
         let combined = rotation.compose(&translation);
 
+        eprintln!(
+            "Rotation: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            rotation.s(),
+            rotation.e23(),
+            rotation.e31(),
+            rotation.e12(),
+            rotation.e01(),
+            rotation.e02(),
+            rotation.e03(),
+            rotation.e0123()
+        );
+        eprintln!(
+            "Translation: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            translation.s(),
+            translation.e23(),
+            translation.e31(),
+            translation.e12(),
+            translation.e01(),
+            translation.e02(),
+            translation.e03(),
+            translation.e0123()
+        );
+        eprintln!(
+            "Combined: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            combined.s(),
+            combined.e23(),
+            combined.e31(),
+            combined.e12(),
+            combined.e01(),
+            combined.e02(),
+            combined.e03(),
+            combined.e0123()
+        );
+
         let p = Point::from_cartesian(1.0, 0.0, 0.0);
+
+        // Step-by-step: first rotation only
+        let after_rot = rotation.transform_point(&p);
+        eprintln!(
+            "After rotation: ({}, {}, {})",
+            after_rot.x(),
+            after_rot.y(),
+            after_rot.z()
+        );
+
+        // Then translation only
+        let after_trans = translation.transform_point(&after_rot);
+        eprintln!(
+            "After translation: ({}, {}, {})",
+            after_trans.x(),
+            after_trans.y(),
+            after_trans.z()
+        );
+
+        // Combined
         let result = combined.transform_point(&p);
+        eprintln!(
+            "Combined result: ({}, {}, {})",
+            result.x(),
+            result.y(),
+            result.z()
+        );
 
         assert!(
             abs_diff_eq!(result.x(), 1.0, epsilon = ABS_DIFF_EQ_EPS),

@@ -903,8 +903,7 @@ impl<T: Float> Motor<T> {
     /// Compose motors: self then other.
     ///
     /// The result applies `self` first, then `other`.
-    /// In PGA, the sandwich product `(A * B) * p * (A * B)̃` applies A first, then B.
-    /// So for `compose(self, other)` to apply self first, we compute `self * other`.
+    /// With the explicit PGA formula, `self * other` applies self first.
     ///
     /// This uses an explicit formula derived from sympy to ensure correct composition.
     pub fn compose(&self, other: &Motor<T>) -> Motor<T> {
@@ -927,7 +926,7 @@ impl<T: Float> Motor<T> {
         let d03_2 = self.e03();
         let i2 = self.e0123();
 
-        // Geometric product: self * other = M2 * M1
+        // Geometric product: self * other
         let s = -b12_1 * b12_2 - b23_1 * b23_2 - b31_1 * b31_2 + s1 * s2;
         let e23 = -b12_1 * b31_2 + b12_2 * b31_1 + b23_1 * s2 + b23_2 * s1;
         let e31 = b12_1 * b23_2 - b12_2 * b23_1 + b31_1 * s2 + b31_2 * s1;
@@ -955,7 +954,8 @@ impl<T: Float> Motor<T> {
             + d03_1 * b12_2
             + d03_2 * b12_1;
 
-        Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
+        // Normalize to enforce Study condition (required for correct transformations)
+        Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123).normalized()
     }
 
     /// Inverse motor.
@@ -1005,6 +1005,39 @@ impl<T: Float> Motor<T> {
             self.e03() / wn,
             self.e0123() / wn,
         )
+    }
+
+    /// Normalize the motor to satisfy both unit weight norm and Study condition.
+    ///
+    /// The Study condition is: `s * e0123 + e23 * e01 + e31 * e02 + e12 * e03 = 0`
+    ///
+    /// This is necessary after motor composition, as the geometric product
+    /// of two Study-satisfying motors doesn't automatically satisfy the condition.
+    pub fn normalized(&self) -> Self {
+        // First normalize weight
+        let wn = self.weight_norm();
+        if wn < T::epsilon() {
+            return *self;
+        }
+
+        let s = self.s() / wn;
+        let e23 = self.e23() / wn;
+        let e31 = self.e31() / wn;
+        let e12 = self.e12() / wn;
+        let e01 = self.e01() / wn;
+        let e02 = self.e02() / wn;
+        let e03 = self.e03() / wn;
+
+        // Project e0123 to satisfy Study condition:
+        // s * e0123 + e23 * e01 + e31 * e02 + e12 * e03 = 0
+        // => e0123 = -(e23 * e01 + e31 * e02 + e12 * e03) / s
+        let e0123 = if s.abs() > T::epsilon() {
+            -(e23 * e01 + e31 * e02 + e12 * e03) / s
+        } else {
+            T::zero()
+        };
+
+        Self::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
     }
 
     /// Check if motor is unitized.
