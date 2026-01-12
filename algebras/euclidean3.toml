@@ -33,6 +33,9 @@ fields = ["xy", "xz", "yz"]
 grades = [0, 2]
 description = "3D rotor (even subalgebra element)"
 fields = ["s", "xy", "xz", "yz"]
+constraints = [
+    { name = "unit", expression = "s*s + xy*xy + xz*xz + yz*yz = 1" }
+]
 
 [types.Trivector]
 grades = [3]
