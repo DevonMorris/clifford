@@ -296,7 +296,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     /// ```
     #[inline]
     fn from(rotor: Rotor<T>) -> Self {
-        let r = rotor.normalized();
+        let r = rotor.normalize();
         // Mapping: (w, i, j, k) = (s, yz, -xz, xy)
         let q = na::Quaternion::new(r.s(), r.b().yz(), -r.b().xz(), r.b().xy());
         na::UnitQuaternion::new_normalize(q)
@@ -444,7 +444,7 @@ mod tests {
         #[test]
         fn rotor_quaternion_roundtrip(r in any::<Rotor<f64>>()) {
             // Normalize for this test
-            let r = r.normalized();
+            let r = r.normalize();
             let q: na::UnitQuaternion<f64> = r.into();
             let back: Rotor<f64> = q.into();
 
@@ -458,7 +458,7 @@ mod tests {
 
         #[test]
         fn rotor_rotation3_roundtrip(r in any::<Rotor<f64>>()) {
-            let r = r.normalized();
+            let r = r.normalize();
             let rot: na::Rotation3<f64> = r.into();
             let back: Rotor<f64> = rot.into();
 
@@ -473,7 +473,7 @@ mod tests {
             r in any::<Rotor<f64>>(),
             v in any::<Vector<f64>>(),
         ) {
-            let r = r.normalized();
+            let r = r.normalize();
             let na_v: na::Vector3<f64> = v.into();
 
             // Rotate with clifford rotor

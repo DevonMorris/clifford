@@ -265,17 +265,6 @@ impl<T: Float> Rotor<T> {
         )
     }
 
-    /// Returns a normalized (unit) rotor.
-    ///
-    /// This method divides by the norm without checking for zero.
-    /// For a safe version, use `try_normalize()`.
-    #[inline]
-    pub fn normalized(&self) -> Self {
-        let n = self.norm();
-        // Use new_unchecked since normalization produces unit rotor
-        Self::new_unchecked(self.s() / n, self.xy() / n, self.xz() / n, self.yz() / n)
-    }
-
     /// Applies this rotation to a vector: `v' = R̃ v R`.
     ///
     /// Note: Some sources use `R v R̃`. We use `R̃ v R` which gives counterclockwise
@@ -356,7 +345,7 @@ impl<T: Float> Rotor<T> {
                 self.xz() * (T::one() - t) + other.xz() * t,
                 self.yz() * (T::one() - t) + other.yz() * t,
             )
-            .normalized();
+            .normalize();
         }
 
         let sin_theta = theta.sin();

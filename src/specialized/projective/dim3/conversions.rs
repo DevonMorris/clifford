@@ -685,7 +685,7 @@ mod tests {
             r in any::<EucRotor<f64>>(),
             vx in -10.0f64..10.0, vy in -10.0f64..10.0, vz in -10.0f64..10.0,
         ) {
-            let r = r.normalized();
+            let r = r.normalize();
             let motor: Motor<f64> = r.into();
             let back: EuclideanRotor<f64> = motor.into();
 
@@ -734,7 +734,7 @@ mod tests {
             r in any::<EucRotor<f64>>(),
             x in -10.0f64..10.0, y in -10.0f64..10.0, z in -10.0f64..10.0,
         ) {
-            let r = r.normalized();
+            let r = r.normalize();
             let motor: Motor<f64> = r.into();
 
             // Rotate with Euclidean rotor
