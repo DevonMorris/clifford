@@ -1080,6 +1080,28 @@ impl<T: Float> Motor<T> {
             ab.e0123() + ba.e0123(),
         )
     }
+
+    /// Transform a point via antisandwich product.
+    ///
+    /// In PGA, the antisandwich `M ⊛ P ⊛ rev(M)` is required for correct
+    /// motor transformations because it handles the degenerate metric (e0² = 0).
+    /// The regular sandwich product doesn't work for translations.
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        products::antisandwich_motor_point(self, p)
+    }
+
+    /// Transform a line via antisandwich product.
+    #[inline]
+    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
+        products::antisandwich_motor_line(self, line)
+    }
+
+    /// Transform a plane via antisandwich product.
+    #[inline]
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        products::antisandwich_motor_plane(self, plane)
+    }
 }
 
 // ============================================================================
@@ -1193,5 +1215,148 @@ impl<T: Float> Flector<T> {
     #[inline]
     pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
         products::geometric_flector_flector(self, other)
+    }
+
+    /// Transform a point via antisandwich product.
+    ///
+    /// In PGA, flectors (reflections) also use the antisandwich product
+    /// for transformations.
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        products::antisandwich_flector_point(self, p)
+    }
+
+    /// Transform a line via antisandwich product.
+    #[inline]
+    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
+        products::antisandwich_flector_line(self, line)
+    }
+
+    /// Transform a plane via antisandwich product.
+    #[inline]
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        products::antisandwich_flector_plane(self, plane)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::abs_diff_eq;
+
+    const EPS: f64 = 1e-10;
+
+    #[test]
+    fn antisandwich_translation_works() {
+        // Create a pure translation motor
+        let motor = Motor::from_translation(10.0, 20.0, 30.0);
+        let p = Point::from_cartesian(1.0, 2.0, 3.0);
+
+        // Debug: print motor components
+        eprintln!(
+            "Motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            motor.s(),
+            motor.e23(),
+            motor.e31(),
+            motor.e12(),
+            motor.e01(),
+            motor.e02(),
+            motor.e03(),
+            motor.e0123()
+        );
+        eprintln!(
+            "Point: e1={}, e2={}, e3={}, e0={}",
+            p.e1(),
+            p.e2(),
+            p.e3(),
+            p.e0()
+        );
+
+        // Use generated antisandwich transformation
+        let result = motor.transform_point(&p);
+
+        // Debug: print result components
+        eprintln!(
+            "Result: e1={}, e2={}, e3={}, e0={}",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Expected: point translated by (10, 20, 30)
+        assert!(
+            abs_diff_eq!(result.x(), 11.0, epsilon = EPS),
+            "x: expected 11.0, got {}",
+            result.x()
+        );
+        assert!(
+            abs_diff_eq!(result.y(), 22.0, epsilon = EPS),
+            "y: expected 22.0, got {}",
+            result.y()
+        );
+        assert!(
+            abs_diff_eq!(result.z(), 33.0, epsilon = EPS),
+            "z: expected 33.0, got {}",
+            result.z()
+        );
+    }
+
+    #[test]
+    fn antisandwich_rotation_works() {
+        use std::f64::consts::FRAC_PI_2;
+
+        // Create a 90° rotation around Z axis
+        let motor = Motor::from_rotation_z(FRAC_PI_2);
+        let p = Point::from_cartesian(1.0, 0.0, 0.0);
+
+        // Debug: print motor components
+        eprintln!(
+            "Motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            motor.s(),
+            motor.e23(),
+            motor.e31(),
+            motor.e12(),
+            motor.e01(),
+            motor.e02(),
+            motor.e03(),
+            motor.e0123()
+        );
+        eprintln!(
+            "Point: e1={}, e2={}, e3={}, e0={}",
+            p.e1(),
+            p.e2(),
+            p.e3(),
+            p.e0()
+        );
+
+        // Use generated antisandwich transformation
+        let result = motor.transform_point(&p);
+
+        // Debug: print result components
+        eprintln!(
+            "Result: e1={}, e2={}, e3={}, e0={}",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Expected: (1, 0, 0) rotated 90° around Z -> (0, 1, 0)
+        assert!(
+            abs_diff_eq!(result.x(), 0.0, epsilon = EPS),
+            "x: expected 0.0, got {}",
+            result.x()
+        );
+        assert!(
+            abs_diff_eq!(result.y(), 1.0, epsilon = EPS),
+            "y: expected 1.0, got {}",
+            result.y()
+        );
+        assert!(
+            abs_diff_eq!(result.z(), 0.0, epsilon = EPS),
+            "z: expected 0.0, got {}",
+            result.z()
+        );
     }
 }

@@ -231,6 +231,73 @@ impl ProductTable {
 
         result_map.into_iter().collect()
     }
+
+    /// Computes the complement (Hodge dual) of a blade.
+    ///
+    /// The complement maps a grade-k blade to a grade-(n-k) blade where n = dim.
+    /// For blade index `i`, the complement index is `(2^dim - 1) XOR i`.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, complement_index)` where sign is ±1 based on the
+    /// permutation required to bring the blade and its complement into canonical
+    /// order to form the pseudoscalar.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::euclidean(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // In 3D: complement(e1) = e23 (with some sign)
+    /// let (sign, result) = table.complement(1);
+    /// assert_eq!(result, 6); // e23 = 0b110
+    /// ```
+    pub fn complement(&self, blade: usize) -> (i8, usize) {
+        let pseudoscalar = self.num_blades() - 1; // All bits set
+        let complement_blade = pseudoscalar ^ blade;
+
+        // Sign is determined by: blade * complement_blade = ±pseudoscalar
+        // We use the geometric product to get this sign
+        let (sign, result) = self.geometric(blade, complement_blade);
+        debug_assert_eq!(result, pseudoscalar, "complement should produce pseudoscalar");
+
+        (sign, complement_blade)
+    }
+
+    /// Computes the geometric antiproduct of two blades.
+    ///
+    /// The antiproduct is dual to the geometric product:
+    /// `a ⊛ b = complement(complement(a) * complement(b))`
+    ///
+    /// In PGA (Projective GA), the antiproduct is essential for correct
+    /// motor transformations because it handles the degenerate metric properly.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the antiproduct
+    ///
+    /// Note: The sign may be 0 if the product vanishes.
+    pub fn antiproduct(&self, a: usize, b: usize) -> (i8, usize) {
+        // Get complements
+        let (sign_ca, comp_a) = self.complement(a);
+        let (sign_cb, comp_b) = self.complement(b);
+
+        // Geometric product of complements
+        let (sign_prod, prod) = self.geometric(comp_a, comp_b);
+
+        // Complement of the product
+        let (sign_result, result) = self.complement(prod);
+
+        // Total sign
+        let total_sign = sign_ca * sign_cb * sign_prod * sign_result;
+
+        (total_sign, result)
+    }
 }
 
 #[cfg(test)]

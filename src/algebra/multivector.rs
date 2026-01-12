@@ -1077,6 +1077,86 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         self.dual().exterior(&other.dual()).undual()
     }
 
+    /// Computes the antiwedge (exterior antiproduct): `a ∨ b`.
+    ///
+    /// This is an alias for [`regressive`](Self::regressive). The antiwedge is
+    /// the dual of the wedge product, representing the "meet" (intersection)
+    /// of subspaces rather than the "join" (span).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e12: Multivector<f64, Euclidean3> =
+    ///     Multivector::basis_vector(0).exterior(&Multivector::basis_vector(1));
+    /// let e23: Multivector<f64, Euclidean3> =
+    ///     Multivector::basis_vector(1).exterior(&Multivector::basis_vector(2));
+    ///
+    /// // Antiwedge of two planes gives their intersection (a line)
+    /// let intersection = e12.antiwedge(&e23);
+    /// ```
+    #[inline]
+    pub fn antiwedge(&self, other: &Self) -> Self {
+        self.regressive(other)
+    }
+
+    /// Computes the geometric antiproduct: `a ⊛ b = undual(dual(a) × dual(b))`.
+    ///
+    /// The geometric antiproduct is the dual of the geometric product. In PGA
+    /// (Projective Geometric Algebra), the antiproduct is essential for correct
+    /// motor transformations because it properly handles the degenerate direction.
+    ///
+    /// # Properties
+    ///
+    /// - `dual(a × b) = dual(a) ⊛ dual(b)` (duality relationship)
+    /// - Used for PGA sandwich transformations: `M ⊛ x ⊛ rev(M)`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// // Antiproduct of vectors
+    /// let result = e1.antiproduct(&e2);
+    /// ```
+    pub fn antiproduct(&self, other: &Self) -> Self {
+        (&self.dual() * &other.dual()).undual()
+    }
+
+    /// Computes the antisandwich product: `R ⊛ x ⊛ R̃`.
+    ///
+    /// The antisandwich uses the geometric antiproduct instead of the geometric
+    /// product. In PGA, this is the correct transformation for motors because
+    /// it handles translations properly (which the regular sandwich cannot due
+    /// to the degenerate metric e₀² = 0).
+    ///
+    /// # Properties
+    ///
+    /// - Preserves grade of the argument
+    /// - Correctly transforms points under translation in PGA
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Projective3;
+    ///
+    /// // In PGA, use antisandwich for motor transformations
+    /// let motor: Multivector<f64, Projective3> = Multivector::scalar(1.0);
+    /// let point: Multivector<f64, Projective3> = Multivector::basis_vector(0);
+    ///
+    /// let transformed = motor.antisandwich(&point);
+    /// ```
+    pub fn antisandwich(&self, x: &Self) -> Self {
+        self.antiproduct(x).antiproduct(&self.reverse())
+    }
+
     /// Computes the sandwich product: `R x R̃`.
     ///
     /// The sandwich product is the fundamental operation for transformations

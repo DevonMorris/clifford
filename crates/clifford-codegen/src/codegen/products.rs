@@ -145,6 +145,7 @@ impl<'a> ProductGenerator<'a> {
         let inner = self.generate_all_inner();
         let scalar = self.generate_all_scalar();
         let sandwich = self.generate_all_sandwich();
+        let antisandwich = self.generate_all_antisandwich();
 
         quote! {
             #header
@@ -171,9 +172,14 @@ impl<'a> ProductGenerator<'a> {
             #scalar
 
             // ============================================================
-            // Sandwich Products
+            // Sandwich Products (Geometric)
             // ============================================================
             #sandwich
+
+            // ============================================================
+            // Antisandwich Products (for PGA transformations)
+            // ============================================================
+            #antisandwich
         }
     }
 
@@ -585,6 +591,93 @@ impl<'a> ProductGenerator<'a> {
         self.generate_sandwich_product(versor_type, operand_type)
     }
 
+    /// Generates all antisandwich product functions.
+    ///
+    /// Antisandwich products use the geometric antiproduct instead of the
+    /// geometric product. In PGA (Projective GA), antisandwich is required
+    /// for correct motor transformations because it handles the degenerate
+    /// metric (e0² = 0) properly.
+    ///
+    /// For each versor type, we generate an antisandwich function for each
+    /// target type specified in its `sandwich.targets` list.
+    fn generate_all_antisandwich(&self) -> TokenStream {
+        let mut products = Vec::new();
+
+        for versor_type in &self.spec.types {
+            // Skip non-versors and aliases
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+
+            if let Some(ref versor_spec) = versor_type.versor {
+                // Get targets - either explicit or auto-detected
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        if let Some(product) =
+                            self.generate_antisandwich_product(versor_type, target_type)
+                        {
+                            products.push(product);
+                        }
+                    }
+                }
+            }
+        }
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a single antisandwich product function.
+    ///
+    /// The antisandwich computes: v ⊛ x ⊛ rev(v) where ⊛ is the geometric
+    /// antiproduct.
+    fn generate_antisandwich_product(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+    ) -> Option<TokenStream> {
+        let v_name = format_ident!("{}", versor_type.name);
+        let x_name = format_ident!("{}", operand_type.name);
+
+        let fn_name = format_ident!(
+            "antisandwich_{}_{}",
+            versor_type.name.to_lowercase(),
+            operand_type.name.to_lowercase()
+        );
+
+        let field_exprs: Vec<TokenStream> = operand_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms =
+                    self.compute_antisandwich_terms(versor_type, operand_type, field.blade_index);
+                self.generate_sandwich_expression(&terms)
+            })
+            .collect();
+
+        let doc = format!(
+            "Antisandwich product: {} ⊛ {} ⊛ rev({}) -> {}\n\n\
+             Uses the geometric antiproduct. In PGA, use this instead of\n\
+             the regular sandwich for correct motor transformations.",
+            versor_type.name, operand_type.name, versor_type.name, operand_type.name
+        );
+
+        let constructor_call = self.generate_constructor_call(operand_type, &x_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(v: &#v_name<T>, x: &#x_name<T>) -> #x_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
     /// Checks if a type is a versor (e.g., Rotor).
     #[allow(dead_code)]
     fn is_versor_type(&self, ty: &TypeSpec) -> bool {
@@ -790,6 +883,62 @@ impl<'a> ProductGenerator<'a> {
                     };
 
                     let (sign_vxr, result) = self.table.geometric(vx, v2_blade);
+                    if sign_vxr == 0 {
+                        continue;
+                    }
+
+                    if result == result_blade {
+                        let final_sign = sign_vx * sign_vxr * rev_sign;
+                        terms.push(SandwichTerm {
+                            sign: final_sign,
+                            v_field_1: field_v1.name.clone(),
+                            x_field: field_x.name.clone(),
+                            v_field_2: field_v2.name.clone(),
+                        });
+                    }
+                }
+            }
+        }
+
+        self.simplify_sandwich_terms(terms)
+    }
+
+    /// Computes antisandwich product terms: v ⊛ x ⊛ rev(v) -> result_blade.
+    ///
+    /// Uses the geometric antiproduct instead of the geometric product.
+    fn compute_antisandwich_terms(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+        result_blade: usize,
+    ) -> Vec<SandwichTerm> {
+        let mut terms = Vec::new();
+
+        // For each combination: v_i ⊛ x_j ⊛ rev(v_k)
+        for field_v1 in &versor_type.fields {
+            for field_x in &operand_type.fields {
+                for field_v2 in &versor_type.fields {
+                    let v1_blade = field_v1.blade_index;
+                    let x_blade = field_x.blade_index;
+                    let v2_blade = field_v2.blade_index;
+
+                    // Compute v_i ⊛ x_j using antiproduct
+                    let (sign_vx, vx) = self.table.antiproduct(v1_blade, x_blade);
+                    if sign_vx == 0 {
+                        continue;
+                    }
+
+                    // Compute (v_i ⊛ x_j) ⊛ rev(v_k)
+                    // rev(v_k) has sign (-1)^(k(k-1)/2) for grade k
+                    let v2_grade = Blade::from_index(v2_blade).grade();
+                    #[allow(clippy::manual_is_multiple_of)]
+                    let rev_sign: i8 = if (v2_grade * v2_grade.saturating_sub(1) / 2) % 2 == 0 {
+                        1
+                    } else {
+                        -1
+                    };
+
+                    let (sign_vxr, result) = self.table.antiproduct(vx, v2_blade);
                     if sign_vxr == 0 {
                         continue;
                     }
