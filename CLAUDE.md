@@ -423,6 +423,100 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 
 **Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
 
+#### Using Generated Products in Extensions
+
+When implementing domain-specific methods in extension files (`extensions.rs`), **always use generated products** instead of manual formulas:
+
+```rust
+// CORRECT: Use generated product from generated/products.rs
+use super::generated::products;
+
+impl<T: Float> Point<T> {
+    pub fn join(&self, other: &Point<T>) -> Line<T> {
+        // Use generated exterior product
+        products::exterior_point_point(self, other)
+    }
+}
+
+// WRONG: Manual formula (error-prone, not verified)
+impl<T: Float> Point<T> {
+    pub fn join(&self, other: &Point<T>) -> Line<T> {
+        // Don't do this - prone to sign/ordering errors
+        Line::new_unchecked(
+            self.e1() * other.e2() - self.e2() * other.e1(),  // might be wrong!
+            // ...
+        )
+    }
+}
+```
+
+**Acceptable exceptions** (when manual formulas are okay):
+1. The product combination isn't generated yet (file an issue to add it!)
+2. Performance-critical code where the generated form is suboptimal
+3. Geometric shortcuts (e.g., `distance()` using a specialized formula)
+
+Even for exceptions, add a comment citing the mathematical source of the formula.
+
+**Red flags in code review**:
+- Manual product formulas in extension files
+- Sign corrections or coefficient adjustments
+- Comments like "// manual implementation because codegen doesn't..."
+
+These indicate missing codegen features that should be added via PRD-17.
+
+#### Regenerating Algebras After Codegen Changes
+
+**Whenever you modify the code generator (`clifford-codegen`), you MUST regenerate all algebras.** This ensures the generated code stays in sync with codegen changes.
+
+**Step 1: Update TOML specs if needed**
+
+Some codegen changes require updating the algebra TOML files:
+- New configuration fields (e.g., adding `interior = true` to products)
+- Renamed fields (e.g., `outer` → `exterior`)
+- New constraint formats
+- Schema changes
+
+```bash
+# Example: enabling a new product type in all algebras
+for toml in algebras/*.toml; do
+    # Add new configuration (manually or via script)
+done
+```
+
+**Step 2: Regenerate all algebras**
+
+```bash
+# After any codegen modification, regenerate all algebras
+for toml in algebras/*.toml; do
+    cargo run --package clifford-codegen -- generate "$toml" --force
+done
+
+# Then verify everything still works
+cargo fmt
+cargo clippy
+cargo test
+cargo doc --no-deps
+```
+
+**When TOML updates are needed:**
+- Adding new product types (must enable in TOML)
+- Adding new type-level options
+- Changing field naming conventions
+- Adding new constraint syntax
+
+**When only regeneration is needed:**
+- Fixing bugs in existing generation
+- Improving generated code quality
+- Fixing documentation generation
+- Optimizing generated expressions
+
+**Commit pattern for codegen changes:**
+1. First commit: The codegen fix/feature
+2. Second commit: TOML updates (if needed) + regenerated algebras
+3. Or: Single commit with all if they're tightly coupled
+
+This prevents situations where codegen is fixed but generated code is stale.
+
 ## Development Commands
 
 ```bash

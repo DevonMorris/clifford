@@ -152,3 +152,54 @@ For complex operations (motor composition, sandwich products, multi-term formula
 - TOML spec has correct grades, fields, and constraints
 - Constraint order is correct (dependencies solved first)
 - Generated tests pass
+
+**Codegen change requirements**:
+- [ ] **TOML specs updated** - If codegen adds new fields/options, algebra TOMLs must be updated
+- [ ] **Algebras regenerated** - If codegen was modified, ALL algebras must be regenerated
+- [ ] **Generated code committed** - Regenerated files are included in the PR
+- [ ] **Tests pass** - All tests pass with freshly generated code
+
+**When TOML updates are needed:**
+- Adding new product types (must enable in TOML)
+- Adding new configuration options
+- Renaming fields (e.g., `outer` → `exterior`)
+- Changing schema or constraint formats
+
+```bash
+# Verify algebras are in sync with codegen
+for toml in algebras/*.toml; do
+    cargo run --package clifford-codegen -- generate "$toml" --force
+done
+git diff --exit-code src/generated/ src/specialized/*/generated/
+```
+
+If `git diff` shows changes, the PR is missing regenerated algebras (or TOML updates).
+
+### Generated Products in Extensions
+
+When reviewing extension files (`extensions.rs`):
+
+- [ ] **Uses generated products** - Methods use `products::*` functions from `generated/products.rs`
+- [ ] **No manual formulas** - Algebraic products aren't hand-rolled with multi-term expressions
+- [ ] **Missing products documented** - If manual formula needed, comment explains why and cites source
+- [ ] **Issue filed for gaps** - Missing codegen products have issues filed (PRD-17)
+
+**Acceptable exceptions** for manual formulas:
+1. Product combination not yet generated (must have issue filed)
+2. Performance-critical path with documented benchmark justification
+3. Geometric shortcut formula with cited mathematical source
+
+**Examples of what to flag**:
+```rust
+// FLAG: Manual exterior product - should use products::exterior_point_point
+let line = Line::new_unchecked(
+    self.e1() * other.e2() - self.e2() * other.e1(),
+    // ...
+);
+
+// FLAG: Manual left contraction - should use products::left_contract_*
+let result = self.e1() * plane.e023() + self.e2() * plane.e031() + ...;
+
+// OK: Uses generated product
+let line = products::exterior_point_point(self, other);
+```
