@@ -10,6 +10,9 @@ use quote::{format_ident, quote};
 use crate::algebra::geometric_grades;
 use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
+use crate::symbolic::{
+    AtomToRust, ExpressionSimplifier, ProductKind as SymbolicProductKind, SymbolicProduct,
+};
 
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -259,15 +262,9 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms =
-                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Geometric);
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Geometric);
 
         let doc = format!(
             "Geometric product: {} * {} -> {}",
@@ -323,15 +320,9 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms =
-                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Outer);
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Outer);
 
         let doc = format!(
             "Outer product: {} ^ {} -> {}",
@@ -387,19 +378,13 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms = self.compute_terms(
-                    type_a,
-                    type_b,
-                    field.blade_index,
-                    ProductKind::LeftContraction,
-                );
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs = self.generate_expression_symbolic(
+            type_a,
+            type_b,
+            output_type,
+            ProductKind::LeftContraction,
+        );
 
         let doc = format!(
             "Left contraction: {} | {} -> {}",
@@ -765,6 +750,64 @@ impl<'a> ProductGenerator<'a> {
                 v_field_1: v1,
                 x_field: x,
                 v_field_2: v2,
+            })
+            .collect()
+    }
+
+    // ========================================================================
+    // Symbolic Expression Generation
+    // ========================================================================
+
+    /// Generates a simplified Rust expression using symbolic algebra.
+    ///
+    /// This method uses Symbolica to:
+    /// 1. Build a symbolic expression for the product
+    /// 2. Simplify by expanding and collecting like terms
+    /// 3. Convert the simplified expression to Rust code
+    ///
+    /// This produces more compact code than the term-based approach when
+    /// there are opportunities for simplification (e.g., constraint substitution).
+    fn generate_expression_symbolic(
+        &self,
+        type_a: &TypeSpec,
+        type_b: &TypeSpec,
+        output_type: &TypeSpec,
+        kind: ProductKind,
+    ) -> Vec<TokenStream> {
+        let symbolic_product = SymbolicProduct::new(self.algebra);
+        let simplifier = ExpressionSimplifier::new();
+
+        // Create symbolic field variables
+        let a_symbols = symbolic_product.create_field_symbols(type_a, "a");
+        let b_symbols = symbolic_product.create_field_symbols(type_b, "b");
+
+        // Map ProductKind to SymbolicProductKind
+        let symbolic_kind = match kind {
+            ProductKind::Geometric => SymbolicProductKind::Geometric,
+            ProductKind::Outer => SymbolicProductKind::Outer,
+            ProductKind::LeftContraction => SymbolicProductKind::LeftContraction,
+            _ => SymbolicProductKind::Geometric, // Fallback for other kinds
+        };
+
+        // Compute symbolic product
+        let symbolic_fields = symbolic_product.compute(
+            type_a,
+            type_b,
+            output_type,
+            symbolic_kind,
+            &a_symbols,
+            &b_symbols,
+        );
+
+        // Create converter for Rust code generation
+        let converter = AtomToRust::new(&[type_a, type_b], &["a", "b"]);
+
+        // Simplify and convert each field expression
+        symbolic_fields
+            .iter()
+            .map(|field| {
+                let simplified = simplifier.simplify(&field.expression);
+                converter.convert(&simplified)
             })
             .collect()
     }

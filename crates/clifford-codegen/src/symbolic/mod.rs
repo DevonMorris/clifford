@@ -28,10 +28,14 @@
 
 mod parser;
 mod product;
+mod simplify;
 mod solver;
+mod to_rust;
 mod verify;
 
 pub use parser::{ConstraintExpr, ConstraintParser, ParseError};
 pub use product::{ProductKind, SymbolicField, SymbolicProduct};
+pub use simplify::ExpressionSimplifier;
 pub use solver::{ConstraintSolver, SolutionType, SolveError, SolveResult};
+pub use to_rust::AtomToRust;
 pub use verify::{ConstraintVerifier, VerificationResult};

@@ -116,7 +116,7 @@ pub struct UserConstraint {
     /// Enforcement method to generate (e.g., "normalize").
     pub enforce: Option<String>,
     /// Whether this constraint has domain restrictions (e.g., requires sqrt).
-    /// If true, new() returns Option<Self>.
+    /// If true, `new()` returns `Option<Self>`.
     pub has_domain_restriction: bool,
 }
 
