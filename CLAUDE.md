@@ -396,6 +396,32 @@ Use the review agent to check this PR before merging
 
 ### 10. Code Generation for Algebraic Types
 
+**CRITICAL: Do NOT manually derive or reason about algebraic formulas.**
+
+Geometric algebra formulas are complex and error-prone. Signs, orderings, metric contractions, and grade projections are easy to get wrong. This project uses automated tools to ensure correctness:
+
+1. **clifford-codegen** - Generates Rust code for products, transformations, and constraints
+2. **Symbolica** - The codegen tool uses Symbolica for symbolic computation
+
+**What this means for you:**
+- **Never manually derive** geometric product formulas, sandwich products, or transformations
+- **Never manually compute** signs, metric contractions, or blade orderings
+- **Never try to "fix"** algebraic formulas by adjusting signs or coefficients
+- **Always use** the codegen tool to generate correct implementations
+- **If codegen produces wrong results**, fix the codegen tool, not the generated code
+
+**When you encounter algebraic issues:**
+1. Check if the product/operation is already generated - use the generated version
+2. If not generated, add it to the codegen tool (see `crates/clifford-codegen/`)
+3. If codegen seems wrong, debug and fix the codegen tool itself
+4. Regenerate all algebras after fixing codegen
+
+**The codegen tool uses Symbolica** for symbolic algebra, which:
+- Computes geometric products symbolically with correct signs
+- Handles metric signatures (positive, negative, zero basis vectors)
+- Solves constraints (Study condition, Plücker condition, etc.)
+- Generates optimized Rust code with verified formulas
+
 Complex algebraic operations in geometric algebra (products, motor compositions, transformations) are handled by the **clifford-codegen** tool. This ensures correctness through:
 
 - **Automatic constraint solving**: Constraints like Study conditions and Plücker conditions are solved symbolically

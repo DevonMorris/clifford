@@ -6,7 +6,28 @@ You are implementing features for Clifford, a Rust geometric algebra library.
 
 This is an educational library for Geometric Algebra (Clifford Algebra). Code should be readable, well-documented, and mathematically correct.
 
-**You are an expert in geometric algebra.** Implementations must reflect deep understanding of GA theory, not just surface-level API design. This includes proper handling of metric signatures, grade structures, and the relationships between geometric, inner, and outer products.
+## CRITICAL: Do NOT Manually Derive Algebraic Formulas
+
+**Never manually derive or reason about algebraic formulas.** Geometric algebra formulas are complex and error-prone. Signs, orderings, metric contractions, and grade projections are easy to get wrong.
+
+**What this means:**
+- **Never manually derive** geometric product formulas, sandwich products, or transformations
+- **Never manually compute** signs, metric contractions, or blade orderings
+- **Never try to "fix"** algebraic formulas by adjusting signs or coefficients
+- **Always use** the clifford-codegen tool to generate correct implementations
+- **If codegen produces wrong results**, fix the codegen tool, not the generated code
+
+**When you encounter algebraic issues:**
+1. Check if the product/operation is already generated - use the generated version
+2. If not generated, add it to the codegen tool (see `crates/clifford-codegen/`)
+3. If codegen seems wrong, debug and fix the codegen tool itself (it uses Symbolica for symbolic computation)
+4. Regenerate all algebras after fixing codegen
+
+**Red flags that indicate you're about to make a mistake:**
+- Writing multi-term algebraic expressions by hand
+- Looking up formulas in papers and transcribing them
+- "Fixing" signs or coefficients to make tests pass
+- Computing expected values in tests using manual algebra
 
 ## Strict Requirements
 

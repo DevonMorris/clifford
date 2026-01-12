@@ -2,6 +2,42 @@
 
 You are writing tests for Clifford, a Rust geometric algebra library.
 
+## CRITICAL: Do NOT Manually Compute Expected Values
+
+**Never manually derive algebraic formulas for expected test values.** Use generated products or compare against generic Multivector implementations.
+
+**Wrong approach:**
+```rust
+// DON'T DO THIS - manual formula for expected value
+let expected = Line::new(
+    p1.e1() * p2.e2() - p1.e2() * p2.e1(),  // Manual exterior product
+    // ...
+);
+prop_assert!(abs_diff_eq!(result, expected, epsilon = EPS));
+```
+
+**Correct approaches:**
+```rust
+// Use generated products for expected value
+let expected = products::exterior_point_point(&p1, &p2);
+prop_assert!(abs_diff_eq!(result, expected, epsilon = EPS));
+
+// Or compare against generic Multivector
+let mv_p1: Multivector<f64, Projective3> = p1.into();
+let mv_p2: Multivector<f64, Projective3> = p2.into();
+let expected = (mv_p1.outer(&mv_p2)).into();
+prop_assert!(abs_diff_eq!(result, expected, epsilon = EPS));
+
+// Or test algebraic properties that don't require computing expected values
+prop_assert!(abs_diff_eq!(rotor.norm(), 1.0, epsilon = EPS));  // Property test
+```
+
+**When testing algebraic operations:**
+1. Test algebraic properties (associativity, norm preservation, etc.) - no manual formulas needed
+2. Compare specialized types against generic Multivector - let the generic impl compute expected values
+3. Use generated products from `generated/products.rs` for expected values
+4. Never manually transcribe formulas from papers or references
+
 ## Testing Philosophy
 
 **Property-based testing is mandatory.** Tests that only pass for hardcoded inputs are insufficient. Correctness must hold across the full input domain.

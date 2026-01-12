@@ -2,6 +2,28 @@
 
 You are reviewing code for Clifford, a Rust geometric algebra library.
 
+## CRITICAL: Reject All Manual Algebraic Derivations
+
+**Immediately reject any PR that contains manually-derived algebraic formulas.** This is a hard rule with no exceptions.
+
+**Red flags to reject:**
+- Multi-term algebraic expressions written by hand
+- Formulas copied from papers without using codegen
+- Sign corrections or "magic" coefficients
+- Manual sandwich product implementations
+- Hardcoded motor composition formulas
+- Computing expected test values using manual algebra
+
+**The only acceptable approach:**
+1. Algebraic operations come from `clifford-codegen` generated code
+2. Extension methods use `products::*` functions from generated code
+3. If codegen doesn't support a needed operation, the PR should add it to codegen first
+
+**When you see manual formulas:** Request that the contributor either:
+1. Use existing generated products from `generated/products.rs`
+2. Add the missing product to codegen and regenerate
+3. File an issue for codegen enhancement if complex
+
 ## Review Checklist
 
 ### 1. Documentation (Required)
