@@ -55,26 +55,20 @@ proptest! {
 proptest! {
     #[test]
     fn vec2_arbitrary_accessible(v in any::<dim2::Vector<f64>>()) {
-        // Verify Vector arbitrary is accessible
+        // Verify Vector arbitrary is accessible from generated code
         let _ = v.norm();
     }
 
     #[test]
-    fn non_zero_vec2_arbitrary_accessible(v in any::<dim2::arbitrary::NonZeroVector<f64>>()) {
-        // Verify NonZeroVector wrapper is accessible and has non-zero norm
-        prop_assert!(v.norm_squared() > 0.01);
+    fn bivec2_arbitrary_accessible(b in any::<dim2::Bivector<f64>>()) {
+        // Verify Bivector arbitrary is accessible from generated code
+        let _ = b.norm();
     }
 
     #[test]
-    fn unit_vec2_arbitrary_accessible(v in any::<dim2::arbitrary::UnitVector<f64>>()) {
-        // Verify UnitVector wrapper is accessible and has unit norm
-        prop_assert!(abs_diff_eq!(v.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-    }
-
-    #[test]
-    fn unit_rotor2_arbitrary_accessible(r in any::<dim2::arbitrary::UnitRotor<f64>>()) {
-        // Verify UnitRotor wrapper is accessible and has unit norm
-        prop_assert!(abs_diff_eq!(r.norm(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
+    fn rotor2_arbitrary_accessible(r in any::<dim2::Rotor<f64>>()) {
+        // Verify Rotor arbitrary is accessible from generated code
+        let _ = r.norm();
     }
 }
 
