@@ -68,6 +68,8 @@ The following lessons were learned during the Euclidean 3D migration:
 
 11. **nalgebra interop tests in nalgebra.rs**: Keep nalgebra conversion tests in the nalgebra.rs file using generated Arbitrary impls, not in a separate arbitrary.rs with wrapper types
 
+12. **Use `normalize()` from generated code**: Don't add a `normalized()` method to extensions.rs - the generated code already provides `normalize()` and `try_normalize()` methods. Use these consistently
+
 ## Phase 1: Create TOML Specification
 
 ### Deliverable: `algebras/projective2.toml`

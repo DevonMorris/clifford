@@ -69,7 +69,9 @@ The following lessons were learned during the Euclidean 3D migration:
 
 11. **nalgebra interop tests in nalgebra.rs**: Keep nalgebra conversion tests in the nalgebra.rs file using generated Arbitrary impls, not in a separate arbitrary.rs with wrapper types.
 
-12. **Motor-to-Rotor conversions**: When converting a unit Motor's rotation part to a Euclidean Rotor, `.normalized()` is unnecessary since the rotation part of a unit motor is already unit
+12. **Motor-to-Rotor conversions**: When converting a unit Motor's rotation part to a Euclidean Rotor, normalization is unnecessary since the rotation part of a unit motor is already unit
+
+13. **Use `normalize()` from generated code**: Don't add a `normalized()` method to extensions.rs - the generated code already provides `normalize()` and `try_normalize()` methods. Use these consistently
 
 ## Phase 1: Create TOML Specification
 

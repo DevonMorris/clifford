@@ -160,7 +160,7 @@ impl From<Rotor<f32>> for rerun::components::RotationQuat {
     /// ```
     #[inline]
     fn from(rotor: Rotor<f32>) -> Self {
-        let r = rotor.normalized();
+        let r = rotor.normalize();
         // Mapping: (x, y, z, w) = (yz, -xz, xy, s)
         let quat = rerun::Quaternion::from_xyzw([r.b().yz(), -r.b().xz(), r.b().xy(), r.s()]);
         rerun::components::RotationQuat(quat)
