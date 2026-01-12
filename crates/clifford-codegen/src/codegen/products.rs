@@ -11,7 +11,8 @@ use crate::algebra::geometric_grades;
 use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
 use crate::symbolic::{
-    AtomToRust, ExpressionSimplifier, ProductKind as SymbolicProductKind, SymbolicProduct,
+    AtomToRust, ConstraintSimplifier, ExpressionSimplifier, ProductKind as SymbolicProductKind,
+    SymbolicProduct,
 };
 
 /// The kind of product to generate.
@@ -762,8 +763,9 @@ impl<'a> ProductGenerator<'a> {
     ///
     /// This method uses Symbolica to:
     /// 1. Build a symbolic expression for the product
-    /// 2. Simplify by expanding and collecting like terms
-    /// 3. Convert the simplified expression to Rust code
+    /// 2. Apply constraint substitutions (e.g., unit norm)
+    /// 3. Simplify by expanding and collecting like terms
+    /// 4. Convert the simplified expression to Rust code
     ///
     /// This produces more compact code than the term-based approach when
     /// there are opportunities for simplification (e.g., constraint substitution).
@@ -775,7 +777,10 @@ impl<'a> ProductGenerator<'a> {
         kind: ProductKind,
     ) -> Vec<TokenStream> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
-        let simplifier = ExpressionSimplifier::new();
+        let expr_simplifier = ExpressionSimplifier::new();
+
+        // Create constraint simplifier for input type constraints
+        let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["a", "b"]);
 
         // Create symbolic field variables
         let a_symbols = symbolic_product.create_field_symbols(type_a, "a");
@@ -802,11 +807,14 @@ impl<'a> ProductGenerator<'a> {
         // Create converter for Rust code generation
         let converter = AtomToRust::new(&[type_a, type_b], &["a", "b"]);
 
-        // Simplify and convert each field expression
+        // Apply constraint substitution, simplify, and convert each field expression
         symbolic_fields
             .iter()
             .map(|field| {
-                let simplified = simplifier.simplify(&field.expression);
+                // First apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
+                let with_constraints = constraint_simplifier.apply(&field.expression);
+                // Then simplify (expand and collect like terms)
+                let simplified = expr_simplifier.simplify(&with_constraints);
                 converter.convert(&simplified)
             })
             .collect()
