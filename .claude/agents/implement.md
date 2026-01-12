@@ -113,6 +113,19 @@ impl<T: Float> Vector<T> {
 
 For types with constraints (Motor, Line), add `new_unchecked()` and `try_from_components()`.
 
+## Algebra TOML Files
+
+**All algebra specifications live in the top-level `algebras/` directory.** Never duplicate them elsewhere.
+
+```bash
+# Regenerate after codegen changes (always specify output path)
+cargo run --package clifford-codegen -- generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/generated --force
+cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
+cargo run --package clifford-codegen -- generate algebras/projective3.toml -o src/specialized/projective/dim3/generated --force
+```
+
+The `module_path` field in the TOML must match the target location (e.g., `euclidean::dim3` for `src/specialized/euclidean/dim3/generated/`).
+
 ## Module Structure and Naming
 
 The `specialized` module is organized by algebra type, then dimension:
@@ -122,7 +135,8 @@ specialized/
   euclidean/          # Euclidean GA (standard geometry)
     dim2/             # 2D: Vector, Bivector, Rotor
     dim3/             # 3D: Vector, Bivector, Trivector, Rotor, Even
-  projective/         # (future) Projective GA
+  projective/         # Projective GA
+    dim3/             # 3D: Point, Line, Plane, Motor, Flector
   conformal/          # (future) Conformal GA
 ```
 

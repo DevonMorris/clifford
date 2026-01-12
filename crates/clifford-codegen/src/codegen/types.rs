@@ -180,7 +180,7 @@ impl<'a> TypeGenerator<'a> {
         let example = self.generate_example(ty);
 
         let doc_string = format!(
-            "{}\n\n# Basis Ordering\n\n{}\n\n# Example\n\n```ignore\n{}\n```",
+            "{}\n\n# Basis Ordering\n\n{}\n\n# Example\n\n```\n{}\n```",
             description, basis_table, example
         );
 
@@ -214,15 +214,10 @@ impl<'a> TypeGenerator<'a> {
             .map(|(i, _)| format!("{}.0", i + 1))
             .collect();
 
-        let module_path = self
-            .spec
-            .module_path
-            .as_deref()
-            .unwrap_or("generated")
-            .replace("::", "/");
+        let module_path = self.spec.module_path.as_deref().unwrap_or("generated");
 
         format!(
-            "use clifford::{}::{};\n\nlet v = {}::new({});",
+            "use clifford::specialized::{}::{};\n\nlet v = {}::new({});",
             module_path,
             ty.name,
             ty.name,

@@ -444,17 +444,41 @@ Complex algebraic operations in geometric algebra (products, motor compositions,
 - **Type-safe code generation**: Products, conversions, and traits are generated with correct formulas
 - **Property-based testing**: Generated verification tests compare specialized types against generic Multivector
 
+#### Algebra TOML Files
+
+**All algebra specifications live in the top-level `algebras/` directory.** This is the single source of truth for algebra definitions.
+
+```
+algebras/
+  euclidean2.toml    # 2D Euclidean GA
+  euclidean3.toml    # 3D Euclidean GA
+  projective3.toml   # 3D Projective GA (PGA)
+```
+
+**Important guidelines:**
+- **Never duplicate** algebra TOMLs elsewhere in the repo
+- **Always regenerate** to the correct specialized module path:
+  - `euclidean::dim2` → `src/specialized/euclidean/dim2/generated/`
+  - `euclidean::dim3` → `src/specialized/euclidean/dim3/generated/`
+  - `projective::dim3` → `src/specialized/projective/dim3/generated/`
+- The `module_path` field in the TOML must match the target location
+
 #### Usage
 
 ```bash
-# Generate code for an algebra
-cargo run --package clifford-codegen -- generate algebras/projective3.toml --force
+# Generate code for an algebra (specify output path)
+cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
 
 # Discover valid entities for a signature
 cargo run --package clifford-codegen -- discover 3 0 1
 
 # List blades for an algebra
 cargo run --package clifford-codegen -- blades algebras/projective3.toml
+
+# Regenerate all algebras after codegen changes
+cargo run --package clifford-codegen -- generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/generated --force
+cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
+cargo run --package clifford-codegen -- generate algebras/projective3.toml -o src/specialized/projective/dim3/generated --force
 ```
 
 #### Generated Code Quality

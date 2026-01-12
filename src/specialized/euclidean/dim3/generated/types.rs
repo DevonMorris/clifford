@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "3D bivector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Bivector;\n\nlet v = Bivector::new(1.0, 2.0, 3.0);\n```"]
+#[doc = "3D bivector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Bivector;\n\nlet v = Bivector::new(1.0, 2.0, 3.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -127,7 +127,7 @@ impl<T: Float> Default for Bivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Rotor;\n\nlet v = Rotor::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Rotor;\n\nlet v = Rotor::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -243,7 +243,7 @@ impl<T: Float> Default for Rotor<T> {
         Self::identity()
     }
 }
-#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
+#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -343,7 +343,7 @@ impl<T: Float> Default for Scalar<T> {
         Self::identity()
     }
 }
-#[doc = "3D trivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `xyz` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Trivector;\n\nlet v = Trivector::new(1.0);\n```"]
+#[doc = "3D trivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `xyz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Trivector;\n\nlet v = Trivector::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -438,7 +438,7 @@ impl<T: Float> Default for Trivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n| 4 | e3 | `z` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim3::Vector;\n\nlet v = Vector::new(1.0, 2.0, 3.0);\n```"]
+#[doc = "3D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n| 4 | e3 | `z` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Vector;\n\nlet v = Vector::new(1.0, 2.0, 3.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]

@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "2D bivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim2::Bivector;\n\nlet v = Bivector::new(1.0);\n```"]
+#[doc = "2D bivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim2::Bivector;\n\nlet v = Bivector::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -103,7 +103,7 @@ impl<T: Float> Default for Bivector<T> {
         Self::zero()
     }
 }
-#[doc = "2D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim2::Rotor;\n\nlet v = Rotor::new(1.0, 2.0);\n```"]
+#[doc = "2D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim2::Rotor;\n\nlet v = Rotor::new(1.0, 2.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -205,7 +205,7 @@ impl<T: Float> Default for Rotor<T> {
         Self::identity()
     }
 }
-#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim2::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
+#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim2::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -305,7 +305,7 @@ impl<T: Float> Default for Scalar<T> {
         Self::identity()
     }
 }
-#[doc = "2D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n\n\n# Example\n\n```ignore\nuse clifford::euclidean/dim2::Vector;\n\nlet v = Vector::new(1.0, 2.0);\n```"]
+#[doc = "2D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim2::Vector;\n\nlet v = Vector::new(1.0, 2.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]

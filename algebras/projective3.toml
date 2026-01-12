@@ -10,7 +10,7 @@
 
 [algebra]
 name = "projective3"
-module_path = "generated::projective3"
+module_path = "projective::dim3"
 description = "3D Projective Geometric Algebra"
 
 [signature]
