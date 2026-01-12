@@ -33,6 +33,8 @@ use super::signature::Algebra;
 pub struct ProductTable {
     /// The algebra dimension.
     dim: usize,
+    /// Signature (p, q, r): p positive, q negative, r degenerate.
+    signature: (usize, usize, usize),
     /// Signs for geometric product: signs[a * n + b] = sign of e_a * e_b.
     signs: Vec<i8>,
     /// Result indices: results[a * n + b] = index of e_a * e_b.
@@ -70,6 +72,7 @@ impl ProductTable {
 
         Self {
             dim: algebra.dim(),
+            signature: algebra.signature(),
             signs,
             results,
         }
@@ -129,6 +132,148 @@ impl ProductTable {
     #[inline]
     pub fn result(&self, a: usize, b: usize) -> usize {
         self.results[a * self.num_blades() + b]
+    }
+
+    /// Returns the metric value for a basis vector.
+    ///
+    /// - Returns `+1` for positive basis vectors (indices `0..p`)
+    /// - Returns `-1` for negative basis vectors (indices `p..p+q`)
+    /// - Returns `0` for degenerate basis vectors (indices `p+q..dim`)
+    #[inline]
+    #[allow(dead_code)]
+    fn metric(&self, basis: usize) -> i8 {
+        let (p, q, _r) = self.signature;
+        if basis < p {
+            1
+        } else if basis < p + q {
+            -1
+        } else {
+            0
+        }
+    }
+
+    /// Returns the anti-metric value for a basis vector.
+    ///
+    /// The anti-metric "swaps" the degenerate subspace. In PGA (3,0,1):
+    /// - Original metric: e₄ squares to 0
+    /// - Anti-metric: e₄ squares to 1 (so products involving e₄² don't vanish)
+    ///
+    /// This is essential for correct antiproduct computation in degenerate algebras.
+    #[inline]
+    fn anti_metric(&self, basis: usize) -> i8 {
+        let (p, q, _r) = self.signature;
+        if basis < p {
+            // Positive in original metric → positive in anti-metric
+            1
+        } else if basis < p + q {
+            // Negative in original metric → negative in anti-metric
+            -1
+        } else {
+            // Degenerate in original metric → positive in anti-metric
+            // This is the key difference: e₀² = 0 becomes ē₀² = 1
+            1
+        }
+    }
+
+    /// Computes the metric contribution for the anti-metric product.
+    ///
+    /// For an overlap (shared basis vectors), returns the product of
+    /// anti-metric values for each basis in the overlap.
+    ///
+    /// # Returns
+    ///
+    /// - The product of anti-metric values, or
+    /// - 0 if the overlap represents a degenerate combination in anti-space
+    fn anti_metric_contribution(&self, overlap: usize) -> i8 {
+        let (_p, _q, r) = self.signature;
+
+        // In the anti-metric, the degenerate subspace is the COMPLEMENT of
+        // the original degenerate subspace. For PGA where e₄ is degenerate:
+        // - Original: e₄² = 0
+        // - Anti: (e₁₂₃)² maps to degenerate behavior
+        //
+        // The check: if ALL non-degenerate basis vectors are in the overlap
+        // AND no degenerate basis vectors are in the overlap, the contribution
+        // is 0 (this represents squaring the "anti-degenerate" subspace).
+        //
+        // More specifically: overlap is degenerate in anti-space if it consists
+        // only of the non-degenerate part of the algebra.
+
+        // Mask of non-degenerate basis vectors
+        let non_degenerate_mask = (1usize << (self.dim - r)) - 1;
+
+        // Check if overlap contains ONLY non-degenerate bases AND all of them
+        if r > 0 && overlap == non_degenerate_mask {
+            // This is the anti-degenerate case: e₁₂₃...eₚ₊ᵧ squared
+            return 0;
+        }
+
+        // Otherwise, compute product of anti-metric values
+        let mut contribution: i8 = 1;
+        for basis in 0..self.dim {
+            if (overlap >> basis) & 1 == 1 {
+                let m = self.anti_metric(basis);
+                // In anti-metric, degenerate bases become +1, so we never get 0 here
+                contribution *= m;
+            }
+        }
+
+        contribution
+    }
+
+    /// Computes the geometric product using the anti-metric.
+    ///
+    /// This is the dual of the geometric product, used for computing
+    /// the antiproduct in degenerate algebras like PGA.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the product
+    pub fn geometric_anti(&self, a: usize, b: usize) -> (i8, usize) {
+        let result_blade = a ^ b;
+        let overlap = a & b;
+
+        if overlap == 0 {
+            // No metric contribution, just reordering sign
+            return (self.exterior_sign(a, b), result_blade);
+        }
+
+        // Use anti-metric for overlap contribution
+        let metric_sign = self.anti_metric_contribution(overlap);
+        if metric_sign == 0 {
+            return (0, 0);
+        }
+
+        // Compute reordering sign (same as regular geometric product)
+        let reorder_sign = self.compute_reorder_sign(a, b);
+
+        (reorder_sign * metric_sign, result_blade)
+    }
+
+    /// Computes the sign from reordering basis vectors in a product.
+    ///
+    /// When computing e_A * e_B, we need to count how many transpositions
+    /// are needed to bring the basis vectors into canonical order.
+    fn compute_reorder_sign(&self, a: usize, b: usize) -> i8 {
+        // For each bit position, count how many bits in 'a' are above it
+        // (need to swap past them when merging)
+        let mut transpositions = 0;
+        let mut b_remaining = b;
+
+        while b_remaining != 0 {
+            let lowest_b = b_remaining & b_remaining.wrapping_neg();
+            let b_pos = lowest_b.trailing_zeros();
+
+            // Count bits in 'a' that are above this position
+            let a_above = a >> (b_pos + 1);
+            transpositions += a_above.count_ones();
+
+            b_remaining &= !lowest_b;
+        }
+
+        if transpositions % 2 == 0 { 1 } else { -1 }
     }
 
     /// Finds all products that contribute to a given result blade.
@@ -301,12 +446,17 @@ impl ProductTable {
     /// Computes the geometric antiproduct of two blades.
     ///
     /// The antiproduct is defined as:
-    /// `a ⊛ b = ∁(∁a * ∁b)`
+    /// `a ⊛ b = ∁(∁a *_anti ∁b)`
     ///
-    /// where `*` is the geometric product and `∁` is the complement.
+    /// where `*_anti` is the geometric product using the **anti-metric** and
+    /// `∁` is the complement.
     ///
-    /// In PGA (Projective GA), the antiproduct is essential for correct
-    /// motor transformations because it handles the degenerate metric properly.
+    /// In degenerate algebras like PGA, the standard formula `∁(∁a * ∁b)` using
+    /// the original metric fails because products involving the degenerate basis
+    /// vanish. The anti-metric fixes this by "swapping" which directions are
+    /// degenerate:
+    /// - Original PGA metric: e₀² = 0
+    /// - Anti-metric: ē₀² = 1 (the complement of e₀ becomes degenerate instead)
     ///
     /// # Returns
     ///
@@ -320,8 +470,8 @@ impl ProductTable {
         let (sign_ca, comp_a) = self.complement(a);
         let (sign_cb, comp_b) = self.complement(b);
 
-        // Geometric product of complements
-        let (sign_prod, prod) = self.geometric(comp_a, comp_b);
+        // Geometric product of complements using ANTI-METRIC
+        let (sign_prod, prod) = self.geometric_anti(comp_a, comp_b);
         if sign_prod == 0 {
             return (0, 0);
         }
@@ -466,5 +616,128 @@ mod tests {
         assert!(table.has_contributions_to_grade(&bivectors, &vectors, 3));
         assert!(!table.has_contributions_to_grade(&bivectors, &vectors, 0));
         assert!(!table.has_contributions_to_grade(&bivectors, &vectors, 2));
+    }
+
+    #[test]
+    fn pga_antiproduct_pseudoscalar_is_identity() {
+        // PGA (3,0,1): e1, e2, e3 square to +1, e4 squares to 0
+        // The PSEUDOSCALAR (e1234) acts as identity for antiproduct
+        // (dual to scalar being identity for geometric product)
+        let algebra = Algebra::pga(3);
+        let table = ProductTable::new(&algebra);
+
+        let pseudoscalar = 15; // e1234
+        let e1 = 1;
+        let e2 = 2;
+        let e3 = 4;
+        let e4 = 8;
+
+        // Pseudoscalar ⊛ anything = ±anything (identity up to sign)
+        let (sign, result) = table.antiproduct(pseudoscalar, e1);
+        assert_eq!(result, e1, "pseudoscalar ⊛ e1 should give e1");
+        assert_ne!(sign, 0);
+
+        let (sign, result) = table.antiproduct(pseudoscalar, e2);
+        assert_eq!(result, e2, "pseudoscalar ⊛ e2 should give e2");
+        assert_ne!(sign, 0);
+
+        let (sign, result) = table.antiproduct(pseudoscalar, e3);
+        assert_eq!(result, e3, "pseudoscalar ⊛ e3 should give e3");
+        assert_ne!(sign, 0);
+
+        let (sign, result) = table.antiproduct(pseudoscalar, e4);
+        assert_eq!(result, e4, "pseudoscalar ⊛ e4 should give e4");
+        assert_ne!(sign, 0);
+    }
+
+    #[test]
+    fn pga_antiproduct_scalar_behavior() {
+        // In anti-space, scalar maps to "dual" behavior
+        // scalar ⊛ non-degenerate-basis should NOT give 0
+        // scalar ⊛ degenerate-basis CAN give 0 (anti-degenerate)
+        let algebra = Algebra::pga(3);
+        let table = ProductTable::new(&algebra);
+
+        let scalar = 0;
+        let e1 = 1; // non-degenerate
+        let e4 = 8; // degenerate
+
+        // scalar ⊛ e1 should be non-zero (the original bug fix)
+        let (sign, result) = table.antiproduct(scalar, e1);
+        assert_ne!(sign, 0, "scalar ⊛ e1 should not vanish in PGA");
+        // The result should be the complement of e1 (e234)
+        assert_eq!(result, 14, "scalar ⊛ e1 should give e234");
+
+        // scalar ⊛ e4 gives 0 because e123 (complement of e4) is anti-degenerate
+        let (sign, _result) = table.antiproduct(scalar, e4);
+        assert_eq!(sign, 0, "scalar ⊛ e4 should vanish (anti-degenerate)");
+    }
+
+    #[test]
+    fn pga_antiproduct_motor_point_nonzero() {
+        // Motor components and point components should produce non-zero antiproducts
+        let algebra = Algebra::pga(3);
+        let table = ProductTable::new(&algebra);
+
+        // Motor has scalar and e0i components (bivectors containing e4)
+        // In 4D PGA: e14 = 9, e24 = 10, e34 = 12
+        let e14 = 9;
+        let e1 = 1;
+
+        // e14 ⊛ e1 should be non-zero (translation affects points)
+        let (sign, _result) = table.antiproduct(e14, e1);
+        assert_ne!(sign, 0, "e14 ⊛ e1 should not vanish");
+    }
+
+    #[test]
+    fn pga_anti_metric_contribution() {
+        // Test the anti_metric_contribution directly
+        let algebra = Algebra::pga(3);
+        let table = ProductTable::new(&algebra);
+
+        // In PGA (3,0,1), the anti-degenerate overlap is e123 (index 7)
+        // which is all non-degenerate bases: bits 0, 1, 2
+        assert_eq!(
+            table.anti_metric_contribution(7),
+            0,
+            "e123 overlap should be degenerate in anti-space"
+        );
+
+        // Overlaps that include the degenerate basis (e4, bit 3) should NOT vanish
+        // e4 alone (index 8)
+        assert_ne!(
+            table.anti_metric_contribution(8),
+            0,
+            "e4 overlap should not be degenerate in anti-space"
+        );
+
+        // e14 overlap (bits 0 and 3, index 9)
+        assert_ne!(
+            table.anti_metric_contribution(9),
+            0,
+            "e14 overlap should not be degenerate in anti-space"
+        );
+
+        // e234 overlap (bits 1, 2, 3, index 14)
+        assert_ne!(
+            table.anti_metric_contribution(14),
+            0,
+            "e234 overlap should not be degenerate in anti-space"
+        );
+    }
+
+    #[test]
+    fn euclidean_antiproduct_same_as_geometric() {
+        // In Euclidean algebras (no degenerate directions), the antiproduct
+        // should behave similarly to the geometric product (up to sign/complement)
+        let algebra = Algebra::euclidean(3);
+        let table = ProductTable::new(&algebra);
+
+        // Antiscalar in 3D Euclidean is e123 (index 7)
+        let antiscalar = 7;
+        let e1 = 1;
+
+        // e123 ⊛ e1 = e1 (identity property)
+        assert_eq!(table.antiproduct(antiscalar, e1), (1, e1));
     }
 }
