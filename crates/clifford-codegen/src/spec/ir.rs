@@ -88,6 +88,28 @@ pub struct TypeSpec {
     /// Linear constraints are always solvable; quadratic constraints may require
     /// `Option<Self>` return type due to domain restrictions.
     pub constraints: Vec<UserConstraint>,
+    /// Versor information (if this type is a versor).
+    ///
+    /// If present, this type can transform other elements via the sandwich
+    /// product: `X' = V * X * rev(V)`.
+    pub versor: Option<VersorSpec>,
+}
+
+/// Versor specification for a type.
+///
+/// Versors are elements that can transform other elements via the sandwich
+/// product. This includes rotors (rotations), motors (rigid motions),
+/// and flectors (reflections).
+#[derive(Debug, Clone)]
+pub struct VersorSpec {
+    /// Whether this versor has unit norm (`V * rev(V) = 1`).
+    ///
+    /// Unit versors have simpler sandwich formulas since `V⁻¹ = rev(V)`.
+    pub is_unit: bool,
+    /// Types that this versor can transform via sandwich product.
+    ///
+    /// Empty means auto-detect based on grade compatibility.
+    pub sandwich_targets: Vec<String>,
 }
 
 /// Sign convention for constraints with ± ambiguity.
@@ -116,7 +138,7 @@ pub struct UserConstraint {
     /// Enforcement method to generate (e.g., "normalize").
     pub enforce: Option<String>,
     /// Whether this constraint has domain restrictions (e.g., requires sqrt).
-    /// If true, new() returns Option<Self>.
+    /// If true, `new()` returns `Option<Self>`.
     pub has_domain_restriction: bool,
 }
 

@@ -80,6 +80,29 @@ pub struct RawTypeSpec {
     /// User-defined additional constraints.
     #[serde(default)]
     pub constraints: Vec<RawUserConstraint>,
+    /// Whether this type is a versor (for sandwich products).
+    ///
+    /// Versors are elements that can transform other elements via the
+    /// sandwich product: `X' = V * X * rev(V)`.
+    #[serde(default)]
+    pub versor: bool,
+    /// Sandwich product configuration.
+    ///
+    /// Specifies which types this versor can transform via sandwich product.
+    #[serde(default)]
+    pub sandwich: Option<RawSandwichConfig>,
+}
+
+/// Raw sandwich product configuration.
+#[derive(Debug, Deserialize, Clone, Default)]
+pub struct RawSandwichConfig {
+    /// Target types for sandwich product.
+    ///
+    /// Can be:
+    /// - A list of type names: `["Vector", "Bivector"]`
+    /// - Empty to auto-detect targets based on grade compatibility
+    #[serde(default)]
+    pub targets: Vec<String>,
 }
 
 /// Raw user-defined constraint.

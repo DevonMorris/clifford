@@ -10,7 +10,7 @@ use crate::discovery::{ProductType, infer_all_products};
 use super::error::ParseError;
 use super::ir::{
     AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
-    SignConvention, SignatureSpec, TypeSpec, UserConstraint, normalize_constraint_expr,
+    SignConvention, SignatureSpec, TypeSpec, UserConstraint, VersorSpec, normalize_constraint_expr,
 };
 use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec, RawUserConstraint};
 
@@ -376,6 +376,20 @@ fn parse_type(
     let user_constraints = parse_user_constraints(&raw.constraints, &fields, name)?;
     constraints.extend(user_constraints);
 
+    // Parse versor information
+    let versor = if raw.versor {
+        Some(VersorSpec {
+            is_unit: constraints.iter().any(|c| c.name == "unit"),
+            sandwich_targets: raw
+                .sandwich
+                .as_ref()
+                .map(|s| s.targets.clone())
+                .unwrap_or_default(),
+        })
+    } else {
+        None
+    };
+
     Ok(TypeSpec {
         name: name.to_string(),
         grades: raw.grades.clone(),
@@ -383,6 +397,7 @@ fn parse_type(
         fields,
         alias_of: raw.alias_of.clone(),
         constraints,
+        versor,
     })
 }
 
@@ -510,13 +525,37 @@ fn default_blade_name(blade_index: usize, sig: &SignatureSpec) -> String {
 }
 
 /// Builds field specs from provided field names.
+///
+/// # Canonical Ordering Requirement
+///
+/// Fields in TOML must be listed in **canonical blade order**:
+/// 1. First by grade (ascending)
+/// 2. Within each grade, by blade index (ascending)
+///
+/// Blade indices follow the bitmask convention where bit `i` indicates
+/// the presence of basis vector `eᵢ`. For example, in 3D:
+///
+/// | Index | Binary | Blade | Grade |
+/// |-------|--------|-------|-------|
+/// | 0     | 000    | 1     | 0     |
+/// | 1     | 001    | e₁    | 1     |
+/// | 2     | 010    | e₂    | 1     |
+/// | 3     | 011    | e₁₂   | 2     |
+/// | 4     | 100    | e₃    | 1     |
+/// | 5     | 101    | e₁₃   | 2     |
+/// | 6     | 110    | e₂₃   | 2     |
+/// | 7     | 111    | e₁₂₃  | 3     |
+///
+/// So for a grade-2 Bivector in 3D, fields must be in order: `["xy", "xz", "yz"]`
+/// (corresponding to blade indices 3, 5, 6).
 fn build_fields_from_names(
     names: &[String],
     grades: &[usize],
     dim: usize,
     type_name: &str,
 ) -> Result<Vec<FieldSpec>, ParseError> {
-    // Collect blade indices for these grades in order
+    // Collect blade indices for these grades in canonical order
+    // (sorted by grade first, then by blade index within each grade)
     let mut blade_indices = Vec::new();
     for &grade in grades {
         for blade_index in 0usize..(1 << dim) {
@@ -543,6 +582,42 @@ fn build_fields_from_names(
             grade,
         })
         .collect())
+}
+
+/// Validates that fields in a TypeSpec have canonical blade ordering.
+///
+/// Fields must be ordered by grade first (ascending), then by blade index
+/// within each grade (ascending). This ensures consistent behavior in
+/// product computations and conversions.
+///
+/// # Returns
+///
+/// `true` if the fields are in canonical order, `false` otherwise.
+#[cfg(test)]
+pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
+    if ty.fields.is_empty() {
+        return true;
+    }
+
+    let mut prev_grade = 0;
+    let mut prev_blade_index = 0;
+
+    for (i, field) in ty.fields.iter().enumerate() {
+        // Fields must be ordered by grade first
+        if field.grade < prev_grade {
+            return false;
+        }
+
+        // Within a grade, blade indices must be ascending
+        if field.grade == prev_grade && i > 0 && field.blade_index <= prev_blade_index {
+            return false;
+        }
+
+        prev_grade = field.grade;
+        prev_blade_index = field.blade_index;
+    }
+
+    true
 }
 
 /// Infers products automatically from types.
@@ -1183,5 +1258,128 @@ mod tests {
             &Some("s".to_string())
         ));
         assert!(!super::detect_domain_restriction("s*s = 1", &None));
+    }
+
+    #[test]
+    fn blade_indices_are_canonical_euclidean2() {
+        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+
+        for ty in &spec.types {
+            assert!(
+                super::validate_canonical_field_order(ty),
+                "Type {} in euclidean2.toml has non-canonical field ordering:\n{:?}",
+                ty.name,
+                ty.fields
+            );
+        }
+    }
+
+    #[test]
+    fn blade_indices_are_canonical_euclidean3() {
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+
+        for ty in &spec.types {
+            assert!(
+                super::validate_canonical_field_order(ty),
+                "Type {} in euclidean3.toml has non-canonical field ordering:\n{:?}",
+                ty.name,
+                ty.fields
+            );
+        }
+    }
+
+    #[test]
+    fn validate_canonical_order_function() {
+        // Test the validation function with synthetic data
+        use super::super::ir::FieldSpec;
+
+        // Valid canonical ordering for grade 2 in 3D
+        let valid_type = super::super::ir::TypeSpec {
+            name: "Bivector".to_string(),
+            grades: vec![2],
+            description: None,
+            fields: vec![
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                },
+            ],
+            alias_of: None,
+            constraints: vec![],
+            versor: None,
+        };
+        assert!(super::validate_canonical_field_order(&valid_type));
+
+        // Invalid: wrong order within grade
+        let invalid_type = super::super::ir::TypeSpec {
+            name: "Bivector".to_string(),
+            grades: vec![2],
+            description: None,
+            fields: vec![
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                }, // Wrong!
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                }, // Wrong!
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                }, // Wrong!
+            ],
+            alias_of: None,
+            constraints: vec![],
+            versor: None,
+        };
+        assert!(!super::validate_canonical_field_order(&invalid_type));
+
+        // Valid multi-grade type
+        let valid_rotor = super::super::ir::TypeSpec {
+            name: "Rotor".to_string(),
+            grades: vec![0, 2],
+            description: None,
+            fields: vec![
+                FieldSpec {
+                    name: "s".to_string(),
+                    blade_index: 0,
+                    grade: 0,
+                },
+                FieldSpec {
+                    name: "xy".to_string(),
+                    blade_index: 3,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "xz".to_string(),
+                    blade_index: 5,
+                    grade: 2,
+                },
+                FieldSpec {
+                    name: "yz".to_string(),
+                    blade_index: 6,
+                    grade: 2,
+                },
+            ],
+            alias_of: None,
+            constraints: vec![],
+            versor: None,
+        };
+        assert!(super::validate_canonical_field_order(&valid_rotor));
     }
 }

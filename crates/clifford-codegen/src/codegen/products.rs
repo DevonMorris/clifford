@@ -10,6 +10,10 @@ use quote::{format_ident, quote};
 use crate::algebra::geometric_grades;
 use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
+use crate::symbolic::{
+    AtomToRust, ConstraintSimplifier, ExpressionSimplifier, ProductKind as SymbolicProductKind,
+    SymbolicProduct,
+};
 
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -259,15 +263,9 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms =
-                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Geometric);
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Geometric);
 
         let doc = format!(
             "Geometric product: {} * {} -> {}",
@@ -323,15 +321,9 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms =
-                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Outer);
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Outer);
 
         let doc = format!(
             "Outer product: {} ^ {} -> {}",
@@ -387,19 +379,13 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms = self.compute_terms(
-                    type_a,
-                    type_b,
-                    field.blade_index,
-                    ProductKind::LeftContraction,
-                );
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Use symbolic simplification for expression generation
+        let field_exprs = self.generate_expression_symbolic(
+            type_a,
+            type_b,
+            output_type,
+            ProductKind::LeftContraction,
+        );
 
         let doc = format!(
             "Left contraction: {} | {} -> {}",
@@ -480,47 +466,110 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all sandwich product functions.
     ///
-    /// Sandwich products are currently not auto-generated to avoid dead code.
-    /// They will be generated when explicitly requested via spec options.
+    /// Sandwich products are generated for types marked as versors in the TOML spec.
+    /// For each versor type, we generate a sandwich function for each target type
+    /// specified in its `sandwich.targets` list.
     fn generate_all_sandwich(&self) -> TokenStream {
-        // TODO: Add spec option to enable sandwich product generation
-        // For now, return empty to avoid dead code warnings
-        quote! {}
-    }
+        let mut products = Vec::new();
 
-    /// Generates all sandwich product functions (internal implementation).
-    ///
-    /// Sandwich products are only generated for versor types (Rotor) acting on
-    /// grade-k types (Vector, Bivector, etc.).
-    #[allow(dead_code)]
-    fn generate_all_sandwich_impl(&self) -> TokenStream {
-        let products: Vec<TokenStream> = self
-            .spec
-            .types
-            .iter()
-            .filter(|t| t.alias_of.is_none())
-            .filter(|t| self.is_versor_type(t))
-            .flat_map(|versor_type| {
-                self.spec
-                    .types
-                    .iter()
-                    .filter(|t| t.alias_of.is_none())
-                    .filter(|t| !self.is_versor_type(t) || t.name == "Scalar")
-                    .filter_map(|operand_type| {
-                        self.generate_sandwich_product(versor_type, operand_type)
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect();
+        for versor_type in &self.spec.types {
+            // Skip non-versors and aliases
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+
+            if let Some(ref versor_spec) = versor_type.versor {
+                // Get targets - either explicit or auto-detected
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    // Auto-detect targets: all types that preserve grade under sandwich
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        if let Some(product) =
+                            self.generate_sandwich_product_from_spec(versor_type, target_type)
+                        {
+                            products.push(product);
+                        }
+                    }
+                }
+            }
+        }
 
         quote! { #(#products)* }
     }
 
+    /// Infers valid sandwich targets for a versor type.
+    ///
+    /// A type is a valid target if the sandwich product V * X * rev(V) produces
+    /// the same grades as X (grade-preserving transformation).
+    fn infer_sandwich_targets(&self, versor_type: &TypeSpec) -> Vec<String> {
+        let mut targets = Vec::new();
+        let dim = self.algebra.dim();
+
+        for candidate in &self.spec.types {
+            // Skip aliases
+            if candidate.alias_of.is_some() {
+                continue;
+            }
+
+            // Check if sandwich preserves grades
+            let output_grades =
+                self.compute_sandwich_output_grades(&versor_type.grades, &candidate.grades, dim);
+
+            // Valid target if output grades exactly match candidate grades
+            let candidate_grades_set: std::collections::HashSet<usize> =
+                candidate.grades.iter().copied().collect();
+            if output_grades == candidate_grades_set {
+                targets.push(candidate.name.clone());
+            }
+        }
+
+        targets
+    }
+
+    /// Computes output grades of a sandwich product V * X * rev(V).
+    fn compute_sandwich_output_grades(
+        &self,
+        versor_grades: &[usize],
+        operand_grades: &[usize],
+        dim: usize,
+    ) -> std::collections::HashSet<usize> {
+        use crate::algebra::geometric_grades;
+        let mut output = std::collections::HashSet::new();
+
+        for &vg in versor_grades {
+            for &xg in operand_grades {
+                for &wg in versor_grades {
+                    // Compute possible output grades from v * x * w
+                    let vx_grades = geometric_grades(vg, xg, dim);
+                    for vxg in vx_grades {
+                        let vxw_grades = geometric_grades(vxg, wg, dim);
+                        output.extend(vxw_grades);
+                    }
+                }
+            }
+        }
+
+        output
+    }
+
+    /// Generates a single sandwich product function from versor spec.
+    fn generate_sandwich_product_from_spec(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+    ) -> Option<TokenStream> {
+        self.generate_sandwich_product(versor_type, operand_type)
+    }
+
     /// Checks if a type is a versor (e.g., Rotor).
+    #[allow(dead_code)]
     fn is_versor_type(&self, ty: &TypeSpec) -> bool {
-        // Versors typically have grades 0 and 2, or 0, 2, and 4, etc.
-        // For now, we consider any type with grade 0 and even grades as a versor.
-        ty.grades.contains(&0) && ty.grades.iter().all(|g| g % 2 == 0) && ty.name.contains("Rotor")
+        ty.versor.is_some()
     }
 
     /// Generates a single sandwich product function.
@@ -761,10 +810,75 @@ impl<'a> ProductGenerator<'a> {
             .into_iter()
             .filter(|(_, sign)| *sign != 0)
             .map(|((v1, x, v2), sign)| SandwichTerm {
-                sign: if sign > 0 { 1 } else { -1 },
+                sign, // Keep the accumulated coefficient (can be 2, 3, -2, etc.)
                 v_field_1: v1,
                 x_field: x,
                 v_field_2: v2,
+            })
+            .collect()
+    }
+
+    // ========================================================================
+    // Symbolic Expression Generation
+    // ========================================================================
+
+    /// Generates a simplified Rust expression using symbolic algebra.
+    ///
+    /// This method uses Symbolica to:
+    /// 1. Build a symbolic expression for the product
+    /// 2. Apply constraint substitutions (e.g., unit norm)
+    /// 3. Simplify by expanding and collecting like terms
+    /// 4. Convert the simplified expression to Rust code
+    ///
+    /// This produces more compact code than the term-based approach when
+    /// there are opportunities for simplification (e.g., constraint substitution).
+    fn generate_expression_symbolic(
+        &self,
+        type_a: &TypeSpec,
+        type_b: &TypeSpec,
+        output_type: &TypeSpec,
+        kind: ProductKind,
+    ) -> Vec<TokenStream> {
+        let symbolic_product = SymbolicProduct::new(self.algebra);
+        let expr_simplifier = ExpressionSimplifier::new();
+
+        // Create constraint simplifier for input type constraints
+        let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["a", "b"]);
+
+        // Create symbolic field variables
+        let a_symbols = symbolic_product.create_field_symbols(type_a, "a");
+        let b_symbols = symbolic_product.create_field_symbols(type_b, "b");
+
+        // Map ProductKind to SymbolicProductKind
+        let symbolic_kind = match kind {
+            ProductKind::Geometric => SymbolicProductKind::Geometric,
+            ProductKind::Outer => SymbolicProductKind::Outer,
+            ProductKind::LeftContraction => SymbolicProductKind::LeftContraction,
+            _ => SymbolicProductKind::Geometric, // Fallback for other kinds
+        };
+
+        // Compute symbolic product
+        let symbolic_fields = symbolic_product.compute(
+            type_a,
+            type_b,
+            output_type,
+            symbolic_kind,
+            &a_symbols,
+            &b_symbols,
+        );
+
+        // Create converter for Rust code generation
+        let converter = AtomToRust::new(&[type_a, type_b], &["a", "b"]);
+
+        // Apply constraint substitution, simplify, and convert each field expression
+        symbolic_fields
+            .iter()
+            .map(|field| {
+                // First apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
+                let with_constraints = constraint_simplifier.apply(&field.expression);
+                // Then simplify (expand and collect like terms)
+                let simplified = expr_simplifier.simplify(&with_constraints);
+                converter.convert(&simplified)
             })
             .collect()
     }
@@ -811,11 +925,28 @@ impl<'a> ProductGenerator<'a> {
             let x_field = format_ident!("{}", term.x_field);
             let v2 = format_ident!("{}", term.v_field_2);
 
-            let term_expr = match (i, term.sign) {
-                (0, s) if s > 0 => quote! { v.#v1() * x.#x_field() * v.#v2() },
-                (0, _) => quote! { -(v.#v1() * x.#x_field() * v.#v2()) },
-                (_, s) if s > 0 => quote! { + v.#v1() * x.#x_field() * v.#v2() },
-                (_, _) => quote! { - v.#v1() * x.#x_field() * v.#v2() },
+            let abs_coeff = term.sign.abs();
+            let is_negative = term.sign < 0;
+
+            // Build the base product expression
+            let base_expr = quote! { v.#v1() * x.#x_field() * v.#v2() };
+
+            // Apply coefficient if not 1
+            let coeff_expr = match abs_coeff {
+                1 => base_expr,
+                2 => quote! { T::TWO * #base_expr },
+                n => {
+                    let n_i8 = n as i8;
+                    quote! { T::from_i8(#n_i8) * #base_expr }
+                }
+            };
+
+            // Apply sign and position-based formatting
+            let term_expr = match (i, is_negative) {
+                (0, false) => coeff_expr,
+                (0, true) => quote! { -(#coeff_expr) },
+                (_, false) => quote! { + #coeff_expr },
+                (_, true) => quote! { - #coeff_expr },
             };
 
             expr_parts.push(term_expr);
@@ -874,9 +1005,9 @@ mod tests {
     }
 
     #[test]
-    fn skips_sandwich_unless_specified() {
-        // Sandwich products are not auto-generated to avoid dead code
-        // They will only be generated when explicitly requested via spec options
+    fn generates_sandwich_for_marked_versors() {
+        // Sandwich products are generated for types marked with versor = true
+        // and explicitly listed targets in [types.TypeName.sandwich]
         let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -885,7 +1016,25 @@ mod tests {
         let tokens = generator.generate_products_file();
         let code = tokens.to_string();
 
-        // Sandwich should NOT be generated by default
+        // Rotor is marked as versor with targets Vector, Bivector, Rotor
+        assert!(code.contains("sandwich_rotor_vector"));
+        assert!(code.contains("sandwich_rotor_bivector"));
+        assert!(code.contains("sandwich_rotor_rotor"));
+    }
+
+    #[test]
+    fn skips_sandwich_without_versor_marking() {
+        // Sandwich products are NOT generated for types without versor = true
+        // Use euclidean2 which has no versor marking
+        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+        let algebra = Algebra::euclidean(2);
+        let table = ProductTable::new(&algebra);
+        let generator = ProductGenerator::new(&spec, &algebra, table);
+
+        let tokens = generator.generate_products_file();
+        let code = tokens.to_string();
+
+        // Sandwich should NOT be generated (no versor marking)
         assert!(!code.contains("sandwich_"));
     }
 

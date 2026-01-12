@@ -11,6 +11,7 @@
 //! - [`ConstraintParser`]: Parse constraint expressions from strings
 //! - [`SymbolicProduct`]: Compute symbolic product outputs
 //! - [`ConstraintVerifier`]: Verify that outputs satisfy constraints
+//! - [`ConstraintSimplifier`]: Apply type constraints to simplify expressions
 //!
 //! # Example
 //!
@@ -26,12 +27,18 @@
 //! let result = verifier.verify(&input_constraints, &constraint, &output_fields);
 //! ```
 
+mod constraint_simplify;
 mod parser;
 mod product;
+mod simplify;
 mod solver;
+mod to_rust;
 mod verify;
 
+pub use constraint_simplify::ConstraintSimplifier;
 pub use parser::{ConstraintExpr, ConstraintParser, ParseError};
 pub use product::{ProductKind, SymbolicField, SymbolicProduct};
+pub use simplify::ExpressionSimplifier;
 pub use solver::{ConstraintSolver, SolutionType, SolveError, SolveResult};
+pub use to_rust::AtomToRust;
 pub use verify::{ConstraintVerifier, VerificationResult};

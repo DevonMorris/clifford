@@ -27,6 +27,9 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-11](prd-11-autodiff.md) | Pending | Automatic differentiation via dual numbers |
 | [PRD-12](prd-12-rerun.md) | **Complete** | Rerun visualization integration |
 | [PRD-13](prd-13-release.md) | Draft | Release and publishing process |
+| [PRD-14](prd-14-codegen.md) | In Progress | Geometric Algebra Code Generator |
+| [PRD-15](prd-15-codegen-migration.md) | In Progress | Codegen Migration (Euclidean, Projective) |
+| [PRD-16](prd-16-codegen-improvements.md) | Draft | Codegen Improvements: Blade Ordering, Versors, Simplification |
 
 ## Implementation Order
 
