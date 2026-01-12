@@ -1081,14 +1081,56 @@ impl<T: Float> Motor<T> {
         )
     }
 
-    /// Transform a point via antisandwich product.
+    /// Transform a point by this motor.
     ///
-    /// In PGA, the antisandwich `M ⊛ P ⊛ rev(M)` is required for correct
-    /// motor transformations because it handles the degenerate metric (e0² = 0).
-    /// The regular sandwich product doesn't work for translations.
+    /// Uses the PGA-specific transformation formula from Rigid Geometric Algebra.
+    /// The standard antisandwich formula fails due to e0² = 0, so we use the
+    /// explicit coordinate formula:
+    ///
+    /// ```text
+    /// a = v × p_xyz + pw * m
+    /// p'_xyz = p_xyz + 2(s * a + v × a - e0123 * pw * v)
+    /// p'_w = pw
+    /// ```
+    ///
+    /// where v = (e23, e31, e12), m = (e01, e02, e03).
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        products::antisandwich_motor_point(self, p)
+        let two = T::TWO;
+
+        // Motor components
+        let s = self.s();
+        let vx = self.e23();
+        let vy = self.e31();
+        let vz = self.e12();
+        let mx = self.e01();
+        let my = self.e02();
+        let mz = self.e03();
+        let mw = self.e0123();
+
+        // Point components
+        let px = p.e1();
+        let py = p.e2();
+        let pz = p.e3();
+        let pw = p.e0();
+
+        // a = v × p + pw * m
+        let ax = vy * pz - vz * py + pw * mx;
+        let ay = vz * px - vx * pz + pw * my;
+        let az = vx * py - vy * px + pw * mz;
+
+        // v × a
+        let vxa_x = vy * az - vz * ay;
+        let vxa_y = vz * ax - vx * az;
+        let vxa_z = vx * ay - vy * ax;
+
+        // p'_xyz = p_xyz + 2(s * a + v × a - mw * pw * v)
+        let px_new = px + two * (s * ax + vxa_x - mw * pw * vx);
+        let py_new = py + two * (s * ay + vxa_y - mw * pw * vy);
+        let pz_new = pz + two * (s * az + vxa_z - mw * pw * vz);
+
+        // p'_w = pw (unchanged)
+        Point::new(px_new, py_new, pz_new, pw)
     }
 
     /// Transform a line via antisandwich product.
@@ -1218,9 +1260,6 @@ impl<T: Float> Flector<T> {
     }
 
     /// Transform a point via antisandwich product.
-    ///
-    /// In PGA, flectors (reflections) also use the antisandwich product
-    /// for transformations.
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
         products::antisandwich_flector_point(self, p)

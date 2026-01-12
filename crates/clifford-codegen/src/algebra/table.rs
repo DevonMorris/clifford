@@ -232,16 +232,19 @@ impl ProductTable {
         result_map.into_iter().collect()
     }
 
-    /// Computes the complement (Hodge dual) of a blade.
+    /// Computes the right complement of a blade.
     ///
-    /// The complement maps a grade-k blade to a grade-(n-k) blade where n = dim.
+    /// The right complement maps a grade-k blade to a grade-(n-k) blade where n = dim.
     /// For blade index `i`, the complement index is `(2^dim - 1) XOR i`.
+    ///
+    /// The right complement is defined by: `u ∧ ū = I` (pseudoscalar)
+    /// where ∧ is the exterior (wedge) product.
     ///
     /// # Returns
     ///
     /// A tuple `(sign, complement_index)` where sign is ±1 based on the
     /// permutation required to bring the blade and its complement into canonical
-    /// order to form the pseudoscalar.
+    /// order to form the pseudoscalar via the exterior product.
     ///
     /// # Example
     ///
@@ -259,18 +262,48 @@ impl ProductTable {
         let pseudoscalar = self.num_blades() - 1; // All bits set
         let complement_blade = pseudoscalar ^ blade;
 
-        // Sign is determined by: blade * complement_blade = ±pseudoscalar
-        // We use the geometric product to get this sign
-        let (sign, result) = self.geometric(blade, complement_blade);
-        debug_assert_eq!(result, pseudoscalar, "complement should produce pseudoscalar");
+        // Sign is determined by: blade ∧ complement_blade = ±pseudoscalar
+        // Since blade and complement_blade don't share any basis vectors,
+        // the exterior product equals the geometric product for this pair.
+        // We compute the sign by counting transpositions needed to put
+        // the combined basis vectors into canonical order.
+        let sign = self.exterior_sign(blade, complement_blade);
 
         (sign, complement_blade)
     }
 
+    /// Computes the sign of the exterior product of two non-overlapping blades.
+    ///
+    /// For blades that don't share basis vectors, this is the sign from
+    /// reordering the basis vectors into canonical order.
+    fn exterior_sign(&self, a: usize, b: usize) -> i8 {
+        debug_assert_eq!(a & b, 0, "blades must not overlap for exterior sign");
+
+        // Count transpositions: for each bit in b, count how many bits in a
+        // are to the right of it (i.e., have higher index but appear earlier)
+        let mut transpositions = 0;
+        let mut b_remaining = b;
+        while b_remaining != 0 {
+            // Find lowest set bit in b
+            let lowest_b = b_remaining & b_remaining.wrapping_neg();
+            let b_pos = lowest_b.trailing_zeros();
+
+            // Count bits in a that are above this position (need to swap past)
+            let a_above = a >> (b_pos + 1);
+            transpositions += a_above.count_ones();
+
+            b_remaining &= !lowest_b;
+        }
+
+        if transpositions % 2 == 0 { 1 } else { -1 }
+    }
+
     /// Computes the geometric antiproduct of two blades.
     ///
-    /// The antiproduct is dual to the geometric product:
-    /// `a ⊛ b = complement(complement(a) * complement(b))`
+    /// The antiproduct is defined as:
+    /// `a ⊛ b = ∁(∁a * ∁b)`
+    ///
+    /// where `*` is the geometric product and `∁` is the complement.
     ///
     /// In PGA (Projective GA), the antiproduct is essential for correct
     /// motor transformations because it handles the degenerate metric properly.
@@ -289,6 +322,9 @@ impl ProductTable {
 
         // Geometric product of complements
         let (sign_prod, prod) = self.geometric(comp_a, comp_b);
+        if sign_prod == 0 {
+            return (0, 0);
+        }
 
         // Complement of the product
         let (sign_result, result) = self.complement(prod);

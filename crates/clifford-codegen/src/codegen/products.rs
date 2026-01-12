@@ -634,8 +634,11 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates a single antisandwich product function.
     ///
-    /// The antisandwich computes: v ⊛ x ⊛ rev(v) where ⊛ is the geometric
+    /// The antisandwich computes: v ⊛ x ⊛ antirev(v) where ⊛ is the geometric
     /// antiproduct.
+    ///
+    /// Returns None if the antiproduct produces no non-zero terms (which can
+    /// happen in degenerate algebras like PGA where e0² = 0).
     fn generate_antisandwich_product(
         &self,
         versor_type: &TypeSpec,
@@ -650,20 +653,30 @@ impl<'a> ProductGenerator<'a> {
             operand_type.name.to_lowercase()
         );
 
+        // Collect terms for each field, tracking if any field has non-empty terms
+        let mut has_any_terms = false;
         let field_exprs: Vec<TokenStream> = operand_type
             .fields
             .iter()
             .map(|field| {
                 let terms =
                     self.compute_antisandwich_terms(versor_type, operand_type, field.blade_index);
+                if !terms.is_empty() {
+                    has_any_terms = true;
+                }
                 self.generate_sandwich_expression(&terms)
             })
             .collect();
 
+        // Skip generating function if no terms were computed (degenerate case)
+        if !has_any_terms {
+            return None;
+        }
+
         let doc = format!(
-            "Antisandwich product: {} ⊛ {} ⊛ rev({}) -> {}\n\n\
-             Uses the geometric antiproduct. In PGA, use this instead of\n\
-             the regular sandwich for correct motor transformations.",
+            "Antisandwich product: {} ⊛ {} ⊛ antirev({}) -> {}\n\n\
+             Uses the geometric antiproduct and antireverse. In PGA, use this\n\
+             instead of the regular sandwich for correct motor transformations.",
             versor_type.name, operand_type.name, versor_type.name, operand_type.name
         );
 
@@ -903,9 +916,13 @@ impl<'a> ProductGenerator<'a> {
         self.simplify_sandwich_terms(terms)
     }
 
-    /// Computes antisandwich product terms: v ⊛ x ⊛ rev(v) -> result_blade.
+    /// Computes antisandwich product terms: v ⊛ x ⊛ antirev(v) -> result_blade.
     ///
-    /// Uses the geometric antiproduct instead of the geometric product.
+    /// Uses the geometric antiproduct and antireverse instead of the
+    /// geometric product and reverse. The antireverse is defined as:
+    /// `antirev(x) = complement(reverse(complement(x)))`
+    ///
+    /// The antireverse sign for grade k in dimension n is: `(-1)^((n-k)(n-k-1)/2)`
     fn compute_antisandwich_terms(
         &self,
         versor_type: &TypeSpec,
@@ -913,8 +930,9 @@ impl<'a> ProductGenerator<'a> {
         result_blade: usize,
     ) -> Vec<SandwichTerm> {
         let mut terms = Vec::new();
+        let dim = self.algebra.dim();
 
-        // For each combination: v_i ⊛ x_j ⊛ rev(v_k)
+        // For each combination: v_i ⊛ x_j ⊛ antirev(v_k)
         for field_v1 in &versor_type.fields {
             for field_x in &operand_type.fields {
                 for field_v2 in &versor_type.fields {
@@ -928,15 +946,17 @@ impl<'a> ProductGenerator<'a> {
                         continue;
                     }
 
-                    // Compute (v_i ⊛ x_j) ⊛ rev(v_k)
-                    // rev(v_k) has sign (-1)^(k(k-1)/2) for grade k
+                    // Compute (v_i ⊛ x_j) ⊛ antirev(v_k)
+                    // antirev(v_k) has sign (-1)^((n-k)(n-k-1)/2) for grade k in dimension n
                     let v2_grade = Blade::from_index(v2_blade).grade();
+                    let antigrade = dim - v2_grade;
                     #[allow(clippy::manual_is_multiple_of)]
-                    let rev_sign: i8 = if (v2_grade * v2_grade.saturating_sub(1) / 2) % 2 == 0 {
-                        1
-                    } else {
-                        -1
-                    };
+                    let antirev_sign: i8 =
+                        if (antigrade * antigrade.saturating_sub(1) / 2) % 2 == 0 {
+                            1
+                        } else {
+                            -1
+                        };
 
                     let (sign_vxr, result) = self.table.antiproduct(vx, v2_blade);
                     if sign_vxr == 0 {
@@ -944,7 +964,7 @@ impl<'a> ProductGenerator<'a> {
                     }
 
                     if result == result_blade {
-                        let final_sign = sign_vx * sign_vxr * rev_sign;
+                        let final_sign = sign_vx * sign_vxr * antirev_sign;
                         terms.push(SandwichTerm {
                             sign: final_sign,
                             v_field_1: field_v1.name.clone(),
