@@ -193,14 +193,15 @@ impl ConstraintSimplifier {
     }
 
     /// Checks if two atoms are equal.
+    ///
+    /// Uses Symbolica's native `PartialEq` implementation on expanded forms.
     fn atoms_equal(a: &Atom, b: &Atom) -> bool {
-        // Compare by expanding and checking string representation
-        // This is a simple approach; Symbolica may have better methods
+        // Expand both to canonical form for comparison
         let a_expanded = a.expand();
         let b_expanded = b.expand();
 
-        // Compare canonical forms
-        a_expanded.to_string() == b_expanded.to_string()
+        // Use Symbolica's PartialEq implementation directly
+        a_expanded == b_expanded
     }
 
     /// Tries to substitute a pattern within a sum expression.
@@ -210,27 +211,43 @@ impl ConstraintSimplifier {
         // Compute expr - pattern
         let difference = expr - pattern;
         let simplified_diff = difference.expand();
+        let expanded_expr = expr.expand();
 
-        // If the difference simplifies (pattern was present), return value + difference
-        // Check if difference has fewer terms than original
-        let expr_str = expr.expand().to_string();
-        let diff_str = simplified_diff.to_string();
+        // Count terms in the expanded expressions
+        let expr_terms = Self::count_terms(&expanded_expr);
+        let diff_terms = Self::count_terms(&simplified_diff);
+        let pattern_terms = Self::count_terms(&pattern.expand());
 
-        // Heuristic: if difference is simpler (shorter) and doesn't contain
-        // the pattern variables in the same way, substitution worked
-        if diff_str.len() < expr_str.len() || Self::is_simpler(&simplified_diff, expr) {
-            // Pattern was found and removed, add value back
-            let result = &simplified_diff + value;
-            return Some(result.expand());
+        // If the pattern was present, subtracting it should reduce terms
+        // The difference should have fewer terms than the original
+        // (approximately: expr_terms - pattern_terms + possible cancellations)
+        if diff_terms < expr_terms || Self::is_simpler(&simplified_diff, &expanded_expr) {
+            // Check that we removed approximately the right number of terms
+            // Allow for some cancellation effects
+            if expr_terms.saturating_sub(diff_terms) > 0 || diff_terms + pattern_terms > expr_terms
+            {
+                // Pattern was found and removed, add value back
+                let result = &simplified_diff + value;
+                return Some(result.expand());
+            }
         }
 
         None
     }
 
+    /// Counts the number of terms in an atom.
+    ///
+    /// For Add expressions, returns the number of addends.
+    /// For other atoms, returns 1.
+    fn count_terms(atom: &Atom) -> usize {
+        atom.as_add_view().map(|add| add.get_nargs()).unwrap_or(1)
+    }
+
     /// Checks if expr_a is simpler than expr_b.
+    ///
+    /// Uses term count as the complexity metric.
     fn is_simpler(a: &Atom, b: &Atom) -> bool {
-        // Simple heuristic based on string length
-        a.to_string().len() < b.to_string().len()
+        Self::count_terms(a) < Self::count_terms(b)
     }
 }
 
