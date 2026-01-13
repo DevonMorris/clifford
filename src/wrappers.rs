@@ -1,33 +1,80 @@
-//! Geometry-specific wrapper types for normalized entities.
+//! Geometry-specific wrapper types for normalized and constrained entities.
 //!
 //! This module provides wrapper types that guarantee specific normalization
-//! properties at the type level. Each geometry type has its own wrapper with
-//! a clear name describing what it guarantees:
+//! or constraint properties at the type level. There are two kinds of wrappers:
 //!
-//! | Wrapper | Constraint | Use Case |
-//! |---------|------------|----------|
-//! | [`Unit<T>`] | `norm() == 1` | Euclidean vectors, bivectors, rotors |
-//! | [`Bulk<T>`] | `bulk_norm() == 1` | PGA versors (motors, flectors) |
-//! | [`Ideal<T>`] | `weight_norm() == 1` | PGA homogeneous coords (points, planes) |
-//! | [`Proper<T>`] | `is_timelike()` | Minkowski timelike vectors |
+//! - **Normalization wrappers**: Scale elements to satisfy a norm constraint
+//! - **Constraint wrappers**: Verify elements satisfy a property (no scaling)
+//!
+//! # Wrapper Types
+//!
+//! ## Euclidean Algebras
+//!
+//! | Wrapper | Type | Constraint | Use Case |
+//! |---------|------|------------|----------|
+//! | [`Unit<T>`] | Normalization | `norm() == 1` | Unit vectors, rotors |
+//!
+//! ## Projective GA (PGA)
+//!
+//! | Wrapper | Type | Constraint | Use Case |
+//! |---------|------|------------|----------|
+//! | [`Bulk<T>`] | Normalization | `bulk_norm() == 1` | Versors (motors, flectors) |
+//! | [`Unitized<T>`] | Normalization | `weight_norm() == 1` | Finite points, planes |
+//! | [`Ideal<T>`] | Constraint | `weight_norm() ≈ 0` | Points/planes at infinity |
+//!
+//! ## Minkowski (Indefinite) Algebras
+//!
+//! | Wrapper | Type | Constraint | Use Case |
+//! |---------|------|------------|----------|
+//! | [`Proper<T>`] | Normalization | timelike, `|norm²| == 1` | 4-velocities |
+//! | [`Spacelike<T>`] | Normalization | spacelike, `|norm²| == 1` | Spatial directions |
+//! | [`Null<T>`] | Constraint | `norm² ≈ 0` | Photon worldlines |
+//!
+//! # Normalization vs Constraint Wrappers
+//!
+//! **Normalization wrappers** scale the element to satisfy a norm:
+//! - `Unit::try_new(v)` → divides by `norm()`, returns `None` if zero
+//! - `Unitized::try_new(p)` → divides by `weight_norm()`, returns `None` if ideal
+//!
+//! **Constraint wrappers** verify a property without scaling:
+//! - `Ideal::try_new(p)` → returns `Some` only if `weight_norm() ≈ 0`
+//! - `Null::try_new(v)` → returns `Some` only if `norm² ≈ 0`
 //!
 //! # Example
 //!
 //! ```ignore
-//! use clifford::wrappers::Unit;
+//! use clifford::wrappers::{Unit, Unitized, Ideal};
 //! use clifford::specialized::euclidean::dim3::Vector;
+//! use clifford::specialized::projective::dim3::Point;
 //!
+//! // Euclidean: normalize a vector
 //! let v = Vector::new(3.0, 4.0, 0.0);
 //! let unit = Unit::new_normalize(v);
 //! assert!((unit.norm() - 1.0).abs() < 1e-10);
+//!
+//! // PGA: unitize a finite point
+//! let p = Point::new(2.0, 4.0, 6.0, 2.0);
+//! let unitized = Unitized::new_normalize(p);  // w = 1 form
+//!
+//! // PGA: constrain to ideal point (direction)
+//! let dir = Point::new(1.0, 0.0, 0.0, 0.0);  // w = 0
+//! let ideal = Ideal::try_new(dir).unwrap();
 //! ```
 //!
 //! # Naming Rationale
 //!
 //! - **`Unit<T>`** - Standard mathematical term for norm = 1
-//! - **`Bulk<T>`** - PGA terminology for the non-degenerate part
-//! - **`Ideal<T>`** - PGA terminology for the degenerate/projective part
-//! - **`Proper<T>`** - Physics terminology for proper time/proper length
+//! - **`Bulk<T>`** - PGA terminology for normalized by non-degenerate part
+//! - **`Unitized<T>`** - PGA terminology for standard homogeneous form (weight = 1)
+//! - **`Ideal<T>`** - PGA terminology for elements at infinity (weight = 0)
+//! - **`Proper<T>`** - Physics terminology for proper time/proper velocity (timelike)
+//! - **`Spacelike<T>`** - Physics terminology for spatial separations
+//! - **`Null<T>`** - Physics terminology for lightlike/null vectors
+//!
+//! # References
+//!
+//! - [Rigid GA Wiki - Geometric norm](https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_norm)
+//! - [Rigid GA Wiki - Unitization](https://rigidgeometricalgebra.org/wiki/index.php?title=Unitization)
 
 use core::fmt::Debug;
 use core::hash::Hash;
@@ -377,7 +424,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
 }
 
 // ============================================================================
-// Ideal<T> - PGA Homogeneous Wrapper
+// Unitized<T> - PGA Homogeneous Wrapper (weight = 1)
 // ============================================================================
 
 /// A wrapper guaranteeing weight norm = 1 (standard homogeneous form).
@@ -386,15 +433,20 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
 /// projective/ideal (degenerate) part. For points, `weight_norm() == 1`
 /// means the point is in standard homogeneous form with w = 1.
 ///
+/// # Unitized vs Ideal
+///
+/// - **`Unitized<T>`**: Normalization wrapper - scales so weight_norm = 1 (finite elements)
+/// - **`Ideal<T>`**: Constraint wrapper - verifies weight_norm ≈ 0 (elements at infinity)
+///
 /// # Example
 ///
 /// ```ignore
-/// use clifford::wrappers::Ideal;
+/// use clifford::wrappers::Unitized;
 /// use clifford::specialized::projective::dim3::Point;
 ///
-/// // Create a homogeneous point and normalize to standard form
+/// // Create a homogeneous point and unitize to standard form
 /// let p = Point::new(2.0, 4.0, 6.0, 2.0);  // Represents (1, 2, 3)
-/// let std = Ideal::new_normalize(p);
+/// let std = Unitized::new_normalize(p);
 ///
 /// // Standard form has weight norm = 1
 /// assert!((std.weight_norm() - 1.0).abs() < 1e-10);
@@ -402,34 +454,42 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
 ///
 /// # When to Use
 ///
-/// Use `Ideal<T>` for:
-/// - PGA points in standard homogeneous form
+/// Use `Unitized<T>` for:
+/// - PGA points in standard homogeneous form (finite points)
 /// - PGA planes in standard form
-/// - Any element where the projective coordinate should be normalized
+/// - Any element where the projective coordinate should be normalized to 1
 ///
 /// # Unitization vs Normalization
 ///
 /// In PGA terminology:
-/// - **Normalize** = divide by bulk norm
-/// - **Unitize** = divide by weight norm (what `Ideal` does)
+/// - **Normalize** = divide by bulk norm (use `Bulk<T>`)
+/// - **Unitize** = divide by weight norm (use `Unitized<T>`)
+///
+/// # Reference
+///
+/// [Rigid GA Wiki - Unitization](https://rigidgeometricalgebra.org/wiki/index.php?title=Unitization)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Ideal<T> {
+pub struct Unitized<T> {
     /// The wrapped value, guaranteed to satisfy the wrapper's constraint.
     inner: T,
 }
 
-impl<T: DegenerateNormed> Ideal<T> {
-    /// Creates an `Ideal<T>` by unitizing (dividing by weight norm).
+impl<T: DegenerateNormed> Unitized<T> {
+    /// Creates a `Unitized<T>` by dividing by weight norm.
     ///
     /// Returns `None` if the weight norm is zero or near-zero
-    /// (e.g., ideal/infinity points).
+    /// (e.g., ideal/infinity points cannot be unitized).
     ///
     /// # Example
     ///
     /// ```ignore
     /// let p = Point::new(2.0, 4.0, 6.0, 2.0);
-    /// let std = Ideal::try_new(p).unwrap();
+    /// let std = Unitized::try_new(p).unwrap();
+    ///
+    /// // Ideal points (at infinity) cannot be unitized
+    /// let ideal = Point::new(1.0, 0.0, 0.0, 0.0);  // w = 0
+    /// assert!(Unitized::try_new(ideal).is_none());
     /// ```
     #[inline]
     pub fn try_new(inner: T) -> Option<Self>
@@ -439,7 +499,7 @@ impl<T: DegenerateNormed> Ideal<T> {
         inner.try_unitize().map(|u| Self { inner: u })
     }
 
-    /// Creates an `Ideal<T>` by unitizing (dividing by weight norm).
+    /// Creates a `Unitized<T>` by dividing by weight norm.
     ///
     /// # Panics
     ///
@@ -449,16 +509,180 @@ impl<T: DegenerateNormed> Ideal<T> {
     where
         T: Sized,
     {
-        Self::try_new(inner).expect("cannot weight-normalize ideal element")
+        Self::try_new(inner).expect("cannot unitize element with zero weight (ideal element)")
     }
 }
 
-impl<T> Ideal<T> {
-    /// Creates an `Ideal<T>` without checking or enforcing normalization.
+impl<T> Unitized<T> {
+    /// Creates a `Unitized<T>` without checking or enforcing normalization.
     ///
     /// # Safety
     ///
     /// The caller must ensure the inner value has unit weight norm.
+    #[inline]
+    pub fn new_unchecked(inner: T) -> Self {
+        Self { inner }
+    }
+
+    /// Returns the inner value, consuming the wrapper.
+    #[inline]
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
+    /// Returns a reference to the inner value.
+    #[inline]
+    pub fn as_inner(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T> Deref for Unitized<T> {
+    type Target = T;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> AsRef<T> for Unitized<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T: Debug> Debug for Unitized<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Unitized").field(&self.inner).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for Unitized<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl<T: Eq> Eq for Unitized<T> {}
+
+impl<T: Hash> Hash for Unitized<T> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.inner.hash(state);
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Unitized<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.inner.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Unitized<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = T::deserialize(deserializer)?;
+        Ok(Self { inner })
+    }
+}
+
+// ============================================================================
+// Ideal<T> - PGA Constraint Wrapper (weight = 0)
+// ============================================================================
+
+/// A constraint wrapper guaranteeing weight norm ≈ 0 (elements at infinity).
+///
+/// In Projective Geometric Algebra (PGA), elements with zero weight are called
+/// "ideal" - they represent geometric entities at infinity. For example, an
+/// ideal point represents a direction (point at infinity).
+///
+/// **Important**: This is a *constraint* wrapper, not a *normalization* wrapper.
+/// It verifies that the element has near-zero weight but does NOT scale it.
+/// You cannot normalize an ideal element by weight because weight = 0.
+///
+/// # Ideal vs Unitized
+///
+/// - **`Ideal<T>`**: Constraint wrapper - verifies weight_norm ≈ 0 (at infinity)
+/// - **`Unitized<T>`**: Normalization wrapper - scales so weight_norm = 1 (finite)
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::wrappers::Ideal;
+/// use clifford::specialized::projective::dim3::Point;
+///
+/// // An ideal point (direction) has w = 0
+/// let direction = Point::new(1.0, 0.0, 0.0, 0.0);  // Points in +x direction
+/// let ideal = Ideal::try_new(direction).unwrap();
+///
+/// // Finite points cannot be wrapped as Ideal
+/// let finite = Point::new(1.0, 2.0, 3.0, 1.0);  // w = 1
+/// assert!(Ideal::try_new(finite).is_none());
+/// ```
+///
+/// # When to Use
+///
+/// Use `Ideal<T>` for:
+/// - PGA ideal points (directions, points at infinity)
+/// - PGA ideal planes (plane at infinity)
+/// - Type-safe APIs that require ideal/infinite elements
+///
+/// # Reference
+///
+/// [Rigid GA Wiki - Ideal elements](https://rigidgeometricalgebra.org/wiki/index.php?title=Projective_geometric_algebra)
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Ideal<T> {
+    /// The wrapped value, guaranteed to have weight ≈ 0.
+    inner: T,
+}
+
+impl<T: DegenerateNormed> Ideal<T> {
+    /// Creates an `Ideal<T>` if the element has near-zero weight.
+    ///
+    /// This is a constraint check, NOT a normalization. The element is
+    /// wrapped as-is if its weight norm is below epsilon.
+    ///
+    /// Returns `None` if the weight norm is not near zero (finite element).
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Ideal point (direction) - weight = 0
+    /// let direction = Point::new(1.0, 0.0, 0.0, 0.0);
+    /// let ideal = Ideal::try_new(direction).unwrap();
+    ///
+    /// // Finite point - weight ≠ 0, rejected
+    /// let finite = Point::new(1.0, 2.0, 3.0, 1.0);
+    /// assert!(Ideal::try_new(finite).is_none());
+    /// ```
+    #[inline]
+    pub fn try_new(inner: T) -> Option<Self>
+    where
+        T: Sized,
+    {
+        if inner.weight_norm() < T::Scalar::epsilon() {
+            Some(Self { inner })
+        } else {
+            None // Not ideal - has finite weight
+        }
+    }
+}
+
+impl<T> Ideal<T> {
+    /// Creates an `Ideal<T>` without checking the weight constraint.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the inner value has near-zero weight norm.
     #[inline]
     pub fn new_unchecked(inner: T) -> Self {
         Self { inner }
@@ -688,6 +912,322 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Proper<T> {
 }
 
 // ============================================================================
+// Spacelike<T> - Minkowski Spacelike Wrapper
+// ============================================================================
+
+/// A wrapper guaranteeing the vector is spacelike and normalized.
+///
+/// In Minkowski spacetime with signature `(+,-,-,-)`, spacelike vectors have
+/// negative squared norm. They represent spatial separations between events
+/// that are outside each other's light cones.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::wrappers::Spacelike;
+/// use clifford::specialized::minkowski::dim4::FourVector;
+///
+/// // Spacelike vector (t² - x² - y² - z² < 0)
+/// let v = FourVector::new(1.0, 2.0, 0.0, 0.0);  // 1 - 4 = -3 < 0
+/// let spacelike = Spacelike::try_new(v).unwrap();
+///
+/// // Timelike vectors are rejected
+/// let timelike = FourVector::new(2.0, 1.0, 0.0, 0.0);  // 4 - 1 > 0
+/// assert!(Spacelike::try_new(timelike).is_none());
+/// ```
+///
+/// # When to Use
+///
+/// Use `Spacelike<T>` for:
+/// - Spatial separation vectors
+/// - Space-like hypersurface normals
+/// - Any quantity that must be outside the light cone
+///
+/// # Reference
+///
+/// [Spacetime Algebra](https://en.wikipedia.org/wiki/Spacetime_algebra)
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Spacelike<T> {
+    /// The wrapped value, guaranteed to be spacelike and normalized.
+    inner: T,
+}
+
+impl<T: IndefiniteNormed> Spacelike<T> {
+    /// Creates a `Spacelike<T>` if the input is spacelike.
+    ///
+    /// Returns `None` if the input is timelike or lightlike.
+    /// The input is normalized by its magnitude (√|v·v|).
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let spacelike = FourVector::new(1.0, 2.0, 0.0, 0.0);  // 1 - 4 < 0
+    /// let normalized = Spacelike::try_new(spacelike).unwrap();
+    ///
+    /// let timelike = FourVector::new(2.0, 1.0, 0.0, 0.0);
+    /// assert!(Spacelike::try_new(timelike).is_none());
+    /// ```
+    #[inline]
+    pub fn try_new(inner: T) -> Option<Self>
+    where
+        T: Sized,
+    {
+        if inner.is_spacelike() {
+            // Normalize by magnitude: √|v·v|
+            let mag = inner.norm(); // norm() returns √|norm_squared()|
+            if mag > T::Scalar::epsilon() {
+                Some(Self {
+                    inner: inner.scale(<T::Scalar as One>::one() / mag),
+                })
+            } else {
+                None
+            }
+        } else {
+            None // Timelike or lightlike
+        }
+    }
+}
+
+impl<T> Spacelike<T> {
+    /// Creates a `Spacelike<T>` without checking the spacelike property.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the inner value is spacelike and normalized.
+    #[inline]
+    pub fn new_unchecked(inner: T) -> Self {
+        Self { inner }
+    }
+
+    /// Returns the inner value, consuming the wrapper.
+    #[inline]
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
+    /// Returns a reference to the inner value.
+    #[inline]
+    pub fn as_inner(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T> Deref for Spacelike<T> {
+    type Target = T;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> AsRef<T> for Spacelike<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T: Debug> Debug for Spacelike<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Spacelike").field(&self.inner).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for Spacelike<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl<T: Eq> Eq for Spacelike<T> {}
+
+impl<T: Hash> Hash for Spacelike<T> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.inner.hash(state);
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Spacelike<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.inner.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Spacelike<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = T::deserialize(deserializer)?;
+        Ok(Self { inner })
+    }
+}
+
+// ============================================================================
+// Null<T> - Minkowski Lightlike Constraint Wrapper
+// ============================================================================
+
+/// A constraint wrapper guaranteeing the vector is lightlike/null.
+///
+/// In Minkowski spacetime, lightlike (or null) vectors have zero squared norm.
+/// They represent the world-lines of massless particles (photons) and lie
+/// exactly on the light cone.
+///
+/// **Important**: This is a *constraint* wrapper, not a *normalization* wrapper.
+/// Null vectors cannot be normalized in the traditional sense because their
+/// norm is zero. The wrapper verifies the constraint but does not scale.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::wrappers::Null;
+/// use clifford::specialized::minkowski::dim4::FourVector;
+///
+/// // Lightlike vector (t² - x² - y² - z² = 0)
+/// let photon = FourVector::new(1.0, 1.0, 0.0, 0.0);  // 1 - 1 = 0
+/// let null = Null::try_new(photon).unwrap();
+///
+/// // Non-null vectors are rejected
+/// let timelike = FourVector::new(2.0, 1.0, 0.0, 0.0);
+/// assert!(Null::try_new(timelike).is_none());
+/// ```
+///
+/// # When to Use
+///
+/// Use `Null<T>` for:
+/// - Photon 4-momenta
+/// - Light cone generators
+/// - Any quantity that must lie on the light cone
+///
+/// # Reference
+///
+/// [Null vector](https://en.wikipedia.org/wiki/Null_vector)
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Null<T> {
+    /// The wrapped value, guaranteed to have norm ≈ 0.
+    inner: T,
+}
+
+impl<T: IndefiniteNormed> Null<T> {
+    /// Creates a `Null<T>` if the element is lightlike (norm² ≈ 0).
+    ///
+    /// This is a constraint check, NOT a normalization. The element is
+    /// wrapped as-is if its squared norm is near zero.
+    ///
+    /// Returns `None` if the element is not lightlike.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// let photon = FourVector::new(1.0, 1.0, 0.0, 0.0);
+    /// let null = Null::try_new(photon).unwrap();
+    ///
+    /// let timelike = FourVector::new(2.0, 1.0, 0.0, 0.0);
+    /// assert!(Null::try_new(timelike).is_none());
+    /// ```
+    #[inline]
+    pub fn try_new(inner: T) -> Option<Self>
+    where
+        T: Sized,
+    {
+        if inner.is_lightlike() {
+            Some(Self { inner })
+        } else {
+            None // Not null
+        }
+    }
+}
+
+impl<T> Null<T> {
+    /// Creates a `Null<T>` without checking the lightlike constraint.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the inner value is lightlike (norm² ≈ 0).
+    #[inline]
+    pub fn new_unchecked(inner: T) -> Self {
+        Self { inner }
+    }
+
+    /// Returns the inner value, consuming the wrapper.
+    #[inline]
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
+    /// Returns a reference to the inner value.
+    #[inline]
+    pub fn as_inner(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T> Deref for Null<T> {
+    type Target = T;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> AsRef<T> for Null<T> {
+    #[inline]
+    fn as_ref(&self) -> &T {
+        &self.inner
+    }
+}
+
+impl<T: Debug> Debug for Null<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Null").field(&self.inner).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for Null<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl<T: Eq> Eq for Null<T> {}
+
+impl<T: Hash> Hash for Null<T> {
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.inner.hash(state);
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T: serde::Serialize> serde::Serialize for Null<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.inner.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Null<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = T::deserialize(deserializer)?;
+        Ok(Self { inner })
+    }
+}
+
+// ============================================================================
 // Arbitrary Implementations
 // ============================================================================
 
@@ -734,7 +1274,7 @@ mod arbitrary_impl {
         }
     }
 
-    impl<T> Arbitrary for Ideal<T>
+    impl<T> Arbitrary for Unitized<T>
     where
         T: DegenerateNormed + Arbitrary + Debug + 'static,
     {
@@ -743,7 +1283,23 @@ mod arbitrary_impl {
 
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             any::<T>()
-                .prop_filter_map("weight-normalizable", |t| Ideal::try_new(t))
+                .prop_filter_map("unitizable (weight > 0)", |t| Unitized::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Ideal<T>
+    where
+        T: DegenerateNormed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            // Ideal elements have weight ≈ 0, which is rare in random data.
+            // This filter will reject most samples, so Ideal<T> is expensive to generate.
+            any::<T>()
+                .prop_filter_map("ideal (weight ≈ 0)", |t| Ideal::try_new(t))
                 .boxed()
         }
     }
@@ -758,6 +1314,36 @@ mod arbitrary_impl {
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             any::<T>()
                 .prop_filter_map("timelike", |t| Proper::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Spacelike<T>
+    where
+        T: IndefiniteNormed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<T>()
+                .prop_filter_map("spacelike", |t| Spacelike::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Null<T>
+    where
+        T: IndefiniteNormed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            // Null elements have norm² ≈ 0, which is rare in random data.
+            // This filter will reject most samples, so Null<T> is expensive to generate.
+            any::<T>()
+                .prop_filter_map("lightlike (norm² ≈ 0)", |t| Null::try_new(t))
                 .boxed()
         }
     }
@@ -837,5 +1423,83 @@ mod tests {
         let a = Unit { inner: 42i32 };
         let b = a;
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn unitized_debug_format() {
+        let unitized = Unitized { inner: 42i32 };
+        assert_eq!(format!("{:?}", unitized), "Unitized(42)");
+    }
+
+    #[test]
+    fn unitized_deref() {
+        let unitized = Unitized { inner: 42i32 };
+        assert_eq!(*unitized, 42);
+    }
+
+    #[test]
+    fn unitized_as_ref() {
+        let unitized = Unitized { inner: 42i32 };
+        assert_eq!(unitized.as_ref(), &42);
+    }
+
+    #[test]
+    fn unitized_into_inner() {
+        let unitized = Unitized { inner: 42i32 };
+        assert_eq!(unitized.into_inner(), 42);
+    }
+
+    #[test]
+    fn unitized_equality() {
+        let a = Unitized { inner: 42i32 };
+        let b = Unitized { inner: 42i32 };
+        let c = Unitized { inner: 43i32 };
+        assert_eq!(a, b);
+        assert_ne!(a, c);
+    }
+
+    #[test]
+    fn spacelike_debug_format() {
+        let spacelike = Spacelike { inner: 42i32 };
+        assert_eq!(format!("{:?}", spacelike), "Spacelike(42)");
+    }
+
+    #[test]
+    fn spacelike_deref() {
+        let spacelike = Spacelike { inner: 42i32 };
+        assert_eq!(*spacelike, 42);
+    }
+
+    #[test]
+    fn spacelike_into_inner() {
+        let spacelike = Spacelike { inner: 42i32 };
+        assert_eq!(spacelike.into_inner(), 42);
+    }
+
+    #[test]
+    fn null_debug_format() {
+        let null = Null { inner: 42i32 };
+        assert_eq!(format!("{:?}", null), "Null(42)");
+    }
+
+    #[test]
+    fn null_deref() {
+        let null = Null { inner: 42i32 };
+        assert_eq!(*null, 42);
+    }
+
+    #[test]
+    fn null_into_inner() {
+        let null = Null { inner: 42i32 };
+        assert_eq!(null.into_inner(), 42);
+    }
+
+    #[test]
+    fn null_equality() {
+        let a = Null { inner: 42i32 };
+        let b = Null { inner: 42i32 };
+        let c = Null { inner: 43i32 };
+        assert_eq!(a, b);
+        assert_ne!(a, c);
     }
 }

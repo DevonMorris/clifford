@@ -22,7 +22,7 @@ pub use crate::scalar::Float;
 pub use crate::signature::{
     Conformal2, Conformal3, Euclidean2, Euclidean3, Euclidean4, Projective2, Projective3, Signature,
 };
-pub use crate::wrappers::{Bulk, Ideal, Proper, Unit};
+pub use crate::wrappers::{Bulk, Ideal, Null, Proper, Spacelike, Unit, Unitized};
 
 // Re-export approx traits for approximate comparisons
 pub use approx::{AbsDiffEq, RelativeEq, UlpsEq};
