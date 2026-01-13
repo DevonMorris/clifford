@@ -1145,9 +1145,24 @@ mod tests {
         let p = Point::<f64>::from_cartesian(3.0, 4.0, 5.0);
         let m = Motor::<f64>::identity();
 
-        eprintln!("Identity motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-            m.s(), m.e23(), m.e31(), m.e12(), m.e01(), m.e02(), m.e03(), m.e0123());
-        eprintln!("Input point: ({}, {}, {}, {})", p.e1(), p.e2(), p.e3(), p.e0());
+        eprintln!(
+            "Identity motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            m.s(),
+            m.e23(),
+            m.e31(),
+            m.e12(),
+            m.e01(),
+            m.e02(),
+            m.e03(),
+            m.e0123()
+        );
+        eprintln!(
+            "Input point: ({}, {}, {}, {})",
+            p.e1(),
+            p.e2(),
+            p.e3(),
+            p.e0()
+        );
 
         let result = m.transform_point(&p);
 
@@ -1190,9 +1205,24 @@ mod tests {
         let origin = Point::<f64>::origin();
         let t = Motor::<f64>::from_translation(2.0, 0.0, 0.0);
 
-        println!("Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-            t.s(), t.e23(), t.e31(), t.e12(), t.e01(), t.e02(), t.e03(), t.e0123());
-        println!("Origin: ({}, {}, {}, {})", origin.e1(), origin.e2(), origin.e3(), origin.e0());
+        println!(
+            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            t.s(),
+            t.e23(),
+            t.e31(),
+            t.e12(),
+            t.e01(),
+            t.e02(),
+            t.e03(),
+            t.e0123()
+        );
+        println!(
+            "Origin: ({}, {}, {}, {})",
+            origin.e1(),
+            origin.e2(),
+            origin.e3(),
+            origin.e0()
+        );
 
         let result = t.transform_point(&origin);
 

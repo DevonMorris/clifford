@@ -755,6 +755,9 @@ impl<'a> ProductGenerator<'a> {
     }
 
     /// Generates an antigeometric product from a product entry.
+    ///
+    /// Uses term-based generation with the `antiproduct` table method to correctly
+    /// compute `∁(∁a × ∁b)` using the regular geometric product.
     fn generate_antigeometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
         let type_a = self.find_type(&entry.lhs)?;
         let type_b = self.find_type(&entry.rhs)?;
@@ -770,13 +773,20 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        // Use symbolic simplification for expression generation
-        let field_exprs = self.generate_expression_symbolic(
-            type_a,
-            type_b,
-            output_type,
-            ProductKind::Antigeometric,
-        );
+        // Use term-based generation with table.antiproduct() for correct formula
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms = self.compute_terms(
+                    type_a,
+                    type_b,
+                    field.blade_index,
+                    ProductKind::Antigeometric,
+                );
+                self.generate_expression(&terms)
+            })
+            .collect();
 
         let doc = format!(
             "Antigeometric product: {} ⊛ {} -> {}\n\nDefined as complement(complement(a) * complement(b)).",

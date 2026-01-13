@@ -542,17 +542,9 @@ impl ProductTable {
     /// Computes the geometric antiproduct of two blades.
     ///
     /// The antiproduct is defined as:
-    /// `a ⊛ b = ∁(∁a *_anti ∁b)`
+    /// `a ⊛ b = ∁(∁a × ∁b)`
     ///
-    /// where `*_anti` is the geometric product using the **anti-metric** and
-    /// `∁` is the complement.
-    ///
-    /// In degenerate algebras like PGA, the standard formula `∁(∁a * ∁b)` using
-    /// the original metric fails because products involving the degenerate basis
-    /// vanish. The anti-metric fixes this by "swapping" which directions are
-    /// degenerate:
-    /// - Original PGA metric: e₀² = 0
-    /// - Anti-metric: ē₀² = 1 (the complement of e₀ becomes degenerate instead)
+    /// where `×` is the **regular** geometric product and `∁` is the complement.
     ///
     /// # Returns
     ///
@@ -566,8 +558,8 @@ impl ProductTable {
         let (sign_ca, comp_a) = self.complement(a);
         let (sign_cb, comp_b) = self.complement(b);
 
-        // Geometric product of complements using ANTI-METRIC
-        let (sign_prod, prod) = self.geometric_anti(comp_a, comp_b);
+        // Geometric product of complements using REGULAR metric
+        let (sign_prod, prod) = self.geometric(comp_a, comp_b);
         if sign_prod == 0 {
             return (0, 0);
         }
@@ -1273,9 +1265,11 @@ mod tests {
 
     #[test]
     fn pga_antiproduct_scalar_behavior() {
-        // In anti-space, scalar maps to "dual" behavior
-        // scalar ⊛ non-degenerate-basis should NOT give 0
-        // scalar ⊛ degenerate-basis CAN give 0 (anti-degenerate)
+        // With the correct antiproduct formula (∁(∁a × ∁b) using regular geometric):
+        // scalar ⊛ non-degenerate-basis: complement(e1234 × complement(ei)) vanishes
+        //   because e1234 × e_ijk involves degenerate e0 in the metric
+        // scalar ⊛ degenerate-basis (e4/e0): complement(e1234 × e123) is NON-ZERO
+        //   because e1234 × e123 = ±e0 (only Euclidean bases in metric)
         let algebra = Algebra::pga(3);
         let table = ProductTable::new(&algebra);
 
@@ -1283,15 +1277,17 @@ mod tests {
         let e1 = 1; // non-degenerate
         let e4 = 8; // degenerate
 
-        // scalar ⊛ e1 should be non-zero (the original bug fix)
-        let (sign, result) = table.antiproduct(scalar, e1);
-        assert_ne!(sign, 0, "scalar ⊛ e1 should not vanish in PGA");
-        // The result should be the complement of e1 (e234)
-        assert_eq!(result, 14, "scalar ⊛ e1 should give e234");
+        // scalar ⊛ e1 vanishes because the intermediate product involves e0
+        let (sign, _result) = table.antiproduct(scalar, e1);
+        assert_eq!(
+            sign, 0,
+            "scalar ⊛ e1 vanishes (intermediate uses degenerate e0)"
+        );
 
-        // scalar ⊛ e4 gives 0 because e123 (complement of e4) is anti-degenerate
-        let (sign, _result) = table.antiproduct(scalar, e4);
-        assert_eq!(sign, 0, "scalar ⊛ e4 should vanish (anti-degenerate)");
+        // scalar ⊛ e4 (e0) is NON-ZERO because e1234 × e123 uses only Euclidean bases
+        let (sign, result) = table.antiproduct(scalar, e4);
+        assert_ne!(sign, 0, "scalar ⊛ e4 should not vanish");
+        assert_eq!(result, 7, "scalar ⊛ e4 should give e123");
     }
 
     #[test]
@@ -3059,16 +3055,16 @@ mod full_cayley_tests {
         let algebra = Algebra::pga(3);
         let table = ProductTable::new(&algebra);
 
-        // Row 1
-        assert_eq!(table.antiproduct(0, 0), (1, 15));
-        assert_eq!(table.antiproduct(0, 1), (-1, 14));
-        assert_eq!(table.antiproduct(0, 2), (1, 13));
-        assert_eq!(table.antiproduct(0, 3), (-1, 12));
-        assert_eq!(table.antiproduct(0, 4), (-1, 11));
-        assert_eq!(table.antiproduct(0, 5), (1, 10));
-        assert_eq!(table.antiproduct(0, 6), (-1, 9));
-        assert_eq!(table.antiproduct(0, 7), (1, 8));
-        assert_eq!(table.antiproduct(0, 8), (0, 0));
+        // Row scalar
+        assert_eq!(table.antiproduct(0, 0), (0, 0));
+        assert_eq!(table.antiproduct(0, 1), (0, 0));
+        assert_eq!(table.antiproduct(0, 2), (0, 0));
+        assert_eq!(table.antiproduct(0, 3), (0, 0));
+        assert_eq!(table.antiproduct(0, 4), (0, 0));
+        assert_eq!(table.antiproduct(0, 5), (0, 0));
+        assert_eq!(table.antiproduct(0, 6), (0, 0));
+        assert_eq!(table.antiproduct(0, 7), (0, 0));
+        assert_eq!(table.antiproduct(0, 8), (1, 7));
         assert_eq!(table.antiproduct(0, 9), (-1, 6));
         assert_eq!(table.antiproduct(0, 10), (1, 5));
         assert_eq!(table.antiproduct(0, 11), (-1, 4));
@@ -3077,14 +3073,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(0, 14), (-1, 1));
         assert_eq!(table.antiproduct(0, 15), (1, 0));
         // Row e1
-        assert_eq!(table.antiproduct(1, 0), (1, 14));
-        assert_eq!(table.antiproduct(1, 1), (-1, 15));
-        assert_eq!(table.antiproduct(1, 2), (-1, 12));
-        assert_eq!(table.antiproduct(1, 3), (1, 13));
-        assert_eq!(table.antiproduct(1, 4), (1, 10));
-        assert_eq!(table.antiproduct(1, 5), (-1, 11));
-        assert_eq!(table.antiproduct(1, 6), (-1, 8));
-        assert_eq!(table.antiproduct(1, 7), (1, 9));
+        assert_eq!(table.antiproduct(1, 0), (0, 0));
+        assert_eq!(table.antiproduct(1, 1), (0, 0));
+        assert_eq!(table.antiproduct(1, 2), (0, 0));
+        assert_eq!(table.antiproduct(1, 3), (0, 0));
+        assert_eq!(table.antiproduct(1, 4), (0, 0));
+        assert_eq!(table.antiproduct(1, 5), (0, 0));
+        assert_eq!(table.antiproduct(1, 6), (0, 0));
+        assert_eq!(table.antiproduct(1, 7), (0, 0));
         assert_eq!(table.antiproduct(1, 8), (-1, 6));
         assert_eq!(table.antiproduct(1, 9), (1, 7));
         assert_eq!(table.antiproduct(1, 10), (1, 4));
@@ -3094,14 +3090,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(1, 14), (1, 0));
         assert_eq!(table.antiproduct(1, 15), (-1, 1));
         // Row e2
-        assert_eq!(table.antiproduct(2, 0), (-1, 13));
-        assert_eq!(table.antiproduct(2, 1), (1, 12));
-        assert_eq!(table.antiproduct(2, 2), (-1, 15));
-        assert_eq!(table.antiproduct(2, 3), (1, 14));
-        assert_eq!(table.antiproduct(2, 4), (-1, 9));
-        assert_eq!(table.antiproduct(2, 5), (1, 8));
-        assert_eq!(table.antiproduct(2, 6), (-1, 11));
-        assert_eq!(table.antiproduct(2, 7), (1, 10));
+        assert_eq!(table.antiproduct(2, 0), (0, 0));
+        assert_eq!(table.antiproduct(2, 1), (0, 0));
+        assert_eq!(table.antiproduct(2, 2), (0, 0));
+        assert_eq!(table.antiproduct(2, 3), (0, 0));
+        assert_eq!(table.antiproduct(2, 4), (0, 0));
+        assert_eq!(table.antiproduct(2, 5), (0, 0));
+        assert_eq!(table.antiproduct(2, 6), (0, 0));
+        assert_eq!(table.antiproduct(2, 7), (0, 0));
         assert_eq!(table.antiproduct(2, 8), (1, 5));
         assert_eq!(table.antiproduct(2, 9), (-1, 4));
         assert_eq!(table.antiproduct(2, 10), (1, 7));
@@ -3111,14 +3107,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(2, 14), (1, 3));
         assert_eq!(table.antiproduct(2, 15), (-1, 2));
         // Row e12
-        assert_eq!(table.antiproduct(3, 0), (-1, 12));
-        assert_eq!(table.antiproduct(3, 1), (1, 13));
-        assert_eq!(table.antiproduct(3, 2), (1, 14));
-        assert_eq!(table.antiproduct(3, 3), (-1, 15));
-        assert_eq!(table.antiproduct(3, 4), (1, 8));
-        assert_eq!(table.antiproduct(3, 5), (-1, 9));
-        assert_eq!(table.antiproduct(3, 6), (-1, 10));
-        assert_eq!(table.antiproduct(3, 7), (1, 11));
+        assert_eq!(table.antiproduct(3, 0), (0, 0));
+        assert_eq!(table.antiproduct(3, 1), (0, 0));
+        assert_eq!(table.antiproduct(3, 2), (0, 0));
+        assert_eq!(table.antiproduct(3, 3), (0, 0));
+        assert_eq!(table.antiproduct(3, 4), (0, 0));
+        assert_eq!(table.antiproduct(3, 5), (0, 0));
+        assert_eq!(table.antiproduct(3, 6), (0, 0));
+        assert_eq!(table.antiproduct(3, 7), (0, 0));
         assert_eq!(table.antiproduct(3, 8), (-1, 4));
         assert_eq!(table.antiproduct(3, 9), (1, 5));
         assert_eq!(table.antiproduct(3, 10), (1, 6));
@@ -3128,14 +3124,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(3, 14), (-1, 2));
         assert_eq!(table.antiproduct(3, 15), (1, 3));
         // Row e3
-        assert_eq!(table.antiproduct(4, 0), (1, 11));
-        assert_eq!(table.antiproduct(4, 1), (-1, 10));
-        assert_eq!(table.antiproduct(4, 2), (1, 9));
-        assert_eq!(table.antiproduct(4, 3), (-1, 8));
-        assert_eq!(table.antiproduct(4, 4), (-1, 15));
-        assert_eq!(table.antiproduct(4, 5), (1, 14));
-        assert_eq!(table.antiproduct(4, 6), (-1, 13));
-        assert_eq!(table.antiproduct(4, 7), (1, 12));
+        assert_eq!(table.antiproduct(4, 0), (0, 0));
+        assert_eq!(table.antiproduct(4, 1), (0, 0));
+        assert_eq!(table.antiproduct(4, 2), (0, 0));
+        assert_eq!(table.antiproduct(4, 3), (0, 0));
+        assert_eq!(table.antiproduct(4, 4), (0, 0));
+        assert_eq!(table.antiproduct(4, 5), (0, 0));
+        assert_eq!(table.antiproduct(4, 6), (0, 0));
+        assert_eq!(table.antiproduct(4, 7), (0, 0));
         assert_eq!(table.antiproduct(4, 8), (-1, 3));
         assert_eq!(table.antiproduct(4, 9), (1, 2));
         assert_eq!(table.antiproduct(4, 10), (-1, 1));
@@ -3145,14 +3141,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(4, 14), (1, 5));
         assert_eq!(table.antiproduct(4, 15), (-1, 4));
         // Row e13
-        assert_eq!(table.antiproduct(5, 0), (1, 10));
-        assert_eq!(table.antiproduct(5, 1), (-1, 11));
-        assert_eq!(table.antiproduct(5, 2), (-1, 8));
-        assert_eq!(table.antiproduct(5, 3), (1, 9));
-        assert_eq!(table.antiproduct(5, 4), (1, 14));
-        assert_eq!(table.antiproduct(5, 5), (-1, 15));
-        assert_eq!(table.antiproduct(5, 6), (-1, 12));
-        assert_eq!(table.antiproduct(5, 7), (1, 13));
+        assert_eq!(table.antiproduct(5, 0), (0, 0));
+        assert_eq!(table.antiproduct(5, 1), (0, 0));
+        assert_eq!(table.antiproduct(5, 2), (0, 0));
+        assert_eq!(table.antiproduct(5, 3), (0, 0));
+        assert_eq!(table.antiproduct(5, 4), (0, 0));
+        assert_eq!(table.antiproduct(5, 5), (0, 0));
+        assert_eq!(table.antiproduct(5, 6), (0, 0));
+        assert_eq!(table.antiproduct(5, 7), (0, 0));
         assert_eq!(table.antiproduct(5, 8), (1, 2));
         assert_eq!(table.antiproduct(5, 9), (-1, 3));
         assert_eq!(table.antiproduct(5, 10), (-1, 0));
@@ -3162,14 +3158,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(5, 14), (-1, 4));
         assert_eq!(table.antiproduct(5, 15), (1, 5));
         // Row e23
-        assert_eq!(table.antiproduct(6, 0), (-1, 9));
-        assert_eq!(table.antiproduct(6, 1), (1, 8));
-        assert_eq!(table.antiproduct(6, 2), (-1, 11));
-        assert_eq!(table.antiproduct(6, 3), (1, 10));
-        assert_eq!(table.antiproduct(6, 4), (-1, 13));
-        assert_eq!(table.antiproduct(6, 5), (1, 12));
-        assert_eq!(table.antiproduct(6, 6), (-1, 15));
-        assert_eq!(table.antiproduct(6, 7), (1, 14));
+        assert_eq!(table.antiproduct(6, 0), (0, 0));
+        assert_eq!(table.antiproduct(6, 1), (0, 0));
+        assert_eq!(table.antiproduct(6, 2), (0, 0));
+        assert_eq!(table.antiproduct(6, 3), (0, 0));
+        assert_eq!(table.antiproduct(6, 4), (0, 0));
+        assert_eq!(table.antiproduct(6, 5), (0, 0));
+        assert_eq!(table.antiproduct(6, 6), (0, 0));
+        assert_eq!(table.antiproduct(6, 7), (0, 0));
         assert_eq!(table.antiproduct(6, 8), (-1, 1));
         assert_eq!(table.antiproduct(6, 9), (1, 0));
         assert_eq!(table.antiproduct(6, 10), (-1, 3));
@@ -3179,14 +3175,14 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(6, 14), (-1, 7));
         assert_eq!(table.antiproduct(6, 15), (1, 6));
         // Row e123
-        assert_eq!(table.antiproduct(7, 0), (-1, 8));
-        assert_eq!(table.antiproduct(7, 1), (1, 9));
-        assert_eq!(table.antiproduct(7, 2), (1, 10));
-        assert_eq!(table.antiproduct(7, 3), (-1, 11));
-        assert_eq!(table.antiproduct(7, 4), (1, 12));
-        assert_eq!(table.antiproduct(7, 5), (-1, 13));
-        assert_eq!(table.antiproduct(7, 6), (-1, 14));
-        assert_eq!(table.antiproduct(7, 7), (1, 15));
+        assert_eq!(table.antiproduct(7, 0), (0, 0));
+        assert_eq!(table.antiproduct(7, 1), (0, 0));
+        assert_eq!(table.antiproduct(7, 2), (0, 0));
+        assert_eq!(table.antiproduct(7, 3), (0, 0));
+        assert_eq!(table.antiproduct(7, 4), (0, 0));
+        assert_eq!(table.antiproduct(7, 5), (0, 0));
+        assert_eq!(table.antiproduct(7, 6), (0, 0));
+        assert_eq!(table.antiproduct(7, 7), (0, 0));
         assert_eq!(table.antiproduct(7, 8), (1, 0));
         assert_eq!(table.antiproduct(7, 9), (-1, 1));
         assert_eq!(table.antiproduct(7, 10), (-1, 2));
@@ -3196,7 +3192,7 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(7, 14), (1, 6));
         assert_eq!(table.antiproduct(7, 15), (-1, 7));
         // Row e4
-        assert_eq!(table.antiproduct(8, 0), (0, 0));
+        assert_eq!(table.antiproduct(8, 0), (-1, 7));
         assert_eq!(table.antiproduct(8, 1), (1, 6));
         assert_eq!(table.antiproduct(8, 2), (-1, 5));
         assert_eq!(table.antiproduct(8, 3), (1, 4));
@@ -3204,7 +3200,7 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(8, 5), (-1, 2));
         assert_eq!(table.antiproduct(8, 6), (1, 1));
         assert_eq!(table.antiproduct(8, 7), (-1, 0));
-        assert_eq!(table.antiproduct(8, 8), (0, 0));
+        assert_eq!(table.antiproduct(8, 8), (-1, 15));
         assert_eq!(table.antiproduct(8, 9), (1, 14));
         assert_eq!(table.antiproduct(8, 10), (-1, 13));
         assert_eq!(table.antiproduct(8, 11), (1, 12));
