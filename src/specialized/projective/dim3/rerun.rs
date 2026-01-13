@@ -21,7 +21,7 @@
 //! let rec = rerun::RecordingStreamBuilder::new("clifford_demo").connect_tcp()?;
 //!
 //! // Log a PGA point
-//! let point = Point::new(1.0_f32, 2.0, 3.0);
+//! let point = Point::from_cartesian(1.0_f32, 2.0, 3.0);
 //! rec.log("point", &rerun::Points3D::new([point]))?;
 //!
 //! // Log a motor transform
@@ -53,7 +53,7 @@ impl From<Point<f32>> for rerun::Position3D {
     /// ```ignore
     /// use clifford::specialized::projective::dim3::Point;
     ///
-    /// let p = Point::new(1.0_f32, 2.0, 3.0);
+    /// let p = Point::from_cartesian(1.0_f32, 2.0, 3.0);
     /// let pos: rerun::Position3D = p.into();
     /// ```
     #[inline]
@@ -149,7 +149,7 @@ mod tests {
     use approx::abs_diff_eq;
     use proptest::prelude::*;
 
-    use crate::specialized::projective::dim3::arbitrary::UnitMotor;
+    use crate::specialized::projective::dim3::BulkMotor;
 
     /// Epsilon for f32 comparisons.
     const EPS: f32 = 1e-4;
@@ -161,7 +161,7 @@ mod tests {
             y in -100.0f32..100.0,
             z in -100.0f32..100.0,
         ) {
-            let p = Point::new(x, y, z);
+            let p = Point::from_cartesian(x, y, z);
             let pos: rerun::Position3D = p.into();
             prop_assert!(abs_diff_eq!(pos.x(), x, epsilon = EPS));
             prop_assert!(abs_diff_eq!(pos.y(), y, epsilon = EPS));
@@ -187,7 +187,7 @@ mod tests {
         }
 
         #[test]
-        fn motor_to_transform3d_does_not_panic(m in any::<UnitMotor<f32>>()) {
+        fn motor_to_transform3d_does_not_panic(m in any::<BulkMotor<f32>>()) {
             let _t: rerun::Transform3D = (*m).into();
         }
     }

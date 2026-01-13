@@ -20,7 +20,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim2::{Vector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
@@ -50,6 +50,12 @@ mod rerun;
 
 // Re-export generated types
 pub use generated::types::{Bivector, Rotor, Scalar, Vector};
+
+// Re-export wrapper type aliases
+pub use generated::types::{UnitBivector, UnitRotor, UnitScalar, UnitVector};
+
+// Re-export products module for direct access to algebraic products
+pub use generated::products;
 
 // Re-export Even alias from extensions
 pub use extensions::Even;

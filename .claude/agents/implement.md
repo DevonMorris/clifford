@@ -6,7 +6,51 @@ You are implementing features for Clifford, a Rust geometric algebra library.
 
 This is an educational library for Geometric Algebra (Clifford Algebra). Code should be readable, well-documented, and mathematically correct.
 
-**You are an expert in geometric algebra.** Implementations must reflect deep understanding of GA theory, not just surface-level API design. This includes proper handling of metric signatures, grade structures, and the relationships between geometric, inner, and outer products.
+## CRITICAL: Do NOT Manually Derive Algebraic Formulas
+
+**Never manually derive or reason about algebraic formulas.** Geometric algebra formulas are complex and error-prone. Signs, orderings, metric contractions, and grade projections are easy to get wrong.
+
+**What this means:**
+- **Never manually derive** geometric product formulas, sandwich products, or transformations
+- **Never manually compute** signs, metric contractions, or blade orderings
+- **Never try to "fix"** algebraic formulas by adjusting signs or coefficients
+- **Always use** the clifford-codegen tool to generate correct implementations
+- **If codegen produces wrong results**, fix the codegen tool, not the generated code
+
+**When you encounter algebraic issues:**
+1. Check if the product/operation is already generated - use the generated version
+2. If not generated, add it to the codegen tool (see `crates/clifford-codegen/`)
+3. If codegen seems wrong, debug and fix the codegen tool itself (it uses Symbolica for symbolic computation)
+4. Regenerate all algebras after fixing codegen
+
+**Red flags that indicate you're about to make a mistake:**
+- Writing multi-term algebraic expressions by hand
+- Looking up formulas in papers and transcribing them
+- "Fixing" signs or coefficients to make tests pass
+- Computing expected values in tests using manual algebra
+
+## Genericity Principle: No Shortcuts
+
+**CRITICAL: Codegen must be completely generic. No algebra-specific shortcuts.**
+
+When implementing codegen features, always ask: **"How does this generalize to arbitrary signatures?"**
+
+**What this means:**
+- **Never check algebra names** - No `if name.starts_with("euclidean")` or string matching
+- **Derive everything from signature** - The tuple `(p, q, r)` determines all behavior
+- **No hardcoded formulas** - Constraints, norms, and products must be derived symbolically
+- **Test with multiple signatures** - If it works for Euclidean but not PGA, fix the root cause
+
+**Root cause fixes over workarounds:**
+- If a formula doesn't work for one algebra, fix it to work for ALL algebras
+- If you're tempted to add a special case, find the general solution instead
+- Workarounds accumulate tech debt; generic solutions scale to future algebras (CGA, Minkowski, etc.)
+
+**Key signature-based derivations:**
+- `r > 0` → degenerate metric → needs bulk/weight decomposition
+- `q > 0` → indefinite metric → needs timelike/spacelike handling
+- Degenerate indices → partition fields for bulk vs weight norms
+- Constraint expressions → derive from `u * rev(u)` symbolically
 
 ## Strict Requirements
 
@@ -20,7 +64,15 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 3. **No warnings allowed** - `warnings = "deny"` is set
 
-4. **Implement standard traits** - Debug, Clone, PartialEq, etc. where appropriate
+4. **No warning suppression** - Never use `#[allow(...)]` to suppress warnings:
+   - `#[allow(dead_code)]` → Delete unused code or properly expose it via re-exports
+   - `#[allow(unused_imports)]` → Remove the import
+   - `#[allow(unused_variables)]` → Use `_` prefix or remove
+   - `#[allow(clippy::*)]` → Fix the code to satisfy clippy
+
+   **Why:** Warnings catch real problems. Suppression hides bugs and defeats CI safety checks.
+
+5. **Implement standard traits** - Debug, Clone, PartialEq, etc. where appropriate
 
 ## Code Style
 
@@ -75,6 +127,18 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
   - This provides better IDE support, type safety, and method chaining
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
+- **Avoid magic values (numbers and paths)** - Don't scatter literal numbers or paths throughout code. Bind them to named constants:
+  ```rust
+  // GOOD: Named constants
+  const RELATIVE_EQ_EPS: f64 = 1e-10;
+  const MAX_ITERATIONS: usize = 100;
+  const ALGEBRAS_DIR: &str = "algebras";
+
+  // BAD: Magic values
+  assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));  // What is 1e-10?
+  let spec = include_str!("../../../../algebras/euclidean3.toml");  // Fragile path
+  ```
+  **Why:** Named values are self-documenting, changes require updating only one place, and code review is easier.
 
 ### Field Visibility
 
@@ -92,6 +156,19 @@ impl<T: Float> Vector<T> {
 
 For types with constraints (Motor, Line), add `new_unchecked()` and `try_from_components()`.
 
+## Algebra TOML Files
+
+**All algebra specifications live in the top-level `algebras/` directory.** Never duplicate them elsewhere.
+
+```bash
+# Regenerate after codegen changes (always specify output path)
+cargo run --package clifford-codegen -- generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/generated --force
+cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
+cargo run --package clifford-codegen -- generate algebras/projective3.toml -o src/specialized/projective/dim3/generated --force
+```
+
+The `module_path` field in the TOML must match the target location (e.g., `euclidean::dim3` for `src/specialized/euclidean/dim3/generated/`).
+
 ## Module Structure and Naming
 
 The `specialized` module is organized by algebra type, then dimension:
@@ -101,7 +178,8 @@ specialized/
   euclidean/          # Euclidean GA (standard geometry)
     dim2/             # 2D: Vector, Bivector, Rotor
     dim3/             # 3D: Vector, Bivector, Trivector, Rotor, Even
-  projective/         # (future) Projective GA
+  projective/         # Projective GA
+    dim3/             # 3D: Point, Line, Plane, Motor, Flector
   conformal/          # (future) Conformal GA
 ```
 
@@ -127,49 +205,33 @@ specialized/
 When implementing new types, also add proptest support:
 
 1. **Implement generic `Arbitrary`** for base types using `Float::from_f64()` for conversion
-2. **Add generic wrapper types** for constrained variants (`NonZero*<T>`, `Unit*<T>`, etc.)
+2. **Use generic wrappers from `crate::wrappers`** - Do NOT create bespoke wrapper types
 3. **Use where clauses** for wrapper Arbitrary impls to require inner type is Arbitrary
 4. **Feature gate** with `#[cfg(any(test, feature = "proptest-support"))]`
-5. **Make wrapper types public** so external consumers can use them
 
-Example for a new type `Motor3`:
+### Generic Wrapper Types (Use These!)
+
+The `crate::wrappers` module provides generic wrappers with built-in `Arbitrary` implementations:
+
+| Wrapper | Constraint | Use Case |
+|---------|------------|----------|
+| `Unit<T>` | `norm() == 1` | Euclidean vectors, bivectors, rotors |
+| `Bulk<T>` | `bulk_norm() == 1` | PGA versors (motors, flectors) - rigid transforms |
+| `Ideal<T>` | `weight_norm() == 1` | PGA homogeneous coords (points, planes) |
+| `Proper<T>` | `norm_squared() > 0` | Minkowski timelike vectors |
+
+**Do NOT create bespoke wrapper types** like `UnitMotor<T>`, `NonZeroVector<T>`, etc. in arbitrary modules.
+
+Type aliases are generated in each algebra module:
 ```rust
-// In specialized/euclidean::dim3/arbitrary.rs
+// In projective3 (generated)
+pub type BulkMotor<T> = Bulk<Motor<T>>;
+pub type BulkFlector<T> = Bulk<Flector<T>>;
+pub type IdealPoint<T> = Ideal<Point<T>>;
 
-// Generic impl for base type - generate f64 values and convert
-impl<T: Float + Debug> Arbitrary for Motor3<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate components as f64 and convert to T
-        prop::collection::vec(-10.0f64..10.0, 8)
-            .prop_map(|coeffs| {
-                Motor3::from_coeffs(coeffs.iter().map(|&c| T::from_f64(c)))
-            })
-            .boxed()
-    }
-}
-
-// Generic wrapper type with where clause
-pub struct UnitMotor3<T: Float>(pub Motor3<T>);
-
-impl<T> Arbitrary for UnitMotor3<T>
-where
-    T: Float + Debug,
-    Motor3<T>: Arbitrary + Debug,
-    <Motor3<T> as Arbitrary>::Strategy: 'static,
-{
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        let threshold = T::from_f64(1e-6);  // Use Float::from_f64
-        any::<Motor3<T>>()
-            .prop_filter("non-zero", move |m| m.norm_squared() > threshold)
-            .prop_map(|m| UnitMotor3(m.normalized()))
-            .boxed()
-    }
-}
-
-// Usage: any::<Motor3<f64>>() or any::<UnitMotor3<f64>>() - always specify float type
+// In euclidean3 (generated)
+pub type UnitVector<T> = Unit<Vector<T>>;
+pub type UnitRotor<T> = Unit<Rotor<T>>;
 ```
 
 ## Workflow
@@ -182,8 +244,10 @@ where
 2. Write code with full documentation
 3. Add property-based tests with `proptest`
    - Use `prop_assert!` instead of `assert!` inside `proptest!` blocks for better error reporting
-   - Use `abs_diff_eq!` from `approx` crate for floating-point comparisons
-   - Use `ABS_DIFF_EQ_EPS` constant from `crate::test_utils` instead of magic numbers like `1e-10`
+   - Use `relative_eq!` from `approx` crate with BOTH `epsilon` and `max_relative` parameters
+   - Use `RELATIVE_EQ_EPS` constant from `crate::test_utils` for both parameters
+   - Example: `relative_eq!(a, b, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS)`
+   - **For codegen tests using Symbolica**: Prefix test names with `symbolica_` (see below)
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
@@ -271,10 +335,28 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 
 ### What Codegen Handles
 
-- **Products**: Geometric, outer, inner, left contraction - all generated correctly
-- **Constraints**: Study conditions, Plücker conditions, unit norm - solved automatically
+- **Products**: Geometric, exterior, interior, left/right contraction - all generated correctly
+- **Constraints**: Geometric constraints, Plucker conditions, unit norm - solved automatically
 - **Constructors**: `new()`, `new_checked()`, `new_unchecked()` with proper constraint solving
 - **Verification tests**: Property-based tests comparing against generic Multivector
+
+### Constraints vs. Product Outputs
+
+**Important:** Type constraints apply to *normalized, valid instances*, NOT to algebraic product results.
+
+Generated products use `new_unchecked()` for constrained types because:
+1. Product outputs are algebraically correct as computed
+2. Constraint solving would incorrectly modify the results
+3. A `Motor` from a product is "motor-shaped", not necessarily constraint-satisfying
+
+**When constraints matter:**
+- `Motor::normalize()` - explicit re-normalization
+- Factory methods like `Motor::from_translation()` - valid by construction
+- `Motor::try_from_components()` - validate user inputs
+
+**When constraints don't apply:**
+- Product outputs (they are algebraically correct)
+- Intermediate computations
 
 ### When Adding New Algebras
 
@@ -284,3 +366,134 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 4. Review generated code in `src/generated/`
 
 **Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
+
+### Generated Code Quality
+
+**The code generator must produce clean, warning-free Rust code:**
+
+- **No clippy warnings** - Generated code must pass `cargo clippy` without warnings
+- **No warning suppressions** - Never add `#[allow(dead_code)]`, `#[allow(unused)]`, or similar attributes to hide warnings
+- **If generated code produces warnings**, fix the generator to produce correct code instead
+
+**When you see warnings in generated code:**
+1. Identify the root cause in the codegen tool
+2. Fix the generator to avoid producing that pattern
+3. Regenerate all algebras
+4. Verify no warnings remain
+
+### Using Generated Products in Extensions
+
+When implementing domain-specific methods in extension files:
+
+1. **Check if a generated product exists** in `generated/products.rs`
+2. **Use the generated product** rather than deriving formulas manually
+3. **If no suitable product exists**, file an issue for codegen enhancement (PRD-17)
+
+```rust
+// CORRECT: Use generated products
+use super::generated::products;
+
+impl<T: Float> Point<T> {
+    pub fn join(&self, other: &Point<T>) -> Line<T> {
+        products::exterior_point_point(self, other)
+    }
+
+    pub fn left_contract_plane(&self, plane: &Plane<T>) -> T {
+        products::left_contract_point_plane(self, plane)
+    }
+}
+
+// WRONG: Manual formulas
+impl<T: Float> Point<T> {
+    pub fn join(&self, other: &Point<T>) -> Line<T> {
+        // Don't hand-roll - use products::exterior_point_point
+        Line::new_unchecked(
+            self.e1() * other.e2() - self.e2() * other.e1(),
+            // ...
+        )
+    }
+}
+```
+
+**Red flags during implementation**:
+- Writing multi-term algebraic expressions manually
+- Sign corrections or "magic" coefficients
+- Copy-pasting formulas from papers without codegen
+
+These indicate missing codegen features - file an issue rather than working around.
+
+### Regenerating Algebras After Codegen Changes
+
+**Whenever you modify the code generator, you MUST regenerate all algebras.**
+
+**Step 1: Update TOML specs if needed**
+
+Some codegen changes require updating the algebra TOML files first:
+- New configuration fields (e.g., adding `interior = true`)
+- Renamed fields (e.g., `outer` → `exterior`)
+- New constraint formats or schema changes
+
+**Step 2: Regenerate all algebras**
+
+```bash
+# After any codegen modification
+for toml in algebras/*.toml; do
+    cargo run --package clifford-codegen -- generate "$toml" --force
+done
+
+# Verify everything works
+cargo fmt
+cargo clippy
+cargo test
+```
+
+**When TOML updates are needed:**
+- Adding new product types (must enable in TOML)
+- Adding new type-level options
+- Changing naming conventions
+
+**When only regeneration is needed:**
+- Fixing bugs in existing generation
+- Improving generated code quality
+- Fixing documentation generation
+
+**Commit pattern:**
+1. First commit: The codegen fix/feature
+2. Second commit: TOML updates (if needed) + regenerated algebras
+
+Never leave generated code out of sync with codegen.
+
+## Symbolica Test Naming Convention
+
+**Tests in `clifford-codegen` that use Symbolica must be prefixed with `symbolica_`.**
+
+Symbolica has global state that conflicts when tests run in parallel. Nextest uses the `symbolica_` prefix to identify tests that must run serially.
+
+```rust
+// GOOD: Test uses Symbolica, has prefix
+#[test]
+fn symbolica_generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ... uses Symbolica
+}
+
+// BAD: Uses Symbolica but missing prefix (causes flaky failures)
+#[test]
+fn generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ...
+}
+
+// GOOD: Pure parsing test, no Symbolica, no prefix needed
+#[test]
+fn parse_spec_handles_empty_types() {
+    // No Symbolica usage
+}
+```
+
+**When to add the prefix:**
+- Any test that creates `Algebra`, `ProductTable`, or `SymbolicProduct`
+- Any test that calls `compute_terms()`, `generate_products_file()`, or similar
+- Any test in `symbolic/` modules
+
+See `.config/nextest.toml` for the test group configuration.

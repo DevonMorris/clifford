@@ -192,8 +192,8 @@ mod tests {
     use super::*;
     use crate::algebra::Multivector;
     use crate::basis::Blade;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
 
     // ========================================================================
@@ -252,7 +252,7 @@ mod tests {
         // e₀ is at index 2 (basis vector index), blade index is 1 << 2 = 4
         let e0: Multivector<f64, Projective2> = Multivector::basis_vector(2);
         let e0_sq = &e0 * &e0;
-        assert!(e0_sq.is_zero(ABS_DIFF_EQ_EPS));
+        assert!(e0_sq.is_zero(RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -260,7 +260,7 @@ mod tests {
         // e₀ is at index 3 (basis vector index), blade index is 1 << 3 = 8
         let e0: Multivector<f64, Projective3> = Multivector::basis_vector(3);
         let e0_sq = &e0 * &e0;
-        assert!(e0_sq.is_zero(ABS_DIFF_EQ_EPS));
+        assert!(e0_sq.is_zero(RELATIVE_EQ_EPS));
     }
 
     #[test]
@@ -269,20 +269,20 @@ mod tests {
         let e2: Multivector<f64, Projective3> = Multivector::basis_vector(1);
         let e3: Multivector<f64, Projective3> = Multivector::basis_vector(2);
 
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             (&e1 * &e1).scalar_part(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             (&e2 * &e2).scalar_part(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             (&e3 * &e3).scalar_part(),
             1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -294,10 +294,10 @@ mod tests {
         let e12 = &e1 * &e2;
         let e12_sq = &e12 * &e12;
 
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             e12_sq.scalar_part(),
             -1.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -309,7 +309,7 @@ mod tests {
         let e01 = &e0 * &e1;
         let e01_sq = &e01 * &e01;
 
-        assert!(e01_sq.is_zero(ABS_DIFF_EQ_EPS));
+        assert!(e01_sq.is_zero(RELATIVE_EQ_EPS));
     }
 
     // ========================================================================
@@ -322,7 +322,7 @@ mod tests {
         let origin: Multivector<f64, Projective3> = Multivector::basis_vector(3);
 
         // Should be grade 1
-        assert_eq!(origin.grade(ABS_DIFF_EQ_EPS), Some(1));
+        assert_eq!(origin.grade(RELATIVE_EQ_EPS), Some(1));
     }
 
     #[test]
@@ -335,7 +335,7 @@ mod tests {
         point.set(Blade::basis_vector(3), 1.0); // e₀ (weight = 1)
 
         // Should be grade 1
-        assert_eq!(point.grade(ABS_DIFF_EQ_EPS), Some(1));
+        assert_eq!(point.grade(RELATIVE_EQ_EPS), Some(1));
     }
 
     #[test]
@@ -345,13 +345,13 @@ mod tests {
         ideal.set(Blade::basis_vector(0), 1.0); // e₁ only
 
         // Should be grade 1
-        assert_eq!(ideal.grade(ABS_DIFF_EQ_EPS), Some(1));
+        assert_eq!(ideal.grade(RELATIVE_EQ_EPS), Some(1));
 
         // No e₀ component (index 3 -> blade index 8)
-        assert!(abs_diff_eq!(
+        assert!(relative_eq!(
             ideal.get(Blade::basis_vector(3)),
             0.0,
-            epsilon = ABS_DIFF_EQ_EPS
+            max_relative = RELATIVE_EQ_EPS
         ));
     }
 
@@ -368,7 +368,7 @@ mod tests {
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -379,7 +379,7 @@ mod tests {
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -388,12 +388,12 @@ mod tests {
             let e0: Multivector<f64, Projective2> = Multivector::basis_vector(2);
             let scaled = &e0 * s;
             let sq = &scaled * &scaled;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga2_reverse_involutory(a in any::<Multivector<f64, Projective2>>()) {
-            prop_assert!(abs_diff_eq!(a.reverse().reverse(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.reverse().reverse(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -403,12 +403,12 @@ mod tests {
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga2_involute_involutory(a in any::<Multivector<f64, Projective2>>()) {
-            prop_assert!(abs_diff_eq!(a.involute().involute(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.involute().involute(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -417,22 +417,22 @@ mod tests {
             b in any::<Multivector<f64, Projective2>>(),
             c in any::<Multivector<f64, Projective2>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga2_one_is_multiplicative_identity(a in any::<Multivector<f64, Projective2>>()) {
             let one = Multivector::<f64, Projective2>::one();
-            prop_assert!(abs_diff_eq!(&a * &one, a, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(&one * &a, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga2_zero_is_additive_identity(a in any::<Multivector<f64, Projective2>>()) {
             let zero = Multivector::<f64, Projective2>::zero();
-            prop_assert!(abs_diff_eq!(&a + &zero, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -440,7 +440,7 @@ mod tests {
             a in any::<Multivector<f64, Projective2>>(),
             b in any::<Multivector<f64, Projective2>>()
         ) {
-            prop_assert!(abs_diff_eq!(&a + &b, &b + &a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -449,7 +449,7 @@ mod tests {
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
                 .fold(Multivector::<f64, Projective2>::zero(), |acc, x| &acc + &x);
-            prop_assert!(abs_diff_eq!(sum, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
@@ -466,7 +466,7 @@ mod tests {
         ) {
             let lhs = &(&a * &b) * &c;
             let rhs = &a * &(&b * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -477,7 +477,7 @@ mod tests {
         ) {
             let lhs = &a * &(&b + &c);
             let rhs = &(&a * &b) + &(&a * &c);
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -486,12 +486,12 @@ mod tests {
             let e0: Multivector<f64, Projective3> = Multivector::basis_vector(3);
             let scaled = &e0 * s;
             let sq = &scaled * &scaled;
-            prop_assert!(sq.is_zero(ABS_DIFF_EQ_EPS));
+            prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_reverse_involutory(a in any::<Multivector<f64, Projective3>>()) {
-            prop_assert!(abs_diff_eq!(a.reverse().reverse(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.reverse().reverse(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -501,12 +501,12 @@ mod tests {
         ) {
             let lhs = (&a * &b).reverse();
             let rhs = &b.reverse() * &a.reverse();
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_involute_involutory(a in any::<Multivector<f64, Projective3>>()) {
-            prop_assert!(abs_diff_eq!(a.involute().involute(), a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(a.involute().involute(), a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -515,22 +515,22 @@ mod tests {
             b in any::<Multivector<f64, Projective3>>(),
             c in any::<Multivector<f64, Projective3>>(),
         ) {
-            let lhs = a.outer(&b).outer(&c);
-            let rhs = a.outer(&b.outer(&c));
-            prop_assert!(abs_diff_eq!(lhs, rhs, epsilon = ABS_DIFF_EQ_EPS));
+            let lhs = a.exterior(&b).exterior(&c);
+            let rhs = a.exterior(&b.exterior(&c));
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_one_is_multiplicative_identity(a in any::<Multivector<f64, Projective3>>()) {
             let one = Multivector::<f64, Projective3>::one();
-            prop_assert!(abs_diff_eq!(&a * &one, a, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(&one * &a, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_zero_is_additive_identity(a in any::<Multivector<f64, Projective3>>()) {
             let zero = Multivector::<f64, Projective3>::zero();
-            prop_assert!(abs_diff_eq!(&a + &zero, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -538,7 +538,7 @@ mod tests {
             a in any::<Multivector<f64, Projective3>>(),
             b in any::<Multivector<f64, Projective3>>()
         ) {
-            prop_assert!(abs_diff_eq!(&a + &b, &b + &a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -547,13 +547,13 @@ mod tests {
             let sum = (0..=4)
                 .map(|k| a.grade_select(k))
                 .fold(Multivector::<f64, Projective3>::zero(), |acc, x| &acc + &x);
-            prop_assert!(abs_diff_eq!(sum, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_even_plus_odd_equals_original(a in any::<Multivector<f64, Projective3>>()) {
             let reconstructed = &a.even() + &a.odd();
-            prop_assert!(abs_diff_eq!(reconstructed, a, epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(relative_eq!(reconstructed, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // Note: dual/undual tests are NOT included because in PGA the pseudoscalar
@@ -589,7 +589,7 @@ mod tests {
                 let pga_dot = pga_a.inner(&pga_b).scalar_part();
                 let na_dot = na_a.dot(&na_b);
 
-                prop_assert!(abs_diff_eq!(pga_dot, na_dot, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(pga_dot, na_dot, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
 
             /// Euclidean subspace geometric product gives correct scalar + bivector
@@ -611,15 +611,15 @@ mod tests {
 
                 // Scalar part should be dot product
                 let expected_scalar = na_a.dot(&na_b);
-                prop_assert!(abs_diff_eq!(
+                prop_assert!(relative_eq!(
                     product.scalar_part(),
                     expected_scalar,
-                    epsilon = ABS_DIFF_EQ_EPS
+                    max_relative = RELATIVE_EQ_EPS
                 ));
 
                 // Should have no grade-1 or grade-3 parts (only scalar and bivector)
-                prop_assert!(product.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
-                prop_assert!(product.grade_select(3).is_zero(ABS_DIFF_EQ_EPS));
+                prop_assert!(product.grade_select(1).is_zero(RELATIVE_EQ_EPS));
+                prop_assert!(product.grade_select(3).is_zero(RELATIVE_EQ_EPS));
             }
 
             /// Cross product can be extracted from wedge product in 3D
@@ -638,7 +638,7 @@ mod tests {
                 let na_cross = na_a.cross(&na_b);
 
                 // The wedge product a∧b gives a bivector
-                let wedge = pga_a.outer(&pga_b);
+                let wedge = pga_a.exterior(&pga_b);
 
                 // In 3D Euclidean subspace, the bivector components are related to cross product:
                 // e₁₂ component = ax*by - ay*bx = (a×b)_z
@@ -650,9 +650,9 @@ mod tests {
                 let biv_13 = wedge.get(Blade::from_index(0b0101)); // e₁₃
                 let biv_23 = wedge.get(Blade::from_index(0b0110)); // e₂₃
 
-                prop_assert!(abs_diff_eq!(biv_23, na_cross.x, epsilon = ABS_DIFF_EQ_EPS));
-                prop_assert!(abs_diff_eq!(-biv_13, na_cross.y, epsilon = ABS_DIFF_EQ_EPS));
-                prop_assert!(abs_diff_eq!(biv_12, na_cross.z, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(biv_23, na_cross.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+                prop_assert!(relative_eq!(-biv_13, na_cross.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+                prop_assert!(relative_eq!(biv_12, na_cross.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
         }
     }
@@ -681,7 +681,7 @@ mod tests {
                 let pga_dot = pga_a.inner(&pga_b).scalar_part();
                 let na_dot = na_a.dot(&na_b);
 
-                prop_assert!(abs_diff_eq!(pga_dot, na_dot, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(pga_dot, na_dot, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
 
             /// Euclidean subspace geometric product gives correct scalar + bivector
@@ -703,15 +703,15 @@ mod tests {
 
                 // Scalar part should be dot product
                 let expected_scalar = na_a.dot(&na_b);
-                prop_assert!(abs_diff_eq!(
+                prop_assert!(relative_eq!(
                     product.scalar_part(),
                     expected_scalar,
-                    epsilon = ABS_DIFF_EQ_EPS
+                    max_relative = RELATIVE_EQ_EPS
                 ));
 
                 // Should have no grade-1 or grade-3 parts (only scalar and bivector)
-                prop_assert!(product.grade_select(1).is_zero(ABS_DIFF_EQ_EPS));
-                prop_assert!(product.grade_select(3).is_zero(ABS_DIFF_EQ_EPS));
+                prop_assert!(product.grade_select(1).is_zero(RELATIVE_EQ_EPS));
+                prop_assert!(product.grade_select(3).is_zero(RELATIVE_EQ_EPS));
             }
 
             /// Cross product can be extracted from wedge product in 3D
@@ -730,7 +730,7 @@ mod tests {
                 let na_cross = na_a.cross(&na_b);
 
                 // The wedge product a∧b gives a bivector
-                let wedge = pga_a.outer(&pga_b);
+                let wedge = pga_a.exterior(&pga_b);
 
                 // In 3D Euclidean subspace, the bivector components are related to cross product:
                 // e₁₂ component = ax*by - ay*bx = (a×b)_z
@@ -742,9 +742,9 @@ mod tests {
                 let biv_13 = wedge.get(Blade::from_index(0b0101)); // e₁₃
                 let biv_23 = wedge.get(Blade::from_index(0b0110)); // e₂₃
 
-                prop_assert!(abs_diff_eq!(biv_23, na_cross.x, epsilon = ABS_DIFF_EQ_EPS));
-                prop_assert!(abs_diff_eq!(-biv_13, na_cross.y, epsilon = ABS_DIFF_EQ_EPS));
-                prop_assert!(abs_diff_eq!(biv_12, na_cross.z, epsilon = ABS_DIFF_EQ_EPS));
+                prop_assert!(relative_eq!(biv_23, na_cross.x, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+                prop_assert!(relative_eq!(-biv_13, na_cross.y, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+                prop_assert!(relative_eq!(biv_12, na_cross.z, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
             }
         }
     }

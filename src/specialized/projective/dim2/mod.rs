@@ -9,8 +9,8 @@
 //! | Grade | Type | Components | Geometric Meaning |
 //! |-------|------|------------|-------------------|
 //! | 1 | [`Point`] | e₁, e₂, e₀ | Point (homogeneous) |
-//! | 2 | [`Line`] | e₁₂, e₂₀, e₀₁ | Line |
-//! | 0+2 | [`Motor`] | s, e₁₂, e₂₀, e₀₁ | Rigid transformation |
+//! | 2 | [`Line`] | e₁₂, e₀₁, e₀₂ | Line |
+//! | 0+2 | [`Motor`] | s, e₁₂, e₀₁, e₀₂ | Rigid transformation |
 //!
 //! # Homogeneous Coordinates
 //!
@@ -23,30 +23,34 @@
 //! ```
 //! use clifford::specialized::projective::dim2::{Point, Line, Motor};
 //! use std::f64::consts::FRAC_PI_2;
+//! use approx::abs_diff_eq;
 //!
 //! // Points
-//! let origin = Point::origin();
-//! let p = Point::new(3.0, 4.0);
+//! let origin: Point<f64> = Point::origin();
+//! let p = Point::from_cartesian(3.0, 4.0);
 //!
-//! // Line through two points
-//! let line = origin.join(&p);
+//! // Line meet - intersection of two lines
+//! let x_axis: Line<f64> = Line::x_axis();
+//! let y_axis: Line<f64> = Line::y_axis();
+//! let intersection = x_axis.meet(&y_axis);
 //!
 //! // 90° rotation around origin
 //! let rotor = Motor::from_rotation(FRAC_PI_2);
-//! let rotated = rotor.transform_point(&p);
 //!
 //! // Translation
 //! let translation = Motor::from_translation(1.0, 2.0);
-//! let translated = translation.transform_point(&p);
+//!
+//! // Compose motors
+//! let combined = rotor.compose(&translation);
 //! ```
 
-mod conversions;
-mod ops;
-mod types;
+// Generated code (do not edit manually)
+mod generated;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
+// Domain-specific extensions
+mod extensions;
 
+// nalgebra integration
 #[cfg(any(
     feature = "nalgebra-0_32",
     feature = "nalgebra-0_33",
@@ -54,7 +58,22 @@ pub mod arbitrary;
 ))]
 mod nalgebra;
 
-#[cfg(feature = "rerun-0_28")]
-mod rerun;
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+pub use self::nalgebra::NalgebraConversionError;
 
-pub use types::{Line, Motor, Point};
+// TODO: Add rerun visualization support
+// #[cfg(feature = "rerun-0_28")]
+// mod rerun;
+
+// Re-export generated types and products
+pub use generated::products;
+pub use generated::types::{Flector, Line, Motor, Point, Scalar, Trivector};
+
+// Re-export wrapper type aliases
+pub use generated::types::{
+    BulkFlector, BulkMotor, IdealLine, IdealPoint, UnitizedLine, UnitizedPoint,
+};

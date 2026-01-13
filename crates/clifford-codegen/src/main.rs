@@ -140,18 +140,11 @@ enum Commands {
 }
 
 /// Options for code generation.
-#[allow(dead_code)]
 struct GenerateOptions {
     /// Output directory.
     output: Option<PathBuf>,
     /// Include nalgebra conversions.
     nalgebra: bool,
-    /// Include serde derives.
-    serde: bool,
-    /// Generate tests.
-    tests: bool,
-    /// Generate Arbitrary implementations.
-    arbitrary: bool,
     /// Dry run mode.
     dry_run: bool,
     /// Force overwrite.
@@ -168,9 +161,9 @@ fn main() -> Result<()> {
             specs,
             output,
             nalgebra,
-            serde,
-            no_tests,
-            no_arbitrary,
+            serde: _,        // CLI arg accepted but not yet implemented
+            no_tests: _,     // CLI arg accepted but not yet implemented
+            no_arbitrary: _, // CLI arg accepted but not yet implemented
             dry_run,
             force,
             verbose,
@@ -178,9 +171,6 @@ fn main() -> Result<()> {
             let options = GenerateOptions {
                 output,
                 nalgebra,
-                serde,
-                tests: !no_tests,
-                arbitrary: !no_arbitrary,
                 dry_run,
                 force,
                 verbose,

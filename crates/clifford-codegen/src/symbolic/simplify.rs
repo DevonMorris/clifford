@@ -112,10 +112,16 @@ impl Default for ExpressionSimplifier {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn simplify_expands_product() {
+    fn symbolica_simplify_expands_product() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let simplifier = ExpressionSimplifier::new();
 
         // Create (1 + 1) which should simplify to 2
@@ -128,8 +134,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn is_zero_detects_zero() {
+    fn symbolica_is_zero_detects_zero() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let simplifier = ExpressionSimplifier::new();
 
         let zero = Atom::num(0);
@@ -140,8 +146,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn term_count_for_sum() {
+    fn symbolica_term_count_for_sum() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let simplifier = ExpressionSimplifier::new();
 
         // a + b has 2 terms

@@ -37,9 +37,11 @@ mod format;
 mod products;
 mod traits;
 mod types;
+mod unary;
 
 pub use conversions::ConversionsGenerator;
 pub use format::format_tokens;
 pub use products::ProductGenerator;
 pub use traits::TraitsGenerator;
 pub use types::TypeGenerator;
+pub use unary::UnaryGenerator;

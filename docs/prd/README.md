@@ -30,6 +30,7 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-14](prd-14-codegen.md) | In Progress | Geometric Algebra Code Generator |
 | [PRD-15](prd-15-codegen-migration.md) | In Progress | Codegen Migration (Euclidean, Projective) |
 | [PRD-16](prd-16-codegen-improvements.md) | Draft | Codegen Improvements: Blade Ordering, Versors, Simplification |
+| [PRD-17](prd-17-codegen-products.md) | Draft | Codegen Product Completeness and Documentation |
 
 ## Implementation Order
 

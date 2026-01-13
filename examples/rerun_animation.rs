@@ -84,14 +84,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Define a cube centered at origin
             let half = 0.5_f32;
             let cube_vertices = [
-                Point::new(-half, -half, -half),
-                Point::new(half, -half, -half),
-                Point::new(half, half, -half),
-                Point::new(-half, half, -half),
-                Point::new(-half, -half, half),
-                Point::new(half, -half, half),
-                Point::new(half, half, half),
-                Point::new(-half, half, half),
+                Point::from_cartesian(-half, -half, -half),
+                Point::from_cartesian(half, -half, -half),
+                Point::from_cartesian(half, half, -half),
+                Point::from_cartesian(-half, half, -half),
+                Point::from_cartesian(-half, -half, half),
+                Point::from_cartesian(half, -half, half),
+                Point::from_cartesian(half, half, half),
+                Point::from_cartesian(-half, half, half),
             ];
 
             // Transform all vertices
@@ -157,9 +157,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Show coordinate frame following the helix
             let origin = Point::origin();
-            let tx = motor.transform_point(&Point::new(0.5, 0.0, 0.0));
-            let ty = motor.transform_point(&Point::new(0.0, 0.5, 0.0));
-            let tz = motor.transform_point(&Point::new(0.0, 0.0, 0.5));
+            let tx = motor.transform_point(&Point::from_cartesian(0.5, 0.0, 0.0));
+            let ty = motor.transform_point(&Point::from_cartesian(0.0, 0.5, 0.0));
+            let tz = motor.transform_point(&Point::from_cartesian(0.0, 0.0, 0.5));
             let o = motor.transform_point(&origin);
 
             rec.log(

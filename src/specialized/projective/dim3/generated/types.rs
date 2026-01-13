@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 7 | e1e2e3 | `e023` |\n| 11 | e1e2e4 | `e031` |\n| 13 | e1e3e4 | `e012` |\n| 14 | e2e3e4 | `e123` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -19,26 +19,21 @@ pub struct Flector<T: Float> {
     e2: T,
     #[doc = "Coefficient of `e3`."]
     e3: T,
-    #[doc = "Coefficient of `e4`."]
+    #[doc = "Coefficient of `e0`."]
     e0: T,
-    #[doc = "Coefficient of `e1e2e3`."]
+    #[doc = "Coefficient of `e023`."]
     e023: T,
-    #[doc = "Coefficient of `e1e2e4`."]
+    #[doc = "Coefficient of `e031`."]
     e031: T,
-    #[doc = "Coefficient of `e1e3e4`."]
+    #[doc = "Coefficient of `e012`."]
     e012: T,
-    #[doc = "Coefficient of `e2e3e4`."]
+    #[doc = "Coefficient of `e123`."]
     e123: T,
 }
 impl<T: Float> Flector<T> {
-    #[doc = "Creates a new element from 7 independent coefficients.\n\nThe `e023` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
+    #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(e1: T, e2: T, e3: T, e0: T, e031: T, e012: T, e123: T) -> Self {
-        let e023 = if (e1).abs() > T::epsilon() {
-            (-e2 * e031 - e3 * e012 - e0 * e123) / (e1)
-        } else {
-            T::zero()
-        };
+    pub fn new(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
         Self {
             e1,
             e2,
@@ -50,94 +45,51 @@ impl<T: Float> Flector<T> {
             e123,
         }
     }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|e1*e023 + e2*e031 + e3*e012 + e0*e123| > tolerance`."]
-    #[inline]
-    pub fn new_checked(
-        e1: T,
-        e2: T,
-        e3: T,
-        e0: T,
-        e023: T,
-        e031: T,
-        e012: T,
-        e123: T,
-        tolerance: T,
-    ) -> Result<Self, crate::ConstraintError> {
-        let residual_0 = (e1 * e023 + e2 * e031 + e3 * e012 + e0 * e123) - (T::zero());
-        if residual_0.abs() > tolerance {
-            return Err(crate::ConstraintError::new(
-                "Flector",
-                "e1*e023 + e2*e031 + e3*e012 + e0*e123 = 0",
-                residual_0.to_f64().unwrap_or(0.0),
-            ));
-        }
-        Ok(Self {
-            e1,
-            e2,
-            e3,
-            e0,
-            e023,
-            e031,
-            e012,
-            e123,
-        })
-    }
-    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
-    #[doc = r" # Safety (Logical)"]
-    #[doc = r""]
-    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
-    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
-    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
     pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
-        Self {
-            e1,
-            e2,
-            e3,
-            e0,
-            e023,
-            e031,
-            e012,
-            e123,
-        }
+        Self::new(e1, e2, e3, e0, e023, e031, e012, e123)
     }
-    #[doc = "Returns the e1 component (coefficient of `e1`)."]
+    #[doc = "Returns the `e1` coefficient."]
     #[inline]
     pub fn e1(&self) -> T {
         self.e1
     }
-    #[doc = "Returns the e2 component (coefficient of `e2`)."]
+    #[doc = "Returns the `e2` coefficient."]
     #[inline]
     pub fn e2(&self) -> T {
         self.e2
     }
-    #[doc = "Returns the e3 component (coefficient of `e3`)."]
+    #[doc = "Returns the `e3` coefficient."]
     #[inline]
     pub fn e3(&self) -> T {
         self.e3
     }
-    #[doc = "Returns the e0 component (coefficient of `e4`)."]
+    #[doc = "Returns the `e0` coefficient."]
     #[inline]
     pub fn e0(&self) -> T {
         self.e0
     }
-    #[doc = "Returns the e023 component (coefficient of `e1e2e3`)."]
+    #[doc = "Returns the `e023` coefficient."]
     #[inline]
     pub fn e023(&self) -> T {
         self.e023
     }
-    #[doc = "Returns the e031 component (coefficient of `e1e2e4`)."]
+    #[doc = "Returns the `e031` coefficient."]
     #[inline]
     pub fn e031(&self) -> T {
         self.e031
     }
-    #[doc = "Returns the e012 component (coefficient of `e1e3e4`)."]
+    #[doc = "Returns the `e012` coefficient."]
     #[inline]
     pub fn e012(&self) -> T {
         self.e012
     }
-    #[doc = "Returns the e123 component (coefficient of `e2e3e4`)."]
+    #[doc = "Returns the `e123` coefficient."]
     #[inline]
     pub fn e123(&self) -> T {
         self.e123
@@ -145,7 +97,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new_unchecked(
+        Self::new(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -199,7 +151,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e1 * s,
             self.e2 * s,
             self.e3 * s,
@@ -221,31 +173,26 @@ impl<T: Float> Flector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e1, self.e2, self.e3, self.e0, -self.e023, -self.e031, -self.e012, -self.e123,
         )
     }
-    // Note: transform_point is defined in extensions.rs with optimized formula
-
-    #[doc = "Transforms a Line by this versor via sandwich product.\n\nComputes `self * line * self.reverse()`."]
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
-    pub fn transform_line(&self, x: &Line<T>) -> Line<T> {
-        super::products::sandwich_flector_line(self, x)
-    }
-    #[doc = "Transforms a Plane by this versor via sandwich product.\n\nComputes `self * plane * self.reverse()`."]
-    #[inline]
-    pub fn transform_plane(&self, x: &Plane<T>) -> Plane<T> {
-        super::products::sandwich_flector_plane(self, x)
-    }
-    #[doc = "Transforms a Motor by this versor via sandwich product.\n\nComputes `self * motor * self.reverse()`."]
-    #[inline]
-    pub fn transform_motor(&self, x: &Motor<T>) -> Motor<T> {
-        super::products::sandwich_flector_motor(self, x)
-    }
-    #[doc = "Transforms a Flector by this versor via sandwich product.\n\nComputes `self * flector * self.reverse()`."]
-    #[inline]
-    pub fn transform_flector(&self, x: &Flector<T>) -> Flector<T> {
-        super::products::sandwich_flector_flector(self, x)
+    pub fn antireverse(&self) -> Self {
+        Self::new(
+            -self.e1, -self.e2, -self.e3, -self.e0, self.e023, self.e031, self.e012, self.e123,
+        )
     }
 }
 impl<T: Float> Default for Flector<T> {
@@ -253,33 +200,28 @@ impl<T: Float> Default for Flector<T> {
         Self::zero()
     }
 }
-#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `e01` |\n| 5 | e1e3 | `e02` |\n| 6 | e2e3 | `e03` |\n| 9 | e1e4 | `e23` |\n| 10 | e2e4 | `e31` |\n| 12 | e3e4 | `e12` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
+#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Line<T: Float> {
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `e01`."]
     e01: T,
-    #[doc = "Coefficient of `e1e3`."]
+    #[doc = "Coefficient of `e02`."]
     e02: T,
-    #[doc = "Coefficient of `e2e3`."]
+    #[doc = "Coefficient of `e03`."]
     e03: T,
-    #[doc = "Coefficient of `e1e4`."]
+    #[doc = "Coefficient of `e23`."]
     e23: T,
-    #[doc = "Coefficient of `e2e4`."]
+    #[doc = "Coefficient of `e31`."]
     e31: T,
-    #[doc = "Coefficient of `e3e4`."]
+    #[doc = "Coefficient of `e12`."]
     e12: T,
 }
 impl<T: Float> Line<T> {
-    #[doc = "Creates a new element from 5 independent coefficients.\n\nThe `e03` coefficient(s) are computed from geometric constraints.\nWhen divisors are zero (degenerate case), computed values default to zero."]
+    #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(e01: T, e02: T, e23: T, e31: T, e12: T) -> Self {
-        let e03 = if (e12).abs() > T::epsilon() {
-            (-e01 * e23 - e02 * e31) / (e12)
-        } else {
-            T::zero()
-        };
+    pub fn new(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
         Self {
             e01,
             e02,
@@ -289,78 +231,41 @@ impl<T: Float> Line<T> {
             e12,
         }
     }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if the geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if `|e01*e23 + e02*e31 + e03*e12| > tolerance`."]
-    #[inline]
-    pub fn new_checked(
-        e01: T,
-        e02: T,
-        e03: T,
-        e23: T,
-        e31: T,
-        e12: T,
-        tolerance: T,
-    ) -> Result<Self, crate::ConstraintError> {
-        let residual_0 = (e01 * e23 + e02 * e31 + e03 * e12) - (T::zero());
-        if residual_0.abs() > tolerance {
-            return Err(crate::ConstraintError::new(
-                "Line",
-                "e01*e23 + e02*e31 + e03*e12 = 0",
-                residual_0.to_f64().unwrap_or(0.0),
-            ));
-        }
-        Ok(Self {
-            e01,
-            e02,
-            e03,
-            e23,
-            e31,
-            e12,
-        })
-    }
-    #[doc = r" Creates a new element from all coefficients without validation."]
+    #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
-    #[doc = r" # Safety (Logical)"]
-    #[doc = r""]
-    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
-    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
-    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
     pub fn new_unchecked(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
-        Self {
-            e01,
-            e02,
-            e03,
-            e23,
-            e31,
-            e12,
-        }
+        Self::new(e01, e02, e03, e23, e31, e12)
     }
-    #[doc = "Returns the e01 component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `e01` coefficient."]
     #[inline]
     pub fn e01(&self) -> T {
         self.e01
     }
-    #[doc = "Returns the e02 component (coefficient of `e1e3`)."]
+    #[doc = "Returns the `e02` coefficient."]
     #[inline]
     pub fn e02(&self) -> T {
         self.e02
     }
-    #[doc = "Returns the e03 component (coefficient of `e2e3`)."]
+    #[doc = "Returns the `e03` coefficient."]
     #[inline]
     pub fn e03(&self) -> T {
         self.e03
     }
-    #[doc = "Returns the e23 component (coefficient of `e1e4`)."]
+    #[doc = "Returns the `e23` coefficient."]
     #[inline]
     pub fn e23(&self) -> T {
         self.e23
     }
-    #[doc = "Returns the e31 component (coefficient of `e2e4`)."]
+    #[doc = "Returns the `e31` coefficient."]
     #[inline]
     pub fn e31(&self) -> T {
         self.e31
     }
-    #[doc = "Returns the e12 component (coefficient of `e3e4`)."]
+    #[doc = "Returns the `e12` coefficient."]
     #[inline]
     pub fn e12(&self) -> T {
         self.e12
@@ -368,46 +273,10 @@ impl<T: Float> Line<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new_unchecked(
+        Self::new(
             T::zero(),
             T::zero(),
             T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-        )
-    }
-    #[doc = "Creates the unit e1e2 element."]
-    #[inline]
-    pub fn unit_e01() -> Self {
-        Self::new_unchecked(
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-        )
-    }
-    #[doc = "Creates the unit e1e3 element."]
-    #[inline]
-    pub fn unit_e02() -> Self {
-        Self::new_unchecked(
-            T::zero(),
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-        )
-    }
-    #[doc = "Creates the unit e2e3 element."]
-    #[inline]
-    pub fn unit_e03() -> Self {
-        Self::new_unchecked(
-            T::zero(),
-            T::zero(),
-            T::one(),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -415,20 +284,56 @@ impl<T: Float> Line<T> {
     }
     #[doc = "Creates the unit e1e4 element."]
     #[inline]
-    pub fn unit_e23() -> Self {
-        Self::new_unchecked(
-            T::zero(),
-            T::zero(),
-            T::zero(),
+    pub fn unit_e01() -> Self {
+        Self::new(
             T::one(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
             T::zero(),
             T::zero(),
         )
     }
     #[doc = "Creates the unit e2e4 element."]
     #[inline]
+    pub fn unit_e02() -> Self {
+        Self::new(
+            T::zero(),
+            T::one(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+        )
+    }
+    #[doc = "Creates the unit e3e4 element."]
+    #[inline]
+    pub fn unit_e03() -> Self {
+        Self::new(
+            T::zero(),
+            T::zero(),
+            T::one(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+        )
+    }
+    #[doc = "Creates the unit e2e3 element."]
+    #[inline]
+    pub fn unit_e23() -> Self {
+        Self::new(
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::one(),
+            T::zero(),
+            T::zero(),
+        )
+    }
+    #[doc = "Creates the unit e1e3 element."]
+    #[inline]
     pub fn unit_e31() -> Self {
-        Self::new_unchecked(
+        Self::new(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -437,10 +342,10 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e3e4 element."]
+    #[doc = "Creates the unit e1e2 element."]
     #[inline]
     pub fn unit_e12() -> Self {
-        Self::new_unchecked(
+        Self::new(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -490,7 +395,7 @@ impl<T: Float> Line<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.e01 * s,
             self.e02 * s,
             self.e03 * s,
@@ -510,7 +415,24 @@ impl<T: Float> Line<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new_unchecked(
+        Self::new(
+            -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
+        )
+    }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(
             -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
         )
     }
@@ -520,102 +442,32 @@ impl<T: Float> Default for Line<T> {
         Self::zero()
     }
 }
-#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `e23` |\n| 5 | e1e3 | `e31` |\n| 6 | e2e3 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Motor<T: Float> {
     #[doc = "Coefficient of `s`."]
     s: T,
-    #[doc = "Coefficient of `e1e2`."]
+    #[doc = "Coefficient of `e23`."]
     e23: T,
-    #[doc = "Coefficient of `e1e3`."]
+    #[doc = "Coefficient of `e31`."]
     e31: T,
-    #[doc = "Coefficient of `e2e3`."]
+    #[doc = "Coefficient of `e12`."]
     e12: T,
-    #[doc = "Coefficient of `e1e4`."]
+    #[doc = "Coefficient of `e01`."]
     e01: T,
-    #[doc = "Coefficient of `e2e4`."]
+    #[doc = "Coefficient of `e02`."]
     e02: T,
-    #[doc = "Coefficient of `e3e4`."]
+    #[doc = "Coefficient of `e03`."]
     e03: T,
-    #[doc = "Coefficient of `e1e2e3e4`."]
+    #[doc = "Coefficient of `e0123`."]
     e0123: T,
 }
 impl<T: Float> Motor<T> {
-    #[doc = "Creates a new element from 6 independent coefficients.\n\nThe `s`, `e0123` coefficient(s) are computed from geometric constraints.\n\nReturns `None` if the constraint cannot be satisfied (e.g., when the\nsqrt argument would be negative)."]
+    #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(e23: T, e31: T, e12: T, e01: T, e02: T, e03: T) -> Option<Self> {
-        let sqrt_arg = T::from_i8(1) - e23 * e23 - e31 * e31 - e12 * e12;
-        if sqrt_arg < T::zero() {
-            return None;
-        }
-        let s = sqrt_arg.sqrt();
-        let e0123 = if (s).abs() > T::epsilon() {
-            (-e23 * e01 - e31 * e02 - e12 * e03) / (s)
-        } else {
-            T::zero()
-        };
-        Some(Self {
-            s,
-            e23,
-            e31,
-            e12,
-            e01,
-            e02,
-            e03,
-            e0123,
-        })
-    }
-    #[doc = "Creates a new element from all coefficients with constraint validation.\n\nReturns an error if any geometric constraint is not satisfied within\nthe given tolerance.\n\n# Errors\n\nReturns `ConstraintError` if any of:\n- `|s*s + e23*e23 + e31*e31 + e12*e12 - 1| > tolerance`\n- `|s*e0123 + e23*e01 + e31*e02 + e12*e03| > tolerance`"]
-    #[inline]
-    pub fn new_checked(
-        s: T,
-        e23: T,
-        e31: T,
-        e12: T,
-        e01: T,
-        e02: T,
-        e03: T,
-        e0123: T,
-        tolerance: T,
-    ) -> Result<Self, crate::ConstraintError> {
-        let residual_0 = (s * s + e23 * e23 + e31 * e31 + e12 * e12) - (T::from_i8(1));
-        if residual_0.abs() > tolerance {
-            return Err(crate::ConstraintError::new(
-                "Motor",
-                "s*s + e23*e23 + e31*e31 + e12*e12 = 1",
-                residual_0.to_f64().unwrap_or(0.0),
-            ));
-        }
-        let residual_1 = (s * e0123 + e23 * e01 + e31 * e02 + e12 * e03) - (T::zero());
-        if residual_1.abs() > tolerance {
-            return Err(crate::ConstraintError::new(
-                "Motor",
-                "s*e0123 + e23*e01 + e31*e02 + e12*e03 = 0",
-                residual_1.to_f64().unwrap_or(0.0),
-            ));
-        }
-        Ok(Self {
-            s,
-            e23,
-            e31,
-            e12,
-            e01,
-            e02,
-            e03,
-            e0123,
-        })
-    }
-    #[doc = r" Creates a new element from all coefficients without validation."]
-    #[doc = r""]
-    #[doc = r" # Safety (Logical)"]
-    #[doc = r""]
-    #[doc = r" Caller must ensure the geometric constraint is satisfied."]
-    #[doc = r" Use this for performance-critical code, automatic differentiation,"]
-    #[doc = r" or when coefficients come from trusted sources (e.g., product operations)."]
-    #[inline]
-    pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+    pub fn new(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
         Self {
             s,
             e23,
@@ -627,42 +479,51 @@ impl<T: Float> Motor<T> {
             e0123,
         }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+        Self::new(s, e23, e31, e12, e01, e02, e03, e0123)
+    }
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s
     }
-    #[doc = "Returns the e23 component (coefficient of `e1e2`)."]
+    #[doc = "Returns the `e23` coefficient."]
     #[inline]
     pub fn e23(&self) -> T {
         self.e23
     }
-    #[doc = "Returns the e31 component (coefficient of `e1e3`)."]
+    #[doc = "Returns the `e31` coefficient."]
     #[inline]
     pub fn e31(&self) -> T {
         self.e31
     }
-    #[doc = "Returns the e12 component (coefficient of `e2e3`)."]
+    #[doc = "Returns the `e12` coefficient."]
     #[inline]
     pub fn e12(&self) -> T {
         self.e12
     }
-    #[doc = "Returns the e01 component (coefficient of `e1e4`)."]
+    #[doc = "Returns the `e01` coefficient."]
     #[inline]
     pub fn e01(&self) -> T {
         self.e01
     }
-    #[doc = "Returns the e02 component (coefficient of `e2e4`)."]
+    #[doc = "Returns the `e02` coefficient."]
     #[inline]
     pub fn e02(&self) -> T {
         self.e02
     }
-    #[doc = "Returns the e03 component (coefficient of `e3e4`)."]
+    #[doc = "Returns the `e03` coefficient."]
     #[inline]
     pub fn e03(&self) -> T {
         self.e03
     }
-    #[doc = "Returns the e0123 component (coefficient of `e1e2e3e4`)."]
+    #[doc = "Returns the `e0123` coefficient."]
     #[inline]
     pub fn e0123(&self) -> T {
         self.e0123
@@ -670,22 +531,8 @@ impl<T: Float> Motor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new_unchecked(
+        Self::new(
             T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-        )
-    }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new_unchecked(
-            T::one(),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -738,7 +585,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.s * s,
             self.e23 * s,
             self.e31 * s,
@@ -760,41 +607,45 @@ impl<T: Float> Motor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new_unchecked(
+        Self::new(
             self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }
-    // Note: transform_point, transform_line, transform_plane are defined in extensions.rs
-    // with optimized formulas from rigidgeometricalgebra.org
-
-    #[doc = "Transforms a Motor by this versor via sandwich product.\n\nComputes `self * motor * self.reverse()`."]
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
-    pub fn transform_motor(&self, x: &Motor<T>) -> Motor<T> {
-        super::products::sandwich_motor_motor(self, x)
-    }
-    #[doc = "Transforms a Flector by this versor via sandwich product.\n\nComputes `self * flector * self.reverse()`."]
-    #[inline]
-    pub fn transform_flector(&self, x: &Flector<T>) -> Flector<T> {
-        super::products::sandwich_motor_flector(self, x)
+    pub fn antireverse(&self) -> Self {
+        Self::new(
+            self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
+        )
     }
 }
 impl<T: Float> Default for Motor<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
-#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `e023` |\n| 11 | e1e2e4 | `e031` |\n| 13 | e1e3e4 | `e012` |\n| 14 | e2e3e4 | `e123` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Plane<T: Float> {
-    #[doc = "Coefficient of `e1e2e3`."]
+    #[doc = "Coefficient of `e023`."]
     e023: T,
-    #[doc = "Coefficient of `e1e2e4`."]
+    #[doc = "Coefficient of `e031`."]
     e031: T,
-    #[doc = "Coefficient of `e1e3e4`."]
+    #[doc = "Coefficient of `e012`."]
     e012: T,
-    #[doc = "Coefficient of `e2e3e4`."]
+    #[doc = "Coefficient of `e123`."]
     e123: T,
 }
 impl<T: Float> Plane<T> {
@@ -808,22 +659,31 @@ impl<T: Float> Plane<T> {
             e123,
         }
     }
-    #[doc = "Returns the e023 component (coefficient of `e1e2e3`)."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(e023: T, e031: T, e012: T, e123: T) -> Self {
+        Self::new(e023, e031, e012, e123)
+    }
+    #[doc = "Returns the `e023` coefficient."]
     #[inline]
     pub fn e023(&self) -> T {
         self.e023
     }
-    #[doc = "Returns the e031 component (coefficient of `e1e2e4`)."]
+    #[doc = "Returns the `e031` coefficient."]
     #[inline]
     pub fn e031(&self) -> T {
         self.e031
     }
-    #[doc = "Returns the e012 component (coefficient of `e1e3e4`)."]
+    #[doc = "Returns the `e012` coefficient."]
     #[inline]
     pub fn e012(&self) -> T {
         self.e012
     }
-    #[doc = "Returns the e123 component (coefficient of `e2e3e4`)."]
+    #[doc = "Returns the `e123` coefficient."]
     #[inline]
     pub fn e123(&self) -> T {
         self.e123
@@ -833,22 +693,22 @@ impl<T: Float> Plane<T> {
     pub fn zero() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e2e3 element."]
+    #[doc = "Creates the unit e2e3e4 element."]
     #[inline]
     pub fn unit_e023() -> Self {
         Self::new(T::one(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e2e4 element."]
+    #[doc = "Creates the unit e1e3e4 element."]
     #[inline]
     pub fn unit_e031() -> Self {
         Self::new(T::zero(), T::one(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e3e4 element."]
+    #[doc = "Creates the unit e1e2e4 element."]
     #[inline]
     pub fn unit_e012() -> Self {
         Self::new(T::zero(), T::zero(), T::one(), T::zero())
     }
-    #[doc = "Creates the unit e2e3e4 element."]
+    #[doc = "Creates the unit e1e2e3 element."]
     #[inline]
     pub fn unit_e123() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::one())
@@ -907,13 +767,28 @@ impl<T: Float> Plane<T> {
     pub fn reverse(&self) -> Self {
         Self::new(-self.e023, -self.e031, -self.e012, -self.e123)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.e023, self.e031, self.e012, self.e123)
+    }
 }
 impl<T: Float> Default for Plane<T> {
     fn default() -> Self {
         Self::zero()
     }
 }
-#[doc = "3D point in homogeneous coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Point;\n\nlet v = Point::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D point in homogeneous coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Point;\n\nlet v = Point::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -924,7 +799,7 @@ pub struct Point<T: Float> {
     e2: T,
     #[doc = "Coefficient of `e3`."]
     e3: T,
-    #[doc = "Coefficient of `e4`."]
+    #[doc = "Coefficient of `e0`."]
     e0: T,
 }
 impl<T: Float> Point<T> {
@@ -933,22 +808,31 @@ impl<T: Float> Point<T> {
     pub fn new(e1: T, e2: T, e3: T, e0: T) -> Self {
         Self { e1, e2, e3, e0 }
     }
-    #[doc = "Returns the e1 component (coefficient of `e1`)."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T) -> Self {
+        Self::new(e1, e2, e3, e0)
+    }
+    #[doc = "Returns the `e1` coefficient."]
     #[inline]
     pub fn e1(&self) -> T {
         self.e1
     }
-    #[doc = "Returns the e2 component (coefficient of `e2`)."]
+    #[doc = "Returns the `e2` coefficient."]
     #[inline]
     pub fn e2(&self) -> T {
         self.e2
     }
-    #[doc = "Returns the e3 component (coefficient of `e3`)."]
+    #[doc = "Returns the `e3` coefficient."]
     #[inline]
     pub fn e3(&self) -> T {
         self.e3
     }
-    #[doc = "Returns the e0 component (coefficient of `e4`)."]
+    #[doc = "Returns the `e0` coefficient."]
     #[inline]
     pub fn e0(&self) -> T {
         self.e0
@@ -1029,18 +913,33 @@ impl<T: Float> Point<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.e1, self.e2, self.e3, self.e0)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(-self.e1, -self.e2, -self.e3, -self.e0)
+    }
 }
 impl<T: Float> Default for Point<T> {
     fn default() -> Self {
         Self::zero()
     }
 }
-#[doc = "Quadvector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Quadvector;\n\nlet v = Quadvector::new(1.0);\n```"]
+#[doc = "Quadvector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Quadvector;\n\nlet v = Quadvector::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Quadvector<T: Float> {
-    #[doc = "Coefficient of `e1e2e3e4`."]
+    #[doc = "Coefficient of `e0123`."]
     e0123: T,
 }
 impl<T: Float> Quadvector<T> {
@@ -1049,7 +948,16 @@ impl<T: Float> Quadvector<T> {
     pub fn new(e0123: T) -> Self {
         Self { e0123 }
     }
-    #[doc = "Returns the e0123 component (coefficient of `e1e2e3e4`)."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(e0123: T) -> Self {
+        Self::new(e0123)
+    }
+    #[doc = "Returns the `e0123` coefficient."]
     #[inline]
     pub fn e0123(&self) -> T {
         self.e0123
@@ -1115,13 +1023,28 @@ impl<T: Float> Quadvector<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.e0123)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.e0123)
+    }
 }
 impl<T: Float> Default for Quadvector<T> {
     fn default() -> Self {
         Self::zero()
     }
 }
-#[doc = "Scalar\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```ignore\nuse clifford::generated/projective3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
+#[doc = "Scalar\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -1135,7 +1058,16 @@ impl<T: Float> Scalar<T> {
     pub fn new(s: T) -> Self {
         Self { s }
     }
-    #[doc = "Returns the s component (coefficient of `s`)."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(s: T) -> Self {
+        Self::new(s)
+    }
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
     pub fn s(&self) -> T {
         self.s
@@ -1144,11 +1076,6 @@ impl<T: Float> Scalar<T> {
     #[inline]
     pub fn zero() -> Self {
         Self::new(T::zero())
-    }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new(T::one())
     }
     #[doc = "Creates the unit s element."]
     #[inline]
@@ -1206,9 +1133,40 @@ impl<T: Float> Scalar<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.s)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.s)
+    }
 }
 impl<T: Float> Default for Scalar<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
+#[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]
+pub type BulkFlector<T> = crate::wrappers::Bulk<Flector<T>>;
+#[doc = "A unitized line (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized line has been weight-normalized to standard form, representing a finite (non-ideal) line."]
+pub type UnitizedLine<T> = crate::wrappers::Unitized<Line<T>>;
+#[doc = "An ideal line (weight ≈ 0).\n\nAn ideal line lies at infinity (has zero weight component). This is a constraint wrapper that verifies the line is ideal, not a normalization wrapper."]
+pub type IdealLine<T> = crate::wrappers::Ideal<Line<T>>;
+#[doc = "A bulk-normalized Motor (bulk norm = 1).\n\nFor a Motor to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Motor has been bulk-normalized."]
+pub type BulkMotor<T> = crate::wrappers::Bulk<Motor<T>>;
+#[doc = "A unitized plane (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized plane has been weight-normalized to standard form, representing a finite (non-ideal) plane."]
+pub type UnitizedPlane<T> = crate::wrappers::Unitized<Plane<T>>;
+#[doc = "An ideal plane (weight ≈ 0).\n\nAn ideal plane lies at infinity (has zero weight component). This is a constraint wrapper that verifies the plane is ideal, not a normalization wrapper."]
+pub type IdealPlane<T> = crate::wrappers::Ideal<Plane<T>>;
+#[doc = "A unitized point (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized point has been weight-normalized to standard form, representing a finite (non-ideal) point."]
+pub type UnitizedPoint<T> = crate::wrappers::Unitized<Point<T>>;
+#[doc = "An ideal point (weight ≈ 0).\n\nAn ideal point lies at infinity (has zero weight component). This is a constraint wrapper that verifies the point is ideal, not a normalization wrapper."]
+pub type IdealPoint<T> = crate::wrappers::Ideal<Point<T>>;

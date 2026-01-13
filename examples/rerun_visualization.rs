@@ -72,10 +72,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Log PGA points
     let pga_points = [
-        Point::new(0.0_f32, 0.0, 0.0),
-        Point::new(1.0, 0.0, 0.0),
-        Point::new(1.0, 1.0, 0.0),
-        Point::new(0.0, 1.0, 0.0),
+        Point::from_cartesian(0.0_f32, 0.0, 0.0),
+        Point::from_cartesian(1.0, 0.0, 0.0),
+        Point::from_cartesian(1.0, 1.0, 0.0),
+        Point::from_cartesian(0.0, 1.0, 0.0),
     ];
     rec.log("pga/square", &rerun::Points3D::new(pga_points))?;
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     rec.log("pga/motor_transform", &rerun::Transform3D::from(motor))?;
 
     // Visualize motor action on a point
-    let start = Point::new(0.0_f32, 0.0, 0.0);
+    let start = Point::from_cartesian(0.0_f32, 0.0, 0.0);
     let mut trajectory = vec![start];
 
     for i in 1..=16 {

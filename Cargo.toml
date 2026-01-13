@@ -85,3 +85,7 @@ required-features = ["rerun-0_28"]
 [[example]]
 name = "rerun_bivector"
 required-features = ["rerun-0_28"]
+
+# Optimize codegen tool even in dev mode (symbolic computation is slow unoptimized)
+[profile.dev.package.clifford-codegen]
+opt-level = 3

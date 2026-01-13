@@ -17,8 +17,8 @@ use crate::spec::TypeSpec;
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Outer product (wedge, grade-raising).
-    Outer,
+    /// Exterior product (wedge, grade-raising).
+    Exterior,
     /// Left contraction (inner product).
     LeftContraction,
 }
@@ -38,19 +38,16 @@ pub struct SymbolicField {
 ///
 /// Given input types with symbolic field values, computes the symbolic
 /// expressions for each output field.
-pub struct SymbolicProduct<'a> {
-    /// The algebra for blade computations.
-    #[allow(dead_code)]
-    algebra: &'a Algebra,
+pub struct SymbolicProduct {
     /// The product table.
     table: ProductTable,
 }
 
-impl<'a> SymbolicProduct<'a> {
+impl SymbolicProduct {
     /// Creates a new symbolic product computer.
-    pub fn new(algebra: &'a Algebra) -> Self {
+    pub fn new(algebra: &Algebra) -> Self {
         let table = ProductTable::new(algebra);
-        Self { algebra, table }
+        Self { table }
     }
 
     /// Creates symbolic variables for a type's fields.
@@ -144,7 +141,7 @@ impl<'a> SymbolicProduct<'a> {
                 // Filter based on product kind
                 let include = match kind {
                     ProductKind::Geometric => true,
-                    ProductKind::Outer => {
+                    ProductKind::Exterior => {
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
                         let result_grade = Blade::from_index(result_blade).grade();
@@ -188,13 +185,16 @@ impl<'a> SymbolicProduct<'a> {
 mod tests {
     use super::*;
     use crate::spec::parse_spec;
+    use std::sync::Mutex;
 
-    // Note: This test creates symbols which can cause issues with Symbolica's
-    // global state when running in parallel with other tests. Run with
-    // --test-threads=1 or individually if it fails.
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
+
     #[test]
-    #[ignore = "Symbolica global state conflicts when running in parallel"]
-    fn create_symbols_for_vector() {
+    fn symbolica_create_symbols_for_vector() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let spec = parse_spec(
             r#"
             [algebra]

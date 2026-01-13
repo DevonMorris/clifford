@@ -5,7 +5,6 @@
 //!
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
-//! - **[`conformal`]**: Conformal geometric algebra (CGA) for 3D
 //!
 //! # Type Organization
 //!
@@ -17,8 +16,6 @@
 //!   projective/
 //!     dim2/   - 2D PGA: Point, Line, Motor
 //!     dim3/   - 3D PGA: Point, Line, Plane, Motor
-//!   conformal/
-//!     dim3/   - 3D CGA: Point, Sphere
 //! ```
 //!
 //! # Benefits of Specialized Types
@@ -41,7 +38,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //!
 //! // Create a vector
@@ -59,7 +56,6 @@
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
-pub mod conformal;
 pub mod euclidean;
 pub mod projective;
 

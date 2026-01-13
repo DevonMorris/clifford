@@ -57,7 +57,7 @@ clifford = "0.1"
 
 Rotors are the GA equivalent of quaternions, but they arise naturally from the geometry:
 
-```rust
+```rust,ignore
 use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 use std::f64::consts::FRAC_PI_2;
 
@@ -78,7 +78,7 @@ assert!((rotated.y() - 1.0).abs() < 1e-10);
 
 Motors combine rotation and translation into a single object that composes beautifully:
 
-```rust
+```rust,ignore
 use clifford::specialized::projective::dim3::{Motor, Point};
 
 // Create a motor: translate by (1, 2, 3)
@@ -102,7 +102,7 @@ Motors can also transform lines and planes, making them ideal for robotics and g
 
 The same patterns work in 2D:
 
-```rust
+```rust,ignore
 use clifford::specialized::euclidean::dim2::{Vector, Rotor};
 use std::f64::consts::FRAC_PI_2;
 

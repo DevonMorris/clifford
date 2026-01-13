@@ -17,14 +17,14 @@ impl<T: Float> From<Flector<T>> for Multivector<T, Projective3> {
             value.e3(),
             T::zero(),
             T::zero(),
-            value.e023(),
+            value.e123(),
             value.e0(),
             T::zero(),
             T::zero(),
-            value.e031(),
-            T::zero(),
             value.e012(),
-            value.e123(),
+            T::zero(),
+            value.e031(),
+            value.e023(),
             T::zero(),
         ])
     }
@@ -35,16 +35,16 @@ impl<T: Float> From<Line<T>> for Multivector<T, Projective3> {
             T::zero(),
             T::zero(),
             T::zero(),
-            value.e01(),
-            T::zero(),
-            value.e02(),
-            value.e03(),
-            T::zero(),
-            T::zero(),
-            value.e23(),
-            value.e31(),
-            T::zero(),
             value.e12(),
+            T::zero(),
+            value.e31(),
+            value.e23(),
+            T::zero(),
+            T::zero(),
+            value.e01(),
+            value.e02(),
+            T::zero(),
+            value.e03(),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -57,10 +57,10 @@ impl<T: Float> From<Motor<T>> for Multivector<T, Projective3> {
             value.s(),
             T::zero(),
             T::zero(),
-            value.e23(),
+            value.e12(),
             T::zero(),
             value.e31(),
-            value.e12(),
+            value.e23(),
             T::zero(),
             T::zero(),
             value.e01(),
@@ -83,14 +83,14 @@ impl<T: Float> From<Plane<T>> for Multivector<T, Projective3> {
             T::zero(),
             T::zero(),
             T::zero(),
-            value.e023(),
+            value.e123(),
             T::zero(),
             T::zero(),
-            T::zero(),
-            value.e031(),
             T::zero(),
             value.e012(),
-            value.e123(),
+            T::zero(),
+            value.e031(),
+            value.e023(),
             T::zero(),
         ])
     }
@@ -166,20 +166,16 @@ impl<T: Float> From<Multivector<T, Projective3>> for Flector<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
-    #[doc = r""]
-    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
-    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
-    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new_unchecked(
+        Self::new(
             mv.get(Blade::from_index(1usize)),
             mv.get(Blade::from_index(2usize)),
             mv.get(Blade::from_index(4usize)),
             mv.get(Blade::from_index(8usize)),
-            mv.get(Blade::from_index(7usize)),
-            mv.get(Blade::from_index(11usize)),
-            mv.get(Blade::from_index(13usize)),
             mv.get(Blade::from_index(14usize)),
+            mv.get(Blade::from_index(13usize)),
+            mv.get(Blade::from_index(11usize)),
+            mv.get(Blade::from_index(7usize)),
         )
     }
 }
@@ -188,18 +184,14 @@ impl<T: Float> From<Multivector<T, Projective3>> for Line<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
-    #[doc = r""]
-    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
-    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
-    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new_unchecked(
-            mv.get(Blade::from_index(3usize)),
-            mv.get(Blade::from_index(5usize)),
-            mv.get(Blade::from_index(6usize)),
+        Self::new(
             mv.get(Blade::from_index(9usize)),
             mv.get(Blade::from_index(10usize)),
             mv.get(Blade::from_index(12usize)),
+            mv.get(Blade::from_index(6usize)),
+            mv.get(Blade::from_index(5usize)),
+            mv.get(Blade::from_index(3usize)),
         )
     }
 }
@@ -208,16 +200,12 @@ impl<T: Float> From<Multivector<T, Projective3>> for Motor<T> {
     #[doc = r""]
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
-    #[doc = r""]
-    #[doc = r" **Warning:** Uses `new_unchecked()` since the source multivector"]
-    #[doc = r" may not satisfy the geometric constraint. Verify the constraint"]
-    #[doc = r" manually if needed."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
-        Self::new_unchecked(
+        Self::new(
             mv.get(Blade::from_index(0usize)),
-            mv.get(Blade::from_index(3usize)),
-            mv.get(Blade::from_index(5usize)),
             mv.get(Blade::from_index(6usize)),
+            mv.get(Blade::from_index(5usize)),
+            mv.get(Blade::from_index(3usize)),
             mv.get(Blade::from_index(9usize)),
             mv.get(Blade::from_index(10usize)),
             mv.get(Blade::from_index(12usize)),
@@ -232,10 +220,10 @@ impl<T: Float> From<Multivector<T, Projective3>> for Plane<T> {
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective3>) -> Self {
         Self::new(
-            mv.get(Blade::from_index(7usize)),
-            mv.get(Blade::from_index(11usize)),
-            mv.get(Blade::from_index(13usize)),
             mv.get(Blade::from_index(14usize)),
+            mv.get(Blade::from_index(13usize)),
+            mv.get(Blade::from_index(11usize)),
+            mv.get(Blade::from_index(7usize)),
         )
     }
 }

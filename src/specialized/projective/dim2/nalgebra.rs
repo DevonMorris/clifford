@@ -1,14 +1,34 @@
-//! nalgebra interoperability for 2D PGA types.
+//! nalgebra interoperability for 2D Projective GA types.
 //!
-//! This module provides conversions between 2D PGA types and nalgebra types:
-//! - [`Point`] ↔ [`nalgebra::Point2`]
-//! - [`Motor`] ↔ [`nalgebra::Isometry2`]
-//! - [`Motor`] ↔ [`nalgebra::UnitComplex`] (rotation only)
-//! - [`Motor`] ↔ [`nalgebra::Rotation2`] (rotation only)
+//! This module provides bidirectional conversions between clifford's 2D PGA types
+//! and nalgebra's equivalent types.
+//!
+//! Enable with feature `nalgebra-0_32`, `nalgebra-0_33`, or `nalgebra-0_34`.
+//!
+//! # Conversions
+//!
+//! | clifford | nalgebra | Notes |
+//! |----------|----------|-------|
+//! | [`Point<T>`] | [`na::Point2<T>`] | Homogeneous ↔ Cartesian coordinates |
+//! | [`Motor<T>`] | [`na::Isometry2<T>`] | Rigid transformation (rotation + translation) |
+//!
+//! # Motor ↔ Isometry Correspondence
+//!
+//! Both PGA motors and nalgebra isometries represent rigid transformations
+//! (rotation + translation), but with different internal representations.
+//!
+//! **Motor representation** (2D PGA with dual form, grades 1+3):
+//! - Components `(e0, e012)` encode the rotation: e0 = -sin(θ/2), e012 = cos(θ/2)
+//! - Components `(e1, e2)` encode the translation: e1 = dy/2, e2 = -dx/2
+//!
+//! This dual form matches 3D PGA where motors include the pseudoscalar,
+//! allowing the antisandwich product to work directly for transformations.
+//!
+//! **Isometry representation**:
+//! - `UnitComplex` for rotation
+//! - `Translation2` for translation
 
-use crate::scalar::Float;
-
-use super::types::{Motor, Point};
+use core::fmt;
 
 #[cfg(feature = "nalgebra-0_32")]
 use nalgebra_0_32 as na;
@@ -17,34 +37,54 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
+use crate::scalar::Float;
+
+use super::{Motor, Point};
+
+// ============================================================================
+// Error type
+// ============================================================================
+
+/// Error when converting from clifford types to nalgebra types.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NalgebraConversionError {
+    /// Point is ideal (at infinity), cannot convert to finite coordinates.
+    IdealPoint,
+}
+
+impl fmt::Display for NalgebraConversionError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::IdealPoint => write!(f, "point is ideal (at infinity)"),
+        }
+    }
+}
+
+impl std::error::Error for NalgebraConversionError {}
+
 // ============================================================================
 // Point <-> Point2
 // ============================================================================
 
-impl<T> From<na::Point2<T>> for Point<T>
-where
-    T: Float + na::Scalar,
-{
-    /// Converts a nalgebra [`Point2`](na::Point2) to a PGA [`Point`].
+impl<T: Float + na::Scalar> From<na::Point2<T>> for Point<T> {
+    /// Converts a nalgebra 2D point to a PGA point.
     ///
-    /// The resulting point has homogeneous weight `w = 1`.
+    /// Creates a finite point with homogeneous weight `w = 1`.
+    #[inline]
     fn from(p: na::Point2<T>) -> Self {
-        Point::new(p.x, p.y)
+        Point::from_cartesian(p.x, p.y)
     }
 }
 
-impl<T> TryFrom<Point<T>> for na::Point2<T>
-where
-    T: Float + na::Scalar,
-{
-    type Error = PointConversionError;
+impl<T: Float + na::Scalar> TryFrom<Point<T>> for na::Point2<T> {
+    type Error = NalgebraConversionError;
 
-    /// Tries to convert a PGA [`Point`] to a nalgebra [`Point2`](na::Point2).
+    /// Attempts to convert a PGA point to a nalgebra 2D point.
     ///
-    /// Returns an error if the point is at infinity (weight ≈ 0).
+    /// Returns an error if the point is ideal (at infinity).
     fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
-        if p.e0.abs() < T::epsilon() {
-            return Err(PointConversionError::PointAtInfinity);
+        if p.e0().abs() < T::epsilon() {
+            return Err(NalgebraConversionError::IdealPoint);
         }
         Ok(na::Point2::new(p.x(), p.y()))
     }
@@ -54,589 +94,367 @@ where
 // Motor <-> Isometry2
 // ============================================================================
 
-impl<T> From<na::Isometry2<T>> for Motor<T>
-where
-    T: Float + na::RealField + Copy,
-{
-    /// Converts a nalgebra [`Isometry2`](na::Isometry2) to a PGA [`Motor`].
+impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry2<T> {
+    /// Converts a PGA motor to a nalgebra 2D isometry.
+    ///
+    /// # Mathematical Correspondence
+    ///
+    /// In dual form, the motor components are:
+    /// - `e0 = -sin(θ/2)`, `e012 = cos(θ/2)` (rotation)
+    /// - `e1 = dy/2`, `e2 = -dx/2` (translation in dual form)
+    ///
+    /// For a composed motor `trans.compose(&rot)`, the translation components
+    /// mix with rotation. We decompose to recover the original values.
+    fn from(motor: Motor<T>) -> Self {
+        // Extract rotation from (e0, e012) = (-sin(θ/2), cos(θ/2))
+        // rotation_angle() computes atan2(-e0, e012) * 2 = θ
+        let rotation = na::UnitComplex::new(motor.rotation_angle());
+
+        // Decompose translation from composed motor in dual form:
+        // For pure translation: e1 = dy/2, e2 = -dx/2
+        // For composed motor, translation components mix with rotation:
+        // e1_composed = e1_t*e012 + e2_t*e0
+        // e2_composed = e2_t*e012 - e1_t*e0
+        // Inverting: e1_t = e1*e012 - e2*e0, e2_t = e2*e012 + e1*e0
+        let cos_half = motor.e012();
+        let sin_half = -motor.e0(); // e0 = -sin(θ/2), so sin_half = -e0
+        let e1_t = motor.e1() * cos_half + motor.e2() * sin_half;
+        let e2_t = motor.e2() * cos_half - motor.e1() * sin_half;
+
+        // In dual form: e1 = dy/2, e2 = -dx/2
+        // So: dx = -2*e2_t, dy = 2*e1_t
+        let translation = na::Translation2::new(-e2_t * T::TWO, e1_t * T::TWO);
+
+        na::Isometry2::from_parts(translation, rotation)
+    }
+}
+
+impl<T: Float + na::RealField> From<na::Isometry2<T>> for Motor<T> {
+    /// Converts a nalgebra 2D isometry to a PGA motor.
+    ///
+    /// # Mathematical Correspondence
+    ///
+    /// Nalgebra's `Isometry2::new(translation, angle)` applies rotation first (around origin),
+    /// then translation. To match this, we compose the motors:
+    /// `translation.compose(&rotation)` applies rotation first, then translation.
     fn from(iso: na::Isometry2<T>) -> Self {
         let angle = iso.rotation.angle();
-        let translation = iso.translation.vector;
+        let t = iso.translation.vector;
 
+        // Build rotation and translation motors
         let rotation = Motor::from_rotation(angle);
-        let trans = Motor::from_translation(translation.x, translation.y);
+        let translation = Motor::from_translation(t.x, t.y);
 
-        // nalgebra applies rotation first, then translation
-        // In PGA compose, leftmost motor acts first: rotation.compose(&trans) = R * T
-        rotation.compose(&trans)
+        // Compose: translation.compose(&rotation) applies rotation first
+        translation.compose(&rotation)
     }
 }
-
-impl<T> From<Motor<T>> for na::Isometry2<T>
-where
-    T: Float + na::RealField + Copy,
-{
-    /// Converts a PGA [`Motor`] to a nalgebra [`Isometry2`](na::Isometry2).
-    ///
-    /// Note: This extracts the rotation angle and translation from the motor.
-    /// For non-unit motors, the result may not be exact.
-    fn from(m: Motor<T>) -> Self {
-        let angle = m.rotation_angle();
-        let t = m.translation();
-
-        // Note: for a composed motor, the translation extraction is approximate
-        // For accurate extraction, we'd need to decompose the motor properly
-        na::Isometry2::new(na::Vector2::new(t.x(), t.y()), angle)
-    }
-}
-
-// ============================================================================
-// Motor <-> UnitComplex (rotation only)
-// ============================================================================
-
-impl<T> From<na::UnitComplex<T>> for Motor<T>
-where
-    T: Float + na::RealField,
-{
-    /// Converts a nalgebra [`UnitComplex`](na::UnitComplex) to a pure rotation [`Motor`].
-    ///
-    /// # Mapping
-    ///
-    /// UnitComplex stores `z = cos(θ) + i·sin(θ)` where θ is the full rotation angle.
-    /// Motor stores `s = cos(θ/2)`, `e12 = sin(θ/2)` (half-angle representation).
-    ///
-    /// We use half-angle formulas:
-    /// - `cos(θ/2) = √((1 + cos(θ))/2)`
-    /// - `sin(θ/2) = √((1 - cos(θ))/2)` with sign from sin(θ)
-    fn from(uc: na::UnitComplex<T>) -> Self {
-        let angle = uc.angle();
-        Motor::from_rotation(angle)
-    }
-}
-
-impl<T> From<Motor<T>> for na::UnitComplex<T>
-where
-    T: Float + na::RealField,
-{
-    /// Converts a [`Motor`]'s rotation part to a nalgebra [`UnitComplex`](na::UnitComplex).
-    ///
-    /// # Note
-    ///
-    /// This extracts only the rotation component. Translation is ignored.
-    ///
-    /// # Mapping
-    ///
-    /// Motor stores `s = cos(θ/2)`, `e12 = sin(θ/2)`.
-    /// UnitComplex needs `cos(θ)`, `sin(θ)`.
-    ///
-    /// We use double-angle formulas:
-    /// - `cos(θ) = cos²(θ/2) - sin²(θ/2) = s² - e12²`
-    /// - `sin(θ) = 2·sin(θ/2)·cos(θ/2) = 2·s·e12`
-    fn from(m: Motor<T>) -> Self {
-        // Double angle formulas
-        let cos_theta = m.s() * m.s() - m.e12() * m.e12();
-        let sin_theta = T::TWO * m.s() * m.e12();
-        na::UnitComplex::from_cos_sin_unchecked(cos_theta, sin_theta)
-    }
-}
-
-// ============================================================================
-// Motor <-> Rotation2 (rotation only)
-// ============================================================================
-
-impl<T> From<na::Rotation2<T>> for Motor<T>
-where
-    T: Float + na::RealField,
-{
-    /// Converts a nalgebra [`Rotation2`](na::Rotation2) to a pure rotation [`Motor`].
-    fn from(rot: na::Rotation2<T>) -> Self {
-        let angle = rot.angle();
-        Motor::from_rotation(angle)
-    }
-}
-
-impl<T> From<Motor<T>> for na::Rotation2<T>
-where
-    T: Float + na::RealField,
-{
-    /// Converts a [`Motor`]'s rotation part to a nalgebra [`Rotation2`](na::Rotation2).
-    ///
-    /// # Note
-    ///
-    /// This extracts only the rotation component. Translation is ignored.
-    fn from(m: Motor<T>) -> Self {
-        let uc: na::UnitComplex<T> = m.into();
-        uc.into()
-    }
-}
-
-// ============================================================================
-// Error types
-// ============================================================================
-
-// Re-export the shared error type
-pub use super::super::PointConversionError;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::ABS_DIFF_EQ_EPS;
-    use approx::abs_diff_eq;
+    use crate::specialized::projective::dim2::UnitizedPoint;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
     use proptest::prelude::*;
+
+    /// Epsilon for floating-point comparisons in tests.
+    const EPS: f64 = RELATIVE_EQ_EPS;
+
+    // ========================================================================
+    // Point round-trip tests
+    // ========================================================================
 
     proptest! {
         #[test]
-        fn point_roundtrip(x in -100.0f64..100.0, y in -100.0f64..100.0) {
-            let pga_point = Point::new(x, y);
-            let na_point: na::Point2<f64> = pga_point.try_into().unwrap();
-            let back: Point<f64> = na_point.into();
+        fn point_roundtrip(p in any::<UnitizedPoint<f64>>()) {
+            let na_p: na::Point2<f64> = (*p).try_into().unwrap();
+            let back: Point<f64> = na_p.into();
 
-            prop_assert!(abs_diff_eq!(pga_point.x(), back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_point.y(), back.y(), epsilon = ABS_DIFF_EQ_EPS));
+            // Compare Cartesian coordinates
+            prop_assert!(relative_eq!(p.x(), back.x(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.y(), back.y(), epsilon = EPS, max_relative = EPS));
         }
 
         #[test]
-        fn motor_transform_matches_isometry(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            // Create motor and isometry representing the same transformation
-            // nalgebra: first rotate, then translate
-            // PGA compose: leftmost acts first, so rotation.compose(&translation)
-            let rotation = Motor::from_rotation(angle);
-            let translation = Motor::from_translation(tx, ty);
-            let motor = rotation.compose(&translation);
+        fn point_try_from_finite(p in any::<UnitizedPoint<f64>>()) {
+            let result: Result<na::Point2<f64>, _> = (*p).try_into();
+            prop_assert!(result.is_ok());
 
-            let iso = na::Isometry2::new(na::Vector2::new(tx, ty), angle);
-
-            // Transform a point using both
-            let pga_point = Point::new(px, py);
-            let pga_result = motor.transform_point(&pga_point);
-
-            let na_point = na::Point2::new(px, py);
-            let na_result = iso * na_point;
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        #[test]
-        fn isometry_to_motor_roundtrip(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            // Create an isometry and convert to motor
-            let iso = na::Isometry2::new(na::Vector2::new(tx, ty), angle);
-            let motor: Motor<f64> = iso.into();
-
-            // Transform a point with both and compare
-            let na_point = na::Point2::new(px, py);
-            let na_result = iso * na_point;
-
-            let pga_point = Point::new(px, py);
-            let pga_result = motor.transform_point(&pga_point);
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            let na_p = result.unwrap();
+            prop_assert!(relative_eq!(p.x(), na_p.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.y(), na_p.y, epsilon = EPS, max_relative = EPS));
         }
     }
 
     #[test]
-    fn ideal_point_conversion_fails() {
+    fn point_try_from_ideal_fails() {
         let ideal = Point::<f64>::ideal(1.0, 0.0);
         let result: Result<na::Point2<f64>, _> = ideal.try_into();
-        assert!(result.is_err());
+        assert!(matches!(result, Err(NalgebraConversionError::IdealPoint)));
     }
 
     // ========================================================================
-    // Composition order consistency tests
+    // Motor conversion tests
     // ========================================================================
-    //
-    // In nalgebra: (iso1 * iso2) * p = iso1 * (iso2 * p)
-    //   - iso1 * iso2 applies iso2 first, then iso1
-    //
-    // In PGA: m1.compose(&m2) applies m1 first, then m2
-    //   - So nalgebra's iso1 * iso2 corresponds to our m2.compose(&m1)
-    //   - Or equivalently, our m1.compose(&m2) corresponds to nalgebra's m2 * m1
+
+    #[test]
+    fn identity_motor_to_isometry() {
+        let motor = Motor::<f64>::identity();
+        let iso: na::Isometry2<f64> = motor.into();
+
+        // Identity isometry should have zero rotation and zero translation
+        assert!(relative_eq!(
+            iso.rotation.angle(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            iso.translation.vector.x,
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            iso.translation.vector.y,
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+    }
+
+    #[test]
+    fn isometry_identity_to_motor() {
+        let iso = na::Isometry2::<f64>::identity();
+        let motor: Motor<f64> = iso.into();
+
+        // Identity motor in dual form: e1=0, e2=0, e0=0, e012=1
+        assert!(relative_eq!(
+            motor.e1(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e2(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e0(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e012(),
+            1.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+    }
 
     proptest! {
-        /// Verifies that Motor composition matches nalgebra Isometry multiplication
-        /// with the appropriate order reversal.
+        /// Test that translation factories produce equivalent results.
         #[test]
-        fn composition_order_matches_nalgebra(
-            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx1 in -10.0f64..10.0, ty1 in -10.0f64..10.0,
-            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx2 in -10.0f64..10.0, ty2 in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
+        fn translation_factory_equivalence(
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
         ) {
-            // Create two isometries and motors
+            let motor = Motor::from_translation(tx, ty);
+            let iso: na::Isometry2<f64> = motor.into();
+
+            // Translation should match
+            prop_assert!(
+                relative_eq!(iso.translation.vector.x, tx, epsilon = EPS, max_relative = EPS),
+                "tx mismatch: {} vs {}", iso.translation.vector.x, tx
+            );
+            prop_assert!(
+                relative_eq!(iso.translation.vector.y, ty, epsilon = EPS, max_relative = EPS),
+                "ty mismatch: {} vs {}", iso.translation.vector.y, ty
+            );
+            // Rotation should be identity
+            prop_assert!(
+                relative_eq!(iso.rotation.angle(), 0.0, epsilon = EPS, max_relative = EPS),
+                "rotation should be 0, got {}", iso.rotation.angle()
+            );
+        }
+
+        /// Test that rotation factories produce equivalent rotation angles.
+        #[test]
+        fn rotation_factory_equivalence(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+        ) {
+            let motor = Motor::from_rotation(angle);
+            let iso: na::Isometry2<f64> = motor.into();
+
+            // Rotation angle should match
+            prop_assert!(
+                relative_eq!(iso.rotation.angle(), angle, epsilon = EPS, max_relative = EPS),
+                "angle mismatch: {} vs {}", iso.rotation.angle(), angle
+            );
+            // Translation should be zero
+            prop_assert!(
+                relative_eq!(iso.translation.vector.x, 0.0, epsilon = EPS, max_relative = EPS),
+                "tx should be 0, got {}", iso.translation.vector.x
+            );
+            prop_assert!(
+                relative_eq!(iso.translation.vector.y, 0.0, epsilon = EPS, max_relative = EPS),
+                "ty should be 0, got {}", iso.translation.vector.y
+            );
+        }
+
+        /// Test Motor → Isometry → Motor roundtrip for pure translations.
+        #[test]
+        fn translation_roundtrip(
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+        ) {
+            let motor = Motor::from_translation(tx, ty);
+            let iso: na::Isometry2<f64> = motor.into();
+            let back: Motor<f64> = iso.into();
+
+            // Motor components should match (dual form: e1, e2, e0, e012)
+            prop_assert!(relative_eq!(motor.e1(), back.e1(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e2(), back.e2(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e0(), back.e0(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e012(), back.e012(), epsilon = EPS, max_relative = EPS));
+        }
+
+        /// Test Motor → Isometry → Motor roundtrip for pure rotations.
+        #[test]
+        fn rotation_roundtrip(
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+        ) {
+            let motor = Motor::from_rotation(angle);
+            let iso: na::Isometry2<f64> = motor.into();
+            let back: Motor<f64> = iso.into();
+
+            // Motor components should match (dual form: e1, e2, e0, e012)
+            prop_assert!(relative_eq!(motor.e1(), back.e1(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e2(), back.e2(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e0(), back.e0(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e012(), back.e012(), epsilon = EPS, max_relative = EPS));
+        }
+    }
+
+    // ========================================================================
+    // Operational equivalence tests
+    // ========================================================================
+
+    proptest! {
+        /// Test that transform_point gives equivalent results via clifford and nalgebra.
+        #[test]
+        fn transform_point_equivalence(
+            px in -100.0f64..100.0,
+            py in -100.0f64..100.0,
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
+            angle in -std::f64::consts::PI..std::f64::consts::PI,
+        ) {
+            // Build isometry in nalgebra: rotation then translation
+            let iso = na::Isometry2::new(na::Vector2::new(tx, ty), angle);
+
+            // Convert to motor
+            let motor: Motor<f64> = iso.into();
+
+            // Transform a point using both
+            let p_cliff = Point::from_cartesian(px, py);
+            let p_na = na::Point2::new(px, py);
+
+            let result_cliff = motor.transform_point(&p_cliff);
+            let result_na = iso.transform_point(&p_na);
+
+            prop_assert!(
+                relative_eq!(result_cliff.x(), result_na.x, epsilon = EPS, max_relative = EPS),
+                "x mismatch: clifford {} vs nalgebra {}", result_cliff.x(), result_na.x
+            );
+            prop_assert!(
+                relative_eq!(result_cliff.y(), result_na.y, epsilon = EPS, max_relative = EPS),
+                "y mismatch: clifford {} vs nalgebra {}", result_cliff.y(), result_na.y
+            );
+        }
+
+        /// Test that motor composition matches isometry composition.
+        #[test]
+        fn composition_equivalence(
+            tx1 in -50.0f64..50.0,
+            ty1 in -50.0f64..50.0,
+            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
+            tx2 in -50.0f64..50.0,
+            ty2 in -50.0f64..50.0,
+            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
+        ) {
             let iso1 = na::Isometry2::new(na::Vector2::new(tx1, ty1), angle1);
             let iso2 = na::Isometry2::new(na::Vector2::new(tx2, ty2), angle2);
+
             let motor1: Motor<f64> = iso1.into();
             let motor2: Motor<f64> = iso2.into();
 
-            // nalgebra: iso1 * iso2 applies iso2 first, then iso1
-            let na_composed = iso1 * iso2;
-            let na_point = na::Point2::new(px, py);
-            let na_result = na_composed * na_point;
+            // nalgebra composition: iso1 * iso2 applies iso2 first, then iso1
+            let composed_na = iso1 * iso2;
 
-            // PGA: motor2.compose(&motor1) applies motor2 first, then motor1
-            // This should match nalgebra's iso1 * iso2
-            let pga_composed = motor2.compose(&motor1);
-            let pga_point = Point::new(px, py);
-            let pga_result = pga_composed.transform_point(&pga_point);
+            // clifford composition: motor1.compose(&motor2) applies motor2 first, then motor1
+            let composed_cliff = motor1.compose(&motor2);
 
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
+            // Compare by transforming a test point
+            let test_pt = na::Point2::new(1.0, 2.0);
+            let test_cliff = Point::from_cartesian(1.0, 2.0);
+
+            let result_na = composed_na.transform_point(&test_pt);
+            let result_cliff = composed_cliff.transform_point(&test_cliff);
+
+            prop_assert!(
+                relative_eq!(result_cliff.x(), result_na.x, epsilon = EPS, max_relative = EPS),
+                "composed x mismatch: clifford {} vs nalgebra {}", result_cliff.x(), result_na.x
+            );
+            prop_assert!(
+                relative_eq!(result_cliff.y(), result_na.y, epsilon = EPS, max_relative = EPS),
+                "composed y mismatch: clifford {} vs nalgebra {}", result_cliff.y(), result_na.y
+            );
         }
 
-        /// Verifies that Motor inverse matches nalgebra Isometry inverse.
+        /// Test that motor inverse matches isometry inverse.
         #[test]
-        fn inverse_matches_nalgebra(
+        fn inverse_equivalence(
+            tx in -100.0f64..100.0,
+            ty in -100.0f64..100.0,
             angle in -std::f64::consts::PI..std::f64::consts::PI,
-            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
         ) {
             let iso = na::Isometry2::new(na::Vector2::new(tx, ty), angle);
             let motor: Motor<f64> = iso.into();
 
             // Transform a point, then apply inverse
-            let na_point = na::Point2::new(px, py);
-            let na_transformed = iso * na_point;
-            let na_back = iso.inverse() * na_transformed;
+            let test_pt = na::Point2::new(3.0, 4.0);
+            let test_cliff = Point::from_cartesian(3.0, 4.0);
 
-            let pga_point = Point::new(px, py);
-            let pga_transformed = motor.transform_point(&pga_point);
-            let pga_back = motor.inverse().transform_point(&pga_transformed);
+            let transformed_na = iso.transform_point(&test_pt);
+            let transformed_cliff = motor.transform_point(&test_cliff);
 
-            // Both should return to the original point
-            prop_assert!(abs_diff_eq!(pga_back.x(), na_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_back.y(), na_back.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_back.x(), px, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_back.y(), py, epsilon = ABS_DIFF_EQ_EPS));
+            // Apply inverse
+            let back_na = iso.inverse().transform_point(&transformed_na);
+            let back_cliff = motor.inverse().transform_point(&transformed_cliff);
+
+            prop_assert!(
+                relative_eq!(back_cliff.x(), back_na.x, epsilon = EPS, max_relative = EPS),
+                "inverse x mismatch: clifford {} vs nalgebra {}", back_cliff.x(), back_na.x
+            );
+            prop_assert!(
+                relative_eq!(back_cliff.y(), back_na.y, epsilon = EPS, max_relative = EPS),
+                "inverse y mismatch: clifford {} vs nalgebra {}", back_cliff.y(), back_na.y
+            );
+
+            // Also verify round-trip back to original point
+            prop_assert!(
+                relative_eq!(back_cliff.x(), test_cliff.x(), epsilon = EPS, max_relative = EPS),
+                "round-trip x mismatch: {} vs {}", back_cliff.x(), test_cliff.x()
+            );
+            prop_assert!(
+                relative_eq!(back_cliff.y(), test_cliff.y(), epsilon = EPS, max_relative = EPS),
+                "round-trip y mismatch: {} vs {}", back_cliff.y(), test_cliff.y()
+            );
         }
-
-        /// Verifies that pure rotations match between PGA and nalgebra.
-        #[test]
-        fn pure_rotation_matches_nalgebra(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let na_rot = na::Isometry2::rotation(angle);
-            let pga_rot = Motor::from_rotation(angle);
-
-            let na_point = na::Point2::new(px, py);
-            let na_result = na_rot * na_point;
-
-            let pga_point = Point::new(px, py);
-            let pga_result = pga_rot.transform_point(&pga_point);
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Verifies that pure translations match between PGA and nalgebra.
-        #[test]
-        fn pure_translation_matches_nalgebra(
-            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let na_trans = na::Isometry2::translation(tx, ty);
-            let pga_trans = Motor::from_translation(tx, ty);
-
-            let na_point = na::Point2::new(px, py);
-            let na_result = na_trans * na_point;
-
-            let pga_point = Point::new(px, py);
-            let pga_result = pga_trans.transform_point(&pga_point);
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Verifies that Motor composition equals sequential application.
-        #[test]
-        fn compose_equals_sequential_application(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            tx in -10.0f64..10.0, ty in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let rotation = Motor::from_rotation(angle);
-            let translation = Motor::from_translation(tx, ty);
-            let composed = rotation.compose(&translation);
-
-            let p = Point::new(px, py);
-
-            // Composed transformation
-            let result_composed = composed.transform_point(&p);
-
-            // Sequential application: rotate first, then translate
-            let intermediate = rotation.transform_point(&p);
-            let result_sequential = translation.transform_point(&intermediate);
-
-            prop_assert!(abs_diff_eq!(result_composed.x(), result_sequential.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_composed.y(), result_sequential.y(), epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Verifies all four equivalent ways to apply composed transformations match.
-        ///
-        /// This is the key consistency test between PGA and nalgebra:
-        /// 1. composed_motor.transform_point(p)
-        /// 2. motor2.transform_point(motor1.transform_point(p))
-        /// 3. (iso1 * iso2) * p
-        /// 4. iso1 * (iso2 * p)
-        ///
-        /// All should produce the same result.
-        #[test]
-        fn all_composition_methods_equivalent(
-            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx1 in -10.0f64..10.0, ty1 in -10.0f64..10.0,
-            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx2 in -10.0f64..10.0, ty2 in -10.0f64..10.0,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            // Create isometries and motors
-            let iso1 = na::Isometry2::new(na::Vector2::new(tx1, ty1), angle1);
-            let iso2 = na::Isometry2::new(na::Vector2::new(tx2, ty2), angle2);
-            let motor1: Motor<f64> = iso1.into();
-            let motor2: Motor<f64> = iso2.into();
-
-            let na_point = na::Point2::new(px, py);
-            let pga_point = Point::new(px, py);
-
-            // Method 1: nalgebra composed, then applied
-            let na_composed = iso1 * iso2;
-            let result_na_composed = na_composed * na_point;
-
-            // Method 2: nalgebra sequential application
-            let result_na_sequential = iso1 * (iso2 * na_point);
-
-            // Method 3: PGA composed (motor2.compose(motor1) = motor2 first, then motor1)
-            // This matches iso1 * iso2 (iso2 first, then iso1)
-            let pga_composed = motor2.compose(&motor1);
-            let result_pga_composed = pga_composed.transform_point(&pga_point);
-
-            // Method 4: PGA sequential application
-            let intermediate = motor2.transform_point(&pga_point);
-            let result_pga_sequential = motor1.transform_point(&intermediate);
-
-            // All four methods should match
-            prop_assert!(abs_diff_eq!(result_na_composed.x, result_na_sequential.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_na_composed.y, result_na_sequential.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_composed.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_composed.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_sequential.x(), result_na_composed.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_pga_sequential.y(), result_na_composed.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Verifies triple composition consistency.
-        #[test]
-        fn triple_composition_matches_nalgebra(
-            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx1 in -5.0f64..5.0, ty1 in -5.0f64..5.0,
-            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx2 in -5.0f64..5.0, ty2 in -5.0f64..5.0,
-            angle3 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx3 in -5.0f64..5.0, ty3 in -5.0f64..5.0,
-            px in -5.0f64..5.0, py in -5.0f64..5.0,
-        ) {
-            let iso1 = na::Isometry2::new(na::Vector2::new(tx1, ty1), angle1);
-            let iso2 = na::Isometry2::new(na::Vector2::new(tx2, ty2), angle2);
-            let iso3 = na::Isometry2::new(na::Vector2::new(tx3, ty3), angle3);
-
-            let motor1: Motor<f64> = iso1.into();
-            let motor2: Motor<f64> = iso2.into();
-            let motor3: Motor<f64> = iso3.into();
-
-            // nalgebra: iso1 * iso2 * iso3 applies iso3 first, then iso2, then iso1
-            let na_composed = iso1 * iso2 * iso3;
-            let na_point = na::Point2::new(px, py);
-            let na_result = na_composed * na_point;
-
-            // PGA: to match, we need motor3.compose(&motor2).compose(&motor1)
-            let pga_composed = motor3.compose(&motor2).compose(&motor1);
-            let pga_point = Point::new(px, py);
-            let pga_result = pga_composed.transform_point(&pga_point);
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-    }
-
-    #[test]
-    fn identity_motor_matches_nalgebra_identity() {
-        let na_identity = na::Isometry2::<f64>::identity();
-        let pga_identity = Motor::<f64>::identity();
-
-        // Both should leave points unchanged
-        let points = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (3.0, 4.0), (-2.5, 7.1)];
-        for (px, py) in points {
-            let na_point = na::Point2::new(px, py);
-            let na_result = na_identity * na_point;
-
-            let pga_point = Point::new(px, py);
-            let pga_result = pga_identity.transform_point(&pga_point);
-
-            assert!(abs_diff_eq!(
-                pga_result.x(),
-                na_result.x,
-                epsilon = ABS_DIFF_EQ_EPS
-            ));
-            assert!(abs_diff_eq!(
-                pga_result.y(),
-                na_result.y,
-                epsilon = ABS_DIFF_EQ_EPS
-            ));
-            assert!(abs_diff_eq!(pga_result.x(), px, epsilon = ABS_DIFF_EQ_EPS));
-            assert!(abs_diff_eq!(pga_result.y(), py, epsilon = ABS_DIFF_EQ_EPS));
-        }
-    }
-
-    // ========================================================================
-    // Motor <-> UnitComplex conversion tests
-    // ========================================================================
-
-    proptest! {
-        /// Tests that Motor -> UnitComplex -> Motor preserves rotation behavior.
-        #[test]
-        fn motor_unitcomplex_roundtrip(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let motor = Motor::from_rotation(angle);
-            let uc: na::UnitComplex<f64> = motor.into();
-            let back: Motor<f64> = uc.into();
-
-            // Compare by transforming a point
-            let p = Point::new(px, py);
-            let result_orig = motor.transform_point(&p);
-            let result_back = back.transform_point(&p);
-
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Tests that UnitComplex -> Motor -> UnitComplex preserves rotation.
-        #[test]
-        fn unitcomplex_motor_roundtrip(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let uc = na::UnitComplex::from_angle(angle);
-            let motor: Motor<f64> = uc.into();
-            let back: na::UnitComplex<f64> = motor.into();
-
-            // Compare by transforming a point
-            let na_point = na::Point2::new(px, py);
-            let result_orig = uc * na_point;
-            let result_back = back * na_point;
-
-            prop_assert!(abs_diff_eq!(result_orig.x, result_back.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y, result_back.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Tests that Motor rotation matches UnitComplex rotation.
-        #[test]
-        fn motor_unitcomplex_rotation_equivalence(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let motor = Motor::from_rotation(angle);
-            let uc: na::UnitComplex<f64> = motor.into();
-
-            // Transform with both
-            let pga_point = Point::new(px, py);
-            let pga_result = motor.transform_point(&pga_point);
-
-            let na_point = na::Point2::new(px, py);
-            let na_result = uc * na_point;
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-    }
-
-    // ========================================================================
-    // Motor <-> Rotation2 conversion tests
-    // ========================================================================
-
-    proptest! {
-        /// Tests that Motor -> Rotation2 -> Motor preserves rotation behavior.
-        #[test]
-        fn motor_rotation2_roundtrip(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let motor = Motor::from_rotation(angle);
-            let rot: na::Rotation2<f64> = motor.into();
-            let back: Motor<f64> = rot.into();
-
-            // Compare by transforming a point
-            let p = Point::new(px, py);
-            let result_orig = motor.transform_point(&p);
-            let result_back = back.transform_point(&p);
-
-            prop_assert!(abs_diff_eq!(result_orig.x(), result_back.x(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(result_orig.y(), result_back.y(), epsilon = ABS_DIFF_EQ_EPS));
-        }
-
-        /// Tests that Rotation2 -> Motor transformation equivalence.
-        #[test]
-        fn rotation2_to_motor_equivalence(
-            angle in -std::f64::consts::PI..std::f64::consts::PI,
-            px in -10.0f64..10.0, py in -10.0f64..10.0,
-        ) {
-            let rot = na::Rotation2::new(angle);
-            let motor: Motor<f64> = rot.into();
-
-            // Transform a point with both
-            let na_point = na::Point2::new(px, py);
-            let na_result = rot * na_point;
-
-            let pga_point = Point::new(px, py);
-            let pga_result = motor.transform_point(&pga_point);
-
-            prop_assert!(abs_diff_eq!(pga_result.x(), na_result.x, epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(pga_result.y(), na_result.y, epsilon = ABS_DIFF_EQ_EPS));
-        }
-    }
-
-    // ========================================================================
-    // Identity tests for rotation conversions
-    // ========================================================================
-
-    #[test]
-    fn identity_motor_to_unitcomplex() {
-        let motor = Motor::<f64>::identity();
-        let uc: na::UnitComplex<f64> = motor.into();
-
-        // Should be identity (angle = 0, so cos=1, sin=0)
-        assert!(abs_diff_eq!(uc.re, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(uc.im, 0.0, epsilon = ABS_DIFF_EQ_EPS));
-    }
-
-    #[test]
-    fn identity_unitcomplex_to_motor() {
-        let uc = na::UnitComplex::<f64>::identity();
-        let motor: Motor<f64> = uc.into();
-
-        // Should produce identity motor (rotation part)
-        assert!(abs_diff_eq!(motor.s(), 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(motor.e12(), 0.0, epsilon = ABS_DIFF_EQ_EPS));
-    }
-
-    #[test]
-    fn identity_motor_to_rotation2() {
-        let motor = Motor::<f64>::identity();
-        let rot: na::Rotation2<f64> = motor.into();
-
-        // Should be identity rotation
-        let p = na::Point2::new(1.0, 2.0);
-        let result = rot * p;
-        assert!(abs_diff_eq!(result.x, 1.0, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(result.y, 2.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

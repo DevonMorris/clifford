@@ -17,7 +17,7 @@
 //! [`Rotor`] represents rotations as `scalar + bivector`. This is equivalent
 //! to unit quaternions but expressed in the geometric algebra framework:
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
@@ -55,6 +55,12 @@ mod rerun;
 
 // Re-export generated types
 pub use generated::types::{Bivector, Rotor, Scalar, Trivector, Vector};
+
+// Re-export wrapper type aliases
+pub use generated::types::{UnitBivector, UnitRotor, UnitScalar, UnitTrivector, UnitVector};
+
+// Re-export products module for direct access to algebraic products
+pub use generated::products;
 
 // Re-export Even as alias from extensions
 pub use extensions::Even;

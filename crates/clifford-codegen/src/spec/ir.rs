@@ -56,6 +56,52 @@ impl SignatureSpec {
     pub fn num_blades(&self) -> usize {
         1 << self.dim()
     }
+
+    /// Returns indices of basis vectors that square to +1 (positive metric).
+    pub fn positive_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.basis.iter().filter(|b| b.metric == 1).map(|b| b.index)
+    }
+
+    /// Returns indices of basis vectors that square to -1 (negative metric).
+    pub fn negative_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.basis
+            .iter()
+            .filter(|b| b.metric == -1)
+            .map(|b| b.index)
+    }
+
+    /// Returns indices of basis vectors that square to 0 (degenerate/null).
+    ///
+    /// In PGA, this is typically the e0 basis (projective origin).
+    pub fn degenerate_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.basis.iter().filter(|b| b.metric == 0).map(|b| b.index)
+    }
+
+    /// Returns true if this algebra has a degenerate metric (r > 0).
+    ///
+    /// Algebras with degenerate metrics (like PGA) have different normalization
+    /// behavior and require bulk/weight decomposition.
+    #[inline]
+    pub fn is_degenerate(&self) -> bool {
+        self.r > 0
+    }
+
+    /// Returns true if this algebra has an indefinite metric (q > 0).
+    ///
+    /// Algebras with indefinite metrics (like Minkowski) can have timelike,
+    /// spacelike, and lightlike vectors.
+    #[inline]
+    pub fn is_indefinite(&self) -> bool {
+        self.q > 0
+    }
+
+    /// Returns the signature type name derived from (p, q, r).
+    ///
+    /// This generates a generic name like `Cl3_0_1` instead of algebra-specific
+    /// names like "Projective3".
+    pub fn signature_type_name(&self) -> String {
+        format!("Cl{}_{}{}", self.p, self.q, self.r)
+    }
 }
 
 /// A single basis vector in the signature.
@@ -176,23 +222,6 @@ impl TypeSpec {
     }
 }
 
-/// Normalizes a constraint expression for comparison.
-///
-/// This removes whitespace differences and sorts terms to allow
-/// comparing constraints that are mathematically equivalent.
-pub fn normalize_constraint_expr(expr: &str) -> String {
-    // Remove all whitespace
-    let mut normalized: String = expr.chars().filter(|c| !c.is_whitespace()).collect();
-
-    // Normalize multiplication: remove explicit * where implicit works
-    // e.g., "2*s" stays as "2*s" but we ensure consistent spacing
-    normalized = normalized.replace("+-", "-");
-    normalized = normalized.replace("-+", "-");
-    normalized = normalized.replace("--", "+");
-
-    normalized
-}
-
 /// A field in a type.
 #[derive(Debug, Clone)]
 pub struct FieldSpec {
@@ -209,16 +238,22 @@ pub struct FieldSpec {
 pub struct ProductsSpec {
     /// Geometric product entries.
     pub geometric: Vec<ProductEntry>,
-    /// Outer (wedge) product entries.
-    pub outer: Vec<ProductEntry>,
+    /// Exterior (wedge) product entries.
+    pub exterior: Vec<ProductEntry>,
+    /// Interior (symmetric inner) product entries.
+    pub interior: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.
     pub right_contraction: Vec<ProductEntry>,
-    /// Regressive product entries.
+    /// Regressive (meet) product entries.
     pub regressive: Vec<ProductEntry>,
     /// Scalar product entries.
     pub scalar: Vec<ProductEntry>,
+    /// Antigeometric product entries.
+    pub antigeometric: Vec<ProductEntry>,
+    /// Antiscalar product entries.
+    pub antiscalar: Vec<ProductEntry>,
 }
 
 /// A single product entry specifying lhs × rhs → output.

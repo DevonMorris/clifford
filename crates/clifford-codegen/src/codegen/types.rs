@@ -7,8 +7,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade};
-use crate::spec::{AlgebraSpec, SignConvention, TypeSpec};
-use crate::symbolic::{ConstraintSolver, SolutionType, SolveResult};
+use crate::spec::{AlgebraSpec, TypeSpec};
 
 /// Generates Rust struct definitions for algebra types.
 ///
@@ -16,7 +15,7 @@ use crate::symbolic::{ConstraintSolver, SolutionType, SolveResult};
 /// - Documentation with basis ordering tables
 /// - Derive macros (Clone, Copy, Debug, PartialEq, serde)
 /// - Private fields with public accessors
-/// - Constructors (`new`, `zero`, `identity`, unit basis)
+/// - Constructors (`new`, `zero`, unit basis)
 /// - Basic methods (`norm_squared`, `norm`, `reverse`)
 /// - Default implementation
 ///
@@ -82,6 +81,8 @@ impl<'a> TypeGenerator<'a> {
             .map(|ty| self.generate_alias(ty))
             .collect();
 
+        let wrapper_aliases = self.generate_wrapper_aliases();
+
         quote! {
             #header
             #imports
@@ -89,6 +90,8 @@ impl<'a> TypeGenerator<'a> {
             #(#types)*
 
             #(#aliases)*
+
+            #wrapper_aliases
         }
     }
 
@@ -181,7 +184,7 @@ impl<'a> TypeGenerator<'a> {
         let example = self.generate_example(ty);
 
         let doc_string = format!(
-            "{}\n\n# Basis Ordering\n\n{}\n\n# Example\n\n```ignore\n{}\n```",
+            "{}\n\n# Basis Ordering\n\n{}\n\n# Example\n\n```\n{}\n```",
             description, basis_table, example
         );
 
@@ -215,15 +218,10 @@ impl<'a> TypeGenerator<'a> {
             .map(|(i, _)| format!("{}.0", i + 1))
             .collect();
 
-        let module_path = self
-            .spec
-            .module_path
-            .as_deref()
-            .unwrap_or("generated")
-            .replace("::", "/");
+        let module_path = self.spec.module_path.as_deref().unwrap_or("generated");
 
         format!(
-            "use clifford::{}::{};\n\nlet v = {}::new({});",
+            "use clifford::specialized::{}::{};\n\nlet v = {}::new({});",
             module_path,
             ty.name,
             ty.name,
@@ -252,9 +250,8 @@ impl<'a> TypeGenerator<'a> {
             .iter()
             .map(|field| {
                 let name = format_ident!("{}", field.name);
-                let blade = Blade::from_index(field.blade_index);
-                let blade_name = self.algebra.blade_name(blade);
-                let doc = format!("Coefficient of `{}`.", blade_name);
+                // Use the field name from the TOML spec, not the computed blade name
+                let doc = format!("Coefficient of `{}`.", field.name);
 
                 quote! {
                     #[doc = #doc]
@@ -272,77 +269,31 @@ impl<'a> TypeGenerator<'a> {
         let constructor = self.generate_constructor(ty);
         let accessors = self.generate_accessors(ty);
         let zero = self.generate_zero(ty);
-        let identity = self.generate_identity(ty);
         let unit_elements = self.generate_unit_elements(ty);
         let norm_methods = self.generate_norm_methods(ty);
         let reverse = self.generate_reverse(ty);
-        let transform_methods = self.generate_transform_methods(ty);
+        let antireverse = self.generate_antireverse(ty);
 
         quote! {
             impl<T: Float> #name<T> {
                 #constructor
                 #accessors
                 #zero
-                #identity
                 #unit_elements
                 #norm_methods
                 #reverse
-                #transform_methods
+                #antireverse
             }
         }
     }
 
     /// Generates constructors.
     ///
-    /// For types with `solve_for` fields:
-    /// - `new()` takes all fields except the solved-for ones and computes them
-    /// - `new_checked()` takes all fields and validates constraints
-    /// - `new_unchecked()` takes all fields without validation
-    ///
-    /// For types without `solve_for`:
-    /// - `new()` takes all fields (same as current behavior)
+    /// All types get:
+    /// - `new()` - the primary constructor that takes all fields
+    /// - `new_unchecked()` - alias for `new()` for backward compatibility with
+    ///   code that uses unchecked constructors for constrained types
     fn generate_constructor(&self, ty: &TypeSpec) -> TokenStream {
-        let solve_for_fields = ty.solve_for_fields();
-
-        if solve_for_fields.is_empty() {
-            // No solve_for - generate simple constructor
-            return self.generate_simple_constructor(ty);
-        }
-
-        // Collect solutions for all constraints with solve_for
-        let solver = ConstraintSolver::new();
-        let mut solutions = Vec::new();
-
-        for constraint in &ty.constraints {
-            if let Some(ref solve_for) = constraint.solve_for {
-                let positive_root = constraint.sign == SignConvention::Positive;
-                match solver.solve_with_sign(&constraint.expression, solve_for, positive_root) {
-                    Ok(solution) => solutions.push((solve_for.clone(), solution)),
-                    Err(e) => {
-                        let error_msg = format!(
-                            "/* constraint '{}' solve_for failed: {} */",
-                            constraint.name, e
-                        );
-                        let unchecked = self.generate_new_unchecked(ty);
-                        return quote! {
-                            #[doc = #error_msg]
-                            #unchecked
-                        };
-                    }
-                }
-            }
-        }
-
-        if solutions.is_empty() {
-            // No solutions - generate simple constructor
-            return self.generate_simple_constructor(ty);
-        }
-
-        self.generate_constrained_constructors_multi(ty, &solutions)
-    }
-
-    /// Generates a simple constructor (for types without solve_for).
-    fn generate_simple_constructor(&self, ty: &TypeSpec) -> TokenStream {
         let params: Vec<TokenStream> = ty
             .fields
             .iter()
@@ -360,6 +311,8 @@ impl<'a> TypeGenerator<'a> {
                 quote! { #name }
             })
             .collect();
+
+        let params2 = params.clone();
 
         quote! {
             /// Creates a new element from components.
@@ -367,367 +320,17 @@ impl<'a> TypeGenerator<'a> {
             pub fn new(#(#params),*) -> Self {
                 Self { #(#field_inits),* }
             }
-        }
-    }
 
-    /// Generates all three constructors for constrained types with multiple solve_for fields.
-    fn generate_constrained_constructors_multi(
-        &self,
-        ty: &TypeSpec,
-        solutions: &[(String, SolveResult)],
-    ) -> TokenStream {
-        let new_fn = self.generate_new_with_solve_multi(ty, solutions);
-        let new_checked = self.generate_new_checked(ty);
-        let new_unchecked = self.generate_new_unchecked(ty);
-
-        quote! {
-            #new_fn
-            #new_checked
-            #new_unchecked
-        }
-    }
-
-    /// Generates `new()` that computes all solved-for fields.
-    ///
-    /// For quadratic constraints (involving sqrt), returns `Option<Self>` since
-    /// the sqrt argument may be negative for some inputs.
-    fn generate_new_with_solve_multi(
-        &self,
-        ty: &TypeSpec,
-        solutions: &[(String, SolveResult)],
-    ) -> TokenStream {
-        let solve_for_names: Vec<&str> = solutions.iter().map(|(name, _)| name.as_str()).collect();
-
-        // Check if any solution requires sqrt (quadratic)
-        let has_quadratic = solutions
-            .iter()
-            .any(|(_, sol)| sol.solution_type == SolutionType::Quadratic);
-
-        // Parameters: all fields except solve_for fields
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .filter(|f| !solve_for_names.contains(&f.name.as_str()))
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        // Field initializers
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        // Generate computation expressions for each solve_for field
-        let compute_exprs: Vec<TokenStream> = solutions
-            .iter()
-            .map(|(solve_for, solution)| {
-                let solve_for_ident = format_ident!("{}", solve_for);
-
-                let numerator_expr: TokenStream = solution
-                    .numerator
-                    .parse()
-                    .unwrap_or_else(|_| quote! { T::zero() });
-
-                match solution.solution_type {
-                    SolutionType::Quadratic => {
-                        // Quadratic: var = sqrt(expr)
-                        if has_quadratic {
-                            let sign_expr = if solution.positive_root {
-                                quote! { sqrt_arg.sqrt() }
-                            } else {
-                                quote! { -sqrt_arg.sqrt() }
-                            };
-                            quote! {
-                                let sqrt_arg = #numerator_expr;
-                                if sqrt_arg < T::zero() {
-                                    return None; // No real solution
-                                }
-                                let #solve_for_ident = #sign_expr;
-                            }
-                        } else {
-                            // Shouldn't happen, but handle gracefully
-                            let sign_expr = if solution.positive_root {
-                                quote! { (#numerator_expr).sqrt() }
-                            } else {
-                                quote! { -(#numerator_expr).sqrt() }
-                            };
-                            quote! {
-                                let #solve_for_ident = #sign_expr;
-                            }
-                        }
-                    }
-                    SolutionType::Linear => {
-                        // Linear: var = expr / divisor
-                        if let Some(ref divisor) = solution.divisor {
-                            let divisor_ident: TokenStream =
-                                divisor.parse().unwrap_or_else(|_| quote! { T::one() });
-
-                            quote! {
-                                let #solve_for_ident = if (#divisor_ident).abs() > T::epsilon() {
-                                    (#numerator_expr) / (#divisor_ident)
-                                } else {
-                                    T::zero() // Canonical value for degenerate case
-                                };
-                            }
-                        } else {
-                            quote! {
-                                let #solve_for_ident = #numerator_expr;
-                            }
-                        }
-                    }
-                }
-            })
-            .collect();
-
-        // Generate doc comment
-        let solve_for_list = solve_for_names.join("`, `");
-
-        if has_quadratic {
-            let doc = format!(
-                "Creates a new element from {} independent coefficients.\n\n\
-                 The `{}` coefficient(s) are computed from geometric constraints.\n\n\
-                 Returns `None` if the constraint cannot be satisfied (e.g., when the\n\
-                 sqrt argument would be negative).",
-                ty.fields.len() - solutions.len(),
-                solve_for_list
-            );
-
-            quote! {
-                #[doc = #doc]
-                #[inline]
-                pub fn new(#(#params),*) -> Option<Self> {
-                    #(#compute_exprs)*
-                    Some(Self { #(#field_inits),* })
-                }
-            }
-        } else {
-            let doc = format!(
-                "Creates a new element from {} independent coefficients.\n\n\
-                 The `{}` coefficient(s) are computed from geometric constraints.\n\
-                 When divisors are zero (degenerate case), computed values default to zero.",
-                ty.fields.len() - solutions.len(),
-                solve_for_list
-            );
-
-            quote! {
-                #[doc = #doc]
-                #[inline]
-                pub fn new(#(#params),*) -> Self {
-                    #(#compute_exprs)*
-                    Self { #(#field_inits),* }
-                }
-            }
-        }
-    }
-
-    /// Generates `new_checked()` that validates ALL constraints.
-    fn generate_new_checked(&self, ty: &TypeSpec) -> TokenStream {
-        let type_name = &ty.name;
-
-        // All parameters
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        // Generate validation checks for ALL constraints
-        let validation_checks: Vec<TokenStream> = ty
-            .constraints
-            .iter()
-            .enumerate()
-            .map(|(i, constraint)| {
-                let constraint_expr = &constraint.expression;
-                let residual_expr = self.generate_residual_expr(constraint_expr, ty);
-                let residual_name = format_ident!("residual_{}", i);
-
-                quote! {
-                    let #residual_name = #residual_expr;
-                    if #residual_name.abs() > tolerance {
-                        return Err(crate::ConstraintError::new(
-                            #type_name,
-                            #constraint_expr,
-                            #residual_name.to_f64().unwrap_or(0.0),
-                        ));
-                    }
-                }
-            })
-            .collect();
-
-        // Generate doc with all constraints listed
-        let constraint_docs: Vec<String> = ty
-            .constraints
-            .iter()
-            .map(|c| self.constraint_to_residual_doc(&c.expression))
-            .collect();
-
-        let doc = if constraint_docs.is_empty() {
-            "Creates a new element from all coefficients with constraint validation.".to_string()
-        } else if constraint_docs.len() == 1 {
-            format!(
-                "Creates a new element from all coefficients with constraint validation.\n\n\
-                 Returns an error if the geometric constraint is not satisfied within\n\
-                 the given tolerance.\n\n\
-                 # Errors\n\n\
-                 Returns `ConstraintError` if `|{}| > tolerance`.",
-                constraint_docs[0]
-            )
-        } else {
-            let constraints_list = constraint_docs
-                .iter()
-                .map(|c| format!("- `|{}| > tolerance`", c))
-                .collect::<Vec<_>>()
-                .join("\n");
-            format!(
-                "Creates a new element from all coefficients with constraint validation.\n\n\
-                 Returns an error if any geometric constraint is not satisfied within\n\
-                 the given tolerance.\n\n\
-                 # Errors\n\n\
-                 Returns `ConstraintError` if any of:\n{}",
-                constraints_list
-            )
-        };
-
-        quote! {
-            #[doc = #doc]
-            #[inline]
-            pub fn new_checked(
-                #(#params,)*
-                tolerance: T,
-            ) -> Result<Self, crate::ConstraintError> {
-                #(#validation_checks)*
-
-                Ok(Self { #(#field_inits),* })
-            }
-        }
-    }
-
-    /// Converts a constraint expression to a residual doc string.
-    ///
-    /// For `s*s + e12*e12 = 1`, returns `s*s + e12*e12 - 1`.
-    /// For `2*s*e0123 = 0`, returns `2*s*e0123`.
-    fn constraint_to_residual_doc(&self, constraint: &str) -> String {
-        let parts: Vec<&str> = constraint.split('=').collect();
-        let lhs = parts.first().unwrap_or(&"").trim();
-        let rhs = parts.get(1).unwrap_or(&"0").trim();
-
-        if rhs == "0" {
-            lhs.to_string()
-        } else {
-            format!("{} - {}", lhs, rhs)
-        }
-    }
-
-    /// Generates `new_unchecked()` for raw construction.
-    fn generate_new_unchecked(&self, ty: &TypeSpec) -> TokenStream {
-        let params: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name: T }
-            })
-            .collect();
-
-        let field_inits: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                let name = format_ident!("{}", field.name);
-                quote! { #name }
-            })
-            .collect();
-
-        quote! {
-            /// Creates a new element from all coefficients without validation.
+            /// Creates a new element from components without validation.
             ///
-            /// # Safety (Logical)
-            ///
-            /// Caller must ensure the geometric constraint is satisfied.
-            /// Use this for performance-critical code, automatic differentiation,
-            /// or when coefficients come from trusted sources (e.g., product operations).
+            /// This is an alias for `new()`. It exists for consistency with types
+            /// that have geometric constraints, where unchecked construction is
+            /// used in performance-critical code or trusted contexts.
             #[inline]
-            pub fn new_unchecked(#(#params),*) -> Self {
-                Self { #(#field_inits),* }
+            pub fn new_unchecked(#(#params2),*) -> Self {
+                Self::new(#(#field_inits),*)
             }
         }
-    }
-
-    /// Generates the residual expression for constraint validation.
-    ///
-    /// For a constraint like `s*s + e12*e12 = 1`, generates `(lhs) - (rhs)`.
-    fn generate_residual_expr(&self, constraint: &str, ty: &TypeSpec) -> TokenStream {
-        // Parse constraint like "s*s + e12*e12 = 1" into LHS and RHS
-        let parts: Vec<&str> = constraint.split('=').collect();
-        let lhs = parts.first().unwrap_or(&"T::zero()").trim();
-        let rhs = parts.get(1).unwrap_or(&"0").trim();
-
-        let lhs_expr = self.constraint_to_rust_expr(lhs, ty);
-        let rhs_expr = self.constraint_to_rust_expr(rhs, ty);
-
-        // Generate: LHS - RHS
-        let combined = format!("({}) - ({})", lhs_expr, rhs_expr);
-        combined.parse().unwrap_or_else(|_| quote! { T::zero() })
-    }
-
-    /// Converts a constraint expression to Rust syntax.
-    fn constraint_to_rust_expr(&self, expr: &str, _ty: &TypeSpec) -> String {
-        // Convert "2*s*e0123" to "T::TWO * s * e0123"
-        // and "-2*e12*e03" to "-T::TWO * e12 * e03"
-
-        let trimmed = expr.trim();
-
-        // Handle standalone numeric constants (RHS values like "0" or "1")
-        if trimmed == "0" {
-            return "T::zero()".to_string();
-        }
-        if trimmed == "1" {
-            return "T::from_i8(1)".to_string();
-        }
-
-        // First normalize: add spaces around operators
-        let mut result = trimmed.to_string();
-        result = result.replace('*', " * ");
-        result = result.replace('+', " + ");
-        result = result.replace('-', " - ");
-
-        // Clean up double spaces
-        while result.contains("  ") {
-            result = result.replace("  ", " ");
-        }
-
-        // Now replace standalone numeric coefficients (at word boundaries)
-        // " 2 " -> " T::TWO "  and " - 2 " -> " - T::TWO "
-        result = result.replace(" 2 ", " T::TWO ");
-        result = result.replace(" - 2 ", " - T::TWO ");
-
-        // Handle start of expression: "2 * " -> "T::TWO * " and "- 2 * " -> "- T::TWO * "
-        if result.starts_with("2 ") {
-            result = format!("T::TWO {}", &result[2..]);
-        } else if result.starts_with("- 2 ") {
-            result = format!("- T::TWO {}", &result[4..]);
-        }
-
-        result.trim().to_string()
     }
 
     /// Generates accessor methods for each field.
@@ -737,12 +340,8 @@ impl<'a> TypeGenerator<'a> {
             .iter()
             .map(|field| {
                 let name = format_ident!("{}", field.name);
-                let blade = Blade::from_index(field.blade_index);
-                let blade_name = self.algebra.blade_name(blade);
-                let doc = format!(
-                    "Returns the {} component (coefficient of `{}`).",
-                    field.name, blade_name
-                );
+                // Use the field name from the TOML spec, not the computed blade name
+                let doc = format!("Returns the `{}` coefficient.", field.name);
 
                 quote! {
                     #[doc = #doc]
@@ -757,58 +356,16 @@ impl<'a> TypeGenerator<'a> {
         quote! { #(#accessors)* }
     }
 
-    /// Generates the zero() method.
-    /// Returns the constructor name to use for the given type.
-    /// Uses `new_unchecked` for constrained types, `new` otherwise.
-    fn constructor_name(ty: &TypeSpec) -> TokenStream {
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        if has_constraints {
-            quote! { new_unchecked }
-        } else {
-            quote! { new }
-        }
-    }
-
     /// Generates the zero() method for a type.
     fn generate_zero(&self, ty: &TypeSpec) -> TokenStream {
         let zeros: Vec<TokenStream> = ty.fields.iter().map(|_| quote! { T::zero() }).collect();
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         quote! {
             /// Creates the zero element.
             #[inline]
             pub fn zero() -> Self {
                 Self::#constructor(#(#zeros),*)
-            }
-        }
-    }
-
-    /// Generates the identity() method if the type contains grade 0.
-    fn generate_identity(&self, ty: &TypeSpec) -> TokenStream {
-        // Only generate identity for types containing grade 0
-        if !ty.grades.contains(&0) {
-            return quote! {};
-        }
-
-        let values: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                if field.grade == 0 {
-                    quote! { T::one() }
-                } else {
-                    quote! { T::zero() }
-                }
-            })
-            .collect();
-
-        let constructor = Self::constructor_name(ty);
-
-        quote! {
-            /// Creates the identity element (scalar = 1, rest = 0).
-            #[inline]
-            pub fn identity() -> Self {
-                Self::#constructor(#(#values),*)
             }
         }
     }
@@ -820,7 +377,7 @@ impl<'a> TypeGenerator<'a> {
             return quote! {};
         }
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         let units: Vec<TokenStream> = ty
             .fields
@@ -866,7 +423,7 @@ impl<'a> TypeGenerator<'a> {
             .map(|f| format_ident!("{}", f.name))
             .collect();
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         // Compute norm squared based on metric signature.
         // For each blade, we need to consider the metric.
@@ -965,7 +522,7 @@ impl<'a> TypeGenerator<'a> {
                 let grade = field.grade;
                 // Sign is (-1)^(k(k-1)/2)
                 let exponent = grade * grade.saturating_sub(1) / 2;
-                if exponent % 2 == 0 {
+                if exponent.is_multiple_of(2) {
                     quote! { self.#name }
                 } else {
                     quote! { -self.#name }
@@ -973,7 +530,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let constructor = Self::constructor_name(ty);
+        let constructor = quote! { new };
 
         quote! {
             /// Returns the reverse (reversion).
@@ -992,75 +549,220 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
-    /// Generates transform methods for versor types.
+    /// Generates the antireverse() method.
     ///
-    /// For types marked as versors, generates `transform_*` methods for each
-    /// target type that can be transformed via the sandwich product.
-    fn generate_transform_methods(&self, ty: &TypeSpec) -> TokenStream {
-        // Only generate for versor types
-        let versor_spec = match &ty.versor {
-            Some(spec) => spec,
-            None => return quote! {},
-        };
+    /// Antireverse: (-1)^((n-k)(n-k-1)/2) for grade k in dimension n.
+    /// This is the reverse of the complement, or complement of the reverse.
+    pub fn generate_antireverse(&self, ty: &TypeSpec) -> TokenStream {
+        let dim = self.spec.signature.dim();
 
-        // Get targets - either explicit or inferred
-        let targets = if versor_spec.sandwich_targets.is_empty() {
-            // Auto-detect would require more context - for now, skip if empty
-            return quote! {};
-        } else {
-            &versor_spec.sandwich_targets
-        };
-
-        let versor_name_lower = ty.name.to_lowercase();
-        let methods: Vec<TokenStream> = targets
+        let antireversed_values: Vec<TokenStream> = ty
+            .fields
             .iter()
-            .filter_map(|target_name| {
-                let target_type = self.spec.types.iter().find(|t| &t.name == target_name)?;
-                if target_type.alias_of.is_some() {
-                    return None;
+            .map(|field| {
+                let name = format_ident!("{}", field.name);
+                let grade = field.grade;
+                let antigrade = dim - grade;
+                // Sign is (-1)^((n-k)(n-k-1)/2)
+                let exponent = antigrade * antigrade.saturating_sub(1) / 2;
+                if exponent.is_multiple_of(2) {
+                    quote! { self.#name }
+                } else {
+                    quote! { -self.#name }
                 }
-
-                let target_ident = format_ident!("{}", target_name);
-                let target_name_lower = target_name.to_lowercase();
-                let method_name = format_ident!("transform_{}", target_name_lower);
-                let sandwich_fn =
-                    format_ident!("sandwich_{}_{}", versor_name_lower, target_name_lower);
-
-                let doc = format!(
-                    "Transforms a {} by this versor via sandwich product.\n\n\
-                     Computes `self * {} * self.reverse()`.",
-                    target_name, target_name_lower
-                );
-
-                Some(quote! {
-                    #[doc = #doc]
-                    #[inline]
-                    pub fn #method_name(&self, x: &#target_ident<T>) -> #target_ident<T> {
-                        super::products::#sandwich_fn(self, x)
-                    }
-                })
             })
             .collect();
 
-        quote! { #(#methods)* }
+        // Use unchecked constructor for constrained types
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        let constructor = if has_constraints {
+            quote! { new_unchecked }
+        } else {
+            quote! { new }
+        };
+
+        quote! {
+            /// Returns the antireverse.
+            ///
+            /// For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2).
+            /// This is equivalent to complement(reverse(complement(x))).
+            ///
+            /// In PGA (n=4):
+            /// - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1
+            /// - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1
+            /// - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1
+            /// - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1
+            /// - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1
+            #[inline]
+            pub fn antireverse(&self) -> Self {
+                Self::#constructor(#(#antireversed_values),*)
+            }
+        }
     }
 
     /// Generates the Default implementation.
     fn generate_default(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
 
-        // Default is identity for types with grade 0, otherwise zero
-        let default_fn = if ty.grades.contains(&0) {
-            quote! { Self::identity() }
-        } else {
-            quote! { Self::zero() }
-        };
-
+        // Default is always zero - identity() is context-dependent and not generated
         quote! {
             impl<T: Float> Default for #name<T> {
                 fn default() -> Self {
-                    #default_fn
+                    Self::zero()
                 }
+            }
+        }
+    }
+
+    /// Generates wrapper type aliases based on algebra type.
+    ///
+    /// For Euclidean algebras (no degenerate basis), generates `Unit<T>` aliases:
+    /// - `UnitVector<T> = Unit<Vector<T>>`
+    /// - `UnitBivector<T> = Unit<Bivector<T>>`
+    /// - `UnitRotor<T> = Unit<Rotor<T>>`
+    ///
+    /// For PGA algebras (has degenerate basis), generates:
+    /// - `Bulk<T>` aliases for versors (Motor, Flector): `BulkMotor<T> = Bulk<Motor<T>>`
+    /// - `Unitized<T>` aliases for finite entities (Point, Plane, Line): `UnitizedPoint<T> = Unitized<Point<T>>`
+    /// - `Ideal<T>` aliases for at-infinity entities (Point, Plane, Line): `IdealPoint<T> = Ideal<Point<T>>`
+    fn generate_wrapper_aliases(&self) -> TokenStream {
+        let is_pga = self.spec.signature.r > 0;
+
+        if is_pga {
+            self.generate_pga_wrapper_aliases()
+        } else {
+            self.generate_euclidean_wrapper_aliases()
+        }
+    }
+
+    /// Generates Unit<T> wrapper aliases for Euclidean algebras.
+    fn generate_euclidean_wrapper_aliases(&self) -> TokenStream {
+        let mut aliases = Vec::new();
+
+        for ty in &self.spec.types {
+            // Skip aliases
+            if ty.alias_of.is_some() {
+                continue;
+            }
+
+            // Generate Unit aliases for types that make sense to normalize:
+            // - Single-grade types (Vector, Bivector, Trivector)
+            // - Rotor types (grades [0, 2])
+            let should_generate = ty.grades.len() == 1
+                || (ty.grades.contains(&0) && ty.grades.contains(&2) && ty.grades.len() == 2);
+
+            if should_generate {
+                let type_name = format_ident!("{}", ty.name);
+                let alias_name = format_ident!("Unit{}", ty.name);
+                let doc = format!(
+                    "A unit {} (Euclidean norm = 1).\n\n\
+                     This type alias provides compile-time documentation that the \
+                     {} has been normalized.",
+                    ty.name, ty.name
+                );
+
+                aliases.push(quote! {
+                    #[doc = #doc]
+                    pub type #alias_name<T> = crate::wrappers::Unit<#type_name<T>>;
+                });
+            }
+        }
+
+        if aliases.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                // ============================================================================
+                // Wrapper Type Aliases
+                // ============================================================================
+
+                #(#aliases)*
+            }
+        }
+    }
+
+    /// Generates Bulk<T>, Unitized<T>, and Ideal<T> wrapper aliases for PGA algebras.
+    fn generate_pga_wrapper_aliases(&self) -> TokenStream {
+        let mut aliases = Vec::new();
+
+        // Versor type names that get Bulk<T> wrappers
+        let versor_names = ["Motor", "Flector"];
+
+        // Homogeneous geometric entity names that get Unitized<T> and Ideal<T> wrappers
+        let homogeneous_names = ["Point", "Plane", "Line"];
+
+        for ty in &self.spec.types {
+            // Skip aliases
+            if ty.alias_of.is_some() {
+                continue;
+            }
+
+            let type_name = format_ident!("{}", ty.name);
+
+            // Check if it's a versor type
+            if versor_names.contains(&ty.name.as_str()) {
+                let alias_name = format_ident!("Bulk{}", ty.name);
+                let doc = format!(
+                    "A bulk-normalized {} (bulk norm = 1).\n\n\
+                     For a {} to represent a proper rigid transformation, the bulk norm \
+                     (non-degenerate part) should be 1. This type alias provides compile-time \
+                     documentation that the {} has been bulk-normalized.",
+                    ty.name, ty.name, ty.name
+                );
+
+                aliases.push(quote! {
+                    #[doc = #doc]
+                    pub type #alias_name<T> = crate::wrappers::Bulk<#type_name<T>>;
+                });
+            }
+
+            // Check if it's a homogeneous geometric entity
+            if homogeneous_names.contains(&ty.name.as_str()) {
+                // Generate Unitized<T> alias for finite (weight = 1) normalization
+                let unitized_alias = format_ident!("Unitized{}", ty.name);
+                let unitized_doc = format!(
+                    "A unitized {} (weight norm = 1).\n\n\
+                     In PGA, geometric entities are represented in homogeneous coordinates. \
+                     A unitized {} has been weight-normalized to standard form, representing \
+                     a finite (non-ideal) {}.",
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase()
+                );
+
+                aliases.push(quote! {
+                    #[doc = #unitized_doc]
+                    pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
+                });
+
+                // Generate Ideal<T> alias for at-infinity (weight ≈ 0) constraint
+                let ideal_alias = format_ident!("Ideal{}", ty.name);
+                let ideal_doc = format!(
+                    "An ideal {} (weight ≈ 0).\n\n\
+                     An ideal {} lies at infinity (has zero weight component). \
+                     This is a constraint wrapper that verifies the {} is ideal, \
+                     not a normalization wrapper.",
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase()
+                );
+
+                aliases.push(quote! {
+                    #[doc = #ideal_doc]
+                    pub type #ideal_alias<T> = crate::wrappers::Ideal<#type_name<T>>;
+                });
+            }
+        }
+
+        if aliases.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                // ============================================================================
+                // Wrapper Type Aliases
+                // ============================================================================
+
+                #(#aliases)*
             }
         }
     }
@@ -1073,7 +775,7 @@ mod tests {
 
     #[test]
     fn generates_vector_type() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1091,16 +793,13 @@ mod tests {
     #[test]
     fn field_order_is_canonical() {
         // Verify fields are ordered by grade, then by blade index
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let full_type = spec.types.iter().find(|t| t.name == "Full").unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let rotor_type = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
 
-        let field_order: Vec<&str> = full_type.fields.iter().map(|f| f.name.as_str()).collect();
+        let field_order: Vec<&str> = rotor_type.fields.iter().map(|f| f.name.as_str()).collect();
 
-        // Expected: s (grade 0), x, y, z (grade 1), xy, xz, yz (grade 2), xyz (grade 3)
-        assert_eq!(
-            field_order,
-            vec!["s", "x", "y", "z", "xy", "xz", "yz", "xyz"]
-        );
+        // Expected: s (grade 0), xy, xz, yz (grade 2)
+        assert_eq!(field_order, vec!["s", "xy", "xz", "yz"]);
     }
 
     #[test]
@@ -1110,7 +809,7 @@ mod tests {
         // Grade 2: sign = -1 (2*1/2 = 1, odd)
         // Grade 3: sign = -1 (3*2/2 = 3, odd)
 
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1126,37 +825,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_identity_for_rotor() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = TypeGenerator::new(&spec, &algebra);
-
-        let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        let tokens = generator.generate_identity(rotor);
-        let code = tokens.to_string();
-
-        // Identity should have scalar = 1
-        assert!(code.contains("identity"));
-        assert!(code.contains("T :: one ()"));
-    }
-
-    #[test]
-    fn no_identity_for_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = TypeGenerator::new(&spec, &algebra);
-
-        let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
-        let tokens = generator.generate_identity(vector);
-        let code = tokens.to_string();
-
-        // Vector has no grade 0, so no identity
-        assert!(code.is_empty());
-    }
-
-    #[test]
     fn generates_unit_elements_for_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1172,7 +842,7 @@ mod tests {
 
     #[test]
     fn no_unit_elements_for_rotor() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1185,22 +855,24 @@ mod tests {
     }
 
     #[test]
-    fn generates_alias() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn generates_alias_if_present() {
+        // Currently no algebras define type aliases, so this test just verifies
+        // the code generation completes without errors. Type alias generation
+        // would be tested when an algebra with alias_of is added.
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
         let tokens = generator.generate_types_file();
         let code = tokens.to_string();
 
-        // Even is an alias of Rotor
-        assert!(code.contains("pub type Even"));
-        assert!(code.contains("Rotor"));
+        // Verify basic types are generated (aliases would appear similarly)
+        assert!(code.contains("pub struct Rotor"));
     }
 
     #[test]
     fn generates_default_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1208,9 +880,9 @@ mod tests {
         let tokens = generator.generate_default(rotor);
         let code = tokens.to_string();
 
-        // Rotor default should be identity
+        // Default is always zero - identity is context-dependent
         assert!(code.contains("impl < T : Float > Default for Rotor"));
-        assert!(code.contains("Self :: identity ()"));
+        assert!(code.contains("Self :: zero ()"));
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
         let tokens = generator.generate_default(vector);

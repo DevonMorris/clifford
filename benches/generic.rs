@@ -24,7 +24,7 @@ fn bench_vector_wedge(c: &mut Criterion) {
     let b: Multivector<f64, Euclidean3> = Multivector::vector(&[4.0, 5.0, 6.0]);
 
     c.bench_function("generic/vector_wedge", |bencher| {
-        bencher.iter(|| black_box(&a).outer(black_box(&b)))
+        bencher.iter(|| black_box(&a).exterior(black_box(&b)))
     });
 }
 

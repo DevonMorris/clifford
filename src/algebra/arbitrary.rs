@@ -35,8 +35,8 @@
 //!         a in any::<VectorE3>(),
 //!         b in any::<VectorE3>()
 //!     ) {
-//!         let ab = a.outer(&*b);
-//!         let ba = b.outer(&*a);
+//!         let ab = a.exterior(&*b);
+//!         let ba = b.exterior(&*a);
 //!         prop_assert!(abs_diff_eq!(ab, -&ba, epsilon = 1e-10));
 //!     }
 //! }

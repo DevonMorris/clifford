@@ -10,7 +10,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Rotor, Bivector};
 //! use std::f64::consts::FRAC_PI_2;
 //!

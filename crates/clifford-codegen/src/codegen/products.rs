@@ -8,27 +8,36 @@ use quote::{format_ident, quote};
 
 #[cfg(test)]
 use crate::algebra::geometric_grades;
-use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
+#[cfg(test)]
+use crate::algebra::left_contraction_grade;
+#[cfg(test)]
+use crate::algebra::outer_grade;
+use crate::algebra::{Algebra, Blade, ProductTable};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintSimplifier, ExpressionSimplifier, ProductKind as SymbolicProductKind,
     SymbolicProduct,
 };
 
+use super::unary::UnaryGenerator;
+
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Outer product (wedge, grade-raising).
-    Outer,
-    /// Left contraction (inner product).
+    /// Exterior product (wedge, grade-raising).
+    Exterior,
+    /// Interior product (symmetric inner, grade |ga - gb|).
+    Interior,
+    /// Left contraction (A ⌋ B, grade gb - ga when ga <= gb).
     LeftContraction,
-    /// Regressive product (dual of outer).
+    /// Right contraction (A ⌊ B, grade ga - gb when gb <= ga).
+    RightContraction,
+    /// Regressive product (meet, dual of exterior, grade ga + gb - dim).
     Regressive,
-    /// Scalar product (grade-0 part of geometric).
-    Scalar,
+    /// Geometric antiproduct (complement(complement(a) * complement(b))).
+    Antigeometric,
 }
 
 /// A term in a product expression.
@@ -59,7 +68,7 @@ struct SandwichTerm {
 ///
 /// The generator produces functions for:
 /// - Geometric products
-/// - Outer products (wedge)
+/// - Exterior products (wedge)
 /// - Inner products (left contraction)
 /// - Regressive products
 /// - Sandwich products
@@ -141,10 +150,19 @@ impl<'a> ProductGenerator<'a> {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let geometric = self.generate_all_geometric();
-        let outer = self.generate_all_outer();
-        let inner = self.generate_all_inner();
+        let exterior = self.generate_all_exterior();
+        let interior = self.generate_all_interior();
+        let left_contraction = self.generate_all_inner(); // Left contraction (inner)
+        let right_contraction = self.generate_all_right_contraction();
+        let regressive = self.generate_all_regressive();
         let scalar = self.generate_all_scalar();
+        let antigeometric = self.generate_all_antigeometric();
         let sandwich = self.generate_all_sandwich();
+        let antisandwich = self.generate_all_antisandwich();
+
+        // Generate unary operations
+        let unary_gen = UnaryGenerator::new(self.spec);
+        let unary = unary_gen.generate_all();
 
         quote! {
             #header
@@ -156,14 +174,29 @@ impl<'a> ProductGenerator<'a> {
             #geometric
 
             // ============================================================
-            // Outer Products (Wedge)
+            // Exterior Products (Wedge)
             // ============================================================
-            #outer
+            #exterior
 
             // ============================================================
-            // Inner Products (Left Contraction)
+            // Interior Products (Symmetric Inner)
             // ============================================================
-            #inner
+            #interior
+
+            // ============================================================
+            // Left Contraction Products
+            // ============================================================
+            #left_contraction
+
+            // ============================================================
+            // Right Contraction Products
+            // ============================================================
+            #right_contraction
+
+            // ============================================================
+            // Regressive Products (Meet)
+            // ============================================================
+            #regressive
 
             // ============================================================
             // Scalar Products
@@ -171,21 +204,65 @@ impl<'a> ProductGenerator<'a> {
             #scalar
 
             // ============================================================
-            // Sandwich Products
+            // Antigeometric Products
+            // ============================================================
+            #antigeometric
+
+            // ============================================================
+            // Sandwich Products (Geometric)
             // ============================================================
             #sandwich
+
+            // ============================================================
+            // Antisandwich Products (for PGA transformations)
+            // ============================================================
+            #antisandwich
+
+            // ============================================================
+            // Unary Operations (Reverse, Antireverse, Complement)
+            // ============================================================
+            #unary
         }
     }
 
-    /// Generates the file header.
+    /// Generates the file header with comprehensive module documentation.
     fn generate_header(&self) -> TokenStream {
         let name = &self.spec.name;
-        let header_doc = format!(
-            r#"//! Product operations for {}.
+
+        // Check if there are any versors to include sandwich documentation
+        let has_versors = self.spec.types.iter().any(|t| t.versor.is_some());
+
+        let sandwich_section = if has_versors {
+            r#"
 //!
-//! This file is auto-generated by clifford-codegen.
-//! Do not edit manually."#,
-            name
+//! # Sandwich Products
+//!
+//! For versor types (rotors, motors), sandwich products are provided:
+//! - `sandwich_{versor}_{operand}(v, x)` computes `v × x × rev(v)`"#
+        } else {
+            ""
+        };
+
+        let header_doc = format!(
+            r#"//! Product functions for the {} algebra.
+//!
+//! This module provides all algebraic products between types in the algebra.
+//! Each function is named `{{product}}_{{lhs}}_{{rhs}}` where:
+//! - `product` is one of: `geometric`, `exterior`, `left_contract`, `inner`, `scalar`
+//! - `lhs` and `rhs` are the input type names in lowercase
+//!
+//! # Available Products
+//!
+//! | Product | Symbol | Description |
+//! |---------|--------|-------------|
+//! | `geometric_*` | `×` | Full geometric product |
+//! | `exterior_*` | `∧` | Wedge/exterior product (grade sum) |
+//! | `left_contract_*` | `⌋` | Left contraction |
+//! | `inner_*` | `·` | Symmetric inner product (grade diff) |
+//! | `scalar_*` | `⟨⟩₀` | Scalar (grade-0) product |{}
+//!
+//! This file is auto-generated by clifford-codegen. Do not edit manually."#,
+            name, sandwich_section
         );
 
         header_doc.parse().unwrap_or_else(|_| quote! {})
@@ -209,8 +286,12 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates a constructor call for the given type.
     ///
-    /// For types with solve_for fields (constrained types), uses `new_unchecked`
-    /// to preserve the computed product values. For unconstrained types, uses `new`.
+    /// For types with constraints (solve_for fields), uses `new_unchecked` because:
+    /// 1. Product outputs are mathematically correct as computed
+    /// 2. Constraint solving would incorrectly modify the algebraic result
+    /// 3. Constraints apply to *normalized* instances, not intermediate results
+    ///
+    /// For unconstrained types, uses the standard `new` constructor.
     fn generate_constructor_call(
         &self,
         ty: &TypeSpec,
@@ -284,29 +365,29 @@ impl<'a> ProductGenerator<'a> {
     }
 
     // ========================================================================
-    // Outer Products
+    // Exterior Products
     // ========================================================================
 
-    /// Generates all outer product functions.
-    fn generate_all_outer(&self) -> TokenStream {
+    /// Generates all exterior product functions.
+    fn generate_all_exterior(&self) -> TokenStream {
         // If no explicit products defined, generate nothing
-        if self.spec.products.outer.is_empty() {
+        if self.spec.products.exterior.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .outer
+            .exterior
             .iter()
-            .filter_map(|entry| self.generate_outer_from_entry(entry))
+            .filter_map(|entry| self.generate_exterior_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates an outer product from a product entry.
-    fn generate_outer_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+    /// Generates an exterior product from a product entry.
+    fn generate_exterior_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
         let type_a = self.find_type(&entry.lhs)?;
         let type_b = self.find_type(&entry.rhs)?;
         let output_type = self.find_type(&entry.output)?;
@@ -316,17 +397,17 @@ impl<'a> ProductGenerator<'a> {
         let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
-            "outer_{}_{}",
+            "exterior_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
 
         // Use symbolic simplification for expression generation
         let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Outer);
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Exterior);
 
         let doc = format!(
-            "Outer product: {} ^ {} -> {}",
+            "Exterior product: {} ^ {} -> {}",
             entry.lhs, entry.rhs, entry.output
         );
 
@@ -404,6 +485,190 @@ impl<'a> ProductGenerator<'a> {
     }
 
     // ========================================================================
+    // Interior Products (Symmetric Inner)
+    // ========================================================================
+
+    /// Generates all interior (symmetric inner) product functions.
+    fn generate_all_interior(&self) -> TokenStream {
+        if self.spec.products.interior.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .interior
+            .iter()
+            .filter_map(|entry| self.generate_interior_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an interior product from a product entry.
+    fn generate_interior_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "interior_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        let field_exprs =
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Interior);
+
+        let doc = format!(
+            "Interior product (symmetric inner): {} · {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Right Contraction Products
+    // ========================================================================
+
+    /// Generates all right contraction product functions.
+    fn generate_all_right_contraction(&self) -> TokenStream {
+        if self.spec.products.right_contraction.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .right_contraction
+            .iter()
+            .filter_map(|entry| self.generate_right_contraction_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a right contraction from a product entry.
+    fn generate_right_contraction_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "right_contract_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        let field_exprs = self.generate_expression_symbolic(
+            type_a,
+            type_b,
+            output_type,
+            ProductKind::RightContraction,
+        );
+
+        let doc = format!(
+            "Right contraction: {} ⌊ {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Regressive Products (Meet)
+    // ========================================================================
+
+    /// Generates all regressive (meet) product functions.
+    fn generate_all_regressive(&self) -> TokenStream {
+        if self.spec.products.regressive.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .regressive
+            .iter()
+            .filter_map(|entry| self.generate_regressive_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a regressive product from a product entry.
+    ///
+    /// Uses term-based generation since regressive products use the complement-based
+    /// formula `a ∨ b = ∁(∁a ∧ ∁b)` which requires the specialized table method.
+    fn generate_regressive_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "regressive_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        // Generate field expressions using term-based computation
+        // This uses table.regressive() which correctly computes ∁(∁a ∧ ∁b)
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms =
+                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Regressive);
+                self.generate_expression(&terms)
+            })
+            .collect();
+
+        let doc = format!(
+            "Regressive product (meet): {} ∨ {} -> {}",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
     // Scalar Products
     // ========================================================================
 
@@ -456,6 +721,100 @@ impl<'a> ProductGenerator<'a> {
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> T {
                 #expr
+            }
+        })
+    }
+
+    // ========================================================================
+    // Antigeometric Products
+    // ========================================================================
+
+    /// Generates all antigeometric product functions.
+    ///
+    /// The antigeometric product is defined as: a ⊛ b = complement(complement(a) * complement(b))
+    fn generate_all_antigeometric(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.antigeometric.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .antigeometric
+            .iter()
+            .filter_map(|entry| self.generate_antigeometric_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an antigeometric product from a product entry.
+    ///
+    /// Uses term-based generation with the `antiproduct` table method to correctly
+    /// compute `∁(∁a × ∁b)` using the regular geometric product.
+    fn generate_antigeometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "antigeometric_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        // Use term-based generation with table.antiproduct() for correct formula
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms = self.compute_terms(
+                    type_a,
+                    type_b,
+                    field.blade_index,
+                    ProductKind::Antigeometric,
+                );
+                self.generate_expression(&terms)
+            })
+            .collect();
+
+        let doc = format!(
+            "Antigeometric product: {} ⊛ {} -> {}\n\nDefined as complement(complement(a) * complement(b)).",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        // Check if parameters are used in expressions
+        let exprs_str = field_exprs
+            .iter()
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let a_used = exprs_str.contains("a .");
+        let b_used = exprs_str.contains("b .");
+
+        let param_a = if a_used {
+            quote! { a: &#a_name<T> }
+        } else {
+            quote! { _a: &#a_name<T> }
+        };
+        let param_b = if b_used {
+            quote! { b: &#b_name<T> }
+        } else {
+            quote! { _b: &#b_name<T> }
+        };
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(#param_a, #param_b) -> #c_name<T> {
+                #constructor_call
             }
         })
     }
@@ -566,10 +925,104 @@ impl<'a> ProductGenerator<'a> {
         self.generate_sandwich_product(versor_type, operand_type)
     }
 
-    /// Checks if a type is a versor (e.g., Rotor).
-    #[allow(dead_code)]
-    fn is_versor_type(&self, ty: &TypeSpec) -> bool {
-        ty.versor.is_some()
+    /// Generates all antisandwich product functions.
+    ///
+    /// Antisandwich products use the geometric antiproduct instead of the
+    /// geometric product. In PGA (Projective GA), antisandwich is required
+    /// for correct motor transformations because it handles the degenerate
+    /// metric (e0² = 0) properly.
+    ///
+    /// For each versor type, we generate an antisandwich function for each
+    /// target type specified in its `sandwich.targets` list.
+    fn generate_all_antisandwich(&self) -> TokenStream {
+        let mut products = Vec::new();
+
+        for versor_type in &self.spec.types {
+            // Skip non-versors and aliases
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+
+            if let Some(ref versor_spec) = versor_type.versor {
+                // Get targets - either explicit or auto-detected
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        if let Some(product) =
+                            self.generate_antisandwich_product(versor_type, target_type)
+                        {
+                            products.push(product);
+                        }
+                    }
+                }
+            }
+        }
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates a single antisandwich product function.
+    ///
+    /// The antisandwich computes: v ⊛ x ⊛ antirev(v) where ⊛ is the geometric
+    /// antiproduct.
+    ///
+    /// Returns None if the antiproduct produces no non-zero terms (which can
+    /// happen in degenerate algebras like PGA where e0² = 0).
+    fn generate_antisandwich_product(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+    ) -> Option<TokenStream> {
+        let v_name = format_ident!("{}", versor_type.name);
+        let x_name = format_ident!("{}", operand_type.name);
+
+        let fn_name = format_ident!(
+            "antisandwich_{}_{}",
+            versor_type.name.to_lowercase(),
+            operand_type.name.to_lowercase()
+        );
+
+        // Collect terms for each field, tracking if any field has non-empty terms
+        let mut has_any_terms = false;
+        let field_exprs: Vec<TokenStream> = operand_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms =
+                    self.compute_antisandwich_terms(versor_type, operand_type, field.blade_index);
+                if !terms.is_empty() {
+                    has_any_terms = true;
+                }
+                self.generate_sandwich_expression(&terms)
+            })
+            .collect();
+
+        // Skip generating function if no terms were computed (degenerate case)
+        if !has_any_terms {
+            return None;
+        }
+
+        let doc = format!(
+            "Antisandwich product: {} ⊛ {} ⊛ antirev({}) -> {}\n\n\
+             Uses the geometric antiproduct and antireverse. In PGA, use this\n\
+             instead of the regular sandwich for correct motor transformations.",
+            versor_type.name, operand_type.name, versor_type.name, operand_type.name
+        );
+
+        let constructor_call = self.generate_constructor_call(operand_type, &x_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(v: &#v_name<T>, x: &#x_name<T>) -> #x_name<T> {
+                #constructor_call
+            }
+        })
     }
 
     /// Generates a single sandwich product function.
@@ -632,12 +1085,16 @@ impl<'a> ProductGenerator<'a> {
             for &gb in &type_b.grades {
                 let result_grades = match kind {
                     ProductKind::Geometric => geometric_grades(ga, gb, dim),
-                    ProductKind::Outer => {
+                    ProductKind::Exterior => {
                         if let Some(g) = outer_grade(ga, gb, dim) {
                             vec![g]
                         } else {
                             vec![]
                         }
+                    }
+                    ProductKind::Interior => {
+                        // Interior product: |ga - gb|
+                        vec![ga.abs_diff(gb)]
                     }
                     ProductKind::LeftContraction => {
                         if let Some(g) = left_contraction_grade(ga, gb) {
@@ -645,6 +1102,10 @@ impl<'a> ProductGenerator<'a> {
                         } else {
                             vec![]
                         }
+                    }
+                    ProductKind::RightContraction => {
+                        // Right contraction: ga - gb when gb <= ga
+                        if gb <= ga { vec![ga - gb] } else { vec![] }
                     }
                     ProductKind::Regressive => {
                         // Regressive product: (a* ^ b*)* where * is dual
@@ -656,12 +1117,12 @@ impl<'a> ProductGenerator<'a> {
                             vec![]
                         }
                     }
-                    ProductKind::Scalar => {
-                        if ga == gb {
-                            vec![0]
-                        } else {
-                            vec![]
-                        }
+                    ProductKind::Antigeometric => {
+                        // Antigeometric: same grade rules as geometric but with antigrades
+                        // antigrade(a ⊛ b) = antigrade(a) + antigrade(b) ± 2k
+                        // where antigrade = n - grade
+                        // For now, use full geometric grades as the antiproduct produces similar structure
+                        geometric_grades(ga, gb, dim)
                     }
                 };
 
@@ -692,39 +1153,18 @@ impl<'a> ProductGenerator<'a> {
                 let a_blade = field_a.blade_index;
                 let b_blade = field_b.blade_index;
 
-                let (sign, result) = self.table.geometric(a_blade, b_blade);
-
-                if result != result_blade || sign == 0 {
-                    continue;
-                }
-
-                // Filter based on product kind
-                let include = match kind {
-                    ProductKind::Geometric => true,
-                    ProductKind::Outer => {
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        outer_grade(a_grade, b_grade, self.algebra.dim())
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false)
-                    }
-                    ProductKind::LeftContraction => {
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        left_contraction_grade(a_grade, b_grade)
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false)
-                    }
-                    ProductKind::Regressive => {
-                        // TODO: implement regressive product filtering
-                        false
-                    }
-                    ProductKind::Scalar => result_blade == 0,
+                // Use specialized table methods for each product kind
+                let (sign, result) = match kind {
+                    ProductKind::Geometric => self.table.geometric(a_blade, b_blade),
+                    ProductKind::Exterior => self.table.exterior(a_blade, b_blade),
+                    ProductKind::Interior => self.table.interior(a_blade, b_blade),
+                    ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
+                    ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
+                    ProductKind::Regressive => self.table.regressive(a_blade, b_blade),
+                    ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
                 };
 
-                if include {
+                if result == result_blade && sign != 0 {
                     terms.push(ProductTerm {
                         sign,
                         a_field: field_a.name.clone(),
@@ -777,6 +1217,69 @@ impl<'a> ProductGenerator<'a> {
 
                     if result == result_blade {
                         let final_sign = sign_vx * sign_vxr * rev_sign;
+                        terms.push(SandwichTerm {
+                            sign: final_sign,
+                            v_field_1: field_v1.name.clone(),
+                            x_field: field_x.name.clone(),
+                            v_field_2: field_v2.name.clone(),
+                        });
+                    }
+                }
+            }
+        }
+
+        self.simplify_sandwich_terms(terms)
+    }
+
+    /// Computes antisandwich product terms: v ⊛ x ⊛ antirev(v) -> result_blade.
+    ///
+    /// Uses the geometric antiproduct and antireverse instead of the
+    /// geometric product and reverse. The antireverse is defined as:
+    /// `antirev(x) = complement(reverse(complement(x)))`
+    ///
+    /// The antireverse sign for grade k in dimension n is: `(-1)^((n-k)(n-k-1)/2)`
+    fn compute_antisandwich_terms(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+        result_blade: usize,
+    ) -> Vec<SandwichTerm> {
+        let mut terms = Vec::new();
+        let dim = self.algebra.dim();
+
+        // For each combination: v_i ⊛ x_j ⊛ antirev(v_k)
+        for field_v1 in &versor_type.fields {
+            for field_x in &operand_type.fields {
+                for field_v2 in &versor_type.fields {
+                    let v1_blade = field_v1.blade_index;
+                    let x_blade = field_x.blade_index;
+                    let v2_blade = field_v2.blade_index;
+
+                    // Compute v_i ⊛ x_j using antiproduct
+                    let (sign_vx, vx) = self.table.antiproduct(v1_blade, x_blade);
+                    if sign_vx == 0 {
+                        continue;
+                    }
+
+                    // Compute (v_i ⊛ x_j) ⊛ antirev(v_k)
+                    // antirev(v_k) has sign (-1)^((n-k)(n-k-1)/2) for grade k in dimension n
+                    let v2_grade = Blade::from_index(v2_blade).grade();
+                    let antigrade = dim - v2_grade;
+                    #[allow(clippy::manual_is_multiple_of)]
+                    let antirev_sign: i8 = if (antigrade * antigrade.saturating_sub(1) / 2) % 2 == 0
+                    {
+                        1
+                    } else {
+                        -1
+                    };
+
+                    let (sign_vxr, result) = self.table.antiproduct(vx, v2_blade);
+                    if sign_vxr == 0 {
+                        continue;
+                    }
+
+                    if result == result_blade {
+                        let final_sign = sign_vx * sign_vxr * antirev_sign;
                         terms.push(SandwichTerm {
                             sign: final_sign,
                             v_field_1: field_v1.name.clone(),
@@ -852,7 +1355,7 @@ impl<'a> ProductGenerator<'a> {
         // Map ProductKind to SymbolicProductKind
         let symbolic_kind = match kind {
             ProductKind::Geometric => SymbolicProductKind::Geometric,
-            ProductKind::Outer => SymbolicProductKind::Outer,
+            ProductKind::Exterior => SymbolicProductKind::Exterior,
             ProductKind::LeftContraction => SymbolicProductKind::LeftContraction,
             _ => SymbolicProductKind::Geometric, // Fallback for other kinds
         };
@@ -936,8 +1439,7 @@ impl<'a> ProductGenerator<'a> {
                 1 => base_expr,
                 2 => quote! { T::TWO * #base_expr },
                 n => {
-                    let n_i8 = n as i8;
-                    quote! { T::from_i8(#n_i8) * #base_expr }
+                    quote! { T::from_i8(#n) * #base_expr }
                 }
             };
 
@@ -962,8 +1464,8 @@ mod tests {
     use crate::spec::parse_spec;
 
     #[test]
-    fn generates_geometric_product() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+    fn symbolica_generates_geometric_product() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
         let algebra = Algebra::euclidean(2);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -976,8 +1478,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_outer_product() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_exterior_product() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -985,14 +1487,15 @@ mod tests {
         let tokens = generator.generate_products_file();
         let code = tokens.to_string();
 
-        assert!(code.contains("outer_vector_vector"));
+        assert!(code.contains("exterior_vector_vector"));
     }
 
     #[test]
-    fn skips_left_contraction_unless_specified() {
-        // Left contraction is not auto-generated to avoid dead code
-        // It will only be generated when explicitly specified in the spec
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_left_contraction() {
+        // Left contraction is auto-generated for all algebras
+        // Left contraction a ⌋ b only gives non-zero when grade(a) <= grade(b)
+        // Valid products: Vector ⌋ Bivector → Vector (grade 2-1=1)
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1000,15 +1503,15 @@ mod tests {
         let tokens = generator.generate_products_file();
         let code = tokens.to_string();
 
-        // Left contraction should NOT be generated by default
-        assert!(!code.contains("left_contract"));
+        // Vector ⌋ Bivector → Vector is a valid left contraction
+        assert!(code.contains("left_contract_vector_bivector"));
     }
 
     #[test]
-    fn generates_sandwich_for_marked_versors() {
+    fn symbolica_generates_sandwich_for_marked_versors() {
         // Sandwich products are generated for types marked with versor = true
         // and explicitly listed targets in [types.TypeName.sandwich]
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1023,10 +1526,30 @@ mod tests {
     }
 
     #[test]
-    fn skips_sandwich_without_versor_marking() {
+    fn symbolica_skips_sandwich_without_versor_marking() {
         // Sandwich products are NOT generated for types without versor = true
-        // Use euclidean2 which has no versor marking
-        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+        // Use inline spec with no versor marking (euclidean2.toml has versor = true on Rotor)
+        let spec_toml = r#"
+            [algebra]
+            name = "test_no_versor"
+            module_path = "test"
+            description = "Test algebra without versor marking"
+
+            [signature]
+            positive = ["e1", "e2"]
+            negative = []
+            zero = []
+
+            [types.Vector]
+            grades = [1]
+            fields = ["x", "y"]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+            # Note: no versor = true here
+        "#;
+        let spec = parse_spec(spec_toml).unwrap();
         let algebra = Algebra::euclidean(2);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1040,7 +1563,7 @@ mod tests {
 
     #[test]
     fn term_computation_vector_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1057,7 +1580,7 @@ mod tests {
 
     #[test]
     fn output_grades_geometric() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1071,14 +1594,14 @@ mod tests {
 
     #[test]
     fn output_grades_outer() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
 
-        let grades = generator.compute_output_grades(vector, vector, ProductKind::Outer);
+        let grades = generator.compute_output_grades(vector, vector, ProductKind::Exterior);
         // Vector ^ Vector produces grade 2
         assert_eq!(grades, vec![2]);
     }

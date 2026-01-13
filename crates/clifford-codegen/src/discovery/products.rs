@@ -19,12 +19,22 @@ use std::collections::BTreeSet;
 pub enum ProductType {
     /// Geometric product: `a * b`
     Geometric,
-    /// Outer (wedge) product: `a ∧ b`
-    Outer,
-    /// Inner product: `a · b`
+    /// Exterior (wedge) product: `a ∧ b`
+    Exterior,
+    /// Inner product: `a · b` (symmetric)
     Inner,
     /// Left contraction: `a ⌋ b`
     LeftContraction,
+    /// Right contraction: `a ⌊ b`
+    RightContraction,
+    /// Regressive (meet) product: `a ∨ b`
+    Regressive,
+    /// Scalar product: grade-0 projection of geometric
+    Scalar,
+    /// Antigeometric product: `a ⊟ b`
+    Antigeometric,
+    /// Antiscalar product: grade-n projection of antigeometric
+    Antiscalar,
 }
 
 impl ProductType {
@@ -32,9 +42,14 @@ impl ProductType {
     pub fn all() -> &'static [ProductType] {
         &[
             ProductType::Geometric,
-            ProductType::Outer,
+            ProductType::Exterior,
             ProductType::Inner,
             ProductType::LeftContraction,
+            ProductType::RightContraction,
+            ProductType::Regressive,
+            ProductType::Scalar,
+            ProductType::Antigeometric,
+            ProductType::Antiscalar,
         ]
     }
 
@@ -42,9 +57,14 @@ impl ProductType {
     pub fn toml_name(&self) -> &'static str {
         match self {
             ProductType::Geometric => "geometric",
-            ProductType::Outer => "outer",
+            ProductType::Exterior => "exterior",
             ProductType::Inner => "inner",
             ProductType::LeftContraction => "left_contraction",
+            ProductType::RightContraction => "right_contraction",
+            ProductType::Regressive => "regressive",
+            ProductType::Scalar => "scalar",
+            ProductType::Antigeometric => "antigeometric",
+            ProductType::Antiscalar => "antiscalar",
         }
     }
 }
@@ -87,7 +107,7 @@ pub struct ProductResult {
 /// assert_eq!(output, vec![0, 2]);
 ///
 /// // Vector ∧ Vector produces bivector (grade 2)
-/// let output = infer_output_grades(&[1], &[1], ProductType::Outer, &algebra);
+/// let output = infer_output_grades(&[1], &[1], ProductType::Exterior, &algebra);
 /// assert_eq!(output, vec![2]);
 /// ```
 pub fn infer_output_grades(
@@ -107,7 +127,7 @@ pub fn infer_output_grades(
                         output_set.insert(g);
                     }
                 }
-                ProductType::Outer => {
+                ProductType::Exterior => {
                     if let Some(g) = outer_grade(ga, gb, dim) {
                         output_set.insert(g);
                     }
@@ -118,6 +138,40 @@ pub fn infer_output_grades(
                 ProductType::LeftContraction => {
                     if let Some(g) = left_contraction_grade(ga, gb) {
                         output_set.insert(g);
+                    }
+                }
+                ProductType::RightContraction => {
+                    // Right contraction: grade(a) - grade(b) when gb <= ga
+                    if gb <= ga {
+                        output_set.insert(ga - gb);
+                    }
+                }
+                ProductType::Regressive => {
+                    // Regressive product: (a* ∧ b*)* where * is dual
+                    // Result grade = ga + gb - dim (when >= 0)
+                    let result = ga + gb;
+                    if result >= dim {
+                        output_set.insert(result - dim);
+                    }
+                }
+                ProductType::Scalar => {
+                    // Scalar product: only grade 0 from geometric
+                    if ga == gb {
+                        output_set.insert(0);
+                    }
+                }
+                ProductType::Antigeometric => {
+                    // Antigeometric: dual(dual(a) * dual(b))
+                    // Same grade structure as geometric, just different metric
+                    for g in geometric_grades(ga, gb, dim) {
+                        output_set.insert(g);
+                    }
+                }
+                ProductType::Antiscalar => {
+                    // Antiscalar: only grade dim from antigeometric
+                    if ga + gb >= dim && (ga + gb - dim).is_multiple_of(2) {
+                        // Can contribute to pseudoscalar
+                        output_set.insert(dim);
                     }
                 }
             }
@@ -157,20 +211,42 @@ pub fn infer_output_grades_precise(
 
     for &a in &lhs_blades {
         for &b in &rhs_blades {
-            let (sign, result) = table.geometric(a, b);
+            // For products with specialized computation, use the appropriate method
+            let (sign, result_grade) = match product_type {
+                ProductType::Regressive => {
+                    // Regressive product uses complement-based formula
+                    let (sign, result) = table.regressive(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Exterior => {
+                    // Exterior product has its own method
+                    let (sign, result) = table.exterior(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Antigeometric | ProductType::Antiscalar => {
+                    // Antiproducts use the anti-metric
+                    let (sign, result) = table.antiproduct(a, b);
+                    (sign, grade(result))
+                }
+                _ => {
+                    // All other products derive from the geometric product
+                    let (sign, result) = table.geometric(a, b);
+                    (sign, grade(result))
+                }
+            };
+
             if sign == 0 {
                 continue;
             }
 
-            let result_grade = grade(result);
             let ga = grade(a);
             let gb = grade(b);
 
             // Check if this product should be included based on product type
             let include = match product_type {
                 ProductType::Geometric => true,
-                ProductType::Outer => {
-                    // Outer product: only grade ga + gb terms
+                ProductType::Exterior => {
+                    // Already filtered by exterior method, but verify grade
                     result_grade == ga + gb
                 }
                 ProductType::Inner => {
@@ -180,6 +256,26 @@ pub fn infer_output_grades_precise(
                 ProductType::LeftContraction => {
                     // Left contraction: only grade gb - ga terms (when ga <= gb)
                     ga <= gb && result_grade == gb - ga
+                }
+                ProductType::RightContraction => {
+                    // Right contraction: only grade ga - gb terms (when gb <= ga)
+                    gb <= ga && result_grade == ga - gb
+                }
+                ProductType::Regressive => {
+                    // Already computed correctly by regressive method
+                    true
+                }
+                ProductType::Scalar => {
+                    // Scalar product: only grade 0 terms
+                    result_grade == 0
+                }
+                ProductType::Antigeometric => {
+                    // Already computed by antiproduct, include all
+                    true
+                }
+                ProductType::Antiscalar => {
+                    // Antiscalar: only grade dim terms
+                    result_grade == algebra.dim()
                 }
             };
 
@@ -338,7 +434,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Vector ∧ Vector = Bivector
-        let output = infer_output_grades(&[1], &[1], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[1], &[1], ProductType::Exterior, &algebra);
         assert_eq!(output, vec![2]);
     }
 
@@ -347,7 +443,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Vector ∧ Bivector = Trivector
-        let output = infer_output_grades(&[1], &[2], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[1], &[2], ProductType::Exterior, &algebra);
         assert_eq!(output, vec![3]);
     }
 
@@ -356,7 +452,7 @@ mod tests {
         let algebra = Algebra::euclidean(3);
 
         // Bivector ∧ Bivector = 0 in 3D (grade 4 > dim 3)
-        let output = infer_output_grades(&[2], &[2], ProductType::Outer, &algebra);
+        let output = infer_output_grades(&[2], &[2], ProductType::Exterior, &algebra);
         assert!(output.is_empty());
     }
 
@@ -435,7 +531,14 @@ mod tests {
         assert!(!result.is_zero);
 
         // Vector ∧ Vector should match Entity_2 (grade 2)
-        let result = infer_product(&[1], &[1], ProductType::Outer, &entities, &algebra, &table);
+        let result = infer_product(
+            &[1],
+            &[1],
+            ProductType::Exterior,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert_eq!(result.output_grades, vec![2]);
         assert_eq!(result.matching_entity, Some("Entity_2".to_string()));
         assert!(!result.is_zero);
@@ -503,7 +606,14 @@ mod tests {
         let entities = vec![(vec![2], "Entity_2".to_string())];
 
         // Bivector ∧ Bivector = 0 in 3D
-        let result = infer_product(&[2], &[2], ProductType::Outer, &entities, &algebra, &table);
+        let result = infer_product(
+            &[2],
+            &[2],
+            ProductType::Exterior,
+            &entities,
+            &algebra,
+            &table,
+        );
         assert!(result.output_grades.is_empty());
         assert!(result.matching_entity.is_none());
         assert!(result.is_zero);

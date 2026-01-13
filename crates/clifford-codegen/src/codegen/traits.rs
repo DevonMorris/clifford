@@ -8,6 +8,7 @@ use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, ProductTable};
 use crate::spec::{AlgebraSpec, TypeSpec};
+use crate::symbolic::{ConstraintDeriver, ConstraintSolver, SolutionType};
 
 /// Generates trait implementations for algebra types.
 ///
@@ -55,19 +56,12 @@ pub struct TraitsGenerator<'a> {
     spec: &'a AlgebraSpec,
     /// The algebra for computations.
     algebra: &'a Algebra,
-    /// The product table.
-    #[allow(dead_code)]
-    table: ProductTable,
 }
 
 impl<'a> TraitsGenerator<'a> {
     /// Creates a new traits generator.
-    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, table: ProductTable) -> Self {
-        Self {
-            spec,
-            algebra,
-            table,
-        }
+    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, _table: ProductTable) -> Self {
+        Self { spec, algebra }
     }
 
     /// Generates the complete traits file.
@@ -81,6 +75,7 @@ impl<'a> TraitsGenerator<'a> {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let ops = self.generate_all_ops();
+        let normed = self.generate_all_normed();
         let approx = self.generate_all_approx();
         let arbitrary = self.generate_all_arbitrary();
         let verification_tests = self.generate_verification_tests_raw();
@@ -93,6 +88,11 @@ impl<'a> TraitsGenerator<'a> {
             // Operator Implementations
             // ============================================================
             #ops
+
+            // ============================================================
+            // Normed Trait Implementations
+            // ============================================================
+            #normed
 
             // ============================================================
             // Approx Trait Implementations
@@ -190,13 +190,18 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
-        // Outer product (using BitXor) - only for explicit products
-        for entry in &self.spec.products.outer {
+        // Exterior product (using BitXor) - only for explicit products
+        for entry in &self.spec.products.exterior {
             // Only generate if lhs matches this type
             if entry.lhs == ty.name {
                 if let Some(other) = self.find_type(&entry.rhs) {
                     if let Some(output_type) = self.find_type(&entry.output) {
-                        impls.push(self.generate_outer_from_entry(ty, other, output_type, entry));
+                        impls.push(self.generate_exterior_from_entry(
+                            ty,
+                            other,
+                            output_type,
+                            entry,
+                        ));
                     }
                 }
             }
@@ -210,14 +215,9 @@ impl<'a> TraitsGenerator<'a> {
         self.spec.types.iter().find(|t| t.name == name)
     }
 
-    /// Generates a constructor call, using `new_unchecked` for constrained types.
-    fn generate_constructor_call(ty: &TypeSpec, field_exprs: &[TokenStream]) -> TokenStream {
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        if has_constraints {
-            quote! { Self::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { Self::new(#(#field_exprs),*) }
-        }
+    /// Generates a constructor call.
+    fn generate_constructor_call(_ty: &TypeSpec, field_exprs: &[TokenStream]) -> TokenStream {
+        quote! { Self::new(#(#field_exprs),*) }
     }
 
     /// Generates Add implementation.
@@ -375,8 +375,8 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates outer product (Type ^ Other -> Output) from a product entry.
-    fn generate_outer_from_entry(
+    /// Generates exterior product (Type ^ Other -> Output) from a product entry.
+    fn generate_exterior_from_entry(
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
@@ -387,7 +387,7 @@ impl<'a> TraitsGenerator<'a> {
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
         let fn_name = format_ident!(
-            "outer_{}_{}",
+            "exterior_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
@@ -402,6 +402,190 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    // ========================================================================
+    // Normed Trait Implementations
+    // ========================================================================
+
+    /// Generates all Normed trait implementations.
+    fn generate_all_normed(&self) -> TokenStream {
+        let impls: Vec<TokenStream> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|ty| self.generate_normed_impl(ty))
+            .collect();
+
+        // For PGA algebras (with degenerate basis), also generate DegenerateNormed
+        let degenerate_impls: Vec<TokenStream> = if self.spec.signature.r > 0 {
+            self.spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none())
+                .filter_map(|ty| self.generate_degenerate_normed_impl(ty))
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        quote! {
+            #(#impls)*
+            #(#degenerate_impls)*
+        }
+    }
+
+    /// Generates `impl Normed for Type<T>`.
+    fn generate_normed_impl(&self, ty: &TypeSpec) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+
+        // Generate norm_squared: sum of squares of all fields
+        let norm_squared_terms: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        // Generate scale: multiply each field by factor
+        let scale_fields: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * factor }
+            })
+            .collect();
+
+        // Handle edge case where type has no fields
+        let norm_squared_expr = if norm_squared_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#norm_squared_terms)+* }
+        };
+
+        quote! {
+            impl<T: Float> crate::norm::Normed for #name<T> {
+                type Scalar = T;
+
+                #[inline]
+                fn norm_squared(&self) -> T {
+                    #norm_squared_expr
+                }
+
+                fn try_normalize(&self) -> Option<Self> {
+                    let n = self.norm();
+                    if n < T::epsilon() {
+                        None
+                    } else {
+                        Some(self.scale(T::one() / n))
+                    }
+                }
+
+                #[inline]
+                fn scale(&self, factor: T) -> Self {
+                    Self::new(#(#scale_fields),*)
+                }
+            }
+        }
+    }
+
+    /// Generates `impl DegenerateNormed for Type<T>` for PGA types.
+    ///
+    /// Returns None if the type has no bulk or weight components.
+    fn generate_degenerate_normed_impl(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        let name = format_ident!("{}", ty.name);
+
+        // Find indices of degenerate basis vectors (those with metric == 0)
+        let degenerate_indices: Vec<usize> = self
+            .spec
+            .signature
+            .basis
+            .iter()
+            .filter(|b| b.metric == 0)
+            .map(|b| b.index)
+            .collect();
+
+        // Partition fields into bulk (no degenerate basis) and weight (has degenerate basis)
+        let (bulk_fields, weight_fields): (Vec<_>, Vec<_>) = ty.fields.iter().partition(|f| {
+            // Check if this field's blade involves any degenerate basis vector
+            !degenerate_indices.iter().any(|&deg_idx| {
+                // Check if bit `deg_idx` is set in the blade_index
+                (f.blade_index >> deg_idx) & 1 == 1
+            })
+        });
+
+        // Don't generate if there are no fields in either category
+        if bulk_fields.is_empty() && weight_fields.is_empty() {
+            return None;
+        }
+
+        // Generate bulk_norm_squared: sum of squares of bulk fields
+        let bulk_norm_terms: Vec<TokenStream> = bulk_fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        // Generate weight_norm_squared: sum of squares of weight fields
+        let weight_norm_terms: Vec<TokenStream> = weight_fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        let bulk_norm_expr = if bulk_norm_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#bulk_norm_terms)+* }
+        };
+
+        let weight_norm_expr = if weight_norm_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#weight_norm_terms)+* }
+        };
+
+        // Generate scale fields for try_unitize
+        let scale_fields: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * inv_w }
+            })
+            .collect();
+
+        Some(quote! {
+            impl<T: Float> crate::norm::DegenerateNormed for #name<T> {
+                #[inline]
+                fn bulk_norm_squared(&self) -> T {
+                    #bulk_norm_expr
+                }
+
+                #[inline]
+                fn weight_norm_squared(&self) -> T {
+                    #weight_norm_expr
+                }
+
+                fn try_unitize(&self) -> Option<Self> {
+                    let w = self.weight_norm();
+                    if w < T::epsilon() {
+                        None
+                    } else {
+                        let inv_w = T::one() / w;
+                        Some(Self::new(#(#scale_fields),*))
+                    }
+                }
+            }
+        })
     }
 
     // ========================================================================
@@ -522,23 +706,282 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Generates Arbitrary implementation for a type.
     ///
-    /// For types with `solve_for`, generates values for all fields except the
-    /// solved-for one(s), letting `new()` compute them from constraints.
+    /// For unconstrained types, generates random values for all fields.
+    /// For constrained types (with geometric constraints like Study condition),
+    /// solves the constraint to compute dependent variables from independent ones.
     fn generate_arbitrary_impl(&self, ty: &TypeSpec) -> TokenStream {
-        let name = format_ident!("{}", ty.name);
+        // Check if this type has a derived constraint
+        if let Some(constraint_impl) = self.try_generate_constrained_arbitrary(ty) {
+            return constraint_impl;
+        }
 
-        // Determine which fields to generate (exclude solve_for fields)
-        let solve_for_fields = ty.solve_for_fields();
-        let fields_to_generate: Vec<_> = ty
-            .fields
+        // No constraint - generate simple random values for all fields
+        self.generate_unconstrained_arbitrary(ty)
+    }
+
+    /// Attempts to generate a constraint-solving Arbitrary implementation.
+    ///
+    /// Returns `Some(TokenStream)` if the type has a derived constraint that can be solved,
+    /// `None` otherwise.
+    fn try_generate_constrained_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        // Derive constraints from algebra structure
+        let deriver = ConstraintDeriver::new(self.algebra);
+        let constraint = deriver.derive_geometric_constraint(ty, "x")?;
+
+        // Only handle single-constraint cases for now
+        if constraint.zero_expressions.len() != 1 {
+            return None;
+        }
+
+        let expr = &constraint.zero_expressions[0];
+
+        // Convert Symbolica expression to string for the solver
+        let expr_str = format!("{} = 0", expr);
+
+        // Find the highest-grade field to solve for (typically pseudoscalar like e0123)
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade)?;
+
+        // Try to solve the constraint for this variable
+        let solver = ConstraintSolver::new();
+        let symbol_name = format!("x_{}", solve_for_field.name);
+        let solution = solver.solve(&expr_str, &symbol_name).ok()?;
+
+        // For quadratic constraints (like Plücker), use filter instead of solving
+        if solution.solution_type == SolutionType::Quadratic {
+            return self.generate_filtered_arbitrary(ty);
+        }
+
+        // Generate constraint-solving Arbitrary
+        Some(self.generate_solving_arbitrary(ty, &solve_for_field.name, &solution))
+    }
+
+    /// Generates Arbitrary that solves a linear constraint.
+    fn generate_solving_arbitrary(
+        &self,
+        ty: &TypeSpec,
+        solve_for: &str,
+        solution: &crate::symbolic::SolveResult,
+    ) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        // Find indices of free and dependent fields
+        let solve_for_idx = ty.fields.iter().position(|f| f.name == solve_for).unwrap();
+        let free_indices: Vec<usize> = (0..num_fields).filter(|&i| i != solve_for_idx).collect();
+
+        // Generate ranges for free variables
+        let range_tuple: Vec<TokenStream> = free_indices
             .iter()
-            .filter(|f| !solve_for_fields.contains(&f.name.as_str()))
+            .map(|_| quote! { -100.0f64..100.0 })
             .collect();
 
-        let num_fields = fields_to_generate.len();
+        // Generate variable names for prop_map
+        let prop_map_args: Vec<TokenStream> = free_indices
+            .iter()
+            .enumerate()
+            .map(|(i, _)| {
+                let var = format_ident!("x{}", i);
+                quote! { #var }
+            })
+            .collect();
 
-        // Check if new() returns Option<Self> (domain restrictions)
-        let has_domain_restriction = ty.has_domain_restrictions();
+        // Build the solution expression
+        let numerator_expr = self.convert_solution_to_tokens(&solution.numerator, ty);
+        let solution_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_expr = self.convert_solution_to_tokens(divisor, ty);
+            quote! { (#numerator_expr) / (#divisor_expr) }
+        } else {
+            numerator_expr
+        };
+
+        // Build field initialization expressions
+        let mut field_var_map: Vec<Option<usize>> = vec![None; num_fields];
+        for (var_idx, &field_idx) in free_indices.iter().enumerate() {
+            field_var_map[field_idx] = Some(var_idx);
+        }
+
+        let field_inits: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, _f)| {
+                if i == solve_for_idx {
+                    quote! { T::from_f64(#solution_expr) }
+                } else {
+                    let var_idx = field_var_map[i].unwrap();
+                    let var = format_ident!("x{}", var_idx);
+                    quote! { T::from_f64(#var) }
+                }
+            })
+            .collect();
+
+        // Generate filter for divisor non-zero condition
+        let filter_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_var = self.find_divisor_variable(divisor, ty);
+            if let Some(var_idx) = divisor_var {
+                let var = format_ident!("x{}", var_idx);
+                // Generate filter args with underscores for unused variables
+                let filter_args: Vec<TokenStream> = free_indices
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| {
+                        if i == var_idx {
+                            let v = format_ident!("x{}", i);
+                            quote! { #v }
+                        } else {
+                            let v = format_ident!("_x{}", i);
+                            quote! { #v }
+                        }
+                    })
+                    .collect();
+                Some(quote! {
+                    .prop_filter("non-zero divisor", |(#(#filter_args),*)| (#var).abs() > 0.1)
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let filter_chain = filter_expr.unwrap_or_else(|| quote! {});
+
+        if free_indices.len() == 1 {
+            let var = format_ident!("x0");
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
+
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (-100.0f64..100.0)
+                            #filter_chain
+                            .prop_map(|#var| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
+                }
+            }
+        } else {
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
+
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (#(#range_tuple),*)
+                            #filter_chain
+                            .prop_map(|(#(#prop_map_args),*)| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
+                }
+            }
+        }
+    }
+
+    /// Converts a solution expression string to TokenStream.
+    ///
+    /// The solution from `ConstraintSolver` uses variable names like "x_s", "x_e23", etc.
+    /// (field names with the `x_` prefix from ConstraintDeriver).
+    /// We need to convert these to the corresponding `x{i}` variables.
+    fn convert_solution_to_tokens(&self, expr: &str, ty: &TypeSpec) -> TokenStream {
+        let mut result = expr.to_string();
+
+        // Find field indices for free variables (all except the solved-for one)
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
+
+        let free_fields: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .collect();
+
+        // Replace "x_fieldname" with "x{i}" variables
+        // Do longer names first to avoid partial replacements
+        let mut sorted_fields: Vec<_> = free_fields.iter().enumerate().collect();
+        sorted_fields.sort_by(|a, b| b.1.name.len().cmp(&a.1.name.len()));
+
+        for (i, field) in sorted_fields {
+            let field_pattern = format!("x_{}", field.name);
+            let var_name = format!("x{}", i);
+            result = result.replace(&field_pattern, &var_name);
+        }
+
+        // Parse and convert to TokenStream
+        result.parse().unwrap_or_else(|_| quote! { T::zero() })
+    }
+
+    /// Finds which free variable corresponds to the divisor.
+    ///
+    /// The divisor uses the `x_fieldname` format from ConstraintDeriver.
+    fn find_divisor_variable(&self, divisor: &str, ty: &TypeSpec) -> Option<usize> {
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade)?;
+
+        let free_fields: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .collect();
+
+        for (i, field) in free_fields.iter().enumerate() {
+            // Check for "x_fieldname" pattern
+            let pattern = format!("x_{}", field.name);
+            if divisor.contains(&pattern) {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    /// Generates Arbitrary with a filter for quadratic constraints.
+    ///
+    /// For constraints like the Plücker condition that are quadratic and can't
+    /// be easily solved, we generate random values and filter.
+    fn generate_filtered_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        // Generate tuple of ranges
+        let range_tuple: Vec<TokenStream> =
+            (0..num_fields).map(|_| quote! { -10.0f64..10.0 }).collect();
+
+        let prop_map_args: Vec<TokenStream> = (0..num_fields)
+            .map(|i| {
+                let var = format_ident!("x{}", i);
+                quote! { #var }
+            })
+            .collect();
+
+        let field_inits: Vec<TokenStream> = (0..num_fields)
+            .map(|i| {
+                let var = format_ident!("x{}", i);
+                quote! { T::from_f64(#var) }
+            })
+            .collect();
+
+        Some(quote! {
+            impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                type Parameters = ();
+                type Strategy = BoxedStrategy<Self>;
+
+                fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                    (#(#range_tuple),*)
+                        .prop_map(|(#(#prop_map_args),*)| {
+                            #name::new(#(#field_inits),*)
+                        })
+                        .boxed()
+                }
+            }
+        })
+    }
+
+    /// Generates simple Arbitrary for unconstrained types.
+    fn generate_unconstrained_arbitrary(&self, ty: &TypeSpec) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
 
         // Generate tuple of ranges
         let range_tuple: Vec<TokenStream> = (0..num_fields)
@@ -552,52 +995,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // For types with domain restrictions, use prop_filter_map
-        // For normal types, use prop_map
-        if has_domain_restriction {
-            // Use smaller range to increase success rate for constrained types
-            let constrained_range_tuple: Vec<TokenStream> =
-                (0..num_fields).map(|_| quote! { -0.5f64..0.5 }).collect();
-
-            let prop_map_args: Vec<TokenStream> = (0..num_fields)
-                .map(|i| {
-                    let var = format_ident!("x{}", i);
-                    quote! { #var }
-                })
-                .collect();
-
-            if num_fields == 1 {
-                quote! {
-                    impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
-                        type Parameters = ();
-                        type Strategy = BoxedStrategy<Self>;
-
-                        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-                            (-0.5f64..0.5)
-                                .prop_filter_map("constraint satisfied", |x0| {
-                                    #name::new(#(#field_inits),*)
-                                })
-                                .boxed()
-                        }
-                    }
-                }
-            } else {
-                quote! {
-                    impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
-                        type Parameters = ();
-                        type Strategy = BoxedStrategy<Self>;
-
-                        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-                            (#(#constrained_range_tuple),*)
-                                .prop_filter_map("constraint satisfied", |(#(#prop_map_args),*)| {
-                                    #name::new(#(#field_inits),*)
-                                })
-                                .boxed()
-                        }
-                    }
-                }
-            }
-        } else if num_fields == 1 {
+        if num_fields == 1 {
             quote! {
                 impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
                     type Parameters = ();
@@ -650,7 +1048,7 @@ impl<'a> TraitsGenerator<'a> {
         let signature_name = self.generate_signature_name();
         let add_sub_tests = self.generate_add_sub_verification_tests_raw();
         let geometric_tests = self.generate_geometric_verification_tests_raw();
-        let outer_tests = self.generate_outer_verification_tests_raw();
+        let exterior_tests = self.generate_exterior_verification_tests_raw();
 
         format!(
             r#"
@@ -670,40 +1068,45 @@ mod verification_tests {{
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{geometric}{outer}}}
+{add_sub}{geometric}{exterior}}}
 "#,
             sig = signature_name,
             add_sub = add_sub_tests,
             geometric = geometric_tests,
-            outer = outer_tests,
+            exterior = exterior_tests,
         )
     }
 
     /// Generates the signature type name for this algebra.
+    ///
+    /// Uses the signature tuple (p, q, r) to determine the signature type,
+    /// not the algebra name. This ensures generic handling of all algebras.
     fn generate_signature_name(&self) -> proc_macro2::Ident {
-        // Convert algebra name to PascalCase signature name
-        let name = &self.spec.name;
-        let sig_name = if name.starts_with("euclidean") {
-            match self.algebra.dim() {
-                2 => "Euclidean2",
-                3 => "Euclidean3",
-                _ => "Euclidean3", // fallback
+        let sig = &self.spec.signature;
+        let (p, q, r) = (sig.p, sig.q, sig.r);
+
+        // Derive signature type from (p, q, r)
+        let sig_name = match (p, q, r) {
+            // Euclidean: Cl(n, 0, 0)
+            (2, 0, 0) => "Euclidean2",
+            (3, 0, 0) => "Euclidean3",
+
+            // Projective (PGA): Cl(n, 0, 1)
+            (2, 0, 1) => "Projective2",
+            (3, 0, 1) => "Projective3",
+
+            // Conformal (CGA): Cl(n+1, 1, 0) - note: uses p+q=4/5 convention
+            // CGA 2D: Cl(3, 1, 0) - 2D + 2 extra dimensions
+            // CGA 3D: Cl(4, 1, 0) - 3D + 2 extra dimensions
+            (4, 1, 0) => "Conformal3",
+
+            // Minkowski spacetime: Cl(1, 3, 0)
+            (1, 3, 0) => "Minkowski4",
+
+            // Generic: use Cl{p}_{q}_{r} format
+            _ => {
+                return format_ident!("Cl{}_{}_{}", p, q, r);
             }
-        } else if name.starts_with("pga") || name.starts_with("projective") {
-            match self.algebra.dim() {
-                3 => "Projective2",
-                4 => "Projective3",
-                _ => "Projective3",
-            }
-        } else if name.starts_with("cga") || name.starts_with("conformal") {
-            match self.algebra.dim() {
-                4 => "Conformal2",
-                5 => "Conformal3",
-                _ => "Conformal3",
-            }
-        } else {
-            // Default: generate a custom signature name
-            "CustomSignature"
         };
         format_ident!("{}", sig_name)
     }
@@ -732,7 +1135,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Add mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -748,7 +1151,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Sub mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -763,7 +1166,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Neg mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -808,7 +1211,7 @@ mod verification_tests {{
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
                 "Geometric product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
@@ -827,17 +1230,17 @@ mod verification_tests {{
             .collect()
     }
 
-    /// Generates outer product verification tests as a formatted string.
-    fn generate_outer_verification_tests_raw(&self) -> String {
+    /// Generates exterior product verification tests as a formatted string.
+    fn generate_exterior_verification_tests_raw(&self) -> String {
         // Only generate tests for products explicitly listed in the TOML
-        if self.spec.products.outer.is_empty() {
+        if self.spec.products.exterior.is_empty() {
             return String::new();
         }
 
         let signature_name = self.generate_signature_name();
         self.spec
             .products
-            .outer
+            .exterior
             .iter()
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
@@ -848,17 +1251,17 @@ mod verification_tests {{
                     r#"
     proptest! {{
         #[test]
-        fn outer_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+        fn exterior_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = outer_{lhs_lower}_{rhs_lower}(&a, &b);
-            let generic_result = mv_a.outer(&mv_b);
+            let specialized_result: {out}<f64> = exterior_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
-                relative_eq!(specialized_mv, generic_result, max_relative = REL_EPSILON),
-                "Outer product mismatch: specialized={{:?}}, generic={{:?}}",
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
         }}
@@ -883,8 +1286,8 @@ mod tests {
     use crate::spec::parse_spec;
 
     #[test]
-    fn generates_add_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_add_impl() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -896,8 +1299,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_sub_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_sub_impl() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -909,8 +1312,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_neg_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_neg_impl() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -922,8 +1325,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_scalar_mul() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_scalar_mul() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -938,8 +1341,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_geometric_mul() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_geometric_mul() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -952,8 +1355,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_outer() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_exterior() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -963,12 +1366,12 @@ mod tests {
 
         // Vector ^ Vector should produce Bivector
         assert!(code.contains("BitXor"));
-        assert!(code.contains("outer_vector_vector"));
+        assert!(code.contains("exterior_vector_vector"));
     }
 
     #[test]
-    fn generates_approx_impls() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_approx_impls() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -982,8 +1385,8 @@ mod tests {
     }
 
     #[test]
-    fn generates_arbitrary_impls() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+    fn symbolica_generates_arbitrary_impls() {
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
