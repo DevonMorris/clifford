@@ -56,19 +56,12 @@ pub struct TraitsGenerator<'a> {
     spec: &'a AlgebraSpec,
     /// The algebra for computations.
     algebra: &'a Algebra,
-    /// The product table.
-    #[allow(dead_code)]
-    table: ProductTable,
 }
 
 impl<'a> TraitsGenerator<'a> {
     /// Creates a new traits generator.
-    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, table: ProductTable) -> Self {
-        Self {
-            spec,
-            algebra,
-            table,
-        }
+    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, _table: ProductTable) -> Self {
+        Self { spec, algebra }
     }
 
     /// Generates the complete traits file.

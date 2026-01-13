@@ -12,12 +12,6 @@ use super::ConstraintExpr;
 pub enum VerificationResult {
     /// Constraint is always satisfied when inputs satisfy their constraints.
     Always,
-    /// Constraint is satisfied under an additional condition.
-    #[allow(dead_code)]
-    Conditional(Atom),
-    /// Constraint can be violated (with explanation).
-    #[allow(dead_code)]
-    Never(String),
     /// Verification was inconclusive (expression too complex).
     Inconclusive(String),
 }

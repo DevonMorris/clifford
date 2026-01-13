@@ -522,7 +522,7 @@ impl<'a> TypeGenerator<'a> {
                 let grade = field.grade;
                 // Sign is (-1)^(k(k-1)/2)
                 let exponent = grade * grade.saturating_sub(1) / 2;
-                if exponent % 2 == 0 {
+                if exponent.is_multiple_of(2) {
                     quote! { self.#name }
                 } else {
                     quote! { -self.#name }
@@ -565,7 +565,7 @@ impl<'a> TypeGenerator<'a> {
                 let antigrade = dim - grade;
                 // Sign is (-1)^((n-k)(n-k-1)/2)
                 let exponent = antigrade * antigrade.saturating_sub(1) / 2;
-                if exponent % 2 == 0 {
+                if exponent.is_multiple_of(2) {
                     quote! { self.#name }
                 } else {
                     quote! { -self.#name }
@@ -794,15 +794,12 @@ mod tests {
     fn field_order_is_canonical() {
         // Verify fields are ordered by grade, then by blade index
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
-        let full_type = spec.types.iter().find(|t| t.name == "Full").unwrap();
+        let rotor_type = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
 
-        let field_order: Vec<&str> = full_type.fields.iter().map(|f| f.name.as_str()).collect();
+        let field_order: Vec<&str> = rotor_type.fields.iter().map(|f| f.name.as_str()).collect();
 
-        // Expected: s (grade 0), x, y, z (grade 1), xy, xz, yz (grade 2), xyz (grade 3)
-        assert_eq!(
-            field_order,
-            vec!["s", "x", "y", "z", "xy", "xz", "yz", "xyz"]
-        );
+        // Expected: s (grade 0), xy, xz, yz (grade 2)
+        assert_eq!(field_order, vec!["s", "xy", "xz", "yz"]);
     }
 
     #[test]

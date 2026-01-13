@@ -231,12 +231,6 @@ impl<T: Float> Point<T> {
         // Result is grade 3 (plane)
         products::exterior_point_line(self, line)
     }
-
-    /// Left contraction onto a plane (returns scalar).
-    #[inline]
-    pub fn left_contract_plane(&self, _plane: &Plane<T>) -> T {
-        todo!("left_contract_plane needs generated left contraction")
-    }
 }
 
 // ============================================================================
@@ -538,16 +532,6 @@ impl<T: Float> Line<T> {
             line_pt_y + t * d.y(),
             line_pt_z + t * d.z(),
         )
-    }
-
-    /// Left contraction onto a plane (returns point).
-    ///
-    /// Computes L ⌋ Π where L is a line (grade-2) and Π is a plane (grade-3).
-    /// The result is a point (grade-1), which is the grade-1 part of the
-    /// geometric product Line * Plane.
-    #[inline]
-    pub fn left_contract_plane(&self, _plane: &Plane<T>) -> Point<T> {
-        todo!("left_contract_plane needs generated left contraction")
     }
 }
 
@@ -955,8 +939,23 @@ impl<T: Float> Motor<T> {
     }
 
     /// Extract translation vector.
+    ///
+    /// For a pure translation motor, this returns the translation vector.
+    /// For combined rotation-translation motors, this extracts the translational
+    /// component based on the dual motor representation.
+    ///
+    /// **Note**: This is only exact for pure translation motors. For general
+    /// motors (rotation + translation), use decomposition methods for accurate
+    /// extraction.
     pub fn translation(&self) -> EuclideanVector<T> {
-        todo!("translation extraction needs generated formula")
+        // Inverse of from_translation encoding:
+        // from_translation sets: e23 = dx/2, e31 = -dy/2, e12 = dz/2
+        // So: dx = 2*e23, dy = -2*e31, dz = 2*e12
+        EuclideanVector::new(
+            T::TWO * self.e23(),
+            -T::TWO * self.e31(),
+            T::TWO * self.e12(),
+        )
     }
 
     /// Commutator: [A, B] = AB - BA.
@@ -1014,16 +1013,22 @@ impl<T: Float> Motor<T> {
         products::antisandwich_motor_point(self, p)
     }
 
-    /// Transform a line: `L' = M L M̃` (sandwich product).
+    /// Transform a line using the antisandwich product.
+    ///
+    /// In PGA, transformations use the geometric antiproduct: L' = M ⊛ L ⊛ M̃
+    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
     #[inline]
-    pub fn transform_line(&self, _line: &Line<T>) -> Line<T> {
-        todo!("transform_line needs generated sandwich product with correct signs")
+    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
+        products::antisandwich_motor_line(self, line)
     }
 
-    /// Transform a plane: `P' = M P M̃` (sandwich product).
+    /// Transform a plane using the antisandwich product.
+    ///
+    /// In PGA, transformations use the geometric antiproduct: Π' = M ⊛ Π ⊛ M̃
+    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
     #[inline]
-    pub fn transform_plane(&self, _plane: &Plane<T>) -> Plane<T> {
-        todo!("transform_plane needs generated sandwich product with correct signs")
+    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
+        products::antisandwich_motor_plane(self, plane)
     }
 }
 
@@ -1229,7 +1234,7 @@ mod tests {
         let origin = Point::<f64>::origin();
         let t = Motor::<f64>::from_translation(2.0, 0.0, 0.0);
 
-        println!(
+        eprintln!(
             "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             t.s(),
             t.e23(),
@@ -1240,7 +1245,7 @@ mod tests {
             t.e03(),
             t.e0123()
         );
-        println!(
+        eprintln!(
             "Origin: ({}, {}, {}, {})",
             origin.e1(),
             origin.e2(),
@@ -1250,7 +1255,7 @@ mod tests {
 
         let result = t.transform_point(&origin);
 
-        println!(
+        eprintln!(
             "Translated: ({}, {}, {}, {})",
             result.e1(),
             result.e2(),
@@ -1290,7 +1295,7 @@ mod tests {
         let origin = Point::<f64>::origin();
         let t = Motor::<f64>::from_translation(0.0, -19.26, 0.0);
 
-        println!(
+        eprintln!(
             "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             t.s(),
             t.e23(),
@@ -1301,7 +1306,7 @@ mod tests {
             t.e03(),
             t.e0123()
         );
-        println!(
+        eprintln!(
             "Origin: ({}, {}, {}, {})",
             origin.e1(),
             origin.e2(),
@@ -1311,7 +1316,7 @@ mod tests {
 
         let result = t.transform_point(&origin);
 
-        println!(
+        eprintln!(
             "Translated: ({}, {}, {}, {})",
             result.e1(),
             result.e2(),
@@ -1345,7 +1350,7 @@ mod tests {
         let origin = Point::<f64>::origin();
         let t = Motor::<f64>::from_translation(0.0, 0.0, 5.0);
 
-        println!(
+        eprintln!(
             "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             t.s(),
             t.e23(),
@@ -1359,7 +1364,7 @@ mod tests {
 
         let result = t.transform_point(&origin);
 
-        println!(
+        eprintln!(
             "Translated: ({}, {}, {}, {})",
             result.e1(),
             result.e2(),
@@ -1393,7 +1398,7 @@ mod tests {
         let f = Flector::<f64>::reflect_xy();
         let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
 
-        println!(
+        eprintln!(
             "Flector: e1={}, e2={}, e3={}, e0={}, e023={}, e031={}, e012={}, e123={}",
             f.e1(),
             f.e2(),
@@ -1404,7 +1409,7 @@ mod tests {
             f.e012(),
             f.e123()
         );
-        println!(
+        eprintln!(
             "Input point: ({}, {}, {}, {})",
             p.e1(),
             p.e2(),
@@ -1414,7 +1419,7 @@ mod tests {
 
         let result = f.transform_point(&p);
 
-        println!(
+        eprintln!(
             "Output point: ({}, {}, {}, {})",
             result.e1(),
             result.e2(),
@@ -1514,7 +1519,7 @@ mod tests {
         let p = Point::<f64>::from_cartesian(1.0, 0.0, 0.0);
         let result = m.transform_point(&p);
 
-        println!(
+        eprintln!(
             "Composed motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             m.s(),
             m.e23(),
@@ -1525,7 +1530,7 @@ mod tests {
             m.e03(),
             m.e0123()
         );
-        println!(
+        eprintln!(
             "Transformed point: ({}, {}, {})",
             result.x(),
             result.y(),

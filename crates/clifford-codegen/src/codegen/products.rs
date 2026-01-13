@@ -23,7 +23,6 @@ use super::unary::UnaryGenerator;
 
 /// The kind of product to generate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[allow(dead_code)]
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
@@ -37,12 +36,8 @@ pub enum ProductKind {
     RightContraction,
     /// Regressive product (meet, dual of exterior, grade ga + gb - dim).
     Regressive,
-    /// Scalar product (grade-0 part of geometric).
-    Scalar,
     /// Geometric antiproduct (complement(complement(a) * complement(b))).
     Antigeometric,
-    /// Antiscalar product (grade-n part of antigeometric).
-    Antiscalar,
 }
 
 /// A term in a product expression.
@@ -1030,12 +1025,6 @@ impl<'a> ProductGenerator<'a> {
         })
     }
 
-    /// Checks if a type is a versor (e.g., Rotor).
-    #[allow(dead_code)]
-    fn is_versor_type(&self, ty: &TypeSpec) -> bool {
-        ty.versor.is_some()
-    }
-
     /// Generates a single sandwich product function.
     fn generate_sandwich_product(
         &self,
@@ -1128,23 +1117,12 @@ impl<'a> ProductGenerator<'a> {
                             vec![]
                         }
                     }
-                    ProductKind::Scalar => {
-                        if ga == gb {
-                            vec![0]
-                        } else {
-                            vec![]
-                        }
-                    }
                     ProductKind::Antigeometric => {
                         // Antigeometric: same grade rules as geometric but with antigrades
                         // antigrade(a ⊛ b) = antigrade(a) + antigrade(b) ± 2k
                         // where antigrade = n - grade
                         // For now, use full geometric grades as the antiproduct produces similar structure
                         geometric_grades(ga, gb, dim)
-                    }
-                    ProductKind::Antiscalar => {
-                        // Antiscalar: grade-n part of antigeometric
-                        vec![dim]
                     }
                 };
 
@@ -1183,9 +1161,7 @@ impl<'a> ProductGenerator<'a> {
                     ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
                     ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
                     ProductKind::Regressive => self.table.regressive(a_blade, b_blade),
-                    ProductKind::Scalar => self.table.scalar(a_blade, b_blade),
                     ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
-                    ProductKind::Antiscalar => self.table.antiscalar(a_blade, b_blade),
                 };
 
                 if result == result_blade && sign != 0 {

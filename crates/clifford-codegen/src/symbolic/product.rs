@@ -38,19 +38,16 @@ pub struct SymbolicField {
 ///
 /// Given input types with symbolic field values, computes the symbolic
 /// expressions for each output field.
-pub struct SymbolicProduct<'a> {
-    /// The algebra for blade computations.
-    #[allow(dead_code)]
-    algebra: &'a Algebra,
+pub struct SymbolicProduct {
     /// The product table.
     table: ProductTable,
 }
 
-impl<'a> SymbolicProduct<'a> {
+impl SymbolicProduct {
     /// Creates a new symbolic product computer.
-    pub fn new(algebra: &'a Algebra) -> Self {
+    pub fn new(algebra: &Algebra) -> Self {
         let table = ProductTable::new(algebra);
-        Self { algebra, table }
+        Self { table }
     }
 
     /// Creates symbolic variables for a type's fields.

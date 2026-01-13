@@ -169,6 +169,12 @@ done
 - **`#[allow(unused_variables)]`** - Use `_` prefix for intentionally unused variables, or remove them
 - **`#[allow(clippy::*)]`** - Fix the code to satisfy clippy, or if truly a false positive, document why with a comment
 
+**Underscore prefix on definitions is NOT a workaround:**
+- **Don't use `_field_name` on struct fields** to suppress dead_code warnings - this is equivalent to `#[allow(dead_code)]`. Either use the field or delete it.
+- **Don't use `_VariantName` on enum variants** - either construct the variant somewhere or remove it.
+- **Exception: Function parameters** - `_param` on unused function parameters is acceptable when the signature is fixed (trait implementations, API compatibility).
+- **Exception: PhantomData** - `_marker: PhantomData<T>` is legitimate when you need the type parameter for type system reasons but don't store data of that type.
+
 **Why this matters:**
 - Warnings exist to catch real problems - suppressing them hides bugs
 - Unused code becomes maintenance burden and confuses readers
@@ -180,9 +186,27 @@ done
 #[allow(dead_code)]
 pub type UnitVector<T> = Unit<Vector<T>>;
 
+// ALSO BAD: Using underscore prefix to suppress warning
+struct Options {
+    _unused_field: bool,  // Don't do this - delete it instead
+}
+
 // GOOD: Properly expose through module's public API
 // In mod.rs:
 pub use generated::types::UnitVector;
+
+// GOOD: PhantomData when you need the type parameter
+struct Container<T> {
+    data: Vec<u8>,
+    _marker: PhantomData<T>,  // OK - needed for type variance
+}
+
+// GOOD: Unused parameter in trait implementation
+impl Visitor for MyVisitor {
+    fn visit(&self, _node: &Node) {  // OK - signature is fixed by trait
+        // ...
+    }
+}
 ```
 
 #### Field Visibility

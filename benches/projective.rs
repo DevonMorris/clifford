@@ -231,24 +231,6 @@ fn bench_pga3_point_left_contract_line(c: &mut Criterion) {
     });
 }
 
-fn bench_pga3_point_left_contract_plane(c: &mut Criterion) {
-    let p = dim3::Point::from_cartesian(0.0, 0.0, 1.0);
-    let plane: dim3::Plane<f64> = dim3::Plane::xy();
-
-    c.bench_function("projective/dim3/point_left_contract_plane", |bencher| {
-        bencher.iter(|| black_box(p).left_contract_plane(&black_box(plane)))
-    });
-}
-
-fn bench_pga3_line_left_contract_plane(c: &mut Criterion) {
-    let line: dim3::Line<f64> = dim3::Line::z_axis();
-    let plane: dim3::Plane<f64> = dim3::Plane::xy();
-
-    c.bench_function("projective/dim3/line_left_contract_plane", |bencher| {
-        bencher.iter(|| black_box(line).left_contract_plane(&black_box(plane)))
-    });
-}
-
 fn bench_pga3_motor_transform_plane(c: &mut Criterion) {
     let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
         .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
@@ -331,8 +313,6 @@ criterion_group!(
     bench_pga3_line_dot,
     bench_pga3_line_distance,
     bench_pga3_point_left_contract_line,
-    bench_pga3_point_left_contract_plane,
-    bench_pga3_line_left_contract_plane,
     bench_pga3_batch_transform_points,
 );
 

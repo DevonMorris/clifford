@@ -33,8 +33,6 @@ use super::signature::Algebra;
 pub struct ProductTable {
     /// The algebra dimension.
     dim: usize,
-    /// Signature (p, q, r): p positive, q negative, r degenerate.
-    signature: (usize, usize, usize),
     /// Signs for geometric product: signs[a * n + b] = sign of e_a * e_b.
     signs: Vec<i8>,
     /// Result indices: results[a * n + b] = index of e_a * e_b.
@@ -72,7 +70,6 @@ impl ProductTable {
 
         Self {
             dim: algebra.dim(),
-            signature: algebra.signature(),
             signs,
             results,
         }
@@ -135,23 +132,6 @@ impl ProductTable {
     }
 
     /// Returns the metric value for a basis vector.
-    ///
-    /// - Returns `+1` for positive basis vectors (indices `0..p`)
-    /// - Returns `-1` for negative basis vectors (indices `p..p+q`)
-    /// - Returns `0` for degenerate basis vectors (indices `p+q..dim`)
-    #[inline]
-    #[allow(dead_code)]
-    fn metric(&self, basis: usize) -> i8 {
-        let (p, q, _r) = self.signature;
-        if basis < p {
-            1
-        } else if basis < p + q {
-            -1
-        } else {
-            0
-        }
-    }
-
     /// Finds all products that contribute to a given result blade.
     ///
     /// Given sets of input blades A and B, returns all (a, b) pairs
