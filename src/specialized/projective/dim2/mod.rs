@@ -44,9 +44,6 @@ mod conversions;
 mod ops;
 mod types;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
-
 #[cfg(any(
     feature = "nalgebra-0_32",
     feature = "nalgebra-0_33",

@@ -182,49 +182,113 @@ specialized/
 When implementing new types, also add proptest support:
 
 1. **Implement generic `Arbitrary`** for base types using `Float::from_f64()` for conversion
-2. **Add generic wrapper types** for constrained variants (`NonZero*<T>`, `Unit*<T>`, etc.)
+2. **Use generic wrappers from `crate::wrappers`** - Do NOT create bespoke wrapper types
 3. **Use where clauses** for wrapper Arbitrary impls to require inner type is Arbitrary
 4. **Feature gate** with `#[cfg(any(test, feature = "proptest-support"))]`
-5. **Make wrapper types public** so external consumers can use them
 
-Example for a new type `Motor3`:
+### Generic Wrapper Types (Use These!)
+
+The `crate::wrappers` module provides generic wrappers with built-in `Arbitrary` implementations:
+
+| Wrapper | Constraint | Use Case |
+|---------|------------|----------|
+| `Unit<T>` | `norm() == 1` | Euclidean vectors, bivectors, rotors |
+| `Bulk<T>` | `bulk_norm() == 1` | PGA versors (motors, flectors) - rigid transforms |
+| `Ideal<T>` | `weight_norm() == 1` | PGA homogeneous coords (points, planes) |
+| `Proper<T>` | `norm_squared() > 0` | Minkowski timelike vectors |
+
+**Do NOT create bespoke wrapper types** like `UnitMotor<T>`, `NonZeroVector<T>`, etc. in arbitrary modules.
+
+Type aliases are generated in each algebra module:
 ```rust
-// In specialized/euclidean::dim3/arbitrary.rs
+// In projective3 (generated)
+pub type BulkMotor<T> = Bulk<Motor<T>>;
+pub type BulkFlector<T> = Bulk<Flector<T>>;
+pub type IdealPoint<T> = Ideal<Point<T>>;
 
-// Generic impl for base type - generate f64 values and convert
-impl<T: Float + Debug> Arbitrary for Motor3<T> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
+// In euclidean3 (generated)
+pub type UnitVector<T> = Unit<Vector<T>>;
+pub type UnitRotor<T> = Unit<Rotor<T>>;
+```
 
+### Arbitrary for Constrained Types
+
+Types with geometric constraints (Motor, Flector, Line) need **factory-based Arbitrary generation**, not random coefficients:
+
+```rust
+// CORRECT: Generate via factory methods that guarantee constraints
+impl<T: Float + Debug> Arbitrary for Motor<T> {
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        // Generate components as f64 and convert to T
-        prop::collection::vec(-10.0f64..10.0, 8)
-            .prop_map(|coeffs| {
-                Motor3::from_coeffs(coeffs.iter().map(|&c| T::from_f64(c)))
+        (
+            -std::f64::consts::PI..std::f64::consts::PI,  // angle
+            -100.0f64..100.0,  // tx
+            -100.0f64..100.0,  // ty
+            -100.0f64..100.0,  // tz
+        )
+            .prop_map(|(angle, tx, ty, tz)| {
+                // Factory methods guarantee constraint satisfaction
+                let rotation = Motor::from_rotation_z(T::from_f64(angle));
+                let translation = Motor::from_translation(
+                    T::from_f64(tx), T::from_f64(ty), T::from_f64(tz)
+                );
+                translation.compose(&rotation)
             })
             .boxed()
     }
 }
 
-// Generic wrapper type with where clause
-pub struct UnitMotor3<T: Float>(pub Motor3<T>);
-
-impl<T> Arbitrary for UnitMotor3<T>
-where
-    T: Float + Debug,
-    Motor3<T>: Arbitrary + Debug,
-    <Motor3<T> as Arbitrary>::Strategy: 'static,
-{
+// WRONG: Random coefficients don't satisfy Study condition
+impl<T: Float + Debug> Arbitrary for Motor<T> {
     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        let threshold = T::from_f64(1e-6);  // Use Float::from_f64
-        any::<Motor3<T>>()
-            .prop_filter("non-zero", move |m| m.norm_squared() > threshold)
-            .prop_map(|m| UnitMotor3(m.normalized()))
+        // DON'T DO THIS - random coefficients violate constraints!
+        (
+            -10.0f64..10.0, -10.0f64..10.0, -10.0f64..10.0, -10.0f64..10.0,
+            -10.0f64..10.0, -10.0f64..10.0, -10.0f64..10.0, -10.0f64..10.0,
+        )
+            .prop_map(|(s, e23, e31, e12, e01, e02, e03, e0123)| {
+                Motor::new_unchecked(...)  // Study condition NOT satisfied!
+            })
+            .boxed()
+    }
+}
+```
+
+### Example: Adding Arbitrary for a New Type
+
+```rust
+// In specialized/euclidean::dim3/arbitrary.rs
+
+// Unconstrained types: random coefficients are fine
+impl<T: Float + Debug> Arbitrary for Vector<T> {
+    type Parameters = ();
+    type Strategy = BoxedStrategy<Self>;
+
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
+            .prop_map(|(x, y, z)| {
+                Vector::new(T::from_f64(x), T::from_f64(y), T::from_f64(z))
+            })
             .boxed()
     }
 }
 
-// Usage: any::<Motor3<f64>>() or any::<UnitMotor3<f64>>() - always specify float type
+// Constrained types: use factory methods
+impl<T: Float + Debug> Arbitrary for Rotor<T> {
+    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+        // Generate axis and angle, construct via factory
+        (
+            any::<UnitVector<T>>(),  // Use wrapper for unit axis
+            -std::f64::consts::PI..std::f64::consts::PI,
+        )
+            .prop_map(|(axis, angle)| {
+                Rotor::from_axis_angle(&axis, T::from_f64(angle))
+            })
+            .boxed()
+    }
+}
+
+// Usage: any::<Vector<f64>>() or any::<Unit<Vector<f64>>>()
+// Or with type alias: any::<UnitVector<f64>>()
 ```
 
 ## Workflow

@@ -688,6 +688,82 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Proper<T> {
 }
 
 // ============================================================================
+// Arbitrary Implementations
+// ============================================================================
+
+/// Proptest `Arbitrary` implementations for wrapper types.
+///
+/// These implementations generate valid wrapped values by:
+/// 1. Generating a random inner value via `any::<T>()`
+/// 2. Filtering/mapping to apply the wrapper's normalization
+///
+/// This requires the inner type `T` to implement both the appropriate
+/// norm trait (`Normed`, `DegenerateNormed`, `IndefiniteNormed`) and `Arbitrary`.
+#[cfg(any(test, feature = "proptest-support"))]
+mod arbitrary_impl {
+    use super::*;
+    use proptest::prelude::*;
+    use proptest::strategy::BoxedStrategy;
+
+    impl<T> Arbitrary for Unit<T>
+    where
+        T: Normed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<T>()
+                .prop_filter_map("normalizable", |t| Unit::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Bulk<T>
+    where
+        T: DegenerateNormed + Arbitrary + Debug + 'static,
+        T::Scalar: Float,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<T>()
+                .prop_filter_map("bulk-normalizable", |t| Bulk::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Ideal<T>
+    where
+        T: DegenerateNormed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<T>()
+                .prop_filter_map("weight-normalizable", |t| Ideal::try_new(t))
+                .boxed()
+        }
+    }
+
+    impl<T> Arbitrary for Proper<T>
+    where
+        T: IndefiniteNormed + Arbitrary + Debug + 'static,
+    {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+            any::<T>()
+                .prop_filter_map("timelike", |t| Proper::try_new(t))
+                .boxed()
+        }
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 

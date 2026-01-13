@@ -71,9 +71,6 @@ pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-#[cfg(any(test, feature = "proptest-support"))]
-pub mod arbitrary;
-
 // Re-export generated types and products
 pub use generated::products;
 pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};

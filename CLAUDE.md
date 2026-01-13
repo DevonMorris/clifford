@@ -311,42 +311,50 @@ let from_f64: T = T::from_f64(3.14);
   // Avoid: free functions
   fn arb_vec3() -> impl Strategy<Value = Vector<f64>> { ... }
   ```
-- **Arbitrary modules**: Each module with types has an `arbitrary` submodule containing:
-  - Generic `Arbitrary` implementations for all types using `Float::from_f64()` for conversion
-  - Generic wrapper types for constrained values (e.g., `NonZeroVector<T>`, `UnitVector<T>`, `UnitRotor<T>`)
-  - Compile with `#[cfg(any(test, feature = "proptest-support"))]`
-  ```rust
-  // Import wrapper types from the arbitrary module
-  use crate::specialized::euclidean::dim3::arbitrary::{NonZeroVector, UnitVector, UnitRotor};
+- **Use generic wrappers for normalized types**: The `crate::wrappers` module provides generic wrappers with `Arbitrary` implementations:
+  - `Unit<T>` - Euclidean norm = 1 (requires `Normed` trait)
+  - `Bulk<T>` - PGA bulk norm = 1 (requires `DegenerateNormed` trait)
+  - `Ideal<T>` - PGA weight norm = 1 (requires `DegenerateNormed` trait)
 
-  // Use any::<Type<f64>>() - always specify the float type explicitly
-  // Internal tests should use f64 for consistency
+  **Do NOT create bespoke wrapper types** like `UnitMotor<T>` in arbitrary modules. Use the generic wrappers instead:
+  ```rust
+  // GOOD: Use generic wrappers from crate::wrappers
+  use clifford::specialized::projective::dim3::{BulkMotor, Motor, Point};
+
   proptest! {
       #[test]
-      fn rotor_preserves_norm(r in any::<UnitRotor<f64>>(), v in any::<Vector<f64>>()) {
-          let rotated = r.rotate(v);  // Deref allows direct method access
-          prop_assert!(relative_eq!(v.norm(), rotated.norm(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+      fn motor_preserves_distance(motor in any::<BulkMotor<f64>>(), p in any::<Point<f64>>()) {
+          // BulkMotor<T> = Bulk<Motor<T>> with Arbitrary impl
       }
   }
+
+  // BAD: Bespoke wrapper in arbitrary module
+  pub struct UnitMotor<T>(pub Motor<T>);  // Don't do this!
+  impl<T> Arbitrary for UnitMotor<T> { ... }  // Don't do this!
   ```
-- **Generic Arbitrary pattern**: All types use generic `Arbitrary` impls with `Float::from_f64()`:
+- **Arbitrary for constrained types**: Types with geometric constraints (Study condition, Plücker condition) should generate valid instances via factory methods, not random coefficients:
   ```rust
-  // Base types generate f64 values and convert
-  impl<T: Float + Debug> Arbitrary for Vector<T> {
+  // GOOD: Generate via factory methods that guarantee validity
+  impl<T: Float + Debug> Arbitrary for Motor<T> {
       fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-          (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-              .prop_map(|(x, y, z)| Vector::new(T::from_f64(x), T::from_f64(y), T::from_f64(z)))
+          (angle, tx, ty, tz)
+              .prop_map(|(angle, tx, ty, tz)| {
+                  let rotation = Motor::from_rotation(T::from_f64(angle));
+                  let translation = Motor::from_translation(...);
+                  translation.compose(&rotation)  // Valid by construction
+              })
               .boxed()
       }
   }
 
-  // Wrapper types use where clauses requiring the inner type to be Arbitrary
-  impl<T> Arbitrary for NonZeroVector<T>
-  where
-      T: Float + Debug,
-      Vector<T>: Arbitrary + Debug,
-      <Vector<T> as Arbitrary>::Strategy: 'static,
-  { ... }
+  // BAD: Random coefficients don't satisfy constraints
+  impl<T: Float + Debug> Arbitrary for Motor<T> {
+      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+          (s, e23, e31, e12, e01, e02, e03, e0123)  // Won't satisfy Study condition!
+              .prop_map(|...| Motor::new(...))
+              .boxed()
+      }
+  }
   ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
