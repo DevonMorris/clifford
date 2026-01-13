@@ -8,6 +8,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  # Hide Symbolica banner (allowed for non-commercial use)
+  # See: https://symbolica.io/docs/get_started.html
+  SYMBOLICA_HIDE_BANNER: "1"
 
 jobs:
   check:
