@@ -705,12 +705,27 @@ This prevents situations where codegen is fixed but generated code is stale.
 
 ```bash
 cargo build           # Build the library (default features include serde, proptest-support, nalgebra-0_33)
-cargo test            # Run all tests
+cargo nextest run     # Run all tests (recommended - handles Symbolica correctly)
+cargo test            # Run all tests (fallback - uses mutex for Symbolica tests)
 cargo doc --open      # Generate and view documentation
 cargo bench           # Run benchmarks
 cargo clippy          # Run linter
 cargo fmt             # Format code
 cargo deny check      # Check licenses and advisories
+```
+
+### Why `cargo nextest`?
+
+The `clifford-codegen` crate uses [Symbolica](https://symbolica.io) for symbolic algebra, which has global state that conflicts when tests run in parallel. We use `cargo nextest` with test groups to:
+
+- Run Symbolica tests (prefixed with `symbolica_`) serially
+- Run all other tests in parallel for speed
+
+The configuration is in `.config/nextest.toml`. Tests also have a mutex fallback for `cargo test` users, but `nextest` is preferred for reliability.
+
+Install nextest with:
+```bash
+cargo install cargo-nextest
 ```
 
 ## Verification Workflow
@@ -721,7 +736,7 @@ cargo deny check      # Check licenses and advisories
 cargo fmt             # Format code (CI checks this!)
 cargo clippy          # Lint check
 cargo doc --no-deps   # Documentation build (CI checks this!)
-cargo test            # Run all tests including doc tests
+cargo nextest run     # Run all tests (recommended)
 cargo deny check      # License and security audit (CI checks this!)
 ```
 
