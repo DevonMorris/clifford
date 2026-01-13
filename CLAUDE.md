@@ -554,7 +554,7 @@ Geometric algebra formulas are complex and error-prone. Signs, orderings, metric
 **The codegen tool uses Symbolica** for symbolic algebra, which:
 - Computes geometric products symbolically with correct signs
 - Handles metric signatures (positive, negative, zero basis vectors)
-- Solves constraints (Study condition, Plücker condition, etc.)
+- Solves constraints (geometric constraint, Plücker condition, etc.)
 - Generates optimized Rust code with verified formulas
 
 #### Genericity Principle: No Shortcuts
@@ -575,7 +575,7 @@ When implementing codegen features, always ask: **"How does this generalize to a
 if name.starts_with("pga") { use_pga_formula() }
 
 // BAD: Hardcoded constraint for one algebra
-let study_residual = s * e0123 + e23 * e01 + ...;  // Motor-specific
+let geometric_residual = s * e0123 + e23 * e01 + ...;  // Motor-specific
 
 // BAD: Separate code paths for "PGA" vs "Euclidean"
 if is_pga { generate_pga_wrappers() } else { generate_euclidean_wrappers() }
@@ -604,7 +604,7 @@ let bulk_fields = fields.filter(|f| !contains_degenerate_index(f));
 
 Complex algebraic operations in geometric algebra (products, motor compositions, transformations) are handled by the **clifford-codegen** tool. This ensures correctness through:
 
-- **Automatic constraint solving**: Constraints like Study conditions and Plücker conditions are solved symbolically
+- **Automatic constraint solving**: Constraints like geometric constraints and Plücker conditions are solved symbolically
 - **Type-safe code generation**: Products, conversions, and traits are generated with correct formulas
 - **Property-based testing**: Generated verification tests compare specialized types against generic Multivector
 
@@ -663,17 +663,17 @@ cargo run --package clifford-codegen -- generate algebras/projective3.toml -o sr
 
 - **Adding new algebras**: Define types and constraints in TOML, generate Rust code
 - **Complex products**: Motor composition, sandwich products, etc. are generated correctly
-- **Constraint handling**: Study conditions, Plücker conditions, unit norm - all solved automatically
+- **Constraint handling**: Geometric constraints, Plücker conditions, unit norm - all solved automatically
 
 **Never hardcode algebraic formulas.** Use the codegen tool to generate correct implementations.
 
 #### Constraints vs. Product Outputs
 
-**Important distinction:** Type constraints (Study condition, Plucker condition, etc.) apply to *normalized, valid instances* of a type, NOT to algebraic product results.
+**Important distinction:** Type constraints (geometric constraint, Plucker condition, etc.) apply to *normalized, valid instances* of a type, NOT to algebraic product results.
 
 Generated products use `new_unchecked()` for constrained types because:
 1. **Product outputs are algebraically correct** - The formulas are derived from the multiplication table
-2. **Constraint solving would modify results** - e.g., computing `e0123` via Study condition when the product naturally produces `e0123 = 0`
+2. **Constraint solving would modify results** - e.g., computing `e0123` via geometric constraint when the product naturally produces `e0123 = 0`
 3. **Constraints apply to normalized instances** - A `Motor` from a product is "motor-shaped", not necessarily constraint-satisfying
 
 **When constraints matter:**

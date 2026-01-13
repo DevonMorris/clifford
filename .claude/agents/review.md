@@ -183,7 +183,7 @@ For complex operations (motor composition, sandwich products, multi-term formula
 
 **Constraints vs. Product Outputs:**
 
-Type constraints (Study condition, Plucker condition) apply to *normalized, valid instances*, NOT to product results. Generated products correctly use `new_unchecked()` because:
+Type constraints (geometric constraint, Plucker condition) apply to *normalized, valid instances*, NOT to product results. Generated products correctly use `new_unchecked()` because:
 - Product outputs are algebraically correct as computed
 - Constraint solving would incorrectly modify the results
 - Constraints are for factory methods and normalization, not product outputs
@@ -259,7 +259,7 @@ When reviewing codegen changes, verify:
 if spec.name.starts_with("projective") { ... }
 
 // REJECT: Hardcoded constraint expression
-let study = s * e0123 + e23 * e01 + ...;
+let geometric = s * e0123 + e23 * e01 + ...;
 
 // REJECT: Separate code paths by algebra name
 fn generate_pga_stuff() { ... }

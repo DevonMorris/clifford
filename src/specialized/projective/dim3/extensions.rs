@@ -917,19 +917,25 @@ impl<T: Float> Motor<T> {
         (self.bulk_norm_squared() - T::one()).abs() < tolerance
     }
 
-    /// Study condition residual.
+    /// Geometric constraint residual.
+    ///
+    /// The geometric constraint requires: `s·e₀₁₂₃ + e₂₃·e₀₁ + e₃₁·e₀₂ + e₁₂·e₀₃ = 0`
+    ///
+    /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
     #[inline]
-    pub fn study_residual(&self) -> T {
+    pub fn geometric_constraint_residual(&self) -> T {
         self.s() * self.e0123()
             + self.e23() * self.e01()
             + self.e31() * self.e02()
             + self.e12() * self.e03()
     }
 
-    /// Check if motor satisfies Study condition.
+    /// Check if motor satisfies the geometric constraint.
+    ///
+    /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
     #[inline]
-    pub fn satisfies_study_condition(&self, tolerance: T) -> bool {
-        self.study_residual().abs() < tolerance
+    pub fn satisfies_geometric_constraint(&self, tolerance: T) -> bool {
+        self.geometric_constraint_residual().abs() < tolerance
     }
 
     /// Extract rotation angle.

@@ -22,17 +22,17 @@ pub enum PointConversionError {
 
 /// Error type for motor constraint violations.
 ///
-/// Motors must satisfy the Study condition to represent valid rigid transformations.
+/// Motors must satisfy the geometric constraint to represent valid rigid transformations.
 /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Error)]
 pub enum MotorConstraintError {
-    /// Motor violates the Study condition.
+    /// Motor violates the geometric constraint.
     ///
-    /// The Study condition requires: `s·e₀₁₂₃ - e₂₃·e₀₁ - e₃₁·e₀₂ - e₁₂·e₀₃ = 0`
+    /// The geometric constraint requires: `s·e₀₁₂₃ + e₂₃·e₀₁ + e₃₁·e₀₂ + e₁₂·e₀₃ = 0`
     ///
     /// This ensures the motor represents a proper rigid transformation (rotation + translation).
-    #[error("motor violates Study condition: s·e₀₁₂₃ ≠ v·m")]
-    StudyConditionViolation,
+    #[error("motor violates geometric constraint: s·e₀₁₂₃ ≠ -v·m")]
+    GeometricConstraintViolation,
 
     /// Motor has zero weight norm (degenerate).
     ///

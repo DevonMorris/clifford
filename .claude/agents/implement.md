@@ -336,7 +336,7 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 ### What Codegen Handles
 
 - **Products**: Geometric, exterior, interior, left/right contraction - all generated correctly
-- **Constraints**: Study conditions, Plucker conditions, unit norm - solved automatically
+- **Constraints**: Geometric constraints, Plucker conditions, unit norm - solved automatically
 - **Constructors**: `new()`, `new_checked()`, `new_unchecked()` with proper constraint solving
 - **Verification tests**: Property-based tests comparing against generic Multivector
 
