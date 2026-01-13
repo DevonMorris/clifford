@@ -8,6 +8,7 @@ use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, ProductTable};
 use crate::spec::{AlgebraSpec, TypeSpec};
+use crate::symbolic::{ConstraintDeriver, ConstraintSolver, SolutionType};
 
 /// Generates trait implementations for algebra types.
 ///
@@ -712,8 +713,266 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Generates Arbitrary implementation for a type.
     ///
-    /// Generates random values for all fields using proptest.
+    /// For unconstrained types, generates random values for all fields.
+    /// For constrained types (with geometric constraints like Study condition),
+    /// solves the constraint to compute dependent variables from independent ones.
     fn generate_arbitrary_impl(&self, ty: &TypeSpec) -> TokenStream {
+        // Check if this type has a derived constraint
+        if let Some(constraint_impl) = self.try_generate_constrained_arbitrary(ty) {
+            return constraint_impl;
+        }
+
+        // No constraint - generate simple random values for all fields
+        self.generate_unconstrained_arbitrary(ty)
+    }
+
+    /// Attempts to generate a constraint-solving Arbitrary implementation.
+    ///
+    /// Returns `Some(TokenStream)` if the type has a derived constraint that can be solved,
+    /// `None` otherwise.
+    fn try_generate_constrained_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        // Derive constraints from algebra structure
+        let deriver = ConstraintDeriver::new(self.algebra);
+        let constraint = deriver.derive_geometric_constraint(ty, "x")?;
+
+        // Only handle single-constraint cases for now
+        if constraint.zero_expressions.len() != 1 {
+            return None;
+        }
+
+        let expr = &constraint.zero_expressions[0];
+
+        // Convert Symbolica expression to string for the solver
+        let expr_str = format!("{} = 0", expr);
+
+        // Find the highest-grade field to solve for (typically pseudoscalar like e0123)
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade)?;
+
+        // Try to solve the constraint for this variable
+        let solver = ConstraintSolver::new();
+        let symbol_name = format!("x_{}", solve_for_field.name);
+        let solution = solver.solve(&expr_str, &symbol_name).ok()?;
+
+        // For quadratic constraints (like Plücker), use filter instead of solving
+        if solution.solution_type == SolutionType::Quadratic {
+            return self.generate_filtered_arbitrary(ty);
+        }
+
+        // Generate constraint-solving Arbitrary
+        Some(self.generate_solving_arbitrary(ty, &solve_for_field.name, &solution))
+    }
+
+    /// Generates Arbitrary that solves a linear constraint.
+    fn generate_solving_arbitrary(
+        &self,
+        ty: &TypeSpec,
+        solve_for: &str,
+        solution: &crate::symbolic::SolveResult,
+    ) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        // Find indices of free and dependent fields
+        let solve_for_idx = ty.fields.iter().position(|f| f.name == solve_for).unwrap();
+        let free_indices: Vec<usize> = (0..num_fields).filter(|&i| i != solve_for_idx).collect();
+
+        // Generate ranges for free variables
+        let range_tuple: Vec<TokenStream> = free_indices
+            .iter()
+            .map(|_| quote! { -100.0f64..100.0 })
+            .collect();
+
+        // Generate variable names for prop_map
+        let prop_map_args: Vec<TokenStream> = free_indices
+            .iter()
+            .enumerate()
+            .map(|(i, _)| {
+                let var = format_ident!("x{}", i);
+                quote! { #var }
+            })
+            .collect();
+
+        // Build the solution expression
+        let numerator_expr = self.convert_solution_to_tokens(&solution.numerator, ty);
+        let solution_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_expr = self.convert_solution_to_tokens(divisor, ty);
+            quote! { (#numerator_expr) / (#divisor_expr) }
+        } else {
+            numerator_expr
+        };
+
+        // Build field initialization expressions
+        let mut field_var_map: Vec<Option<usize>> = vec![None; num_fields];
+        for (var_idx, &field_idx) in free_indices.iter().enumerate() {
+            field_var_map[field_idx] = Some(var_idx);
+        }
+
+        let field_inits: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, _f)| {
+                if i == solve_for_idx {
+                    quote! { T::from_f64(#solution_expr) }
+                } else {
+                    let var_idx = field_var_map[i].unwrap();
+                    let var = format_ident!("x{}", var_idx);
+                    quote! { T::from_f64(#var) }
+                }
+            })
+            .collect();
+
+        // Generate filter for divisor non-zero condition
+        let filter_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_var = self.find_divisor_variable(divisor, ty);
+            if let Some(var_idx) = divisor_var {
+                let var = format_ident!("x{}", var_idx);
+                Some(quote! {
+                    .prop_filter("non-zero divisor", |(#(#prop_map_args),*)| (#var).abs() > 0.1)
+                })
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let filter_chain = filter_expr.unwrap_or_else(|| quote! {});
+
+        if free_indices.len() == 1 {
+            let var = format_ident!("x0");
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
+
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (-100.0f64..100.0)
+                            #filter_chain
+                            .prop_map(|#var| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
+                }
+            }
+        } else {
+            quote! {
+                impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                    type Parameters = ();
+                    type Strategy = BoxedStrategy<Self>;
+
+                    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                        (#(#range_tuple),*)
+                            #filter_chain
+                            .prop_map(|(#(#prop_map_args),*)| {
+                                #name::new(#(#field_inits),*)
+                            })
+                            .boxed()
+                    }
+                }
+            }
+        }
+    }
+
+    /// Converts a solution expression string to TokenStream.
+    ///
+    /// The solution from `ConstraintSolver` uses variable names like "x_s", "x_e23", etc.
+    /// (field names with the `x_` prefix from ConstraintDeriver).
+    /// We need to convert these to the corresponding `x{i}` variables.
+    fn convert_solution_to_tokens(&self, expr: &str, ty: &TypeSpec) -> TokenStream {
+        let mut result = expr.to_string();
+
+        // Find field indices for free variables (all except the solved-for one)
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
+
+        let free_fields: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .collect();
+
+        // Replace "x_fieldname" with "x{i}" variables
+        // Do longer names first to avoid partial replacements
+        let mut sorted_fields: Vec<_> = free_fields.iter().enumerate().collect();
+        sorted_fields.sort_by(|a, b| b.1.name.len().cmp(&a.1.name.len()));
+
+        for (i, field) in sorted_fields {
+            let field_pattern = format!("x_{}", field.name);
+            let var_name = format!("x{}", i);
+            result = result.replace(&field_pattern, &var_name);
+        }
+
+        // Parse and convert to TokenStream
+        result.parse().unwrap_or_else(|_| quote! { T::zero() })
+    }
+
+    /// Finds which free variable corresponds to the divisor.
+    ///
+    /// The divisor uses the `x_fieldname` format from ConstraintDeriver.
+    fn find_divisor_variable(&self, divisor: &str, ty: &TypeSpec) -> Option<usize> {
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade)?;
+
+        let free_fields: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .collect();
+
+        for (i, field) in free_fields.iter().enumerate() {
+            // Check for "x_fieldname" pattern
+            let pattern = format!("x_{}", field.name);
+            if divisor.contains(&pattern) {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    /// Generates Arbitrary with a filter for quadratic constraints.
+    ///
+    /// For constraints like the Plücker condition that are quadratic and can't
+    /// be easily solved, we generate random values and filter.
+    fn generate_filtered_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        // Generate tuple of ranges
+        let range_tuple: Vec<TokenStream> =
+            (0..num_fields).map(|_| quote! { -10.0f64..10.0 }).collect();
+
+        let prop_map_args: Vec<TokenStream> = (0..num_fields)
+            .map(|i| {
+                let var = format_ident!("x{}", i);
+                quote! { #var }
+            })
+            .collect();
+
+        let field_inits: Vec<TokenStream> = (0..num_fields)
+            .map(|i| {
+                let var = format_ident!("x{}", i);
+                quote! { T::from_f64(#var) }
+            })
+            .collect();
+
+        Some(quote! {
+            impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                type Parameters = ();
+                type Strategy = BoxedStrategy<Self>;
+
+                fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                    (#(#range_tuple),*)
+                        .prop_map(|(#(#prop_map_args),*)| {
+                            #name::new(#(#field_inits),*)
+                        })
+                        .boxed()
+                }
+            }
+        })
+    }
+
+    /// Generates simple Arbitrary for unconstrained types.
+    fn generate_unconstrained_arbitrary(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
         let num_fields = ty.fields.len();
 
@@ -812,30 +1071,35 @@ mod verification_tests {{
     }
 
     /// Generates the signature type name for this algebra.
+    ///
+    /// Uses the signature tuple (p, q, r) to determine the signature type,
+    /// not the algebra name. This ensures generic handling of all algebras.
     fn generate_signature_name(&self) -> proc_macro2::Ident {
-        // Convert algebra name to PascalCase signature name
-        let name = &self.spec.name;
-        let sig_name = if name.starts_with("euclidean") {
-            match self.algebra.dim() {
-                2 => "Euclidean2",
-                3 => "Euclidean3",
-                _ => "Euclidean3", // fallback
+        let sig = &self.spec.signature;
+        let (p, q, r) = (sig.p, sig.q, sig.r);
+
+        // Derive signature type from (p, q, r)
+        let sig_name = match (p, q, r) {
+            // Euclidean: Cl(n, 0, 0)
+            (2, 0, 0) => "Euclidean2",
+            (3, 0, 0) => "Euclidean3",
+
+            // Projective (PGA): Cl(n, 0, 1)
+            (2, 0, 1) => "Projective2",
+            (3, 0, 1) => "Projective3",
+
+            // Conformal (CGA): Cl(n+1, 1, 0) - note: uses p+q=4/5 convention
+            // CGA 2D: Cl(3, 1, 0) - 2D + 2 extra dimensions
+            // CGA 3D: Cl(4, 1, 0) - 3D + 2 extra dimensions
+            (4, 1, 0) => "Conformal3",
+
+            // Minkowski spacetime: Cl(1, 3, 0)
+            (1, 3, 0) => "Minkowski4",
+
+            // Generic: use Cl{p}_{q}_{r} format
+            _ => {
+                return format_ident!("Cl{}_{}_{}", p, q, r);
             }
-        } else if name.starts_with("pga") || name.starts_with("projective") {
-            match self.algebra.dim() {
-                3 => "Projective2",
-                4 => "Projective3",
-                _ => "Projective3",
-            }
-        } else if name.starts_with("cga") || name.starts_with("conformal") {
-            match self.algebra.dim() {
-                4 => "Conformal2",
-                5 => "Conformal3",
-                _ => "Conformal3",
-            }
-        } else {
-            // Default: generate a custom signature name
-            "CustomSignature"
         };
         format_ident!("{}", sig_name)
     }

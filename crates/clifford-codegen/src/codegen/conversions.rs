@@ -110,28 +110,33 @@ impl<'a> ConversionsGenerator<'a> {
     }
 
     /// Generates the signature type name.
+    ///
+    /// Uses the signature tuple (p, q, r) to determine the signature type,
+    /// not the algebra name. This ensures generic handling of all algebras.
     fn generate_signature_name(&self) -> proc_macro2::Ident {
-        let name = &self.spec.name;
-        let sig_name = if name.starts_with("euclidean") {
-            match self.algebra.dim() {
-                2 => "Euclidean2",
-                3 => "Euclidean3",
-                _ => "Euclidean3",
+        let sig = &self.spec.signature;
+        let (p, q, r) = (sig.p, sig.q, sig.r);
+
+        // Derive signature type from (p, q, r)
+        let sig_name = match (p, q, r) {
+            // Euclidean: Cl(n, 0, 0)
+            (2, 0, 0) => "Euclidean2",
+            (3, 0, 0) => "Euclidean3",
+
+            // Projective (PGA): Cl(n, 0, 1)
+            (2, 0, 1) => "Projective2",
+            (3, 0, 1) => "Projective3",
+
+            // Conformal (CGA): Cl(n+1, 1, 0)
+            (4, 1, 0) => "Conformal3",
+
+            // Minkowski spacetime: Cl(1, 3, 0)
+            (1, 3, 0) => "Minkowski4",
+
+            // Generic: use Cl{p}_{q}_{r} format
+            _ => {
+                return format_ident!("Cl{}_{}_{}", p, q, r);
             }
-        } else if name.starts_with("pga") || name.starts_with("projective") {
-            match self.algebra.dim() {
-                3 => "Projective2",
-                4 => "Projective3",
-                _ => "Projective3",
-            }
-        } else if name.starts_with("cga") || name.starts_with("conformal") {
-            match self.algebra.dim() {
-                4 => "Conformal2",
-                5 => "Conformal3",
-                _ => "Conformal3",
-            }
-        } else {
-            "CustomSignature"
         };
         format_ident!("{}", sig_name)
     }

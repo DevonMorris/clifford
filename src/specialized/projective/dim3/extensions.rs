@@ -191,17 +191,7 @@ impl<T: Float> Point<T> {
     /// ```
     #[inline]
     pub fn join(&self, other: &Point<T>) -> Line<T> {
-        // P ∧ Q for P = (px, py, pz, pw) and Q = (qx, qy, qz, qw)
-        // Note: The generated outer_point_point has incorrect sign/ordering mapping,
-        // so we use the explicit formula from the PGA literature.
-        Line::new_unchecked(
-            self.e0() * other.e1() - self.e1() * other.e0(), // e01
-            self.e0() * other.e2() - self.e2() * other.e0(), // e02
-            self.e0() * other.e3() - self.e3() * other.e0(), // e03
-            self.e2() * other.e3() - self.e3() * other.e2(), // e23
-            self.e3() * other.e1() - self.e1() * other.e3(), // e31
-            self.e1() * other.e2() - self.e2() * other.e1(), // e12
-        )
+        products::exterior_point_point(self, other)
     }
 
     /// Euclidean distance to another finite point.
@@ -418,28 +408,7 @@ impl<T: Float> Line<T> {
     /// is parallel to the plane (no intersection), returns an ideal point.
     #[inline]
     pub fn meet_plane(&self, plane: &Plane<T>) -> Point<T> {
-        // Regressive product L ∨ P computed via coordinate formula
-        // Line: vx·e23 + vy·e31 + vz·e12 + mx·e01 + my·e02 + mz·e03
-        // Plane: nx·e023 + ny·e031 + nz·e012 + d·e123
-        let vx = self.e23();
-        let vy = self.e31();
-        let vz = self.e12();
-        let mx = self.e01();
-        let my = self.e02();
-        let mz = self.e03();
-
-        let nx = plane.e023();
-        let ny = plane.e031();
-        let nz = plane.e012();
-        let d = plane.e123();
-
-        // Point = (m × n + v·d, v · n)
-        let e1 = my * nz - mz * ny + vx * d;
-        let e2 = mz * nx - mx * nz + vy * d;
-        let e3 = mx * ny - my * nx + vz * d;
-        let e0 = vx * nx + vy * ny + vz * nz;
-
-        Point::new(e1, e2, e3, e0)
+        products::regressive_line_plane(self, plane)
     }
 
     /// Angle between two lines (in radians).
@@ -691,31 +660,7 @@ impl<T: Float> Plane<T> {
     /// parallel (no intersection), returns a line at infinity.
     #[inline]
     pub fn meet(&self, other: &Plane<T>) -> Line<T> {
-        // Regressive product P1 ∨ P2 computed via coordinate formula
-        // Plane1: n1x·e023 + n1y·e031 + n1z·e012 + d1·e123
-        // Plane2: n2x·e023 + n2y·e031 + n2z·e012 + d2·e123
-        let n1x = self.e023();
-        let n1y = self.e031();
-        let n1z = self.e012();
-        let d1 = self.e123();
-
-        let n2x = other.e023();
-        let n2y = other.e031();
-        let n2z = other.e012();
-        let d2 = other.e123();
-
-        // Direction = n1 × n2 (stored in e01, e02, e03 for Line)
-        let dir_x = n1y * n2z - n1z * n2y;
-        let dir_y = n1z * n2x - n1x * n2z;
-        let dir_z = n1x * n2y - n1y * n2x;
-
-        // Moment from plane offsets (stored in e23, e31, e12 for Line)
-        let mom_x = n1x * d2 - n2x * d1;
-        let mom_y = n1y * d2 - n2y * d1;
-        let mom_z = n1z * d2 - n2z * d1;
-
-        // Line::new_unchecked(e01, e02, e03, e23, e31, e12)
-        Line::new_unchecked(dir_x, dir_y, dir_z, mom_x, mom_y, mom_z)
+        products::regressive_plane_plane(self, other)
     }
 
     /// Angle between two planes (in radians).
