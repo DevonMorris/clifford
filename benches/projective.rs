@@ -23,8 +23,8 @@ use criterion::{Criterion, criterion_group, criterion_main};
 // ============================================================================
 
 fn bench_pga2_point_join(c: &mut Criterion) {
-    let p1 = dim2::Point::new(0.0, 0.0);
-    let p2 = dim2::Point::new(1.0, 1.0);
+    let p1 = dim2::Point::from_cartesian(0.0, 0.0);
+    let p2 = dim2::Point::from_cartesian(1.0, 1.0);
 
     c.bench_function("projective/dim2/point_join", |bencher| {
         bencher.iter(|| black_box(p1).join(&black_box(p2)))
@@ -43,7 +43,7 @@ fn bench_pga2_line_meet(c: &mut Criterion) {
 fn bench_pga2_motor_transform_point(c: &mut Criterion) {
     let motor =
         dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
-    let p = dim2::Point::new(3.0, 4.0);
+    let p = dim2::Point::from_cartesian(3.0, 4.0);
 
     c.bench_function("projective/dim2/motor_transform_point", |bencher| {
         bencher.iter(|| black_box(motor).transform_point(&black_box(p)))
@@ -79,8 +79,8 @@ fn bench_pga2_motor_inverse(c: &mut Criterion) {
 }
 
 fn bench_pga2_point_distance(c: &mut Criterion) {
-    let p1 = dim2::Point::new(0.0, 0.0);
-    let p2 = dim2::Point::new(3.0, 4.0);
+    let p1 = dim2::Point::from_cartesian(0.0, 0.0);
+    let p2 = dim2::Point::from_cartesian(3.0, 4.0);
 
     c.bench_function("projective/dim2/point_distance", |bencher| {
         bencher.iter(|| black_box(p1).distance(&black_box(p2)))
@@ -89,7 +89,7 @@ fn bench_pga2_point_distance(c: &mut Criterion) {
 
 fn bench_pga2_line_distance_to_point(c: &mut Criterion) {
     let line: dim2::Line<f64> = dim2::Line::x_axis();
-    let p = dim2::Point::new(3.0, 4.0);
+    let p = dim2::Point::from_cartesian(3.0, 4.0);
 
     c.bench_function("projective/dim2/line_distance_to_point", |bencher| {
         bencher.iter(|| black_box(line).distance_to_point(&black_box(p)))
@@ -283,7 +283,9 @@ fn bench_pga3_batch_transform_points(c: &mut Criterion) {
 fn bench_pga2_batch_transform_points(c: &mut Criterion) {
     let motor =
         dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
-    let points: Vec<dim2::Point<f64>> = (0..100).map(|i| dim2::Point::new(i as f64, 0.0)).collect();
+    let points: Vec<dim2::Point<f64>> = (0..100)
+        .map(|i| dim2::Point::from_cartesian(i as f64, 0.0))
+        .collect();
 
     c.bench_function("projective/dim2/batch_transform_100_points", |bencher| {
         bencher.iter(|| {

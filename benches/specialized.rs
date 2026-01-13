@@ -60,7 +60,7 @@ fn bench_rotor2_compose(c: &mut Criterion) {
 }
 
 fn bench_rotor2_slerp(c: &mut Criterion) {
-    let r1 = dim2::Rotor::<f64>::identity();
+    let r1 = dim2::Rotor::<f64>::from_angle(0.0);
     let r2 = dim2::Rotor::<f64>::from_angle(FRAC_PI_4);
 
     c.bench_function("euclidean/dim2/rotor_slerp", |bencher| {
@@ -127,7 +127,7 @@ fn bench_rotor3_compose(c: &mut Criterion) {
 }
 
 fn bench_rotor3_slerp(c: &mut Criterion) {
-    let r1 = dim3::Rotor::<f64>::identity();
+    let r1 = dim3::Rotor::from_angle_plane(0.0, dim3::Bivector::unit_xy());
     let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
 
     c.bench_function("euclidean/dim3/rotor_slerp", |bencher| {
