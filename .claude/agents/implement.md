@@ -124,6 +124,41 @@ Generated products use `new_unchecked()` for constrained types because:
 
 Constraints matter for: `normalize()`, factory methods, `try_from_components()`
 
+### Adding New Operations to Codegen
+
+When adding a new product or unary operation to codegen, you must:
+
+1. **Add the trait to `src/ops.rs`** (clifford main crate)
+   ```rust
+   pub trait MyNewProduct<Rhs = Self> {
+       type Output;
+       fn my_new_product(&self, rhs: &Rhs) -> Self::Output;
+   }
+   ```
+
+2. **Export from `src/prelude.rs`**
+   ```rust
+   pub use crate::ops::{..., MyNewProduct};
+   ```
+
+3. **Generate free functions** in `crates/clifford-codegen/src/codegen/products.rs`
+
+4. **Generate trait impls** in `crates/clifford-codegen/src/codegen/traits.rs`:
+   - Add import for the new trait in `generate_imports()`
+   - Add generation loop in `generate_all_product_traits()`
+   - Add trait impl generator method (e.g., `generate_my_new_product_trait()`)
+
+5. **Regenerate all algebras**
+   ```bash
+   for toml in algebras/*.toml; do
+       cargo run --package clifford-codegen -- generate "$toml" --force
+   done
+   ```
+
+**Existing traits in `clifford::ops`:**
+- Binary: `GeometricProduct`, `Wedge`, `Antiwedge`, `Inner`, `LeftContract`, `RightContract`, `Sandwich`, `Antisandwich`, `ScalarProduct`, `BulkContract`, `WeightContract`, `BulkExpand`, `WeightExpand`, `Antigeometric`
+- Unary: `Reverse`, `Antireverse`, `LeftComplement`, `RightComplement`, `BulkDual`, `WeightDual`
+
 ## Testing
 
 ### Symbolica Test Naming

@@ -4,6 +4,11 @@
 #![doc = " Do not edit manually."]
 use super::products::*;
 use super::types::{Bivector, Rotor, Scalar, Trivector, Vector};
+use crate::ops::{
+    Antigeometric, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand,
+    GeometricProduct, Inner, LeftContract, Reverse, RightComplement, RightContract, Sandwich,
+    ScalarProduct, Wedge, WeightContract, WeightExpand,
+};
 use crate::scalar::Float;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Add, BitXor, Mul, Neg, Sub};
@@ -485,6 +490,1543 @@ impl<T: Float> BitXor<Vector<T>> for Vector<T> {
     #[inline]
     fn bitxor(self, rhs: Vector<T>) -> Bivector<T> {
         exterior_vector_vector(&self, &rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Bivector<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Bivector<T>) -> Rotor<T> {
+        geometric_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Rotor<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        geometric_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        geometric_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Trivector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Trivector<T>) -> Vector<T> {
+        geometric_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Bivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Bivector<T>) -> Rotor<T> {
+        geometric_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        geometric_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        geometric_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Bivector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        geometric_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Rotor<T>> for Scalar<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        geometric_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        geometric_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Trivector<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        geometric_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Vector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Vector<T>) -> Vector<T> {
+        geometric_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Bivector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Bivector<T>) -> Vector<T> {
+        geometric_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        geometric_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        geometric_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Vector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Vector<T>) -> Bivector<T> {
+        geometric_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Vector<T> {
+        geometric_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Trivector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        geometric_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Vector<T>> for Vector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Vector<T>) -> Rotor<T> {
+        geometric_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Rotor<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Rotor<T>) -> Bivector<T> {
+        exterior_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        exterior_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Vector<T>> for Bivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Vector<T>) -> Trivector<T> {
+        exterior_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        exterior_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        exterior_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        exterior_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Trivector<T>> for Rotor<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        exterior_rotor_trivector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Bivector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        exterior_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Rotor<T>> for Scalar<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        exterior_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        exterior_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Trivector<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        exterior_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Vector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
+        exterior_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Rotor<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Rotor<T>) -> Trivector<T> {
+        exterior_trivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        exterior_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Bivector<T>> for Vector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Bivector<T>) -> Trivector<T> {
+        exterior_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
+        exterior_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Vector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
+        exterior_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Bivector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
+        regressive_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Rotor<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Rotor<T>) -> Vector<T> {
+        regressive_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Trivector<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        regressive_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Vector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
+        regressive_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Bivector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
+        regressive_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Rotor<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Rotor<T>) -> Vector<T> {
+        regressive_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Trivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Trivector<T>) -> Rotor<T> {
+        regressive_rotor_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Vector<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
+        regressive_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Trivector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        regressive_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Bivector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        regressive_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Rotor<T>> for Trivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        regressive_trivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Scalar<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        regressive_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Trivector<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        regressive_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Vector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Vector<T>) -> Vector<T> {
+        regressive_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Bivector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        regressive_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Rotor<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Rotor<T>) -> Scalar<T> {
+        regressive_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Trivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Trivector<T>) -> Vector<T> {
+        regressive_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Bivector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        interior_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Rotor<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        interior_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        interior_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Trivector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Trivector<T>) -> Vector<T> {
+        interior_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Vector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
+        interior_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Bivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Bivector<T>) -> Rotor<T> {
+        interior_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        interior_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        interior_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
+        interior_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Bivector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        interior_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Rotor<T>> for Scalar<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        interior_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        interior_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Trivector<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        interior_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Vector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
+        interior_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Bivector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Bivector<T>) -> Vector<T> {
+        interior_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        interior_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        interior_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Vector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Vector<T>) -> Bivector<T> {
+        interior_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Bivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Bivector<T>) -> Vector<T> {
+        interior_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Rotor<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Rotor<T>) -> Vector<T> {
+        interior_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Vector<T> {
+        interior_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Trivector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        interior_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Vector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Vector<T>) -> Scalar<T> {
+        interior_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        left_contract_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Rotor<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
+        left_contract_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Trivector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Trivector<T>) -> Vector<T> {
+        left_contract_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Bivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Bivector<T>) -> Rotor<T> {
+        left_contract_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        left_contract_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Scalar<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        left_contract_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        left_contract_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Bivector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        left_contract_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Rotor<T>> for Scalar<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        left_contract_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        left_contract_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Trivector<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        left_contract_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Vector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        left_contract_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        left_contract_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
+        left_contract_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Rotor<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
+        left_contract_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Trivector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        left_contract_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Vector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
+        left_contract_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Bivector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        right_contract_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Rotor<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        right_contract_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        right_contract_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Vector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        right_contract_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Bivector<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        right_contract_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        right_contract_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        right_contract_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        right_contract_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Rotor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
+        right_contract_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        right_contract_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Bivector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
+        right_contract_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        right_contract_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        right_contract_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Vector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
+        right_contract_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Rotor<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
+        right_contract_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
+        right_contract_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Vector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
+        right_contract_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
+        sandwich_rotor_vector(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
+        sandwich_rotor_bivector(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
+        sandwich_rotor_rotor(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
+        antisandwich_rotor_vector(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
+        antisandwich_rotor_bivector(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
+        antisandwich_rotor_rotor(self, operand)
+    }
+}
+impl<T: Float> ScalarProduct<Bivector<T>> for Bivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Bivector<T>) -> T {
+        scalar_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Rotor<T>> for Bivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
+        scalar_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Bivector<T>> for Rotor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Bivector<T>) -> T {
+        scalar_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Rotor<T>> for Rotor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
+        scalar_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Scalar<T>> for Rotor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
+        scalar_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Rotor<T>> for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
+        scalar_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
+        scalar_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Trivector<T>> for Trivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Trivector<T>) -> T {
+        scalar_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Vector<T>> for Vector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Vector<T>) -> T {
+        scalar_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Bivector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        bulk_contraction_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Rotor<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        bulk_contraction_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        bulk_contraction_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Vector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        bulk_contraction_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Bivector<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        bulk_contraction_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        bulk_contraction_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        bulk_contraction_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        bulk_contraction_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Rotor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
+        bulk_contraction_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        bulk_contraction_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Bivector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
+        bulk_contraction_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        bulk_contraction_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        bulk_contraction_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Vector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
+        bulk_contraction_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Rotor<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
+        bulk_contraction_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
+        bulk_contraction_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Vector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
+        bulk_contraction_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Bivector<T>> for Bivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        weight_contraction_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Rotor<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        weight_contraction_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Scalar<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        weight_contraction_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Vector<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        weight_contraction_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Bivector<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
+        weight_contraction_rotor_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        weight_contraction_rotor_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Scalar<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
+        weight_contraction_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
+        weight_contraction_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Rotor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
+        weight_contraction_scalar_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        weight_contraction_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Bivector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
+        weight_contraction_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Scalar<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        weight_contraction_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Trivector<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        weight_contraction_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Vector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
+        weight_contraction_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Rotor<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
+        weight_contraction_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Scalar<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
+        weight_contraction_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Vector<T>> for Vector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
+        weight_contraction_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Bivector<T>> for Bivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
+        bulk_expansion_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Rotor<T>> for Bivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Rotor<T>) -> Trivector<T> {
+        bulk_expansion_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Trivector<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        bulk_expansion_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Scalar<T>> for Rotor<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        bulk_expansion_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Trivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Trivector<T>) -> Rotor<T> {
+        bulk_expansion_rotor_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Vector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
+        bulk_expansion_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Bivector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
+        bulk_expansion_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        bulk_expansion_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Trivector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        bulk_expansion_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Vector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
+        bulk_expansion_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Trivector<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        bulk_expansion_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        bulk_expansion_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Rotor<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Rotor<T>) -> Bivector<T> {
+        bulk_expansion_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Trivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
+        bulk_expansion_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Vector<T>> for Vector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
+        bulk_expansion_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Bivector<T>> for Bivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
+        weight_expansion_bivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Rotor<T>> for Bivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Rotor<T>) -> Trivector<T> {
+        weight_expansion_bivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Trivector<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        weight_expansion_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Scalar<T>> for Rotor<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        weight_expansion_rotor_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Trivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Trivector<T>) -> Rotor<T> {
+        weight_expansion_rotor_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Vector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
+        weight_expansion_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Bivector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
+        weight_expansion_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        weight_expansion_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Trivector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        weight_expansion_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Vector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
+        weight_expansion_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Trivector<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        weight_expansion_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        weight_expansion_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Rotor<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Rotor<T>) -> Bivector<T> {
+        weight_expansion_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Trivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
+        weight_expansion_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Vector<T>> for Vector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
+        weight_expansion_vector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Vector<T> {
+        antigeometric_bivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Trivector<T>> for Bivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Trivector<T>) -> Bivector<T> {
+        antigeometric_bivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Vector<T>> for Bivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Vector<T>) -> Rotor<T> {
+        antigeometric_bivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Trivector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Trivector<T>) -> Rotor<T> {
+        antigeometric_rotor_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Vector<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Vector<T>) -> Rotor<T> {
+        antigeometric_rotor_vector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Bivector<T>> for Scalar<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Bivector<T>) -> Vector<T> {
+        antigeometric_scalar_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Trivector<T> {
+        antigeometric_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Trivector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Trivector<T>) -> Scalar<T> {
+        antigeometric_scalar_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Vector<T>> for Scalar<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Vector<T>) -> Bivector<T> {
+        antigeometric_scalar_vector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Bivector<T>> for Trivector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Bivector<T>) -> Bivector<T> {
+        antigeometric_trivector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Rotor<T>> for Trivector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        antigeometric_trivector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        antigeometric_trivector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Trivector<T>> for Trivector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Trivector<T>) -> Trivector<T> {
+        antigeometric_trivector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Vector<T>> for Trivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Vector<T>) -> Vector<T> {
+        antigeometric_trivector_vector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Bivector<T>> for Vector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Bivector<T>) -> Rotor<T> {
+        antigeometric_vector_bivector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Rotor<T>> for Vector<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Rotor<T>) -> Rotor<T> {
+        antigeometric_vector_rotor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Bivector<T> {
+        antigeometric_vector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Trivector<T>> for Vector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Trivector<T>) -> Vector<T> {
+        antigeometric_vector_trivector(self, rhs)
+    }
+}
+impl<T: Float> Reverse for Bivector<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_bivector(self)
+    }
+}
+impl<T: Float> Reverse for Rotor<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_rotor(self)
+    }
+}
+impl<T: Float> Reverse for Scalar<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_scalar(self)
+    }
+}
+impl<T: Float> Reverse for Trivector<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_trivector(self)
+    }
+}
+impl<T: Float> Reverse for Vector<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_vector(self)
+    }
+}
+impl<T: Float> Antireverse for Bivector<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_bivector(self)
+    }
+}
+impl<T: Float> Antireverse for Rotor<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_rotor(self)
+    }
+}
+impl<T: Float> Antireverse for Scalar<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_scalar(self)
+    }
+}
+impl<T: Float> Antireverse for Trivector<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_trivector(self)
+    }
+}
+impl<T: Float> Antireverse for Vector<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_vector(self)
+    }
+}
+impl<T: Float> RightComplement for Bivector<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn right_complement(&self) -> Vector<T> {
+        complement_bivector(self)
+    }
+}
+impl<T: Float> RightComplement for Scalar<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn right_complement(&self) -> Trivector<T> {
+        complement_scalar(self)
+    }
+}
+impl<T: Float> RightComplement for Trivector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_complement(&self) -> Scalar<T> {
+        complement_trivector(self)
+    }
+}
+impl<T: Float> RightComplement for Vector<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn right_complement(&self) -> Bivector<T> {
+        complement_vector(self)
     }
 }
 impl<T: Float> crate::norm::Normed for Bivector<T> {
