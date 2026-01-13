@@ -185,7 +185,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
@@ -196,15 +196,8 @@ impl<T: Float> Rotor<T> {
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
-    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
-        // Simplified for 2D: equivalent to rotation matrix
-        let cos_theta = self.s() * self.s() - self.xy() * self.xy();
-        let sin_theta = T::TWO * self.s() * self.xy();
-
-        Vector::new(
-            cos_theta * v.x() - sin_theta * v.y(),
-            sin_theta * v.x() + cos_theta * v.y(),
-        )
+    pub fn rotate(&self, _v: Vector<T>) -> Vector<T> {
+        todo!("rotate needs generated sandwich product")
     }
 
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.

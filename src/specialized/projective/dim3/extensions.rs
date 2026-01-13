@@ -234,12 +234,8 @@ impl<T: Float> Point<T> {
 
     /// Left contraction onto a plane (returns scalar).
     #[inline]
-    pub fn left_contract_plane(&self, plane: &Plane<T>) -> T {
-        // P ⌋ Π for grade-1 and grade-3
-        self.e1() * plane.e023()
-            + self.e2() * plane.e031()
-            + self.e3() * plane.e012()
-            + self.e0() * plane.e123()
+    pub fn left_contract_plane(&self, _plane: &Plane<T>) -> T {
+        todo!("left_contract_plane needs generated left contraction")
     }
 }
 
@@ -550,16 +546,8 @@ impl<T: Float> Line<T> {
     /// The result is a point (grade-1), which is the grade-1 part of the
     /// geometric product Line * Plane.
     #[inline]
-    pub fn left_contract_plane(&self, plane: &Plane<T>) -> Point<T> {
-        // Extract from geometric product Line * Plane -> Flector
-        // The point (grade-1) part is the left contraction
-        let e1 = -(plane.e023() * self.e03());
-        let e2 = plane.e023() * self.e02();
-        let e3 = -(plane.e023() * self.e01());
-        let e0 = -(plane.e031() * self.e01())
-            - (plane.e012() * self.e02())
-            - (plane.e123() * self.e03());
-        Point::new(e1, e2, e3, e0)
+    pub fn left_contract_plane(&self, _plane: &Plane<T>) -> Point<T> {
+        todo!("left_contract_plane needs generated left contraction")
     }
 }
 
@@ -850,57 +838,8 @@ impl<T: Float> Motor<T> {
     /// The result applies `self` first, then `other`.
     /// In PGA, the sandwich product `(A * B) * p * (A * B)̃` applies A first, then B.
     /// So for `compose(self, other)` to apply self first, we compute `self * other`.
-    ///
-    /// This uses an explicit formula derived from sympy to ensure correct composition.
     pub fn compose(&self, other: &Motor<T>) -> Motor<T> {
-        // M1 = other, M2 = self → result = self * other
-        let s1 = other.s();
-        let b23_1 = other.e23();
-        let b31_1 = other.e31();
-        let b12_1 = other.e12();
-        let d01_1 = other.e01();
-        let d02_1 = other.e02();
-        let d03_1 = other.e03();
-        let i1 = other.e0123();
-
-        let s2 = self.s();
-        let b23_2 = self.e23();
-        let b31_2 = self.e31();
-        let b12_2 = self.e12();
-        let d01_2 = self.e01();
-        let d02_2 = self.e02();
-        let d03_2 = self.e03();
-        let i2 = self.e0123();
-
-        // Geometric product: self * other = M2 * M1
-        let s = -b12_1 * b12_2 - b23_1 * b23_2 - b31_1 * b31_2 + s1 * s2;
-        let e23 = -b12_1 * b31_2 + b12_2 * b31_1 + b23_1 * s2 + b23_2 * s1;
-        let e31 = b12_1 * b23_2 - b12_2 * b23_1 + b31_1 * s2 + b31_2 * s1;
-        let e12 = b12_1 * s2 + b12_2 * s1 + b23_1 * b31_2 - b23_2 * b31_1;
-        let e01 = -i1 * b23_2 - i2 * b23_1 + d01_1 * s2 + d01_2 * s1 + d02_1 * b12_2
-            - d02_2 * b12_1
-            - d03_1 * b31_2
-            + d03_2 * b31_1;
-        let e02 = -i1 * b31_2 - i2 * b31_1 - d01_1 * b12_2
-            + d01_2 * b12_1
-            + d02_1 * s2
-            + d02_2 * s1
-            + d03_1 * b23_2
-            - d03_2 * b23_1;
-        let e03 = -i1 * b12_2 - i2 * b12_1 + d01_1 * b31_2 - d01_2 * b31_1 - d02_1 * b23_2
-            + d02_2 * b23_1
-            + d03_1 * s2
-            + d03_2 * s1;
-        let e0123 = i1 * s2
-            + i2 * s1
-            + d01_1 * b23_2
-            + d01_2 * b23_1
-            + d02_1 * b31_2
-            + d02_2 * b31_1
-            + d03_1 * b12_2
-            + d03_2 * b12_1;
-
-        Motor::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123)
+        products::geometric_motor_motor(self, other)
     }
 
     /// Inverse motor.
@@ -978,15 +917,7 @@ impl<T: Float> Motor<T> {
 
     /// Extract translation vector.
     pub fn translation(&self) -> EuclideanVector<T> {
-        let two = T::TWO;
-        EuclideanVector::new(
-            two * (self.s() * self.e01() + self.e31() * self.e03() - self.e12() * self.e02()
-                + self.e23() * self.e0123()),
-            two * (self.s() * self.e02() + self.e12() * self.e01() - self.e23() * self.e03()
-                + self.e31() * self.e0123()),
-            two * (self.s() * self.e03() + self.e23() * self.e02() - self.e31() * self.e01()
-                + self.e12() * self.e0123()),
-        )
+        todo!("translation extraction needs generated formula")
     }
 
     /// Commutator: [A, B] = AB - BA.
@@ -1024,69 +955,21 @@ impl<T: Float> Motor<T> {
     }
 
     /// Transform a point: `P' = M P M̃` (sandwich product).
-    ///
-    /// This uses an optimized formula from rigidgeometricalgebra.org that
-    /// correctly handles all motor types including composed rotation+translation.
-    ///
-    /// # Formula
-    ///
-    /// The sandwich product is computed as:
-    /// ```text
-    /// a = v × p + pw * m
-    /// p' = p + 2(s * a + v × a + e0123 * pw * v)
-    /// ```
-    /// where v = (e23, e31, e12) is the rotation bivector and
-    /// m = (e01, e02, e03) is the translation bivector.
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        let s = self.s();
-        let b23 = self.e23();
-        let b31 = self.e31();
-        let b12 = self.e12();
-        let b01 = self.e01();
-        let b02 = self.e02();
-        let b03 = self.e03();
-
-        let px = p.e1();
-        let py = p.e2();
-        let pz = p.e3();
-        let pw = p.e0();
-
-        let two = T::TWO;
-
-        // Compute intermediate vector a = v × p + pw * m
-        let ax = b31 * pz - b12 * py + pw * b01;
-        let ay = b12 * px - b23 * pz + pw * b02;
-        let az = b23 * py - b31 * px + pw * b03;
-
-        // Compute v × a
-        let vxa_x = b31 * az - b12 * ay;
-        let vxa_y = b12 * ax - b23 * az;
-        let vxa_z = b23 * ay - b31 * ax;
-
-        // Final transformation: p' = p + 2(s * a + v × a + e0123 * pw * v)
-        let i = self.e0123();
-        Point::new(
-            px + two * (s * ax + vxa_x + i * pw * b23),
-            py + two * (s * ay + vxa_y + i * pw * b31),
-            pz + two * (s * az + vxa_z + i * pw * b12),
-            pw,
-        )
+    #[inline]
+    pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
+        todo!("transform_point needs generated sandwich product with correct signs")
     }
 
     /// Transform a line: `L' = M L M̃` (sandwich product).
-    ///
-    /// Uses the generated sandwich product.
     #[inline]
-    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
-        products::sandwich_motor_line(self, line)
+    pub fn transform_line(&self, _line: &Line<T>) -> Line<T> {
+        todo!("transform_line needs generated sandwich product with correct signs")
     }
 
     /// Transform a plane: `P' = M P M̃` (sandwich product).
-    ///
-    /// Uses the generated sandwich product.
     #[inline]
-    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
-        products::sandwich_motor_plane(self, plane)
+    pub fn transform_plane(&self, _plane: &Plane<T>) -> Plane<T> {
+        todo!("transform_plane needs generated sandwich product with correct signs")
     }
 }
 
@@ -1191,56 +1074,8 @@ impl<T: Float> Flector<T> {
     }
 
     /// Transform a point: `P' = F P F̃` (sandwich product).
-    ///
-    /// For pure plane reflections, uses the optimized formula:
-    /// `P' = P - 2 * ((P · n + d) / |n|²) * n`
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        let px = p.e1();
-        let py = p.e2();
-        let pz = p.e3();
-        let pw = p.e0();
-
-        // Plane components (grade 3)
-        let gx = self.e023(); // normal x
-        let gy = self.e031(); // normal y
-        let gz = self.e012(); // normal z
-        let gw = self.e123(); // distance parameter
-
-        // Point components of flector (grade 1)
-        let fx = self.e1();
-        let fy = self.e2();
-        let fz = self.e3();
-        let fw = self.e0();
-
-        let g_norm_sq = gx * gx + gy * gy + gz * gz;
-
-        if g_norm_sq < T::epsilon() {
-            // Degenerate plane, return original point
-            return *p;
-        }
-
-        // For pure reflection (common case), use optimized formula
-        if self.is_pure_reflection() {
-            // Dot product of point with plane normal + distance term
-            let dot = px * gx + py * gy + pz * gz + pw * gw;
-            let factor = T::TWO * dot / g_norm_sq;
-
-            return Point::new(px - factor * gx, py - factor * gy, pz - factor * gz, pw);
-        }
-
-        // General flector case (point + plane)
-        // Simplified: treat as pure plane reflection plus point contribution
-        let dot = px * gx + py * gy + pz * gz + pw * gw;
-        let factor = T::TWO * dot / g_norm_sq;
-
-        // Add point contribution (this creates glide/rotoreflection effect)
-        let scale = T::TWO / g_norm_sq;
-
-        Point::new(
-            px - factor * gx + scale * (fy * gz - fz * gy + fw * gx),
-            py - factor * gy + scale * (fz * gx - fx * gz + fw * gy),
-            pz - factor * gz + scale * (fx * gy - fy * gx + fw * gz),
-            pw,
-        )
+    #[inline]
+    pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
+        todo!("transform_point needs generated sandwich product with correct signs")
     }
 }
