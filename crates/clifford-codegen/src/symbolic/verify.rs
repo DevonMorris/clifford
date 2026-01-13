@@ -75,14 +75,16 @@ impl ConstraintVerifier {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
 
-    // Note: Symbolica's global state can cause crashes when running multiple
-    // tests in parallel. These tests are marked as ignored but can be run
-    // individually with `cargo test --package clifford-codegen <test_name>`.
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn verify_numeric_constraint() {
+    fn symbolica_verify_numeric_constraint() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         // Test with a numeric constraint directly constructed
         let verifier = ConstraintVerifier::new();
 
@@ -100,8 +102,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn verify_zero_atom() {
+    fn symbolica_verify_zero_atom() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let verifier = ConstraintVerifier::new();
 
         // Create atoms for 0 = 0

@@ -188,13 +188,16 @@ impl<'a> SymbolicProduct<'a> {
 mod tests {
     use super::*;
     use crate::spec::parse_spec;
+    use std::sync::Mutex;
 
-    // Note: This test creates symbols which can cause issues with Symbolica's
-    // global state when running in parallel with other tests. Run with
-    // --test-threads=1 or individually if it fails.
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
+
     #[test]
-    #[ignore = "Symbolica global state conflicts when running in parallel"]
-    fn create_symbols_for_vector() {
+    fn symbolica_create_symbols_for_vector() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let spec = parse_spec(
             r#"
             [algebra]

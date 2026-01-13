@@ -255,6 +255,12 @@ impl ConstraintSimplifier {
 mod tests {
     use super::*;
     use crate::spec::FieldSpec;
+    use std::sync::Mutex;
+
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
     fn make_rotor_type() -> TypeSpec {
         TypeSpec {
@@ -298,8 +304,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn prefix_expression_works() {
+    fn symbolica_prefix_expression_works() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let rotor = make_rotor_type();
         let result = ConstraintSimplifier::prefix_expression(
             "s*s + xy*xy + xz*xz + yz*yz",
@@ -313,8 +319,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn replace_identifier_works() {
+    fn symbolica_replace_identifier_works() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let result = ConstraintSimplifier::replace_identifier("s*s + s", "s", "a_s");
         assert_eq!(result, "a_s*a_s + a_s");
 

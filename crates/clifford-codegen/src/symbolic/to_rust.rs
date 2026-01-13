@@ -346,7 +346,13 @@ impl AtomToRust {
 mod tests {
     use super::*;
     use crate::spec::FieldSpec;
+    use std::sync::Mutex;
     use symbolica::atom::Atom;
+
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
     fn make_test_type(name: &str, fields: &[(&str, usize)]) -> TypeSpec {
         TypeSpec {
@@ -368,8 +374,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn convert_integer_constants() {
+    fn symbolica_convert_integer_constants() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let type_a = make_test_type("A", &[("x", 1)]);
         let converter = AtomToRust::new(&[&type_a], &["a"]);
 
@@ -387,8 +393,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn convert_negative_integers() {
+    fn symbolica_convert_negative_integers() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let type_a = make_test_type("A", &[("x", 1)]);
         let converter = AtomToRust::new(&[&type_a], &["a"]);
 

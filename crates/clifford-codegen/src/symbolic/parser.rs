@@ -135,14 +135,16 @@ impl ConstraintParser {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
 
-    // Note: Symbolica's global state can cause crashes when running multiple
-    // parsing tests in parallel. These tests are marked as ignored but can
-    // be run individually with `cargo test --package clifford-codegen <test_name>`.
+    // Symbolica uses global state that conflicts when tests run in parallel.
+    // Tests prefixed with `symbolica_` are configured to run serially via nextest.
+    // The mutex provides a fallback for `cargo test` users.
+    static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
-    #[ignore = "Symbolica global state conflicts"]
-    fn parse_constraint_basic() {
+    fn symbolica_parse_constraint_basic() {
+        let _guard = SYMBOLICA_LOCK.lock().unwrap();
         let parser = ConstraintParser::new();
         // Use numeric constraint to avoid symbol conflicts
         let result = parser.parse("1 + 2 = 3", &[]);
