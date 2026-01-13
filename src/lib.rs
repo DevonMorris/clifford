@@ -1,4 +1,82 @@
 #![doc = include_str!("../README.md")]
+//!
+//! # For Linear Algebra Users
+//!
+//! If you know linear algebra, you're already halfway to understanding Geometric Algebra (GA).
+//! This section maps concepts you know to their GA equivalents.
+//!
+//! ## From Vectors to Blades
+//!
+//! In LA, you work with vectors. In GA, vectors are just one type of **blade**:
+//!
+//! | Grade | Name | LA Analogue | Geometric Meaning |
+//! |-------|------|-------------|-------------------|
+//! | 0 | Scalar | Real number | Magnitude, no direction |
+//! | 1 | Vector | Vector in R^n | Directed line segment |
+//! | 2 | Bivector | (no direct equivalent) | Oriented plane segment |
+//! | 3 | Trivector | (no direct equivalent) | Oriented volume |
+//! | n | Pseudoscalar | Determinant (sort of) | Oriented n-volume |
+//!
+//! **Key insight**: The cross product `a × b` in 3D actually produces a bivector
+//! (oriented plane), not a vector. The "vector" you get is the **dual** of that plane.
+//!
+//! ## From Products to the Geometric Product
+//!
+//! In LA, you have separate operations: dot product, cross product, matrix multiplication.
+//! In GA, the **geometric product** unifies them:
+//!
+//! ```text
+//! a * b = a·b + a∧b
+//!       = (inner product) + (outer product)
+//!       = (scalar part) + (bivector part)
+//! ```
+//!
+//! | LA Operation | GA Equivalent | Result |
+//! |--------------|---------------|--------|
+//! | Dot product `a·b` | Inner product | Scalar (grade 0) |
+//! | Cross product `a×b` | `*(a∧b)` (dual of wedge) | Vector (grade 1) |
+//! | Matrix multiply | Geometric product | Mixed grades |
+//!
+//! ## From Rotations to Rotors
+//!
+//! This is where GA really shines. Rotations are represented by **rotors**:
+//!
+//! | Dimension | LA Representation | GA Representation |
+//! |-----------|-------------------|-------------------|
+//! | 2D | 2×2 rotation matrix | Rotor (scalar + bivector) |
+//! | 2D | Complex number `e^{iθ}` | Rotor `cos(θ/2) + sin(θ/2)e₁₂` |
+//! | 3D | 3×3 rotation matrix | Rotor (scalar + bivector) |
+//! | 3D | Quaternion | Rotor `s + xy·e₁₂ + xz·e₁₃ + yz·e₂₃` |
+//! | nD | SO(n) matrix | Rotor (even-grade multivector) |
+//!
+//! **Quaternions ARE rotors!** The imaginary units i, j, k are bivectors e₂₃, e₃₁, e₁₂.
+//!
+//! ## Module Guide
+//!
+//! - [`algebra`]: Generic [`Multivector`](algebra::Multivector) for any metric signature.
+//!   Use when you need maximum flexibility or exotic algebras.
+//!
+//! - [`specialized::euclidean`]: Optimized types for 2D/3D Euclidean geometry.
+//!   Use for standard vector math, rotations, reflections.
+//!
+//! - [`specialized::projective`]: Projective GA (PGA) for rigid body transforms.
+//!   Use when you need unified rotation + translation (like 4×4 matrices, but better).
+//!
+//! - [`basis`]: Low-level blade representation. Rarely needed directly.
+//!
+//! - [`signature`]: Metric signatures defining the algebra. Use [`prelude`] instead.
+//!
+//! ## Quick Decision Guide
+//!
+//! | Task | Recommended Module |
+//! |------|-------------------|
+//! | 2D/3D rotations | [`specialized::euclidean`] |
+//! | Rigid body transforms | [`specialized::projective`] |
+//! | Robotics kinematics | [`specialized::projective`] |
+//! | Graphics transforms | [`specialized::projective`] |
+//! | Physics simulations | [`algebra`] with appropriate signature |
+//! | Learning GA | Start with [`specialized::euclidean::dim3`] |
+//!
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/DevonMorris/clifford/main/assets/clifford.png",
     html_favicon_url = "https://raw.githubusercontent.com/DevonMorris/clifford/main/assets/clifford.png"

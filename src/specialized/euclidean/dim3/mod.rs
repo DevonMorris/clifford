@@ -12,10 +12,89 @@
 //! | 2 | [`Bivector`] | e₁₂, e₁₃, e₂₃ | Oriented plane/rotation axis |
 //! | 3 | [`Trivector`] | e₁₂₃ | Oriented volume |
 //!
-//! # Rotors
+//! # Rotors and Quaternions
 //!
-//! [`Rotor`] represents rotations as `scalar + bivector`. This is equivalent
-//! to unit quaternions but expressed in the geometric algebra framework:
+//! If you know quaternions, you already know rotors! A 3D rotor **is** a quaternion,
+//! just written in a different basis:
+//!
+//! | Quaternion | Rotor | Meaning |
+//! |------------|-------|---------|
+//! | `w` | `s` (scalar) | cos(θ/2) |
+//! | `x·i` | `e₂₃` | rotation in yz-plane |
+//! | `y·j` | `e₃₁` (= -e₁₃) | rotation in zx-plane |
+//! | `z·k` | `e₁₂` | rotation in xy-plane |
+//!
+//! The quaternion formula `q = w + xi + yj + zk` becomes:
+//!
+//! ```text
+//! R = s + e₂₃·x + e₃₁·y + e₁₂·z
+//!   = cos(θ/2) + sin(θ/2)·B̂
+//! ```
+//!
+//! where `B̂` is the unit bivector of the rotation plane.
+//!
+//! ## Why Bivectors Beat Axis Vectors
+//!
+//! Traditional: "Rotate 90° around the z-axis"
+//! GA: "Rotate 90° in the xy-plane"
+//!
+//! These describe the same rotation, but the GA version is more fundamental:
+//!
+//! - **Rotation happens IN a plane**, not AROUND an axis
+//! - The "axis" is just the line perpendicular to that plane (only works in 3D!)
+//! - In 2D there's no axis, but there IS a plane (the whole 2D space)
+//! - In 4D+ there are multiple perpendicular directions—bivectors still work
+//!
+//! The axis vector is the **dual** of the rotation bivector: `axis = *B`
+//!
+//! # The Sandwich Product
+//!
+//! Rotors rotate vectors using the **sandwich product**:
+//!
+//! ```text
+//! v' = R v R̃    (R̃ is the reverse of R)
+//! ```
+//!
+//! This is identical to the quaternion formula `v' = q v q*` (where `q*` is conjugate).
+//!
+//! Why a sandwich? The geometric product `R v` would change the grade of `v`,
+//! but `R v R̃` guarantees the result is still a vector.
+//!
+//! # Cross Product via GA
+//!
+//! The cross product is the dual of the wedge product:
+//!
+//! ```text
+//! a × b = *(a ∧ b)
+//! ```
+//!
+//! Where `*` is the Hodge dual (multiply by inverse pseudoscalar e₁₂₃⁻¹ = e₃₂₁).
+//!
+//! | Operation | Result | Type |
+//! |-----------|--------|------|
+//! | `a ∧ b` | Oriented plane containing a, b | Bivector |
+//! | `*(a ∧ b)` | Vector perpendicular to that plane | Vector |
+//! | `a × b` | Same as above | Vector |
+//!
+//! # nalgebra Integration
+//!
+//! With the `nalgebra-0_33` feature (or `0_32`/`0_34`), conversions are provided:
+//!
+//! | clifford | nalgebra |
+//! |----------|----------|
+//! | `Vector` | `Vector3<T>` |
+//! | `Rotor` | `UnitQuaternion<T>` |
+//! | `Bivector` | (no direct equivalent) |
+//!
+//! ```ignore
+//! use clifford::specialized::euclidean::dim3::Rotor;
+//! use nalgebra::UnitQuaternion;
+//!
+//! let rotor = Rotor::from_angle_z(std::f64::consts::FRAC_PI_2);
+//! let quat: UnitQuaternion<f64> = rotor.into();
+//! ```
+//!
+//! # Example
 //!
 //! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
