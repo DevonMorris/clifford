@@ -1122,15 +1122,39 @@ impl<T: Float> Flector<T> {
     }
 
     /// Compose two flectors (result is a motor).
+    ///
+    /// Since flector transformations use the antisandwich product, composition
+    /// uses the geometric antiproduct to properly combine transformations.
+    /// Two reflections compose to give a rotation around their intersection axis.
     #[inline]
     pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
-        products::geometric_flector_flector(self, other)
+        products::antigeometric_flector_flector(self, other)
     }
 
-    /// Transform a point: `P' = F P F̃` (sandwich product).
+    /// Transform a point using the antisandwich product.
+    ///
+    /// In PGA with our convention, flector transformations use the geometric antiproduct:
+    /// `P' = F ⊛ P ⊛ F̃` where ⊛ is the geometric antiproduct and F̃ is the antireverse.
+    ///
+    /// For a pure reflection through a plane, this reflects the point across the plane.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Flector, Point};
+    ///
+    /// // Reflect through XY plane (z = 0)
+    /// let f = Flector::<f64>::reflect_xy();
+    /// let p = Point::from_cartesian(1.0, 2.0, 3.0);
+    /// let p2 = f.transform_point(&p);
+    /// // Point should be reflected in z
+    /// assert!((p2.x() - 1.0).abs() < 1e-10);
+    /// assert!((p2.y() - 2.0).abs() < 1e-10);
+    /// assert!((p2.z() + 3.0).abs() < 1e-10); // z is negated
+    /// ```
     #[inline]
-    pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
-        todo!("transform_point needs generated sandwich product with correct signs")
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        products::antisandwich_flector_point(self, p)
     }
 }
 
@@ -1359,6 +1383,172 @@ mod tests {
         assert!(relative_eq!(
             result.e3(),
             5.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn flector_reflect_xy_plane() {
+        let f = Flector::<f64>::reflect_xy();
+        let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
+
+        println!(
+            "Flector: e1={}, e2={}, e3={}, e0={}, e023={}, e031={}, e012={}, e123={}",
+            f.e1(),
+            f.e2(),
+            f.e3(),
+            f.e0(),
+            f.e023(),
+            f.e031(),
+            f.e012(),
+            f.e123()
+        );
+        println!(
+            "Input point: ({}, {}, {}, {})",
+            p.e1(),
+            p.e2(),
+            p.e3(),
+            p.e0()
+        );
+
+        let result = f.transform_point(&p);
+
+        println!(
+            "Output point: ({}, {}, {}, {})",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Reflecting (1, 2, 3) through XY plane should give (1, 2, -3)
+        assert!(relative_eq!(
+            result.x(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            -3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn flector_reflect_yz_plane() {
+        let f = Flector::<f64>::reflect_yz();
+        let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
+
+        let result = f.transform_point(&p);
+
+        // Reflecting (1, 2, 3) through YZ plane should give (-1, 2, 3)
+        assert!(relative_eq!(
+            result.x(),
+            -1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn flector_reflect_xz_plane() {
+        let f = Flector::<f64>::reflect_xz();
+        let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
+
+        let result = f.transform_point(&p);
+
+        // Reflecting (1, 2, 3) through XZ plane should give (1, -2, 3)
+        assert!(relative_eq!(
+            result.x(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            -2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            3.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn flector_compose_two_reflections_gives_rotation() {
+        // Composing two reflections through planes that meet at an angle gives a rotation
+        // by twice that angle around their intersection axis
+
+        let f1 = Flector::<f64>::reflect_xz(); // YZ normal, reflects y
+        let f2 = Flector::<f64>::reflect_yz(); // XZ normal, reflects x
+
+        // F1 * F2 should give a motor (rotation)
+        let m = f1.compose(&f2);
+
+        // Apply the motor to a point
+        let p = Point::<f64>::from_cartesian(1.0, 0.0, 0.0);
+        let result = m.transform_point(&p);
+
+        println!(
+            "Composed motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            m.s(),
+            m.e23(),
+            m.e31(),
+            m.e12(),
+            m.e01(),
+            m.e02(),
+            m.e03(),
+            m.e0123()
+        );
+        println!(
+            "Transformed point: ({}, {}, {})",
+            result.x(),
+            result.y(),
+            result.z()
+        );
+
+        // This should be a 180-degree rotation around the z-axis
+        // (1, 0, 0) -> (-1, 0, 0)
+        assert!(relative_eq!(
+            result.x(),
+            -1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.y(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.z(),
+            0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));

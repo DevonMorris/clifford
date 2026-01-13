@@ -60,7 +60,14 @@ grades = [0, 2]
 description = "2D rigid transformation (rotation + translation)"
 fields = ["s", "e12", "e01", "e02"]
 versor = true
-sandwich = { targets = ["Point", "Line", "Motor"] }
+sandwich = { targets = ["Point", "Line", "Motor", "Flector"] }
+
+[types.Flector]
+grades = [1, 3]
+description = "2D reflection (improper isometry)"
+fields = ["e1", "e2", "e0", "e012"]
+versor = true
+sandwich = { targets = ["Point", "Line", "Motor", "Flector"] }
 
 [options]
 generate_serde = true

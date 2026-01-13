@@ -8,6 +8,132 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[doc = "2D reflection (improper isometry)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e0` |\n| 7 | e1e2e3 | `e012` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[repr(C)]
+pub struct Flector<T: Float> {
+    #[doc = "Coefficient of `e1`."]
+    e1: T,
+    #[doc = "Coefficient of `e2`."]
+    e2: T,
+    #[doc = "Coefficient of `e0`."]
+    e0: T,
+    #[doc = "Coefficient of `e012`."]
+    e012: T,
+}
+impl<T: Float> Flector<T> {
+    #[doc = r" Creates a new element from components."]
+    #[inline]
+    pub fn new(e1: T, e2: T, e0: T, e012: T) -> Self {
+        Self { e1, e2, e0, e012 }
+    }
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
+    #[doc = r" that have geometric constraints, where unchecked construction is"]
+    #[doc = r" used in performance-critical code or trusted contexts."]
+    #[inline]
+    pub fn new_unchecked(e1: T, e2: T, e0: T, e012: T) -> Self {
+        Self::new(e1, e2, e0, e012)
+    }
+    #[doc = "Returns the `e1` coefficient."]
+    #[inline]
+    pub fn e1(&self) -> T {
+        self.e1
+    }
+    #[doc = "Returns the `e2` coefficient."]
+    #[inline]
+    pub fn e2(&self) -> T {
+        self.e2
+    }
+    #[doc = "Returns the `e0` coefficient."]
+    #[inline]
+    pub fn e0(&self) -> T {
+        self.e0
+    }
+    #[doc = "Returns the `e012` coefficient."]
+    #[inline]
+    pub fn e012(&self) -> T {
+        self.e012
+    }
+    #[doc = r" Creates the zero element."]
+    #[inline]
+    pub fn zero() -> Self {
+        Self::new(T::zero(), T::zero(), T::zero(), T::zero())
+    }
+    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r""]
+    #[doc = r" This is the sum of squares of all components."]
+    #[inline]
+    pub fn norm_squared(&self) -> T {
+        self.e1 * self.e1 + self.e2 * self.e2 + self.e0 * self.e0 + self.e012 * self.e012
+    }
+    #[doc = r" Returns the Euclidean norm."]
+    #[inline]
+    pub fn norm(&self) -> T {
+        self.norm_squared().sqrt()
+    }
+    #[doc = r" Attempts to normalize this element."]
+    #[doc = r""]
+    #[doc = r" Returns `None` if the norm is too small (less than epsilon)."]
+    #[inline]
+    pub fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[doc = r" Normalizes this element, panicking if the norm is too small."]
+    #[doc = r""]
+    #[doc = r" # Panics"]
+    #[doc = r""]
+    #[doc = r" Panics if the norm is less than epsilon."]
+    #[inline]
+    pub fn normalize(&self) -> Self {
+        self.try_normalize().expect("cannot normalize zero element")
+    }
+    #[doc = r" Scales all components by a scalar."]
+    #[inline]
+    pub fn scale(&self, s: T) -> Self {
+        Self::new(self.e1 * s, self.e2 * s, self.e0 * s, self.e012 * s)
+    }
+    #[doc = r" Returns the reverse (reversion)."]
+    #[doc = r""]
+    #[doc = r" For a k-blade, the reverse has sign (-1)^(k(k-1)/2):"]
+    #[doc = r" - Grade 0: +1"]
+    #[doc = r" - Grade 1: +1"]
+    #[doc = r" - Grade 2: -1"]
+    #[doc = r" - Grade 3: -1"]
+    #[doc = r" - Grade 4: +1"]
+    #[doc = r" - ..."]
+    #[inline]
+    pub fn reverse(&self) -> Self {
+        Self::new(self.e1, self.e2, self.e0, -self.e012)
+    }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(-self.e1, -self.e2, -self.e0, self.e012)
+    }
+}
+impl<T: Float> Default for Flector<T> {
+    fn default() -> Self {
+        Self::zero()
+    }
+}
 #[doc = "2D line\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `e12` |\n| 5 | e1e3 | `e01` |\n| 6 | e2e3 | `e02` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -622,6 +748,8 @@ impl<T: Float> Default for Trivector<T> {
         Self::zero()
     }
 }
+#[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]
+pub type BulkFlector<T> = crate::wrappers::Bulk<Flector<T>>;
 #[doc = "A unitized line (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized line has been weight-normalized to standard form, representing a finite (non-ideal) line."]
 pub type UnitizedLine<T> = crate::wrappers::Unitized<Line<T>>;
 #[doc = "An ideal line (weight ≈ 0).\n\nAn ideal line lies at infinity (has zero weight component). This is a constraint wrapper that verifies the line is ideal, not a normalization wrapper."]

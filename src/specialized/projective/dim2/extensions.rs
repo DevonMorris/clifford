@@ -4,7 +4,7 @@
 //! to the generated types that are specific to 2D projective geometry.
 
 use super::generated::products;
-use super::generated::types::{Line, Motor, Point};
+use super::generated::types::{Flector, Line, Motor, Point};
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim2::Vector as EuclideanVector;
 
@@ -622,6 +622,133 @@ impl<T: Float> Motor<T> {
     }
 }
 
+// ============================================================================
+// Flector extensions
+// ============================================================================
+
+impl<T: Float> Flector<T> {
+    /// Creates a flector from a reflection line.
+    ///
+    /// The flector will reflect points across the given line.
+    /// The line should be unitized (unit weight norm) for proper reflection.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim2::{Flector, Line, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let x_axis: Line<f64> = Line::x_axis();
+    /// let f = Flector::from_line(&x_axis);
+    /// let p = Point::from_cartesian(1.0, 2.0);
+    /// let reflected = f.transform_point(&p);
+    /// assert!(abs_diff_eq!(reflected.x(), 1.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(reflected.y(), -2.0, epsilon = 1e-10));
+    /// ```
+    pub fn from_line(line: &Line<T>) -> Self {
+        let l = line.unitized();
+        Self::new(T::zero(), T::zero(), T::zero(), l.e12())
+            + Self::new(l.e01(), l.e02(), T::zero(), T::zero())
+    }
+
+    /// Creates a flector from line normal direction through the origin.
+    ///
+    /// Reflects across the line passing through the origin with the given normal.
+    pub fn from_line_through_origin(nx: T, ny: T) -> Self {
+        let norm = (nx * nx + ny * ny).sqrt();
+        Self::new(nx / norm, ny / norm, T::zero(), T::zero())
+    }
+
+    /// Reflect through X-axis (y = 0).
+    #[inline]
+    pub fn reflect_x() -> Self {
+        Self::from_line(&Line::x_axis())
+    }
+
+    /// Reflect through Y-axis (x = 0).
+    #[inline]
+    pub fn reflect_y() -> Self {
+        Self::from_line(&Line::y_axis())
+    }
+
+    /// Point part (grade 1): e1, e2, e0.
+    #[inline]
+    pub fn point_part(&self) -> Point<T> {
+        Point::new(self.e1(), self.e2(), self.e0())
+    }
+
+    /// Trivector part (grade 3): e012.
+    #[inline]
+    pub fn trivector_part(&self) -> T {
+        self.e012()
+    }
+
+    /// Check if this is a pure reflection (point part is zero).
+    #[inline]
+    pub fn is_pure_reflection(&self) -> bool {
+        let pt = self.point_part();
+        pt.bulk_norm() < T::epsilon() && pt.weight_norm() < T::epsilon()
+    }
+
+    /// Unitize to unit bulk norm.
+    ///
+    /// For a flector to represent a proper rigid reflection, the bulk norm
+    /// (e1² + e2² + e012²) should be 1.
+    pub fn unitized(&self) -> Self {
+        use crate::norm::DegenerateNormed;
+        let bn = self.bulk_norm();
+        if bn < T::epsilon() {
+            return *self;
+        }
+        Self::new(
+            self.e1() / bn,
+            self.e2() / bn,
+            self.e0() / bn,
+            self.e012() / bn,
+        )
+    }
+
+    /// Compose two flectors (result is a motor).
+    ///
+    /// Two reflections compose to give a rotation around their intersection axis
+    /// (or a translation if the lines are parallel).
+    #[inline]
+    pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
+        products::geometric_flector_flector(self, other)
+    }
+
+    /// Transform a point using the sandwich product.
+    ///
+    /// In 2D PGA, flector transformations use the regular sandwich product:
+    /// `P' = F * P * rev(F)` (unlike 3D PGA which uses the antisandwich).
+    ///
+    /// This reflects the point across the line represented by the flector.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim2::{Flector, Point};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Reflect through Y-axis (x = 0)
+    /// let f = Flector::<f64>::reflect_y();
+    /// let p = Point::from_cartesian(2.0, 3.0);
+    /// let reflected = f.transform_point(&p);
+    /// assert!(abs_diff_eq!(reflected.x(), -2.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(reflected.y(), 3.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        products::sandwich_flector_point(self, p)
+    }
+
+    /// Transform a line using the sandwich product.
+    #[inline]
+    pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
+        products::sandwich_flector_line(self, l)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -749,5 +876,62 @@ mod tests {
             0.0,
             epsilon = RELATIVE_EQ_EPS
         ));
+    }
+
+    // ==========================================================================
+    // Flector tests
+    // ==========================================================================
+
+    #[test]
+    fn flector_reflect_y_axis() {
+        let f = Flector::<f64>::reflect_y();
+        let p = Point::from_cartesian(2.0, 3.0);
+
+        let reflected = f.transform_point(&p);
+
+        // Reflecting (2, 3) through Y-axis (x = 0) should give (-2, 3)
+        assert!(abs_diff_eq!(reflected.x(), -2.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(reflected.y(), 3.0, epsilon = RELATIVE_EQ_EPS));
+    }
+
+    #[test]
+    fn flector_reflect_x_axis() {
+        let f = Flector::<f64>::reflect_x();
+        let p = Point::from_cartesian(2.0, 3.0);
+
+        let reflected = f.transform_point(&p);
+
+        // Reflecting (2, 3) through X-axis (y = 0) should give (2, -3)
+        assert!(abs_diff_eq!(reflected.x(), 2.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(reflected.y(), -3.0, epsilon = RELATIVE_EQ_EPS));
+    }
+
+    #[test]
+    fn flector_double_reflection_identity() {
+        let f = Flector::<f64>::reflect_y();
+        let p = Point::from_cartesian(2.0, 3.0);
+
+        // Reflecting twice should return to original
+        let once = f.transform_point(&p);
+        let twice = f.transform_point(&once);
+
+        assert!(abs_diff_eq!(twice.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(twice.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
+    }
+
+    #[test]
+    fn flector_compose_two_reflections_gives_rotation() {
+        // Composing reflections through X and Y axes should give 180° rotation
+        let f_x = Flector::<f64>::reflect_x();
+        let f_y = Flector::<f64>::reflect_y();
+
+        let m = f_x.compose(&f_y);
+        let p = Point::from_cartesian(1.0, 0.0);
+        let result = m.transform_point(&p);
+
+        // Two perpendicular reflections = 180° rotation
+        // (1, 0) -> (-1, 0)
+        assert!(abs_diff_eq!(result.x(), -1.0, epsilon = RELATIVE_EQ_EPS));
+        assert!(abs_diff_eq!(result.y(), 0.0, epsilon = RELATIVE_EQ_EPS));
     }
 }
