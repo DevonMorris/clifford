@@ -247,6 +247,7 @@ pub type UnitRotor<T> = Unit<Rotor<T>>;
    - Use `relative_eq!` from `approx` crate with BOTH `epsilon` and `max_relative` parameters
    - Use `RELATIVE_EQ_EPS` constant from `crate::test_utils` for both parameters
    - Example: `relative_eq!(a, b, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS)`
+   - **For codegen tests using Symbolica**: Prefix test names with `symbolica_` (see below)
 4. Add `Arbitrary` implementations for new types
 5. **Run verification before committing**:
    ```bash
@@ -461,3 +462,38 @@ cargo test
 2. Second commit: TOML updates (if needed) + regenerated algebras
 
 Never leave generated code out of sync with codegen.
+
+## Symbolica Test Naming Convention
+
+**Tests in `clifford-codegen` that use Symbolica must be prefixed with `symbolica_`.**
+
+Symbolica has global state that conflicts when tests run in parallel. Nextest uses the `symbolica_` prefix to identify tests that must run serially.
+
+```rust
+// GOOD: Test uses Symbolica, has prefix
+#[test]
+fn symbolica_generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ... uses Symbolica
+}
+
+// BAD: Uses Symbolica but missing prefix (causes flaky failures)
+#[test]
+fn generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ...
+}
+
+// GOOD: Pure parsing test, no Symbolica, no prefix needed
+#[test]
+fn parse_spec_handles_empty_types() {
+    // No Symbolica usage
+}
+```
+
+**When to add the prefix:**
+- Any test that creates `Algebra`, `ProductTable`, or `SymbolicProduct`
+- Any test that calls `compute_terms()`, `generate_products_file()`, or similar
+- Any test in `symbolic/` modules
+
+See `.config/nextest.toml` for the test group configuration.

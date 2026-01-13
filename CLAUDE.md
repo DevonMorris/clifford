@@ -458,6 +458,34 @@ let from_f64: T = T::from_f64(3.14);
 - Unit tests with specific examples are acceptable only when property-based testing is not feasible
 - Doc tests for examples
 - All tests run automatically via GitHub Actions CI on every push and PR
+- **Symbolica test naming convention**: Tests in `clifford-codegen` that use Symbolica for symbolic computation **must** be prefixed with `symbolica_`. This enables nextest to run them serially (avoiding global state conflicts).
+  ```rust
+  // GOOD: Test uses Symbolica, has symbolica_ prefix
+  #[test]
+  fn symbolica_generates_geometric_product() {
+      let algebra = Algebra::euclidean(3);
+      // ... uses Symbolica for symbolic computation
+  }
+
+  // BAD: Test uses Symbolica but lacks prefix (will cause flaky failures)
+  #[test]
+  fn generates_geometric_product() {  // Missing symbolica_ prefix!
+      let algebra = Algebra::euclidean(3);
+      // ...
+  }
+
+  // GOOD: Test doesn't use Symbolica, no prefix needed
+  #[test]
+  fn parse_spec_handles_empty_types() {
+      // Pure parsing test, no Symbolica
+  }
+  ```
+  **When to add the prefix:**
+  - Any test that creates `Algebra`, `ProductTable`, or `SymbolicProduct`
+  - Any test that calls `compute_terms()`, `generate_products_file()`, or similar
+  - Any test in `symbolic/` modules
+
+  See `.config/nextest.toml` for the test group configuration.
 
 ### 8. Code Review
 - PRs are reviewed by Greptile (AI-powered review)

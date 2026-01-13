@@ -279,6 +279,41 @@ Wrapper types (`UnitVector<T>`, `NonZeroVector<T>`, etc.) implement:
 
 **Note**: Always specify the float type when using wrapper types: `any::<UnitVector<f64>>()`, not `any::<UnitVector>()`.
 
+## Symbolica Test Naming Convention
+
+**Tests in `clifford-codegen` that use Symbolica must be prefixed with `symbolica_`.**
+
+Symbolica has global state that conflicts when tests run in parallel. Nextest uses the `symbolica_` prefix to identify tests that must run serially.
+
+```rust
+// GOOD: Test uses Symbolica, has prefix
+#[test]
+fn symbolica_generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ... uses Symbolica
+}
+
+// BAD: Uses Symbolica but missing prefix (causes flaky failures)
+#[test]
+fn generates_geometric_product() {
+    let algebra = Algebra::euclidean(3);
+    // ...
+}
+
+// GOOD: Pure parsing test, no Symbolica, no prefix needed
+#[test]
+fn parse_spec_handles_empty_types() {
+    // No Symbolica usage
+}
+```
+
+**When to add the prefix:**
+- Any test that creates `Algebra`, `ProductTable`, or `SymbolicProduct`
+- Any test that calls `compute_terms()`, `generate_products_file()`, or similar
+- Any test in `symbolic/` modules
+
+See `.config/nextest.toml` for the test group configuration.
+
 ## Documentation
 
 All test functions need doc comments explaining:

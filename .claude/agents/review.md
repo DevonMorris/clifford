@@ -49,6 +49,11 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Key algebraic properties verified
 - [ ] Edge cases tested
 - [ ] Doc tests present and passing
+- [ ] **Symbolica tests named correctly** - Tests in `clifford-codegen` that use Symbolica must have `symbolica_` prefix:
+  - Any test creating `Algebra`, `ProductTable`, or `SymbolicProduct`
+  - Any test calling `compute_terms()`, `generate_products_file()`, etc.
+  - Any test in `symbolic/` modules
+  - Missing prefix causes flaky test failures (Symbolica global state conflicts)
 - [ ] Arbitrary impls follow generic pattern:
   - All types use `impl<T: Float + Debug> Arbitrary for Type<T>`
   - Uses `Float::from_f64()` for range value and threshold conversion
