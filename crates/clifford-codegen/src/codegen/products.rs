@@ -22,22 +22,36 @@ use crate::symbolic::{
 use super::unary::UnaryGenerator;
 
 /// The kind of product to generate.
+///
+/// Product naming follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions:
+/// - `∧` = wedge (exterior product)
+/// - `∨` = antiwedge (regressive product)
+/// - `★` = dual (bulk dual)
+/// - `☆` = antidual (weight dual)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Exterior product (wedge, grade-raising).
-    Exterior,
-    /// Interior product (symmetric inner, grade |ga - gb|).
-    Interior,
+    /// Wedge product (∧, exterior, grade-raising).
+    Wedge,
+    /// Inner product (symmetric, Hestenes inner, grade |ga - gb|).
+    Inner,
     /// Left contraction (A ⌋ B, grade gb - ga when ga <= gb).
     LeftContraction,
     /// Right contraction (A ⌊ B, grade ga - gb when gb <= ga).
     RightContraction,
-    /// Regressive product (meet, dual of exterior, grade ga + gb - dim).
-    Regressive,
+    /// Antiwedge product (∨, regressive/meet, grade ga + gb - dim).
+    Antiwedge,
     /// Geometric antiproduct (complement(complement(a) * complement(b))).
     Antigeometric,
+    /// Bulk contraction (a ∨ b★, antiwedge with bulk dual).
+    BulkContraction,
+    /// Weight contraction (a ∨ b☆, antiwedge with weight dual).
+    WeightContraction,
+    /// Bulk expansion (a ∧ b★, wedge with bulk dual).
+    BulkExpansion,
+    /// Weight expansion (a ∧ b☆, wedge with weight dual).
+    WeightExpansion,
 }
 
 /// A term in a product expression.
@@ -160,6 +174,12 @@ impl<'a> ProductGenerator<'a> {
         let sandwich = self.generate_all_sandwich();
         let antisandwich = self.generate_all_antisandwich();
 
+        // Interior products (RGA-style contractions and expansions)
+        let bulk_contraction = self.generate_all_bulk_contraction();
+        let weight_contraction = self.generate_all_weight_contraction();
+        let bulk_expansion = self.generate_all_bulk_expansion();
+        let weight_expansion = self.generate_all_weight_expansion();
+
         // Generate unary operations
         let unary_gen = UnaryGenerator::new(self.spec);
         let unary = unary_gen.generate_all();
@@ -207,6 +227,26 @@ impl<'a> ProductGenerator<'a> {
             // Antigeometric Products
             // ============================================================
             #antigeometric
+
+            // ============================================================
+            // Interior Products: Bulk Contraction (a ∨ b★)
+            // ============================================================
+            #bulk_contraction
+
+            // ============================================================
+            // Interior Products: Weight Contraction (a ∨ b☆)
+            // ============================================================
+            #weight_contraction
+
+            // ============================================================
+            // Interior Products: Bulk Expansion (a ∧ b★)
+            // ============================================================
+            #bulk_expansion
+
+            // ============================================================
+            // Interior Products: Weight Expansion (a ∧ b☆)
+            // ============================================================
+            #weight_expansion
 
             // ============================================================
             // Sandwich Products (Geometric)
@@ -371,14 +411,14 @@ impl<'a> ProductGenerator<'a> {
     /// Generates all exterior product functions.
     fn generate_all_exterior(&self) -> TokenStream {
         // If no explicit products defined, generate nothing
-        if self.spec.products.exterior.is_empty() {
+        if self.spec.products.wedge.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .exterior
+            .wedge
             .iter()
             .filter_map(|entry| self.generate_exterior_from_entry(entry))
             .collect();
@@ -404,7 +444,7 @@ impl<'a> ProductGenerator<'a> {
 
         // Use symbolic simplification for expression generation
         let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Exterior);
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Wedge);
 
         let doc = format!(
             "Exterior product: {} ^ {} -> {}",
@@ -490,14 +530,14 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all interior (symmetric inner) product functions.
     fn generate_all_interior(&self) -> TokenStream {
-        if self.spec.products.interior.is_empty() {
+        if self.spec.products.inner.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .interior
+            .inner
             .iter()
             .filter_map(|entry| self.generate_interior_from_entry(entry))
             .collect();
@@ -522,7 +562,7 @@ impl<'a> ProductGenerator<'a> {
         );
 
         let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Interior);
+            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Inner);
 
         let doc = format!(
             "Interior product (symmetric inner): {} · {} -> {}",
@@ -606,14 +646,14 @@ impl<'a> ProductGenerator<'a> {
 
     /// Generates all regressive (meet) product functions.
     fn generate_all_regressive(&self) -> TokenStream {
-        if self.spec.products.regressive.is_empty() {
+        if self.spec.products.antiwedge.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .regressive
+            .antiwedge
             .iter()
             .filter_map(|entry| self.generate_regressive_from_entry(entry))
             .collect();
@@ -647,7 +687,7 @@ impl<'a> ProductGenerator<'a> {
             .iter()
             .map(|field| {
                 let terms =
-                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Regressive);
+                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Antiwedge);
                 self.generate_expression(&terms)
             })
             .collect();
@@ -655,6 +695,141 @@ impl<'a> ProductGenerator<'a> {
         let doc = format!(
             "Regressive product (meet): {} ∨ {} -> {}",
             entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
+                #constructor_call
+            }
+        })
+    }
+
+    // ========================================================================
+    // Interior Products (RGA-style Contractions and Expansions)
+    // ========================================================================
+
+    /// Generates all bulk contraction functions (a ∨ b★).
+    fn generate_all_bulk_contraction(&self) -> TokenStream {
+        if self.spec.products.bulk_contraction.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .bulk_contraction
+            .iter()
+            .filter_map(|entry| {
+                self.generate_interior_product_from_entry(entry, ProductKind::BulkContraction)
+            })
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates all weight contraction functions (a ∨ b☆).
+    fn generate_all_weight_contraction(&self) -> TokenStream {
+        if self.spec.products.weight_contraction.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .weight_contraction
+            .iter()
+            .filter_map(|entry| {
+                self.generate_interior_product_from_entry(entry, ProductKind::WeightContraction)
+            })
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates all bulk expansion functions (a ∧ b★).
+    fn generate_all_bulk_expansion(&self) -> TokenStream {
+        if self.spec.products.bulk_expansion.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .bulk_expansion
+            .iter()
+            .filter_map(|entry| {
+                self.generate_interior_product_from_entry(entry, ProductKind::BulkExpansion)
+            })
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates all weight expansion functions (a ∧ b☆).
+    fn generate_all_weight_expansion(&self) -> TokenStream {
+        if self.spec.products.weight_expansion.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .weight_expansion
+            .iter()
+            .filter_map(|entry| {
+                self.generate_interior_product_from_entry(entry, ProductKind::WeightExpansion)
+            })
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an interior product (contraction or expansion) from a product entry.
+    fn generate_interior_product_from_entry(
+        &self,
+        entry: &ProductEntry,
+        kind: ProductKind,
+    ) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let (fn_prefix, doc_symbol, doc_desc) = match kind {
+            ProductKind::BulkContraction => ("bulk_contraction", "∨ b★", "bulk contraction"),
+            ProductKind::WeightContraction => ("weight_contraction", "∨ b☆", "weight contraction"),
+            ProductKind::BulkExpansion => ("bulk_expansion", "∧ b★", "bulk expansion"),
+            ProductKind::WeightExpansion => ("weight_expansion", "∧ b☆", "weight expansion"),
+            _ => return None,
+        };
+
+        let fn_name = format_ident!(
+            "{}_{}_{}",
+            fn_prefix,
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        // Generate field expressions using term-based computation
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms = self.compute_terms(type_a, type_b, field.blade_index, kind);
+                self.generate_expression(&terms)
+            })
+            .collect();
+
+        let doc = format!(
+            "{}: {} {} {} -> {}",
+            doc_desc, entry.lhs, doc_symbol, entry.rhs, entry.output
         );
 
         let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
@@ -1085,15 +1260,15 @@ impl<'a> ProductGenerator<'a> {
             for &gb in &type_b.grades {
                 let result_grades = match kind {
                     ProductKind::Geometric => geometric_grades(ga, gb, dim),
-                    ProductKind::Exterior => {
+                    ProductKind::Wedge => {
                         if let Some(g) = outer_grade(ga, gb, dim) {
                             vec![g]
                         } else {
                             vec![]
                         }
                     }
-                    ProductKind::Interior => {
-                        // Interior product: |ga - gb|
+                    ProductKind::Inner => {
+                        // Inner product: |ga - gb|
                         vec![ga.abs_diff(gb)]
                     }
                     ProductKind::LeftContraction => {
@@ -1107,8 +1282,8 @@ impl<'a> ProductGenerator<'a> {
                         // Right contraction: ga - gb when gb <= ga
                         if gb <= ga { vec![ga - gb] } else { vec![] }
                     }
-                    ProductKind::Regressive => {
-                        // Regressive product: (a* ^ b*)* where * is dual
+                    ProductKind::Antiwedge => {
+                        // Antiwedge (regressive): (a* ^ b*)* where * is complement
                         // Result grade = ga + gb - dim
                         let result = ga + gb;
                         if result >= dim {
@@ -1119,10 +1294,25 @@ impl<'a> ProductGenerator<'a> {
                     }
                     ProductKind::Antigeometric => {
                         // Antigeometric: same grade rules as geometric but with antigrades
-                        // antigrade(a ⊛ b) = antigrade(a) + antigrade(b) ± 2k
-                        // where antigrade = n - grade
-                        // For now, use full geometric grades as the antiproduct produces similar structure
                         geometric_grades(ga, gb, dim)
+                    }
+                    // Interior products - these involve duals
+                    ProductKind::BulkContraction | ProductKind::WeightContraction => {
+                        // Contractions reduce grade: |ga - (dim - gb)|
+                        // After dualing b, we get antigrade(b) = dim - gb
+                        let b_antigrade = dim - gb;
+                        if ga >= b_antigrade {
+                            vec![ga - b_antigrade]
+                        } else {
+                            vec![]
+                        }
+                    }
+                    ProductKind::BulkExpansion | ProductKind::WeightExpansion => {
+                        // Expansions: wedge with dual
+                        // After dualing b, we get antigrade(b) = dim - gb
+                        let b_antigrade = dim - gb;
+                        let sum = ga + b_antigrade;
+                        if sum <= dim { vec![sum] } else { vec![] }
                     }
                 };
 
@@ -1156,12 +1346,18 @@ impl<'a> ProductGenerator<'a> {
                 // Use specialized table methods for each product kind
                 let (sign, result) = match kind {
                     ProductKind::Geometric => self.table.geometric(a_blade, b_blade),
-                    ProductKind::Exterior => self.table.exterior(a_blade, b_blade),
-                    ProductKind::Interior => self.table.interior(a_blade, b_blade),
+                    ProductKind::Wedge => self.table.exterior(a_blade, b_blade),
+                    ProductKind::Inner => self.table.interior(a_blade, b_blade),
                     ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
                     ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
-                    ProductKind::Regressive => self.table.regressive(a_blade, b_blade),
+                    ProductKind::Antiwedge => self.table.regressive(a_blade, b_blade),
                     ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
+                    ProductKind::BulkContraction => self.table.bulk_contraction(a_blade, b_blade),
+                    ProductKind::WeightContraction => {
+                        self.table.weight_contraction(a_blade, b_blade)
+                    }
+                    ProductKind::BulkExpansion => self.table.bulk_expansion(a_blade, b_blade),
+                    ProductKind::WeightExpansion => self.table.weight_expansion(a_blade, b_blade),
                 };
 
                 if result == result_blade && sign != 0 {
@@ -1355,8 +1551,14 @@ impl<'a> ProductGenerator<'a> {
         // Map ProductKind to SymbolicProductKind
         let symbolic_kind = match kind {
             ProductKind::Geometric => SymbolicProductKind::Geometric,
-            ProductKind::Exterior => SymbolicProductKind::Exterior,
+            ProductKind::Wedge => SymbolicProductKind::Wedge,
+            ProductKind::Inner => SymbolicProductKind::Inner,
             ProductKind::LeftContraction => SymbolicProductKind::LeftContraction,
+            ProductKind::Antiwedge => SymbolicProductKind::Antiwedge,
+            ProductKind::BulkContraction => SymbolicProductKind::BulkContraction,
+            ProductKind::WeightContraction => SymbolicProductKind::WeightContraction,
+            ProductKind::BulkExpansion => SymbolicProductKind::BulkExpansion,
+            ProductKind::WeightExpansion => SymbolicProductKind::WeightExpansion,
             _ => SymbolicProductKind::Geometric, // Fallback for other kinds
         };
 
@@ -1601,7 +1803,7 @@ mod tests {
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
 
-        let grades = generator.compute_output_grades(vector, vector, ProductKind::Exterior);
+        let grades = generator.compute_output_grades(vector, vector, ProductKind::Wedge);
         // Vector ^ Vector produces grade 2
         assert_eq!(grades, vec![2]);
     }

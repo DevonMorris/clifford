@@ -516,6 +516,15 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     let antigeometric_table = infer_all_products(&entities, ProductType::Antigeometric, &algebra);
     let antiscalar_table = infer_all_products(&entities, ProductType::Antiscalar, &algebra);
 
+    // Interior products (RGA-style contractions and expansions)
+    let bulk_contraction_table =
+        infer_all_products(&entities, ProductType::BulkContraction, &algebra);
+    let weight_contraction_table =
+        infer_all_products(&entities, ProductType::WeightContraction, &algebra);
+    let bulk_expansion_table = infer_all_products(&entities, ProductType::BulkExpansion, &algebra);
+    let weight_expansion_table =
+        infer_all_products(&entities, ProductType::WeightExpansion, &algebra);
+
     // Convert inferred products to ProductEntry format
     // Skip products that don't have matching entity types
     let convert_entries = |table: crate::discovery::ProductTable2D| -> Vec<ProductEntry> {
@@ -540,14 +549,19 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
 
     ProductsSpec {
         geometric: convert_entries(geometric_table),
-        exterior: convert_entries(exterior_table),
-        interior: convert_entries(inner_table), // Symmetric inner product
+        wedge: convert_entries(exterior_table),
+        inner: convert_entries(inner_table), // Symmetric inner product (Hestenes)
         left_contraction: convert_entries(left_contraction_table),
         right_contraction: convert_entries(right_contraction_table),
-        regressive: convert_entries(regressive_table),
+        antiwedge: convert_entries(regressive_table),
         scalar: convert_entries(scalar_table),
         antigeometric: convert_entries(antigeometric_table),
         antiscalar: convert_entries(antiscalar_table),
+        // Interior products (RGA-style contractions and expansions)
+        bulk_contraction: convert_entries(bulk_contraction_table),
+        weight_contraction: convert_entries(weight_contraction_table),
+        bulk_expansion: convert_entries(bulk_expansion_table),
+        weight_expansion: convert_entries(weight_expansion_table),
     }
 }
 
@@ -849,16 +863,16 @@ mod tests {
             "Geometric products should be inferred"
         );
         assert!(
-            !spec.products.exterior.is_empty(),
-            "Exterior products should be inferred"
+            !spec.products.wedge.is_empty(),
+            "Wedge products should be inferred"
         );
         assert!(
             !spec.products.left_contraction.is_empty(),
             "Left contraction products should be inferred"
         );
         assert!(
-            !spec.products.interior.is_empty(),
-            "Interior products should be inferred"
+            !spec.products.inner.is_empty(),
+            "Inner products should be inferred"
         );
     }
 

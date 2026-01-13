@@ -205,6 +205,40 @@ Type constraints (geometric constraint, Plucker condition) apply to *normalized,
 - Generated tests pass
 - **No clippy warnings** - Generated code passes `cargo clippy` without warnings
 - **No warning suppressions** - No `#[allow(dead_code)]`, `#[allow(unused)]`, etc. in generated code
+- **Uses Symbolica simplification** - All expressions simplified via Symbolica before code generation
+
+### Symbolica Expression Simplification
+
+**ALL generated code must use Symbolica for expression simplification.** Review for:
+
+- [ ] **Expressions are simplified** - No redundant terms, combined like terms
+- [ ] **Uses Symbolica methods** - `expand()`, `collect()`, `together()`, `cancel()`
+- [ ] **No manual term iteration** - Not using `compute_terms()` or `compute_sandwich_terms()` for new products
+
+**Reject** PRs with manual term iteration for new products. All symbolic computation should use Symbolica.
+
+### RGA Product Notation
+
+This library follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions:
+
+| Symbol | Name | Function Pattern |
+|--------|------|------------------|
+| `∧` | **wedge** | `wedge_*` |
+| `∨` | **antiwedge** | `antiwedge_*` |
+| `★` | **dual** | `dual_*` |
+| `☆` | **antidual** | `antidual_*` |
+| `ã` (tilde above) | **reverse** | `reverse_*` |
+| `a̲` (tilde below) | **antireverse** | `antireverse_*` |
+| `ā` (bar above) | **right complement** | `right_complement_*` |
+| `a̱` (bar below) | **left complement** | `left_complement_*` |
+
+**Interior Products**:
+- Bulk contraction: `a ∨ b★` → `bulk_contraction_*`
+- Weight contraction: `a ∨ b☆` → `weight_contraction_*`
+- Bulk expansion: `a ∧ b★` → `bulk_expansion_*`
+- Weight expansion: `a ∧ b☆` → `weight_expansion_*`
+
+**Authoritative Reference**: The [RGA Wiki](https://rigidgeometricalgebra.org/wiki/index.php?title=Main_Page) is the authoritative reference for product definitions and terminology.
 
 **Codegen change requirements**:
 - [ ] **TOML specs updated** - If codegen adds new fields/options, algebra TOMLs must be updated

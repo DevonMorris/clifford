@@ -31,6 +31,11 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-15](prd-15-codegen-migration.md) | In Progress | Codegen Migration (Euclidean, Projective) |
 | [PRD-16](prd-16-codegen-improvements.md) | Draft | Codegen Improvements: Blade Ordering, Versors, Simplification |
 | [PRD-17](prd-17-codegen-products.md) | Draft | Codegen Product Completeness and Documentation |
+| [PRD-18](prd-18-constraint-redesign.md) | In Progress | Constraint Redesign and Wrapper Types |
+| [PRD-19](prd-19-symbolica-testing-strategy.md) | **Complete** | Symbolica Testing Strategy |
+| [PRD-20](prd-20-projective-nalgebra-interop.md) | Draft | Projective-nalgebra Interoperability |
+| [PRD-21](prd-21-2d-pga-dual-motors.md) | Draft | 2D PGA and Dual Motors |
+| [PRD-22](prd-22-interior-products.md) | Draft | Interior Products and Product Naming Corrections |
 
 ## Implementation Order
 

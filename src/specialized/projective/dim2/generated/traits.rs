@@ -2750,4 +2750,1900 @@ mod verification_tests {
             );
         }
     }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_flector_flector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = bulk_contraction_flector_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_flector_line_scalar_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_flector_line(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_flector_motor_point_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_flector_motor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_flector_point_point_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_flector_point(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_flector_scalar_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = bulk_contraction_flector_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_line_flector_flector_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = bulk_contraction_line_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_line_line_scalar_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_line_line(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_line_motor_point_matches_multivector(a in any::<Line<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_line_motor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_line_point_point_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_line_point(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_line_scalar_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_contraction_line_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_motor_flector_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_contraction_motor_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_motor_line_point_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_motor_line(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_motor_motor_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = bulk_contraction_motor_motor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_motor_point_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = bulk_contraction_motor_point(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_motor_scalar_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_contraction_motor_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_point_flector_point_matches_multivector(a in any::<Point<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_point_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_point_motor_scalar_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_point_motor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_point_point_scalar_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_point_point(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_point_scalar_point_matches_multivector(a in any::<Point<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_point_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_flector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_scalar_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_scalar_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_flector_motor_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_contraction_trivector_flector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_line_point_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_contraction_trivector_line(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_motor_line_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_contraction_trivector_motor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_point_line_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_contraction_trivector_point(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_contraction_trivector_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_flector_flector_scalar_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_flector_flector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_flector_line_scalar_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_flector_line(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_flector_motor_point_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_flector_motor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_flector_point_point_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_flector_point(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_line_flector_scalar_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_line_flector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_line_line_scalar_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_line_line(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_line_motor_point_matches_multivector(a in any::<Line<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_line_motor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_line_point_point_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_line_point(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_motor_flector_point_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_motor_flector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_motor_line_point_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_motor_line(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_motor_motor_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_contraction_motor_motor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_motor_point_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_contraction_motor_point(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_motor_trivector_scalar_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_motor_trivector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_point_motor_scalar_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_point_motor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_point_point_scalar_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_point_point(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_flector_point_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_trivector_flector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_line_point_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_contraction_trivector_line(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_motor_flector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_contraction_trivector_motor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_point_line_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_contraction_trivector_point(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_trivector_scalar_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_trivector_trivector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_flector_flector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_expansion_flector_flector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_flector_line_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_expansion_flector_line(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_flector_motor_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_flector_motor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_flector_point_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_flector_point(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_flector_scalar_trivector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_flector_scalar(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_line_flector_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_line_flector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_line_line_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_line_line(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_motor_flector_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_motor_flector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_motor_line_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_motor_line(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_motor_motor_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_motor_motor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_motor_point_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_motor_point(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_point_flector_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_point_flector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_point_line_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_point_line(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_point_motor_trivector_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_point_motor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_point_point_trivector_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_point_point(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_flector_motor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = bulk_expansion_scalar_flector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_line_point_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = bulk_expansion_scalar_line(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_motor_line_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_scalar_motor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_point_line_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = bulk_expansion_scalar_point(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = bulk_expansion_scalar_scalar(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_flector_flector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = weight_expansion_flector_flector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_flector_line_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = weight_expansion_flector_line(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_expansion_flector_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_flector_point_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_flector_point(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_flector_trivector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_expansion_flector_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_line_flector_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_line_flector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_line_line_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_line_line(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_line_motor_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_line_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_line_trivector_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_line_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_motor_flector_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_motor_flector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_motor_line_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_motor_line(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = weight_expansion_motor_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_motor_point_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_motor_point(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_motor_trivector_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = weight_expansion_motor_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_point_flector_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_point_flector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_point_line_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_point_line(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_point_motor_motor_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Motor<f64> = weight_expansion_point_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_point_point_trivector_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_point_point(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_point_trivector_point_matches_multivector(a in any::<Point<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_expansion_point_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_flector_point_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_expansion_scalar_flector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_line_point_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Point<f64> = weight_expansion_scalar_line(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_motor_flector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Flector<f64> = weight_expansion_scalar_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_point_line_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Line<f64> = weight_expansion_scalar_point(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_trivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_expansion_scalar_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_trivector_motor_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_trivector_motor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_trivector_trivector_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = weight_expansion_trivector_trivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_flector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_flector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_line(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_line(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_motor(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_motor(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_point(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_point(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_trivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_trivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
 }

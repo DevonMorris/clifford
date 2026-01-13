@@ -234,26 +234,40 @@ pub struct FieldSpec {
 }
 
 /// Product specifications for all product types.
+///
+/// Product naming follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions:
+/// - `∧` = wedge (exterior product)
+/// - `∨` = antiwedge (regressive product)
+/// - `★` = dual (bulk dual)
+/// - `☆` = antidual (weight dual)
 #[derive(Debug, Clone, Default)]
 pub struct ProductsSpec {
     /// Geometric product entries.
     pub geometric: Vec<ProductEntry>,
-    /// Exterior (wedge) product entries.
-    pub exterior: Vec<ProductEntry>,
-    /// Interior (symmetric inner) product entries.
-    pub interior: Vec<ProductEntry>,
+    /// Wedge product entries (∧, exterior, grade-raising).
+    pub wedge: Vec<ProductEntry>,
+    /// Inner product entries (symmetric, Hestenes inner, grade |ga - gb|).
+    pub inner: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.
     pub right_contraction: Vec<ProductEntry>,
-    /// Regressive (meet) product entries.
-    pub regressive: Vec<ProductEntry>,
+    /// Antiwedge product entries (∨, regressive/meet).
+    pub antiwedge: Vec<ProductEntry>,
     /// Scalar product entries.
     pub scalar: Vec<ProductEntry>,
     /// Antigeometric product entries.
     pub antigeometric: Vec<ProductEntry>,
     /// Antiscalar product entries.
     pub antiscalar: Vec<ProductEntry>,
+    /// Bulk contraction entries (a ∨ b★).
+    pub bulk_contraction: Vec<ProductEntry>,
+    /// Weight contraction entries (a ∨ b☆).
+    pub weight_contraction: Vec<ProductEntry>,
+    /// Bulk expansion entries (a ∧ b★).
+    pub bulk_expansion: Vec<ProductEntry>,
+    /// Weight expansion entries (a ∧ b☆).
+    pub weight_expansion: Vec<ProductEntry>,
 }
 
 /// A single product entry specifying lhs × rhs → output.

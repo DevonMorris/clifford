@@ -13,14 +13,28 @@ use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer
 use crate::spec::TypeSpec;
 
 /// The kind of product to compute symbolically.
+///
+/// Product naming follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
-    /// Exterior product (wedge, grade-raising).
-    Exterior,
+    /// Wedge product (∧, exterior, grade-raising).
+    Wedge,
+    /// Inner product (symmetric, Hestenes inner).
+    Inner,
     /// Left contraction (inner product).
     LeftContraction,
+    /// Antiwedge product (∨, regressive/meet).
+    Antiwedge,
+    /// Bulk contraction (a ∨ b★).
+    BulkContraction,
+    /// Weight contraction (a ∨ b☆).
+    WeightContraction,
+    /// Bulk expansion (a ∧ b★).
+    BulkExpansion,
+    /// Weight expansion (a ∧ b☆).
+    WeightExpansion,
 }
 
 /// A symbolic field expression.
@@ -141,13 +155,20 @@ impl SymbolicProduct {
                 // Filter based on product kind
                 let include = match kind {
                     ProductKind::Geometric => true,
-                    ProductKind::Exterior => {
+                    ProductKind::Wedge => {
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
                         let result_grade = Blade::from_index(result_blade).grade();
                         outer_grade(a_grade, b_grade, dim)
                             .map(|g| g == result_grade)
                             .unwrap_or(false)
+                    }
+                    ProductKind::Inner => {
+                        let a_grade = Blade::from_index(a_blade).grade();
+                        let b_grade = Blade::from_index(b_blade).grade();
+                        let result_grade = Blade::from_index(result_blade).grade();
+                        // Inner product: |ga - gb|
+                        result_grade == a_grade.abs_diff(b_grade)
                     }
                     ProductKind::LeftContraction => {
                         let a_grade = Blade::from_index(a_blade).grade();
@@ -156,6 +177,17 @@ impl SymbolicProduct {
                         left_contraction_grade(a_grade, b_grade)
                             .map(|g| g == result_grade)
                             .unwrap_or(false)
+                    }
+                    // These products are computed via table methods in ProductTable
+                    // and handled in codegen/products.rs directly
+                    ProductKind::Antiwedge
+                    | ProductKind::BulkContraction
+                    | ProductKind::WeightContraction
+                    | ProductKind::BulkExpansion
+                    | ProductKind::WeightExpansion => {
+                        // These are composite products that use dual operations
+                        // They are handled specially in the codegen layer
+                        false
                     }
                 };
 

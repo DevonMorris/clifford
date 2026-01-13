@@ -161,10 +161,10 @@ For types with constraints (Motor, Line), add `new_unchecked()` and `try_from_co
 **All algebra specifications live in the top-level `algebras/` directory.** Never duplicate them elsewhere.
 
 ```bash
-# Regenerate after codegen changes (always specify output path)
-cargo run --package clifford-codegen -- generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/generated --force
-cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
-cargo run --package clifford-codegen -- generate algebras/projective3.toml -o src/specialized/projective/dim3/generated --force
+# Regenerate all algebras after codegen changes
+for toml in algebras/*.toml; do
+    cargo run --package clifford-codegen -- generate "$toml" --force
+done
 ```
 
 The `module_path` field in the TOML must match the target location (e.g., `euclidean::dim3` for `src/specialized/euclidean/dim3/generated/`).
@@ -335,10 +335,53 @@ cargo run --package clifford-codegen -- blades algebras/projective3.toml
 
 ### What Codegen Handles
 
-- **Products**: Geometric, exterior, interior, left/right contraction - all generated correctly
+- **Products**: Geometric, wedge, antiwedge, contractions, expansions - all generated correctly
 - **Constraints**: Geometric constraints, Plucker conditions, unit norm - solved automatically
 - **Constructors**: `new()`, `new_checked()`, `new_unchecked()` with proper constraint solving
 - **Verification tests**: Property-based tests comparing against generic Multivector
+- **Expression simplification**: All expressions simplified via Symbolica before code generation
+
+### Symbolica Expression Simplification
+
+**ALL generated code must use Symbolica for expression simplification.** This applies to:
+- Binary products (wedge, antiwedge, geometric, etc.)
+- Interior products (contractions and expansions)
+- Sandwich and antisandwich products
+- Unary operations (dual, reverse, complement)
+
+**Key Symbolica operations:**
+- `expand()` - Distributes products over sums
+- `collect()` - Groups terms by variables
+- `together()` - Combines fractions
+- `cancel()` - Cancels common factors
+
+**Do NOT use manual term iteration** (like `compute_terms()` or `compute_sandwich_terms()`) for new products. Always use Symbolica-based symbolic computation for optimal output.
+
+### RGA Product Notation
+
+This library follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions:
+
+| Symbol | Name | Function Pattern |
+|--------|------|------------------|
+| `∧` | **wedge** | `wedge_*` |
+| `∨` | **antiwedge** | `antiwedge_*` |
+| `★` | **dual** | `dual_*` |
+| `☆` | **antidual** | `antidual_*` |
+| `ã` (tilde above) | **reverse** | `reverse_*` |
+| `a̲` (tilde below) | **antireverse** | `antireverse_*` |
+| `ā` (bar above) | **right complement** | `right_complement_*` |
+| `a̱` (bar below) | **left complement** | `left_complement_*` |
+
+**Interior Products** (contractions and expansions):
+
+| Product | Formula | Function Pattern |
+|---------|---------|------------------|
+| Bulk contraction | `a ∨ b★` | `bulk_contraction_*` |
+| Weight contraction | `a ∨ b☆` | `weight_contraction_*` |
+| Bulk expansion | `a ∧ b★` | `bulk_expansion_*` |
+| Weight expansion | `a ∧ b☆` | `weight_expansion_*` |
+
+**Authoritative Reference**: The [RGA Wiki](https://rigidgeometricalgebra.org/wiki/index.php?title=Main_Page) is the authoritative reference for all GA operations.
 
 ### Constraints vs. Product Outputs
 

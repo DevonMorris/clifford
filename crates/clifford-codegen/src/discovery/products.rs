@@ -35,6 +35,14 @@ pub enum ProductType {
     Antigeometric,
     /// Antiscalar product: grade-n projection of antigeometric
     Antiscalar,
+    /// Bulk contraction: `a ∨ b★` (antiwedge with bulk dual)
+    BulkContraction,
+    /// Weight contraction: `a ∨ b☆` (antiwedge with weight dual)
+    WeightContraction,
+    /// Bulk expansion: `a ∧ b★` (wedge with bulk dual)
+    BulkExpansion,
+    /// Weight expansion: `a ∧ b☆` (wedge with weight dual)
+    WeightExpansion,
 }
 
 impl ProductType {
@@ -50,6 +58,10 @@ impl ProductType {
             ProductType::Scalar,
             ProductType::Antigeometric,
             ProductType::Antiscalar,
+            ProductType::BulkContraction,
+            ProductType::WeightContraction,
+            ProductType::BulkExpansion,
+            ProductType::WeightExpansion,
         ]
     }
 
@@ -65,6 +77,10 @@ impl ProductType {
             ProductType::Scalar => "scalar",
             ProductType::Antigeometric => "antigeometric",
             ProductType::Antiscalar => "antiscalar",
+            ProductType::BulkContraction => "bulk_contraction",
+            ProductType::WeightContraction => "weight_contraction",
+            ProductType::BulkExpansion => "bulk_expansion",
+            ProductType::WeightExpansion => "weight_expansion",
         }
     }
 }
@@ -174,6 +190,23 @@ pub fn infer_output_grades(
                         output_set.insert(dim);
                     }
                 }
+                ProductType::BulkContraction | ProductType::WeightContraction => {
+                    // Contraction: a ∨ dual(b)
+                    // dual(b) has antigrade = dim - gb
+                    // antiwedge: ga + (dim - gb) - dim = ga - gb (when ga >= gb)
+                    if ga >= gb {
+                        output_set.insert(ga - gb);
+                    }
+                }
+                ProductType::BulkExpansion | ProductType::WeightExpansion => {
+                    // Expansion: a ∧ dual(b)
+                    // dual(b) has antigrade = dim - gb
+                    // wedge: ga + (dim - gb) (when <= dim)
+                    let result = ga + dim - gb;
+                    if result <= dim {
+                        output_set.insert(result);
+                    }
+                }
             }
         }
     }
@@ -228,6 +261,22 @@ pub fn infer_output_grades_precise(
                     let (sign, result) = table.antiproduct(a, b);
                     (sign, grade(result))
                 }
+                ProductType::BulkContraction => {
+                    let (sign, result) = table.bulk_contraction(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::WeightContraction => {
+                    let (sign, result) = table.weight_contraction(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::BulkExpansion => {
+                    let (sign, result) = table.bulk_expansion(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::WeightExpansion => {
+                    let (sign, result) = table.weight_expansion(a, b);
+                    (sign, grade(result))
+                }
                 _ => {
                     // All other products derive from the geometric product
                     let (sign, result) = table.geometric(a, b);
@@ -276,6 +325,13 @@ pub fn infer_output_grades_precise(
                 ProductType::Antiscalar => {
                     // Antiscalar: only grade dim terms
                     result_grade == algebra.dim()
+                }
+                ProductType::BulkContraction
+                | ProductType::WeightContraction
+                | ProductType::BulkExpansion
+                | ProductType::WeightExpansion => {
+                    // Already computed correctly by specialized table methods
+                    true
                 }
             };
 

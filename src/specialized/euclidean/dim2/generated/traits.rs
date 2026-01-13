@@ -1357,4 +1357,1100 @@ mod verification_tests {
             );
         }
     }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_bivector_bivector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_rotor_rotor_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_contraction_bivector_rotor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_contraction_bivector_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_contraction_bivector_vector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_rotor_bivector_scalar_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_rotor_bivector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_contraction_rotor_rotor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_rotor_scalar_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_contraction_rotor_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_rotor_vector_vector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_contraction_rotor_vector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_rotor_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_scalar_rotor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_scalar_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_rotor_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_contraction_vector_rotor(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_contraction_vector_scalar(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_contraction_vector_vector(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_bivector_bivector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_rotor_rotor_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_contraction_bivector_rotor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_contraction_bivector_scalar(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_contraction_bivector_vector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_rotor_bivector_scalar_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_rotor_bivector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_contraction_rotor_rotor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_rotor_scalar_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_contraction_rotor_scalar(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_rotor_vector_vector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_contraction_rotor_vector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_rotor_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_scalar_rotor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_scalar_scalar(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_rotor_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_contraction_vector_rotor(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_contraction_vector_scalar(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_contraction_vector_vector(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_bivector_bivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_expansion_bivector_bivector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_bivector_rotor_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_expansion_bivector_rotor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_rotor_bivector_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_expansion_rotor_bivector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_expansion_rotor_rotor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_rotor_scalar_bivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_expansion_rotor_scalar(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_rotor_vector_vector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_expansion_rotor_vector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_bivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = bulk_expansion_scalar_bivector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_rotor_rotor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = bulk_expansion_scalar_rotor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_expansion_scalar_scalar(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_expansion_scalar_vector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_bivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_expansion_vector_bivector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_rotor_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = bulk_expansion_vector_rotor(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = bulk_expansion_vector_vector(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_bivector_bivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_expansion_bivector_bivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_bivector_rotor_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_expansion_bivector_rotor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_rotor_bivector_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_expansion_rotor_bivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_rotor_rotor_rotor_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_expansion_rotor_rotor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_rotor_scalar_bivector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_expansion_rotor_scalar(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_rotor_vector_vector_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_expansion_rotor_vector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_bivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = weight_expansion_scalar_bivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_rotor_rotor_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Rotor<f64> = weight_expansion_scalar_rotor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_scalar_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_expansion_scalar_scalar(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_expansion_scalar_vector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_bivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_expansion_vector_bivector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_rotor_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = weight_expansion_vector_rotor(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = weight_expansion_vector_vector(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_rotor(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_rotor(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
 }

@@ -555,7 +555,44 @@ Geometric algebra formulas are complex and error-prone. Signs, orderings, metric
 - Computes geometric products symbolically with correct signs
 - Handles metric signatures (positive, negative, zero basis vectors)
 - Solves constraints (geometric constraint, Plücker condition, etc.)
+- **Simplifies expressions** using `expand()`, `collect()`, and other Symbolica methods
 - Generates optimized Rust code with verified formulas
+
+#### Symbolica Expression Simplification
+
+**ALL generated code must use Symbolica for expression simplification.** This applies to:
+- Binary products (wedge, antiwedge, geometric, etc.)
+- Interior products (contractions and expansions)
+- Sandwich and antisandwich products
+- Unary operations (dual, reverse, complement)
+
+**Why this matters:**
+- Symbolica's simplification produces optimal expressions (no redundant terms)
+- Manual term computation is error-prone and produces verbose code
+- Symbolic simplification catches cancellations that manual iteration misses
+
+**Simplification pipeline:**
+```rust
+fn generate_product_expression(&self, ...) -> Vec<TokenStream> {
+    // 1. Build symbolic expression using Symbolica
+    let symbolic_fields = symbolic_product.compute(...);
+
+    // 2. Simplify using Symbolica's methods
+    let expanded = field.expression.expand();      // Distribute products
+    let collected = expanded.collect(...);          // Combine like terms
+
+    // 3. Convert to Rust code
+    converter.convert(&simplified)
+}
+```
+
+**Key Symbolica operations:**
+- `expand()` - Distributes products over sums: `(a + b) * c` → `a*c + b*c`
+- `collect()` - Groups terms by variables: `a*x + b*x` → `(a + b)*x`
+- `together()` - Combines fractions over common denominator
+- `cancel()` - Cancels common factors
+
+**Do NOT use manual term iteration** (like `compute_terms()` or `compute_sandwich_terms()`) for new products. Always use Symbolica-based symbolic computation.
 
 #### Genericity Principle: No Shortcuts
 
@@ -640,9 +677,9 @@ cargo run --package clifford-codegen -- discover 3 0 1
 cargo run --package clifford-codegen -- blades algebras/projective3.toml
 
 # Regenerate all algebras after codegen changes
-cargo run --package clifford-codegen -- generate algebras/euclidean2.toml -o src/specialized/euclidean/dim2/generated --force
-cargo run --package clifford-codegen -- generate algebras/euclidean3.toml -o src/specialized/euclidean/dim3/generated --force
-cargo run --package clifford-codegen -- generate algebras/projective3.toml -o src/specialized/projective/dim3/generated --force
+for toml in algebras/*.toml; do
+    cargo run --package clifford-codegen -- generate "$toml" --force
+done
 ```
 
 #### Generated Code Quality
@@ -728,6 +765,32 @@ Even for exceptions, add a comment citing the mathematical source of the formula
 - Comments like "// manual implementation because codegen doesn't..."
 
 These indicate missing codegen features that should be added via PRD-17.
+
+#### Updating Multivector When Adding New Products
+
+**When adding new product types to codegen, you MUST also implement the corresponding operation on `Multivector`.**
+
+This ensures:
+1. Generated verification tests can compare specialized products against generic Multivector
+2. Users have access to the same operations on both specialized and generic types
+3. The test suite verifies correctness of generated formulas
+
+**Required steps when adding a new product:**
+1. Add the product to `ProductTable` in `crates/clifford-codegen/src/algebra/table.rs`
+2. Add inference logic in `crates/clifford-codegen/src/discovery/products.rs`
+3. Add generation logic in `crates/clifford-codegen/src/codegen/products.rs`
+4. **Implement the operation on `Multivector`** in `src/algebra/multivector.rs`
+5. Add verification test generation in `crates/clifford-codegen/src/codegen/traits.rs`
+6. Regenerate all algebras
+
+**Example: Adding a new product `foo`:**
+```rust
+// 1. ProductTable::foo() method
+// 2. ProductType::Foo variant in discovery/products.rs
+// 3. generate_all_foo() in codegen/products.rs
+// 4. Multivector::foo() method - REQUIRED for verification tests
+// 5. generate_foo_verification_tests_raw() in codegen/traits.rs
+```
 
 #### Regenerating Algebras After Codegen Changes
 
@@ -864,6 +927,36 @@ Run `cargo deny check` to verify license compliance before adding new dependenci
 - [ ] **PRD-6: CGA** - Conformal GA, polish
 
 ## Resources
+
+### Authoritative Reference
+
+**The [Rigid Geometric Algebra Wiki](https://rigidgeometricalgebra.org/wiki/index.php?title=Main_Page) is the authoritative reference for all GA operations in this library.** When in doubt about product definitions, formulas, or terminology, consult the RGA wiki first.
+
+### RGA Product Notation
+
+This library follows [Rigid Geometric Algebra](https://rigidgeometricalgebra.org/) conventions for product naming:
+
+| Symbol | Name | Generated Function | Description |
+|--------|------|-------------------|-------------|
+| `∧` | **wedge** | `wedge_*` | Exterior product (grade-raising) |
+| `∨` | **antiwedge** | `antiwedge_*` | Regressive product (antigrade-raising) |
+| `★` | **dual** | `dual_*` | Bulk dual (metric complement) |
+| `☆` | **antidual** | `antidual_*` | Weight dual (antiproduct complement) |
+| `ã` (tilde above) | **reverse** | `reverse_*` | Reverses order of basis vectors in each blade |
+| `a̲` (tilde below) | **antireverse** | `antireverse_*` | Antiproduct complement of reverse |
+| `ā` (bar above) | **right complement** | `right_complement_*` | Right complement (a ∧ ā = 𝟙) |
+| `a̱` (bar below) | **left complement** | `left_complement_*` | Left complement (a̱ ∧ a = 𝟙) |
+
+**Interior Products** (contractions and expansions):
+
+| Product | Formula | Generated Function |
+|---------|---------|-------------------|
+| Bulk contraction | `a ∨ b★` | `bulk_contraction_*` |
+| Weight contraction | `a ∨ b☆` | `weight_contraction_*` |
+| Bulk expansion | `a ∧ b★` | `bulk_expansion_*` |
+| Weight expansion | `a ∧ b☆` | `weight_expansion_*` |
+
+**Note**: The `inner_*` functions compute the Hestenes inner product (symmetric, grade `|ga - gb|`), which is different from the RGA interior products defined above.
 
 ### Projective Geometric Algebra (PGA)
 - [Rigid Geometric Algebra Wiki](https://rigidgeometricalgebra.org/wiki/index.php?title=Main_Page) - Comprehensive reference for 3D PGA formulas, motor transformations, and the geometric antiproduct

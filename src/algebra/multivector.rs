@@ -1047,16 +1047,87 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         self.left_contract(&ps)
     }
 
-    /// Computes the regressive (vee) product: `a ∨ b = (a* ∧ b*)*⁻¹`.
+    /// Computes the complement of a multivector.
+    ///
+    /// The complement maps a grade-k blade to a grade-(n-k) blade by XOR with
+    /// the pseudoscalar index. The sign is determined by the number of
+    /// transpositions needed to put `blade ∧ complement(blade)` into canonical
+    /// order.
+    ///
+    /// This is used in RGA for the regressive product:
+    /// `a ∨ b = complement(complement(a) ∧ complement(b))`
+    ///
+    /// # Properties
+    ///
+    /// - `grade(complement(a)) = n - grade(a)` where n is the dimension
+    /// - `complement(complement(a)) = ±a`
+    /// - Different from Hodge dual (which uses contraction)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // Complement of e1 in 3D gives a bivector (e23)
+    /// let e1_comp = e1.complement();
+    /// assert_eq!(e1_comp.grade(1e-10), Some(2));
+    /// ```
+    pub fn complement(&self) -> Self {
+        let ps_index = S::NumBlades::USIZE - 1;
+        let mut result = Self::zero();
+
+        for i in 0..S::NumBlades::USIZE {
+            if self.coeffs[i] == T::zero() {
+                continue;
+            }
+
+            let complement_index = ps_index ^ i;
+
+            // Compute exterior sign: (-1)^(transpositions for i ∧ complement)
+            // This counts how many bits in complement_index are "passed over" by bits in i
+            let sign = exterior_sign(i, complement_index);
+
+            result.coeffs[complement_index] += T::from_i8(sign) * self.coeffs[i];
+        }
+        result
+    }
+
+    /// Deprecated: Use [`complement`](Self::complement) instead.
+    ///
+    /// The right complement maps a grade-k blade to a grade-(n-k) blade.
+    /// This is used in RGA for the regressive product.
+    #[deprecated(since = "0.3.0", note = "use `complement` instead")]
+    pub fn right_complement(&self) -> Self {
+        self.complement()
+    }
+
+    /// Deprecated: Use [`complement`](Self::complement) instead.
+    ///
+    /// The left complement maps a grade-k blade to a grade-(n-k) blade.
+    /// This is used in RGA for computing the "undual" in the regressive product.
+    #[deprecated(since = "0.3.0", note = "use `complement` instead")]
+    pub fn left_complement(&self) -> Self {
+        self.complement()
+    }
+
+    /// Computes the regressive (vee) product: `a ∨ b = complement(complement(a) ∧ complement(b))`.
     ///
     /// The regressive product is the dual of the outer product. While the
     /// outer product represents the "join" (span) of subspaces, the regressive
     /// product represents the "meet" (intersection).
     ///
+    /// # Formula
+    ///
+    /// Using complement notation:
+    /// - `a ∨ b = complement(complement(a) ∧ complement(b))`
+    ///
     /// # Properties
     ///
     /// - Grade-lowering (opposite of wedge)
-    /// - `a ∨ b = undual(dual(a) ∧ dual(b))`
+    /// - Associative
     ///
     /// # Example
     ///
@@ -1074,7 +1145,7 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// assert_eq!(meet.grade(1e-10), Some(1));
     /// ```
     pub fn regressive(&self, other: &Self) -> Self {
-        self.dual().exterior(&other.dual()).undual()
+        self.complement().exterior(&other.complement()).complement()
     }
 
     /// Computes the antiwedge (exterior antiproduct): `a ∨ b`.
@@ -1102,6 +1173,188 @@ impl<T: Float, S: Signature> Multivector<T, S> {
         self.regressive(other)
     }
 
+    /// Computes the bulk dual (★): `a★ = ã ⊙ 𝟙`.
+    ///
+    /// The bulk dual is computed as `reverse(a) * pseudoscalar`. It maps a blade
+    /// to its orthogonal complement using the metric (bulk) structure.
+    ///
+    /// # Properties
+    ///
+    /// - `grade(a★) = n - grade(a)` where n is the dimension
+    /// - `(a★)★ = ±a` (up to sign, involutory)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // In 3D, bulk dual of a vector is a bivector
+    /// let e1_bulk_dual = e1.bulk_dual();
+    /// assert_eq!(e1_bulk_dual.grade(1e-10), Some(2));
+    /// ```
+    pub fn bulk_dual(&self) -> Self {
+        let ps = Self::pseudoscalar();
+        &self.reverse() * &ps
+    }
+
+    /// Computes the left bulk dual (★): `★a = 𝟙 ⊙ ã`.
+    ///
+    /// The left bulk dual is computed as `pseudoscalar * reverse(a)`. This is
+    /// the "undual" operation for the bulk dual, used in computing the antiproduct.
+    ///
+    /// # Properties
+    ///
+    /// - `grade(★a) = n - grade(a)` where n is the dimension
+    /// - `★(a★) = ±a` (recovers original up to sign)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // In 3D, left bulk dual of a vector is a bivector
+    /// let e1_left_dual = e1.left_bulk_dual();
+    /// assert_eq!(e1_left_dual.grade(1e-10), Some(2));
+    /// ```
+    pub fn left_bulk_dual(&self) -> Self {
+        let ps = Self::pseudoscalar();
+        &ps * &self.reverse()
+    }
+
+    /// Computes the weight dual (☆): `a☆ = ã ⊛ 1`.
+    ///
+    /// The weight dual is computed as `reverse(a) ⊛ scalar` where ⊛ is the
+    /// geometric antiproduct. It maps a blade to its orthogonal complement
+    /// using the anti-metric (weight) structure.
+    ///
+    /// # Properties
+    ///
+    /// - `grade(a☆) = n - grade(a)` where n is the dimension
+    /// - Uses the antiproduct with the scalar (grade-0 element)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    ///
+    /// // In 3D, weight dual of a vector is a bivector
+    /// let e1_weight_dual = e1.weight_dual();
+    /// assert_eq!(e1_weight_dual.grade(1e-10), Some(2));
+    /// ```
+    pub fn weight_dual(&self) -> Self {
+        let scalar = Self::scalar(T::one());
+        self.reverse().antiproduct(&scalar)
+    }
+
+    /// Computes the bulk contraction: `a ∨ b★`.
+    ///
+    /// The bulk contraction is the antiwedge of `a` with the bulk dual of `b`.
+    /// This is one of the four interior products in Rigid Geometric Algebra.
+    ///
+    /// # Properties
+    ///
+    /// - Grade-lowering operation
+    /// - Measures how much `b` "projects onto" the complement of `a`
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// let result = e1.bulk_contraction(&e2);
+    /// ```
+    pub fn bulk_contraction(&self, other: &Self) -> Self {
+        self.antiwedge(&other.bulk_dual())
+    }
+
+    /// Computes the weight contraction: `a ∨ b☆`.
+    ///
+    /// The weight contraction is the antiwedge of `a` with the weight dual of `b`.
+    /// This is one of the four interior products in Rigid Geometric Algebra.
+    ///
+    /// # Properties
+    ///
+    /// - Grade-lowering operation
+    /// - Uses the anti-metric structure
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// let result = e1.weight_contraction(&e2);
+    /// ```
+    pub fn weight_contraction(&self, other: &Self) -> Self {
+        self.antiwedge(&other.weight_dual())
+    }
+
+    /// Computes the bulk expansion: `a ∧ b★`.
+    ///
+    /// The bulk expansion is the wedge of `a` with the bulk dual of `b`.
+    /// This is one of the four interior products in Rigid Geometric Algebra.
+    ///
+    /// # Properties
+    ///
+    /// - Can be grade-raising or grade-lowering depending on inputs
+    /// - Measures the "exterior" relationship using bulk structure
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// let result = e1.bulk_expansion(&e2);
+    /// ```
+    pub fn bulk_expansion(&self, other: &Self) -> Self {
+        self.exterior(&other.bulk_dual())
+    }
+
+    /// Computes the weight expansion: `a ∧ b☆`.
+    ///
+    /// The weight expansion is the wedge of `a` with the weight dual of `b`.
+    /// This is one of the four interior products in Rigid Geometric Algebra.
+    ///
+    /// # Properties
+    ///
+    /// - Can be grade-raising or grade-lowering depending on inputs
+    /// - Uses the anti-metric structure
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
+    /// let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
+    ///
+    /// let result = e1.weight_expansion(&e2);
+    /// ```
+    pub fn weight_expansion(&self, other: &Self) -> Self {
+        self.exterior(&other.weight_dual())
+    }
+
     /// Computes the geometric antiproduct: `a ⊛ b = undual(dual(a) × dual(b))`.
     ///
     /// The geometric antiproduct is the dual of the geometric product. In PGA
@@ -1126,7 +1379,8 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     /// let result = e1.antiproduct(&e2);
     /// ```
     pub fn antiproduct(&self, other: &Self) -> Self {
-        (&self.dual() * &other.dual()).undual()
+        // a ⋇ b = complement(complement(a) ⊙ complement(b))
+        (&self.complement() * &other.complement()).complement()
     }
 
     /// Computes the antisandwich product: `R ⊛ x ⊛ R̃`.
@@ -1609,6 +1863,42 @@ impl<T: Float, S: Signature> fmt::Display for Multivector<T, S> {
     }
 }
 
+// ============================================================================
+// Helper functions
+// ============================================================================
+
+/// Computes the sign for the exterior product of two non-overlapping blades.
+///
+/// For blades `a` and `b` that don't share any basis vectors (i.e., `a & b == 0`),
+/// this computes `(-1)^swaps` where `swaps` is the number of transpositions
+/// needed to put the basis vectors of `a ∧ b` into canonical order.
+///
+/// # Panics
+///
+/// Debug builds panic if the blades overlap (share basis vectors).
+#[inline]
+fn exterior_sign(a: usize, b: usize) -> i8 {
+    debug_assert_eq!(a & b, 0, "blades must not overlap for exterior sign");
+
+    // Count transpositions: for each bit in b, count how many bits in a
+    // are to the right of it (have higher index, appear later in canonical order)
+    let mut transpositions = 0;
+    let mut b_remaining = b;
+    while b_remaining != 0 {
+        // Find lowest set bit in b
+        let lowest_b = b_remaining & b_remaining.wrapping_neg();
+        let b_pos = lowest_b.trailing_zeros();
+
+        // Count bits in a that are above this position (need to swap past)
+        let a_above = a >> (b_pos + 1);
+        transpositions += a_above.count_ones();
+
+        b_remaining &= !lowest_b;
+    }
+
+    if transpositions % 2 == 0 { 1 } else { -1 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2013,6 +2303,48 @@ mod tests {
             // Double reflection returns original
             let double_reflected = n.sandwich(&reflected);
             prop_assert!(relative_eq!(double_reflected, *v, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+        }
+
+        // ====================================================================
+        // De Morgan's Laws (RGA)
+        // https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_products
+        // ====================================================================
+
+        #[test]
+        fn de_morgan_complement_of_geometric_product(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+        ) {
+            // complement(a * b) = complement(a) ⋇ complement(b)
+            let lhs = (&a * &b).complement();
+            let rhs = a.complement().antiproduct(&b.complement());
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+        }
+
+        #[test]
+        fn de_morgan_complement_of_antiproduct(
+            a in any::<Multivector<f64, Euclidean3>>(),
+            b in any::<Multivector<f64, Euclidean3>>(),
+        ) {
+            // complement(a ⋇ b) = complement(a) * complement(b)
+            // This is actually how we define antiproduct, so this tests consistency
+            let lhs = a.antiproduct(&b).complement();
+            let rhs = &a.complement() * &b.complement();
+            prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+        }
+
+        #[test]
+        fn complement_involutory(
+            a in any::<Multivector<f64, Euclidean3>>(),
+        ) {
+            // complement(complement(a)) = ±a
+            // The double complement may introduce a sign depending on dimension and grade
+            let double_comp = a.complement().complement();
+            // In 3D, double complement is ±1 times original depending on grade
+            // For a general multivector, we check that double complement squared equals a squared
+            let lhs_norm_sq = (&double_comp * &double_comp.reverse()).scalar_part();
+            let rhs_norm_sq = (&a * &a.reverse()).scalar_part();
+            prop_assert!(relative_eq!(lhs_norm_sq, rhs_norm_sq, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
 
