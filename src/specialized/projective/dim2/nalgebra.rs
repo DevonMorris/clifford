@@ -147,6 +147,7 @@ impl<T: Float + na::RealField> From<na::Isometry2<T>> for Motor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::specialized::projective::dim2::UnitizedPoint;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::relative_eq;
     use proptest::prelude::*;
@@ -154,19 +155,14 @@ mod tests {
     /// Epsilon for floating-point comparisons in tests.
     const EPS: f64 = RELATIVE_EQ_EPS;
 
-    /// Strategy for generating finite points (not at infinity).
-    fn finite_point_strategy() -> impl Strategy<Value = Point<f64>> {
-        (-100.0f64..100.0, -100.0f64..100.0).prop_map(|(x, y)| Point::from_cartesian(x, y))
-    }
-
     // ========================================================================
     // Point round-trip tests
     // ========================================================================
 
     proptest! {
         #[test]
-        fn point_roundtrip(p in finite_point_strategy()) {
-            let na_p: na::Point2<f64> = p.try_into().unwrap();
+        fn point_roundtrip(p in any::<UnitizedPoint<f64>>()) {
+            let na_p: na::Point2<f64> = (*p).try_into().unwrap();
             let back: Point<f64> = na_p.into();
 
             // Compare Cartesian coordinates
@@ -175,8 +171,8 @@ mod tests {
         }
 
         #[test]
-        fn point_try_from_finite(p in finite_point_strategy()) {
-            let result: Result<na::Point2<f64>, _> = p.try_into();
+        fn point_try_from_finite(p in any::<UnitizedPoint<f64>>()) {
+            let result: Result<na::Point2<f64>, _> = (*p).try_into();
             prop_assert!(result.is_ok());
 
             let na_p = result.unwrap();

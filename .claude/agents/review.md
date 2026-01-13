@@ -35,6 +35,7 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] `cargo doc --no-deps` builds without warnings
 
 ### 2. Correctness
+- [ ] **No `todo!()` macros** - Code must be complete; `todo!()` indicates unfinished implementation
 - [ ] Mathematical operations are correct
 - [ ] Edge cases handled (zero vectors, degenerate cases)
 - [ ] Numerical stability considered
@@ -57,6 +58,10 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
   - Use `Unit<T>`, `Bulk<T>`, `Ideal<T>`, `Proper<T>` from `crate::wrappers`
   - Use generated type aliases like `BulkMotor<T>`, `UnitVector<T>`
   - Reject PRs that define `UnitMotor<T>`, `NonZeroVector<T>`, etc. in arbitrary modules
+- [ ] **No ad-hoc strategy functions** - Use generated type aliases with `Arbitrary` impls:
+  - Use `any::<UnitizedPoint<f64>>()` instead of `finite_point_strategy()`
+  - Use `any::<BulkMotor<f64>>()` instead of `normalized_motor_strategy()`
+  - Reject free functions like `fn foo_strategy() -> impl Strategy<Value = T>`
 
 ### 4. Style & Idioms
 - [ ] Follows Rust API Guidelines

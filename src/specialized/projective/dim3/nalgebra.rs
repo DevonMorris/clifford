@@ -250,7 +250,7 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::specialized::projective::dim3::{Flector, Plane};
+    use crate::specialized::projective::dim3::{Flector, Plane, UnitizedPoint};
     use crate::test_utils::RELATIVE_EQ_EPS;
     use crate::wrappers::Unitized;
     use approx::relative_eq;
@@ -259,21 +259,14 @@ mod tests {
     /// Epsilon for floating-point comparisons in tests.
     const EPS: f64 = RELATIVE_EQ_EPS;
 
-    /// Strategy for generating finite points (not at infinity).
-    fn finite_point_strategy() -> impl Strategy<Value = Point<f64>> {
-        // Generate coordinates in a reasonable range
-        (-100.0f64..100.0, -100.0f64..100.0, -100.0f64..100.0)
-            .prop_map(|(x, y, z)| Point::from_cartesian(x, y, z))
-    }
-
     // ========================================================================
     // Point round-trip tests
     // ========================================================================
 
     proptest! {
         #[test]
-        fn point_roundtrip(p in finite_point_strategy()) {
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+        fn point_roundtrip(p in any::<UnitizedPoint<f64>>()) {
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let back: Point<f64> = na_p.into();
 
             // Compare Cartesian coordinates
@@ -283,8 +276,8 @@ mod tests {
         }
 
         #[test]
-        fn point_try_from_finite(p in finite_point_strategy()) {
-            let result: Result<na::Point3<f64>, _> = p.try_into();
+        fn point_try_from_finite(p in any::<UnitizedPoint<f64>>()) {
+            let result: Result<na::Point3<f64>, _> = (*p).try_into();
             prop_assert!(result.is_ok());
 
             let na_p = result.unwrap();
@@ -353,14 +346,14 @@ mod tests {
         #[test]
         fn transform_point_equivalence(
             m in any::<Unitized<Motor<f64>>>(),
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Transform with clifford motor
-            let result_ga = m.transform_point(&p);
+            let result_ga = m.transform_point(&*p);
 
             // Transform with nalgebra isometry
             let iso: na::Isometry3<f64> = (*m).into();
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             // Compare results
@@ -383,17 +376,17 @@ mod tests {
         fn composition_equivalence(
             m1 in any::<Unitized<Motor<f64>>>(),
             m2 in any::<Unitized<Motor<f64>>>(),
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Compose with clifford
             let composed_ga = m1.compose(&*m2);
-            let result_ga = composed_ga.transform_point(&p);
+            let result_ga = composed_ga.transform_point(&*p);
 
             // Compose with nalgebra
             let iso1: na::Isometry3<f64> = (*m1).into();
             let iso2: na::Isometry3<f64> = (*m2).into();
             let composed_na = iso1 * iso2;
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = composed_na.transform_point(&na_p);
 
             // Compare results
@@ -415,16 +408,16 @@ mod tests {
         #[test]
         fn inverse_equivalence(
             m in any::<Unitized<Motor<f64>>>(),
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Inverse with clifford
             let inv_ga = m.inverse();
-            let result_ga = inv_ga.transform_point(&p);
+            let result_ga = inv_ga.transform_point(&*p);
 
             // Inverse with nalgebra
             let iso: na::Isometry3<f64> = (*m).into();
             let inv_na = iso.inverse();
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = inv_na.transform_point(&na_p);
 
             // Compare results
@@ -454,7 +447,7 @@ mod tests {
             tx in -100.0f64..100.0,
             ty in -100.0f64..100.0,
             tz in -100.0f64..100.0,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_translation(tx, ty, tz);
             let iso = na::Isometry3::from_parts(
@@ -462,8 +455,8 @@ mod tests {
                 na::UnitQuaternion::identity(),
             );
 
-            let result_ga = motor.transform_point(&p);
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let result_ga = motor.transform_point(&*p);
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -478,7 +471,7 @@ mod tests {
         #[test]
         fn rotation_x_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_x(angle);
             // PGA rotates opposite to nalgebra convention, so use -angle
@@ -487,8 +480,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&p);
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let result_ga = motor.transform_point(&*p);
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -503,7 +496,7 @@ mod tests {
         #[test]
         fn rotation_y_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_y(angle);
             // PGA rotates opposite to nalgebra convention, so use -angle
@@ -512,8 +505,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&p);
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let result_ga = motor.transform_point(&*p);
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -528,7 +521,7 @@ mod tests {
         #[test]
         fn rotation_z_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_z(angle);
             // PGA rotates opposite to nalgebra convention, so use -angle
@@ -537,8 +530,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&p);
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let result_ga = motor.transform_point(&*p);
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -556,7 +549,7 @@ mod tests {
             ay in -1.0f64..1.0,
             az in -1.0f64..1.0,
             angle in -std::f64::consts::PI..std::f64::consts::PI,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Skip degenerate axes
             let axis_len = (ax*ax + ay*ay + az*az).sqrt();
@@ -572,8 +565,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na_axis, -angle),
             );
 
-            let result_ga = motor.transform_point(&p);
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let result_ga = motor.transform_point(&*p);
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -649,7 +642,7 @@ mod tests {
             nx in -1.0f64..1.0,
             ny in -1.0f64..1.0,
             nz in -1.0f64..1.0,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Skip degenerate normals
             let norm_len = (nx*nx + ny*ny + nz*nz).sqrt();
@@ -660,10 +653,10 @@ mod tests {
             let flector = Flector::from_plane_through_origin(nx, ny, nz);
 
             // Reflect with flector
-            let result_ga = flector.transform_point(&p);
+            let result_ga = flector.transform_point(&*p);
 
             // Reflect manually
-            let na_p: na::Point3<f64> = p.try_into().unwrap();
+            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_normal = na::Vector3::new(nx, ny, nz);
             let result_na = reflect_point_through_origin_plane(&na_p, &na_normal);
 
@@ -689,7 +682,7 @@ mod tests {
             ny in -1.0f64..1.0,
             nz in -1.0f64..1.0,
             d in -10.0f64..10.0,
-            p in finite_point_strategy(),
+            p in any::<UnitizedPoint<f64>>(),
         ) {
             // Skip degenerate normals
             let norm_len = (nx*nx + ny*ny + nz*nz).sqrt();
@@ -699,7 +692,7 @@ mod tests {
             let flector = Flector::from_plane(&plane);
 
             // Reflect twice
-            let once = flector.transform_point(&p);
+            let once = flector.transform_point(&*p);
             let twice = flector.transform_point(&once);
 
             // Should be back at original point

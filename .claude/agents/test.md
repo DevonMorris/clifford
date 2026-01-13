@@ -169,6 +169,48 @@ proptest! {
 - Wrapper types use where clauses requiring the inner type to be Arbitrary
 - Chain with `.prop_filter()` and `.prop_map()` for derived strategies
 - Use `any::<Type>()` in tests, not free functions
+- **Prefer generated type aliases over ad-hoc strategy functions**: Use `UnitizedPoint<T>`, `BulkMotor<T>`, etc.
+
+## Use Generated Type Aliases, Not Ad-Hoc Strategies
+
+The codegen generates type aliases with `Arbitrary` impls for constrained types. **Always use these instead of writing ad-hoc strategy functions.**
+
+```rust
+// GOOD: Use generated type aliases
+use clifford::specialized::projective::dim3::UnitizedPoint;
+
+proptest! {
+    #[test]
+    fn test_finite_point(p in any::<UnitizedPoint<f64>>()) {
+        // UnitizedPoint guarantees weight_norm = 1 (finite point)
+        // Access inner Point via Deref: &*p
+        let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+    }
+}
+
+// BAD: Ad-hoc strategy function
+fn finite_point_strategy() -> impl Strategy<Value = Point<f64>> {
+    (-100.0..100.0, -100.0..100.0, -100.0..100.0)
+        .prop_map(|(x, y, z)| Point::from_cartesian(x, y, z))
+}
+```
+
+**Why this matters:**
+- Type aliases document constraints at the type level
+- `Arbitrary` impls on wrappers are reusable across test modules
+- Consistent with the project's wrapper types pattern
+- Avoids duplicated strategy logic
+
+**Available generated type aliases:**
+| Alias | Constraint | Use Case |
+|-------|------------|----------|
+| `UnitizedPoint<T>` | weight = 1 | Finite points |
+| `UnitizedPlane<T>` | weight = 1 | Finite planes |
+| `UnitizedLine<T>` | weight = 1 | Finite lines |
+| `BulkMotor<T>` | bulk_norm = 1 | Normalized motors |
+| `BulkFlector<T>` | bulk_norm = 1 | Normalized flectors |
+| `IdealPoint<T>` | weight ≈ 0 | Points at infinity |
+| `IdealLine<T>` | weight ≈ 0 | Lines at infinity |
 
 ## Arbitrary Module Structure
 
