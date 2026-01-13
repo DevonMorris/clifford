@@ -12,10 +12,10 @@ impl<T: Float> Add for Flector<T> {
     #[inline]
     fn add(self, rhs: Self) -> Self {
         Self::new(
-            self.e1() + rhs.e1(),
-            self.e2() + rhs.e2(),
-            self.e0() + rhs.e0(),
-            self.e012() + rhs.e012(),
+            self.s() + rhs.s(),
+            self.e12() + rhs.e12(),
+            self.e01() + rhs.e01(),
+            self.e02() + rhs.e02(),
         )
     }
 }
@@ -24,10 +24,10 @@ impl<T: Float> Sub for Flector<T> {
     #[inline]
     fn sub(self, rhs: Self) -> Self {
         Self::new(
-            self.e1() - rhs.e1(),
-            self.e2() - rhs.e2(),
-            self.e0() - rhs.e0(),
-            self.e012() - rhs.e012(),
+            self.s() - rhs.s(),
+            self.e12() - rhs.e12(),
+            self.e01() - rhs.e01(),
+            self.e02() - rhs.e02(),
         )
     }
 }
@@ -35,7 +35,7 @@ impl<T: Float> Neg for Flector<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.e1(), -self.e2(), -self.e0(), -self.e012())
+        Self::new(-self.s(), -self.e12(), -self.e01(), -self.e02())
     }
 }
 impl<T: Float> Mul<T> for Flector<T> {
@@ -60,9 +60,9 @@ impl Mul<Flector<f64>> for f64 {
     }
 }
 impl<T: Float> Mul<Flector<T>> for Flector<T> {
-    type Output = Motor<T>;
+    type Output = Flector<T>;
     #[inline]
-    fn mul(self, rhs: Flector<T>) -> Motor<T> {
+    fn mul(self, rhs: Flector<T>) -> Flector<T> {
         geometric_flector_flector(&self, &rhs)
     }
 }
@@ -74,9 +74,9 @@ impl<T: Float> Mul<Line<T>> for Flector<T> {
     }
 }
 impl<T: Float> Mul<Motor<T>> for Flector<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Motor<T>) -> Flector<T> {
+    fn mul(self, rhs: Motor<T>) -> Motor<T> {
         geometric_flector_motor(&self, &rhs)
     }
 }
@@ -95,37 +95,37 @@ impl<T: Float> Mul<Scalar<T>> for Flector<T> {
     }
 }
 impl<T: Float> Mul<Trivector<T>> for Flector<T> {
-    type Output = Line<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Trivector<T>) -> Line<T> {
+    fn mul(self, rhs: Trivector<T>) -> Motor<T> {
         geometric_flector_trivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Flector<T>> for Flector<T> {
-    type Output = Line<T>;
+    type Output = Flector<T>;
     #[inline]
-    fn bitxor(self, rhs: Flector<T>) -> Line<T> {
+    fn bitxor(self, rhs: Flector<T>) -> Flector<T> {
         exterior_flector_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Line<T>> for Flector<T> {
-    type Output = Trivector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn bitxor(self, rhs: Line<T>) -> Trivector<T> {
+    fn bitxor(self, rhs: Line<T>) -> Line<T> {
         exterior_flector_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Flector<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn bitxor(self, rhs: Motor<T>) -> Flector<T> {
+    fn bitxor(self, rhs: Motor<T>) -> Motor<T> {
         exterior_flector_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Flector<T> {
-    type Output = Line<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn bitxor(self, rhs: Point<T>) -> Line<T> {
+    fn bitxor(self, rhs: Point<T>) -> Motor<T> {
         exterior_flector_point(&self, &rhs)
     }
 }
@@ -134,6 +134,13 @@ impl<T: Float> BitXor<Scalar<T>> for Flector<T> {
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Flector<T> {
         exterior_flector_scalar(&self, &rhs)
+    }
+}
+impl<T: Float> BitXor<Trivector<T>> for Flector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn bitxor(self, rhs: Trivector<T>) -> Trivector<T> {
+        exterior_flector_trivector(&self, &rhs)
     }
 }
 impl<T: Float> Add for Line<T> {
@@ -194,9 +201,9 @@ impl<T: Float> Mul<Flector<T>> for Line<T> {
     }
 }
 impl<T: Float> Mul<Line<T>> for Line<T> {
-    type Output = Motor<T>;
+    type Output = Flector<T>;
     #[inline]
-    fn mul(self, rhs: Line<T>) -> Motor<T> {
+    fn mul(self, rhs: Line<T>) -> Flector<T> {
         geometric_line_line(&self, &rhs)
     }
 }
@@ -208,9 +215,9 @@ impl<T: Float> Mul<Motor<T>> for Line<T> {
     }
 }
 impl<T: Float> Mul<Point<T>> for Line<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Point<T>) -> Flector<T> {
+    fn mul(self, rhs: Point<T>) -> Motor<T> {
         geometric_line_point(&self, &rhs)
     }
 }
@@ -229,16 +236,16 @@ impl<T: Float> Mul<Trivector<T>> for Line<T> {
     }
 }
 impl<T: Float> BitXor<Flector<T>> for Line<T> {
-    type Output = Trivector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn bitxor(self, rhs: Flector<T>) -> Trivector<T> {
+    fn bitxor(self, rhs: Flector<T>) -> Line<T> {
         exterior_line_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Line<T> {
-    type Output = Line<T>;
+    type Output = Trivector<T>;
     #[inline]
-    fn bitxor(self, rhs: Motor<T>) -> Line<T> {
+    fn bitxor(self, rhs: Motor<T>) -> Trivector<T> {
         exterior_line_motor(&self, &rhs)
     }
 }
@@ -261,10 +268,10 @@ impl<T: Float> Add for Motor<T> {
     #[inline]
     fn add(self, rhs: Self) -> Self {
         Self::new(
-            self.s() + rhs.s(),
-            self.e12() + rhs.e12(),
-            self.e01() + rhs.e01(),
-            self.e02() + rhs.e02(),
+            self.e1() + rhs.e1(),
+            self.e2() + rhs.e2(),
+            self.e0() + rhs.e0(),
+            self.e012() + rhs.e012(),
         )
     }
 }
@@ -273,10 +280,10 @@ impl<T: Float> Sub for Motor<T> {
     #[inline]
     fn sub(self, rhs: Self) -> Self {
         Self::new(
-            self.s() - rhs.s(),
-            self.e12() - rhs.e12(),
-            self.e01() - rhs.e01(),
-            self.e02() - rhs.e02(),
+            self.e1() - rhs.e1(),
+            self.e2() - rhs.e2(),
+            self.e0() - rhs.e0(),
+            self.e012() - rhs.e012(),
         )
     }
 }
@@ -284,7 +291,7 @@ impl<T: Float> Neg for Motor<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.s(), -self.e12(), -self.e01(), -self.e02())
+        Self::new(-self.e1(), -self.e2(), -self.e0(), -self.e012())
     }
 }
 impl<T: Float> Mul<T> for Motor<T> {
@@ -309,9 +316,9 @@ impl Mul<Motor<f64>> for f64 {
     }
 }
 impl<T: Float> Mul<Flector<T>> for Motor<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Flector<T>) -> Flector<T> {
+    fn mul(self, rhs: Flector<T>) -> Motor<T> {
         geometric_motor_flector(&self, &rhs)
     }
 }
@@ -323,9 +330,9 @@ impl<T: Float> Mul<Line<T>> for Motor<T> {
     }
 }
 impl<T: Float> Mul<Motor<T>> for Motor<T> {
-    type Output = Motor<T>;
+    type Output = Flector<T>;
     #[inline]
-    fn mul(self, rhs: Motor<T>) -> Motor<T> {
+    fn mul(self, rhs: Motor<T>) -> Flector<T> {
         geometric_motor_motor(&self, &rhs)
     }
 }
@@ -344,37 +351,37 @@ impl<T: Float> Mul<Scalar<T>> for Motor<T> {
     }
 }
 impl<T: Float> Mul<Trivector<T>> for Motor<T> {
-    type Output = Flector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn mul(self, rhs: Trivector<T>) -> Flector<T> {
+    fn mul(self, rhs: Trivector<T>) -> Line<T> {
         geometric_motor_trivector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Flector<T>> for Motor<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn bitxor(self, rhs: Flector<T>) -> Flector<T> {
+    fn bitxor(self, rhs: Flector<T>) -> Motor<T> {
         exterior_motor_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Line<T>> for Motor<T> {
-    type Output = Line<T>;
+    type Output = Trivector<T>;
     #[inline]
-    fn bitxor(self, rhs: Line<T>) -> Line<T> {
+    fn bitxor(self, rhs: Line<T>) -> Trivector<T> {
         exterior_motor_line(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Motor<T> {
-    type Output = Motor<T>;
+    type Output = Line<T>;
     #[inline]
-    fn bitxor(self, rhs: Motor<T>) -> Motor<T> {
+    fn bitxor(self, rhs: Motor<T>) -> Line<T> {
         exterior_motor_motor(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Point<T>> for Motor<T> {
-    type Output = Flector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn bitxor(self, rhs: Point<T>) -> Flector<T> {
+    fn bitxor(self, rhs: Point<T>) -> Line<T> {
         exterior_motor_point(&self, &rhs)
     }
 }
@@ -383,13 +390,6 @@ impl<T: Float> BitXor<Scalar<T>> for Motor<T> {
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Motor<T> {
         exterior_motor_scalar(&self, &rhs)
-    }
-}
-impl<T: Float> BitXor<Trivector<T>> for Motor<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bitxor(self, rhs: Trivector<T>) -> Trivector<T> {
-        exterior_motor_trivector(&self, &rhs)
     }
 }
 impl<T: Float> Add for Point<T> {
@@ -450,9 +450,9 @@ impl<T: Float> Mul<Flector<T>> for Point<T> {
     }
 }
 impl<T: Float> Mul<Line<T>> for Point<T> {
-    type Output = Flector<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Line<T>) -> Flector<T> {
+    fn mul(self, rhs: Line<T>) -> Motor<T> {
         geometric_point_line(&self, &rhs)
     }
 }
@@ -464,9 +464,9 @@ impl<T: Float> Mul<Motor<T>> for Point<T> {
     }
 }
 impl<T: Float> Mul<Point<T>> for Point<T> {
-    type Output = Motor<T>;
+    type Output = Flector<T>;
     #[inline]
-    fn mul(self, rhs: Point<T>) -> Motor<T> {
+    fn mul(self, rhs: Point<T>) -> Flector<T> {
         geometric_point_point(&self, &rhs)
     }
 }
@@ -485,9 +485,9 @@ impl<T: Float> Mul<Trivector<T>> for Point<T> {
     }
 }
 impl<T: Float> BitXor<Flector<T>> for Point<T> {
-    type Output = Line<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn bitxor(self, rhs: Flector<T>) -> Line<T> {
+    fn bitxor(self, rhs: Flector<T>) -> Motor<T> {
         exterior_point_flector(&self, &rhs)
     }
 }
@@ -499,9 +499,9 @@ impl<T: Float> BitXor<Line<T>> for Point<T> {
     }
 }
 impl<T: Float> BitXor<Motor<T>> for Point<T> {
-    type Output = Flector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn bitxor(self, rhs: Motor<T>) -> Flector<T> {
+    fn bitxor(self, rhs: Motor<T>) -> Line<T> {
         exterior_point_motor(&self, &rhs)
     }
 }
@@ -688,9 +688,9 @@ impl Mul<Trivector<f64>> for f64 {
     }
 }
 impl<T: Float> Mul<Flector<T>> for Trivector<T> {
-    type Output = Line<T>;
+    type Output = Motor<T>;
     #[inline]
-    fn mul(self, rhs: Flector<T>) -> Line<T> {
+    fn mul(self, rhs: Flector<T>) -> Motor<T> {
         geometric_trivector_flector(&self, &rhs)
     }
 }
@@ -702,9 +702,9 @@ impl<T: Float> Mul<Line<T>> for Trivector<T> {
     }
 }
 impl<T: Float> Mul<Motor<T>> for Trivector<T> {
-    type Output = Flector<T>;
+    type Output = Line<T>;
     #[inline]
-    fn mul(self, rhs: Motor<T>) -> Flector<T> {
+    fn mul(self, rhs: Motor<T>) -> Line<T> {
         geometric_trivector_motor(&self, &rhs)
     }
 }
@@ -722,11 +722,11 @@ impl<T: Float> Mul<Scalar<T>> for Trivector<T> {
         geometric_trivector_scalar(&self, &rhs)
     }
 }
-impl<T: Float> BitXor<Motor<T>> for Trivector<T> {
+impl<T: Float> BitXor<Flector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
-    fn bitxor(self, rhs: Motor<T>) -> Trivector<T> {
-        exterior_trivector_motor(&self, &rhs)
+    fn bitxor(self, rhs: Flector<T>) -> Trivector<T> {
+        exterior_trivector_flector(&self, &rhs)
     }
 }
 impl<T: Float> BitXor<Scalar<T>> for Trivector<T> {
@@ -740,10 +740,10 @@ impl<T: Float> crate::norm::Normed for Flector<T> {
     type Scalar = T;
     #[inline]
     fn norm_squared(&self) -> T {
-        self.e1() * self.e1()
-            + self.e2() * self.e2()
-            + self.e0() * self.e0()
-            + self.e012() * self.e012()
+        self.s() * self.s()
+            + self.e12() * self.e12()
+            + self.e01() * self.e01()
+            + self.e02() * self.e02()
     }
     fn try_normalize(&self) -> Option<Self> {
         let n = self.norm();
@@ -756,10 +756,10 @@ impl<T: Float> crate::norm::Normed for Flector<T> {
     #[inline]
     fn scale(&self, factor: T) -> Self {
         Self::new(
-            self.e1() * factor,
-            self.e2() * factor,
-            self.e0() * factor,
-            self.e012() * factor,
+            self.s() * factor,
+            self.e12() * factor,
+            self.e01() * factor,
+            self.e02() * factor,
         )
     }
 }
@@ -790,10 +790,10 @@ impl<T: Float> crate::norm::Normed for Motor<T> {
     type Scalar = T;
     #[inline]
     fn norm_squared(&self) -> T {
-        self.s() * self.s()
-            + self.e12() * self.e12()
-            + self.e01() * self.e01()
-            + self.e02() * self.e02()
+        self.e1() * self.e1()
+            + self.e2() * self.e2()
+            + self.e0() * self.e0()
+            + self.e012() * self.e012()
     }
     fn try_normalize(&self) -> Option<Self> {
         let n = self.norm();
@@ -806,10 +806,10 @@ impl<T: Float> crate::norm::Normed for Motor<T> {
     #[inline]
     fn scale(&self, factor: T) -> Self {
         Self::new(
-            self.s() * factor,
-            self.e12() * factor,
-            self.e01() * factor,
-            self.e02() * factor,
+            self.e1() * factor,
+            self.e2() * factor,
+            self.e0() * factor,
+            self.e012() * factor,
         )
     }
 }
@@ -873,11 +873,11 @@ impl<T: Float> crate::norm::Normed for Trivector<T> {
 impl<T: Float> crate::norm::DegenerateNormed for Flector<T> {
     #[inline]
     fn bulk_norm_squared(&self) -> T {
-        self.e1() * self.e1() + self.e2() * self.e2()
+        self.s() * self.s() + self.e12() * self.e12()
     }
     #[inline]
     fn weight_norm_squared(&self) -> T {
-        self.e0() * self.e0() + self.e012() * self.e012()
+        self.e01() * self.e01() + self.e02() * self.e02()
     }
     fn try_unitize(&self) -> Option<Self> {
         let w = self.weight_norm();
@@ -886,10 +886,10 @@ impl<T: Float> crate::norm::DegenerateNormed for Flector<T> {
         } else {
             let inv_w = T::one() / w;
             Some(Self::new(
-                self.e1() * inv_w,
-                self.e2() * inv_w,
-                self.e0() * inv_w,
-                self.e012() * inv_w,
+                self.s() * inv_w,
+                self.e12() * inv_w,
+                self.e01() * inv_w,
+                self.e02() * inv_w,
             ))
         }
     }
@@ -920,11 +920,11 @@ impl<T: Float> crate::norm::DegenerateNormed for Line<T> {
 impl<T: Float> crate::norm::DegenerateNormed for Motor<T> {
     #[inline]
     fn bulk_norm_squared(&self) -> T {
-        self.s() * self.s() + self.e12() * self.e12()
+        self.e1() * self.e1() + self.e2() * self.e2()
     }
     #[inline]
     fn weight_norm_squared(&self) -> T {
-        self.e01() * self.e01() + self.e02() * self.e02()
+        self.e0() * self.e0() + self.e012() * self.e012()
     }
     fn try_unitize(&self) -> Option<Self> {
         let w = self.weight_norm();
@@ -933,10 +933,10 @@ impl<T: Float> crate::norm::DegenerateNormed for Motor<T> {
         } else {
             let inv_w = T::one() / w;
             Some(Self::new(
-                self.s() * inv_w,
-                self.e12() * inv_w,
-                self.e01() * inv_w,
-                self.e02() * inv_w,
+                self.e1() * inv_w,
+                self.e2() * inv_w,
+                self.e0() * inv_w,
+                self.e012() * inv_w,
             ))
         }
     }
@@ -1008,10 +1008,10 @@ impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Flector<T> {
         T::default_epsilon()
     }
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.e1().abs_diff_eq(&other.e1(), epsilon)
-            && self.e2().abs_diff_eq(&other.e2(), epsilon)
-            && self.e0().abs_diff_eq(&other.e0(), epsilon)
-            && self.e012().abs_diff_eq(&other.e012(), epsilon)
+        self.s().abs_diff_eq(&other.s(), epsilon)
+            && self.e12().abs_diff_eq(&other.e12(), epsilon)
+            && self.e01().abs_diff_eq(&other.e01(), epsilon)
+            && self.e02().abs_diff_eq(&other.e02(), epsilon)
     }
 }
 impl<T: Float + RelativeEq<Epsilon = T>> RelativeEq for Flector<T> {
@@ -1024,12 +1024,10 @@ impl<T: Float + RelativeEq<Epsilon = T>> RelativeEq for Flector<T> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        self.e1().relative_eq(&other.e1(), epsilon, max_relative)
-            && self.e2().relative_eq(&other.e2(), epsilon, max_relative)
-            && self.e0().relative_eq(&other.e0(), epsilon, max_relative)
-            && self
-                .e012()
-                .relative_eq(&other.e012(), epsilon, max_relative)
+        self.s().relative_eq(&other.s(), epsilon, max_relative)
+            && self.e12().relative_eq(&other.e12(), epsilon, max_relative)
+            && self.e01().relative_eq(&other.e01(), epsilon, max_relative)
+            && self.e02().relative_eq(&other.e02(), epsilon, max_relative)
     }
 }
 impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Flector<T> {
@@ -1037,10 +1035,10 @@ impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Flector<T> {
         T::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.e1().ulps_eq(&other.e1(), epsilon, max_ulps)
-            && self.e2().ulps_eq(&other.e2(), epsilon, max_ulps)
-            && self.e0().ulps_eq(&other.e0(), epsilon, max_ulps)
-            && self.e012().ulps_eq(&other.e012(), epsilon, max_ulps)
+        self.s().ulps_eq(&other.s(), epsilon, max_ulps)
+            && self.e12().ulps_eq(&other.e12(), epsilon, max_ulps)
+            && self.e01().ulps_eq(&other.e01(), epsilon, max_ulps)
+            && self.e02().ulps_eq(&other.e02(), epsilon, max_ulps)
     }
 }
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Line<T> {
@@ -1085,10 +1083,10 @@ impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Motor<T> {
         T::default_epsilon()
     }
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
-        self.s().abs_diff_eq(&other.s(), epsilon)
-            && self.e12().abs_diff_eq(&other.e12(), epsilon)
-            && self.e01().abs_diff_eq(&other.e01(), epsilon)
-            && self.e02().abs_diff_eq(&other.e02(), epsilon)
+        self.e1().abs_diff_eq(&other.e1(), epsilon)
+            && self.e2().abs_diff_eq(&other.e2(), epsilon)
+            && self.e0().abs_diff_eq(&other.e0(), epsilon)
+            && self.e012().abs_diff_eq(&other.e012(), epsilon)
     }
 }
 impl<T: Float + RelativeEq<Epsilon = T>> RelativeEq for Motor<T> {
@@ -1101,10 +1099,12 @@ impl<T: Float + RelativeEq<Epsilon = T>> RelativeEq for Motor<T> {
         epsilon: Self::Epsilon,
         max_relative: Self::Epsilon,
     ) -> bool {
-        self.s().relative_eq(&other.s(), epsilon, max_relative)
-            && self.e12().relative_eq(&other.e12(), epsilon, max_relative)
-            && self.e01().relative_eq(&other.e01(), epsilon, max_relative)
-            && self.e02().relative_eq(&other.e02(), epsilon, max_relative)
+        self.e1().relative_eq(&other.e1(), epsilon, max_relative)
+            && self.e2().relative_eq(&other.e2(), epsilon, max_relative)
+            && self.e0().relative_eq(&other.e0(), epsilon, max_relative)
+            && self
+                .e012()
+                .relative_eq(&other.e012(), epsilon, max_relative)
     }
 }
 impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Motor<T> {
@@ -1112,10 +1112,10 @@ impl<T: Float + UlpsEq<Epsilon = T>> UlpsEq for Motor<T> {
         T::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
-        self.s().ulps_eq(&other.s(), epsilon, max_ulps)
-            && self.e12().ulps_eq(&other.e12(), epsilon, max_ulps)
-            && self.e01().ulps_eq(&other.e01(), epsilon, max_ulps)
-            && self.e02().ulps_eq(&other.e02(), epsilon, max_ulps)
+        self.e1().ulps_eq(&other.e1(), epsilon, max_ulps)
+            && self.e2().ulps_eq(&other.e2(), epsilon, max_ulps)
+            && self.e0().ulps_eq(&other.e0(), epsilon, max_ulps)
+            && self.e012().ulps_eq(&other.e012(), epsilon, max_ulps)
     }
 }
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Point<T> {
@@ -1619,11 +1619,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_flector_flector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+        fn geometric_flector_flector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Motor<f64> = geometric_flector_flector(&a, &b);
+            let specialized_result: Flector<f64> = geometric_flector_flector(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1655,11 +1655,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+        fn geometric_flector_motor_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_flector_motor(&a, &b);
+            let specialized_result: Motor<f64> = geometric_flector_motor(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1709,11 +1709,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_flector_trivector_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
+        fn geometric_flector_trivector_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = geometric_flector_trivector(&a, &b);
+            let specialized_result: Motor<f64> = geometric_flector_trivector(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1745,11 +1745,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_line_line_motor_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
+        fn geometric_line_line_flector_matches_multivector(a in any::<Line<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Motor<f64> = geometric_line_line(&a, &b);
+            let specialized_result: Flector<f64> = geometric_line_line(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1781,11 +1781,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_line_point_flector_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
+        fn geometric_line_point_motor_matches_multivector(a in any::<Line<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_line_point(&a, &b);
+            let specialized_result: Motor<f64> = geometric_line_point(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1835,11 +1835,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+        fn geometric_motor_flector_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_motor_flector(&a, &b);
+            let specialized_result: Motor<f64> = geometric_motor_flector(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1871,11 +1871,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+        fn geometric_motor_motor_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Motor<f64> = geometric_motor_motor(&a, &b);
+            let specialized_result: Flector<f64> = geometric_motor_motor(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1925,11 +1925,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_motor_trivector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+        fn geometric_motor_trivector_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_motor_trivector(&a, &b);
+            let specialized_result: Line<f64> = geometric_motor_trivector(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1961,11 +1961,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_point_line_flector_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
+        fn geometric_point_line_motor_matches_multivector(a in any::<Point<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_point_line(&a, &b);
+            let specialized_result: Motor<f64> = geometric_point_line(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -1997,11 +1997,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_point_point_motor_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
+        fn geometric_point_point_flector_matches_multivector(a in any::<Point<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Motor<f64> = geometric_point_point(&a, &b);
+            let specialized_result: Flector<f64> = geometric_point_point(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2159,11 +2159,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_trivector_flector_line_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
+        fn geometric_trivector_flector_motor_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = geometric_trivector_flector(&a, &b);
+            let specialized_result: Motor<f64> = geometric_trivector_flector(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2195,11 +2195,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn geometric_trivector_motor_flector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+        fn geometric_trivector_motor_line_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = geometric_trivector_motor(&a, &b);
+            let specialized_result: Line<f64> = geometric_trivector_motor(&a, &b);
             let generic_result = mv_a * mv_b;
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2249,11 +2249,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_flector_flector_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_flector_flector_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = exterior_flector_flector(&a, &b);
+            let specialized_result: Flector<f64> = exterior_flector_flector(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2267,11 +2267,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_flector_line_trivector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_flector_line_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Trivector<f64> = exterior_flector_line(&a, &b);
+            let specialized_result: Line<f64> = exterior_flector_line(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2285,11 +2285,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_flector_motor_flector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_flector_motor_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = exterior_flector_motor(&a, &b);
+            let specialized_result: Motor<f64> = exterior_flector_motor(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2303,11 +2303,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_flector_point_line_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_flector_point_motor_matches_multivector(a in any::<Flector<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = exterior_flector_point(&a, &b);
+            let specialized_result: Motor<f64> = exterior_flector_point(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2339,11 +2339,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_line_flector_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_flector_trivector_trivector_matches_multivector(a in any::<Flector<f64>>(), b in any::<Trivector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Trivector<f64> = exterior_line_flector(&a, &b);
+            let specialized_result: Trivector<f64> = exterior_flector_trivector(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2357,11 +2357,29 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_line_motor_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_line_flector_line_matches_multivector(a in any::<Line<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = exterior_line_motor(&a, &b);
+            let specialized_result: Line<f64> = exterior_line_flector(&a, &b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Exterior product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn exterior_line_motor_trivector_matches_multivector(a in any::<Line<f64>>(), b in any::<Motor<f64>>()) {
+            let mv_a: Multivector<f64, Projective2> = a.into();
+            let mv_b: Multivector<f64, Projective2> = b.into();
+
+            let specialized_result: Trivector<f64> = exterior_line_motor(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2411,11 +2429,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_motor_flector_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
+        fn exterior_motor_flector_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = exterior_motor_flector(&a, &b);
+            let specialized_result: Motor<f64> = exterior_motor_flector(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2429,11 +2447,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_motor_line_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
+        fn exterior_motor_line_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Line<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Line<f64> = exterior_motor_line(&a, &b);
+            let specialized_result: Trivector<f64> = exterior_motor_line(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2447,11 +2465,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_motor_motor_motor_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_motor_motor_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Motor<f64> = exterior_motor_motor(&a, &b);
+            let specialized_result: Line<f64> = exterior_motor_motor(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2465,11 +2483,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_motor_point_flector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
+        fn exterior_motor_point_line_matches_multivector(a in any::<Motor<f64>>(), b in any::<Point<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = exterior_motor_point(&a, &b);
+            let specialized_result: Line<f64> = exterior_motor_point(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2501,29 +2519,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_motor_trivector_trivector_matches_multivector(a in any::<Motor<f64>>(), b in any::<Trivector<f64>>()) {
+        fn exterior_point_flector_motor_matches_multivector(a in any::<Point<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Trivector<f64> = exterior_motor_trivector(&a, &b);
-            let generic_result = mv_a.exterior(&mv_b);
-
-            let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
-            prop_assert!(
-                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
-                "Exterior product mismatch: specialized={:?}, generic={:?}",
-                specialized_mv, generic_result
-            );
-        }
-    }
-
-    proptest! {
-        #[test]
-        fn exterior_point_flector_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Flector<f64>>()) {
-            let mv_a: Multivector<f64, Projective2> = a.into();
-            let mv_b: Multivector<f64, Projective2> = b.into();
-
-            let specialized_result: Line<f64> = exterior_point_flector(&a, &b);
+            let specialized_result: Motor<f64> = exterior_point_flector(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2555,11 +2555,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_point_motor_flector_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_point_motor_line_matches_multivector(a in any::<Point<f64>>(), b in any::<Motor<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Flector<f64> = exterior_point_motor(&a, &b);
+            let specialized_result: Line<f64> = exterior_point_motor(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();
@@ -2717,11 +2717,11 @@ mod verification_tests {
 
     proptest! {
         #[test]
-        fn exterior_trivector_motor_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Motor<f64>>()) {
+        fn exterior_trivector_flector_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Flector<f64>>()) {
             let mv_a: Multivector<f64, Projective2> = a.into();
             let mv_b: Multivector<f64, Projective2> = b.into();
 
-            let specialized_result: Trivector<f64> = exterior_trivector_motor(&a, &b);
+            let specialized_result: Trivector<f64> = exterior_trivector_flector(&a, &b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, Projective2> = specialized_result.into();

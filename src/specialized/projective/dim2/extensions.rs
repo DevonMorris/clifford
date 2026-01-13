@@ -447,10 +447,12 @@ impl<T: Float> Line<T> {
 impl<T: Float> Motor<T> {
     /// Creates the identity motor (no transformation).
     ///
-    /// In 2D PGA, the identity motor has only the scalar component.
+    /// In 2D PGA with dual representation, the identity motor has e012=1.
+    /// This matches the 3D PGA pattern where identity is the pseudoscalar.
     #[inline]
     pub fn identity() -> Self {
-        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+        // Dual form: e012 = 1 (pseudoscalar component)
+        Self::new(T::zero(), T::zero(), T::zero(), T::one())
     }
 
     /// Creates a pure rotation motor around the origin.
@@ -461,12 +463,14 @@ impl<T: Float> Motor<T> {
     ///
     /// # Notes
     ///
-    /// The rotor formula for counterclockwise rotation uses -sin(θ/2)*e12
-    /// because the e12 bivector represents rotation from e1 toward e2.
+    /// In dual form, the rotation is encoded as:
+    /// - e0 = -sin(θ/2) (dual of e12 component)
+    /// - e012 = cos(θ/2) (dual of scalar component)
     #[inline]
     pub fn from_rotation(angle: T) -> Self {
         let half = angle / T::TWO;
-        Self::new(half.cos(), -half.sin(), T::zero(), T::zero())
+        // Dual form: e0 = -sin(θ/2), e012 = cos(θ/2)
+        Self::new(T::zero(), T::zero(), -half.sin(), half.cos())
     }
 
     /// Creates a pure translation motor.
@@ -478,14 +482,14 @@ impl<T: Float> Motor<T> {
     ///
     /// # Note
     ///
-    /// In 2D PGA with our representation, the translation motor uses the formula:
-    /// `T = 1 - (dx/2)*e01 - (dy/2)*e02`
-    ///
-    /// This is different from 3D PGA due to the duality relationship between
-    /// points (vectors) and lines (bivectors) in 2D.
+    /// In dual form, translation is encoded as:
+    /// - e1 = dy/2 (dual of -e02 component)
+    /// - e2 = -dx/2 (dual of e01 component)
+    /// - e012 = 1
     #[inline]
     pub fn from_translation(dx: T, dy: T) -> Self {
-        Self::new(T::one(), T::zero(), -dx / T::TWO, -dy / T::TWO)
+        // Dual form mapping: e1 = -(-dy/2) = dy/2, e2 = -dx/2
+        Self::new(dy / T::TWO, -dx / T::TWO, T::zero(), T::one())
     }
 
     /// Creates a motor for rotation around an arbitrary point.
@@ -507,32 +511,27 @@ impl<T: Float> Motor<T> {
     /// For a unit motor, this equals the reverse.
     #[inline]
     pub fn inverse(&self) -> Self {
-        let norm_sq = self.s() * self.s() + self.e12() * self.e12();
+        // In dual form, the norm squared uses e0 and e012 (duals of e12 and s)
+        let norm_sq = self.e012() * self.e012() + self.e0() * self.e0();
         if norm_sq.abs() < T::epsilon() {
             return *self;
         }
         let rev = self.reverse();
         Self::new(
-            rev.s() / norm_sq,
-            rev.e12() / norm_sq,
-            rev.e01() / norm_sq,
-            rev.e02() / norm_sq,
+            rev.e1() / norm_sq,
+            rev.e2() / norm_sq,
+            rev.e0() / norm_sq,
+            rev.e012() / norm_sq,
         )
     }
 
-    /// Composes two motors via geometric product: `self * other`.
+    /// Composes two motors via antigeometric product.
     ///
-    /// The resulting motor applies `other` first, then `self`. This follows
-    /// from the sandwich product expansion:
-    /// ```text
-    /// (self * other) * P * rev(self * other)
-    ///   = self * other * P * rev(other) * rev(self)
-    ///   = self * (other * P * rev(other)) * rev(self)
-    /// ```
-    /// So `other` transforms P first, then `self` transforms the result.
+    /// In dual form, motor composition uses the antigeometric product.
+    /// The resulting motor applies `other` first, then `self`.
     #[inline]
     pub fn compose(&self, other: &Self) -> Self {
-        products::geometric_motor_motor(self, other)
+        products::antigeometric_motor_motor(self, other)
     }
 
     /// Linear interpolation between motors (normalized).
@@ -540,10 +539,10 @@ impl<T: Float> Motor<T> {
     pub fn lerp(&self, other: &Self, t: T) -> Self {
         let one_minus_t = T::one() - t;
         Self::new(
-            self.s() * one_minus_t + other.s() * t,
-            self.e12() * one_minus_t + other.e12() * t,
-            self.e01() * one_minus_t + other.e01() * t,
-            self.e02() * one_minus_t + other.e02() * t,
+            self.e1() * one_minus_t + other.e1() * t,
+            self.e2() * one_minus_t + other.e2() * t,
+            self.e0() * one_minus_t + other.e0() * t,
+            self.e012() * one_minus_t + other.e012() * t,
         )
         .normalize()
     }
@@ -551,7 +550,9 @@ impl<T: Float> Motor<T> {
     /// Returns the rotation angle in radians.
     #[inline]
     pub fn rotation_angle(&self) -> T {
-        self.e12().atan2(self.s()) * T::TWO
+        // In dual form: e0 = -sin(θ/2), e012 = cos(θ/2)
+        // So angle = 2 * atan2(-e0, e012)
+        (-self.e0()).atan2(self.e012()) * T::TWO
     }
 
     /// Returns the translation vector as a Euclidean vector.
@@ -562,49 +563,24 @@ impl<T: Float> Motor<T> {
     /// For composed motors (rotation + translation), this is an approximation.
     #[inline]
     pub fn translation(&self) -> EuclideanVector<T> {
-        // Since from_translation uses -dx/2 and -dy/2, we negate to recover dx, dy
-        EuclideanVector::new(-self.e01() * T::TWO, -self.e02() * T::TWO)
+        // In dual form: e1 = dy/2, e2 = -dx/2
+        // So dx = -2*e2, dy = 2*e1
+        EuclideanVector::new(-self.e2() * T::TWO, self.e1() * T::TWO)
     }
 
-    /// Transforms a point using the dual sandwich formula.
+    /// Transforms a point using the antisandwich product.
     ///
-    /// In 2D PGA with our vector-based point representation, the transformation
-    /// formula is: `P' = complement(M * complement(P) * rev(M))`
-    ///
-    /// This works because:
-    /// 1. Points (vectors, grade 1) are dual to lines (bivectors, grade 2)
-    /// 2. The motor sandwich naturally transforms bivectors correctly
-    /// 3. By complementing the point to a line, applying the sandwich, and
-    ///    complementing back, we get the correct point transformation
-    ///
-    /// This is analogous to how 3D PGA uses the antisandwich, but the 2D case
-    /// requires this explicit dual sandwich due to the algebra structure.
+    /// In 2D PGA with dual motor representation, the antisandwich product
+    /// works directly for point transformationirtual. This matches the 3D PGA pattern.
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        // complement(P) for point P = x*e1 + y*e2 + w*e0
-        // gives line L = w*e12 + y*e01 - x*e02
-        let p_as_line = Line::new(p.e0(), p.e2(), -p.e1());
-
-        // Apply motor sandwich to the line
-        let transformed_line = products::sandwich_motor_line(self, &p_as_line);
-
-        // complement(L) for line L = a*e12 + b*e01 + c*e02
-        // gives point P = -c*e1 + b*e2 + a*e0
-        Point::new(
-            -transformed_line.e02(),
-            transformed_line.e01(),
-            transformed_line.e12(),
-        )
+        products::antisandwich_motor_point(self, p)
     }
 
-    /// Transforms a line using the sandwich product: `L' = M * L * rev(M)`.
-    ///
-    /// This applies the rigid transformation to the line.
-    /// In 2D PGA, the regular sandwich product is used (unlike 3D PGA which uses
-    /// the antisandwich).
+    /// Transforms a line using the antisandwich product.
     #[inline]
     pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
-        products::sandwich_motor_line(self, l)
+        products::antisandwich_motor_line(self, l)
     }
 
     /// Transforms a Euclidean 2D vector using this motor.
@@ -632,6 +608,9 @@ impl<T: Float> Flector<T> {
     /// The flector will reflect points across the given line.
     /// The line should be unitized (unit weight norm) for proper reflection.
     ///
+    /// In 2D PGA with swapped representation (Flector = grades 0+2),
+    /// the flector stores the line components directly.
+    ///
     /// # Example
     ///
     /// ```
@@ -647,8 +626,9 @@ impl<T: Float> Flector<T> {
     /// ```
     pub fn from_line(line: &Line<T>) -> Self {
         let l = line.unitized();
-        Self::new(T::zero(), T::zero(), T::zero(), l.e12())
-            + Self::new(l.e01(), l.e02(), T::zero(), T::zero())
+        // Flector fields: s, e12, e01, e02
+        // Line fields: e12, e01, e02
+        Self::new(T::zero(), l.e12(), l.e01(), l.e02())
     }
 
     /// Creates a flector from line normal direction through the origin.
@@ -656,7 +636,8 @@ impl<T: Float> Flector<T> {
     /// Reflects across the line passing through the origin with the given normal.
     pub fn from_line_through_origin(nx: T, ny: T) -> Self {
         let norm = (nx * nx + ny * ny).sqrt();
-        Self::new(nx / norm, ny / norm, T::zero(), T::zero())
+        // Line through origin: d=0, so e12=0, normal=(nx, ny) -> e01=nx, e02=ny
+        Self::new(T::zero(), T::zero(), nx / norm, ny / norm)
     }
 
     /// Reflect through X-axis (y = 0).
@@ -671,58 +652,73 @@ impl<T: Float> Flector<T> {
         Self::from_line(&Line::y_axis())
     }
 
-    /// Point part (grade 1): e1, e2, e0.
+    /// Returns the line part of this flector (grade 2 components).
+    ///
+    /// For a pure reflection flector, this is the reflection line.
     #[inline]
-    pub fn point_part(&self) -> Point<T> {
-        Point::new(self.e1(), self.e2(), self.e0())
+    pub fn line_part(&self) -> Line<T> {
+        Line::new(self.e12(), self.e01(), self.e02())
     }
 
-    /// Trivector part (grade 3): e012.
+    /// Returns the scalar part (grade 0).
     #[inline]
-    pub fn trivector_part(&self) -> T {
-        self.e012()
+    pub fn scalar_part(&self) -> T {
+        self.s()
     }
 
-    /// Check if this is a pure reflection (point part is zero).
+    /// Check if this is a pure reflection (scalar part is zero).
     #[inline]
     pub fn is_pure_reflection(&self) -> bool {
-        let pt = self.point_part();
-        pt.bulk_norm() < T::epsilon() && pt.weight_norm() < T::epsilon()
+        self.s().abs() < T::epsilon()
     }
 
-    /// Unitize to unit bulk norm.
+    /// Unitize to unit weight norm.
     ///
-    /// For a flector to represent a proper rigid reflection, the bulk norm
-    /// (e1² + e2² + e012²) should be 1.
+    /// For a flector to represent a proper rigid reflection, the weight norm
+    /// (e01² + e02²) should be 1.
     pub fn unitized(&self) -> Self {
-        use crate::norm::DegenerateNormed;
-        let bn = self.bulk_norm();
-        if bn < T::epsilon() {
+        let wn = self.weight_norm();
+        if wn < T::epsilon() {
             return *self;
         }
         Self::new(
-            self.e1() / bn,
-            self.e2() / bn,
-            self.e0() / bn,
-            self.e012() / bn,
+            self.s() / wn,
+            self.e12() / wn,
+            self.e01() / wn,
+            self.e02() / wn,
         )
+    }
+
+    /// Returns the squared weight norm of the flector.
+    ///
+    /// The weight norm is the length of the normal direction: `e01² + e02²`.
+    #[inline]
+    pub fn weight_norm_squared(&self) -> T {
+        self.e01() * self.e01() + self.e02() * self.e02()
+    }
+
+    /// Returns the weight norm of the flector.
+    #[inline]
+    pub fn weight_norm(&self) -> T {
+        self.weight_norm_squared().sqrt()
     }
 
     /// Compose two flectors (result is a motor).
     ///
     /// Two reflections compose to give a rotation around their intersection axis
     /// (or a translation if the lines are parallel).
+    ///
+    /// In the swapped representation, flector (grades 0+2) composition uses the
+    /// antigeometric product to produce a motor in dual form (grades 1+3).
     #[inline]
     pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
-        products::geometric_flector_flector(self, other)
+        products::antigeometric_flector_flector(self, other)
     }
 
-    /// Transform a point using the sandwich product.
+    /// Transform a point by reflecting it across the flector's line.
     ///
-    /// In 2D PGA, flector transformations use the regular sandwich product:
-    /// `P' = F * P * rev(F)` (unlike 3D PGA which uses the antisandwich).
-    ///
-    /// This reflects the point across the line represented by the flector.
+    /// For a pure reflection flector (scalar part = 0), this reflects the
+    /// point across the line represented by the grade-2 components.
     ///
     /// # Example
     ///
@@ -739,12 +735,15 @@ impl<T: Float> Flector<T> {
     /// ```
     #[inline]
     pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        products::sandwich_flector_point(self, p)
+        // Use the line part for reflection
+        self.line_part().reflect(p)
     }
 
-    /// Transform a line using the sandwich product.
+    /// Transform a line by reflecting it across the flector's line.
     #[inline]
     pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
+        // Reflect a line by reflecting two points on it and joining them
+        // For now, use the sandwich product which should work for line-line
         products::sandwich_flector_line(self, l)
     }
 }

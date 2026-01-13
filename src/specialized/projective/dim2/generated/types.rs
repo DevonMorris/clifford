@@ -8,25 +8,25 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "2D reflection (improper isometry)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e0` |\n| 7 | e1e2e3 | `e012` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "2D reflection (improper isometry) in dual form\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `e12` |\n| 5 | e1e3 | `e01` |\n| 6 | e2e3 | `e02` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Flector<T: Float> {
-    #[doc = "Coefficient of `e1`."]
-    e1: T,
-    #[doc = "Coefficient of `e2`."]
-    e2: T,
-    #[doc = "Coefficient of `e0`."]
-    e0: T,
-    #[doc = "Coefficient of `e012`."]
-    e012: T,
+    #[doc = "Coefficient of `s`."]
+    s: T,
+    #[doc = "Coefficient of `e12`."]
+    e12: T,
+    #[doc = "Coefficient of `e01`."]
+    e01: T,
+    #[doc = "Coefficient of `e02`."]
+    e02: T,
 }
 impl<T: Float> Flector<T> {
     #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(e1: T, e2: T, e0: T, e012: T) -> Self {
-        Self { e1, e2, e0, e012 }
+    pub fn new(s: T, e12: T, e01: T, e02: T) -> Self {
+        Self { s, e12, e01, e02 }
     }
     #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
@@ -34,28 +34,28 @@ impl<T: Float> Flector<T> {
     #[doc = r" that have geometric constraints, where unchecked construction is"]
     #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
-    pub fn new_unchecked(e1: T, e2: T, e0: T, e012: T) -> Self {
-        Self::new(e1, e2, e0, e012)
+    pub fn new_unchecked(s: T, e12: T, e01: T, e02: T) -> Self {
+        Self::new(s, e12, e01, e02)
     }
-    #[doc = "Returns the `e1` coefficient."]
+    #[doc = "Returns the `s` coefficient."]
     #[inline]
-    pub fn e1(&self) -> T {
-        self.e1
+    pub fn s(&self) -> T {
+        self.s
     }
-    #[doc = "Returns the `e2` coefficient."]
+    #[doc = "Returns the `e12` coefficient."]
     #[inline]
-    pub fn e2(&self) -> T {
-        self.e2
+    pub fn e12(&self) -> T {
+        self.e12
     }
-    #[doc = "Returns the `e0` coefficient."]
+    #[doc = "Returns the `e01` coefficient."]
     #[inline]
-    pub fn e0(&self) -> T {
-        self.e0
+    pub fn e01(&self) -> T {
+        self.e01
     }
-    #[doc = "Returns the `e012` coefficient."]
+    #[doc = "Returns the `e02` coefficient."]
     #[inline]
-    pub fn e012(&self) -> T {
-        self.e012
+    pub fn e02(&self) -> T {
+        self.e02
     }
     #[doc = r" Creates the zero element."]
     #[inline]
@@ -67,7 +67,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" This is the sum of squares of all components."]
     #[inline]
     pub fn norm_squared(&self) -> T {
-        self.e1 * self.e1 + self.e2 * self.e2 + self.e0 * self.e0 + self.e012 * self.e012
+        self.s * self.s + self.e12 * self.e12 + self.e01 * self.e01 + self.e02 * self.e02
     }
     #[doc = r" Returns the Euclidean norm."]
     #[inline]
@@ -98,7 +98,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.e1 * s, self.e2 * s, self.e0 * s, self.e012 * s)
+        Self::new(self.s * s, self.e12 * s, self.e01 * s, self.e02 * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -111,7 +111,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.e1, self.e2, self.e0, -self.e012)
+        Self::new(self.s, -self.e12, -self.e01, -self.e02)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -126,7 +126,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.e1, -self.e2, -self.e0, self.e012)
+        Self::new(-self.s, self.e12, self.e01, self.e02)
     }
 }
 impl<T: Float> Default for Flector<T> {
@@ -268,25 +268,25 @@ impl<T: Float> Default for Line<T> {
         Self::zero()
     }
 }
-#[doc = "2D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `e12` |\n| 5 | e1e3 | `e01` |\n| 6 | e2e3 | `e02` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "2D rigid transformation (rotation + translation) in dual form\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e0` |\n| 7 | e1e2e3 | `e012` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Motor<T: Float> {
-    #[doc = "Coefficient of `s`."]
-    s: T,
-    #[doc = "Coefficient of `e12`."]
-    e12: T,
-    #[doc = "Coefficient of `e01`."]
-    e01: T,
-    #[doc = "Coefficient of `e02`."]
-    e02: T,
+    #[doc = "Coefficient of `e1`."]
+    e1: T,
+    #[doc = "Coefficient of `e2`."]
+    e2: T,
+    #[doc = "Coefficient of `e0`."]
+    e0: T,
+    #[doc = "Coefficient of `e012`."]
+    e012: T,
 }
 impl<T: Float> Motor<T> {
     #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(s: T, e12: T, e01: T, e02: T) -> Self {
-        Self { s, e12, e01, e02 }
+    pub fn new(e1: T, e2: T, e0: T, e012: T) -> Self {
+        Self { e1, e2, e0, e012 }
     }
     #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
@@ -294,28 +294,28 @@ impl<T: Float> Motor<T> {
     #[doc = r" that have geometric constraints, where unchecked construction is"]
     #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
-    pub fn new_unchecked(s: T, e12: T, e01: T, e02: T) -> Self {
-        Self::new(s, e12, e01, e02)
+    pub fn new_unchecked(e1: T, e2: T, e0: T, e012: T) -> Self {
+        Self::new(e1, e2, e0, e012)
     }
-    #[doc = "Returns the `s` coefficient."]
+    #[doc = "Returns the `e1` coefficient."]
     #[inline]
-    pub fn s(&self) -> T {
-        self.s
+    pub fn e1(&self) -> T {
+        self.e1
     }
-    #[doc = "Returns the `e12` coefficient."]
+    #[doc = "Returns the `e2` coefficient."]
     #[inline]
-    pub fn e12(&self) -> T {
-        self.e12
+    pub fn e2(&self) -> T {
+        self.e2
     }
-    #[doc = "Returns the `e01` coefficient."]
+    #[doc = "Returns the `e0` coefficient."]
     #[inline]
-    pub fn e01(&self) -> T {
-        self.e01
+    pub fn e0(&self) -> T {
+        self.e0
     }
-    #[doc = "Returns the `e02` coefficient."]
+    #[doc = "Returns the `e012` coefficient."]
     #[inline]
-    pub fn e02(&self) -> T {
-        self.e02
+    pub fn e012(&self) -> T {
+        self.e012
     }
     #[doc = r" Creates the zero element."]
     #[inline]
@@ -327,7 +327,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" This is the sum of squares of all components."]
     #[inline]
     pub fn norm_squared(&self) -> T {
-        self.s * self.s + self.e12 * self.e12 + self.e01 * self.e01 + self.e02 * self.e02
+        self.e1 * self.e1 + self.e2 * self.e2 + self.e0 * self.e0 + self.e012 * self.e012
     }
     #[doc = r" Returns the Euclidean norm."]
     #[inline]
@@ -358,7 +358,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.s * s, self.e12 * s, self.e01 * s, self.e02 * s)
+        Self::new(self.e1 * s, self.e2 * s, self.e0 * s, self.e012 * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -371,7 +371,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.s, -self.e12, -self.e01, -self.e02)
+        Self::new(self.e1, self.e2, self.e0, -self.e012)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -386,7 +386,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.s, self.e12, self.e01, self.e02)
+        Self::new(-self.e1, -self.e2, -self.e0, self.e012)
     }
 }
 impl<T: Float> Default for Motor<T> {

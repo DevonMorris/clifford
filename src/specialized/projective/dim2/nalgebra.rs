@@ -17,9 +17,12 @@
 //! Both PGA motors and nalgebra isometries represent rigid transformations
 //! (rotation + translation), but with different internal representations.
 //!
-//! **Motor representation** (2D PGA with point-based formulation):
-//! - Components `(s, e12)` encode the rotation (cosine and sine of half-angle)
-//! - Components `(e01, e02)` encode the translation (half the displacement)
+//! **Motor representation** (2D PGA with dual form, grades 1+3):
+//! - Components `(e0, e012)` encode the rotation: e0 = -sin(θ/2), e012 = cos(θ/2)
+//! - Components `(e1, e2)` encode the translation: e1 = dy/2, e2 = -dx/2
+//!
+//! This dual form matches 3D PGA where motors include the pseudoscalar,
+//! allowing the antisandwich product to work directly for transformations.
 //!
 //! **Isometry representation**:
 //! - `UnitComplex` for rotation
@@ -96,28 +99,31 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry2<T> {
     ///
     /// # Mathematical Correspondence
     ///
-    /// In a composed motor `trans.compose(&rot)`, the components are:
-    /// - `s = cos(θ/2)`, `e12 = -sin(θ/2)` (rotation)
-    /// - `e01, e02` are mixed translation: `e01 = e01_t*s - e02_t*e12`, etc.
+    /// In dual form, the motor components are:
+    /// - `e0 = -sin(θ/2)`, `e012 = cos(θ/2)` (rotation)
+    /// - `e1 = dy/2`, `e2 = -dx/2` (translation in dual form)
     ///
-    /// We decompose to recover the original rotation and translation.
+    /// For a composed motor `trans.compose(&rot)`, the translation components
+    /// mix with rotation. We decompose to recover the original values.
     fn from(motor: Motor<T>) -> Self {
-        // Extract rotation from (s, e12) = (cos(θ/2), -sin(θ/2))
-        // rotation_angle() computes atan2(e12, s) * 2 = atan2(-sin(θ/2), cos(θ/2)) * 2 = -θ
-        // So we negate to get the actual angle
-        let rotation = na::UnitComplex::new(-motor.rotation_angle());
+        // Extract rotation from (e0, e012) = (-sin(θ/2), cos(θ/2))
+        // rotation_angle() computes atan2(-e0, e012) * 2 = θ
+        let rotation = na::UnitComplex::new(motor.rotation_angle());
 
-        // Decompose translation from composed motor:
-        // For composed motor: e01 = e01_t*s - e02_t*e12, e02 = e02_t*s + e01_t*e12
-        // Inverting: e01_t = e01*s + e02*e12, e02_t = e02*s - e01*e12
-        // (assuming s² + e12² = 1 for unit motor)
-        let s = motor.s();
-        let e12 = motor.e12();
-        let e01_t = motor.e01() * s + motor.e02() * e12;
-        let e02_t = motor.e02() * s - motor.e01() * e12;
+        // Decompose translation from composed motor in dual form:
+        // For pure translation: e1 = dy/2, e2 = -dx/2
+        // For composed motor, translation components mix with rotation:
+        // e1_composed = e1_t*e012 + e2_t*e0
+        // e2_composed = e2_t*e012 - e1_t*e0
+        // Inverting: e1_t = e1*e012 - e2*e0, e2_t = e2*e012 + e1*e0
+        let cos_half = motor.e012();
+        let sin_half = -motor.e0(); // e0 = -sin(θ/2), so sin_half = -e0
+        let e1_t = motor.e1() * cos_half + motor.e2() * sin_half;
+        let e2_t = motor.e2() * cos_half - motor.e1() * sin_half;
 
-        // from_translation uses -dx/2, -dy/2, so dx = -2*e01_t, dy = -2*e02_t
-        let translation = na::Translation2::new(-e01_t * T::TWO, -e02_t * T::TWO);
+        // In dual form: e1 = dy/2, e2 = -dx/2
+        // So: dx = -2*e2_t, dy = 2*e1_t
+        let translation = na::Translation2::new(-e2_t * T::TWO, e1_t * T::TWO);
 
         na::Isometry2::from_parts(translation, rotation)
     }
@@ -223,28 +229,28 @@ mod tests {
         let iso = na::Isometry2::<f64>::identity();
         let motor: Motor<f64> = iso.into();
 
-        // Identity motor should have s=1, e12=0, e01=0, e02=0
+        // Identity motor in dual form: e1=0, e2=0, e0=0, e012=1
         assert!(relative_eq!(
-            motor.s(),
+            motor.e1(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e2(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e0(),
+            0.0,
+            epsilon = EPS,
+            max_relative = EPS
+        ));
+        assert!(relative_eq!(
+            motor.e012(),
             1.0,
-            epsilon = EPS,
-            max_relative = EPS
-        ));
-        assert!(relative_eq!(
-            motor.e12(),
-            0.0,
-            epsilon = EPS,
-            max_relative = EPS
-        ));
-        assert!(relative_eq!(
-            motor.e01(),
-            0.0,
-            epsilon = EPS,
-            max_relative = EPS
-        ));
-        assert!(relative_eq!(
-            motor.e02(),
-            0.0,
             epsilon = EPS,
             max_relative = EPS
         ));
@@ -310,11 +316,11 @@ mod tests {
             let iso: na::Isometry2<f64> = motor.into();
             let back: Motor<f64> = iso.into();
 
-            // Motor components should match
-            prop_assert!(relative_eq!(motor.s(), back.s(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e12(), back.e12(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e01(), back.e01(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e02(), back.e02(), epsilon = EPS, max_relative = EPS));
+            // Motor components should match (dual form: e1, e2, e0, e012)
+            prop_assert!(relative_eq!(motor.e1(), back.e1(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e2(), back.e2(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e0(), back.e0(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e012(), back.e012(), epsilon = EPS, max_relative = EPS));
         }
 
         /// Test Motor → Isometry → Motor roundtrip for pure rotations.
@@ -326,11 +332,11 @@ mod tests {
             let iso: na::Isometry2<f64> = motor.into();
             let back: Motor<f64> = iso.into();
 
-            // Motor components should match (same convention used in conversion)
-            prop_assert!(relative_eq!(motor.s(), back.s(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e12(), back.e12(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e01(), back.e01(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(motor.e02(), back.e02(), epsilon = EPS, max_relative = EPS));
+            // Motor components should match (dual form: e1, e2, e0, e012)
+            prop_assert!(relative_eq!(motor.e1(), back.e1(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e2(), back.e2(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e0(), back.e0(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(motor.e012(), back.e012(), epsilon = EPS, max_relative = EPS));
         }
     }
 

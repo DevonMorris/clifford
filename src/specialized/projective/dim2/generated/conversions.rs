@@ -10,14 +10,14 @@ use crate::signature::Projective2;
 impl<T: Float> From<Flector<T>> for Multivector<T, Projective2> {
     fn from(value: Flector<T>) -> Self {
         Self::from_coeffs(&[
-            T::zero(),
-            value.e1(),
-            value.e2(),
-            T::zero(),
-            value.e0(),
+            value.s(),
             T::zero(),
             T::zero(),
-            value.e012(),
+            value.e12(),
+            T::zero(),
+            value.e01(),
+            value.e02(),
+            T::zero(),
         ])
     }
 }
@@ -38,14 +38,14 @@ impl<T: Float> From<Line<T>> for Multivector<T, Projective2> {
 impl<T: Float> From<Motor<T>> for Multivector<T, Projective2> {
     fn from(value: Motor<T>) -> Self {
         Self::from_coeffs(&[
-            value.s(),
+            T::zero(),
+            value.e1(),
+            value.e2(),
+            T::zero(),
+            value.e0(),
             T::zero(),
             T::zero(),
-            value.e12(),
-            T::zero(),
-            value.e01(),
-            value.e02(),
-            T::zero(),
+            value.e012(),
         ])
     }
 }
@@ -98,10 +98,10 @@ impl<T: Float> From<Multivector<T, Projective2>> for Flector<T> {
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
         Self::new(
-            mv.get(Blade::from_index(1usize)),
-            mv.get(Blade::from_index(2usize)),
-            mv.get(Blade::from_index(4usize)),
-            mv.get(Blade::from_index(7usize)),
+            mv.get(Blade::from_index(0usize)),
+            mv.get(Blade::from_index(3usize)),
+            mv.get(Blade::from_index(5usize)),
+            mv.get(Blade::from_index(6usize)),
         )
     }
 }
@@ -125,10 +125,10 @@ impl<T: Float> From<Multivector<T, Projective2>> for Motor<T> {
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
         Self::new(
-            mv.get(Blade::from_index(0usize)),
-            mv.get(Blade::from_index(3usize)),
-            mv.get(Blade::from_index(5usize)),
-            mv.get(Blade::from_index(6usize)),
+            mv.get(Blade::from_index(1usize)),
+            mv.get(Blade::from_index(2usize)),
+            mv.get(Blade::from_index(4usize)),
+            mv.get(Blade::from_index(7usize)),
         )
     }
 }
