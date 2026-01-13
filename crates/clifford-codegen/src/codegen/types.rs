@@ -623,7 +623,8 @@ impl<'a> TypeGenerator<'a> {
     ///
     /// For PGA algebras (has degenerate basis), generates:
     /// - `Bulk<T>` aliases for versors (Motor, Flector): `BulkMotor<T> = Bulk<Motor<T>>`
-    /// - `Ideal<T>` aliases for geometric entities (Point, Plane, Line): `IdealPoint<T> = Ideal<Point<T>>`
+    /// - `Unitized<T>` aliases for finite entities (Point, Plane, Line): `UnitizedPoint<T> = Unitized<Point<T>>`
+    /// - `Ideal<T>` aliases for at-infinity entities (Point, Plane, Line): `IdealPoint<T> = Ideal<Point<T>>`
     fn generate_wrapper_aliases(&self) -> TokenStream {
         let is_pga = self.spec.signature.r > 0;
 
@@ -680,14 +681,14 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
-    /// Generates Bulk<T> and Ideal<T> wrapper aliases for PGA algebras.
+    /// Generates Bulk<T>, Unitized<T>, and Ideal<T> wrapper aliases for PGA algebras.
     fn generate_pga_wrapper_aliases(&self) -> TokenStream {
         let mut aliases = Vec::new();
 
         // Versor type names that get Bulk<T> wrappers
         let versor_names = ["Motor", "Flector"];
 
-        // Homogeneous geometric entity names that get Ideal<T> wrappers
+        // Homogeneous geometric entity names that get Unitized<T> and Ideal<T> wrappers
         let homogeneous_names = ["Point", "Plane", "Line"];
 
         for ty in &self.spec.types {
@@ -717,20 +718,38 @@ impl<'a> TypeGenerator<'a> {
 
             // Check if it's a homogeneous geometric entity
             if homogeneous_names.contains(&ty.name.as_str()) {
-                let alias_name = format_ident!("Ideal{}", ty.name);
-                let doc = format!(
-                    "An {} in standard homogeneous form (weight norm = 1).\n\n\
-                     In PGA, geometric entities like {}s are represented in homogeneous \
-                     coordinates. This type alias provides compile-time documentation that \
-                     the {} has been weight-normalized to standard form.",
+                // Generate Unitized<T> alias for finite (weight = 1) normalization
+                let unitized_alias = format_ident!("Unitized{}", ty.name);
+                let unitized_doc = format!(
+                    "A unitized {} (weight norm = 1).\n\n\
+                     In PGA, geometric entities are represented in homogeneous coordinates. \
+                     A unitized {} has been weight-normalized to standard form, representing \
+                     a finite (non-ideal) {}.",
                     ty.name.to_lowercase(),
                     ty.name.to_lowercase(),
                     ty.name.to_lowercase()
                 );
 
                 aliases.push(quote! {
-                    #[doc = #doc]
-                    pub type #alias_name<T> = crate::wrappers::Ideal<#type_name<T>>;
+                    #[doc = #unitized_doc]
+                    pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
+                });
+
+                // Generate Ideal<T> alias for at-infinity (weight ≈ 0) constraint
+                let ideal_alias = format_ident!("Ideal{}", ty.name);
+                let ideal_doc = format!(
+                    "An ideal {} (weight ≈ 0).\n\n\
+                     An ideal {} lies at infinity (has zero weight component). \
+                     This is a constraint wrapper that verifies the {} is ideal, \
+                     not a normalization wrapper.",
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase()
+                );
+
+                aliases.push(quote! {
+                    #[doc = #ideal_doc]
+                    pub type #ideal_alias<T> = crate::wrappers::Ideal<#type_name<T>>;
                 });
             }
         }
