@@ -18,6 +18,11 @@ pub use crate::basis::Blade;
 pub use crate::norm::{
     CausalCharacter, ConformalNormed, DegenerateNormed, IndefiniteNormed, Normed,
 };
+pub use crate::ops::{
+    Antigeometric, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkDual, BulkExpand,
+    GeometricProduct, Inner, LeftComplement, LeftContract, Reverse, RightComplement, RightContract,
+    Sandwich, ScalarProduct, Wedge, WeightContract, WeightDual, WeightExpand,
+};
 pub use crate::scalar::Float;
 pub use crate::signature::{
     Conformal2, Conformal3, Euclidean2, Euclidean3, Euclidean4, Projective2, Projective3, Signature,

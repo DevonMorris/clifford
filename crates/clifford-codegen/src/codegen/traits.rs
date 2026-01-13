@@ -75,6 +75,7 @@ impl<'a> TraitsGenerator<'a> {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let ops = self.generate_all_ops();
+        let product_traits = self.generate_all_product_traits();
         let normed = self.generate_all_normed();
         let approx = self.generate_all_approx();
         let arbitrary = self.generate_all_arbitrary();
@@ -88,6 +89,11 @@ impl<'a> TraitsGenerator<'a> {
             // Operator Implementations
             // ============================================================
             #ops
+
+            // ============================================================
+            // Product Trait Implementations (clifford::ops)
+            // ============================================================
+            #product_traits
 
             // ============================================================
             // Normed Trait Implementations
@@ -134,6 +140,12 @@ impl<'a> TraitsGenerator<'a> {
 
         quote! {
             use crate::scalar::Float;
+            use crate::ops::{
+                Wedge, Antiwedge, GeometricProduct, Inner, LeftContract, RightContract,
+                Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
+                BulkExpand, WeightExpand, Antigeometric,
+                Reverse, Antireverse, RightComplement,
+            };
             use super::types::{#(#type_names),*};
             use super::products::*;
 
@@ -402,6 +414,775 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    // ========================================================================
+    // Product Trait Implementations (clifford::ops)
+    // ========================================================================
+
+    /// Generates all product trait implementations.
+    fn generate_all_product_traits(&self) -> TokenStream {
+        let mut impls = Vec::new();
+
+        // GeometricProduct trait
+        for entry in &self.spec.products.geometric {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_geometric_product_trait(a, b, out, entry));
+            }
+        }
+
+        // Wedge trait
+        for entry in &self.spec.products.wedge {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_wedge_trait(a, b, out, entry));
+            }
+        }
+
+        // Antiwedge trait
+        for entry in &self.spec.products.antiwedge {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_antiwedge_trait(a, b, out, entry));
+            }
+        }
+
+        // Inner trait
+        for entry in &self.spec.products.inner {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_inner_trait(a, b, out, entry));
+            }
+        }
+
+        // LeftContract trait
+        for entry in &self.spec.products.left_contraction {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_left_contract_trait(a, b, out, entry));
+            }
+        }
+
+        // RightContract trait
+        for entry in &self.spec.products.right_contraction {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_right_contract_trait(a, b, out, entry));
+            }
+        }
+
+        // Sandwich trait - generated from versor types
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    // Infer valid targets: types where sandwich preserves grades
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(
+                            self.generate_sandwich_trait_from_versor(versor_type, target_type),
+                        );
+                    }
+                }
+            }
+        }
+
+        // Antisandwich trait - generated from versor types (uses same targets as sandwich)
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    // Infer valid targets: types where sandwich preserves grades
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(
+                            self.generate_antisandwich_trait_from_versor(versor_type, target_type),
+                        );
+                    }
+                }
+            }
+        }
+
+        // ScalarProduct trait
+        for entry in &self.spec.products.scalar {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_scalar_product_trait(a, b, out, entry));
+            }
+        }
+
+        // BulkContract trait
+        for entry in &self.spec.products.bulk_contraction {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_bulk_contract_trait(a, b, out, entry));
+            }
+        }
+
+        // WeightContract trait
+        for entry in &self.spec.products.weight_contraction {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_weight_contract_trait(a, b, out, entry));
+            }
+        }
+
+        // BulkExpand trait
+        for entry in &self.spec.products.bulk_expansion {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_bulk_expand_trait(a, b, out, entry));
+            }
+        }
+
+        // WeightExpand trait
+        for entry in &self.spec.products.weight_expansion {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_weight_expand_trait(a, b, out, entry));
+            }
+        }
+
+        // Antigeometric trait
+        for entry in &self.spec.products.antigeometric {
+            if let (Some(a), Some(b), Some(out)) = (
+                self.find_type(&entry.lhs),
+                self.find_type(&entry.rhs),
+                self.find_type(&entry.output),
+            ) {
+                impls.push(self.generate_antigeometric_trait(a, b, out, entry));
+            }
+        }
+
+        // ====== Unary Operation Traits ======
+
+        // Reverse trait - for all types
+        for ty in &self.spec.types {
+            if ty.alias_of.is_none() {
+                impls.push(self.generate_reverse_trait(ty));
+            }
+        }
+
+        // Antireverse trait - for all types
+        for ty in &self.spec.types {
+            if ty.alias_of.is_none() {
+                impls.push(self.generate_antireverse_trait(ty));
+            }
+        }
+
+        // RightComplement trait - only for types that have a complement function
+        // (i.e., where the complement grades map to an existing type)
+        for ty in &self.spec.types {
+            if ty.alias_of.is_none() {
+                if let Some(impl_tokens) = self.generate_right_complement_trait(ty) {
+                    impls.push(impl_tokens);
+                }
+            }
+        }
+
+        // Note: LeftComplement, BulkDual, and WeightDual traits are not yet generated
+        // because the corresponding free functions don't exist in unary.rs.
+        // These can be added in a future PR by extending unary.rs.
+
+        quote! { #(#impls)* }
+    }
+
+    /// Generates GeometricProduct trait impl.
+    fn generate_geometric_product_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "geometric_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> GeometricProduct<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn geometric(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Wedge trait impl.
+    fn generate_wedge_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "exterior_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> Wedge<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn wedge(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Antiwedge trait impl.
+    fn generate_antiwedge_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        // products.rs generates regressive_* for antiwedge/meet products
+        let fn_name = format_ident!(
+            "regressive_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> Antiwedge<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn antiwedge(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Inner trait impl.
+    fn generate_inner_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        // products.rs generates interior_* for symmetric inner products
+        let fn_name = format_ident!(
+            "interior_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> Inner<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn inner(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates LeftContract trait impl.
+    fn generate_left_contract_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "left_contract_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> LeftContract<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn left_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates RightContract trait impl.
+    fn generate_right_contract_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "right_contract_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> RightContract<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn right_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Sandwich trait impl from versor type.
+    fn generate_sandwich_trait_from_versor(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let fn_name = format_ident!(
+            "sandwich_{}_{}",
+            versor.name.to_lowercase(),
+            operand.name.to_lowercase()
+        );
+
+        // For sandwich, output is typically same type as operand
+        quote! {
+            impl<T: Float> Sandwich<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn sandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                    #fn_name(self, operand)
+                }
+            }
+        }
+    }
+
+    /// Generates Antisandwich trait impl from versor type.
+    fn generate_antisandwich_trait_from_versor(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let fn_name = format_ident!(
+            "antisandwich_{}_{}",
+            versor.name.to_lowercase(),
+            operand.name.to_lowercase()
+        );
+
+        // For antisandwich, output is typically same type as operand
+        quote! {
+            impl<T: Float> Antisandwich<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                    #fn_name(self, operand)
+                }
+            }
+        }
+    }
+
+    /// Generates ScalarProduct trait impl.
+    fn generate_scalar_product_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        _output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let fn_name = format_ident!(
+            "scalar_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> ScalarProduct<#b_name<T>> for #a_name<T> {
+                type Scalar = T;
+
+                #[inline]
+                fn scalar_product(&self, rhs: &#b_name<T>) -> T {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates BulkContract trait impl.
+    fn generate_bulk_contract_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "bulk_contraction_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> BulkContract<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn bulk_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates WeightContract trait impl.
+    fn generate_weight_contract_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "weight_contraction_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> WeightContract<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn weight_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates BulkExpand trait impl.
+    fn generate_bulk_expand_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "bulk_expansion_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> BulkExpand<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn bulk_expand(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates WeightExpand trait impl.
+    fn generate_weight_expand_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "weight_expansion_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> WeightExpand<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn weight_expand(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Antigeometric trait impl.
+    fn generate_antigeometric_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let fn_name = format_ident!(
+            "antigeometric_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> Antigeometric<#b_name<T>> for #a_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn antigeometric(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    // ========================================================================
+    // Sandwich Target Inference
+    // ========================================================================
+
+    /// Infers valid sandwich targets for a versor type.
+    ///
+    /// A type is a valid target if the sandwich product V * X * rev(V) produces
+    /// the same grades as X (grade-preserving transformation).
+    fn infer_sandwich_targets(&self, versor_type: &TypeSpec) -> Vec<String> {
+        let mut targets = Vec::new();
+        let dim = self.algebra.dim();
+
+        for candidate in &self.spec.types {
+            // Skip aliases
+            if candidate.alias_of.is_some() {
+                continue;
+            }
+
+            // Check if sandwich preserves grades
+            let output_grades =
+                self.compute_sandwich_output_grades(&versor_type.grades, &candidate.grades, dim);
+
+            // Valid target if output grades exactly match candidate grades
+            let candidate_grades_set: std::collections::HashSet<usize> =
+                candidate.grades.iter().copied().collect();
+            if output_grades == candidate_grades_set {
+                targets.push(candidate.name.clone());
+            }
+        }
+
+        targets
+    }
+
+    /// Computes output grades of a sandwich product V * X * rev(V).
+    fn compute_sandwich_output_grades(
+        &self,
+        versor_grades: &[usize],
+        operand_grades: &[usize],
+        dim: usize,
+    ) -> std::collections::HashSet<usize> {
+        use crate::algebra::geometric_grades;
+        let mut output = std::collections::HashSet::new();
+
+        for &vg in versor_grades {
+            for &xg in operand_grades {
+                for &wg in versor_grades {
+                    // Compute possible output grades from v * x * w
+                    let vx_grades = geometric_grades(vg, xg, dim);
+                    for vxg in vx_grades {
+                        let vxw_grades = geometric_grades(vxg, wg, dim);
+                        output.extend(vxw_grades);
+                    }
+                }
+            }
+        }
+
+        output
+    }
+
+    // ========================================================================
+    // Unary Operation Trait Implementations
+    // ========================================================================
+
+    /// Generates Reverse trait impl.
+    fn generate_reverse_trait(&self, ty: &TypeSpec) -> TokenStream {
+        let type_name = format_ident!("{}", ty.name);
+        let fn_name = format_ident!("reverse_{}", ty.name.to_lowercase());
+
+        quote! {
+            impl<T: Float> Reverse for #type_name<T> {
+                #[inline]
+                fn reverse(&self) -> Self {
+                    #fn_name(self)
+                }
+            }
+        }
+    }
+
+    /// Generates Antireverse trait impl.
+    fn generate_antireverse_trait(&self, ty: &TypeSpec) -> TokenStream {
+        let type_name = format_ident!("{}", ty.name);
+        let fn_name = format_ident!("antireverse_{}", ty.name.to_lowercase());
+
+        quote! {
+            impl<T: Float> Antireverse for #type_name<T> {
+                #[inline]
+                fn antireverse(&self) -> Self {
+                    #fn_name(self)
+                }
+            }
+        }
+    }
+
+    /// Generates RightComplement trait impl.
+    ///
+    /// Returns None if the complement grades don't map to an existing type.
+    fn generate_right_complement_trait(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        // Check if there's a matching output type for the complement
+        let output_type = self.find_complement_output_type(ty)?;
+
+        let type_name = format_ident!("{}", ty.name);
+        // The unary generator produces complement_* functions (which compute right complement)
+        let fn_name = format_ident!("complement_{}", ty.name.to_lowercase());
+        let out_name = format_ident!("{}", output_type);
+
+        Some(quote! {
+            impl<T: Float> RightComplement for #type_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn right_complement(&self) -> #out_name<T> {
+                    #fn_name(self)
+                }
+            }
+        })
+    }
+
+    // Note: LeftComplement, BulkDual, and WeightDual trait generation removed
+    // because the corresponding free functions don't exist in unary.rs yet.
+    // These can be added in a future PR by extending unary.rs.
+
+    /// Finds the output type for complement operations.
+    ///
+    /// The complement of a type with grades [g1, g2, ...] has grades [n-g1, n-g2, ...].
+    /// Returns None if no type with matching grades exists.
+    fn find_complement_output_type(&self, ty: &TypeSpec) -> Option<String> {
+        let dim = self.algebra.dim();
+        let complement_grades: Vec<usize> = ty.grades.iter().map(|g| dim - g).collect();
+
+        // Find a type with matching grades
+        for candidate in &self.spec.types {
+            if candidate.alias_of.is_some() {
+                continue;
+            }
+            let mut candidate_grades = candidate.grades.clone();
+            candidate_grades.sort();
+            let mut sorted_complement = complement_grades.clone();
+            sorted_complement.sort();
+            if candidate_grades == sorted_complement {
+                return Some(candidate.name.clone());
+            }
+        }
+
+        // No matching type found
+        None
     }
 
     // ========================================================================

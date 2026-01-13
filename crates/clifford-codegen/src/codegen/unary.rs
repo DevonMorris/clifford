@@ -182,12 +182,18 @@ impl<'a> UnaryGenerator<'a> {
         let dim = self.spec.signature.dim();
 
         // Find the output type (grades are complemented: k -> n-k)
-        let output_grades: Vec<usize> = ty.grades.iter().map(|&g| dim - g).collect();
-        let output_type = self
-            .spec
-            .types
-            .iter()
-            .find(|t| t.alias_of.is_none() && t.grades == output_grades)?;
+        let mut output_grades: Vec<usize> = ty.grades.iter().map(|&g| dim - g).collect();
+        output_grades.sort();
+
+        // Find a type with matching grades (compare sorted since grade order may differ)
+        let output_type = self.spec.types.iter().find(|t| {
+            if t.alias_of.is_some() {
+                return false;
+            }
+            let mut t_grades = t.grades.clone();
+            t_grades.sort();
+            t_grades == output_grades
+        })?;
 
         let type_name = format_ident!("{}", ty.name);
         let output_name = format_ident!("{}", output_type.name);

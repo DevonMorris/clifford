@@ -4,6 +4,11 @@
 #![doc = " Do not edit manually."]
 use super::products::*;
 use super::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};
+use crate::ops::{
+    Antigeometric, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand,
+    GeometricProduct, Inner, LeftContract, Reverse, RightComplement, RightContract, Sandwich,
+    ScalarProduct, Wedge, WeightContract, WeightExpand,
+};
 use crate::scalar::Float;
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use std::ops::{Add, BitXor, Mul, Neg, Sub};
@@ -912,6 +917,2806 @@ impl<T: Float> BitXor<Scalar<T>> for Scalar<T> {
     #[inline]
     fn bitxor(self, rhs: Scalar<T>) -> Scalar<T> {
         exterior_scalar_scalar(&self, &rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        geometric_flector_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Flector<T> {
+        geometric_flector_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        geometric_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Plane<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Plane<T>) -> Motor<T> {
+        geometric_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Point<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Point<T>) -> Motor<T> {
+        geometric_flector_point(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        geometric_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Flector<T> {
+        geometric_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        geometric_line_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Line<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Motor<T> {
+        geometric_line_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Line<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        geometric_line_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Plane<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Plane<T>) -> Flector<T> {
+        geometric_line_plane(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Point<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Point<T>) -> Flector<T> {
+        geometric_line_point(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Quadvector<T>) -> Line<T> {
+        geometric_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Line<T> {
+        geometric_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        geometric_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Motor<T> {
+        geometric_motor_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        geometric_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Plane<T>) -> Flector<T> {
+        geometric_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Point<T>) -> Flector<T> {
+        geometric_motor_point(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Motor<T> {
+        geometric_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Plane<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        geometric_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Flector<T> {
+        geometric_plane_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        geometric_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Quadvector<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Quadvector<T>) -> Point<T> {
+        geometric_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Plane<T> {
+        geometric_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Point<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        geometric_point_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Flector<T> {
+        geometric_point_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        geometric_point_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Quadvector<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        geometric_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Point<T> {
+        geometric_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        geometric_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Line<T> {
+        geometric_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Plane<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Plane<T>) -> Point<T> {
+        geometric_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Point<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Point<T>) -> Plane<T> {
+        geometric_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        geometric_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        geometric_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Line<T>) -> Line<T> {
+        geometric_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Motor<T>> for Scalar<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        geometric_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Plane<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Plane<T>) -> Plane<T> {
+        geometric_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Point<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Point<T>) -> Point<T> {
+        geometric_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Quadvector<T>> for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        geometric_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> GeometricProduct<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn geometric(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        geometric_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Line<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Line<T>) -> Plane<T> {
+        exterior_flector_line(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Flector<T> {
+        exterior_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Plane<T>> for Flector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Plane<T>) -> Quadvector<T> {
+        exterior_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Flector<T> {
+        exterior_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Flector<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Flector<T>) -> Plane<T> {
+        exterior_line_flector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Line<T>> for Line<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Line<T>) -> Quadvector<T> {
+        exterior_line_line(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Point<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Point<T>) -> Plane<T> {
+        exterior_line_point(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Line<T> {
+        exterior_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Flector<T>) -> Flector<T> {
+        exterior_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Motor<T> {
+        exterior_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Plane<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Plane<T>) -> Plane<T> {
+        exterior_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Point<T>) -> Flector<T> {
+        exterior_motor_point(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Quadvector<T>> for Motor<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        exterior_motor_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Motor<T> {
+        exterior_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Flector<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Flector<T>) -> Quadvector<T> {
+        exterior_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Plane<T> {
+        exterior_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Point<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Point<T>) -> Quadvector<T> {
+        exterior_plane_point(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Plane<T> {
+        exterior_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Line<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Line<T>) -> Plane<T> {
+        exterior_point_line(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Flector<T> {
+        exterior_point_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Plane<T>> for Point<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Plane<T>) -> Quadvector<T> {
+        exterior_point_plane(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Point<T>> for Point<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Point<T>) -> Line<T> {
+        exterior_point_point(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Point<T> {
+        exterior_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Quadvector<T> {
+        exterior_quadvector_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        exterior_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Flector<T>) -> Flector<T> {
+        exterior_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Line<T>) -> Line<T> {
+        exterior_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Motor<T>> for Scalar<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Motor<T>) -> Motor<T> {
+        exterior_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Plane<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Plane<T>) -> Plane<T> {
+        exterior_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Point<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Point<T>) -> Point<T> {
+        exterior_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Quadvector<T>> for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        exterior_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        exterior_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Line<T>) -> Point<T> {
+        regressive_flector_line(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Flector<T> {
+        regressive_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Point<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Point<T>) -> Scalar<T> {
+        regressive_flector_point(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        regressive_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Flector<T>) -> Point<T> {
+        regressive_line_flector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Line<T>) -> Scalar<T> {
+        regressive_line_line(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Plane<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Plane<T>) -> Point<T> {
+        regressive_line_plane(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Line<T> {
+        regressive_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Flector<T>) -> Flector<T> {
+        regressive_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Motor<T> {
+        regressive_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Plane<T>) -> Flector<T> {
+        regressive_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Point<T>) -> Point<T> {
+        regressive_motor_point(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Motor<T> {
+        regressive_motor_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Scalar<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        regressive_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Line<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Line<T>) -> Point<T> {
+        regressive_plane_line(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Flector<T> {
+        regressive_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Plane<T>> for Plane<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Plane<T>) -> Line<T> {
+        regressive_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Point<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Point<T>) -> Scalar<T> {
+        regressive_plane_point(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        regressive_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Flector<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Flector<T>) -> Scalar<T> {
+        regressive_point_flector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Point<T> {
+        regressive_point_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Plane<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Plane<T>) -> Scalar<T> {
+        regressive_point_plane(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Point<T> {
+        regressive_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Flector<T>) -> Flector<T> {
+        regressive_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Line<T>) -> Line<T> {
+        regressive_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Quadvector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Motor<T> {
+        regressive_quadvector_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Plane<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Plane<T>) -> Plane<T> {
+        regressive_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Point<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Point<T>) -> Point<T> {
+        regressive_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        regressive_quadvector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Scalar<T>> for Quadvector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        regressive_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Motor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Motor<T>) -> Scalar<T> {
+        regressive_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> Antiwedge<Quadvector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antiwedge(&self, rhs: &Quadvector<T>) -> Scalar<T> {
+        regressive_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Point<T> {
+        interior_flector_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Motor<T>) -> Flector<T> {
+        interior_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        interior_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Flector<T> {
+        interior_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Flector<T>) -> Point<T> {
+        interior_line_flector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Scalar<T> {
+        interior_line_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Point<T> {
+        interior_line_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Point<T> {
+        interior_line_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Quadvector<T>) -> Line<T> {
+        interior_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Line<T> {
+        interior_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
+        interior_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Motor<T>) -> Motor<T> {
+        interior_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Flector<T> {
+        interior_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Flector<T> {
+        interior_motor_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Motor<T> {
+        interior_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Point<T> {
+        interior_plane_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Motor<T>) -> Flector<T> {
+        interior_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Scalar<T> {
+        interior_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Plane<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Line<T> {
+        interior_plane_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Quadvector<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Quadvector<T>) -> Point<T> {
+        interior_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Plane<T> {
+        interior_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Point<T> {
+        interior_point_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Motor<T>) -> Flector<T> {
+        interior_point_motor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Point<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Line<T> {
+        interior_point_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Scalar<T> {
+        interior_point_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Quadvector<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn inner(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        interior_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Point<T> {
+        interior_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
+        interior_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Line<T> {
+        interior_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Point<T> {
+        interior_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Plane<T> {
+        interior_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        interior_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Inner<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
+        interior_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn inner(&self, rhs: &Line<T>) -> Line<T> {
+        interior_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> Inner<Motor<T>> for Scalar<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn inner(&self, rhs: &Motor<T>) -> Motor<T> {
+        interior_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> Inner<Plane<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn inner(&self, rhs: &Plane<T>) -> Plane<T> {
+        interior_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> Inner<Point<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn inner(&self, rhs: &Point<T>) -> Point<T> {
+        interior_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> Inner<Quadvector<T>> for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn inner(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        interior_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Inner<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn inner(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        interior_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Line<T>) -> Point<T> {
+        left_contract_flector_line(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        left_contract_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Point<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Point<T>) -> Scalar<T> {
+        left_contract_flector_point(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        left_contract_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Flector<T>) -> Point<T> {
+        left_contract_line_flector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Line<T>) -> Scalar<T> {
+        left_contract_line_line(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Plane<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        left_contract_line_plane(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Quadvector<T>) -> Line<T> {
+        left_contract_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        left_contract_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Motor<T>) -> Motor<T> {
+        left_contract_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Plane<T>) -> Flector<T> {
+        left_contract_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Point<T>) -> Point<T> {
+        left_contract_motor_point(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Scalar<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        left_contract_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Flector<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
+        left_contract_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Motor<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Motor<T>) -> Point<T> {
+        left_contract_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Plane<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        left_contract_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Quadvector<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Quadvector<T>) -> Point<T> {
+        left_contract_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Line<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Line<T>) -> Point<T> {
+        left_contract_point_line(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        left_contract_point_motor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Plane<T>> for Point<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Plane<T>) -> Line<T> {
+        left_contract_point_plane(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Point<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Point<T>) -> Scalar<T> {
+        left_contract_point_point(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Quadvector<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        left_contract_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        left_contract_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Line<T>) -> Line<T> {
+        left_contract_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Motor<T>> for Scalar<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Motor<T>) -> Motor<T> {
+        left_contract_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Plane<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Plane<T>) -> Plane<T> {
+        left_contract_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Point<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Point<T>) -> Point<T> {
+        left_contract_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Quadvector<T>> for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        left_contract_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        left_contract_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Line<T>) -> Point<T> {
+        right_contract_flector_line(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        right_contract_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Plane<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        right_contract_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Flector<T> {
+        right_contract_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Flector<T>) -> Point<T> {
+        right_contract_line_flector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Line<T>) -> Scalar<T> {
+        right_contract_line_line(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Point<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Point<T>) -> Point<T> {
+        right_contract_line_point(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Line<T> {
+        right_contract_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        right_contract_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Motor<T>) -> Motor<T> {
+        right_contract_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Plane<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        right_contract_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Point<T>) -> Flector<T> {
+        right_contract_motor_point(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Motor<T> {
+        right_contract_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Line<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Line<T>) -> Point<T> {
+        right_contract_plane_line(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        right_contract_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Plane<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        right_contract_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Point<T>> for Plane<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Point<T>) -> Line<T> {
+        right_contract_plane_point(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Plane<T> {
+        right_contract_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Flector<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
+        right_contract_point_flector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Motor<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Motor<T>) -> Point<T> {
+        right_contract_point_motor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Point<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Point<T>) -> Scalar<T> {
+        right_contract_point_point(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Point<T> {
+        right_contract_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        right_contract_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Line<T>) -> Line<T> {
+        right_contract_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Plane<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        right_contract_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Point<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Point<T>) -> Plane<T> {
+        right_contract_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        right_contract_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Motor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
+        right_contract_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        right_contract_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> Sandwich<Point<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Point<T>) -> Point<T> {
+        sandwich_flector_point(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Line<T>> for Flector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Line<T>) -> Line<T> {
+        sandwich_flector_line(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Plane<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        sandwich_flector_plane(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        sandwich_flector_motor(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
+        sandwich_flector_flector(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Point<T>) -> Point<T> {
+        sandwich_motor_point(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Line<T>> for Motor<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Line<T>) -> Line<T> {
+        sandwich_motor_line(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Plane<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        sandwich_motor_plane(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        sandwich_motor_motor(self, operand)
+    }
+}
+impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
+        sandwich_motor_flector(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
+        antisandwich_flector_point(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
+        antisandwich_flector_line(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Plane<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        antisandwich_flector_plane(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        antisandwich_flector_motor(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
+        antisandwich_flector_flector(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
+        antisandwich_motor_point(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
+        antisandwich_motor_line(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Plane<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        antisandwich_motor_plane(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        antisandwich_motor_motor(self, operand)
+    }
+}
+impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
+        antisandwich_motor_flector(self, operand)
+    }
+}
+impl<T: Float> ScalarProduct<Flector<T>> for Flector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Flector<T>) -> T {
+        scalar_flector_flector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Plane<T>> for Flector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Plane<T>) -> T {
+        scalar_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Point<T>> for Flector<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Point<T>) -> T {
+        scalar_flector_point(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Line<T>> for Line<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Line<T>) -> T {
+        scalar_line_line(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Motor<T>> for Line<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Motor<T>) -> T {
+        scalar_line_motor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Line<T>> for Motor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Line<T>) -> T {
+        scalar_motor_line(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Motor<T>> for Motor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Motor<T>) -> T {
+        scalar_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Scalar<T>> for Motor<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
+        scalar_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Flector<T>> for Plane<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Flector<T>) -> T {
+        scalar_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Plane<T>> for Plane<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Plane<T>) -> T {
+        scalar_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Flector<T>> for Point<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Flector<T>) -> T {
+        scalar_point_flector(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Point<T>> for Point<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Point<T>) -> T {
+        scalar_point_point(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Motor<T>> for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Motor<T>) -> T {
+        scalar_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
+        scalar_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Line<T>) -> Point<T> {
+        bulk_contraction_flector_line(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        bulk_contraction_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Plane<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        bulk_contraction_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Flector<T> {
+        bulk_contraction_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Flector<T>) -> Point<T> {
+        bulk_contraction_line_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Line<T>) -> Scalar<T> {
+        bulk_contraction_line_line(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Point<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Point<T>) -> Point<T> {
+        bulk_contraction_line_point(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Line<T> {
+        bulk_contraction_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        bulk_contraction_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Motor<T>) -> Motor<T> {
+        bulk_contraction_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Plane<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        bulk_contraction_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Point<T>) -> Flector<T> {
+        bulk_contraction_motor_point(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Motor<T> {
+        bulk_contraction_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Line<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Line<T>) -> Point<T> {
+        bulk_contraction_plane_line(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Motor<T>) -> Flector<T> {
+        bulk_contraction_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Plane<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        bulk_contraction_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Point<T>> for Plane<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Point<T>) -> Line<T> {
+        bulk_contraction_plane_point(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Plane<T> {
+        bulk_contraction_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Flector<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
+        bulk_contraction_point_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Motor<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Motor<T>) -> Point<T> {
+        bulk_contraction_point_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Point<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Point<T>) -> Scalar<T> {
+        bulk_contraction_point_point(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Point<T> {
+        bulk_contraction_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        bulk_contraction_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Line<T>) -> Line<T> {
+        bulk_contraction_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Plane<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        bulk_contraction_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Point<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Point<T>) -> Plane<T> {
+        bulk_contraction_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        bulk_contraction_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Motor<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
+        bulk_contraction_scalar_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        bulk_contraction_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Line<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Line<T>) -> Point<T> {
+        weight_contraction_flector_line(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Motor<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Motor<T>) -> Point<T> {
+        weight_contraction_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Plane<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        weight_contraction_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Flector<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Flector<T>) -> Point<T> {
+        weight_contraction_line_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Line<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Line<T>) -> Scalar<T> {
+        weight_contraction_line_line(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Motor<T>> for Line<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
+        weight_contraction_line_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Point<T>> for Line<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Point<T>) -> Point<T> {
+        weight_contraction_line_point(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        weight_contraction_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Plane<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        weight_contraction_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Point<T>) -> Flector<T> {
+        weight_contraction_motor_point(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Quadvector<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Quadvector<T>) -> Scalar<T> {
+        weight_contraction_motor_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Line<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Line<T>) -> Point<T> {
+        weight_contraction_plane_line(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Motor<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Motor<T>) -> Point<T> {
+        weight_contraction_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Plane<T>> for Plane<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Plane<T>) -> Scalar<T> {
+        weight_contraction_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Point<T>> for Plane<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Point<T>) -> Line<T> {
+        weight_contraction_plane_point(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Flector<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
+        weight_contraction_point_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Point<T>> for Point<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Point<T>) -> Scalar<T> {
+        weight_contraction_point_point(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Flector<T>) -> Flector<T> {
+        weight_contraction_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Line<T>) -> Line<T> {
+        weight_contraction_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Plane<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Plane<T>) -> Point<T> {
+        weight_contraction_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Point<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Point<T>) -> Plane<T> {
+        weight_contraction_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> WeightContract<Quadvector<T>> for Quadvector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_contract(&self, rhs: &Quadvector<T>) -> Scalar<T> {
+        weight_contraction_quadvector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Line<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Line<T>) -> Plane<T> {
+        bulk_expansion_flector_line(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Motor<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Motor<T>) -> Plane<T> {
+        bulk_expansion_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Point<T>> for Flector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Point<T>) -> Quadvector<T> {
+        bulk_expansion_flector_point(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Flector<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Flector<T>) -> Plane<T> {
+        bulk_expansion_line_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Line<T>> for Line<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Line<T>) -> Quadvector<T> {
+        bulk_expansion_line_line(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Motor<T>> for Line<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Motor<T>) -> Quadvector<T> {
+        bulk_expansion_line_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Plane<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Plane<T>) -> Plane<T> {
+        bulk_expansion_line_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Flector<T>) -> Flector<T> {
+        bulk_expansion_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Plane<T>) -> Flector<T> {
+        bulk_expansion_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Point<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Point<T>) -> Plane<T> {
+        bulk_expansion_motor_point(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Scalar<T>> for Motor<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        bulk_expansion_motor_scalar(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Flector<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Flector<T>) -> Quadvector<T> {
+        bulk_expansion_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Plane<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Plane<T>) -> Quadvector<T> {
+        bulk_expansion_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Line<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Line<T>) -> Plane<T> {
+        bulk_expansion_point_line(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Motor<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Motor<T>) -> Plane<T> {
+        bulk_expansion_point_motor(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Plane<T>> for Point<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Plane<T>) -> Line<T> {
+        bulk_expansion_point_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Point<T>> for Point<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Point<T>) -> Quadvector<T> {
+        bulk_expansion_point_point(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Flector<T>) -> Flector<T> {
+        bulk_expansion_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Line<T>) -> Line<T> {
+        bulk_expansion_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Plane<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Plane<T>) -> Point<T> {
+        bulk_expansion_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Point<T>) -> Plane<T> {
+        bulk_expansion_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn bulk_expand(&self, rhs: &Scalar<T>) -> Quadvector<T> {
+        bulk_expansion_scalar_scalar(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Line<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Line<T>) -> Plane<T> {
+        weight_expansion_flector_line(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Motor<T>) -> Flector<T> {
+        weight_expansion_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Point<T>> for Flector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Point<T>) -> Quadvector<T> {
+        weight_expansion_flector_point(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        weight_expansion_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Flector<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Flector<T>) -> Plane<T> {
+        weight_expansion_line_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Line<T>> for Line<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Line<T>) -> Quadvector<T> {
+        weight_expansion_line_line(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Plane<T>> for Line<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Plane<T>) -> Plane<T> {
+        weight_expansion_line_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Line<T> {
+        weight_expansion_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Flector<T>) -> Flector<T> {
+        weight_expansion_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Motor<T>) -> Motor<T> {
+        weight_expansion_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Plane<T>) -> Flector<T> {
+        weight_expansion_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Point<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Point<T>) -> Plane<T> {
+        weight_expansion_motor_point(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Motor<T> {
+        weight_expansion_motor_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Flector<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Flector<T>) -> Quadvector<T> {
+        weight_expansion_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Motor<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Motor<T>) -> Plane<T> {
+        weight_expansion_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Plane<T>> for Plane<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Plane<T>) -> Quadvector<T> {
+        weight_expansion_plane_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        weight_expansion_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Line<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Line<T>) -> Plane<T> {
+        weight_expansion_point_line(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Motor<T>) -> Flector<T> {
+        weight_expansion_point_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Plane<T>> for Point<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Plane<T>) -> Line<T> {
+        weight_expansion_point_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Point<T>> for Point<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Point<T>) -> Quadvector<T> {
+        weight_expansion_point_point(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Point<T> {
+        weight_expansion_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Motor<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Motor<T>) -> Quadvector<T> {
+        weight_expansion_quadvector_motor(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        weight_expansion_quadvector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Flector<T>) -> Flector<T> {
+        weight_expansion_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Line<T>) -> Line<T> {
+        weight_expansion_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Plane<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Plane<T>) -> Point<T> {
+        weight_expansion_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Point<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Point<T>) -> Plane<T> {
+        weight_expansion_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> WeightExpand<Quadvector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn weight_expand(&self, rhs: &Quadvector<T>) -> Scalar<T> {
+        weight_expansion_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        antigeometric_flector_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Flector<T> {
+        antigeometric_flector_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        antigeometric_flector_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Plane<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Plane<T>) -> Motor<T> {
+        antigeometric_flector_plane(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Point<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Point<T>) -> Motor<T> {
+        antigeometric_flector_point(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Flector<T> {
+        antigeometric_flector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Flector<T> {
+        antigeometric_flector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        antigeometric_line_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Line<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Motor<T> {
+        antigeometric_line_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Line<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        antigeometric_line_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Plane<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Plane<T>) -> Flector<T> {
+        antigeometric_line_plane(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Point<T>> for Line<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Point<T>) -> Flector<T> {
+        antigeometric_line_point(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Line<T> {
+        antigeometric_line_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Line<T> {
+        antigeometric_line_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        antigeometric_motor_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Motor<T> {
+        antigeometric_motor_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        antigeometric_motor_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Plane<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Plane<T>) -> Flector<T> {
+        antigeometric_motor_plane(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Point<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Point<T>) -> Flector<T> {
+        antigeometric_motor_point(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Motor<T> {
+        antigeometric_motor_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Plane<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        antigeometric_plane_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Flector<T> {
+        antigeometric_plane_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Plane<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        antigeometric_plane_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Plane<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Plane<T> {
+        antigeometric_plane_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Point<T> {
+        antigeometric_plane_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Point<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Motor<T> {
+        antigeometric_point_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Flector<T> {
+        antigeometric_point_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Point<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Flector<T> {
+        antigeometric_point_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Point<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Point<T> {
+        antigeometric_point_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Plane<T> {
+        antigeometric_point_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Quadvector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        antigeometric_quadvector_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Quadvector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Line<T> {
+        antigeometric_quadvector_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Motor<T>> for Quadvector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Motor<T>) -> Motor<T> {
+        antigeometric_quadvector_motor(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Plane<T>> for Quadvector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Plane<T>) -> Plane<T> {
+        antigeometric_quadvector_plane(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Point<T>> for Quadvector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Point<T>) -> Point<T> {
+        antigeometric_quadvector_point(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Quadvector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
+        antigeometric_quadvector_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Scalar<T>> for Quadvector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Scalar<T>) -> Scalar<T> {
+        antigeometric_quadvector_scalar(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Flector<T>> for Scalar<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Flector<T>) -> Flector<T> {
+        antigeometric_scalar_flector(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Line<T>> for Scalar<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Line<T>) -> Line<T> {
+        antigeometric_scalar_line(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Plane<T>> for Scalar<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Plane<T>) -> Point<T> {
+        antigeometric_scalar_plane(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Point<T>> for Scalar<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Point<T>) -> Plane<T> {
+        antigeometric_scalar_point(self, rhs)
+    }
+}
+impl<T: Float> Antigeometric<Quadvector<T>> for Scalar<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antigeometric(&self, rhs: &Quadvector<T>) -> Scalar<T> {
+        antigeometric_scalar_quadvector(self, rhs)
+    }
+}
+impl<T: Float> Reverse for Flector<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_flector(self)
+    }
+}
+impl<T: Float> Reverse for Line<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_line(self)
+    }
+}
+impl<T: Float> Reverse for Motor<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_motor(self)
+    }
+}
+impl<T: Float> Reverse for Plane<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_plane(self)
+    }
+}
+impl<T: Float> Reverse for Point<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_point(self)
+    }
+}
+impl<T: Float> Reverse for Quadvector<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_quadvector(self)
+    }
+}
+impl<T: Float> Reverse for Scalar<T> {
+    #[inline]
+    fn reverse(&self) -> Self {
+        reverse_scalar(self)
+    }
+}
+impl<T: Float> Antireverse for Flector<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_flector(self)
+    }
+}
+impl<T: Float> Antireverse for Line<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_line(self)
+    }
+}
+impl<T: Float> Antireverse for Motor<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_motor(self)
+    }
+}
+impl<T: Float> Antireverse for Plane<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_plane(self)
+    }
+}
+impl<T: Float> Antireverse for Point<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_point(self)
+    }
+}
+impl<T: Float> Antireverse for Quadvector<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_quadvector(self)
+    }
+}
+impl<T: Float> Antireverse for Scalar<T> {
+    #[inline]
+    fn antireverse(&self) -> Self {
+        antireverse_scalar(self)
+    }
+}
+impl<T: Float> RightComplement for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn right_complement(&self) -> Flector<T> {
+        complement_flector(self)
+    }
+}
+impl<T: Float> RightComplement for Line<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn right_complement(&self) -> Line<T> {
+        complement_line(self)
+    }
+}
+impl<T: Float> RightComplement for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn right_complement(&self) -> Motor<T> {
+        complement_motor(self)
+    }
+}
+impl<T: Float> RightComplement for Plane<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn right_complement(&self) -> Point<T> {
+        complement_plane(self)
+    }
+}
+impl<T: Float> RightComplement for Point<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn right_complement(&self) -> Plane<T> {
+        complement_point(self)
+    }
+}
+impl<T: Float> RightComplement for Quadvector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn right_complement(&self) -> Scalar<T> {
+        complement_quadvector(self)
+    }
+}
+impl<T: Float> RightComplement for Scalar<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn right_complement(&self) -> Quadvector<T> {
+        complement_scalar(self)
     }
 }
 impl<T: Float> crate::norm::Normed for Flector<T> {
