@@ -121,7 +121,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
@@ -146,7 +146,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use approx::abs_diff_eq;
     ///

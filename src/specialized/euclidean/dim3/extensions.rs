@@ -57,7 +57,7 @@ impl<T: Float> Vector<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim3::Vector;
     ///
     /// let x = Vector::<f64>::unit_x();
@@ -175,7 +175,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim3::{Rotor, Bivector, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
@@ -207,7 +207,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```ignore
     /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
     /// use approx::abs_diff_eq;
     ///

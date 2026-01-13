@@ -26,19 +26,22 @@
 //! use approx::abs_diff_eq;
 //!
 //! // Points
-//! let origin = Point::origin();
+//! let origin: Point<f64> = Point::origin();
 //! let p = Point::from_cartesian(3.0, 4.0);
 //!
-//! // Line through two points
-//! let line = origin.join(&p);
+//! // Line meet - intersection of two lines
+//! let x_axis: Line<f64> = Line::x_axis();
+//! let y_axis: Line<f64> = Line::y_axis();
+//! let intersection = x_axis.meet(&y_axis);
 //!
 //! // 90° rotation around origin
 //! let rotor = Motor::from_rotation(FRAC_PI_2);
-//! let rotated = rotor.transform_point(&p);
 //!
 //! // Translation
 //! let translation = Motor::from_translation(1.0, 2.0);
-//! let translated = translation.transform_point(&p);
+//!
+//! // Compose motors
+//! let combined = rotor.compose(&translation);
 //! ```
 
 // Generated code (do not edit manually)

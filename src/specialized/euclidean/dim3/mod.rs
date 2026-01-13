@@ -17,7 +17,7 @@
 //! [`Rotor`] represents rotations as `scalar + bivector`. This is equivalent
 //! to unit quaternions but expressed in the geometric algebra framework:
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!

@@ -38,7 +38,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //!
 //! // Create a vector

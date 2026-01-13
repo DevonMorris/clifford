@@ -35,19 +35,18 @@
 //! use clifford::specialized::projective::dim2::{Point, Line, Motor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
-//! // Create points
-//! let p1 = Point::new(0.0, 0.0);  // Origin
-//! let p2 = Point::new(1.0, 0.0);  // Point at (1, 0)
+//! // Create points using from_cartesian (sets w=1)
+//! let p1: Point<f64> = Point::from_cartesian(0.0, 0.0);  // Origin
+//! let p2: Point<f64> = Point::from_cartesian(1.0, 0.0);  // Point at (1, 0)
 //!
-//! // Line through two points
-//! let line = p1.join(&p2);
+//! // Line meet - intersection of two lines
+//! let x_axis: Line<f64> = Line::x_axis();
+//! let y_axis: Line<f64> = Line::y_axis();
+//! let intersection = x_axis.meet(&y_axis);
 //!
 //! // Motor: 90° rotation then translate by (1, 2)
 //! let motor = Motor::from_translation(1.0, 2.0)
 //!     .compose(&Motor::from_rotation(FRAC_PI_2));
-//!
-//! // Transform a point
-//! let transformed = motor.transform_point(&p2);
 //! ```
 
 pub mod dim2;

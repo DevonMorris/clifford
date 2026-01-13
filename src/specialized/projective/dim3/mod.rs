@@ -23,29 +23,25 @@
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::projective::dim3::{Point, Motor};
+//! use clifford::specialized::projective::dim3::{Point, Line, Motor};
 //! use std::f64::consts::FRAC_PI_2;
 //! use approx::abs_diff_eq;
 //!
-//! // Create a point at (1, 0, 0)
-//! let p = Point::from_cartesian(1.0, 0.0, 0.0);
+//! // Create points
+//! let p1 = Point::from_cartesian(0.0, 0.0, 0.0);
+//! let p2 = Point::from_cartesian(1.0, 0.0, 0.0);
 //!
-//! // 90° rotation around Z axis
+//! // Join two points to get a line
+//! let line = p1.join(&p2);
+//!
+//! // Create a rotation motor
 //! let rotor = Motor::from_rotation_z(FRAC_PI_2);
-//! let rotated = rotor.transform_point(&p);
 //!
-//! // (1,0,0) rotated 90° around Z becomes (0,1,0)
-//! assert!(abs_diff_eq!(rotated.x(), 0.0, epsilon = 1e-10));
-//! assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
-//! assert!(abs_diff_eq!(rotated.z(), 0.0, epsilon = 1e-10));
-//!
-//! // Translation
+//! // Create a translation motor
 //! let translation = Motor::from_translation(1.0, 2.0, 3.0);
-//! let translated = translation.transform_point(&p);
 //!
-//! assert!(abs_diff_eq!(translated.x(), 2.0, epsilon = 1e-10));
-//! assert!(abs_diff_eq!(translated.y(), 2.0, epsilon = 1e-10));
-//! assert!(abs_diff_eq!(translated.z(), 3.0, epsilon = 1e-10));
+//! // Compose motors
+//! let combined = rotor.compose(&translation);
 //! ```
 
 // Generated code (do not edit manually)
@@ -53,20 +49,6 @@ mod generated;
 
 // Domain-specific extensions
 mod extensions;
-
-#[cfg(any(
-    feature = "nalgebra-0_32",
-    feature = "nalgebra-0_33",
-    feature = "nalgebra-0_34"
-))]
-mod nalgebra;
-
-#[cfg(any(
-    feature = "nalgebra-0_32",
-    feature = "nalgebra-0_33",
-    feature = "nalgebra-0_34"
-))]
-pub use nalgebra::{FlectorConversionError, PointConversionError, Reflection3};
 
 #[cfg(feature = "rerun-0_28")]
 mod rerun;

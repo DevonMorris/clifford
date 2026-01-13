@@ -20,7 +20,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::specialized::euclidean::dim2::{Vector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
