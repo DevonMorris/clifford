@@ -515,8 +515,8 @@ pub fn interior_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Fle
     Flector::new(
         a.s() * b.s() + -(a.e12() * b.e12()),
         a.s() * b.e12() + a.e12() * b.s(),
-        a.s() * b.e01() + a.e12() * b.e02() + a.e01() * b.s() + -(a.e02() * b.e12()),
-        a.s() * b.e02() + -(a.e12() * b.e01()) + a.e01() * b.e12() + a.e02() * b.s(),
+        a.s() * b.e01() + a.e01() * b.s(),
+        a.s() * b.e02() + a.e02() * b.s(),
     )
 }
 #[doc = "Interior product (symmetric inner): Flector · Line -> Flector"]
@@ -525,8 +525,8 @@ pub fn interior_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Flector<T
     Flector::new(
         -(a.e12() * b.e12()),
         a.s() * b.e12(),
-        a.s() * b.e01() + a.e12() * b.e02() + -(a.e02() * b.e12()),
-        a.s() * b.e02() + -(a.e12() * b.e01()) + a.e01() * b.e12(),
+        a.s() * b.e01(),
+        a.s() * b.e02(),
     )
 }
 #[doc = "Interior product (symmetric inner): Flector · Motor -> Motor"]
@@ -536,7 +536,7 @@ pub fn interior_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Motor<T
         a.s() * b.e1() + a.e12() * b.e2(),
         a.s() * b.e2() + -(a.e12() * b.e1()),
         a.s() * b.e0() + -(a.e12() * b.e012()) + -(a.e01() * b.e1()) + -(a.e02() * b.e2()),
-        a.s() * b.e012() + a.e12() * b.e0() + -(a.e01() * b.e2()) + a.e02() * b.e1(),
+        a.s() * b.e012(),
     )
 }
 #[doc = "Interior product (symmetric inner): Flector · Point -> Point"]
@@ -574,8 +574,8 @@ pub fn interior_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Flector<T
     Flector::new(
         -(a.e12() * b.e12()),
         a.e12() * b.s(),
-        a.e12() * b.e02() + a.e01() * b.s() + -(a.e02() * b.e12()),
-        -(a.e12() * b.e01()) + a.e01() * b.e12() + a.e02() * b.s(),
+        a.e01() * b.s(),
+        a.e02() * b.s(),
     )
 }
 #[doc = "Interior product (symmetric inner): Line · Line -> Scalar"]
@@ -618,7 +618,7 @@ pub fn interior_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Motor<T
         b.s() * a.e1() + -(b.e12() * a.e2()),
         b.s() * a.e2() + b.e12() * a.e1(),
         b.s() * a.e0() + -(b.e12() * a.e012()) + b.e01() * a.e1() + b.e02() * a.e2(),
-        b.s() * a.e012() + b.e12() * a.e0() + -(b.e01() * a.e2()) + b.e02() * a.e1(),
+        b.s() * a.e012(),
     )
 }
 #[doc = "Interior product (symmetric inner): Motor · Line -> Point"]
@@ -635,9 +635,9 @@ pub fn interior_motor_line<T: Float>(a: &Motor<T>, b: &Line<T>) -> Point<T> {
 pub fn interior_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Flector<T> {
     Flector::new(
         b.e1() * a.e1() + b.e2() * a.e2(),
-        -(b.e1() * a.e2()) + b.e2() * a.e1(),
-        -(b.e1() * a.e0()) + -(b.e2() * a.e012()) + b.e0() * a.e1() + -(b.e012() * a.e2()),
-        b.e1() * a.e012() + -(b.e2() * a.e0()) + b.e0() * a.e2() + b.e012() * a.e1(),
+        T::zero(),
+        -(b.e2() * a.e012()) + -(b.e012() * a.e2()),
+        b.e1() * a.e012() + b.e012() * a.e1(),
     )
 }
 #[doc = "Interior product (symmetric inner): Motor · Point -> Flector"]
@@ -645,9 +645,9 @@ pub fn interior_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Flector<T> 
 pub fn interior_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
     Flector::new(
         b.e1() * a.e1() + b.e2() * a.e2(),
-        -(b.e1() * a.e2()) + b.e2() * a.e1(),
-        -(b.e1() * a.e0()) + -(b.e2() * a.e012()) + b.e0() * a.e1(),
-        b.e1() * a.e012() + -(b.e2() * a.e0()) + b.e0() * a.e2(),
+        T::zero(),
+        -(b.e2() * a.e012()),
+        b.e1() * a.e012(),
     )
 }
 #[doc = "Interior product (symmetric inner): Motor · Scalar -> Motor"]
@@ -688,9 +688,9 @@ pub fn interior_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Point<T> {
 pub fn interior_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Flector<T> {
     Flector::new(
         b.e1() * a.e1() + b.e2() * a.e2(),
-        -(b.e1() * a.e2()) + b.e2() * a.e1(),
-        -(b.e1() * a.e0()) + b.e0() * a.e1() + -(b.e012() * a.e2()),
-        -(b.e2() * a.e0()) + b.e0() * a.e2() + b.e012() * a.e1(),
+        T::zero(),
+        -(b.e012() * a.e2()),
+        b.e012() * a.e1(),
     )
 }
 #[doc = "Interior product (symmetric inner): Point · Point -> Scalar"]
@@ -1695,23 +1695,631 @@ pub fn antigeometric_trivector_trivector<T: Float>(
 ) -> Trivector<T> {
     Trivector::new(a.e012() * b.e012())
 }
+#[doc = "bulk contraction: Flector ∨ b★ Flector -> Flector"]
+#[inline]
+pub fn bulk_contraction_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Flector<T> {
+    Flector::new(
+        a.s() * b.s() + a.e12() * b.e12(),
+        a.e12() * b.s(),
+        a.e01() * b.s(),
+        a.e02() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Flector ∨ b★ Line -> Scalar"]
+#[inline]
+pub fn bulk_contraction_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Scalar<T> {
+    Scalar::new(a.e12() * b.e12())
+}
+#[doc = "bulk contraction: Flector ∨ b★ Motor -> Point"]
+#[inline]
+pub fn bulk_contraction_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(
+        -(a.e12() * b.e2()),
+        a.e12() * b.e1(),
+        a.e01() * b.e1() + a.e02() * b.e2(),
+    )
+}
+#[doc = "bulk contraction: Flector ∨ b★ Point -> Point"]
+#[inline]
+pub fn bulk_contraction_flector_point<T: Float>(a: &Flector<T>, b: &Point<T>) -> Point<T> {
+    Point::new(
+        -(a.e12() * b.e2()),
+        a.e12() * b.e1(),
+        a.e01() * b.e1() + a.e02() * b.e2(),
+    )
+}
+#[doc = "bulk contraction: Flector ∨ b★ Scalar -> Flector"]
+#[inline]
+pub fn bulk_contraction_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Flector<T> {
+    Flector::new(
+        a.s() * b.s(),
+        a.e12() * b.s(),
+        a.e01() * b.s(),
+        a.e02() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Line ∨ b★ Flector -> Flector"]
+#[inline]
+pub fn bulk_contraction_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Flector<T> {
+    Flector::new(
+        a.e12() * b.e12(),
+        a.e12() * b.s(),
+        a.e01() * b.s(),
+        a.e02() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Line ∨ b★ Line -> Scalar"]
+#[inline]
+pub fn bulk_contraction_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Scalar<T> {
+    Scalar::new(a.e12() * b.e12())
+}
+#[doc = "bulk contraction: Line ∨ b★ Motor -> Point"]
+#[inline]
+pub fn bulk_contraction_line_motor<T: Float>(a: &Line<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(
+        -(a.e12() * b.e2()),
+        a.e12() * b.e1(),
+        a.e01() * b.e1() + a.e02() * b.e2(),
+    )
+}
+#[doc = "bulk contraction: Line ∨ b★ Point -> Point"]
+#[inline]
+pub fn bulk_contraction_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Point<T> {
+    Point::new(
+        -(a.e12() * b.e2()),
+        a.e12() * b.e1(),
+        a.e01() * b.e1() + a.e02() * b.e2(),
+    )
+}
+#[doc = "bulk contraction: Line ∨ b★ Scalar -> Line"]
+#[inline]
+pub fn bulk_contraction_line_scalar<T: Float>(a: &Line<T>, b: &Scalar<T>) -> Line<T> {
+    Line::new(a.e12() * b.s(), a.e01() * b.s(), a.e02() * b.s())
+}
+#[doc = "bulk contraction: Motor ∨ b★ Flector -> Motor"]
+#[inline]
+pub fn bulk_contraction_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Motor<T> {
+    Motor::new(
+        a.e1() * b.s(),
+        a.e2() * b.s(),
+        a.e0() * b.s() + a.e012() * b.e12(),
+        a.e012() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Motor ∨ b★ Line -> Point"]
+#[inline]
+pub fn bulk_contraction_motor_line<T: Float>(a: &Motor<T>, b: &Line<T>) -> Point<T> {
+    Point::new(T::zero(), T::zero(), a.e012() * b.e12())
+}
+#[doc = "bulk contraction: Motor ∨ b★ Motor -> Flector"]
+#[inline]
+pub fn bulk_contraction_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new(
+        a.e1() * b.e1() + a.e2() * b.e2(),
+        T::zero(),
+        -(a.e012() * b.e2()),
+        a.e012() * b.e1(),
+    )
+}
+#[doc = "bulk contraction: Motor ∨ b★ Point -> Flector"]
+#[inline]
+pub fn bulk_contraction_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
+    Flector::new(
+        a.e1() * b.e1() + a.e2() * b.e2(),
+        T::zero(),
+        -(a.e012() * b.e2()),
+        a.e012() * b.e1(),
+    )
+}
+#[doc = "bulk contraction: Motor ∨ b★ Scalar -> Motor"]
+#[inline]
+pub fn bulk_contraction_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Motor<T> {
+    Motor::new(
+        a.e1() * b.s(),
+        a.e2() * b.s(),
+        a.e0() * b.s(),
+        a.e012() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Point ∨ b★ Flector -> Point"]
+#[inline]
+pub fn bulk_contraction_point_flector<T: Float>(a: &Point<T>, b: &Flector<T>) -> Point<T> {
+    Point::new(a.e1() * b.s(), a.e2() * b.s(), a.e0() * b.s())
+}
+#[doc = "bulk contraction: Point ∨ b★ Motor -> Scalar"]
+#[inline]
+pub fn bulk_contraction_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Scalar<T> {
+    Scalar::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk contraction: Point ∨ b★ Point -> Scalar"]
+#[inline]
+pub fn bulk_contraction_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Scalar<T> {
+    Scalar::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk contraction: Point ∨ b★ Scalar -> Point"]
+#[inline]
+pub fn bulk_contraction_point_scalar<T: Float>(a: &Point<T>, b: &Scalar<T>) -> Point<T> {
+    Point::new(a.e1() * b.s(), a.e2() * b.s(), a.e0() * b.s())
+}
+#[doc = "bulk contraction: Scalar ∨ b★ Flector -> Scalar"]
+#[inline]
+pub fn bulk_contraction_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.s())
+}
+#[doc = "bulk contraction: Scalar ∨ b★ Scalar -> Scalar"]
+#[inline]
+pub fn bulk_contraction_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.s())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Flector -> Motor"]
+#[inline]
+pub fn bulk_contraction_trivector_flector<T: Float>(a: &Trivector<T>, b: &Flector<T>) -> Motor<T> {
+    Motor::new(T::zero(), T::zero(), a.e012() * b.e12(), a.e012() * b.s())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Line -> Point"]
+#[inline]
+pub fn bulk_contraction_trivector_line<T: Float>(a: &Trivector<T>, b: &Line<T>) -> Point<T> {
+    Point::new(T::zero(), T::zero(), a.e012() * b.e12())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Motor -> Line"]
+#[inline]
+pub fn bulk_contraction_trivector_motor<T: Float>(a: &Trivector<T>, b: &Motor<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.e012() * b.e2()), a.e012() * b.e1())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Point -> Line"]
+#[inline]
+pub fn bulk_contraction_trivector_point<T: Float>(a: &Trivector<T>, b: &Point<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.e012() * b.e2()), a.e012() * b.e1())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_contraction_trivector_scalar<T: Float>(
+    a: &Trivector<T>,
+    b: &Scalar<T>,
+) -> Trivector<T> {
+    Trivector::new(a.e012() * b.s())
+}
+#[doc = "weight contraction: Flector ∨ b☆ Flector -> Scalar"]
+#[inline]
+pub fn weight_contraction_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Scalar<T> {
+    Scalar::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight contraction: Flector ∨ b☆ Line -> Scalar"]
+#[inline]
+pub fn weight_contraction_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Scalar<T> {
+    Scalar::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight contraction: Flector ∨ b☆ Motor -> Point"]
+#[inline]
+pub fn weight_contraction_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(a.e01() * b.e0(), a.e02() * b.e0(), T::zero())
+}
+#[doc = "weight contraction: Flector ∨ b☆ Point -> Point"]
+#[inline]
+pub fn weight_contraction_flector_point<T: Float>(a: &Flector<T>, b: &Point<T>) -> Point<T> {
+    Point::new(a.e01() * b.e0(), a.e02() * b.e0(), T::zero())
+}
+#[doc = "weight contraction: Line ∨ b☆ Flector -> Scalar"]
+#[inline]
+pub fn weight_contraction_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Scalar<T> {
+    Scalar::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight contraction: Line ∨ b☆ Line -> Scalar"]
+#[inline]
+pub fn weight_contraction_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Scalar<T> {
+    Scalar::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight contraction: Line ∨ b☆ Motor -> Point"]
+#[inline]
+pub fn weight_contraction_line_motor<T: Float>(a: &Line<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(a.e01() * b.e0(), a.e02() * b.e0(), T::zero())
+}
+#[doc = "weight contraction: Line ∨ b☆ Point -> Point"]
+#[inline]
+pub fn weight_contraction_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Point<T> {
+    Point::new(a.e01() * b.e0(), a.e02() * b.e0(), T::zero())
+}
+#[doc = "weight contraction: Motor ∨ b☆ Flector -> Point"]
+#[inline]
+pub fn weight_contraction_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Point<T> {
+    Point::new(-(a.e012() * b.e02()), a.e012() * b.e01(), T::zero())
+}
+#[doc = "weight contraction: Motor ∨ b☆ Line -> Point"]
+#[inline]
+pub fn weight_contraction_motor_line<T: Float>(a: &Motor<T>, b: &Line<T>) -> Point<T> {
+    Point::new(-(a.e012() * b.e02()), a.e012() * b.e01(), T::zero())
+}
+#[doc = "weight contraction: Motor ∨ b☆ Motor -> Flector"]
+#[inline]
+pub fn weight_contraction_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new(
+        -(a.e0() * b.e0()) - a.e012() * b.e012(),
+        -(a.e012() * b.e0()),
+        T::zero(),
+        T::zero(),
+    )
+}
+#[doc = "weight contraction: Motor ∨ b☆ Point -> Flector"]
+#[inline]
+pub fn weight_contraction_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Flector<T> {
+    Flector::new(
+        -(a.e0() * b.e0()),
+        -(a.e012() * b.e0()),
+        T::zero(),
+        T::zero(),
+    )
+}
+#[doc = "weight contraction: Motor ∨ b☆ Trivector -> Scalar"]
+#[inline]
+pub fn weight_contraction_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.e012() * b.e012()))
+}
+#[doc = "weight contraction: Point ∨ b☆ Motor -> Scalar"]
+#[inline]
+pub fn weight_contraction_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Scalar<T> {
+    Scalar::new(-(a.e0() * b.e0()))
+}
+#[doc = "weight contraction: Point ∨ b☆ Point -> Scalar"]
+#[inline]
+pub fn weight_contraction_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Scalar<T> {
+    Scalar::new(-(a.e0() * b.e0()))
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Flector -> Point"]
+#[inline]
+pub fn weight_contraction_trivector_flector<T: Float>(
+    a: &Trivector<T>,
+    b: &Flector<T>,
+) -> Point<T> {
+    Point::new(-(a.e012() * b.e02()), a.e012() * b.e01(), T::zero())
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Line -> Point"]
+#[inline]
+pub fn weight_contraction_trivector_line<T: Float>(a: &Trivector<T>, b: &Line<T>) -> Point<T> {
+    Point::new(-(a.e012() * b.e02()), a.e012() * b.e01(), T::zero())
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Motor -> Flector"]
+#[inline]
+pub fn weight_contraction_trivector_motor<T: Float>(a: &Trivector<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new(
+        -(a.e012() * b.e012()),
+        -(a.e012() * b.e0()),
+        T::zero(),
+        T::zero(),
+    )
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Point -> Line"]
+#[inline]
+pub fn weight_contraction_trivector_point<T: Float>(a: &Trivector<T>, b: &Point<T>) -> Line<T> {
+    Line::new(-(a.e012() * b.e0()), T::zero(), T::zero())
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Trivector -> Scalar"]
+#[inline]
+pub fn weight_contraction_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Scalar<T> {
+    Scalar::new(-(a.e012() * b.e012()))
+}
+#[doc = "bulk expansion: Flector ∧ b★ Flector -> Motor"]
+#[inline]
+pub fn bulk_expansion_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Motor<T> {
+    Motor::new(
+        T::zero(),
+        T::zero(),
+        a.s() * b.e12(),
+        a.s() * b.s() + a.e12() * b.e12(),
+    )
+}
+#[doc = "bulk expansion: Flector ∧ b★ Line -> Motor"]
+#[inline]
+pub fn bulk_expansion_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Motor<T> {
+    Motor::new(T::zero(), T::zero(), a.s() * b.e12(), a.e12() * b.e12())
+}
+#[doc = "bulk expansion: Flector ∧ b★ Motor -> Line"]
+#[inline]
+pub fn bulk_expansion_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.s() * b.e2()), a.s() * b.e1())
+}
+#[doc = "bulk expansion: Flector ∧ b★ Point -> Line"]
+#[inline]
+pub fn bulk_expansion_flector_point<T: Float>(a: &Flector<T>, b: &Point<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.s() * b.e2()), a.s() * b.e1())
+}
+#[doc = "bulk expansion: Flector ∧ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_expansion_flector_scalar<T: Float>(a: &Flector<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(a.s() * b.s())
+}
+#[doc = "bulk expansion: Line ∧ b★ Flector -> Trivector"]
+#[inline]
+pub fn bulk_expansion_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Trivector<T> {
+    Trivector::new(a.e12() * b.e12())
+}
+#[doc = "bulk expansion: Line ∧ b★ Line -> Trivector"]
+#[inline]
+pub fn bulk_expansion_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Trivector<T> {
+    Trivector::new(a.e12() * b.e12())
+}
+#[doc = "bulk expansion: Motor ∧ b★ Flector -> Line"]
+#[inline]
+pub fn bulk_expansion_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Line<T> {
+    Line::new(T::zero(), a.e1() * b.e12(), a.e2() * b.e12())
+}
+#[doc = "bulk expansion: Motor ∧ b★ Line -> Line"]
+#[inline]
+pub fn bulk_expansion_motor_line<T: Float>(a: &Motor<T>, b: &Line<T>) -> Line<T> {
+    Line::new(T::zero(), a.e1() * b.e12(), a.e2() * b.e12())
+}
+#[doc = "bulk expansion: Motor ∧ b★ Motor -> Trivector"]
+#[inline]
+pub fn bulk_expansion_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Trivector<T> {
+    Trivector::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk expansion: Motor ∧ b★ Point -> Trivector"]
+#[inline]
+pub fn bulk_expansion_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Trivector<T> {
+    Trivector::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk expansion: Point ∧ b★ Flector -> Line"]
+#[inline]
+pub fn bulk_expansion_point_flector<T: Float>(a: &Point<T>, b: &Flector<T>) -> Line<T> {
+    Line::new(T::zero(), a.e1() * b.e12(), a.e2() * b.e12())
+}
+#[doc = "bulk expansion: Point ∧ b★ Line -> Line"]
+#[inline]
+pub fn bulk_expansion_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Line<T> {
+    Line::new(T::zero(), a.e1() * b.e12(), a.e2() * b.e12())
+}
+#[doc = "bulk expansion: Point ∧ b★ Motor -> Trivector"]
+#[inline]
+pub fn bulk_expansion_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Trivector<T> {
+    Trivector::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk expansion: Point ∧ b★ Point -> Trivector"]
+#[inline]
+pub fn bulk_expansion_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Trivector<T> {
+    Trivector::new(a.e1() * b.e1() + a.e2() * b.e2())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Flector -> Motor"]
+#[inline]
+pub fn bulk_expansion_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Motor<T> {
+    Motor::new(T::zero(), T::zero(), a.s() * b.e12(), a.s() * b.s())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Line -> Point"]
+#[inline]
+pub fn bulk_expansion_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Point<T> {
+    Point::new(T::zero(), T::zero(), a.s() * b.e12())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Motor -> Line"]
+#[inline]
+pub fn bulk_expansion_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.s() * b.e2()), a.s() * b.e1())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Point -> Line"]
+#[inline]
+pub fn bulk_expansion_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Line<T> {
+    Line::new(T::zero(), -(a.s() * b.e2()), a.s() * b.e1())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_expansion_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(a.s() * b.s())
+}
+#[doc = "weight expansion: Flector ∧ b☆ Flector -> Motor"]
+#[inline]
+pub fn weight_expansion_flector_flector<T: Float>(a: &Flector<T>, b: &Flector<T>) -> Motor<T> {
+    Motor::new(
+        -(a.s() * b.e02()),
+        a.s() * b.e01(),
+        T::zero(),
+        -(a.e01() * b.e01()) - a.e02() * b.e02(),
+    )
+}
+#[doc = "weight expansion: Flector ∧ b☆ Line -> Motor"]
+#[inline]
+pub fn weight_expansion_flector_line<T: Float>(a: &Flector<T>, b: &Line<T>) -> Motor<T> {
+    Motor::new(
+        -(a.s() * b.e02()),
+        a.s() * b.e01(),
+        T::zero(),
+        -(a.e01() * b.e01()) - a.e02() * b.e02(),
+    )
+}
+#[doc = "weight expansion: Flector ∧ b☆ Motor -> Flector"]
+#[inline]
+pub fn weight_expansion_flector_motor<T: Float>(a: &Flector<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new(
+        -(a.s() * b.e012()),
+        -(a.s() * b.e0()) - a.e12() * b.e012(),
+        -(a.e01() * b.e012()),
+        -(a.e02() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Flector ∧ b☆ Point -> Line"]
+#[inline]
+pub fn weight_expansion_flector_point<T: Float>(a: &Flector<T>, b: &Point<T>) -> Line<T> {
+    Line::new(-(a.s() * b.e0()), T::zero(), T::zero())
+}
+#[doc = "weight expansion: Flector ∧ b☆ Trivector -> Flector"]
+#[inline]
+pub fn weight_expansion_flector_trivector<T: Float>(
+    a: &Flector<T>,
+    b: &Trivector<T>,
+) -> Flector<T> {
+    Flector::new(
+        -(a.s() * b.e012()),
+        -(a.e12() * b.e012()),
+        -(a.e01() * b.e012()),
+        -(a.e02() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Line ∧ b☆ Flector -> Trivector"]
+#[inline]
+pub fn weight_expansion_line_flector<T: Float>(a: &Line<T>, b: &Flector<T>) -> Trivector<T> {
+    Trivector::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight expansion: Line ∧ b☆ Line -> Trivector"]
+#[inline]
+pub fn weight_expansion_line_line<T: Float>(a: &Line<T>, b: &Line<T>) -> Trivector<T> {
+    Trivector::new(-(a.e01() * b.e01()) - a.e02() * b.e02())
+}
+#[doc = "weight expansion: Line ∧ b☆ Motor -> Line"]
+#[inline]
+pub fn weight_expansion_line_motor<T: Float>(a: &Line<T>, b: &Motor<T>) -> Line<T> {
+    Line::new(
+        -(a.e12() * b.e012()),
+        -(a.e01() * b.e012()),
+        -(a.e02() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Line ∧ b☆ Trivector -> Line"]
+#[inline]
+pub fn weight_expansion_line_trivector<T: Float>(a: &Line<T>, b: &Trivector<T>) -> Line<T> {
+    Line::new(
+        -(a.e12() * b.e012()),
+        -(a.e01() * b.e012()),
+        -(a.e02() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Motor ∧ b☆ Flector -> Line"]
+#[inline]
+pub fn weight_expansion_motor_flector<T: Float>(a: &Motor<T>, b: &Flector<T>) -> Line<T> {
+    Line::new(
+        a.e1() * b.e01() + a.e2() * b.e02(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "weight expansion: Motor ∧ b☆ Line -> Line"]
+#[inline]
+pub fn weight_expansion_motor_line<T: Float>(a: &Motor<T>, b: &Line<T>) -> Line<T> {
+    Line::new(
+        a.e1() * b.e01() + a.e2() * b.e02(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "weight expansion: Motor ∧ b☆ Motor -> Motor"]
+#[inline]
+pub fn weight_expansion_motor_motor<T: Float>(a: &Motor<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new(
+        -(a.e1() * b.e012()),
+        -(a.e2() * b.e012()),
+        -(a.e0() * b.e012()),
+        -(a.e0() * b.e0()) - a.e012() * b.e012(),
+    )
+}
+#[doc = "weight expansion: Motor ∧ b☆ Point -> Trivector"]
+#[inline]
+pub fn weight_expansion_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Trivector<T> {
+    Trivector::new(-(a.e0() * b.e0()))
+}
+#[doc = "weight expansion: Motor ∧ b☆ Trivector -> Motor"]
+#[inline]
+pub fn weight_expansion_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Motor<T> {
+    Motor::new(
+        -(a.e1() * b.e012()),
+        -(a.e2() * b.e012()),
+        -(a.e0() * b.e012()),
+        -(a.e012() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Point ∧ b☆ Flector -> Line"]
+#[inline]
+pub fn weight_expansion_point_flector<T: Float>(a: &Point<T>, b: &Flector<T>) -> Line<T> {
+    Line::new(
+        a.e1() * b.e01() + a.e2() * b.e02(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "weight expansion: Point ∧ b☆ Line -> Line"]
+#[inline]
+pub fn weight_expansion_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Line<T> {
+    Line::new(
+        a.e1() * b.e01() + a.e2() * b.e02(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "weight expansion: Point ∧ b☆ Motor -> Motor"]
+#[inline]
+pub fn weight_expansion_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new(
+        -(a.e1() * b.e012()),
+        -(a.e2() * b.e012()),
+        -(a.e0() * b.e012()),
+        -(a.e0() * b.e0()),
+    )
+}
+#[doc = "weight expansion: Point ∧ b☆ Point -> Trivector"]
+#[inline]
+pub fn weight_expansion_point_point<T: Float>(a: &Point<T>, b: &Point<T>) -> Trivector<T> {
+    Trivector::new(-(a.e0() * b.e0()))
+}
+#[doc = "weight expansion: Point ∧ b☆ Trivector -> Point"]
+#[inline]
+pub fn weight_expansion_point_trivector<T: Float>(a: &Point<T>, b: &Trivector<T>) -> Point<T> {
+    Point::new(
+        -(a.e1() * b.e012()),
+        -(a.e2() * b.e012()),
+        -(a.e0() * b.e012()),
+    )
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Flector -> Point"]
+#[inline]
+pub fn weight_expansion_scalar_flector<T: Float>(a: &Scalar<T>, b: &Flector<T>) -> Point<T> {
+    Point::new(-(a.s() * b.e02()), a.s() * b.e01(), T::zero())
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Line -> Point"]
+#[inline]
+pub fn weight_expansion_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Point<T> {
+    Point::new(-(a.s() * b.e02()), a.s() * b.e01(), T::zero())
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Motor -> Flector"]
+#[inline]
+pub fn weight_expansion_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Flector<T> {
+    Flector::new(-(a.s() * b.e012()), -(a.s() * b.e0()), T::zero(), T::zero())
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Point -> Line"]
+#[inline]
+pub fn weight_expansion_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Line<T> {
+    Line::new(-(a.s() * b.e0()), T::zero(), T::zero())
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Trivector -> Scalar"]
+#[inline]
+pub fn weight_expansion_scalar_trivector<T: Float>(a: &Scalar<T>, b: &Trivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.s() * b.e012()))
+}
+#[doc = "weight expansion: Trivector ∧ b☆ Motor -> Trivector"]
+#[inline]
+pub fn weight_expansion_trivector_motor<T: Float>(a: &Trivector<T>, b: &Motor<T>) -> Trivector<T> {
+    Trivector::new(-(a.e012() * b.e012()))
+}
+#[doc = "weight expansion: Trivector ∧ b☆ Trivector -> Trivector"]
+#[inline]
+pub fn weight_expansion_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Trivector<T> {
+    Trivector::new(-(a.e012() * b.e012()))
+}
 #[doc = "Sandwich product: Flector * Point * rev(Flector) -> Point"]
 #[inline]
 pub fn sandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.s() * x.e1() * v.s() + v.e12() * x.e2() * v.s() + v.s() * x.e2() * v.e12()
-            - v.e12() * x.e1() * v.e12(),
-        -(v.s() * x.e1() * v.e12()) - v.e12() * x.e1() * v.s() + v.s() * x.e2() * v.s()
+        v.e12() * x.e2() * v.s() + v.s() * x.e1() * v.s() - v.e12() * x.e1() * v.e12()
+            + v.s() * x.e2() * v.e12(),
+        -(v.e12() * x.e1() * v.s()) - v.s() * x.e1() * v.e12() + v.s() * x.e2() * v.s()
             - v.e12() * x.e2() * v.e12(),
-        v.e02() * x.e1() * v.e12() + v.e12() * x.e1() * v.e02()
-            - v.s() * x.e2() * v.e02()
-            - v.s() * x.e1() * v.e01()
+        v.e12() * x.e0() * v.e12() - v.e01() * x.e1() * v.s() - v.e12() * x.e2() * v.e01()
             + v.s() * x.e0() * v.s()
-            - v.e02() * x.e2() * v.s()
-            + v.e12() * x.e0() * v.e12()
-            - v.e12() * x.e2() * v.e01()
-            - v.e01() * x.e1() * v.s()
-            - v.e01() * x.e2() * v.e12(),
+            + v.e12() * x.e1() * v.e02()
+            - v.s() * x.e1() * v.e01()
+            - v.e01() * x.e2() * v.e12()
+            + v.e02() * x.e1() * v.e12()
+            - v.s() * x.e2() * v.e02()
+            - v.e02() * x.e2() * v.s(),
     )
 }
 #[doc = "Sandwich product: Flector * Line * rev(Flector) -> Line"]
@@ -1719,107 +2327,108 @@ pub fn sandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Point<T
 pub fn sandwich_flector_line<T: Float>(v: &Flector<T>, x: &Line<T>) -> Line<T> {
     Line::new(
         v.s() * x.e12() * v.s() + v.e12() * x.e12() * v.e12(),
-        -(v.e02() * x.e12() * v.s()) + v.e12() * x.e12() * v.e01() - v.s() * x.e12() * v.e02()
-            + v.s() * x.e01() * v.s()
-            - v.e12() * x.e01() * v.e12()
-            + v.e12() * x.e02() * v.s()
+        v.s() * x.e01() * v.s()
             + v.e01() * x.e12() * v.e12()
-            + v.s() * x.e02() * v.e12(),
-        -(v.e12() * x.e01() * v.s()) - v.s() * x.e01() * v.e12()
+            + v.s() * x.e02() * v.e12()
+            + v.e12() * x.e02() * v.s()
+            + v.e12() * x.e12() * v.e01()
+            - v.s() * x.e12() * v.e02()
+            - v.e12() * x.e01() * v.e12()
+            - v.e02() * x.e12() * v.s(),
+        -(v.e12() * x.e01() * v.s()) - v.e12() * x.e02() * v.e12() + v.s() * x.e02() * v.s()
+            - v.s() * x.e01() * v.e12()
             + v.s() * x.e12() * v.e01()
-            + v.s() * x.e02() * v.s()
+            + v.e02() * x.e12() * v.e12()
             + v.e12() * x.e12() * v.e02()
-            + v.e01() * x.e12() * v.s()
-            - v.e12() * x.e02() * v.e12()
-            + v.e02() * x.e12() * v.e12(),
+            + v.e01() * x.e12() * v.s(),
     )
 }
 #[doc = "Sandwich product: Flector * Motor * rev(Flector) -> Motor"]
 #[inline]
 pub fn sandwich_flector_motor<T: Float>(v: &Flector<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        -(v.e12() * x.e1() * v.e12())
-            + v.s() * x.e2() * v.e12()
-            + v.s() * x.e1() * v.s()
+        v.s() * x.e1() * v.s() + v.s() * x.e2() * v.e12() - v.e12() * x.e1() * v.e12()
             + v.e12() * x.e2() * v.s(),
         v.s() * x.e2() * v.s()
-            - v.e12() * x.e1() * v.s()
             - v.s() * x.e1() * v.e12()
+            - v.e12() * x.e1() * v.s()
             - v.e12() * x.e2() * v.e12(),
-        v.e12() * x.e0() * v.e12() - v.e01() * x.e2() * v.e12() + v.e12() * x.e1() * v.e02()
-            - v.s() * x.e1() * v.e01()
-            - v.e12() * x.e012() * v.s()
+        v.s() * x.e012() * v.e12() + v.e12() * x.e0() * v.e12() + v.e12() * x.e1() * v.e02()
             - v.e12() * x.e2() * v.e01()
-            - v.s() * x.e2() * v.e02()
-            - v.e01() * x.e1() * v.s()
-            + v.e02() * x.e1() * v.e12()
+            - v.s() * x.e1() * v.e01()
             + v.s() * x.e0() * v.s()
+            - v.e01() * x.e1() * v.s()
+            - v.e01() * x.e2() * v.e12()
+            + v.e02() * x.e1() * v.e12()
             - v.e02() * x.e2() * v.s()
-            + v.s() * x.e012() * v.e12(),
-        v.s() * x.e2() * v.e01() - v.s() * x.e1() * v.e02()
-            + v.e12() * x.e0() * v.s()
-            + v.s() * x.e012() * v.s()
+            - v.s() * x.e2() * v.e02()
+            - v.e12() * x.e012() * v.s(),
+        -(v.s() * x.e1() * v.e02())
+            + v.s() * x.e2() * v.e01()
             + v.e12() * x.e012() * v.e12()
-            - v.s() * x.e0() * v.e12()
-            + v.e02() * x.e2() * v.e12()
-            - v.e12() * x.e2() * v.e02()
-            - v.e12() * x.e1() * v.e01()
-            - v.e01() * x.e2() * v.s()
             + v.e01() * x.e1() * v.e12()
-            + v.e02() * x.e1() * v.s(),
+            + v.e02() * x.e1() * v.s()
+            - v.e12() * x.e1() * v.e01()
+            + v.e12() * x.e0() * v.s()
+            - v.e01() * x.e2() * v.s()
+            + v.e02() * x.e2() * v.e12()
+            - v.s() * x.e0() * v.e12()
+            - v.e12() * x.e2() * v.e02()
+            + v.s() * x.e012() * v.s(),
     )
 }
 #[doc = "Sandwich product: Flector * Flector * rev(Flector) -> Flector"]
 #[inline]
 pub fn sandwich_flector_flector<T: Float>(v: &Flector<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new(
-        v.e12() * x.s() * v.e12() - v.e12() * x.e12() * v.s()
-            + v.s() * x.e12() * v.e12()
-            + v.s() * x.s() * v.s(),
-        v.e12() * x.s() * v.s() - v.s() * x.s() * v.e12()
+        v.s() * x.s() * v.s() + v.s() * x.e12() * v.e12() + v.e12() * x.s() * v.e12()
+            - v.e12() * x.e12() * v.s(),
+        -(v.s() * x.s() * v.e12())
+            + v.e12() * x.s() * v.s()
             + v.s() * x.e12() * v.s()
             + v.e12() * x.e12() * v.e12(),
-        v.e02() * x.s() * v.e12() - v.e02() * x.e12() * v.s() - v.s() * x.e12() * v.e02()
-            + v.e12() * x.e12() * v.e01()
-            - v.e12() * x.e01() * v.e12()
-            + v.s() * x.e01() * v.s()
-            + v.s() * x.e02() * v.e12()
-            - v.e12() * x.s() * v.e02()
+        v.e02() * x.s() * v.e12()
+            - v.e02() * x.e12() * v.s()
+            - v.s() * x.e12() * v.e02()
             - v.s() * x.s() * v.e01()
+            + v.e12() * x.e12() * v.e01()
+            - v.e12() * x.s() * v.e02()
+            + v.s() * x.e02() * v.e12()
+            - v.e12() * x.e01() * v.e12()
             + v.e12() * x.e02() * v.s()
+            + v.s() * x.e01() * v.s()
             + v.e01() * x.s() * v.s()
             + v.e01() * x.e12() * v.e12(),
-        -(v.e12() * x.e01() * v.s()) - v.e12() * x.e02() * v.e12()
+        v.e02() * x.e12() * v.e12() - v.e01() * x.s() * v.e12()
             + v.e01() * x.e12() * v.s()
             + v.e12() * x.e12() * v.e02()
-            + v.s() * x.e12() * v.e01()
             - v.s() * x.s() * v.e02()
+            - v.e12() * x.e01() * v.s()
+            + v.s() * x.e12() * v.e01()
             + v.s() * x.e02() * v.s()
             - v.s() * x.e01() * v.e12()
-            - v.e01() * x.s() * v.e12()
             + v.e12() * x.s() * v.e01()
-            + v.e02() * x.s() * v.s()
-            + v.e02() * x.e12() * v.e12(),
+            - v.e12() * x.e02() * v.e12()
+            + v.e02() * x.s() * v.s(),
     )
 }
 #[doc = "Sandwich product: Motor * Point * rev(Motor) -> Point"]
 #[inline]
 pub fn sandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.e2() * x.e2() * v.e1() + v.e1() * x.e2() * v.e2() - v.e2() * x.e1() * v.e2()
-            + v.e1() * x.e1() * v.e1(),
-        v.e1() * x.e1() * v.e2() + v.e2() * x.e2() * v.e2() - v.e1() * x.e2() * v.e1()
-            + v.e2() * x.e1() * v.e1(),
-        v.e0() * x.e1() * v.e1()
-            + v.e0() * x.e2() * v.e2()
-            + v.e2() * x.e2() * v.e0()
-            + v.e012() * x.e2() * v.e1()
+        v.e1() * x.e1() * v.e1() + v.e1() * x.e2() * v.e2() + v.e2() * x.e2() * v.e1()
+            - v.e2() * x.e1() * v.e2(),
+        v.e1() * x.e1() * v.e2() + v.e2() * x.e1() * v.e1() + v.e2() * x.e2() * v.e2()
+            - v.e1() * x.e2() * v.e1(),
+        v.e0() * x.e2() * v.e2() + v.e0() * x.e1() * v.e1()
             - v.e1() * x.e0() * v.e1()
+            - v.e2() * x.e0() * v.e2()
+            - v.e012() * x.e1() * v.e2()
+            + v.e012() * x.e2() * v.e1()
+            + v.e2() * x.e2() * v.e0()
             + v.e1() * x.e1() * v.e0()
             + v.e1() * x.e2() * v.e012()
-            - v.e012() * x.e1() * v.e2()
-            - v.e2() * x.e1() * v.e012()
-            - v.e2() * x.e0() * v.e2(),
+            - v.e2() * x.e1() * v.e012(),
     )
 }
 #[doc = "Sandwich product: Motor * Line * rev(Motor) -> Line"]
@@ -1827,103 +2436,105 @@ pub fn sandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
 pub fn sandwich_motor_line<T: Float>(v: &Motor<T>, x: &Line<T>) -> Line<T> {
     Line::new(
         -(v.e2() * x.e12() * v.e2()) - v.e1() * x.e12() * v.e1(),
-        -(v.e2() * x.e02() * v.e1()) + v.e1() * x.e12() * v.e012()
-            - v.e2() * x.e12() * v.e0()
-            - v.e1() * x.e01() * v.e1()
-            - v.e0() * x.e12() * v.e2()
+        -(v.e2() * x.e12() * v.e0()) + v.e2() * x.e01() * v.e2() - v.e1() * x.e02() * v.e2()
             + v.e012() * x.e12() * v.e1()
-            - v.e1() * x.e02() * v.e2()
-            + v.e2() * x.e01() * v.e2(),
-        v.e1() * x.e12() * v.e0()
-            + v.e1() * x.e02() * v.e1()
-            + v.e0() * x.e12() * v.e1()
-            + v.e012() * x.e12() * v.e2()
+            - v.e0() * x.e12() * v.e2()
+            - v.e1() * x.e01() * v.e1()
+            + v.e1() * x.e12() * v.e012()
+            - v.e2() * x.e02() * v.e1(),
+        v.e1() * x.e12() * v.e0() + v.e2() * x.e12() * v.e012()
             - v.e2() * x.e01() * v.e1()
             - v.e2() * x.e02() * v.e2()
+            + v.e1() * x.e02() * v.e1()
             - v.e1() * x.e01() * v.e2()
-            + v.e2() * x.e12() * v.e012(),
+            + v.e012() * x.e12() * v.e2()
+            + v.e0() * x.e12() * v.e1(),
     )
 }
 #[doc = "Sandwich product: Motor * Motor * rev(Motor) -> Motor"]
 #[inline]
 pub fn sandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        v.e1() * x.e1() * v.e1() + v.e2() * x.e2() * v.e1() - v.e2() * x.e1() * v.e2()
-            + v.e1() * x.e2() * v.e2(),
+        v.e2() * x.e2() * v.e1() + v.e1() * x.e1() * v.e1() + v.e1() * x.e2() * v.e2()
+            - v.e2() * x.e1() * v.e2(),
         v.e2() * x.e2() * v.e2() - v.e1() * x.e2() * v.e1()
-            + v.e1() * x.e1() * v.e2()
-            + v.e2() * x.e1() * v.e1(),
-        v.e0() * x.e1() * v.e1() - v.e2() * x.e0() * v.e2()
-            + v.e2() * x.e012() * v.e1()
-            + v.e012() * x.e2() * v.e1()
-            - v.e012() * x.e1() * v.e2()
-            + v.e1() * x.e1() * v.e0()
-            + v.e1() * x.e2() * v.e012()
+            + v.e2() * x.e1() * v.e1()
+            + v.e1() * x.e1() * v.e2(),
+        v.e0() * x.e1() * v.e1()
             - v.e2() * x.e1() * v.e012()
-            + v.e0() * x.e2() * v.e2()
+            - v.e1() * x.e0() * v.e1()
             - v.e1() * x.e012() * v.e2()
-            + v.e2() * x.e2() * v.e0()
-            - v.e1() * x.e0() * v.e1(),
-        v.e2() * x.e0() * v.e1() + v.e2() * x.e012() * v.e2() - v.e1() * x.e1() * v.e012()
-            + v.e1() * x.e2() * v.e0()
+            + v.e1() * x.e2() * v.e012()
+            + v.e0() * x.e2() * v.e2()
+            - v.e012() * x.e1() * v.e2()
+            + v.e012() * x.e2() * v.e1()
+            - v.e2() * x.e0() * v.e2()
+            + v.e1() * x.e1() * v.e0()
+            + v.e2() * x.e012() * v.e1()
+            + v.e2() * x.e2() * v.e0(),
+        -(v.e0() * x.e2() * v.e1()) + v.e1() * x.e012() * v.e1() - v.e2() * x.e2() * v.e012()
+            + v.e2() * x.e012() * v.e2()
             - v.e2() * x.e1() * v.e0()
-            - v.e1() * x.e0() * v.e2()
-            + v.e1() * x.e012() * v.e1()
             + v.e012() * x.e1() * v.e1()
-            - v.e0() * x.e2() * v.e1()
-            - v.e2() * x.e2() * v.e012()
             + v.e012() * x.e2() * v.e2()
-            + v.e0() * x.e1() * v.e2(),
+            + v.e0() * x.e1() * v.e2()
+            + v.e1() * x.e2() * v.e0()
+            + v.e2() * x.e0() * v.e1()
+            - v.e1() * x.e1() * v.e012()
+            - v.e1() * x.e0() * v.e2(),
     )
 }
 #[doc = "Sandwich product: Motor * Flector * rev(Motor) -> Flector"]
 #[inline]
 pub fn sandwich_motor_flector<T: Float>(v: &Motor<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new(
-        v.e1() * x.e12() * v.e2() + v.e1() * x.s() * v.e1() - v.e2() * x.e12() * v.e1()
-            + v.e2() * x.s() * v.e2(),
-        -(v.e1() * x.e12() * v.e1()) - v.e2() * x.e12() * v.e2() - v.e2() * x.s() * v.e1()
-            + v.e1() * x.s() * v.e2(),
-        v.e1() * x.e12() * v.e012() - v.e1() * x.e02() * v.e2() + v.e1() * x.s() * v.e0()
-            - v.e0() * x.e12() * v.e2()
-            + v.e2() * x.e01() * v.e2()
-            - v.e1() * x.e01() * v.e1()
-            - v.e2() * x.e02() * v.e1()
-            - v.e012() * x.s() * v.e2()
-            + v.e012() * x.e12() * v.e1()
-            - v.e0() * x.s() * v.e1()
+        v.e2() * x.s() * v.e2() - v.e2() * x.e12() * v.e1()
+            + v.e1() * x.s() * v.e1()
+            + v.e1() * x.e12() * v.e2(),
+        -(v.e2() * x.e12() * v.e2()) - v.e1() * x.e12() * v.e1() + v.e1() * x.s() * v.e2()
+            - v.e2() * x.s() * v.e1(),
+        -(v.e012() * x.s() * v.e2())
             - v.e2() * x.e12() * v.e0()
-            + v.e2() * x.s() * v.e012(),
-        -(v.e0() * x.s() * v.e2()) + v.e012() * x.s() * v.e1() - v.e2() * x.e01() * v.e1()
-            + v.e0() * x.e12() * v.e1()
-            + v.e012() * x.e12() * v.e2()
-            + v.e2() * x.s() * v.e0()
-            + v.e1() * x.e12() * v.e0()
-            - v.e1() * x.s() * v.e012()
-            - v.e1() * x.e01() * v.e2()
-            + v.e2() * x.e12() * v.e012()
+            - v.e1() * x.e01() * v.e1()
+            - v.e0() * x.e12() * v.e2()
+            + v.e1() * x.s() * v.e0()
+            - v.e2() * x.e02() * v.e1()
+            - v.e0() * x.s() * v.e1()
+            + v.e1() * x.e12() * v.e012()
+            + v.e012() * x.e12() * v.e1()
+            - v.e1() * x.e02() * v.e2()
+            + v.e2() * x.s() * v.e012()
+            + v.e2() * x.e01() * v.e2(),
+        v.e1() * x.e02() * v.e1()
+            - v.e2() * x.e01() * v.e1()
+            - v.e0() * x.s() * v.e2()
             - v.e2() * x.e02() * v.e2()
-            + v.e1() * x.e02() * v.e1(),
+            - v.e1() * x.e01() * v.e2()
+            + v.e1() * x.e12() * v.e0()
+            + v.e012() * x.s() * v.e1()
+            + v.e0() * x.e12() * v.e1()
+            + v.e2() * x.e12() * v.e012()
+            - v.e1() * x.s() * v.e012()
+            + v.e012() * x.e12() * v.e2()
+            + v.e2() * x.s() * v.e0(),
     )
 }
 #[doc = "Antisandwich product: Flector ⊛ Point ⊛ antirev(Flector) -> Point\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        -(v.s() * x.e0() * v.e01()) + v.e12() * x.e0() * v.e02()
-            - v.e01() * x.e0() * v.s()
-            - v.e02() * x.e2() * v.e01()
+        -(v.e01() * x.e1() * v.e01()) - v.e01() * x.e2() * v.e02()
             + v.e02() * x.e0() * v.e12()
-            - v.e01() * x.e1() * v.e01()
-            - v.e01() * x.e2() * v.e02()
-            + v.e02() * x.e1() * v.e02(),
-        v.e01() * x.e2() * v.e01()
+            + v.e02() * x.e1() * v.e02()
+            - v.e01() * x.e0() * v.s()
+            - v.s() * x.e0() * v.e01()
+            - v.e02() * x.e2() * v.e01()
+            + v.e12() * x.e0() * v.e02(),
+        -(v.e02() * x.e0() * v.s()) - v.e02() * x.e1() * v.e01() + v.e01() * x.e2() * v.e01()
+            - v.e12() * x.e0() * v.e01()
             - v.e02() * x.e2() * v.e02()
             - v.s() * x.e0() * v.e02()
-            - v.e02() * x.e1() * v.e01()
-            - v.e02() * x.e0() * v.s()
             - v.e01() * x.e1() * v.e02()
-            - v.e12() * x.e0() * v.e01()
             - v.e01() * x.e0() * v.e12(),
         -(v.e01() * x.e0() * v.e01()) - v.e02() * x.e0() * v.e02(),
     )
@@ -1932,53 +2543,52 @@ pub fn antisandwich_flector_point<T: Float>(v: &Flector<T>, x: &Point<T>) -> Poi
 #[inline]
 pub fn antisandwich_flector_line<T: Float>(v: &Flector<T>, x: &Line<T>) -> Line<T> {
     Line::new(
-        v.e12() * x.e01() * v.e01() - v.e02() * x.e12() * v.e02() + v.e01() * x.e02() * v.s()
-            - v.s() * x.e01() * v.e02()
-            + v.e12() * x.e02() * v.e02()
+        -(v.e02() * x.e01() * v.s())
             + v.e02() * x.e02() * v.e12()
-            + v.s() * x.e02() * v.e01()
+            + v.e12() * x.e01() * v.e01()
             + v.e01() * x.e01() * v.e12()
-            - v.e02() * x.e01() * v.s()
-            - v.e01() * x.e12() * v.e01(),
+            + v.e12() * x.e02() * v.e02()
+            - v.e01() * x.e12() * v.e01()
+            - v.s() * x.e01() * v.e02()
+            + v.e01() * x.e02() * v.s()
+            - v.e02() * x.e12() * v.e02()
+            + v.s() * x.e02() * v.e01(),
         -(v.e02() * x.e01() * v.e02())
-            + v.e01() * x.e02() * v.e02()
             + v.e01() * x.e01() * v.e01()
-            + v.e02() * x.e02() * v.e01(),
-        v.e01() * x.e01() * v.e02() - v.e01() * x.e02() * v.e01()
-            + v.e02() * x.e02() * v.e02()
-            + v.e02() * x.e01() * v.e01(),
+            + v.e02() * x.e02() * v.e01()
+            + v.e01() * x.e02() * v.e02(),
+        v.e01() * x.e01() * v.e02() + v.e02() * x.e02() * v.e02() + v.e02() * x.e01() * v.e01()
+            - v.e01() * x.e02() * v.e01(),
     )
 }
 #[doc = "Antisandwich product: Flector ⊛ Motor ⊛ antirev(Flector) -> Motor\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_flector_motor<T: Float>(v: &Flector<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        v.e12() * x.e0() * v.e02() + v.e02() * x.e0() * v.e12()
-            - v.e02() * x.e012() * v.s()
-            - v.e01() * x.e0() * v.s()
-            + v.s() * x.e012() * v.e02()
-            + v.e02() * x.e1() * v.e02()
-            - v.e01() * x.e1() * v.e01()
+        v.e12() * x.e0() * v.e02() + v.e02() * x.e0() * v.e12() + v.s() * x.e012() * v.e02()
+            - v.s() * x.e0() * v.e01()
             - v.e01() * x.e2() * v.e02()
             - v.e01() * x.e012() * v.e12()
-            - v.e02() * x.e2() * v.e01()
             + v.e12() * x.e012() * v.e01()
-            - v.s() * x.e0() * v.e01(),
-        -(v.s() * x.e0() * v.e02()) - v.e12() * x.e0() * v.e01() + v.e12() * x.e012() * v.e02()
-            - v.e01() * x.e0() * v.e12()
-            + v.e01() * x.e012() * v.s()
-            - v.e01() * x.e1() * v.e02()
-            - v.e02() * x.e1() * v.e01()
-            - v.s() * x.e012() * v.e01()
+            - v.e01() * x.e1() * v.e01()
+            - v.e01() * x.e0() * v.s()
+            + v.e02() * x.e1() * v.e02()
+            - v.e02() * x.e012() * v.s()
+            - v.e02() * x.e2() * v.e01(),
+        -(v.e01() * x.e0() * v.e12()) + v.e01() * x.e2() * v.e01()
+            - v.e12() * x.e0() * v.e01()
             - v.e02() * x.e0() * v.s()
+            - v.e02() * x.e2() * v.e02()
             - v.e02() * x.e012() * v.e12()
-            + v.e01() * x.e2() * v.e01()
-            - v.e02() * x.e2() * v.e02(),
-        -(v.e02() * x.e0() * v.e02()) - v.e02() * x.e012() * v.e01() - v.e01() * x.e0() * v.e01()
-            + v.e01() * x.e012() * v.e02(),
-        -(v.e02() * x.e0() * v.e01())
-            + v.e01() * x.e012() * v.e01()
-            + v.e02() * x.e012() * v.e02()
+            + v.e01() * x.e012() * v.s()
+            - v.s() * x.e012() * v.e01()
+            - v.e02() * x.e1() * v.e01()
+            - v.e01() * x.e1() * v.e02()
+            - v.s() * x.e0() * v.e02()
+            + v.e12() * x.e012() * v.e02(),
+        -(v.e02() * x.e012() * v.e01()) - v.e01() * x.e0() * v.e01() + v.e01() * x.e012() * v.e02()
+            - v.e02() * x.e0() * v.e02(),
+        v.e02() * x.e012() * v.e02() + v.e01() * x.e012() * v.e01() - v.e02() * x.e0() * v.e01()
             + v.e01() * x.e0() * v.e02(),
     )
 }
@@ -1986,29 +2596,30 @@ pub fn antisandwich_flector_motor<T: Float>(v: &Flector<T>, x: &Motor<T>) -> Mot
 #[inline]
 pub fn antisandwich_flector_flector<T: Float>(v: &Flector<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new(
-        v.e12() * x.e01() * v.e02() + v.s() * x.e01() * v.e01() + v.e01() * x.s() * v.e01()
-            - v.e12() * x.e02() * v.e01()
+        -(v.e02() * x.e02() * v.s()) + v.e02() * x.s() * v.e02() + v.s() * x.e02() * v.e02()
             - v.e01() * x.e12() * v.e02()
+            + v.e12() * x.e01() * v.e02()
+            - v.e12() * x.e02() * v.e01()
+            + v.e01() * x.s() * v.e01()
             - v.e01() * x.e01() * v.s()
-            + v.s() * x.e02() * v.e02()
-            + v.e02() * x.s() * v.e02()
             + v.e01() * x.e02() * v.e12()
             + v.e02() * x.e12() * v.e01()
             - v.e02() * x.e01() * v.e12()
-            - v.e02() * x.e02() * v.s(),
-        v.e01() * x.e02() * v.s() + v.e02() * x.s() * v.e01() - v.e02() * x.e12() * v.e02()
+            + v.s() * x.e01() * v.e01(),
+        -(v.e02() * x.e12() * v.e02()) - v.e02() * x.e01() * v.s()
             + v.e01() * x.e01() * v.e12()
-            - v.e02() * x.e01() * v.s()
-            + v.e02() * x.e02() * v.e12()
             + v.e12() * x.e02() * v.e02()
+            - v.e01() * x.e12() * v.e01()
+            + v.e02() * x.s() * v.e01()
+            + v.e02() * x.e02() * v.e12()
+            + v.e01() * x.e02() * v.s()
             + v.e12() * x.e01() * v.e01()
-            + v.s() * x.e02() * v.e01()
-            - v.s() * x.e01() * v.e02()
             - v.e01() * x.s() * v.e02()
-            - v.e01() * x.e12() * v.e01(),
-        v.e01() * x.e01() * v.e01() - v.e02() * x.e01() * v.e02()
-            + v.e01() * x.e02() * v.e02()
-            + v.e02() * x.e02() * v.e01(),
+            - v.s() * x.e01() * v.e02()
+            + v.s() * x.e02() * v.e01(),
+        v.e02() * x.e02() * v.e01() - v.e02() * x.e01() * v.e02()
+            + v.e01() * x.e01() * v.e01()
+            + v.e01() * x.e02() * v.e02(),
         v.e02() * x.e01() * v.e01() + v.e01() * x.e01() * v.e02() + v.e02() * x.e02() * v.e02()
             - v.e01() * x.e02() * v.e01(),
     )
@@ -2017,19 +2628,19 @@ pub fn antisandwich_flector_flector<T: Float>(v: &Flector<T>, x: &Flector<T>) ->
 #[inline]
 pub fn antisandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.e0() * x.e2() * v.e012() - v.e2() * x.e0() * v.e012() - v.e0() * x.e1() * v.e0()
+        -(v.e012() * x.e0() * v.e2()) - v.e2() * x.e0() * v.e012()
             + v.e0() * x.e0() * v.e1()
-            - v.e012() * x.e0() * v.e2()
-            + v.e012() * x.e1() * v.e012()
+            + v.e1() * x.e0() * v.e0()
+            + v.e0() * x.e2() * v.e012()
+            - v.e0() * x.e1() * v.e0()
             + v.e012() * x.e2() * v.e0()
-            + v.e1() * x.e0() * v.e0(),
-        -(v.e0() * x.e2() * v.e0()) - v.e012() * x.e1() * v.e0()
-            + v.e012() * x.e0() * v.e1()
-            + v.e0() * x.e0() * v.e2()
+            + v.e012() * x.e1() * v.e012(),
+        -(v.e0() * x.e1() * v.e012()) + v.e0() * x.e0() * v.e2() - v.e012() * x.e1() * v.e0()
             + v.e2() * x.e0() * v.e0()
-            - v.e0() * x.e1() * v.e012()
             + v.e012() * x.e2() * v.e012()
-            + v.e1() * x.e0() * v.e012(),
+            + v.e1() * x.e0() * v.e012()
+            - v.e0() * x.e2() * v.e0()
+            + v.e012() * x.e0() * v.e1(),
         v.e0() * x.e0() * v.e0() + v.e012() * x.e0() * v.e012(),
     )
 }
@@ -2037,52 +2648,50 @@ pub fn antisandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T
 #[inline]
 pub fn antisandwich_motor_line<T: Float>(v: &Motor<T>, x: &Line<T>) -> Line<T> {
     Line::new(
-        -(v.e2() * x.e01() * v.e0())
-            + v.e2() * x.e02() * v.e012()
+        -(v.e2() * x.e01() * v.e0()) + v.e012() * x.e12() * v.e012() - v.e0() * x.e01() * v.e2()
             + v.e0() * x.e12() * v.e0()
             + v.e1() * x.e01() * v.e012()
-            - v.e0() * x.e01() * v.e2()
-            + v.e0() * x.e02() * v.e1()
-            + v.e012() * x.e01() * v.e1()
-            + v.e012() * x.e02() * v.e2()
             + v.e1() * x.e02() * v.e0()
-            + v.e012() * x.e12() * v.e012(),
-        -(v.e0() * x.e01() * v.e0())
-            + v.e012() * x.e01() * v.e012()
-            + v.e0() * x.e02() * v.e012()
-            + v.e012() * x.e02() * v.e0(),
-        -(v.e0() * x.e02() * v.e0()) - v.e012() * x.e01() * v.e0() - v.e0() * x.e01() * v.e012()
-            + v.e012() * x.e02() * v.e012(),
+            + v.e2() * x.e02() * v.e012()
+            + v.e012() * x.e02() * v.e2()
+            + v.e0() * x.e02() * v.e1()
+            + v.e012() * x.e01() * v.e1(),
+        v.e0() * x.e02() * v.e012() + v.e012() * x.e02() * v.e0() - v.e0() * x.e01() * v.e0()
+            + v.e012() * x.e01() * v.e012(),
+        -(v.e012() * x.e01() * v.e0()) + v.e012() * x.e02() * v.e012()
+            - v.e0() * x.e02() * v.e0()
+            - v.e0() * x.e01() * v.e012(),
     )
 }
 #[doc = "Antisandwich product: Motor ⊛ Motor ⊛ antirev(Motor) -> Motor\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        -(v.e0() * x.e012() * v.e2()) + v.e2() * x.e012() * v.e0() - v.e2() * x.e0() * v.e012()
+        -(v.e2() * x.e0() * v.e012()) - v.e012() * x.e012() * v.e1() - v.e0() * x.e1() * v.e0()
             + v.e0() * x.e2() * v.e012()
-            - v.e012() * x.e012() * v.e1()
-            + v.e012() * x.e2() * v.e0()
-            - v.e012() * x.e0() * v.e2()
-            - v.e0() * x.e1() * v.e0()
-            + v.e1() * x.e0() * v.e0()
-            + v.e012() * x.e1() * v.e012()
             + v.e0() * x.e0() * v.e1()
+            + v.e012() * x.e2() * v.e0()
+            + v.e2() * x.e012() * v.e0()
+            + v.e012() * x.e1() * v.e012()
+            + v.e1() * x.e0() * v.e0()
+            - v.e0() * x.e012() * v.e2()
+            - v.e012() * x.e0() * v.e2()
             + v.e1() * x.e012() * v.e012(),
-        v.e012() * x.e0() * v.e1() + v.e0() * x.e0() * v.e2() + v.e0() * x.e012() * v.e1()
+        v.e2() * x.e0() * v.e0() + v.e0() * x.e0() * v.e2() + v.e012() * x.e0() * v.e1()
+            - v.e0() * x.e2() * v.e0()
             - v.e012() * x.e012() * v.e2()
             - v.e012() * x.e1() * v.e0()
-            - v.e1() * x.e012() * v.e0()
             - v.e0() * x.e1() * v.e012()
             + v.e1() * x.e0() * v.e012()
-            + v.e2() * x.e012() * v.e012()
-            + v.e2() * x.e0() * v.e0()
-            - v.e0() * x.e2() * v.e0()
-            + v.e012() * x.e2() * v.e012(),
-        v.e0() * x.e0() * v.e0() + v.e0() * x.e012() * v.e012() + v.e012() * x.e0() * v.e012()
-            - v.e012() * x.e012() * v.e0(),
-        v.e0() * x.e012() * v.e0() + v.e012() * x.e0() * v.e0() - v.e0() * x.e0() * v.e012()
-            + v.e012() * x.e012() * v.e012(),
+            - v.e1() * x.e012() * v.e0()
+            + v.e012() * x.e2() * v.e012()
+            + v.e0() * x.e012() * v.e1()
+            + v.e2() * x.e012() * v.e012(),
+        v.e0() * x.e012() * v.e012() - v.e012() * x.e012() * v.e0()
+            + v.e0() * x.e0() * v.e0()
+            + v.e012() * x.e0() * v.e012(),
+        v.e0() * x.e012() * v.e0() + v.e012() * x.e012() * v.e012() + v.e012() * x.e0() * v.e0()
+            - v.e0() * x.e0() * v.e012(),
     )
 }
 #[doc = "Antisandwich product: Motor ⊛ Flector ⊛ antirev(Motor) -> Flector\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
@@ -2090,33 +2699,33 @@ pub fn antisandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T
 pub fn antisandwich_motor_flector<T: Float>(v: &Motor<T>, x: &Flector<T>) -> Flector<T> {
     Flector::new(
         v.e0() * x.e12() * v.e012()
-            + v.e0() * x.s() * v.e0()
-            + v.e012() * x.s() * v.e012()
             + v.e1() * x.e02() * v.e012()
-            + v.e0() * x.e02() * v.e2()
-            - v.e1() * x.e01() * v.e0()
-            - v.e2() * x.e01() * v.e012()
-            + v.e012() * x.e01() * v.e2()
             + v.e0() * x.e01() * v.e1()
-            - v.e012() * x.e12() * v.e0()
+            + v.e0() * x.e02() * v.e2()
+            + v.e012() * x.s() * v.e012()
+            - v.e1() * x.e01() * v.e0()
+            + v.e012() * x.e01() * v.e2()
             - v.e012() * x.e02() * v.e1()
-            - v.e2() * x.e02() * v.e0(),
-        v.e0() * x.e12() * v.e0() - v.e0() * x.e01() * v.e2()
-            + v.e012() * x.e01() * v.e1()
-            + v.e1() * x.e02() * v.e0()
-            + v.e1() * x.e01() * v.e012()
-            + v.e0() * x.e02() * v.e1()
-            + v.e012() * x.s() * v.e0()
-            - v.e2() * x.e01() * v.e0()
-            - v.e0() * x.s() * v.e012()
+            - v.e012() * x.e12() * v.e0()
+            - v.e2() * x.e02() * v.e0()
+            + v.e0() * x.s() * v.e0()
+            - v.e2() * x.e01() * v.e012(),
+        v.e0() * x.e02() * v.e1() - v.e0() * x.e01() * v.e2()
             + v.e012() * x.e12() * v.e012()
+            + v.e012() * x.e01() * v.e1()
+            + v.e0() * x.e12() * v.e0()
+            + v.e012() * x.s() * v.e0()
+            - v.e0() * x.s() * v.e012()
             + v.e012() * x.e02() * v.e2()
-            + v.e2() * x.e02() * v.e012(),
-        v.e012() * x.e01() * v.e012() - v.e0() * x.e01() * v.e0()
-            + v.e0() * x.e02() * v.e012()
-            + v.e012() * x.e02() * v.e0(),
-        -(v.e012() * x.e01() * v.e0()) - v.e0() * x.e02() * v.e0() - v.e0() * x.e01() * v.e012()
-            + v.e012() * x.e02() * v.e012(),
+            + v.e2() * x.e02() * v.e012()
+            + v.e1() * x.e01() * v.e012()
+            + v.e1() * x.e02() * v.e0()
+            - v.e2() * x.e01() * v.e0(),
+        v.e012() * x.e02() * v.e0() + v.e0() * x.e02() * v.e012() - v.e0() * x.e01() * v.e0()
+            + v.e012() * x.e01() * v.e012(),
+        -(v.e0() * x.e01() * v.e012()) + v.e012() * x.e02() * v.e012()
+            - v.e0() * x.e02() * v.e0()
+            - v.e012() * x.e01() * v.e0(),
     )
 }
 #[doc = "Reverses the Flector (negates grades where k(k-1)/2 is odd)."]

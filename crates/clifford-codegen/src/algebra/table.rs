@@ -953,6 +953,94 @@ impl ProductTable {
 
         (reverse_sign * anti_sign, result)
     }
+
+    // ========================================================================
+    // Interior Products (Contractions and Expansions)
+    // ========================================================================
+
+    /// Computes the bulk contraction of two basis blades.
+    ///
+    /// The bulk contraction is defined as: a ∨ b★
+    /// where ∨ is the antiwedge and ★ is the bulk dual.
+    ///
+    /// This is one of the four RGA interior products. It reduces grade.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the bulk contraction
+    pub fn bulk_contraction(&self, a: usize, b: usize) -> (i8, usize) {
+        let (dual_sign, b_dual) = self.bulk_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+        let (reg_sign, result) = self.regressive(a, b_dual);
+        (dual_sign * reg_sign, result)
+    }
+
+    /// Computes the weight contraction of two basis blades.
+    ///
+    /// The weight contraction is defined as: a ∨ b☆
+    /// where ∨ is the antiwedge and ☆ is the weight dual.
+    ///
+    /// This is one of the four RGA interior products. It reduces grade.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the weight contraction
+    pub fn weight_contraction(&self, a: usize, b: usize) -> (i8, usize) {
+        let (dual_sign, b_dual) = self.weight_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+        let (reg_sign, result) = self.regressive(a, b_dual);
+        (dual_sign * reg_sign, result)
+    }
+
+    /// Computes the bulk expansion of two basis blades.
+    ///
+    /// The bulk expansion is defined as: a ∧ b★
+    /// where ∧ is the wedge and ★ is the bulk dual.
+    ///
+    /// This is one of the four RGA interior products. It reduces antigrade.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the bulk expansion
+    pub fn bulk_expansion(&self, a: usize, b: usize) -> (i8, usize) {
+        let (dual_sign, b_dual) = self.bulk_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+        let (ext_sign, result) = self.exterior(a, b_dual);
+        (dual_sign * ext_sign, result)
+    }
+
+    /// Computes the weight expansion of two basis blades.
+    ///
+    /// The weight expansion is defined as: a ∧ b☆
+    /// where ∧ is the wedge and ☆ is the weight dual.
+    ///
+    /// This is one of the four RGA interior products. It reduces antigrade.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the weight expansion
+    pub fn weight_expansion(&self, a: usize, b: usize) -> (i8, usize) {
+        let (dual_sign, b_dual) = self.weight_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+        let (ext_sign, result) = self.exterior(a, b_dual);
+        (dual_sign * ext_sign, result)
+    }
 }
 
 #[cfg(test)]

@@ -191,7 +191,7 @@ impl<'a> TraitsGenerator<'a> {
         }
 
         // Exterior product (using BitXor) - only for explicit products
-        for entry in &self.spec.products.exterior {
+        for entry in &self.spec.products.wedge {
             // Only generate if lhs matches this type
             if entry.lhs == ty.name {
                 if let Some(other) = self.find_type(&entry.rhs) {
@@ -1049,6 +1049,11 @@ impl<'a> TraitsGenerator<'a> {
         let add_sub_tests = self.generate_add_sub_verification_tests_raw();
         let geometric_tests = self.generate_geometric_verification_tests_raw();
         let exterior_tests = self.generate_exterior_verification_tests_raw();
+        let bulk_contraction_tests = self.generate_bulk_contraction_verification_tests_raw();
+        let weight_contraction_tests = self.generate_weight_contraction_verification_tests_raw();
+        let bulk_expansion_tests = self.generate_bulk_expansion_verification_tests_raw();
+        let weight_expansion_tests = self.generate_weight_expansion_verification_tests_raw();
+        let de_morgan_tests = self.generate_de_morgan_verification_tests_raw();
 
         format!(
             r#"
@@ -1068,12 +1073,17 @@ mod verification_tests {{
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{geometric}{exterior}}}
+{add_sub}{geometric}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}}}
 "#,
             sig = signature_name,
             add_sub = add_sub_tests,
             geometric = geometric_tests,
             exterior = exterior_tests,
+            bulk_contraction = bulk_contraction_tests,
+            weight_contraction = weight_contraction_tests,
+            bulk_expansion = bulk_expansion_tests,
+            weight_expansion = weight_expansion_tests,
+            de_morgan = de_morgan_tests,
         )
     }
 
@@ -1233,14 +1243,14 @@ mod verification_tests {{
     /// Generates exterior product verification tests as a formatted string.
     fn generate_exterior_verification_tests_raw(&self) -> String {
         // Only generate tests for products explicitly listed in the TOML
-        if self.spec.products.exterior.is_empty() {
+        if self.spec.products.wedge.is_empty() {
             return String::new();
         }
 
         let signature_name = self.generate_signature_name();
         self.spec
             .products
-            .exterior
+            .wedge
             .iter()
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
@@ -1273,6 +1283,268 @@ mod verification_tests {{
                     lhs = entry.lhs,
                     rhs = entry.rhs,
                     out = entry.output,
+                    sig = signature_name,
+                )
+            })
+            .collect()
+    }
+
+    /// Generates bulk contraction verification tests as a formatted string.
+    fn generate_bulk_contraction_verification_tests_raw(&self) -> String {
+        if self.spec.products.bulk_contraction.is_empty() {
+            return String::new();
+        }
+
+        let signature_name = self.generate_signature_name();
+        self.spec
+            .products
+            .bulk_contraction
+            .iter()
+            .map(|entry| {
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn bulk_contraction_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            let specialized_result: {out}<f64> = bulk_contraction_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
+            })
+            .collect()
+    }
+
+    /// Generates weight contraction verification tests as a formatted string.
+    fn generate_weight_contraction_verification_tests_raw(&self) -> String {
+        if self.spec.products.weight_contraction.is_empty() {
+            return String::new();
+        }
+
+        let signature_name = self.generate_signature_name();
+        self.spec
+            .products
+            .weight_contraction
+            .iter()
+            .map(|entry| {
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn weight_contraction_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            let specialized_result: {out}<f64> = weight_contraction_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
+            })
+            .collect()
+    }
+
+    /// Generates bulk expansion verification tests as a formatted string.
+    fn generate_bulk_expansion_verification_tests_raw(&self) -> String {
+        if self.spec.products.bulk_expansion.is_empty() {
+            return String::new();
+        }
+
+        let signature_name = self.generate_signature_name();
+        self.spec
+            .products
+            .bulk_expansion
+            .iter()
+            .map(|entry| {
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn bulk_expansion_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            let specialized_result: {out}<f64> = bulk_expansion_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
+            })
+            .collect()
+    }
+
+    /// Generates weight expansion verification tests as a formatted string.
+    fn generate_weight_expansion_verification_tests_raw(&self) -> String {
+        if self.spec.products.weight_expansion.is_empty() {
+            return String::new();
+        }
+
+        let signature_name = self.generate_signature_name();
+        self.spec
+            .products
+            .weight_expansion
+            .iter()
+            .map(|entry| {
+                let lhs_lower = entry.lhs.to_lowercase();
+                let rhs_lower = entry.rhs.to_lowercase();
+                let out_lower = entry.output.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        #[test]
+        fn weight_expansion_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            let specialized_result: {out}<f64> = weight_expansion_{lhs_lower}_{rhs_lower}(&a, &b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={{:?}}, generic={{:?}}",
+                specialized_mv, generic_result
+            );
+        }}
+    }}
+"#,
+                    lhs_lower = lhs_lower,
+                    rhs_lower = rhs_lower,
+                    out_lower = out_lower,
+                    lhs = entry.lhs,
+                    rhs = entry.rhs,
+                    out = entry.output,
+                    sig = signature_name,
+                )
+            })
+            .collect()
+    }
+
+    /// Generates de-Morgan's law verification tests as a formatted string.
+    ///
+    /// Tests the fundamental identities from RGA:
+    /// - complement(a * b) = complement(a) ⋇ complement(b)
+    /// - complement(a ⋇ b) = complement(a) * complement(b)
+    ///
+    /// These tests verify that the complement and antiproduct operations
+    /// on Multivector satisfy the de-Morgan duality laws.
+    fn generate_de_morgan_verification_tests_raw(&self) -> String {
+        let signature_name = self.generate_signature_name();
+
+        // Generate tests for each non-alias type
+        self.spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|ty| {
+                let name = &ty.name;
+                let name_lower = ty.name.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_{name_lower}(a in any::<{name}<f64>>(), b in any::<{name}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (&mv_a * &mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={{:?}}, complement(a)⋇complement(b)={{:?}}",
+                lhs, rhs
+            );
+        }}
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_{name_lower}(a in any::<{name}<f64>>(), b in any::<{name}<f64>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = &mv_a.complement() * &mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={{:?}}, complement(a)*complement(b)={{:?}}",
+                lhs, rhs
+            );
+        }}
+    }}
+"#,
+                    name_lower = name_lower,
+                    name = name,
                     sig = signature_name,
                 )
             })

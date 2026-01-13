@@ -267,9 +267,9 @@ pub fn interior_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) ->
 pub fn interior_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
         -(a.xy() * b.xy()) + -(a.xz() * b.xz()) + -(a.yz() * b.yz()),
-        a.xy() * b.s() + -(a.xz() * b.yz()) + a.yz() * b.xz(),
-        a.xy() * b.yz() + a.xz() * b.s() + -(a.yz() * b.xy()),
-        -(a.xy() * b.xz()) + a.xz() * b.xy() + a.yz() * b.s(),
+        a.xy() * b.s(),
+        a.xz() * b.s(),
+        a.yz() * b.s(),
     )
 }
 #[doc = "Interior product (symmetric inner): Bivector · Scalar -> Bivector"]
@@ -296,9 +296,9 @@ pub fn interior_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Vec
 pub fn interior_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
     Rotor::new(
         -(a.xy() * b.xy()) + -(a.xz() * b.xz()) + -(a.yz() * b.yz()),
-        -(a.xz() * b.yz()) + a.yz() * b.xz() + b.xy() * a.s(),
-        a.xy() * b.yz() + -(a.yz() * b.xy()) + b.xz() * a.s(),
-        -(a.xy() * b.xz()) + a.xz() * b.xy() + b.yz() * a.s(),
+        b.xy() * a.s(),
+        b.xz() * a.s(),
+        b.yz() * a.s(),
     )
 }
 #[doc = "Interior product (symmetric inner): Rotor · Rotor -> Rotor"]
@@ -306,9 +306,9 @@ pub fn interior_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor
 pub fn interior_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
         -(a.xy() * b.xy()) + -(a.xz() * b.xz()) + -(a.yz() * b.yz()) + b.s() * a.s(),
-        a.xy() * b.s() + -(a.xz() * b.yz()) + a.yz() * b.xz() + b.xy() * a.s(),
-        a.xy() * b.yz() + a.xz() * b.s() + -(a.yz() * b.xy()) + b.xz() * a.s(),
-        -(a.xy() * b.xz()) + a.xz() * b.xy() + a.yz() * b.s() + b.yz() * a.s(),
+        a.xy() * b.s() + b.xy() * a.s(),
+        a.xz() * b.s() + b.xz() * a.s(),
+        a.yz() * b.s() + b.yz() * a.s(),
     )
 }
 #[doc = "Interior product (symmetric inner): Rotor · Scalar -> Rotor"]
@@ -927,296 +927,727 @@ pub fn antigeometric_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Bi
 pub fn antigeometric_vector_trivector<T: Float>(a: &Vector<T>, b: &Trivector<T>) -> Vector<T> {
     Vector::new(a.x() * b.xyz(), a.y() * b.xyz(), a.z() * b.xyz())
 }
+#[doc = "bulk contraction: Bivector ∨ b★ Bivector -> Scalar"]
+#[inline]
+pub fn bulk_contraction_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz())
+}
+#[doc = "bulk contraction: Bivector ∨ b★ Rotor -> Rotor"]
+#[inline]
+pub fn bulk_contraction_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(
+        a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz(),
+        a.xy() * b.s(),
+        a.xz() * b.s(),
+        a.yz() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Bivector ∨ b★ Scalar -> Bivector"]
+#[inline]
+pub fn bulk_contraction_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
+    Bivector::new(a.xy() * b.s(), a.xz() * b.s(), a.yz() * b.s())
+}
+#[doc = "bulk contraction: Bivector ∨ b★ Vector -> Vector"]
+#[inline]
+pub fn bulk_contraction_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        -(a.xy() * b.y()) - a.xz() * b.z(),
+        a.xy() * b.x() - a.yz() * b.z(),
+        a.xz() * b.x() + a.yz() * b.y(),
+    )
+}
+#[doc = "bulk contraction: Rotor ∨ b★ Bivector -> Scalar"]
+#[inline]
+pub fn bulk_contraction_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz())
+}
+#[doc = "bulk contraction: Rotor ∨ b★ Rotor -> Rotor"]
+#[inline]
+pub fn bulk_contraction_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(
+        a.s() * b.s() + a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz(),
+        a.xy() * b.s(),
+        a.xz() * b.s(),
+        a.yz() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Rotor ∨ b★ Scalar -> Rotor"]
+#[inline]
+pub fn bulk_contraction_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
+    Rotor::new(
+        a.s() * b.s(),
+        a.xy() * b.s(),
+        a.xz() * b.s(),
+        a.yz() * b.s(),
+    )
+}
+#[doc = "bulk contraction: Rotor ∨ b★ Vector -> Vector"]
+#[inline]
+pub fn bulk_contraction_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        -(a.xy() * b.y()) - a.xz() * b.z(),
+        a.xy() * b.x() - a.yz() * b.z(),
+        a.xz() * b.x() + a.yz() * b.y(),
+    )
+}
+#[doc = "bulk contraction: Scalar ∨ b★ Rotor -> Scalar"]
+#[inline]
+pub fn bulk_contraction_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.s())
+}
+#[doc = "bulk contraction: Scalar ∨ b★ Scalar -> Scalar"]
+#[inline]
+pub fn bulk_contraction_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.s())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Bivector -> Vector"]
+#[inline]
+pub fn bulk_contraction_trivector_bivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Bivector<T>,
+) -> Vector<T> {
+    Vector::new(a.xyz() * b.yz(), -(a.xyz() * b.xz()), a.xyz() * b.xy())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_contraction_trivector_scalar<T: Float>(
+    a: &Trivector<T>,
+    b: &Scalar<T>,
+) -> Trivector<T> {
+    Trivector::new(a.xyz() * b.s())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Trivector -> Scalar"]
+#[inline]
+pub fn bulk_contraction_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Scalar<T> {
+    Scalar::new(a.xyz() * b.xyz())
+}
+#[doc = "bulk contraction: Trivector ∨ b★ Vector -> Bivector"]
+#[inline]
+pub fn bulk_contraction_trivector_vector<T: Float>(a: &Trivector<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(a.xyz() * b.z(), -(a.xyz() * b.y()), a.xyz() * b.x())
+}
+#[doc = "bulk contraction: Vector ∨ b★ Rotor -> Vector"]
+#[inline]
+pub fn bulk_contraction_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
+    Vector::new(a.x() * b.s(), a.y() * b.s(), a.z() * b.s())
+}
+#[doc = "bulk contraction: Vector ∨ b★ Scalar -> Vector"]
+#[inline]
+pub fn bulk_contraction_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
+    Vector::new(a.x() * b.s(), a.y() * b.s(), a.z() * b.s())
+}
+#[doc = "bulk contraction: Vector ∨ b★ Vector -> Scalar"]
+#[inline]
+pub fn bulk_contraction_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
+    Scalar::new(a.x() * b.x() + a.y() * b.y() + a.z() * b.z())
+}
+#[doc = "weight contraction: Bivector ∨ b☆ Bivector -> Scalar"]
+#[inline]
+pub fn weight_contraction_bivector_bivector<T: Float>(
+    a: &Bivector<T>,
+    b: &Bivector<T>,
+) -> Scalar<T> {
+    Scalar::new(-(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz())
+}
+#[doc = "weight contraction: Bivector ∨ b☆ Rotor -> Rotor"]
+#[inline]
+pub fn weight_contraction_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(
+        -(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz(),
+        -(a.xy() * b.s()),
+        -(a.xz() * b.s()),
+        -(a.yz() * b.s()),
+    )
+}
+#[doc = "weight contraction: Bivector ∨ b☆ Scalar -> Bivector"]
+#[inline]
+pub fn weight_contraction_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Bivector<T> {
+    Bivector::new(-(a.xy() * b.s()), -(a.xz() * b.s()), -(a.yz() * b.s()))
+}
+#[doc = "weight contraction: Bivector ∨ b☆ Vector -> Vector"]
+#[inline]
+pub fn weight_contraction_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        a.xy() * b.y() + a.xz() * b.z(),
+        -(a.xy() * b.x()) + a.yz() * b.z(),
+        -(a.xz() * b.x()) - a.yz() * b.y(),
+    )
+}
+#[doc = "weight contraction: Rotor ∨ b☆ Bivector -> Scalar"]
+#[inline]
+pub fn weight_contraction_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz())
+}
+#[doc = "weight contraction: Rotor ∨ b☆ Rotor -> Rotor"]
+#[inline]
+pub fn weight_contraction_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(
+        -(a.s() * b.s()) - a.xy() * b.xy() - a.xz() * b.xz() - a.yz() * b.yz(),
+        -(a.xy() * b.s()),
+        -(a.xz() * b.s()),
+        -(a.yz() * b.s()),
+    )
+}
+#[doc = "weight contraction: Rotor ∨ b☆ Scalar -> Rotor"]
+#[inline]
+pub fn weight_contraction_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Rotor<T> {
+    Rotor::new(
+        -(a.s() * b.s()),
+        -(a.xy() * b.s()),
+        -(a.xz() * b.s()),
+        -(a.yz() * b.s()),
+    )
+}
+#[doc = "weight contraction: Rotor ∨ b☆ Vector -> Vector"]
+#[inline]
+pub fn weight_contraction_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
+    Vector::new(
+        a.xy() * b.y() + a.xz() * b.z(),
+        -(a.xy() * b.x()) + a.yz() * b.z(),
+        -(a.xz() * b.x()) - a.yz() * b.y(),
+    )
+}
+#[doc = "weight contraction: Scalar ∨ b☆ Rotor -> Scalar"]
+#[inline]
+pub fn weight_contraction_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Scalar<T> {
+    Scalar::new(-(a.s() * b.s()))
+}
+#[doc = "weight contraction: Scalar ∨ b☆ Scalar -> Scalar"]
+#[inline]
+pub fn weight_contraction_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(-(a.s() * b.s()))
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Bivector -> Vector"]
+#[inline]
+pub fn weight_contraction_trivector_bivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Bivector<T>,
+) -> Vector<T> {
+    Vector::new(-(a.xyz() * b.yz()), a.xyz() * b.xz(), -(a.xyz() * b.xy()))
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Scalar -> Trivector"]
+#[inline]
+pub fn weight_contraction_trivector_scalar<T: Float>(
+    a: &Trivector<T>,
+    b: &Scalar<T>,
+) -> Trivector<T> {
+    Trivector::new(-(a.xyz() * b.s()))
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Trivector -> Scalar"]
+#[inline]
+pub fn weight_contraction_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Scalar<T> {
+    Scalar::new(-(a.xyz() * b.xyz()))
+}
+#[doc = "weight contraction: Trivector ∨ b☆ Vector -> Bivector"]
+#[inline]
+pub fn weight_contraction_trivector_vector<T: Float>(
+    a: &Trivector<T>,
+    b: &Vector<T>,
+) -> Bivector<T> {
+    Bivector::new(-(a.xyz() * b.z()), a.xyz() * b.y(), -(a.xyz() * b.x()))
+}
+#[doc = "weight contraction: Vector ∨ b☆ Rotor -> Vector"]
+#[inline]
+pub fn weight_contraction_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
+    Vector::new(-(a.x() * b.s()), -(a.y() * b.s()), -(a.z() * b.s()))
+}
+#[doc = "weight contraction: Vector ∨ b☆ Scalar -> Vector"]
+#[inline]
+pub fn weight_contraction_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> Vector<T> {
+    Vector::new(-(a.x() * b.s()), -(a.y() * b.s()), -(a.z() * b.s()))
+}
+#[doc = "weight contraction: Vector ∨ b☆ Vector -> Scalar"]
+#[inline]
+pub fn weight_contraction_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
+    Scalar::new(-(a.x() * b.x()) - a.y() * b.y() - a.z() * b.z())
+}
+#[doc = "bulk expansion: Bivector ∧ b★ Bivector -> Trivector"]
+#[inline]
+pub fn bulk_expansion_bivector_bivector<T: Float>(
+    a: &Bivector<T>,
+    b: &Bivector<T>,
+) -> Trivector<T> {
+    Trivector::new(a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz())
+}
+#[doc = "bulk expansion: Bivector ∧ b★ Rotor -> Trivector"]
+#[inline]
+pub fn bulk_expansion_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Trivector<T> {
+    Trivector::new(a.xy() * b.xy() + a.xz() * b.xz() + a.yz() * b.yz())
+}
+#[doc = "bulk expansion: Bivector ∧ b★ Trivector -> Bivector"]
+#[inline]
+pub fn bulk_expansion_bivector_trivector<T: Float>(
+    a: &Bivector<T>,
+    b: &Trivector<T>,
+) -> Bivector<T> {
+    Bivector::new(a.xy() * b.xyz(), a.xz() * b.xyz(), a.yz() * b.xyz())
+}
+#[doc = "bulk expansion: Rotor ∧ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_expansion_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(a.s() * b.s())
+}
+#[doc = "bulk expansion: Rotor ∧ b★ Trivector -> Rotor"]
+#[inline]
+pub fn bulk_expansion_rotor_trivector<T: Float>(a: &Rotor<T>, b: &Trivector<T>) -> Rotor<T> {
+    Rotor::new(
+        a.s() * b.xyz(),
+        a.xy() * b.xyz(),
+        a.xz() * b.xyz(),
+        a.yz() * b.xyz(),
+    )
+}
+#[doc = "bulk expansion: Rotor ∧ b★ Vector -> Bivector"]
+#[inline]
+pub fn bulk_expansion_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(a.s() * b.z(), -(a.s() * b.y()), a.s() * b.x())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Bivector -> Vector"]
+#[inline]
+pub fn bulk_expansion_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Vector<T> {
+    Vector::new(a.s() * b.yz(), -(a.s() * b.xz()), a.s() * b.xy())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Scalar -> Trivector"]
+#[inline]
+pub fn bulk_expansion_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(a.s() * b.s())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Trivector -> Scalar"]
+#[inline]
+pub fn bulk_expansion_scalar_trivector<T: Float>(a: &Scalar<T>, b: &Trivector<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.xyz())
+}
+#[doc = "bulk expansion: Scalar ∧ b★ Vector -> Bivector"]
+#[inline]
+pub fn bulk_expansion_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(a.s() * b.z(), -(a.s() * b.y()), a.s() * b.x())
+}
+#[doc = "bulk expansion: Trivector ∧ b★ Trivector -> Trivector"]
+#[inline]
+pub fn bulk_expansion_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Trivector<T> {
+    Trivector::new(a.xyz() * b.xyz())
+}
+#[doc = "bulk expansion: Vector ∧ b★ Bivector -> Bivector"]
+#[inline]
+pub fn bulk_expansion_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(
+        -(a.x() * b.xz()) - a.y() * b.yz(),
+        a.x() * b.xy() - a.z() * b.yz(),
+        a.y() * b.xy() + a.z() * b.xz(),
+    )
+}
+#[doc = "bulk expansion: Vector ∧ b★ Rotor -> Bivector"]
+#[inline]
+pub fn bulk_expansion_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Bivector<T> {
+    Bivector::new(
+        -(a.x() * b.xz()) - a.y() * b.yz(),
+        a.x() * b.xy() - a.z() * b.yz(),
+        a.y() * b.xy() + a.z() * b.xz(),
+    )
+}
+#[doc = "bulk expansion: Vector ∧ b★ Trivector -> Vector"]
+#[inline]
+pub fn bulk_expansion_vector_trivector<T: Float>(a: &Vector<T>, b: &Trivector<T>) -> Vector<T> {
+    Vector::new(a.x() * b.xyz(), a.y() * b.xyz(), a.z() * b.xyz())
+}
+#[doc = "bulk expansion: Vector ∧ b★ Vector -> Trivector"]
+#[inline]
+pub fn bulk_expansion_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Trivector<T> {
+    Trivector::new(a.x() * b.x() + a.y() * b.y() + a.z() * b.z())
+}
+#[doc = "weight expansion: Bivector ∧ b☆ Bivector -> Trivector"]
+#[inline]
+pub fn weight_expansion_bivector_bivector<T: Float>(
+    a: &Bivector<T>,
+    b: &Bivector<T>,
+) -> Trivector<T> {
+    Trivector::new(-(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz())
+}
+#[doc = "weight expansion: Bivector ∧ b☆ Rotor -> Trivector"]
+#[inline]
+pub fn weight_expansion_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Trivector<T> {
+    Trivector::new(-(a.xy() * b.xy()) - a.xz() * b.xz() - a.yz() * b.yz())
+}
+#[doc = "weight expansion: Bivector ∧ b☆ Trivector -> Bivector"]
+#[inline]
+pub fn weight_expansion_bivector_trivector<T: Float>(
+    a: &Bivector<T>,
+    b: &Trivector<T>,
+) -> Bivector<T> {
+    Bivector::new(
+        -(a.xy() * b.xyz()),
+        -(a.xz() * b.xyz()),
+        -(a.yz() * b.xyz()),
+    )
+}
+#[doc = "weight expansion: Rotor ∧ b☆ Scalar -> Trivector"]
+#[inline]
+pub fn weight_expansion_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(-(a.s() * b.s()))
+}
+#[doc = "weight expansion: Rotor ∧ b☆ Trivector -> Rotor"]
+#[inline]
+pub fn weight_expansion_rotor_trivector<T: Float>(a: &Rotor<T>, b: &Trivector<T>) -> Rotor<T> {
+    Rotor::new(
+        -(a.s() * b.xyz()),
+        -(a.xy() * b.xyz()),
+        -(a.xz() * b.xyz()),
+        -(a.yz() * b.xyz()),
+    )
+}
+#[doc = "weight expansion: Rotor ∧ b☆ Vector -> Bivector"]
+#[inline]
+pub fn weight_expansion_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(-(a.s() * b.z()), a.s() * b.y(), -(a.s() * b.x()))
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Bivector -> Vector"]
+#[inline]
+pub fn weight_expansion_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Vector<T> {
+    Vector::new(-(a.s() * b.yz()), a.s() * b.xz(), -(a.s() * b.xy()))
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Scalar -> Trivector"]
+#[inline]
+pub fn weight_expansion_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> Trivector<T> {
+    Trivector::new(-(a.s() * b.s()))
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Trivector -> Scalar"]
+#[inline]
+pub fn weight_expansion_scalar_trivector<T: Float>(a: &Scalar<T>, b: &Trivector<T>) -> Scalar<T> {
+    Scalar::new(-(a.s() * b.xyz()))
+}
+#[doc = "weight expansion: Scalar ∧ b☆ Vector -> Bivector"]
+#[inline]
+pub fn weight_expansion_scalar_vector<T: Float>(a: &Scalar<T>, b: &Vector<T>) -> Bivector<T> {
+    Bivector::new(-(a.s() * b.z()), a.s() * b.y(), -(a.s() * b.x()))
+}
+#[doc = "weight expansion: Trivector ∧ b☆ Trivector -> Trivector"]
+#[inline]
+pub fn weight_expansion_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Trivector<T> {
+    Trivector::new(-(a.xyz() * b.xyz()))
+}
+#[doc = "weight expansion: Vector ∧ b☆ Bivector -> Bivector"]
+#[inline]
+pub fn weight_expansion_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(
+        a.x() * b.xz() + a.y() * b.yz(),
+        -(a.x() * b.xy()) + a.z() * b.yz(),
+        -(a.y() * b.xy()) - a.z() * b.xz(),
+    )
+}
+#[doc = "weight expansion: Vector ∧ b☆ Rotor -> Bivector"]
+#[inline]
+pub fn weight_expansion_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Bivector<T> {
+    Bivector::new(
+        a.x() * b.xz() + a.y() * b.yz(),
+        -(a.x() * b.xy()) + a.z() * b.yz(),
+        -(a.y() * b.xy()) - a.z() * b.xz(),
+    )
+}
+#[doc = "weight expansion: Vector ∧ b☆ Trivector -> Vector"]
+#[inline]
+pub fn weight_expansion_vector_trivector<T: Float>(a: &Vector<T>, b: &Trivector<T>) -> Vector<T> {
+    Vector::new(-(a.x() * b.xyz()), -(a.y() * b.xyz()), -(a.z() * b.xyz()))
+}
+#[doc = "weight expansion: Vector ∧ b☆ Vector -> Trivector"]
+#[inline]
+pub fn weight_expansion_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Trivector<T> {
+    Trivector::new(-(a.x() * b.x()) - a.y() * b.y() - a.z() * b.z())
+}
 #[doc = "Sandwich product: Rotor * Vector * rev(Rotor) -> Vector"]
 #[inline]
 pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        v.s() * x.x() * v.s()
-            + v.s() * x.y() * v.xy()
-            + v.s() * x.z() * v.xz()
-            + v.yz() * x.z() * v.xy()
+        v.yz() * x.z() * v.xy() - v.xz() * x.y() * v.yz()
+            + v.s() * x.x() * v.s()
+            + v.xy() * x.y() * v.s()
             + v.xz() * x.z() * v.s()
+            + v.s() * x.z() * v.xz()
             + v.yz() * x.x() * v.yz()
-            - v.xy() * x.x() * v.xy()
-            - v.xz() * x.y() * v.yz()
-            - v.xz() * x.x() * v.xz()
-            + v.xy() * x.z() * v.yz()
             - v.yz() * x.y() * v.xz()
-            + v.xy() * x.y() * v.s(),
-        -(v.xy() * x.x() * v.s()) - v.yz() * x.x() * v.xz()
+            + v.s() * x.y() * v.xy()
+            - v.xz() * x.x() * v.xz()
+            - v.xy() * x.x() * v.xy()
+            + v.xy() * x.z() * v.yz(),
+        -(v.xy() * x.x() * v.s())
+            + v.s() * x.y() * v.s()
             + v.yz() * x.z() * v.s()
             + v.s() * x.z() * v.yz()
-            - v.s() * x.x() * v.xy()
-            + v.s() * x.y() * v.s()
-            - v.xy() * x.y() * v.xy()
-            - v.xy() * x.z() * v.xz()
-            - v.xz() * x.x() * v.yz()
-            + v.xz() * x.y() * v.xz()
             - v.yz() * x.y() * v.yz()
-            - v.xz() * x.z() * v.xy(),
-        v.yz() * x.x() * v.xy()
+            - v.xy() * x.z() * v.xz()
+            + v.xz() * x.y() * v.xz()
+            - v.yz() * x.x() * v.xz()
+            - v.xz() * x.x() * v.yz()
+            - v.xz() * x.z() * v.xy()
+            - v.s() * x.x() * v.xy()
+            - v.xy() * x.y() * v.xy(),
+        -(v.xz() * x.z() * v.xz()) + v.yz() * x.x() * v.xy() + v.xy() * x.x() * v.yz()
             - v.xz() * x.x() * v.s()
-            - v.yz() * x.z() * v.yz()
-            - v.xz() * x.y() * v.xy()
-            - v.xz() * x.z() * v.xz()
             - v.s() * x.x() * v.xz()
+            - v.xy() * x.y() * v.xz()
+            + v.s() * x.z() * v.s()
+            - v.yz() * x.z() * v.yz()
+            - v.yz() * x.y() * v.s()
             + v.xy() * x.z() * v.xy()
             - v.s() * x.y() * v.yz()
-            - v.yz() * x.y() * v.s()
-            + v.s() * x.z() * v.s()
-            + v.xy() * x.x() * v.yz()
-            - v.xy() * x.y() * v.xz(),
+            - v.xz() * x.y() * v.xy(),
     )
 }
 #[doc = "Sandwich product: Rotor * Bivector * rev(Rotor) -> Bivector"]
 #[inline]
 pub fn sandwich_rotor_bivector<T: Float>(v: &Rotor<T>, x: &Bivector<T>) -> Bivector<T> {
     Bivector::new(
-        -(v.xz() * x.xy() * v.xz())
+        v.xy() * x.xz() * v.xz() - v.xz() * x.xy() * v.xz()
+            + v.yz() * x.xz() * v.s()
             + v.xy() * x.yz() * v.yz()
+            + v.xz() * x.xz() * v.xy()
             + v.s() * x.xy() * v.s()
             + v.yz() * x.yz() * v.xy()
-            - v.yz() * x.xy() * v.yz()
             - v.s() * x.yz() * v.xz()
-            - v.xz() * x.yz() * v.s()
-            + v.xz() * x.xz() * v.xy()
-            + v.yz() * x.xz() * v.s()
+            - v.yz() * x.xy() * v.yz()
             + v.s() * x.xz() * v.yz()
-            + v.xy() * x.xy() * v.xy()
-            + v.xy() * x.xz() * v.xz(),
-        v.xz() * x.xy() * v.xy() + v.xy() * x.xy() * v.xz() + v.xz() * x.xz() * v.xz()
-            - v.yz() * x.xz() * v.yz()
-            - v.yz() * x.xy() * v.s()
-            + v.s() * x.yz() * v.xy()
+            - v.xz() * x.yz() * v.s()
+            + v.xy() * x.xy() * v.xy(),
+        v.xz() * x.xz() * v.xz()
             + v.xy() * x.yz() * v.s()
-            - v.xy() * x.xz() * v.xy()
-            + v.xz() * x.yz() * v.yz()
+            + v.s() * x.yz() * v.xy()
+            + v.xy() * x.xy() * v.xz()
+            + v.s() * x.xz() * v.s()
             - v.s() * x.xy() * v.yz()
+            - v.yz() * x.xz() * v.yz()
+            + v.xz() * x.yz() * v.yz()
+            - v.xy() * x.xz() * v.xy()
+            - v.yz() * x.xy() * v.s()
             + v.yz() * x.yz() * v.xz()
-            + v.s() * x.xz() * v.s(),
-        -(v.s() * x.xz() * v.xy())
-            + v.xz() * x.xz() * v.yz()
-            + v.xz() * x.xy() * v.s()
-            + v.s() * x.yz() * v.s()
-            - v.xy() * x.xz() * v.s()
-            + v.yz() * x.xy() * v.xy()
-            + v.yz() * x.xz() * v.xz()
-            + v.yz() * x.yz() * v.yz()
-            - v.xy() * x.yz() * v.xy()
-            + v.s() * x.xy() * v.xz()
+            + v.xz() * x.xy() * v.xy(),
+        v.xz() * x.xy() * v.s()
             + v.xy() * x.xy() * v.yz()
-            - v.xz() * x.yz() * v.xz(),
+            + v.xz() * x.xz() * v.yz()
+            + v.yz() * x.xz() * v.xz()
+            + v.s() * x.yz() * v.s()
+            + v.yz() * x.xy() * v.xy()
+            - v.s() * x.xz() * v.xy()
+            + v.s() * x.xy() * v.xz()
+            - v.xz() * x.yz() * v.xz()
+            - v.xy() * x.xz() * v.s()
+            + v.yz() * x.yz() * v.yz()
+            - v.xy() * x.yz() * v.xy(),
     )
 }
 #[doc = "Sandwich product: Rotor * Rotor * rev(Rotor) -> Rotor"]
 #[inline]
 pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
-        v.yz() * x.xz() * v.xy() + v.xy() * x.yz() * v.xz()
-            - v.xy() * x.xy() * v.s()
-            - v.yz() * x.yz() * v.s()
-            + v.xy() * x.s() * v.xy()
-            + v.yz() * x.s() * v.yz()
-            - v.yz() * x.xy() * v.xz()
-            - v.xy() * x.xz() * v.yz()
-            - v.xz() * x.xz() * v.s()
-            + v.s() * x.xz() * v.xz()
-            + v.s() * x.s() * v.s()
+        v.s() * x.yz() * v.yz() - v.yz() * x.xy() * v.xz()
             + v.xz() * x.s() * v.xz()
+            + v.yz() * x.xz() * v.xy()
+            + v.s() * x.s() * v.s()
+            + v.s() * x.xy() * v.xy()
+            - v.xy() * x.xy() * v.s()
+            - v.xy() * x.xz() * v.yz()
+            + v.xy() * x.yz() * v.xz()
             - v.xz() * x.yz() * v.xy()
-            + v.xz() * x.xy() * v.yz()
-            + v.s() * x.yz() * v.yz()
-            + v.s() * x.xy() * v.xy(),
-        -(v.yz() * x.s() * v.xz())
-            + v.s() * x.xy() * v.s()
-            + v.xy() * x.s() * v.s()
-            + v.xz() * x.xz() * v.xy()
-            + v.s() * x.xz() * v.yz()
-            + v.xy() * x.xz() * v.xz()
-            + v.yz() * x.xz() * v.s()
-            - v.s() * x.s() * v.xy()
-            - v.s() * x.yz() * v.xz()
-            + v.xy() * x.xy() * v.xy()
-            + v.xy() * x.yz() * v.yz()
-            + v.xz() * x.s() * v.yz()
-            - v.xz() * x.yz() * v.s()
+            - v.xz() * x.xz() * v.s()
+            - v.yz() * x.yz() * v.s()
+            + v.s() * x.xz() * v.xz()
+            + v.yz() * x.s() * v.yz()
+            + v.xy() * x.s() * v.xy()
+            + v.xz() * x.xy() * v.yz(),
+        v.xy() * x.xy() * v.xy() + v.xy() * x.xz() * v.xz() + v.s() * x.xz() * v.yz()
             - v.xz() * x.xy() * v.xz()
-            + v.yz() * x.yz() * v.xy()
-            - v.yz() * x.xy() * v.yz(),
-        v.xy() * x.yz() * v.s()
-            + v.yz() * x.yz() * v.xz()
-            + v.xz() * x.xz() * v.xz()
-            + v.yz() * x.s() * v.xy()
+            - v.s() * x.s() * v.xy()
+            + v.xy() * x.yz() * v.yz()
+            + v.s() * x.xy() * v.s()
+            - v.yz() * x.s() * v.xz()
+            - v.xz() * x.yz() * v.s()
+            + v.xz() * x.xz() * v.xy()
+            + v.yz() * x.xz() * v.s()
+            + v.xy() * x.s() * v.s()
+            - v.s() * x.yz() * v.xz()
+            + v.xz() * x.s() * v.yz()
+            - v.yz() * x.xy() * v.yz()
+            + v.yz() * x.yz() * v.xy(),
+        -(v.yz() * x.xz() * v.yz())
             + v.s() * x.xz() * v.s()
-            - v.s() * x.xy() * v.yz()
-            + v.xy() * x.xy() * v.xz()
-            + v.xz() * x.s() * v.s()
-            - v.yz() * x.xz() * v.yz()
-            + v.xz() * x.yz() * v.yz()
-            - v.s() * x.s() * v.xz()
-            - v.xy() * x.xz() * v.xy()
-            - v.xy() * x.s() * v.yz()
-            + v.xz() * x.xy() * v.xy()
             + v.s() * x.yz() * v.xy()
-            - v.yz() * x.xy() * v.s(),
-        -(v.s() * x.s() * v.yz()) - v.xz() * x.yz() * v.xz() - v.xy() * x.xz() * v.s()
-            + v.xz() * x.xy() * v.s()
-            - v.xz() * x.s() * v.xy()
-            + v.yz() * x.xy() * v.xy()
-            + v.yz() * x.xz() * v.xz()
-            + v.s() * x.xy() * v.xz()
-            - v.xy() * x.yz() * v.xy()
+            + v.xz() * x.yz() * v.yz()
+            + v.xy() * x.yz() * v.s()
+            + v.xz() * x.s() * v.s()
+            - v.xy() * x.xz() * v.xy()
+            - v.s() * x.s() * v.xz()
+            + v.xy() * x.xy() * v.xz()
+            - v.yz() * x.xy() * v.s()
+            + v.xz() * x.xy() * v.xy()
+            - v.xy() * x.s() * v.yz()
+            + v.yz() * x.yz() * v.xz()
+            - v.s() * x.xy() * v.yz()
+            + v.xz() * x.xz() * v.xz()
+            + v.yz() * x.s() * v.xy(),
+        v.xy() * x.s() * v.xz() + v.s() * x.xy() * v.xz() + v.xz() * x.xz() * v.yz()
+            - v.s() * x.s() * v.yz()
             + v.s() * x.yz() * v.s()
-            + v.xy() * x.s() * v.xz()
+            - v.xz() * x.s() * v.xy()
+            - v.xy() * x.xz() * v.s()
             - v.s() * x.xz() * v.xy()
+            - v.xy() * x.yz() * v.xy()
+            + v.xz() * x.xy() * v.s()
             + v.yz() * x.s() * v.s()
-            + v.yz() * x.yz() * v.yz()
             + v.xy() * x.xy() * v.yz()
-            + v.xz() * x.xz() * v.yz(),
+            - v.xz() * x.yz() * v.xz()
+            + v.yz() * x.xy() * v.xy()
+            + v.yz() * x.yz() * v.yz()
+            + v.yz() * x.xz() * v.xz(),
     )
 }
 #[doc = "Antisandwich product: Rotor ⊛ Vector ⊛ antirev(Rotor) -> Vector\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        -(v.xz() * x.y() * v.yz()) - v.xy() * x.y() * v.s()
-            + v.xy() * x.z() * v.yz()
-            + v.s() * x.x() * v.s()
+        -(v.xy() * x.x() * v.xy())
+            - v.yz() * x.y() * v.xz()
+            - v.s() * x.y() * v.xy()
             - v.s() * x.z() * v.xz()
+            - v.xy() * x.y() * v.s()
+            + v.xy() * x.z() * v.yz()
+            - v.xz() * x.y() * v.yz()
+            - v.xz() * x.z() * v.s()
             + v.yz() * x.x() * v.yz()
             - v.xz() * x.x() * v.xz()
-            - v.s() * x.y() * v.xy()
-            - v.xy() * x.x() * v.xy()
-            - v.yz() * x.y() * v.xz()
             + v.yz() * x.z() * v.xy()
-            - v.xz() * x.z() * v.s(),
-        -(v.yz() * x.z() * v.s()) + v.xy() * x.x() * v.s()
+            + v.s() * x.x() * v.s(),
+        -(v.yz() * x.z() * v.s()) - v.s() * x.z() * v.yz() + v.s() * x.y() * v.s()
             - v.xy() * x.y() * v.xy()
-            - v.xz() * x.z() * v.xy()
+            - v.xz() * x.x() * v.yz()
             - v.xy() * x.z() * v.xz()
-            + v.s() * x.y() * v.s()
-            - v.s() * x.z() * v.yz()
-            + v.xz() * x.y() * v.xz()
-            - v.yz() * x.y() * v.yz()
-            - v.yz() * x.x() * v.xz()
+            + v.xy() * x.x() * v.s()
             + v.s() * x.x() * v.xy()
-            - v.xz() * x.x() * v.yz(),
-        v.xy() * x.x() * v.yz() - v.xz() * x.z() * v.xz()
-            + v.yz() * x.x() * v.xy()
-            + v.yz() * x.y() * v.s()
-            - v.yz() * x.z() * v.yz()
-            + v.s() * x.z() * v.s()
+            - v.yz() * x.y() * v.yz()
+            - v.xz() * x.z() * v.xy()
+            + v.xz() * x.y() * v.xz()
+            - v.yz() * x.x() * v.xz(),
+        v.xz() * x.x() * v.s() + v.s() * x.y() * v.yz() - v.xy() * x.y() * v.xz()
+            + v.s() * x.x() * v.xz()
             - v.xz() * x.y() * v.xy()
-            + v.s() * x.y() * v.yz()
+            - v.xz() * x.z() * v.xz()
+            + v.yz() * x.x() * v.xy()
+            - v.yz() * x.z() * v.yz()
+            + v.yz() * x.y() * v.s()
             + v.xy() * x.z() * v.xy()
-            - v.xy() * x.y() * v.xz()
-            + v.xz() * x.x() * v.s()
-            + v.s() * x.x() * v.xz(),
+            + v.s() * x.z() * v.s()
+            + v.xy() * x.x() * v.yz(),
     )
 }
 #[doc = "Antisandwich product: Rotor ⊛ Bivector ⊛ antirev(Rotor) -> Bivector\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_rotor_bivector<T: Float>(v: &Rotor<T>, x: &Bivector<T>) -> Bivector<T> {
     Bivector::new(
-        v.xy() * x.yz() * v.yz()
-            + v.yz() * x.yz() * v.xy()
-            + v.xz() * x.xz() * v.xy()
-            + v.xy() * x.xz() * v.xz()
-            - v.yz() * x.xy() * v.yz()
-            + v.s() * x.xy() * v.s()
-            - v.yz() * x.xz() * v.s()
-            - v.xz() * x.xy() * v.xz()
-            + v.xy() * x.xy() * v.xy()
+        v.xz() * x.xz() * v.xy() - v.yz() * x.xy() * v.yz() - v.yz() * x.xz() * v.s()
+            + v.xy() * x.yz() * v.yz()
             + v.s() * x.yz() * v.xz()
+            + v.xy() * x.xy() * v.xy()
+            - v.xz() * x.xy() * v.xz()
+            - v.s() * x.xz() * v.yz()
+            + v.s() * x.xy() * v.s()
+            + v.xy() * x.xz() * v.xz()
             + v.xz() * x.yz() * v.s()
-            - v.s() * x.xz() * v.yz(),
-        v.s() * x.xz() * v.s()
-            + v.xz() * x.yz() * v.yz()
-            + v.xz() * x.xz() * v.xz()
-            + v.yz() * x.xy() * v.s()
-            + v.s() * x.xy() * v.yz()
-            - v.yz() * x.xz() * v.yz()
-            - v.s() * x.yz() * v.xy()
+            + v.yz() * x.yz() * v.xy(),
+        v.xz() * x.yz() * v.yz() + v.s() * x.xy() * v.yz() + v.s() * x.xz() * v.s()
             - v.xy() * x.xz() * v.xy()
+            + v.yz() * x.xy() * v.s()
+            + v.xz() * x.xy() * v.xy()
+            + v.xz() * x.xz() * v.xz()
             - v.xy() * x.yz() * v.s()
             + v.xy() * x.xy() * v.xz()
-            + v.xz() * x.xy() * v.xy()
-            + v.yz() * x.yz() * v.xz(),
-        v.s() * x.xz() * v.xy() + v.xy() * x.xy() * v.yz() + v.yz() * x.yz() * v.yz()
+            + v.yz() * x.yz() * v.xz()
+            - v.s() * x.yz() * v.xy()
+            - v.yz() * x.xz() * v.yz(),
+        -(v.xy() * x.yz() * v.xy()) - v.s() * x.xy() * v.xz() - v.xz() * x.yz() * v.xz()
+            + v.yz() * x.yz() * v.yz()
+            + v.xy() * x.xy() * v.yz()
+            + v.xy() * x.xz() * v.s()
             - v.xz() * x.xy() * v.s()
-            - v.xz() * x.yz() * v.xz()
-            + v.xz() * x.xz() * v.yz()
+            + v.s() * x.xz() * v.xy()
             + v.yz() * x.xy() * v.xy()
-            + v.s() * x.yz() * v.s()
-            - v.xy() * x.yz() * v.xy()
-            - v.s() * x.xy() * v.xz()
+            + v.xz() * x.xz() * v.yz()
             + v.yz() * x.xz() * v.xz()
-            + v.xy() * x.xz() * v.s(),
+            + v.s() * x.yz() * v.s(),
     )
 }
 #[doc = "Antisandwich product: Rotor ⊛ Rotor ⊛ antirev(Rotor) -> Rotor\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
-        -(v.xy() * x.yz() * v.xz()) + v.xy() * x.s() * v.xy() - v.xy() * x.xy() * v.s()
+        v.s() * x.s() * v.s() - v.xz() * x.xz() * v.s()
             + v.s() * x.xy() * v.xy()
-            + v.s() * x.s() * v.s()
-            - v.xz() * x.xz() * v.s()
+            + v.xy() * x.xz() * v.yz()
+            + v.xy() * x.s() * v.xy()
             + v.xz() * x.s() * v.xz()
+            - v.xz() * x.xy() * v.yz()
+            - v.xy() * x.xy() * v.s()
+            - v.yz() * x.xz() * v.xy()
+            + v.s() * x.xz() * v.xz()
+            + v.s() * x.yz() * v.yz()
             + v.yz() * x.s() * v.yz()
             - v.yz() * x.yz() * v.s()
-            + v.s() * x.yz() * v.yz()
-            - v.xz() * x.xy() * v.yz()
+            - v.xy() * x.yz() * v.xz()
             + v.xz() * x.yz() * v.xy()
-            + v.yz() * x.xy() * v.xz()
-            - v.yz() * x.xz() * v.xy()
-            + v.xy() * x.xz() * v.yz()
-            + v.s() * x.xz() * v.xz(),
-        v.s() * x.xy() * v.s()
-            + v.xy() * x.yz() * v.yz()
-            + v.yz() * x.yz() * v.xy()
-            + v.xy() * x.s() * v.s()
-            - v.s() * x.s() * v.xy()
-            - v.xz() * x.xy() * v.xz()
-            - v.s() * x.xz() * v.yz()
+            + v.yz() * x.xy() * v.xz(),
+        v.xy() * x.yz() * v.yz() - v.yz() * x.xz() * v.s()
             + v.xz() * x.xz() * v.xy()
             + v.xz() * x.yz() * v.s()
-            + v.xy() * x.xz() * v.xz()
+            + v.xy() * x.s() * v.s()
             - v.xz() * x.s() * v.yz()
-            + v.yz() * x.s() * v.xz()
-            - v.yz() * x.xy() * v.yz()
-            + v.xy() * x.xy() * v.xy()
+            - v.xz() * x.xy() * v.xz()
+            - v.s() * x.s() * v.xy()
             + v.s() * x.yz() * v.xz()
-            - v.yz() * x.xz() * v.s(),
-        -(v.s() * x.yz() * v.xy()) - v.xy() * x.xz() * v.xy()
-            + v.s() * x.xy() * v.yz()
-            + v.xz() * x.s() * v.s()
-            + v.yz() * x.xy() * v.s()
-            + v.xz() * x.xy() * v.xy()
-            - v.yz() * x.s() * v.xy()
-            + v.xy() * x.s() * v.yz()
+            + v.xy() * x.xy() * v.xy()
+            - v.yz() * x.xy() * v.yz()
+            + v.xy() * x.xz() * v.xz()
+            + v.yz() * x.s() * v.xz()
+            + v.yz() * x.yz() * v.xy()
+            - v.s() * x.xz() * v.yz()
+            + v.s() * x.xy() * v.s(),
+        v.xz() * x.s() * v.s()
             + v.xy() * x.xy() * v.xz()
-            - v.xy() * x.yz() * v.s()
-            - v.s() * x.s() * v.xz()
-            + v.s() * x.xz() * v.s()
-            - v.yz() * x.xz() * v.yz()
+            + v.xz() * x.xy() * v.xy()
+            + v.s() * x.xy() * v.yz()
+            - v.xy() * x.xz() * v.xy()
+            - v.s() * x.yz() * v.xy()
+            + v.xz() * x.yz() * v.yz()
             + v.yz() * x.yz() * v.xz()
+            + v.xy() * x.s() * v.yz()
             + v.xz() * x.xz() * v.xz()
-            + v.xz() * x.yz() * v.yz(),
-        v.yz() * x.xy() * v.xy() - v.s() * x.xy() * v.xz() - v.xy() * x.s() * v.xz()
-            + v.yz() * x.yz() * v.yz()
-            - v.xz() * x.yz() * v.xz()
-            + v.xy() * x.xy() * v.yz()
-            + v.yz() * x.s() * v.s()
-            + v.yz() * x.xz() * v.xz()
+            + v.yz() * x.xy() * v.s()
+            - v.yz() * x.s() * v.xy()
+            + v.s() * x.xz() * v.s()
+            - v.s() * x.s() * v.xz()
+            - v.xy() * x.yz() * v.s()
+            - v.yz() * x.xz() * v.yz(),
+        -(v.xz() * x.yz() * v.xz()) - v.xy() * x.s() * v.xz() - v.s() * x.xy() * v.xz()
             + v.xy() * x.xz() * v.s()
-            - v.s() * x.s() * v.yz()
-            - v.xy() * x.yz() * v.xy()
-            - v.xz() * x.xy() * v.s()
-            + v.xz() * x.xz() * v.yz()
-            + v.s() * x.yz() * v.s()
             + v.xz() * x.s() * v.xy()
-            + v.s() * x.xz() * v.xy(),
+            + v.yz() * x.xz() * v.xz()
+            + v.yz() * x.yz() * v.yz()
+            + v.xz() * x.xz() * v.yz()
+            - v.xz() * x.xy() * v.s()
+            + v.yz() * x.s() * v.s()
+            - v.s() * x.s() * v.yz()
+            + v.s() * x.xz() * v.xy()
+            + v.s() * x.yz() * v.s()
+            + v.xy() * x.xy() * v.yz()
+            + v.yz() * x.xy() * v.xy()
+            - v.xy() * x.yz() * v.xy(),
     )
 }
 #[doc = "Reverses the Bivector (negates grades where k(k-1)/2 is odd)."]
