@@ -332,30 +332,6 @@ let from_f64: T = T::from_f64(3.14);
   pub struct UnitMotor<T>(pub Motor<T>);  // Don't do this!
   impl<T> Arbitrary for UnitMotor<T> { ... }  // Don't do this!
   ```
-- **Arbitrary for constrained types**: Types with geometric constraints (Study condition, Plücker condition) should generate valid instances via factory methods, not random coefficients:
-  ```rust
-  // GOOD: Generate via factory methods that guarantee validity
-  impl<T: Float + Debug> Arbitrary for Motor<T> {
-      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-          (angle, tx, ty, tz)
-              .prop_map(|(angle, tx, ty, tz)| {
-                  let rotation = Motor::from_rotation(T::from_f64(angle));
-                  let translation = Motor::from_translation(...);
-                  translation.compose(&rotation)  // Valid by construction
-              })
-              .boxed()
-      }
-  }
-
-  // BAD: Random coefficients don't satisfy constraints
-  impl<T: Float + Debug> Arbitrary for Motor<T> {
-      fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-          (s, e23, e31, e12, e01, e02, e03, e0123)  // Won't satisfy Study condition!
-              .prop_map(|...| Motor::new(...))
-              .boxed()
-      }
-  }
-  ```
 - **proptest-support feature**: External consumers enable `proptest-support` feature to access arbitrary modules
 - **Arbitrary wrapper ergonomics**: All wrapper types implement `Deref`, `AsRef`, `From`, and `into_inner()` for easy access to the inner value
 - **Use `approx` crate with `relative_eq!`**: Never hand-roll floating-point comparisons. Use `relative_eq!` with both `epsilon` and `max_relative` parameters:
