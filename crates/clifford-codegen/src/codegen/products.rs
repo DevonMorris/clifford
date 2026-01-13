@@ -161,6 +161,7 @@ impl<'a> ProductGenerator<'a> {
         let right_contraction = self.generate_all_right_contraction();
         let regressive = self.generate_all_regressive();
         let scalar = self.generate_all_scalar();
+        let antigeometric = self.generate_all_antigeometric();
         let sandwich = self.generate_all_sandwich();
         let antisandwich = self.generate_all_antisandwich();
 
@@ -206,6 +207,11 @@ impl<'a> ProductGenerator<'a> {
             // Scalar Products
             // ============================================================
             #scalar
+
+            // ============================================================
+            // Antigeometric Products
+            // ============================================================
+            #antigeometric
 
             // ============================================================
             // Sandwich Products (Geometric)
@@ -720,6 +726,90 @@ impl<'a> ProductGenerator<'a> {
             #[inline]
             pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> T {
                 #expr
+            }
+        })
+    }
+
+    // ========================================================================
+    // Antigeometric Products
+    // ========================================================================
+
+    /// Generates all antigeometric product functions.
+    ///
+    /// The antigeometric product is defined as: a ⊛ b = complement(complement(a) * complement(b))
+    fn generate_all_antigeometric(&self) -> TokenStream {
+        // If no explicit products defined, generate nothing
+        if self.spec.products.antigeometric.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .antigeometric
+            .iter()
+            .filter_map(|entry| self.generate_antigeometric_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an antigeometric product from a product entry.
+    fn generate_antigeometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+        let output_type = self.find_type(&entry.output)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+        let c_name = format_ident!("{}", entry.output);
+
+        let fn_name = format_ident!(
+            "antigeometric_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        // Use symbolic simplification for expression generation
+        let field_exprs = self.generate_expression_symbolic(
+            type_a,
+            type_b,
+            output_type,
+            ProductKind::Antigeometric,
+        );
+
+        let doc = format!(
+            "Antigeometric product: {} ⊛ {} -> {}\n\nDefined as complement(complement(a) * complement(b)).",
+            entry.lhs, entry.rhs, entry.output
+        );
+
+        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
+
+        // Check if parameters are used in expressions
+        let exprs_str = field_exprs
+            .iter()
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
+        let a_used = exprs_str.contains("a .");
+        let b_used = exprs_str.contains("b .");
+
+        let param_a = if a_used {
+            quote! { a: &#a_name<T> }
+        } else {
+            quote! { _a: &#a_name<T> }
+        };
+        let param_b = if b_used {
+            quote! { b: &#b_name<T> }
+        } else {
+            quote! { _b: &#b_name<T> }
+        };
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(#param_a, #param_b) -> #c_name<T> {
+                #constructor_call
             }
         })
     }

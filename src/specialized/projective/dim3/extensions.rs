@@ -733,33 +733,69 @@ impl<T: Float> Plane<T> {
 // ============================================================================
 
 impl<T: Float> Motor<T> {
+    /// Identity motor (leaves all elements unchanged).
+    ///
+    /// In PGA with the antisandwich product, the identity is the pseudoscalar 𝟙 = e₀₁₂₃.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Motor, Point};
+    ///
+    /// let m = Motor::<f64>::identity();
+    /// let p = Point::from_cartesian(1.0, 2.0, 3.0);
+    /// let p2 = m.transform_point(&p);
+    /// assert!((p2.x() - p.x()).abs() < 1e-10);
+    /// ```
+    #[inline]
+    pub fn identity() -> Self {
+        Self::new_unchecked(
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::zero(),
+            T::one(), // e0123 = 1
+        )
+    }
+
     /// Pure translation motor.
+    ///
+    /// Creates a motor that translates by the vector (dx, dy, dz).
+    ///
+    /// In PGA, the translation formula is T = (d/2)·(tx·e₂₃ + ty·e₃₁ + tz·e₁₂) + 𝟙
+    /// where the antisandwich applies the translation twice, giving net displacement (dx, dy, dz).
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
         Self::new_unchecked(
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            dx * half,
-            dy * half,
-            dz * half,
-            T::zero(),
+            T::zero(), // s
+            dx * half, // e23
+            dy * half, // e31
+            dz * half, // e12
+            T::zero(), // e01
+            T::zero(), // e02
+            T::zero(), // e03
+            T::one(),  // e0123 (identity part)
         )
     }
 
     /// Pure rotation around x-axis through origin.
+    ///
+    /// In PGA, the rotation formula is R = l·sin(φ/2) + 𝟙·cos(φ/2)
+    /// where l is the line (axis) and the antisandwich applies the rotation twice.
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            half.cos(),
-            half.sin(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // s
+            T::zero(),  // e23
+            T::zero(),  // e31
+            T::zero(),  // e12
+            half.sin(), // e01 (x direction)
+            T::zero(),  // e02
+            T::zero(),  // e03
+            half.cos(), // e0123
         )
     }
 
@@ -767,14 +803,14 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            half.cos(),
-            T::zero(),
-            half.sin(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // s
+            T::zero(),  // e23
+            T::zero(),  // e31
+            T::zero(),  // e12
+            T::zero(),  // e01
+            half.sin(), // e02 (y direction)
+            T::zero(),  // e03
+            half.cos(), // e0123
         )
     }
 
@@ -782,31 +818,34 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation_z(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            half.cos(),
-            T::zero(),
-            T::zero(),
-            half.sin(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // s
+            T::zero(),  // e23
+            T::zero(),  // e31
+            T::zero(),  // e12
+            T::zero(),  // e01
+            T::zero(),  // e02
+            half.sin(), // e03 (z direction)
+            half.cos(), // e0123
         )
     }
 
     /// Rotation around arbitrary axis through origin.
+    ///
+    /// The axis vector determines the rotation axis (will be normalized).
+    /// The rotation follows the right-hand rule.
     pub fn from_axis_angle(axis: &EuclideanVector<T>, angle: T) -> Self {
         let half = angle / T::TWO;
         let (sin_half, cos_half) = (half.sin(), half.cos());
         let axis_norm = axis.normalized();
         Self::new_unchecked(
-            cos_half,
-            sin_half * axis_norm.x(),
-            sin_half * axis_norm.y(),
-            sin_half * axis_norm.z(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),                // s
+            T::zero(),                // e23
+            T::zero(),                // e31
+            T::zero(),                // e12
+            sin_half * axis_norm.x(), // e01
+            sin_half * axis_norm.y(), // e02
+            sin_half * axis_norm.z(), // e03
+            cos_half,                 // e0123
         )
     }
 
@@ -954,10 +993,25 @@ impl<T: Float> Motor<T> {
         )
     }
 
-    /// Transform a point: `P' = M P M̃` (sandwich product).
+    /// Transform a point using the antisandwich product.
+    ///
+    /// In PGA, transformations use the geometric antiproduct: P' = M ⊛ P ⊛ M̃
+    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::projective::dim3::{Motor, Point};
+    ///
+    /// // Translate a point
+    /// let t = Motor::<f64>::from_translation(1.0, 0.0, 0.0);
+    /// let p = Point::origin();
+    /// let p2 = t.transform_point(&p);
+    /// assert!((p2.x() - 1.0).abs() < 1e-10);
+    /// ```
     #[inline]
-    pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
-        todo!("transform_point needs generated sandwich product with correct signs")
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        products::antisandwich_motor_point(self, p)
     }
 
     /// Transform a line: `L' = M L M̃` (sandwich product).
@@ -1077,5 +1131,103 @@ impl<T: Float> Flector<T> {
     #[inline]
     pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
         todo!("transform_point needs generated sandwich product with correct signs")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::RELATIVE_EQ_EPS;
+    use approx::relative_eq;
+
+    #[test]
+    fn motor_identity_preserves_point() {
+        let p = Point::<f64>::from_cartesian(3.0, 4.0, 5.0);
+        let m = Motor::<f64>::identity();
+
+        eprintln!("Identity motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            m.s(), m.e23(), m.e31(), m.e12(), m.e01(), m.e02(), m.e03(), m.e0123());
+        eprintln!("Input point: ({}, {}, {}, {})", p.e1(), p.e2(), p.e3(), p.e0());
+
+        let result = m.transform_point(&p);
+
+        eprintln!(
+            "Output point: ({}, {}, {}, {})",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        assert!(relative_eq!(
+            result.e1(),
+            p.e1(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e2(),
+            p.e2(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e3(),
+            p.e3(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e0(),
+            p.e0(),
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_translation_x() {
+        let origin = Point::<f64>::origin();
+        let t = Motor::<f64>::from_translation(2.0, 0.0, 0.0);
+
+        println!("Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            t.s(), t.e23(), t.e31(), t.e12(), t.e01(), t.e02(), t.e03(), t.e0123());
+        println!("Origin: ({}, {}, {}, {})", origin.e1(), origin.e2(), origin.e3(), origin.e0());
+
+        let result = t.transform_point(&origin);
+
+        println!(
+            "Translated: ({}, {}, {}, {})",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Expected: (2, 0, 0) with w=1
+        assert!(relative_eq!(
+            result.e1(),
+            2.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e2(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e3(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e0(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 }

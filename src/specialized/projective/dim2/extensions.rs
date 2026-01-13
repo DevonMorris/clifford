@@ -445,6 +445,14 @@ impl<T: Float> Line<T> {
 // ============================================================================
 
 impl<T: Float> Motor<T> {
+    /// Creates the identity motor (no transformation).
+    ///
+    /// In 2D PGA, the identity motor has only the scalar component.
+    #[inline]
+    pub fn identity() -> Self {
+        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+    }
+
     /// Creates a pure rotation motor around the origin.
     ///
     /// # Arguments

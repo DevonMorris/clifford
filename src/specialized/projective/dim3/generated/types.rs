@@ -177,6 +177,23 @@ impl<T: Float> Flector<T> {
             self.e1, self.e2, self.e3, self.e0, -self.e023, -self.e031, -self.e012, -self.e123,
         )
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(
+            -self.e1, -self.e2, -self.e3, -self.e0, self.e023, self.e031, self.e012, self.e123,
+        )
+    }
 }
 impl<T: Float> Default for Flector<T> {
     fn default() -> Self {
@@ -402,6 +419,23 @@ impl<T: Float> Line<T> {
             -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
         )
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(
+            -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
+        )
+    }
 }
 impl<T: Float> Default for Line<T> {
     fn default() -> Self {
@@ -508,20 +542,6 @@ impl<T: Float> Motor<T> {
             T::zero(),
         )
     }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new(
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-        )
-    }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
     #[doc = r" This is the sum of squares of all components."]
@@ -591,10 +611,27 @@ impl<T: Float> Motor<T> {
             self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(
+            self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
+        )
+    }
 }
 impl<T: Float> Default for Motor<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
 #[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
@@ -730,6 +767,21 @@ impl<T: Float> Plane<T> {
     pub fn reverse(&self) -> Self {
         Self::new(-self.e023, -self.e031, -self.e012, -self.e123)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.e023, self.e031, self.e012, self.e123)
+    }
 }
 impl<T: Float> Default for Plane<T> {
     fn default() -> Self {
@@ -861,6 +913,21 @@ impl<T: Float> Point<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.e1, self.e2, self.e3, self.e0)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(-self.e1, -self.e2, -self.e3, -self.e0)
+    }
 }
 impl<T: Float> Default for Point<T> {
     fn default() -> Self {
@@ -956,6 +1023,21 @@ impl<T: Float> Quadvector<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.e0123)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.e0123)
+    }
 }
 impl<T: Float> Default for Quadvector<T> {
     fn default() -> Self {
@@ -994,11 +1076,6 @@ impl<T: Float> Scalar<T> {
     #[inline]
     pub fn zero() -> Self {
         Self::new(T::zero())
-    }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new(T::one())
     }
     #[doc = "Creates the unit s element."]
     #[inline]
@@ -1056,10 +1133,25 @@ impl<T: Float> Scalar<T> {
     pub fn reverse(&self) -> Self {
         Self::new(self.s)
     }
+    #[doc = r" Returns the antireverse."]
+    #[doc = r""]
+    #[doc = r" For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2)."]
+    #[doc = r" This is equivalent to complement(reverse(complement(x)))."]
+    #[doc = r""]
+    #[doc = r" In PGA (n=4):"]
+    #[doc = r" - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1"]
+    #[doc = r" - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1"]
+    #[doc = r" - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1"]
+    #[doc = r" - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1"]
+    #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
+    #[inline]
+    pub fn antireverse(&self) -> Self {
+        Self::new(self.s)
+    }
 }
 impl<T: Float> Default for Scalar<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
 #[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]

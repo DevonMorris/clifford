@@ -15,7 +15,7 @@ use crate::spec::{AlgebraSpec, TypeSpec};
 /// - Documentation with basis ordering tables
 /// - Derive macros (Clone, Copy, Debug, PartialEq, serde)
 /// - Private fields with public accessors
-/// - Constructors (`new`, `zero`, `identity`, unit basis)
+/// - Constructors (`new`, `zero`, unit basis)
 /// - Basic methods (`norm_squared`, `norm`, `reverse`)
 /// - Default implementation
 ///
@@ -269,22 +269,20 @@ impl<'a> TypeGenerator<'a> {
         let constructor = self.generate_constructor(ty);
         let accessors = self.generate_accessors(ty);
         let zero = self.generate_zero(ty);
-        let identity = self.generate_identity(ty);
         let unit_elements = self.generate_unit_elements(ty);
         let norm_methods = self.generate_norm_methods(ty);
         let reverse = self.generate_reverse(ty);
-        let transform_methods = self.generate_transform_methods(ty);
+        let antireverse = self.generate_antireverse(ty);
 
         quote! {
             impl<T: Float> #name<T> {
                 #constructor
                 #accessors
                 #zero
-                #identity
                 #unit_elements
                 #norm_methods
                 #reverse
-                #transform_methods
+                #antireverse
             }
         }
     }
@@ -368,36 +366,6 @@ impl<'a> TypeGenerator<'a> {
             #[inline]
             pub fn zero() -> Self {
                 Self::#constructor(#(#zeros),*)
-            }
-        }
-    }
-
-    /// Generates the identity() method if the type contains grade 0.
-    fn generate_identity(&self, ty: &TypeSpec) -> TokenStream {
-        // Only generate identity for types containing grade 0
-        if !ty.grades.contains(&0) {
-            return quote! {};
-        }
-
-        let values: Vec<TokenStream> = ty
-            .fields
-            .iter()
-            .map(|field| {
-                if field.grade == 0 {
-                    quote! { T::one() }
-                } else {
-                    quote! { T::zero() }
-                }
-            })
-            .collect();
-
-        let constructor = quote! { new };
-
-        quote! {
-            /// Creates the identity element (scalar = 1, rest = 0).
-            #[inline]
-            pub fn identity() -> Self {
-                Self::#constructor(#(#values),*)
             }
         }
     }
@@ -581,32 +549,66 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
-    /// Generates transform methods for versor types.
+    /// Generates the antireverse() method.
     ///
-    /// Note: Transform methods are now generated in extensions.rs, not here.
-    /// This function returns empty so that domain-specific transform methods
-    /// can be defined in extensions with appropriate documentation and behavior.
-    fn generate_transform_methods(&self, _ty: &TypeSpec) -> TokenStream {
-        // Transform methods should be defined in extensions.rs, not generated here.
-        // This allows for domain-specific documentation and behavior.
-        quote! {}
+    /// Antireverse: (-1)^((n-k)(n-k-1)/2) for grade k in dimension n.
+    /// This is the reverse of the complement, or complement of the reverse.
+    pub fn generate_antireverse(&self, ty: &TypeSpec) -> TokenStream {
+        let dim = self.spec.signature.dim();
+
+        let antireversed_values: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let name = format_ident!("{}", field.name);
+                let grade = field.grade;
+                let antigrade = dim - grade;
+                // Sign is (-1)^((n-k)(n-k-1)/2)
+                let exponent = antigrade * antigrade.saturating_sub(1) / 2;
+                if exponent % 2 == 0 {
+                    quote! { self.#name }
+                } else {
+                    quote! { -self.#name }
+                }
+            })
+            .collect();
+
+        // Use unchecked constructor for constrained types
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        let constructor = if has_constraints {
+            quote! { new_unchecked }
+        } else {
+            quote! { new }
+        };
+
+        quote! {
+            /// Returns the antireverse.
+            ///
+            /// For a k-blade in an n-dimensional algebra, the antireverse has sign (-1)^((n-k)(n-k-1)/2).
+            /// This is equivalent to complement(reverse(complement(x))).
+            ///
+            /// In PGA (n=4):
+            /// - Grade 0 (antigrade 4): (-1)^(4*3/2) = (-1)^6 = +1
+            /// - Grade 1 (antigrade 3): (-1)^(3*2/2) = (-1)^3 = -1
+            /// - Grade 2 (antigrade 2): (-1)^(2*1/2) = (-1)^1 = -1
+            /// - Grade 3 (antigrade 1): (-1)^(1*0/2) = (-1)^0 = +1
+            /// - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1
+            #[inline]
+            pub fn antireverse(&self) -> Self {
+                Self::#constructor(#(#antireversed_values),*)
+            }
+        }
     }
 
     /// Generates the Default implementation.
     fn generate_default(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
 
-        // Default is identity for types with grade 0, otherwise zero
-        let default_fn = if ty.grades.contains(&0) {
-            quote! { Self::identity() }
-        } else {
-            quote! { Self::zero() }
-        };
-
+        // Default is always zero - identity() is context-dependent and not generated
         quote! {
             impl<T: Float> Default for #name<T> {
                 fn default() -> Self {
-                    #default_fn
+                    Self::zero()
                 }
             }
         }
@@ -807,35 +809,6 @@ mod tests {
     }
 
     #[test]
-    fn generates_identity_for_rotor() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = TypeGenerator::new(&spec, &algebra);
-
-        let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
-        let tokens = generator.generate_identity(rotor);
-        let code = tokens.to_string();
-
-        // Identity should have scalar = 1
-        assert!(code.contains("identity"));
-        assert!(code.contains("T :: one ()"));
-    }
-
-    #[test]
-    fn no_identity_for_vector() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
-        let algebra = Algebra::euclidean(3);
-        let generator = TypeGenerator::new(&spec, &algebra);
-
-        let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
-        let tokens = generator.generate_identity(vector);
-        let code = tokens.to_string();
-
-        // Vector has no grade 0, so no identity
-        assert!(code.is_empty());
-    }
-
-    #[test]
     fn generates_unit_elements_for_vector() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
@@ -889,9 +862,9 @@ mod tests {
         let tokens = generator.generate_default(rotor);
         let code = tokens.to_string();
 
-        // Rotor default should be identity
+        // Default is always zero - identity is context-dependent
         assert!(code.contains("impl < T : Float > Default for Rotor"));
-        assert!(code.contains("Self :: identity ()"));
+        assert!(code.contains("Self :: zero ()"));
 
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
         let tokens = generator.generate_default(vector);

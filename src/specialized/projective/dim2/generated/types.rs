@@ -181,11 +181,6 @@ impl<T: Float> Motor<T> {
     pub fn zero() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new(T::one(), T::zero(), T::zero(), T::zero())
-    }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
     #[doc = r" This is the sum of squares of all components."]
@@ -240,7 +235,7 @@ impl<T: Float> Motor<T> {
 }
 impl<T: Float> Default for Motor<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
 #[doc = "2D point in homogeneous coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e0` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Point;\n\nlet v = Point::new(1.0, 2.0, 3.0);\n```"]
@@ -395,11 +390,6 @@ impl<T: Float> Scalar<T> {
     pub fn zero() -> Self {
         Self::new(T::zero())
     }
-    #[doc = r" Creates the identity element (scalar = 1, rest = 0)."]
-    #[inline]
-    pub fn identity() -> Self {
-        Self::new(T::one())
-    }
     #[doc = "Creates the unit s element."]
     #[inline]
     pub fn unit_s() -> Self {
@@ -459,7 +449,7 @@ impl<T: Float> Scalar<T> {
 }
 impl<T: Float> Default for Scalar<T> {
     fn default() -> Self {
-        Self::identity()
+        Self::zero()
     }
 }
 #[doc = "Trivector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `e012` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim2::Trivector;\n\nlet v = Trivector::new(1.0);\n```"]
