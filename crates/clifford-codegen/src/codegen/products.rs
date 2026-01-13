@@ -9,8 +9,10 @@ use quote::{format_ident, quote};
 #[cfg(test)]
 use crate::algebra::geometric_grades;
 #[cfg(test)]
+use crate::algebra::left_contraction_grade;
+#[cfg(test)]
 use crate::algebra::outer_grade;
-use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade};
+use crate::algebra::{Algebra, Blade, ProductTable};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintSimplifier, ExpressionSimplifier, ProductKind as SymbolicProductKind,
@@ -1073,65 +1075,20 @@ impl<'a> ProductGenerator<'a> {
                 let a_blade = field_a.blade_index;
                 let b_blade = field_b.blade_index;
 
-                // Use specialized table methods for products that need them
+                // Use specialized table methods for each product kind
                 let (sign, result) = match kind {
+                    ProductKind::Geometric => self.table.geometric(a_blade, b_blade),
                     ProductKind::Exterior => self.table.exterior(a_blade, b_blade),
+                    ProductKind::Interior => self.table.interior(a_blade, b_blade),
+                    ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
+                    ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
                     ProductKind::Regressive => self.table.regressive(a_blade, b_blade),
-                    ProductKind::Antigeometric | ProductKind::Antiscalar => {
-                        self.table.antiproduct(a_blade, b_blade)
-                    }
-                    _ => self.table.geometric(a_blade, b_blade),
+                    ProductKind::Scalar => self.table.scalar(a_blade, b_blade),
+                    ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
+                    ProductKind::Antiscalar => self.table.antiscalar(a_blade, b_blade),
                 };
 
-                if result != result_blade || sign == 0 {
-                    continue;
-                }
-
-                // Filter based on product kind (for products derived from geometric)
-                let include = match kind {
-                    ProductKind::Geometric => true,
-                    ProductKind::Exterior => {
-                        // Already computed correctly by exterior method
-                        true
-                    }
-                    ProductKind::Interior => {
-                        // Interior product: result grade = |ga - gb|
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        result_grade == a_grade.abs_diff(b_grade)
-                    }
-                    ProductKind::LeftContraction => {
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        left_contraction_grade(a_grade, b_grade)
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false)
-                    }
-                    ProductKind::RightContraction => {
-                        // Right contraction: ga - gb when gb <= ga
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        b_grade <= a_grade && result_grade == a_grade - b_grade
-                    }
-                    ProductKind::Regressive => {
-                        // Already computed correctly by regressive method
-                        true
-                    }
-                    ProductKind::Scalar => result_blade == 0,
-                    ProductKind::Antigeometric => {
-                        // Already computed by antiproduct, include all
-                        true
-                    }
-                    ProductKind::Antiscalar => {
-                        // Antiscalar: only grade dim terms
-                        Blade::from_index(result_blade).grade() == self.algebra.dim()
-                    }
-                };
-
-                if include {
+                if result == result_blade && sign != 0 {
                     terms.push(ProductTerm {
                         sign,
                         a_field: field_a.name.clone(),

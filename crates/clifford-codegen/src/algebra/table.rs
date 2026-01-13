@@ -667,7 +667,7 @@ impl ProductTable {
     ///
     /// // e12 ⌊ e2 = e1 (grade 2 - 1 = 1)
     /// let (sign, result) = table.right_contraction(3, 2);
-    /// assert_eq!(sign, -1);  // e12 * e2 = e1 e2 e2 = e1
+    /// assert_eq!(sign, 1);   // e12 * e2 = e1 e2 e2 = e1 * (+1) = e1
     /// assert_eq!(result, 1); // e1
     ///
     /// // e1 ⌊ e12 = 0 (grade 1 < grade 2)
@@ -688,6 +688,132 @@ impl ProductTable {
 
         // Check if result has the correct grade
         if sign != 0 && result.count_ones() as usize == target_grade {
+            (sign, result)
+        } else {
+            (0, 0)
+        }
+    }
+
+    /// Computes the interior product (symmetric contraction) of two basis blades.
+    ///
+    /// The interior product extracts the grade `|grade(a) - grade(b)|` part
+    /// of the geometric product. It's the symmetric version of the contractions.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the interior product
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::euclidean(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // e12 · e2 = e1 (grade |2 - 1| = 1)
+    /// let (sign, result) = table.interior(3, 2);
+    /// assert_eq!(sign, 1);
+    /// assert_eq!(result, 1); // e1
+    ///
+    /// // e1 · e2 = 0 (orthogonal, grade |1 - 1| = 0 but no scalar part)
+    /// let (sign, _) = table.interior(1, 2);
+    /// assert_eq!(sign, 0);
+    /// ```
+    pub fn interior(&self, a: usize, b: usize) -> (i8, usize) {
+        let grade_a = a.count_ones() as usize;
+        let grade_b = b.count_ones() as usize;
+        let target_grade = grade_a.abs_diff(grade_b);
+
+        let (sign, result) = self.geometric(a, b);
+
+        if sign != 0 && result.count_ones() as usize == target_grade {
+            (sign, result)
+        } else {
+            (0, 0)
+        }
+    }
+
+    /// Computes the scalar product of two basis blades.
+    ///
+    /// The scalar product extracts only the grade-0 (scalar) part of the
+    /// geometric product. This is equivalent to the dot product for same-grade
+    /// blades, but returns zero for different grades.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is always 0 (scalar) when non-zero
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::euclidean(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // e1 * e1 = 1 (scalar)
+    /// let (sign, result) = table.scalar(1, 1);
+    /// assert_eq!(sign, 1);
+    /// assert_eq!(result, 0);
+    ///
+    /// // e1 * e2 has no scalar part
+    /// let (sign, _) = table.scalar(1, 2);
+    /// assert_eq!(sign, 0);
+    /// ```
+    pub fn scalar(&self, a: usize, b: usize) -> (i8, usize) {
+        let (sign, result) = self.geometric(a, b);
+
+        if sign != 0 && result == 0 {
+            (sign, 0)
+        } else {
+            (0, 0)
+        }
+    }
+
+    /// Computes the antiscalar product of two basis blades.
+    ///
+    /// The antiscalar product extracts only the grade-n (pseudoscalar) part
+    /// of the antiproduct, where n is the dimension of the algebra.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the pseudoscalar blade index when non-zero
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::pga(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // Pseudoscalar index for 4D algebra (PGA 3D has 4 basis vectors)
+    /// let pseudoscalar = (1 << 4) - 1; // 0b1111 = 15
+    ///
+    /// // e1234 ∨ e1234 = e1234 (antiscalar part)
+    /// // In the antiproduct, pseudoscalar acts like scalar does in geometric product
+    /// let (sign, result) = table.antiscalar(pseudoscalar, pseudoscalar);
+    /// assert_eq!(sign, 1);
+    /// assert_eq!(result, pseudoscalar);
+    ///
+    /// // 1 ∨ e1234 has no antiscalar part (result is scalar, not pseudoscalar)
+    /// let (sign, _) = table.antiscalar(0, pseudoscalar);
+    /// assert_eq!(sign, 0);
+    /// ```
+    pub fn antiscalar(&self, a: usize, b: usize) -> (i8, usize) {
+        let dim = self.dim;
+        let pseudoscalar = (1 << dim) - 1;
+
+        let (sign, result) = self.antiproduct(a, b);
+
+        if sign != 0 && result == pseudoscalar {
             (sign, result)
         } else {
             (0, 0)
