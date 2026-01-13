@@ -408,36 +408,70 @@ pub fn right_contract_vector_scalar<T: Float>(a: &Vector<T>, b: &Scalar<T>) -> V
 pub fn right_contract_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
     Scalar::new(b.x() * a.x() + b.y() * a.y())
 }
+#[doc = "Regressive product (meet): Bivector ∨ Bivector -> Bivector"]
+#[inline]
+pub fn regressive_bivector_bivector<T: Float>(a: &Bivector<T>, b: &Bivector<T>) -> Bivector<T> {
+    Bivector::new(a.xy() * b.xy())
+}
+#[doc = "Regressive product (meet): Bivector ∨ Rotor -> Rotor"]
+#[inline]
+pub fn regressive_bivector_rotor<T: Float>(a: &Bivector<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(a.xy() * b.s(), a.xy() * b.xy())
+}
+#[doc = "Regressive product (meet): Bivector ∨ Scalar -> Scalar"]
+#[inline]
+pub fn regressive_bivector_scalar<T: Float>(a: &Bivector<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.xy() * b.s())
+}
 #[doc = "Regressive product (meet): Bivector ∨ Vector -> Vector"]
 #[inline]
 pub fn regressive_bivector_vector<T: Float>(a: &Bivector<T>, b: &Vector<T>) -> Vector<T> {
-    Vector::new(a.xy() * b.y(), -(a.xy() * b.x()))
+    Vector::new(-(a.xy() * b.x()), -(a.xy() * b.y()))
+}
+#[doc = "Regressive product (meet): Rotor ∨ Bivector -> Rotor"]
+#[inline]
+pub fn regressive_rotor_bivector<T: Float>(a: &Rotor<T>, b: &Bivector<T>) -> Rotor<T> {
+    Rotor::new(a.s() * b.xy(), a.xy() * b.xy())
+}
+#[doc = "Regressive product (meet): Rotor ∨ Rotor -> Rotor"]
+#[inline]
+pub fn regressive_rotor_rotor<T: Float>(a: &Rotor<T>, b: &Rotor<T>) -> Rotor<T> {
+    Rotor::new(a.s() * b.xy() + a.xy() * b.s(), a.xy() * b.xy())
+}
+#[doc = "Regressive product (meet): Rotor ∨ Scalar -> Scalar"]
+#[inline]
+pub fn regressive_rotor_scalar<T: Float>(a: &Rotor<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.xy() * b.s())
 }
 #[doc = "Regressive product (meet): Rotor ∨ Vector -> Vector"]
 #[inline]
 pub fn regressive_rotor_vector<T: Float>(a: &Rotor<T>, b: &Vector<T>) -> Vector<T> {
-    Vector::new(
-        a.xy() * b.y() + b.x() * a.s(),
-        -(a.xy() * b.x()) + b.y() * a.s(),
-    )
+    Vector::new(-(a.xy() * b.x()), -(a.xy() * b.y()))
+}
+#[doc = "Regressive product (meet): Scalar ∨ Bivector -> Scalar"]
+#[inline]
+pub fn regressive_scalar_bivector<T: Float>(a: &Scalar<T>, b: &Bivector<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.xy())
+}
+#[doc = "Regressive product (meet): Scalar ∨ Rotor -> Scalar"]
+#[inline]
+pub fn regressive_scalar_rotor<T: Float>(a: &Scalar<T>, b: &Rotor<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.xy())
 }
 #[doc = "Regressive product (meet): Vector ∨ Bivector -> Vector"]
 #[inline]
 pub fn regressive_vector_bivector<T: Float>(a: &Vector<T>, b: &Bivector<T>) -> Vector<T> {
-    Vector::new(-(b.xy() * a.y()), b.xy() * a.x())
+    Vector::new(-(a.x() * b.xy()), -(a.y() * b.xy()))
 }
 #[doc = "Regressive product (meet): Vector ∨ Rotor -> Vector"]
 #[inline]
 pub fn regressive_vector_rotor<T: Float>(a: &Vector<T>, b: &Rotor<T>) -> Vector<T> {
-    Vector::new(
-        -(b.xy() * a.y()) + b.s() * a.x(),
-        b.xy() * a.x() + b.s() * a.y(),
-    )
+    Vector::new(-(a.x() * b.xy()), -(a.y() * b.xy()))
 }
 #[doc = "Regressive product (meet): Vector ∨ Vector -> Scalar"]
 #[inline]
 pub fn regressive_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> Scalar<T> {
-    Scalar::new(b.x() * a.x() + b.y() * a.y())
+    Scalar::new(a.x() * b.y() - a.y() * b.x())
 }
 #[doc = "Scalar product: Bivector * Bivector -> T (grade-0 part)"]
 #[inline]
@@ -484,9 +518,9 @@ pub fn scalar_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) -> T {
 pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
         v.xy() * x.s() * v.xy() - v.xy() * x.xy() * v.s()
-            + v.s() * x.s() * v.s()
-            + v.s() * x.xy() * v.xy(),
-        v.xy() * x.s() * v.s() + v.s() * x.xy() * v.s() - v.s() * x.s() * v.xy()
+            + v.s() * x.xy() * v.xy()
+            + v.s() * x.s() * v.s(),
+        v.s() * x.xy() * v.s() + v.xy() * x.s() * v.s() - v.s() * x.s() * v.xy()
             + v.xy() * x.xy() * v.xy(),
     )
 }
@@ -494,12 +528,11 @@ pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
 #[inline]
 pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        v.s() * x.y() * v.xy() - v.xy() * x.x() * v.xy()
+        v.s() * x.x() * v.s() - v.xy() * x.x() * v.xy()
             + v.xy() * x.y() * v.s()
-            + v.s() * x.x() * v.s(),
-        -(v.s() * x.x() * v.xy()) + v.s() * x.y() * v.s()
-            - v.xy() * x.y() * v.xy()
-            - v.xy() * x.x() * v.s(),
+            + v.s() * x.y() * v.xy(),
+        -(v.xy() * x.x() * v.s()) - v.xy() * x.y() * v.xy() + v.s() * x.y() * v.s()
+            - v.s() * x.x() * v.xy(),
     )
 }
 #[doc = "Antisandwich product: Rotor ⊛ Rotor ⊛ antirev(Rotor) -> Rotor\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
@@ -507,9 +540,11 @@ pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T>
 pub fn antisandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
         v.xy() * x.s() * v.xy() - v.xy() * x.xy() * v.s()
-            + v.s() * x.xy() * v.xy()
-            + v.s() * x.s() * v.s(),
-        v.s() * x.xy() * v.s() + v.xy() * x.s() * v.s() - v.s() * x.s() * v.xy()
+            + v.s() * x.s() * v.s()
+            + v.s() * x.xy() * v.xy(),
+        -(v.s() * x.s() * v.xy())
+            + v.xy() * x.s() * v.s()
+            + v.s() * x.xy() * v.s()
             + v.xy() * x.xy() * v.xy(),
     )
 }
@@ -517,13 +552,11 @@ pub fn antisandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T
 #[inline]
 pub fn antisandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        -(v.s() * x.x() * v.s())
-            + v.xy() * x.x() * v.xy()
-            + v.s() * x.y() * v.xy()
-            + v.xy() * x.y() * v.s(),
-        -(v.xy() * x.x() * v.s()) + v.xy() * x.y() * v.xy()
-            - v.s() * x.x() * v.xy()
-            - v.s() * x.y() * v.s(),
+        v.xy() * x.x() * v.xy() + v.s() * x.y() * v.xy() + v.xy() * x.y() * v.s()
+            - v.s() * x.x() * v.s(),
+        -(v.s() * x.y() * v.s()) + v.xy() * x.y() * v.xy()
+            - v.xy() * x.x() * v.s()
+            - v.s() * x.x() * v.xy(),
     )
 }
 #[doc = "Reverses the Bivector (negates grades where k(k-1)/2 is odd)."]

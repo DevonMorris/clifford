@@ -1609,9 +1609,11 @@ mod arbitrary_impls {
                 -100.0f64..100.0,
                 -100.0f64..100.0,
                 -100.0f64..100.0,
-                -100.0f64..100.0,
             )
-                .prop_map(|(x0, x1, x2, x3, x4, x5, x6, x7)| {
+                .prop_filter("non-zero divisor", |(_x0, _x1, _x2, x3, _x4, _x5, _x6)| {
+                    (x3).abs() > 0.1
+                })
+                .prop_map(|(x0, x1, x2, x3, x4, x5, x6)| {
                     Flector::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
@@ -1620,7 +1622,7 @@ mod arbitrary_impls {
                         T::from_f64(x4),
                         T::from_f64(x5),
                         T::from_f64(x6),
-                        T::from_f64(x7),
+                        T::from_f64((x0 * x4 - x1 * x5 + x2 * x6) / (x3)),
                     )
                 })
                 .boxed()
@@ -1636,16 +1638,18 @@ mod arbitrary_impls {
                 -100.0f64..100.0,
                 -100.0f64..100.0,
                 -100.0f64..100.0,
-                -100.0f64..100.0,
             )
-                .prop_map(|(x0, x1, x2, x3, x4, x5)| {
+                .prop_filter("non-zero divisor", |(_x0, _x1, x2, _x3, _x4)| {
+                    (x2).abs() > 0.1
+                })
+                .prop_map(|(x0, x1, x2, x3, x4)| {
                     Line::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
                         T::from_f64(x2),
                         T::from_f64(x3),
                         T::from_f64(x4),
-                        T::from_f64(x5),
+                        T::from_f64((-x0 * x3 + x1 * x4) / (x2)),
                     )
                 })
                 .boxed()
@@ -1663,9 +1667,11 @@ mod arbitrary_impls {
                 -100.0f64..100.0,
                 -100.0f64..100.0,
                 -100.0f64..100.0,
-                -100.0f64..100.0,
             )
-                .prop_map(|(x0, x1, x2, x3, x4, x5, x6, x7)| {
+                .prop_filter("non-zero divisor", |(x0, _x1, _x2, _x3, _x4, _x5, _x6)| {
+                    (x0).abs() > 0.1
+                })
+                .prop_map(|(x0, x1, x2, x3, x4, x5, x6)| {
                     Motor::new(
                         T::from_f64(x0),
                         T::from_f64(x1),
@@ -1674,7 +1680,7 @@ mod arbitrary_impls {
                         T::from_f64(x4),
                         T::from_f64(x5),
                         T::from_f64(x6),
-                        T::from_f64(x7),
+                        T::from_f64((x4 * x1 - x5 * x2 + x6 * x3) / (x0)),
                     )
                 })
                 .boxed()

@@ -827,8 +827,22 @@ impl<'a> TraitsGenerator<'a> {
             let divisor_var = self.find_divisor_variable(divisor, ty);
             if let Some(var_idx) = divisor_var {
                 let var = format_ident!("x{}", var_idx);
+                // Generate filter args with underscores for unused variables
+                let filter_args: Vec<TokenStream> = free_indices
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| {
+                        if i == var_idx {
+                            let v = format_ident!("x{}", i);
+                            quote! { #v }
+                        } else {
+                            let v = format_ident!("_x{}", i);
+                            quote! { #v }
+                        }
+                    })
+                    .collect();
                 Some(quote! {
-                    .prop_filter("non-zero divisor", |(#(#prop_map_args),*)| (#var).abs() > 0.1)
+                    .prop_filter("non-zero divisor", |(#(#filter_args),*)| (#var).abs() > 0.1)
                 })
             } else {
                 None
