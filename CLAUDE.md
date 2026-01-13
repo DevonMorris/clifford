@@ -476,6 +476,51 @@ Geometric algebra formulas are complex and error-prone. Signs, orderings, metric
 - Solves constraints (Study condition, Plücker condition, etc.)
 - Generates optimized Rust code with verified formulas
 
+#### Genericity Principle: No Shortcuts
+
+**CRITICAL: The code generator must be completely generic. No algebra-specific shortcuts.**
+
+When implementing codegen features, always ask: **"How does this generalize to arbitrary signatures?"**
+
+**What this means:**
+- **Never check algebra names** - No `if name.starts_with("euclidean")` or similar string matching
+- **Derive everything from signature** - The tuple `(p, q, r)` (positive, negative, degenerate basis count) determines all behavior
+- **No hardcoded formulas for specific algebras** - Constraint expressions, norm formulas, and products must be derived symbolically
+- **Test with multiple signatures** - If it works for Euclidean but not PGA, fix the root cause
+
+**Examples of violations to avoid:**
+```rust
+// BAD: String-based algebra detection
+if name.starts_with("pga") { use_pga_formula() }
+
+// BAD: Hardcoded constraint for one algebra
+let study_residual = s * e0123 + e23 * e01 + ...;  // Motor-specific
+
+// BAD: Separate code paths for "PGA" vs "Euclidean"
+if is_pga { generate_pga_wrappers() } else { generate_euclidean_wrappers() }
+```
+
+**Correct approach:**
+```rust
+// GOOD: Derive from signature tuple
+match (sig.p, sig.q, sig.r) {
+    (n, 0, 0) => /* Euclidean behavior */,
+    (n, 0, 1) => /* Degenerate metric behavior */,
+    _ => /* Generic fallback */,
+}
+
+// GOOD: Derive constraints symbolically from u * rev(u)
+let constraint = deriver.derive_geometric_constraint(ty);
+
+// GOOD: Partition fields by degenerate basis involvement
+let bulk_fields = fields.filter(|f| !contains_degenerate_index(f));
+```
+
+**Root cause fixes over workarounds:**
+- If a formula doesn't work for one algebra, the fix should make it work for ALL algebras
+- If you're tempted to add a special case, step back and find the general solution
+- Workarounds accumulate tech debt; generic solutions scale to future algebras (CGA, Minkowski, etc.)
+
 Complex algebraic operations in geometric algebra (products, motor compositions, transformations) are handled by the **clifford-codegen** tool. This ensures correctness through:
 
 - **Automatic constraint solving**: Constraints like Study conditions and Plücker conditions are solved symbolically

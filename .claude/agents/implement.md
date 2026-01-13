@@ -29,6 +29,29 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 - "Fixing" signs or coefficients to make tests pass
 - Computing expected values in tests using manual algebra
 
+## Genericity Principle: No Shortcuts
+
+**CRITICAL: Codegen must be completely generic. No algebra-specific shortcuts.**
+
+When implementing codegen features, always ask: **"How does this generalize to arbitrary signatures?"**
+
+**What this means:**
+- **Never check algebra names** - No `if name.starts_with("euclidean")` or string matching
+- **Derive everything from signature** - The tuple `(p, q, r)` determines all behavior
+- **No hardcoded formulas** - Constraints, norms, and products must be derived symbolically
+- **Test with multiple signatures** - If it works for Euclidean but not PGA, fix the root cause
+
+**Root cause fixes over workarounds:**
+- If a formula doesn't work for one algebra, fix it to work for ALL algebras
+- If you're tempted to add a special case, find the general solution instead
+- Workarounds accumulate tech debt; generic solutions scale to future algebras (CGA, Minkowski, etc.)
+
+**Key signature-based derivations:**
+- `r > 0` → degenerate metric → needs bulk/weight decomposition
+- `q > 0` → indefinite metric → needs timelike/spacelike handling
+- Degenerate indices → partition fields for bulk vs weight norms
+- Constraint expressions → derive from `u * rev(u)` symbolically
+
 ## Strict Requirements
 
 1. **Documentation is mandatory** - Every public item needs rustdoc with:

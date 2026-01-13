@@ -232,6 +232,45 @@ When reviewing extension files (`extensions.rs`):
 2. Performance-critical path with documented benchmark justification
 3. Geometric shortcut formula with cited mathematical source
 
+### Genericity Review (Critical for Codegen Changes)
+
+**REJECT any PR that introduces algebra-specific shortcuts in codegen.**
+
+When reviewing codegen changes, verify:
+
+- [ ] **No string-based algebra detection** - No `name.starts_with("euclidean")`, `name.contains("pga")`, etc.
+- [ ] **Derives from signature tuple** - Behavior determined by `(p, q, r)`, not algebra name
+- [ ] **No hardcoded formulas** - Constraints and norms derived symbolically, not written manually
+- [ ] **Works for all algebras** - Test with Euclidean, PGA, and consider Minkowski/CGA
+
+**Red flags for genericity violations:**
+```rust
+// REJECT: String matching on algebra name
+if spec.name.starts_with("projective") { ... }
+
+// REJECT: Hardcoded constraint expression
+let study = s * e0123 + e23 * e01 + ...;
+
+// REJECT: Separate code paths by algebra name
+fn generate_pga_stuff() { ... }
+fn generate_euclidean_stuff() { ... }
+```
+
+**Verification commands:**
+```bash
+# Verify no algebra-specific strings in codegen
+grep -r "starts_with.*euclidean" crates/clifford-codegen/src/
+grep -r "starts_with.*pga" crates/clifford-codegen/src/
+grep -r "starts_with.*projective" crates/clifford-codegen/src/
+# All should return empty
+```
+
+**When you see shortcuts, request:**
+1. Derive from signature `(p, q, r)` instead of algebra name
+2. Use `SignatureSpec::is_degenerate()`, `degenerate_indices()`, etc.
+3. Derive constraints symbolically via `ConstraintDeriver`
+4. Test that the fix works for ALL current algebras
+
 **Examples of what to flag**:
 ```rust
 // FLAG: Manual exterior product - should use products::exterior_point_point
