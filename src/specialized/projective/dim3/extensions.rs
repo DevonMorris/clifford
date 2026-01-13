@@ -765,19 +765,19 @@ impl<T: Float> Motor<T> {
     ///
     /// Creates a motor that translates by the vector (dx, dy, dz).
     ///
-    /// In PGA, the translation formula is T = (d/2)·(tx·e₂₃ + ty·e₃₁ + tz·e₁₂) + 𝟙
-    /// where the antisandwich applies the translation twice, giving net displacement (dx, dy, dz).
+    /// In PGA with our basis ordering, translation is encoded with specific sign conventions
+    /// determined by the antisandwich formula.
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
         Self::new_unchecked(
-            T::zero(), // s
-            dx * half, // e23
-            dy * half, // e31
-            dz * half, // e12
-            T::zero(), // e01
-            T::zero(), // e02
-            T::zero(), // e03
-            T::one(),  // e0123 (identity part)
+            T::zero(),  // s
+            dx * half,  // e23
+            -dy * half, // e31 (negated due to basis ordering)
+            dz * half,  // e12
+            T::zero(),  // e01
+            T::zero(),  // e02
+            T::zero(),  // e03
+            T::one(),   // e0123 (identity part)
         )
     }
 
@@ -875,29 +875,29 @@ impl<T: Float> Motor<T> {
     /// Compose motors: self then other.
     ///
     /// The result applies `self` first, then `other`.
-    /// In PGA, the sandwich product `(A * B) * p * (A * B)̃` applies A first, then B.
-    /// So for `compose(self, other)` to apply self first, we compute `self * other`.
+    /// In PGA with the antisandwich transformation, motor composition uses
+    /// the geometric antiproduct (∨) to properly combine transformations.
     pub fn compose(&self, other: &Motor<T>) -> Motor<T> {
-        products::geometric_motor_motor(self, other)
+        products::antigeometric_motor_motor(self, other)
     }
 
     /// Inverse motor.
     ///
-    /// Uses the bulk norm squared (rotor part magnitude) for proper inversion.
+    /// Uses the weight norm squared (rotation part: e01² + e02² + e03² + e0123²)
+    /// for proper inversion. For a unit motor, this equals 1.
     pub fn inverse(&self) -> Self {
-        // Use bulk norm squared (s² + e23² + e31² + e12²) for motor inversion
         use crate::norm::DegenerateNormed;
-        let bn_sq = self.bulk_norm_squared();
+        let wn_sq = self.weight_norm_squared();
         let rev = self.reverse();
         Self::new_unchecked(
-            rev.s() / bn_sq,
-            rev.e23() / bn_sq,
-            rev.e31() / bn_sq,
-            rev.e12() / bn_sq,
-            rev.e01() / bn_sq,
-            rev.e02() / bn_sq,
-            rev.e03() / bn_sq,
-            rev.e0123() / bn_sq,
+            rev.s() / wn_sq,
+            rev.e23() / wn_sq,
+            rev.e31() / wn_sq,
+            rev.e12() / wn_sq,
+            rev.e01() / wn_sq,
+            rev.e02() / wn_sq,
+            rev.e03() / wn_sq,
+            rev.e0123() / wn_sq,
         )
     }
 
@@ -1256,6 +1256,109 @@ mod tests {
         assert!(relative_eq!(
             result.e0(),
             1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_translation_y() {
+        let origin = Point::<f64>::origin();
+        let t = Motor::<f64>::from_translation(0.0, -19.26, 0.0);
+
+        println!(
+            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            t.s(),
+            t.e23(),
+            t.e31(),
+            t.e12(),
+            t.e01(),
+            t.e02(),
+            t.e03(),
+            t.e0123()
+        );
+        println!(
+            "Origin: ({}, {}, {}, {})",
+            origin.e1(),
+            origin.e2(),
+            origin.e3(),
+            origin.e0()
+        );
+
+        let result = t.transform_point(&origin);
+
+        println!(
+            "Translated: ({}, {}, {}, {})",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Expected: (0, -19.26, 0) with w=1
+        assert!(relative_eq!(
+            result.e1(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e2(),
+            -19.26,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e3(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+    }
+
+    #[test]
+    fn motor_translation_z() {
+        let origin = Point::<f64>::origin();
+        let t = Motor::<f64>::from_translation(0.0, 0.0, 5.0);
+
+        println!(
+            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            t.s(),
+            t.e23(),
+            t.e31(),
+            t.e12(),
+            t.e01(),
+            t.e02(),
+            t.e03(),
+            t.e0123()
+        );
+
+        let result = t.transform_point(&origin);
+
+        println!(
+            "Translated: ({}, {}, {}, {})",
+            result.e1(),
+            result.e2(),
+            result.e3(),
+            result.e0()
+        );
+
+        // Expected: (0, 0, 5) with w=1
+        assert!(relative_eq!(
+            result.e1(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e2(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            result.e3(),
+            5.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));

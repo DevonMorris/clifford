@@ -50,6 +50,13 @@ mod generated;
 // Domain-specific extensions
 mod extensions;
 
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+mod nalgebra;
+
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
@@ -62,3 +69,10 @@ pub use generated::types::{
     BulkFlector, BulkMotor, IdealLine, IdealPlane, IdealPoint, UnitizedLine, UnitizedPlane,
     UnitizedPoint,
 };
+
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+pub use nalgebra::NalgebraConversionError;

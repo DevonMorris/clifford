@@ -475,9 +475,17 @@ impl<T: Float> Motor<T> {
     ///
     /// * `dx` - Translation in x direction
     /// * `dy` - Translation in y direction
+    ///
+    /// # Note
+    ///
+    /// In 2D PGA with our representation, the translation motor uses the formula:
+    /// `T = 1 - (dx/2)*e01 - (dy/2)*e02`
+    ///
+    /// This is different from 3D PGA due to the duality relationship between
+    /// points (vectors) and lines (bivectors) in 2D.
     #[inline]
     pub fn from_translation(dx: T, dy: T) -> Self {
-        Self::new(T::one(), T::zero(), dx / T::TWO, dy / T::TWO)
+        Self::new(T::one(), T::zero(), -dx / T::TWO, -dy / T::TWO)
     }
 
     /// Creates a motor for rotation around an arbitrary point.
@@ -514,8 +522,14 @@ impl<T: Float> Motor<T> {
 
     /// Composes two motors via geometric product: `self * other`.
     ///
-    /// In PGA, the sandwich product `(self * other) P (self * other)⁻¹`
-    /// applies `self` first, then `other`.
+    /// The resulting motor applies `other` first, then `self`. This follows
+    /// from the sandwich product expansion:
+    /// ```text
+    /// (self * other) * P * rev(self * other)
+    ///   = self * other * P * rev(other) * rev(self)
+    ///   = self * (other * P * rev(other)) * rev(self)
+    /// ```
+    /// So `other` transforms P first, then `self` transforms the result.
     #[inline]
     pub fn compose(&self, other: &Self) -> Self {
         products::geometric_motor_motor(self, other)
@@ -548,25 +562,49 @@ impl<T: Float> Motor<T> {
     /// For composed motors (rotation + translation), this is an approximation.
     #[inline]
     pub fn translation(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.e01() * T::TWO, self.e02() * T::TWO)
+        // Since from_translation uses -dx/2 and -dy/2, we negate to recover dx, dy
+        EuclideanVector::new(-self.e01() * T::TWO, -self.e02() * T::TWO)
     }
 
-    /// Transforms a point: `P' = M P M̃`.
+    /// Transforms a point using the dual sandwich formula.
     ///
-    /// This applies the rigid transformation represented by the motor to the point.
-    // TODO: Implement optimized formula like dim3 (generated sandwich has sign issues)
+    /// In 2D PGA with our vector-based point representation, the transformation
+    /// formula is: `P' = complement(M * complement(P) * rev(M))`
+    ///
+    /// This works because:
+    /// 1. Points (vectors, grade 1) are dual to lines (bivectors, grade 2)
+    /// 2. The motor sandwich naturally transforms bivectors correctly
+    /// 3. By complementing the point to a line, applying the sandwich, and
+    ///    complementing back, we get the correct point transformation
+    ///
+    /// This is analogous to how 3D PGA uses the antisandwich, but the 2D case
+    /// requires this explicit dual sandwich due to the algebra structure.
     #[inline]
-    pub fn transform_point(&self, _p: &Point<T>) -> Point<T> {
-        todo!("transform_point needs optimized formula - generated sandwich has issues")
+    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
+        // complement(P) for point P = x*e1 + y*e2 + w*e0
+        // gives line L = w*e12 + y*e01 - x*e02
+        let p_as_line = Line::new(p.e0(), p.e2(), -p.e1());
+
+        // Apply motor sandwich to the line
+        let transformed_line = products::sandwich_motor_line(self, &p_as_line);
+
+        // complement(L) for line L = a*e12 + b*e01 + c*e02
+        // gives point P = -c*e1 + b*e2 + a*e0
+        Point::new(
+            -transformed_line.e02(),
+            transformed_line.e01(),
+            transformed_line.e12(),
+        )
     }
 
-    /// Transforms a line: `L' = M L M̃`.
+    /// Transforms a line using the sandwich product: `L' = M * L * rev(M)`.
     ///
     /// This applies the rigid transformation to the line.
-    // TODO: Implement optimized formula like dim3 (generated sandwich has sign issues)
+    /// In 2D PGA, the regular sandwich product is used (unlike 3D PGA which uses
+    /// the antisandwich).
     #[inline]
-    pub fn transform_line(&self, _l: &Line<T>) -> Line<T> {
-        todo!("transform_line needs optimized formula - generated sandwich has issues")
+    pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
+        products::sandwich_motor_line(self, l)
     }
 
     /// Transforms a Euclidean 2D vector using this motor.
@@ -615,7 +653,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "transform_point needs optimized formula"]
     fn motor_identity_preserves_point() {
         let p: Point<f64> = Point::from_cartesian(3.0, 4.0);
         let m: Motor<f64> = Motor::identity();
@@ -626,7 +663,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "transform_point needs optimized formula"]
     fn motor_rotation_90_degrees() {
         let p = Point::from_cartesian(1.0, 0.0);
         let m = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
@@ -637,7 +673,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "transform_point needs optimized formula"]
     fn motor_translation() {
         let p = Point::from_cartesian(1.0, 2.0);
         let m = Motor::from_translation(3.0, 4.0);
@@ -648,14 +683,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "transform_point needs optimized formula"]
     fn motor_composition() {
         let p = Point::from_cartesian(1.0, 0.0);
 
         let rotation = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
         let translation = Motor::from_translation(1.0, 2.0);
-        let composed = rotation.compose(&translation);
 
+        // compose applies the second argument first, so:
+        // translation.compose(&rotation) means: rotate first, then translate
+        let composed = translation.compose(&rotation);
+
+        // (1, 0) -> rotate 90° -> (0, 1) -> translate (1, 2) -> (1, 3)
         let result = composed.transform_point(&p);
 
         assert!(abs_diff_eq!(result.x(), 1.0, epsilon = RELATIVE_EQ_EPS));
@@ -663,7 +701,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "transform_point needs optimized formula"]
     fn motor_inverse() {
         let p = Point::from_cartesian(3.0, 4.0);
         let m = Motor::from_rotation(0.5).compose(&Motor::from_translation(1.0, 2.0));

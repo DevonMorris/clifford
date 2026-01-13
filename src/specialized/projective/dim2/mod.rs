@@ -50,13 +50,20 @@ mod generated;
 // Domain-specific extensions
 mod extensions;
 
-// TODO: Add nalgebra integration
-// #[cfg(any(
-//     feature = "nalgebra-0_32",
-//     feature = "nalgebra-0_33",
-//     feature = "nalgebra-0_34"
-// ))]
-// mod nalgebra;
+// nalgebra integration
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+mod nalgebra;
+
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
+pub use self::nalgebra::NalgebraConversionError;
 
 // TODO: Add rerun visualization support
 // #[cfg(feature = "rerun-0_28")]
