@@ -1156,11 +1156,17 @@ impl<T: Float> Default for Scalar<T> {
 }
 #[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]
 pub type BulkFlector<T> = crate::wrappers::Bulk<Flector<T>>;
-#[doc = "An line in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like lines are represented in homogeneous coordinates. This type alias provides compile-time documentation that the line has been weight-normalized to standard form."]
+#[doc = "A unitized line (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized line has been weight-normalized to standard form, representing a finite (non-ideal) line."]
+pub type UnitizedLine<T> = crate::wrappers::Unitized<Line<T>>;
+#[doc = "An ideal line (weight ≈ 0).\n\nAn ideal line lies at infinity (has zero weight component). This is a constraint wrapper that verifies the line is ideal, not a normalization wrapper."]
 pub type IdealLine<T> = crate::wrappers::Ideal<Line<T>>;
 #[doc = "A bulk-normalized Motor (bulk norm = 1).\n\nFor a Motor to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Motor has been bulk-normalized."]
 pub type BulkMotor<T> = crate::wrappers::Bulk<Motor<T>>;
-#[doc = "An plane in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like planes are represented in homogeneous coordinates. This type alias provides compile-time documentation that the plane has been weight-normalized to standard form."]
+#[doc = "A unitized plane (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized plane has been weight-normalized to standard form, representing a finite (non-ideal) plane."]
+pub type UnitizedPlane<T> = crate::wrappers::Unitized<Plane<T>>;
+#[doc = "An ideal plane (weight ≈ 0).\n\nAn ideal plane lies at infinity (has zero weight component). This is a constraint wrapper that verifies the plane is ideal, not a normalization wrapper."]
 pub type IdealPlane<T> = crate::wrappers::Ideal<Plane<T>>;
-#[doc = "An point in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like points are represented in homogeneous coordinates. This type alias provides compile-time documentation that the point has been weight-normalized to standard form."]
+#[doc = "A unitized point (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized point has been weight-normalized to standard form, representing a finite (non-ideal) point."]
+pub type UnitizedPoint<T> = crate::wrappers::Unitized<Point<T>>;
+#[doc = "An ideal point (weight ≈ 0).\n\nAn ideal point lies at infinity (has zero weight component). This is a constraint wrapper that verifies the point is ideal, not a normalization wrapper."]
 pub type IdealPoint<T> = crate::wrappers::Ideal<Point<T>>;

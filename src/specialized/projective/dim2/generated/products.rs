@@ -767,25 +767,152 @@ pub fn scalar_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> T {
 pub fn scalar_scalar_scalar<T: Float>(a: &Scalar<T>, b: &Scalar<T>) -> T {
     a.s() * b.s()
 }
+#[doc = "Antigeometric product: Line ⊛ Point -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_line_point<T: Float>(a: &Line<T>, b: &Point<T>) -> Motor<T> {
+    Motor::new(
+        a.e12() * b.e0() - a.e01() * b.e2() + a.e02() * b.e1(),
+        -(a.e01() * b.e1()) - a.e02() * b.e2(),
+        -(a.e02() * b.e0()),
+        a.e01() * b.e0(),
+    )
+}
+#[doc = "Antigeometric product: Line ⊛ Scalar -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_line_scalar<T: Float>(a: &Line<T>, b: &Scalar<T>) -> Point<T> {
+    Point::new(a.e02() * b.s(), -(a.e01() * b.s()), T::zero())
+}
+#[doc = "Antigeometric product: Line ⊛ Trivector -> Line\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_line_trivector<T: Float>(a: &Line<T>, b: &Trivector<T>) -> Line<T> {
+    Line::new(a.e12() * b.e012(), a.e01() * b.e012(), a.e02() * b.e012())
+}
+#[doc = "Antigeometric product: Motor ⊛ Point -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_motor_point<T: Float>(a: &Motor<T>, b: &Point<T>) -> Motor<T> {
+    Motor::new(
+        a.e12() * b.e0() - a.e01() * b.e2() + a.e02() * b.e1(),
+        -(a.s() * b.e0()) - a.e01() * b.e1() - a.e02() * b.e2(),
+        -(a.e02() * b.e0()),
+        a.e01() * b.e0(),
+    )
+}
+#[doc = "Antigeometric product: Motor ⊛ Scalar -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_motor_scalar<T: Float>(a: &Motor<T>, b: &Scalar<T>) -> Point<T> {
+    Point::new(a.e02() * b.s(), -(a.e01() * b.s()), T::zero())
+}
+#[doc = "Antigeometric product: Motor ⊛ Trivector -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_motor_trivector<T: Float>(a: &Motor<T>, b: &Trivector<T>) -> Motor<T> {
+    Motor::new(
+        a.s() * b.e012(),
+        a.e12() * b.e012(),
+        a.e01() * b.e012(),
+        a.e02() * b.e012(),
+    )
+}
+#[doc = "Antigeometric product: Point ⊛ Line -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_point_line<T: Float>(a: &Point<T>, b: &Line<T>) -> Motor<T> {
+    Motor::new(
+        a.e1() * b.e02() - a.e2() * b.e01() + a.e0() * b.e12(),
+        a.e1() * b.e01() + a.e2() * b.e02(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "Antigeometric product: Point ⊛ Motor -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_point_motor<T: Float>(a: &Point<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new(
+        a.e1() * b.e02() - a.e2() * b.e01() + a.e0() * b.e12(),
+        a.e1() * b.e01() + a.e2() * b.e02() - a.e0() * b.s(),
+        a.e0() * b.e02(),
+        -(a.e0() * b.e01()),
+    )
+}
+#[doc = "Antigeometric product: Point ⊛ Scalar -> Line\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_point_scalar<T: Float>(a: &Point<T>, b: &Scalar<T>) -> Line<T> {
+    Line::new(-(a.e0() * b.s()), T::zero(), T::zero())
+}
+#[doc = "Antigeometric product: Point ⊛ Trivector -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_point_trivector<T: Float>(a: &Point<T>, b: &Trivector<T>) -> Point<T> {
+    Point::new(a.e1() * b.e012(), a.e2() * b.e012(), a.e0() * b.e012())
+}
+#[doc = "Antigeometric product: Scalar ⊛ Line -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_scalar_line<T: Float>(a: &Scalar<T>, b: &Line<T>) -> Point<T> {
+    Point::new(a.s() * b.e02(), -(a.s() * b.e01()), T::zero())
+}
+#[doc = "Antigeometric product: Scalar ⊛ Motor -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_scalar_motor<T: Float>(a: &Scalar<T>, b: &Motor<T>) -> Point<T> {
+    Point::new(a.s() * b.e02(), -(a.s() * b.e01()), T::zero())
+}
+#[doc = "Antigeometric product: Scalar ⊛ Point -> Line\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_scalar_point<T: Float>(a: &Scalar<T>, b: &Point<T>) -> Line<T> {
+    Line::new(-(a.s() * b.e0()), T::zero(), T::zero())
+}
+#[doc = "Antigeometric product: Scalar ⊛ Trivector -> Scalar\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_scalar_trivector<T: Float>(a: &Scalar<T>, b: &Trivector<T>) -> Scalar<T> {
+    Scalar::new(a.s() * b.e012())
+}
+#[doc = "Antigeometric product: Trivector ⊛ Line -> Line\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_trivector_line<T: Float>(a: &Trivector<T>, b: &Line<T>) -> Line<T> {
+    Line::new(a.e012() * b.e12(), a.e012() * b.e01(), a.e012() * b.e02())
+}
+#[doc = "Antigeometric product: Trivector ⊛ Motor -> Motor\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_trivector_motor<T: Float>(a: &Trivector<T>, b: &Motor<T>) -> Motor<T> {
+    Motor::new(
+        a.e012() * b.s(),
+        a.e012() * b.e12(),
+        a.e012() * b.e01(),
+        a.e012() * b.e02(),
+    )
+}
+#[doc = "Antigeometric product: Trivector ⊛ Point -> Point\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_trivector_point<T: Float>(a: &Trivector<T>, b: &Point<T>) -> Point<T> {
+    Point::new(a.e012() * b.e1(), a.e012() * b.e2(), a.e012() * b.e0())
+}
+#[doc = "Antigeometric product: Trivector ⊛ Scalar -> Scalar\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_trivector_scalar<T: Float>(a: &Trivector<T>, b: &Scalar<T>) -> Scalar<T> {
+    Scalar::new(a.e012() * b.s())
+}
+#[doc = "Antigeometric product: Trivector ⊛ Trivector -> Trivector\n\nDefined as complement(complement(a) * complement(b))."]
+#[inline]
+pub fn antigeometric_trivector_trivector<T: Float>(
+    a: &Trivector<T>,
+    b: &Trivector<T>,
+) -> Trivector<T> {
+    Trivector::new(a.e012() * b.e012())
+}
 #[doc = "Sandwich product: Motor * Point * rev(Motor) -> Point"]
 #[inline]
 pub fn sandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.s() * x.e1() * v.s() + v.e12() * x.e2() * v.s() + v.s() * x.e2() * v.e12()
-            - v.e12() * x.e1() * v.e12(),
-        -(v.s() * x.e1() * v.e12()) + v.s() * x.e2() * v.s()
-            - v.e12() * x.e2() * v.e12()
-            - v.e12() * x.e1() * v.s(),
-        -(v.e01() * x.e2() * v.e12())
-            - v.s() * x.e1() * v.e01()
-            - v.e01() * x.e1() * v.s()
+        -(v.e12() * x.e1() * v.e12())
+            + v.e12() * x.e2() * v.s()
+            + v.s() * x.e2() * v.e12()
+            + v.s() * x.e1() * v.s(),
+        -(v.e12() * x.e2() * v.e12()) - v.e12() * x.e1() * v.s() + v.s() * x.e2() * v.s()
+            - v.s() * x.e1() * v.e12(),
+        -(v.s() * x.e2() * v.e02()) - v.e01() * x.e2() * v.e12() + v.e12() * x.e1() * v.e02()
             - v.e12() * x.e2() * v.e01()
-            + v.e02() * x.e1() * v.e12()
-            - v.s() * x.e2() * v.e02()
-            + v.e12() * x.e1() * v.e02()
+            - v.s() * x.e1() * v.e01()
             - v.e02() * x.e2() * v.s()
-            + v.e12() * x.e0() * v.e12()
-            + v.s() * x.e0() * v.s(),
+            + v.e02() * x.e1() * v.e12()
+            + v.s() * x.e0() * v.s()
+            - v.e01() * x.e1() * v.s()
+            + v.e12() * x.e0() * v.e12(),
     )
 }
 #[doc = "Sandwich product: Motor * Line * rev(Motor) -> Line"]
@@ -793,186 +920,127 @@ pub fn sandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
 pub fn sandwich_motor_line<T: Float>(v: &Motor<T>, x: &Line<T>) -> Line<T> {
     Line::new(
         v.s() * x.e12() * v.s() + v.e12() * x.e12() * v.e12(),
-        v.e12() * x.e12() * v.e01() + v.e01() * x.e12() * v.e12() - v.e02() * x.e12() * v.s()
-            + v.e12() * x.e02() * v.s()
+        v.e12() * x.e12() * v.e01() + v.e01() * x.e12() * v.e12() + v.s() * x.e02() * v.e12()
+            - v.e02() * x.e12() * v.s()
             + v.s() * x.e01() * v.s()
             - v.s() * x.e12() * v.e02()
-            + v.s() * x.e02() * v.e12()
-            - v.e12() * x.e01() * v.e12(),
-        v.e12() * x.e12() * v.e02()
-            + v.e02() * x.e12() * v.e12()
-            + v.s() * x.e02() * v.s()
-            + v.s() * x.e12() * v.e01()
+            - v.e12() * x.e01() * v.e12()
+            + v.e12() * x.e02() * v.s(),
+        -(v.e12() * x.e02() * v.e12()) - v.s() * x.e01() * v.e12()
             + v.e01() * x.e12() * v.s()
+            + v.s() * x.e02() * v.s()
+            + v.e12() * x.e12() * v.e02()
             - v.e12() * x.e01() * v.s()
-            - v.s() * x.e01() * v.e12()
-            - v.e12() * x.e02() * v.e12(),
+            + v.s() * x.e12() * v.e01()
+            + v.e02() * x.e12() * v.e12(),
     )
 }
 #[doc = "Sandwich product: Motor * Motor * rev(Motor) -> Motor"]
 #[inline]
 pub fn sandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        v.s() * x.e12() * v.e12() - v.e12() * x.e12() * v.s()
-            + v.e12() * x.s() * v.e12()
-            + v.s() * x.s() * v.s(),
-        -(v.s() * x.s() * v.e12())
+        v.e12() * x.s() * v.e12() + v.s() * x.s() * v.s() + v.s() * x.e12() * v.e12()
+            - v.e12() * x.e12() * v.s(),
+        v.e12() * x.e12() * v.e12() - v.s() * x.s() * v.e12()
             + v.s() * x.e12() * v.s()
-            + v.e12() * x.s() * v.s()
-            + v.e12() * x.e12() * v.e12(),
-        v.e12() * x.e12() * v.e01() - v.s() * x.s() * v.e01() - v.e12() * x.e01() * v.e12()
-            + v.e01() * x.s() * v.s()
-            + v.e01() * x.e12() * v.e12()
-            + v.e12() * x.e02() * v.s()
+            + v.e12() * x.s() * v.s(),
+        v.e12() * x.e02() * v.s() + v.s() * x.e02() * v.e12() - v.e12() * x.s() * v.e02()
             + v.e02() * x.s() * v.e12()
             - v.e02() * x.e12() * v.s()
-            + v.s() * x.e01() * v.s()
+            + v.e01() * x.e12() * v.e12()
             - v.s() * x.e12() * v.e02()
-            - v.e12() * x.s() * v.e02()
-            + v.s() * x.e02() * v.e12(),
-        v.e01() * x.e12() * v.s()
-            + v.e12() * x.s() * v.e01()
+            + v.s() * x.e01() * v.s()
+            + v.e12() * x.e12() * v.e01()
+            - v.e12() * x.e01() * v.e12()
+            + v.e01() * x.s() * v.s()
+            - v.s() * x.s() * v.e01(),
+        v.e02() * x.s() * v.s()
             + v.s() * x.e12() * v.e01()
             + v.s() * x.e02() * v.s()
-            - v.e12() * x.e02() * v.e12()
-            + v.e02() * x.s() * v.s()
-            - v.s() * x.e01() * v.e12()
+            + v.e01() * x.e12() * v.s()
             + v.e12() * x.e12() * v.e02()
             - v.e01() * x.s() * v.e12()
+            + v.e02() * x.e12() * v.e12()
+            - v.e12() * x.e02() * v.e12()
             - v.s() * x.s() * v.e02()
-            - v.e12() * x.e01() * v.s()
-            + v.e02() * x.e12() * v.e12(),
+            - v.s() * x.e01() * v.e12()
+            + v.e12() * x.s() * v.e01()
+            - v.e12() * x.e01() * v.s(),
     )
 }
 #[doc = "Antisandwich product: Motor ⊛ Point ⊛ antirev(Motor) -> Point\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_motor_point<T: Float>(v: &Motor<T>, x: &Point<T>) -> Point<T> {
     Point::new(
-        v.e02() * x.e1() * v.e02()
-            - v.e12() * x.e1() * v.e12()
-            - v.e12() * x.e2() * v.s()
+        -(v.s() * x.e0() * v.e01()) + v.e02() * x.e1() * v.e02()
+            - v.e02() * x.e2() * v.e01()
             - v.e01() * x.e1() * v.e01()
             - v.e01() * x.e0() * v.s()
-            + v.s() * x.e1() * v.s()
             + v.e02() * x.e0() * v.e12()
-            - v.e02() * x.e2() * v.e01()
-            - v.s() * x.e2() * v.e12()
-            + v.e12() * x.e0() * v.e02()
-            - v.e01() * x.e2() * v.e02(),
-        v.s() * x.e1() * v.e12() - v.e12() * x.e2() * v.e12() + v.s() * x.e2() * v.s()
-            - v.e02() * x.e0() * v.s()
-            + v.e12() * x.e1() * v.s()
-            - v.e12() * x.e0() * v.e01()
-            - v.e01() * x.e0() * v.e12()
-            - v.e02() * x.e2() * v.e02()
+            - v.e01() * x.e2() * v.e02()
+            + v.e12() * x.e0() * v.e02(),
+        -(v.e02() * x.e0() * v.s())
             - v.e01() * x.e1() * v.e02()
+            - v.e02() * x.e2() * v.e02()
             - v.e02() * x.e1() * v.e01()
-            + v.e01() * x.e2() * v.e01(),
-        v.s() * x.e1() * v.e01() + v.e12() * x.e1() * v.e02()
-            - v.e12() * x.e2() * v.e01()
-            - v.e01() * x.e2() * v.e12()
-            + v.e02() * x.e1() * v.e12()
-            + v.s() * x.e2() * v.e02()
-            + v.e02() * x.e2() * v.s()
-            - v.e02() * x.e0() * v.e02()
-            - v.e01() * x.e0() * v.e01()
-            + v.e12() * x.e0() * v.e12()
-            + v.e01() * x.e1() * v.s(),
+            - v.e12() * x.e0() * v.e01()
+            + v.e01() * x.e2() * v.e01()
+            - v.s() * x.e0() * v.e02()
+            - v.e01() * x.e0() * v.e12(),
+        -(v.e01() * x.e0() * v.e01()) - v.e02() * x.e0() * v.e02(),
     )
 }
 #[doc = "Antisandwich product: Motor ⊛ Line ⊛ antirev(Motor) -> Line\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_motor_line<T: Float>(v: &Motor<T>, x: &Line<T>) -> Line<T> {
     Line::new(
-        v.e12() * x.e01() * v.e01() - v.e01() * x.e12() * v.e01() + v.e01() * x.e01() * v.e12()
+        -(v.e02() * x.e01() * v.s())
+            + v.e01() * x.e01() * v.e12()
+            + v.e01() * x.e02() * v.s()
+            + v.e02() * x.e02() * v.e12()
             - v.s() * x.e01() * v.e02()
+            + v.s() * x.e02() * v.e01()
+            + v.e12() * x.e01() * v.e01()
             + v.e12() * x.e02() * v.e02()
             - v.e02() * x.e12() * v.e02()
-            + v.e12() * x.e12() * v.e12()
-            + v.e02() * x.e02() * v.e12()
-            + v.s() * x.e02() * v.e01(),
-        -(v.s() * x.e02() * v.e12())
-            + v.s() * x.e01() * v.s()
-            + v.s() * x.e12() * v.e02()
-            + v.e01() * x.e12() * v.e12()
-            + v.e12() * x.e12() * v.e01()
-            - v.e12() * x.e01() * v.e12()
-            + v.e01() * x.e01() * v.e01()
-            + v.e01() * x.e02() * v.e02()
-            + v.e02() * x.e12() * v.s()
-            - v.e12() * x.e02() * v.s()
-            - v.e02() * x.e01() * v.e02()
-            + v.e02() * x.e02() * v.e01(),
-        v.e01() * x.e01() * v.e02() + v.s() * x.e02() * v.s() - v.e01() * x.e02() * v.e01()
-            + v.e02() * x.e02() * v.e02()
-            - v.e12() * x.e02() * v.e12()
-            + v.e02() * x.e12() * v.e12()
-            - v.s() * x.e12() * v.e01()
-            + v.s() * x.e01() * v.e12()
-            + v.e12() * x.e12() * v.e02()
-            - v.e01() * x.e12() * v.s()
-            + v.e12() * x.e01() * v.s()
-            + v.e02() * x.e01() * v.e01(),
+            - v.e01() * x.e12() * v.e01(),
+        v.e01() * x.e01() * v.e01() + v.e02() * x.e02() * v.e01() + v.e01() * x.e02() * v.e02()
+            - v.e02() * x.e01() * v.e02(),
+        v.e02() * x.e02() * v.e02() + v.e01() * x.e01() * v.e02() + v.e02() * x.e01() * v.e01()
+            - v.e01() * x.e02() * v.e01(),
     )
 }
 #[doc = "Antisandwich product: Motor ⊛ Motor ⊛ antirev(Motor) -> Motor\n\nUses the geometric antiproduct and antireverse. In PGA, use this\ninstead of the regular sandwich for correct motor transformations."]
 #[inline]
 pub fn antisandwich_motor_motor<T: Float>(v: &Motor<T>, x: &Motor<T>) -> Motor<T> {
     Motor::new(
-        v.s() * x.e02() * v.e02() - v.e12() * x.e12() * v.s() - v.e12() * x.e02() * v.e01()
-            + v.e02() * x.e12() * v.e01()
-            - v.e02() * x.e02() * v.s()
-            + v.e02() * x.s() * v.e02()
-            - v.e01() * x.e12() * v.e02()
-            + v.e12() * x.e01() * v.e02()
-            + v.e01() * x.e02() * v.e12()
-            + v.s() * x.s() * v.s()
-            + v.s() * x.e12() * v.e12()
+        -(v.e02() * x.e01() * v.e12()) + v.e01() * x.e02() * v.e12() + v.s() * x.e01() * v.e01()
+            - v.e12() * x.e02() * v.e01()
+            + v.s() * x.e02() * v.e02()
             + v.e01() * x.s() * v.e01()
-            + v.s() * x.e01() * v.e01()
-            + v.e12() * x.s() * v.e12()
+            + v.e02() * x.s() * v.e02()
+            - v.e02() * x.e02() * v.s()
+            + v.e12() * x.e01() * v.e02()
             - v.e01() * x.e01() * v.s()
-            - v.e02() * x.e01() * v.e12(),
-        -(v.s() * x.e01() * v.e02()) - v.e01() * x.s() * v.e02()
-            + v.e02() * x.s() * v.e01()
-            + v.e12() * x.e12() * v.e12()
-            - v.s() * x.s() * v.e12()
+            - v.e01() * x.e12() * v.e02()
+            + v.e02() * x.e12() * v.e01(),
+        v.e01() * x.e02() * v.s() - v.s() * x.e01() * v.e02()
+            + v.e01() * x.e01() * v.e12()
             + v.s() * x.e02() * v.e01()
+            - v.e02() * x.e12() * v.e02()
+            - v.e01() * x.s() * v.e02()
             + v.e12() * x.e02() * v.e02()
             - v.e01() * x.e12() * v.e01()
-            - v.e02() * x.e12() * v.e02()
+            - v.e02() * x.e01() * v.s()
             + v.e02() * x.e02() * v.e12()
             + v.e12() * x.e01() * v.e01()
-            + v.e01() * x.e01() * v.e12(),
-        v.e01() * x.e12() * v.e12() - v.s() * x.s() * v.e01() + v.e01() * x.e02() * v.e02()
-            - v.e02() * x.s() * v.e12()
-            + v.e02() * x.e12() * v.s()
-            + v.e01() * x.e01() * v.e01()
-            - v.e12() * x.e01() * v.e12()
+            + v.e02() * x.s() * v.e01(),
+        -(v.e02() * x.e01() * v.e02())
             + v.e02() * x.e02() * v.e01()
-            + v.s() * x.e01() * v.s()
-            - v.e12() * x.e02() * v.s()
-            + v.e01() * x.s() * v.s()
-            - v.s() * x.e02() * v.e12()
-            + v.e12() * x.s() * v.e02()
-            + v.s() * x.e12() * v.e02()
-            + v.e12() * x.e12() * v.e01()
-            - v.e02() * x.e01() * v.e02(),
-        -(v.e01() * x.e02() * v.e01()) + v.e02() * x.e02() * v.e02()
-            - v.e12() * x.e02() * v.e12()
-            - v.s() * x.s() * v.e02()
-            + v.e12() * x.e01() * v.s()
-            + v.e02() * x.e01() * v.e01()
-            + v.s() * x.e02() * v.s()
-            + v.e01() * x.s() * v.e12()
-            + v.s() * x.e01() * v.e12()
-            - v.e01() * x.e12() * v.s()
-            + v.e01() * x.e01() * v.e02()
-            + v.e02() * x.s() * v.s()
-            - v.e12() * x.s() * v.e01()
-            + v.e02() * x.e12() * v.e12()
-            + v.e12() * x.e12() * v.e02()
-            - v.s() * x.e12() * v.e01(),
+            + v.e01() * x.e02() * v.e02()
+            + v.e01() * x.e01() * v.e01(),
+        v.e02() * x.e02() * v.e02() + v.e01() * x.e01() * v.e02() - v.e01() * x.e02() * v.e01()
+            + v.e02() * x.e01() * v.e01(),
     )
 }
 #[doc = "Reverses the Line (negates grades where k(k-1)/2 is odd)."]

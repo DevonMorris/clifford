@@ -67,4 +67,4 @@ pub use generated::products;
 pub use generated::types::{Line, Motor, Point, Scalar, Trivector};
 
 // Re-export wrapper type aliases
-pub use generated::types::{BulkMotor, IdealLine, IdealPoint};
+pub use generated::types::{BulkMotor, IdealLine, IdealPoint, UnitizedLine, UnitizedPoint};
