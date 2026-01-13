@@ -1056,6 +1056,8 @@ impl<'a> TraitsGenerator<'a> {
         let add_sub_tests = self.generate_add_sub_verification_tests_raw();
         let geometric_tests = self.generate_geometric_verification_tests_raw();
         let exterior_tests = self.generate_exterior_verification_tests_raw();
+        let sandwich_tests = self.generate_sandwich_verification_tests_raw();
+        let antisandwich_tests = self.generate_antisandwich_verification_tests_raw();
 
         format!(
             r#"
@@ -1075,12 +1077,14 @@ mod verification_tests {{
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{geometric}{exterior}}}
+{add_sub}{geometric}{exterior}{sandwich}{antisandwich}}}
 "#,
             sig = signature_name,
             add_sub = add_sub_tests,
             geometric = geometric_tests,
             exterior = exterior_tests,
+            sandwich = sandwich_tests,
+            antisandwich = antisandwich_tests,
         )
     }
 
@@ -1284,6 +1288,206 @@ mod verification_tests {{
                 )
             })
             .collect()
+    }
+
+    /// Generates sandwich verification tests comparing stepwise vs combined formula.
+    ///
+    /// For each versor and target combination, generates a test that compares:
+    /// - Stepwise: geometric(geometric(v, x), reverse(v))
+    /// - Combined: sandwich_versor_target(v, x)
+    fn generate_sandwich_verification_tests_raw(&self) -> String {
+        let mut tests = String::new();
+
+        for versor_type in &self.spec.types {
+            // Skip non-versors and aliases
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    // Use all types as potential targets
+                    self.spec
+                        .types
+                        .iter()
+                        .filter(|t| t.alias_of.is_none())
+                        .map(|t| t.name.clone())
+                        .collect()
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                let versor_name = &versor_type.name;
+                let versor_lower = versor_name.to_lowercase();
+
+                for target_name in &targets {
+                    let target_lower = target_name.to_lowercase();
+
+                    // Find the intermediate type for v * x
+                    let intermediate_entry = self.spec.products.geometric.iter().find(|e| {
+                        e.lhs == *versor_name && e.rhs == *target_name
+                    });
+
+                    // Find the final type for intermediate * rev(v)
+                    let intermediate_type = match intermediate_entry {
+                        Some(e) => &e.output,
+                        None => continue, // Skip if no geometric product exists
+                    };
+
+                    let final_entry = self.spec.products.geometric.iter().find(|e| {
+                        e.lhs == *intermediate_type && e.rhs == *versor_name
+                    });
+
+                    let final_type = match final_entry {
+                        Some(e) => &e.output,
+                        None => continue, // Skip if no final product exists
+                    };
+
+                    let intermediate_lower = intermediate_type.to_lowercase();
+                    let signature_name = self.generate_signature_name();
+
+                    tests.push_str(&format!(
+                        r#"
+    proptest! {{
+        #[test]
+        fn sandwich_{versor_lower}_{target_lower}_stepwise_equals_combined(
+            v in any::<{versor}<f64>>(),
+            x in any::<{target}<f64>>()
+        ) {{
+            // Stepwise: v * x * rev(v)
+            let vx: {intermediate}<f64> = geometric_{versor_lower}_{target_lower}(&v, &x);
+            let v_rev = v.reverse();
+            let stepwise: {stepwise_out}<f64> = geometric_{intermediate_lower}_{versor_lower}(&vx, &v_rev);
+
+            // Combined formula
+            let combined: {target}<f64> = sandwich_{versor_lower}_{target_lower}(&v, &x);
+
+            // Convert to Multivector for comparison (handles different output types)
+            let stepwise_mv: Multivector<f64, {sig}> = stepwise.into();
+            let combined_mv: Multivector<f64, {sig}> = combined.into();
+
+            prop_assert!(
+                relative_eq!(stepwise_mv, combined_mv, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sandwich stepwise vs combined mismatch:\n  stepwise={{:?}}\n  combined={{:?}}",
+                stepwise_mv, combined_mv
+            );
+        }}
+    }}
+"#,
+                        versor_lower = versor_lower,
+                        target_lower = target_lower,
+                        versor = versor_name,
+                        target = target_name,
+                        intermediate = intermediate_type,
+                        intermediate_lower = intermediate_lower,
+                        stepwise_out = final_type,
+                        sig = signature_name,
+                    ));
+                }
+            }
+        }
+
+        tests
+    }
+
+    /// Generates antisandwich verification tests comparing stepwise vs combined formula.
+    ///
+    /// For each versor and target combination, generates a test that compares:
+    /// - Stepwise: antigeometric(antigeometric(v, x), antireverse(v))
+    /// - Combined: antisandwich_versor_target(v, x)
+    fn generate_antisandwich_verification_tests_raw(&self) -> String {
+        let mut tests = String::new();
+
+        for versor_type in &self.spec.types {
+            // Skip non-versors and aliases
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    // Use all types as potential targets
+                    self.spec
+                        .types
+                        .iter()
+                        .filter(|t| t.alias_of.is_none())
+                        .map(|t| t.name.clone())
+                        .collect()
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                let versor_name = &versor_type.name;
+                let versor_lower = versor_name.to_lowercase();
+
+                for target_name in &targets {
+                    let target_lower = target_name.to_lowercase();
+
+                    // Find the intermediate type for v ⊛ x (antigeometric)
+                    let intermediate_entry = self.spec.products.antigeometric.iter().find(|e| {
+                        e.lhs == *versor_name && e.rhs == *target_name
+                    });
+
+                    // Find the final type for intermediate ⊛ antirev(v)
+                    let intermediate_type = match intermediate_entry {
+                        Some(e) => &e.output,
+                        None => continue, // Skip if no antigeometric product exists
+                    };
+
+                    let final_entry = self.spec.products.antigeometric.iter().find(|e| {
+                        e.lhs == *intermediate_type && e.rhs == *versor_name
+                    });
+
+                    let final_type = match final_entry {
+                        Some(e) => &e.output,
+                        None => continue, // Skip if no final product exists
+                    };
+
+                    let intermediate_lower = intermediate_type.to_lowercase();
+                    let signature_name = self.generate_signature_name();
+
+                    tests.push_str(&format!(
+                        r#"
+    proptest! {{
+        #[test]
+        fn antisandwich_{versor_lower}_{target_lower}_stepwise_equals_combined(
+            v in any::<{versor}<f64>>(),
+            x in any::<{target}<f64>>()
+        ) {{
+            // Stepwise: v ⊛ x ⊛ antirev(v)
+            let vx: {intermediate}<f64> = antigeometric_{versor_lower}_{target_lower}(&v, &x);
+            let v_antirev = v.antireverse();
+            let stepwise: {stepwise_out}<f64> = antigeometric_{intermediate_lower}_{versor_lower}(&vx, &v_antirev);
+
+            // Combined formula
+            let combined: {target}<f64> = antisandwich_{versor_lower}_{target_lower}(&v, &x);
+
+            // Convert to Multivector for comparison (handles different output types)
+            let stepwise_mv: Multivector<f64, {sig}> = stepwise.into();
+            let combined_mv: Multivector<f64, {sig}> = combined.into();
+
+            prop_assert!(
+                relative_eq!(stepwise_mv, combined_mv, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antisandwich stepwise vs combined mismatch:\n  stepwise={{:?}}\n  combined={{:?}}",
+                stepwise_mv, combined_mv
+            );
+        }}
+    }}
+"#,
+                        versor_lower = versor_lower,
+                        target_lower = target_lower,
+                        versor = versor_name,
+                        target = target_name,
+                        intermediate = intermediate_type,
+                        intermediate_lower = intermediate_lower,
+                        stepwise_out = final_type,
+                        sig = signature_name,
+                    ));
+                }
+            }
+        }
+
+        tests
     }
 }
 
