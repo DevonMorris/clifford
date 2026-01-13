@@ -417,6 +417,102 @@ impl ProductTable {
         (sign, complement_blade)
     }
 
+    /// Computes the exterior (wedge) product of two basis blades.
+    ///
+    /// The exterior product `a ∧ b`:
+    /// - Is zero if the blades share any basis vectors (a & b != 0)
+    /// - Otherwise equals `a | b` with a sign from reordering
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is 0 if blades overlap, or ±1 from reordering
+    /// - `result` is the blade index of the product
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::euclidean(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // e1 ∧ e2 = e12
+    /// let (sign, result) = table.exterior(1, 2);
+    /// assert_eq!(sign, 1);
+    /// assert_eq!(result, 3);
+    ///
+    /// // e1 ∧ e1 = 0 (same basis vector)
+    /// let (sign, result) = table.exterior(1, 1);
+    /// assert_eq!(sign, 0);
+    /// ```
+    pub fn exterior(&self, a: usize, b: usize) -> (i8, usize) {
+        // Exterior product is zero if blades share any basis vectors
+        if a & b != 0 {
+            return (0, 0);
+        }
+
+        // Result blade is the union of basis vectors
+        let result = a | b;
+
+        // Sign from reordering basis vectors into canonical order
+        let sign = self.exterior_sign(a, b);
+
+        (sign, result)
+    }
+
+    /// Computes the regressive (meet) product of two basis blades.
+    ///
+    /// The regressive product is defined as: `a ∨ b = ∁(∁a ∧ ∁b)`
+    /// where `∁` is the right complement.
+    ///
+    /// This is the dual of the exterior product - while the exterior product
+    /// computes the "join" (smallest subspace containing both), the regressive
+    /// product computes the "meet" (intersection).
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the regressive product
+    ///
+    /// Note: The sign may be 0 if the product vanishes.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::pga(2); // 2D PGA: Cl(2,0,1)
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // In 2D PGA, Line (grade 2) ∨ Line (grade 2) = Point (grade 1)
+    /// // Result grade = 2 + 2 - 3 = 1
+    /// let e12 = 0b011; // grade 2 blade
+    /// let e01 = 0b101; // grade 2 blade
+    /// let (sign, result) = table.regressive(e12, e01);
+    /// assert_ne!(sign, 0, "regressive product should be non-zero");
+    /// ```
+    pub fn regressive(&self, a: usize, b: usize) -> (i8, usize) {
+        // Get complements
+        let (sign_ca, comp_a) = self.complement(a);
+        let (sign_cb, comp_b) = self.complement(b);
+
+        // Exterior product of complements
+        let (sign_ext, ext_result) = self.exterior(comp_a, comp_b);
+        if sign_ext == 0 {
+            return (0, 0);
+        }
+
+        // Complement of the result
+        let (sign_result, result) = self.complement(ext_result);
+
+        // Total sign
+        let total_sign = sign_ca * sign_cb * sign_ext * sign_result;
+
+        (total_sign, result)
+    }
+
     /// Computes the sign of the exterior product of two non-overlapping blades.
     ///
     /// For blades that don't share basis vectors, this is the sign from
@@ -740,4 +836,65 @@ mod tests {
         // e123 ⊛ e1 = e1 (identity property)
         assert_eq!(table.antiproduct(antiscalar, e1), (1, e1));
     }
+}
+
+#[test]
+fn debug_regressive_2d_pga() {
+    // 2D PGA: Cl(2,0,1)
+    let algebra = Algebra::pga(2);
+    let table = ProductTable::new(&algebra);
+
+    println!("dim = {}", algebra.dim());
+    println!("num_blades = {}", algebra.num_blades());
+
+    // Line blades in 2D PGA: e12=3, e01=5, e02=6
+    // Point blades: e1=1, e2=2, e0=4
+
+    // Test complement
+    let (sign_e12, comp_e12) = table.complement(3);
+    println!("complement(e12=3) = {} * {}", sign_e12, comp_e12);
+
+    let (sign_e01, comp_e01) = table.complement(5);
+    println!("complement(e01=5) = {} * {}", sign_e01, comp_e01);
+
+    let (sign_e02, comp_e02) = table.complement(6);
+    println!("complement(e02=6) = {} * {}", sign_e02, comp_e02);
+
+    // Test exterior
+    let (ext_sign, ext_result) = table.exterior(comp_e12, comp_e01);
+    println!(
+        "exterior({}, {}) = {} * {}",
+        comp_e12, comp_e01, ext_sign, ext_result
+    );
+
+    let (ext_sign2, ext_result2) = table.exterior(comp_e12, comp_e02);
+    println!(
+        "exterior({}, {}) = {} * {}",
+        comp_e12, comp_e02, ext_sign2, ext_result2
+    );
+
+    // Test regressive
+    let (reg_sign, reg_result) = table.regressive(3, 5);
+    println!("regressive(e12=3, e01=5) = {} * {}", reg_sign, reg_result);
+
+    let (reg_sign, reg_result) = table.regressive(3, 6);
+    println!("regressive(e12=3, e02=6) = {} * {}", reg_sign, reg_result);
+
+    let (reg_sign, reg_result) = table.regressive(5, 6);
+    println!("regressive(e01=5, e02=6) = {} * {}", reg_sign, reg_result);
+
+    // Expected: Line ∨ Line should give a non-zero Point
+    assert_ne!(reg_sign, 0, "Line ∨ Line should be non-zero");
+}
+
+#[test]
+fn debug_translation_products() {
+    // 2D PGA: Cl(2,0,1)
+    let algebra = Algebra::pga(2);
+    let table = ProductTable::new(&algebra);
+
+    // e01 = 5, e1 = 1, e0 = 4, s = 0
+    println!("geometric(e01=5, e1=1) = {:?}", table.geometric(5, 1)); // should give e0?
+    println!("geometric(e1=1, e01=5) = {:?}", table.geometric(1, 5));
+    println!("geometric(e0=4, s=0) = {:?}", table.geometric(4, 0));
 }

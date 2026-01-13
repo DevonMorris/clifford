@@ -211,12 +211,34 @@ pub fn infer_output_grades_precise(
 
     for &a in &lhs_blades {
         for &b in &rhs_blades {
-            let (sign, result) = table.geometric(a, b);
+            // For products with specialized computation, use the appropriate method
+            let (sign, result_grade) = match product_type {
+                ProductType::Regressive => {
+                    // Regressive product uses complement-based formula
+                    let (sign, result) = table.regressive(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Exterior => {
+                    // Exterior product has its own method
+                    let (sign, result) = table.exterior(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Antigeometric | ProductType::Antiscalar => {
+                    // Antiproducts use the anti-metric
+                    let (sign, result) = table.antiproduct(a, b);
+                    (sign, grade(result))
+                }
+                _ => {
+                    // All other products derive from the geometric product
+                    let (sign, result) = table.geometric(a, b);
+                    (sign, grade(result))
+                }
+            };
+
             if sign == 0 {
                 continue;
             }
 
-            let result_grade = grade(result);
             let ga = grade(a);
             let gb = grade(b);
 
@@ -224,7 +246,7 @@ pub fn infer_output_grades_precise(
             let include = match product_type {
                 ProductType::Geometric => true,
                 ProductType::Exterior => {
-                    // Outer product: only grade ga + gb terms
+                    // Already filtered by exterior method, but verify grade
                     result_grade == ga + gb
                 }
                 ProductType::Inner => {
@@ -240,16 +262,15 @@ pub fn infer_output_grades_precise(
                     gb <= ga && result_grade == ga - gb
                 }
                 ProductType::Regressive => {
-                    // Regressive product: (a* ∧ b*)* - result grade = ga + gb - dim
-                    let dim = algebra.dim();
-                    ga + gb >= dim && result_grade == ga + gb - dim
+                    // Already computed correctly by regressive method
+                    true
                 }
                 ProductType::Scalar => {
                     // Scalar product: only grade 0 terms
                     result_grade == 0
                 }
                 ProductType::Antigeometric => {
-                    // Antigeometric: same grade structure as geometric
+                    // Already computed by antiproduct, include all
                     true
                 }
                 ProductType::Antiscalar => {

@@ -8,7 +8,9 @@ use quote::{format_ident, quote};
 
 #[cfg(test)]
 use crate::algebra::geometric_grades;
-use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
+#[cfg(test)]
+use crate::algebra::outer_grade;
+use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade};
 use crate::spec::{AlgebraSpec, ProductEntry, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintSimplifier, ExpressionSimplifier, ProductKind as SymbolicProductKind,
@@ -617,6 +619,9 @@ impl<'a> ProductGenerator<'a> {
     }
 
     /// Generates a regressive product from a product entry.
+    ///
+    /// Uses term-based generation since regressive products use the complement-based
+    /// formula `a ∨ b = ∁(∁a ∧ ∁b)` which requires the specialized table method.
     fn generate_regressive_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
         let type_a = self.find_type(&entry.lhs)?;
         let type_b = self.find_type(&entry.rhs)?;
@@ -632,8 +637,17 @@ impl<'a> ProductGenerator<'a> {
             entry.rhs.to_lowercase()
         );
 
-        let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Regressive);
+        // Generate field expressions using term-based computation
+        // This uses table.regressive() which correctly computes ∁(∁a ∧ ∁b)
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|field| {
+                let terms =
+                    self.compute_terms(type_a, type_b, field.blade_index, ProductKind::Regressive);
+                self.generate_expression(&terms)
+            })
+            .collect();
 
         let doc = format!(
             "Regressive product (meet): {} ∨ {} -> {}",
@@ -1059,22 +1073,26 @@ impl<'a> ProductGenerator<'a> {
                 let a_blade = field_a.blade_index;
                 let b_blade = field_b.blade_index;
 
-                let (sign, result) = self.table.geometric(a_blade, b_blade);
+                // Use specialized table methods for products that need them
+                let (sign, result) = match kind {
+                    ProductKind::Exterior => self.table.exterior(a_blade, b_blade),
+                    ProductKind::Regressive => self.table.regressive(a_blade, b_blade),
+                    ProductKind::Antigeometric | ProductKind::Antiscalar => {
+                        self.table.antiproduct(a_blade, b_blade)
+                    }
+                    _ => self.table.geometric(a_blade, b_blade),
+                };
 
                 if result != result_blade || sign == 0 {
                     continue;
                 }
 
-                // Filter based on product kind
+                // Filter based on product kind (for products derived from geometric)
                 let include = match kind {
                     ProductKind::Geometric => true,
                     ProductKind::Exterior => {
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        outer_grade(a_grade, b_grade, self.algebra.dim())
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false)
+                        // Already computed correctly by exterior method
+                        true
                     }
                     ProductKind::Interior => {
                         // Interior product: result grade = |ga - gb|
@@ -1099,17 +1117,17 @@ impl<'a> ProductGenerator<'a> {
                         b_grade <= a_grade && result_grade == a_grade - b_grade
                     }
                     ProductKind::Regressive => {
-                        // Regressive (meet): ga + gb - dim when ga + gb >= dim
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        let dim = self.algebra.dim();
-                        a_grade + b_grade >= dim && result_grade == a_grade + b_grade - dim
+                        // Already computed correctly by regressive method
+                        true
                     }
                     ProductKind::Scalar => result_blade == 0,
-                    ProductKind::Antigeometric | ProductKind::Antiscalar => {
-                        // Antiproducts use table.antiproduct() instead - handled separately
-                        false
+                    ProductKind::Antigeometric => {
+                        // Already computed by antiproduct, include all
+                        true
+                    }
+                    ProductKind::Antiscalar => {
+                        // Antiscalar: only grade dim terms
+                        Blade::from_index(result_blade).grade() == self.algebra.dim()
                     }
                 };
 
