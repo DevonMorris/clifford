@@ -1286,7 +1286,7 @@ mod tests {
     use crate::spec::parse_spec;
 
     #[test]
-    fn generates_add_impl() {
+    fn symbolica_generates_add_impl() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1299,7 +1299,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_sub_impl() {
+    fn symbolica_generates_sub_impl() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1312,7 +1312,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_neg_impl() {
+    fn symbolica_generates_neg_impl() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1325,7 +1325,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_scalar_mul() {
+    fn symbolica_generates_scalar_mul() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1341,7 +1341,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_geometric_mul() {
+    fn symbolica_generates_geometric_mul() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1355,7 +1355,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_exterior() {
+    fn symbolica_generates_exterior() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1370,7 +1370,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_approx_impls() {
+    fn symbolica_generates_approx_impls() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -1385,7 +1385,7 @@ mod tests {
     }
 
     #[test]
-    fn generates_arbitrary_impls() {
+    fn symbolica_generates_arbitrary_impls() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);

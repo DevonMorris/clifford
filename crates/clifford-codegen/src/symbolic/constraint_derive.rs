@@ -365,7 +365,7 @@ mod tests {
     use crate::spec::parse_spec;
 
     #[test]
-    fn rotor_has_no_derived_constraints() {
+    fn symbolica_rotor_has_no_derived_constraints() {
         // Euclidean rotor: u * reverse(u) should be purely scalar
         // (no non-scalar constraints needed because cross-terms cancel)
         let spec = parse_spec(
@@ -398,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn vector_norm_squared() {
+    fn symbolica_vector_norm_squared() {
         let spec = parse_spec(
             r#"
             [algebra]
@@ -428,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    fn pga_motor_has_study_condition() {
+    fn symbolica_pga_motor_has_study_condition() {
         // PGA motor: grades [0, 2, 4] - should have Study condition constraint
         // The Study condition arises from the pseudoscalar term in motor * reverse(motor)
         let spec = parse_spec(
@@ -468,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn pga_bivector_has_plucker_condition() {
+    fn symbolica_pga_bivector_has_plucker_condition() {
         // PGA line (bivector): grade [2] - should have Plücker condition
         // In 4D PGA, bivectors don't automatically satisfy geometric constraint
         let spec = parse_spec(
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn euclidean_rotor_all_constraints_deduplicated() {
+    fn symbolica_euclidean_rotor_all_constraints_deduplicated() {
         // For Euclidean rotors, both geometric and antiproduct constraints
         // should yield no constraints (cross-terms cancel in both cases)
         let spec = parse_spec(
@@ -534,7 +534,7 @@ mod tests {
     }
 
     #[test]
-    fn pga_motor_all_constraints() {
+    fn symbolica_pga_motor_all_constraints() {
         // For PGA motors, derive_all_constraints should combine geometric
         // and antiproduct constraints with deduplication
         let spec = parse_spec(
