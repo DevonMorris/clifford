@@ -412,3 +412,11 @@ impl<T: Float> Default for Vector<T> {
         Self::zero()
     }
 }
+#[doc = "A unit Bivector (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Bivector has been normalized."]
+pub type UnitBivector<T> = crate::wrappers::Unit<Bivector<T>>;
+#[doc = "A unit Rotor (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Rotor has been normalized."]
+pub type UnitRotor<T> = crate::wrappers::Unit<Rotor<T>>;
+#[doc = "A unit Scalar (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Scalar has been normalized."]
+pub type UnitScalar<T> = crate::wrappers::Unit<Scalar<T>>;
+#[doc = "A unit Vector (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Vector has been normalized."]
+pub type UnitVector<T> = crate::wrappers::Unit<Vector<T>>;

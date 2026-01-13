@@ -59,6 +59,9 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Standard traits implemented (Debug, Clone, PartialEq, etc.)
 - [ ] No clippy warnings
 - [ ] No compiler warnings
+- [ ] **No warning suppressions** - No `#[allow(dead_code)]`, `#[allow(unused)]`, `#[allow(clippy::*)]`, etc.
+  - If code is unused, delete it or properly expose it via re-exports
+  - Fix root causes instead of suppressing symptoms
 - [ ] Consistent naming
 - [ ] No fully-qualified syntax (`<Type as Trait>::`) when simpler syntax works
 - [ ] Foreign traits not exposed in public API (use helper methods or re-export in prelude)

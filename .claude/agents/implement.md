@@ -41,7 +41,15 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
 
 3. **No warnings allowed** - `warnings = "deny"` is set
 
-4. **Implement standard traits** - Debug, Clone, PartialEq, etc. where appropriate
+4. **No warning suppression** - Never use `#[allow(...)]` to suppress warnings:
+   - `#[allow(dead_code)]` → Delete unused code or properly expose it via re-exports
+   - `#[allow(unused_imports)]` → Remove the import
+   - `#[allow(unused_variables)]` → Use `_` prefix or remove
+   - `#[allow(clippy::*)]` → Fix the code to satisfy clippy
+
+   **Why:** Warnings catch real problems. Suppression hides bugs and defeats CI safety checks.
+
+5. **Implement standard traits** - Debug, Clone, PartialEq, etc. where appropriate
 
 ## Code Style
 

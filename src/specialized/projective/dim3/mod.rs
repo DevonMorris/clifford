@@ -77,3 +77,6 @@ pub mod arbitrary;
 // Re-export generated types and products
 pub use generated::products;
 pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};
+
+// Re-export wrapper type aliases
+pub use generated::types::{BulkFlector, BulkMotor, IdealLine, IdealPlane, IdealPoint};

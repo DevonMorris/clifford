@@ -1062,3 +1062,13 @@ impl<T: Float> Default for Scalar<T> {
         Self::identity()
     }
 }
+#[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]
+pub type BulkFlector<T> = crate::wrappers::Bulk<Flector<T>>;
+#[doc = "An line in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like lines are represented in homogeneous coordinates. This type alias provides compile-time documentation that the line has been weight-normalized to standard form."]
+pub type IdealLine<T> = crate::wrappers::Ideal<Line<T>>;
+#[doc = "A bulk-normalized Motor (bulk norm = 1).\n\nFor a Motor to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Motor has been bulk-normalized."]
+pub type BulkMotor<T> = crate::wrappers::Bulk<Motor<T>>;
+#[doc = "An plane in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like planes are represented in homogeneous coordinates. This type alias provides compile-time documentation that the plane has been weight-normalized to standard form."]
+pub type IdealPlane<T> = crate::wrappers::Ideal<Plane<T>>;
+#[doc = "An point in standard homogeneous form (weight norm = 1).\n\nIn PGA, geometric entities like points are represented in homogeneous coordinates. This type alias provides compile-time documentation that the point has been weight-normalized to standard form."]
+pub type IdealPoint<T> = crate::wrappers::Ideal<Point<T>>;

@@ -160,6 +160,31 @@ done
   - Re-export the trait in our prelude so users don't need to import the dependency directly, or
   - Add helper methods that encapsulate the foreign trait usage (preferred when feasible)
 
+#### No Warning Suppression
+
+**Never use `#[allow(...)]` attributes to suppress warnings.** Always fix the root cause:
+
+- **`#[allow(dead_code)]`** - If code is unused, either delete it or properly expose it through the public API (e.g., add re-exports in `mod.rs`)
+- **`#[allow(unused_imports)]`** - Remove the unused import
+- **`#[allow(unused_variables)]`** - Use `_` prefix for intentionally unused variables, or remove them
+- **`#[allow(clippy::*)]`** - Fix the code to satisfy clippy, or if truly a false positive, document why with a comment
+
+**Why this matters:**
+- Warnings exist to catch real problems - suppressing them hides bugs
+- Unused code becomes maintenance burden and confuses readers
+- CI enforces `warnings = "deny"` - suppressions work around safety checks
+
+**The right approach:**
+```rust
+// BAD: Suppressing dead code warning
+#[allow(dead_code)]
+pub type UnitVector<T> = Unit<Vector<T>>;
+
+// GOOD: Properly expose through module's public API
+// In mod.rs:
+pub use generated::types::UnitVector;
+```
+
 #### Field Visibility
 
 **All specialized types use private fields with public accessors** for consistency:

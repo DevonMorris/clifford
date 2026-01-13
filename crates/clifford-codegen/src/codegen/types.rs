@@ -81,6 +81,8 @@ impl<'a> TypeGenerator<'a> {
             .map(|ty| self.generate_alias(ty))
             .collect();
 
+        let wrapper_aliases = self.generate_wrapper_aliases();
+
         quote! {
             #header
             #imports
@@ -88,6 +90,8 @@ impl<'a> TypeGenerator<'a> {
             #(#types)*
 
             #(#aliases)*
+
+            #wrapper_aliases
         }
     }
 
@@ -604,6 +608,140 @@ impl<'a> TypeGenerator<'a> {
                 fn default() -> Self {
                     #default_fn
                 }
+            }
+        }
+    }
+
+    /// Generates wrapper type aliases based on algebra type.
+    ///
+    /// For Euclidean algebras (no degenerate basis), generates `Unit<T>` aliases:
+    /// - `UnitVector<T> = Unit<Vector<T>>`
+    /// - `UnitBivector<T> = Unit<Bivector<T>>`
+    /// - `UnitRotor<T> = Unit<Rotor<T>>`
+    ///
+    /// For PGA algebras (has degenerate basis), generates:
+    /// - `Bulk<T>` aliases for versors (Motor, Flector): `BulkMotor<T> = Bulk<Motor<T>>`
+    /// - `Ideal<T>` aliases for geometric entities (Point, Plane, Line): `IdealPoint<T> = Ideal<Point<T>>`
+    fn generate_wrapper_aliases(&self) -> TokenStream {
+        let is_pga = self.spec.signature.r > 0;
+
+        if is_pga {
+            self.generate_pga_wrapper_aliases()
+        } else {
+            self.generate_euclidean_wrapper_aliases()
+        }
+    }
+
+    /// Generates Unit<T> wrapper aliases for Euclidean algebras.
+    fn generate_euclidean_wrapper_aliases(&self) -> TokenStream {
+        let mut aliases = Vec::new();
+
+        for ty in &self.spec.types {
+            // Skip aliases
+            if ty.alias_of.is_some() {
+                continue;
+            }
+
+            // Generate Unit aliases for types that make sense to normalize:
+            // - Single-grade types (Vector, Bivector, Trivector)
+            // - Rotor types (grades [0, 2])
+            let should_generate = ty.grades.len() == 1
+                || (ty.grades.contains(&0) && ty.grades.contains(&2) && ty.grades.len() == 2);
+
+            if should_generate {
+                let type_name = format_ident!("{}", ty.name);
+                let alias_name = format_ident!("Unit{}", ty.name);
+                let doc = format!(
+                    "A unit {} (Euclidean norm = 1).\n\n\
+                     This type alias provides compile-time documentation that the \
+                     {} has been normalized.",
+                    ty.name, ty.name
+                );
+
+                aliases.push(quote! {
+                    #[doc = #doc]
+                    pub type #alias_name<T> = crate::wrappers::Unit<#type_name<T>>;
+                });
+            }
+        }
+
+        if aliases.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                // ============================================================================
+                // Wrapper Type Aliases
+                // ============================================================================
+
+                #(#aliases)*
+            }
+        }
+    }
+
+    /// Generates Bulk<T> and Ideal<T> wrapper aliases for PGA algebras.
+    fn generate_pga_wrapper_aliases(&self) -> TokenStream {
+        let mut aliases = Vec::new();
+
+        // Versor type names that get Bulk<T> wrappers
+        let versor_names = ["Motor", "Flector"];
+
+        // Homogeneous geometric entity names that get Ideal<T> wrappers
+        let homogeneous_names = ["Point", "Plane", "Line"];
+
+        for ty in &self.spec.types {
+            // Skip aliases
+            if ty.alias_of.is_some() {
+                continue;
+            }
+
+            let type_name = format_ident!("{}", ty.name);
+
+            // Check if it's a versor type
+            if versor_names.contains(&ty.name.as_str()) {
+                let alias_name = format_ident!("Bulk{}", ty.name);
+                let doc = format!(
+                    "A bulk-normalized {} (bulk norm = 1).\n\n\
+                     For a {} to represent a proper rigid transformation, the bulk norm \
+                     (non-degenerate part) should be 1. This type alias provides compile-time \
+                     documentation that the {} has been bulk-normalized.",
+                    ty.name, ty.name, ty.name
+                );
+
+                aliases.push(quote! {
+                    #[doc = #doc]
+                    pub type #alias_name<T> = crate::wrappers::Bulk<#type_name<T>>;
+                });
+            }
+
+            // Check if it's a homogeneous geometric entity
+            if homogeneous_names.contains(&ty.name.as_str()) {
+                let alias_name = format_ident!("Ideal{}", ty.name);
+                let doc = format!(
+                    "An {} in standard homogeneous form (weight norm = 1).\n\n\
+                     In PGA, geometric entities like {}s are represented in homogeneous \
+                     coordinates. This type alias provides compile-time documentation that \
+                     the {} has been weight-normalized to standard form.",
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase(),
+                    ty.name.to_lowercase()
+                );
+
+                aliases.push(quote! {
+                    #[doc = #doc]
+                    pub type #alias_name<T> = crate::wrappers::Ideal<#type_name<T>>;
+                });
+            }
+        }
+
+        if aliases.is_empty() {
+            quote! {}
+        } else {
+            quote! {
+                // ============================================================================
+                // Wrapper Type Aliases
+                // ============================================================================
+
+                #(#aliases)*
             }
         }
     }
