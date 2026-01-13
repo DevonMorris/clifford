@@ -96,6 +96,18 @@ This is an educational library for Geometric Algebra (Clifford Algebra). Code sh
   - This provides better IDE support, type safety, and method chaining
 - **Avoid fully-qualified syntax** - Prefer `Type::method()` over `<Type as Trait>::method()`. Add helper methods or type aliases to make simpler syntax work.
 - **Don't expose foreign traits in public API** - When our API depends on a foreign trait (e.g., `typenum::Unsigned`), either re-export it in our prelude or add helper methods that encapsulate the usage (preferred).
+- **Avoid magic values (numbers and paths)** - Don't scatter literal numbers or paths throughout code. Bind them to named constants:
+  ```rust
+  // GOOD: Named constants
+  const RELATIVE_EQ_EPS: f64 = 1e-10;
+  const MAX_ITERATIONS: usize = 100;
+  const ALGEBRAS_DIR: &str = "algebras";
+
+  // BAD: Magic values
+  assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));  // What is 1e-10?
+  let spec = include_str!("../../../../algebras/euclidean3.toml");  // Fragile path
+  ```
+  **Why:** Named values are self-documenting, changes require updating only one place, and code review is easier.
 
 ### Field Visibility
 

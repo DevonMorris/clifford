@@ -914,6 +914,379 @@ impl<T: Float> BitXor<Scalar<T>> for Scalar<T> {
         exterior_scalar_scalar(&self, &rhs)
     }
 }
+impl<T: Float> crate::norm::Normed for Flector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.e1() * self.e1()
+            + self.e2() * self.e2()
+            + self.e3() * self.e3()
+            + self.e0() * self.e0()
+            + self.e023() * self.e023()
+            + self.e031() * self.e031()
+            + self.e012() * self.e012()
+            + self.e123() * self.e123()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.e1() * factor,
+            self.e2() * factor,
+            self.e3() * factor,
+            self.e0() * factor,
+            self.e023() * factor,
+            self.e031() * factor,
+            self.e012() * factor,
+            self.e123() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Line<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.e01() * self.e01()
+            + self.e02() * self.e02()
+            + self.e03() * self.e03()
+            + self.e23() * self.e23()
+            + self.e31() * self.e31()
+            + self.e12() * self.e12()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.e01() * factor,
+            self.e02() * factor,
+            self.e03() * factor,
+            self.e23() * factor,
+            self.e31() * factor,
+            self.e12() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Motor<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s()
+            + self.e23() * self.e23()
+            + self.e31() * self.e31()
+            + self.e12() * self.e12()
+            + self.e01() * self.e01()
+            + self.e02() * self.e02()
+            + self.e03() * self.e03()
+            + self.e0123() * self.e0123()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.s() * factor,
+            self.e23() * factor,
+            self.e31() * factor,
+            self.e12() * factor,
+            self.e01() * factor,
+            self.e02() * factor,
+            self.e03() * factor,
+            self.e0123() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Plane<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.e023() * self.e023()
+            + self.e031() * self.e031()
+            + self.e012() * self.e012()
+            + self.e123() * self.e123()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.e023() * factor,
+            self.e031() * factor,
+            self.e012() * factor,
+            self.e123() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Point<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.e1() * self.e1()
+            + self.e2() * self.e2()
+            + self.e3() * self.e3()
+            + self.e0() * self.e0()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.e1() * factor,
+            self.e2() * factor,
+            self.e3() * factor,
+            self.e0() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Quadvector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.e0123() * self.e0123()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.e0123() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.s() * factor)
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Flector<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.e1() * self.e1()
+            + self.e2() * self.e2()
+            + self.e3() * self.e3()
+            + self.e123() * self.e123()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e0() * self.e0()
+            + self.e023() * self.e023()
+            + self.e031() * self.e031()
+            + self.e012() * self.e012()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(
+                self.e1() * inv_w,
+                self.e2() * inv_w,
+                self.e3() * inv_w,
+                self.e0() * inv_w,
+                self.e023() * inv_w,
+                self.e031() * inv_w,
+                self.e012() * inv_w,
+                self.e123() * inv_w,
+            ))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Line<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.e23() * self.e23() + self.e31() * self.e31() + self.e12() * self.e12()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e01() * self.e01() + self.e02() * self.e02() + self.e03() * self.e03()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(
+                self.e01() * inv_w,
+                self.e02() * inv_w,
+                self.e03() * inv_w,
+                self.e23() * inv_w,
+                self.e31() * inv_w,
+                self.e12() * inv_w,
+            ))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Motor<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.s() * self.s()
+            + self.e23() * self.e23()
+            + self.e31() * self.e31()
+            + self.e12() * self.e12()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e01() * self.e01()
+            + self.e02() * self.e02()
+            + self.e03() * self.e03()
+            + self.e0123() * self.e0123()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(
+                self.s() * inv_w,
+                self.e23() * inv_w,
+                self.e31() * inv_w,
+                self.e12() * inv_w,
+                self.e01() * inv_w,
+                self.e02() * inv_w,
+                self.e03() * inv_w,
+                self.e0123() * inv_w,
+            ))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Plane<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.e123() * self.e123()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e023() * self.e023() + self.e031() * self.e031() + self.e012() * self.e012()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(
+                self.e023() * inv_w,
+                self.e031() * inv_w,
+                self.e012() * inv_w,
+                self.e123() * inv_w,
+            ))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Point<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.e1() * self.e1() + self.e2() * self.e2() + self.e3() * self.e3()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e0() * self.e0()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(
+                self.e1() * inv_w,
+                self.e2() * inv_w,
+                self.e3() * inv_w,
+                self.e0() * inv_w,
+            ))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Quadvector<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        T::zero()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        self.e0123() * self.e0123()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(self.e0123() * inv_w))
+        }
+    }
+}
+impl<T: Float> crate::norm::DegenerateNormed for Scalar<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> T {
+        self.s() * self.s()
+    }
+    #[inline]
+    fn weight_norm_squared(&self) -> T {
+        T::zero()
+    }
+    fn try_unitize(&self) -> Option<Self> {
+        let w = self.weight_norm();
+        if w < T::epsilon() {
+            None
+        } else {
+            let inv_w = T::one() / w;
+            Some(Self::new(self.s() * inv_w))
+        }
+    }
+}
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Flector<T> {
     type Epsilon = T;
     fn default_epsilon() -> Self::Epsilon {

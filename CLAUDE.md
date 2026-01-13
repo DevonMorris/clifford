@@ -332,7 +332,36 @@ let from_f64: T = T::from_f64(3.14);
   // Use BOTH epsilon (for near-zero) and max_relative (for larger values)
   assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));
   ```
-- **Use `RELATIVE_EQ_EPS` constant**: Don't use magic numbers like `1e-10` for epsilon values. Use the standard constant `RELATIVE_EQ_EPS` defined in `src/lib.rs::test_utils`:
+- **Avoid magic values (numbers and paths)**: Don't use literal numbers or paths scattered throughout code. Bind them to named constants or variables:
+  ```rust
+  // GOOD: Named constants for numbers
+  const RELATIVE_EQ_EPS: f64 = 1e-10;
+  const MAX_ITERATIONS: usize = 100;
+  const DEFAULT_TOLERANCE: f64 = 1e-6;
+
+  assert!(relative_eq!(a, b, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+
+  // BAD: Magic numbers
+  assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));  // What is 1e-10?
+  for _ in 0..100 { ... }  // Why 100?
+  ```
+  ```rust
+  // GOOD: Named constants for paths (especially in tests)
+  const ALGEBRAS_DIR: &str = "algebras";
+  const EUCLIDEAN3_TOML: &str = "algebras/euclidean3.toml";
+
+  let spec = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", ALGEBRAS_DIR, "/euclidean3.toml"));
+
+  // BAD: Magic paths scattered in code
+  let spec = include_str!("../../../../algebras/euclidean3.toml");  // Fragile, hard to update
+  ```
+  **Why this matters:**
+  - Named values are self-documenting
+  - Changing a value requires updating only one place
+  - Reduces bugs from inconsistent values across files
+  - Makes code review easier (reviewers can verify the constant definition once)
+
+- **Use `RELATIVE_EQ_EPS` constant**: Use the standard constant `RELATIVE_EQ_EPS` defined in `src/lib.rs::test_utils`:
   ```rust
   use crate::test_utils::RELATIVE_EQ_EPS;
   use approx::relative_eq;

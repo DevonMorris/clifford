@@ -378,6 +378,82 @@ impl<T: Float> BitXor<Vector<T>> for Vector<T> {
         exterior_vector_vector(&self, &rhs)
     }
 }
+impl<T: Float> crate::norm::Normed for Bivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.xy() * self.xy()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.xy() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Rotor<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s() + self.xy() * self.xy()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.s() * factor, self.xy() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.s() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Vector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.x() * self.x() + self.y() * self.y()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.x() * factor, self.y() * factor)
+    }
+}
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Bivector<T> {
     type Epsilon = T;
     fn default_epsilon() -> Self::Epsilon {

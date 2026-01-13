@@ -67,6 +67,10 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
   - Accepts `&Vector` instead of `(T, T, T)`
 - [ ] **Field visibility**: All specialized types use private fields with public accessors
   - Constructor pattern: `new()` for types without constraints, `new_unchecked()` for constrained types
+- [ ] **No magic values**: Literal numbers and paths bound to named constants
+  - No scattered `1e-10` values (use `RELATIVE_EQ_EPS`)
+  - No hardcoded paths like `"../../../../algebras/"` (use constants)
+  - Named values are self-documenting and easier to maintain
 
 #### Style Consistency (Critical - Check Carefully)
 **New code MUST match existing codebase patterns.** Review for:

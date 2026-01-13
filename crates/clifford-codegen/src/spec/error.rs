@@ -94,4 +94,13 @@ pub enum ParseError {
         /// The type name.
         type_name: String,
     },
+
+    /// Unknown field name in a type's field list.
+    #[error("type '{type_name}' has unknown field name: '{field}'")]
+    UnknownFieldName {
+        /// The type name.
+        type_name: String,
+        /// The unknown field name.
+        field: String,
+    },
 }

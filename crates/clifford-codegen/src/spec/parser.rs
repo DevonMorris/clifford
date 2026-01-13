@@ -260,7 +260,7 @@ fn parse_type(
                 got: raw.fields.len(),
             });
         }
-        build_fields_from_names(&raw.fields, &raw.grades, dim, name)?
+        build_fields_from_names(&raw.fields, &raw.grades, dim, name, blade_names, sig)?
     };
 
     // Check for duplicate field names
@@ -379,42 +379,76 @@ fn default_blade_name(blade_index: usize, sig: &SignatureSpec) -> String {
 /// | 6     | 110    | e₂₃   | 2     |
 /// | 7     | 111    | e₁₂₃  | 3     |
 ///
-/// So for a grade-2 Bivector in 3D, fields must be in order: `["xy", "xz", "yz"]`
-/// (corresponding to blade indices 3, 5, 6).
+/// Builds field specs from provided field names.
+///
+/// This function tries to compute the correct blade_index for each field:
+/// 1. First, looks up the field name in the blade_names mapping (from [blades] section)
+/// 2. If not found, looks up by default blade name (e.g., "s", "e12", "e123")
+/// 3. If still not found, falls back to assuming canonical blade order
+///
+/// The fallback to canonical order maintains backward compatibility with
+/// algebras that use custom field names without explicit blade mappings.
 fn build_fields_from_names(
     names: &[String],
     grades: &[usize],
     dim: usize,
     type_name: &str,
+    blade_names: &HashMap<usize, String>,
+    sig: &SignatureSpec,
 ) -> Result<Vec<FieldSpec>, ParseError> {
-    // Collect blade indices for these grades in canonical order
-    // (sorted by grade first, then by blade index within each grade)
-    let mut blade_indices = Vec::new();
+    // Build inverted mapping: field_name -> blade_index
+    let name_to_index: HashMap<String, usize> = blade_names
+        .iter()
+        .map(|(&idx, name)| (name.clone(), idx))
+        .collect();
+
+    // Also add default blade names (e.g., "s" for scalar, "e123" for trivector)
+    let mut name_to_index_with_defaults: HashMap<String, usize> = name_to_index;
+    for blade_index in 0usize..(1 << dim) {
+        let default_name = default_blade_name(blade_index, sig);
+        name_to_index_with_defaults
+            .entry(default_name)
+            .or_insert(blade_index);
+    }
+
+    // Collect expected blade indices in canonical order for fallback
+    let mut blade_indices_canonical = Vec::new();
     for &grade in grades {
         for blade_index in 0usize..(1 << dim) {
             if blade_index.count_ones() as usize == grade {
-                blade_indices.push((blade_index, grade));
+                blade_indices_canonical.push((blade_index, grade));
             }
         }
     }
 
-    if names.len() != blade_indices.len() {
+    if names.len() != blade_indices_canonical.len() {
         return Err(ParseError::FieldCountMismatch {
             type_name: type_name.to_string(),
-            expected: blade_indices.len(),
+            expected: blade_indices_canonical.len(),
             got: names.len(),
         });
     }
 
-    Ok(names
-        .iter()
-        .zip(blade_indices.iter())
-        .map(|(name, &(blade_index, grade))| FieldSpec {
+    // Build field specs - try to look up name, otherwise use canonical order
+    let mut fields = Vec::with_capacity(names.len());
+    for (i, name) in names.iter().enumerate() {
+        let (blade_index, grade) = if let Some(&idx) = name_to_index_with_defaults.get(name) {
+            // Found in mapping - use the correct blade_index
+            let grade = idx.count_ones() as usize;
+            (idx, grade)
+        } else {
+            // Not found - fall back to canonical order (maintains backward compatibility)
+            blade_indices_canonical[i]
+        };
+
+        fields.push(FieldSpec {
             name: name.clone(),
             blade_index,
             grade,
-        })
-        .collect())
+        });
+    }
+
+    Ok(fields)
 }
 
 /// Validates that fields in a TypeSpec have canonical blade ordering.
@@ -807,7 +841,7 @@ mod tests {
 
     #[test]
     fn products_are_inferred_euclidean3() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
 
         // All product types should be inferred
         assert!(
@@ -830,7 +864,7 @@ mod tests {
 
     #[test]
     fn blade_indices_are_canonical_euclidean2() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
 
         for ty in &spec.types {
             assert!(
@@ -844,7 +878,7 @@ mod tests {
 
     #[test]
     fn blade_indices_are_canonical_euclidean3() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
 
         for ty in &spec.types {
             assert!(

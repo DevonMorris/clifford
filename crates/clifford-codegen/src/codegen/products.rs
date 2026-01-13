@@ -1414,7 +1414,7 @@ mod tests {
 
     #[test]
     fn generates_geometric_product() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
         let algebra = Algebra::euclidean(2);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1428,7 +1428,7 @@ mod tests {
 
     #[test]
     fn generates_exterior_product() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1444,7 +1444,7 @@ mod tests {
         // Left contraction is auto-generated for all algebras
         // Left contraction a ⌋ b only gives non-zero when grade(a) <= grade(b)
         // Valid products: Vector ⌋ Bivector → Vector (grade 2-1=1)
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1460,7 +1460,7 @@ mod tests {
     fn generates_sandwich_for_marked_versors() {
         // Sandwich products are generated for types marked with versor = true
         // and explicitly listed targets in [types.TypeName.sandwich]
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1478,7 +1478,7 @@ mod tests {
     fn skips_sandwich_without_versor_marking() {
         // Sandwich products are NOT generated for types without versor = true
         // Use euclidean2 which has no versor marking
-        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
         let algebra = Algebra::euclidean(2);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1492,7 +1492,7 @@ mod tests {
 
     #[test]
     fn term_computation_vector_vector() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1509,7 +1509,7 @@ mod tests {
 
     #[test]
     fn output_grades_geometric() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);
@@ -1523,7 +1523,7 @@ mod tests {
 
     #[test]
     fn output_grades_outer() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = ProductGenerator::new(&spec, &algebra, table);

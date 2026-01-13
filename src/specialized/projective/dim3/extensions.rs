@@ -959,58 +959,55 @@ impl<T: Float> Motor<T> {
     }
 
     /// Inverse motor.
+    ///
+    /// Uses the bulk norm squared (rotor part magnitude) for proper inversion.
     pub fn inverse(&self) -> Self {
-        let wn_sq = self.weight_norm_squared();
+        // Use bulk norm squared (s² + e23² + e31² + e12²) for motor inversion
+        use crate::norm::DegenerateNormed;
+        let bn_sq = self.bulk_norm_squared();
         let rev = self.reverse();
         Self::new_unchecked(
-            rev.s() / wn_sq,
-            rev.e23() / wn_sq,
-            rev.e31() / wn_sq,
-            rev.e12() / wn_sq,
-            rev.e01() / wn_sq,
-            rev.e02() / wn_sq,
-            rev.e03() / wn_sq,
-            rev.e0123() / wn_sq,
+            rev.s() / bn_sq,
+            rev.e23() / bn_sq,
+            rev.e31() / bn_sq,
+            rev.e12() / bn_sq,
+            rev.e01() / bn_sq,
+            rev.e02() / bn_sq,
+            rev.e03() / bn_sq,
+            rev.e0123() / bn_sq,
         )
     }
 
-    /// Weight norm squared (rotation part).
-    #[inline]
-    pub fn weight_norm_squared(&self) -> T {
-        self.s() * self.s()
-            + self.e23() * self.e23()
-            + self.e31() * self.e31()
-            + self.e12() * self.e12()
-    }
-
-    /// Weight norm.
-    #[inline]
-    pub fn weight_norm(&self) -> T {
-        self.weight_norm_squared().sqrt()
-    }
-
-    /// Unitize to unit weight norm.
+    /// Unitize to unit bulk norm (makes the rotor part have unit magnitude).
+    ///
+    /// For a motor to represent a proper rigid transformation, the bulk norm
+    /// (rotor part: s² + e23² + e31² + e12²) should be 1.
     pub fn unitized(&self) -> Self {
-        let wn = self.weight_norm();
-        if wn < T::epsilon() {
+        use crate::norm::DegenerateNormed;
+        let bn = self.bulk_norm();
+        if bn < T::epsilon() {
             return *self;
         }
         Self::new_unchecked(
-            self.s() / wn,
-            self.e23() / wn,
-            self.e31() / wn,
-            self.e12() / wn,
-            self.e01() / wn,
-            self.e02() / wn,
-            self.e03() / wn,
-            self.e0123() / wn,
+            self.s() / bn,
+            self.e23() / bn,
+            self.e31() / bn,
+            self.e12() / bn,
+            self.e01() / bn,
+            self.e02() / bn,
+            self.e03() / bn,
+            self.e0123() / bn,
         )
     }
 
-    /// Check if motor is unitized.
+    /// Check if motor is unitized (bulk norm ≈ 1).
+    ///
+    /// A unitized motor has bulk_norm_squared ≈ 1, meaning the rotor part
+    /// has unit magnitude.
     #[inline]
     pub fn is_unitized(&self, tolerance: T) -> bool {
-        (self.weight_norm_squared() - T::one()).abs() < tolerance
+        use crate::norm::DegenerateNormed;
+        (self.bulk_norm_squared() - T::one()).abs() < tolerance
     }
 
     /// Study condition residual.
@@ -1220,38 +1217,25 @@ impl<T: Float> Flector<T> {
         pt.bulk_norm() < T::epsilon() && pt.weight_norm() < T::epsilon()
     }
 
-    /// Weight norm squared.
-    #[inline]
-    pub fn weight_norm_squared(&self) -> T {
-        self.e1() * self.e1()
-            + self.e2() * self.e2()
-            + self.e3() * self.e3()
-            + self.e023() * self.e023()
-            + self.e031() * self.e031()
-            + self.e012() * self.e012()
-    }
-
-    /// Weight norm.
-    #[inline]
-    pub fn weight_norm(&self) -> T {
-        self.weight_norm_squared().sqrt()
-    }
-
-    /// Unitize to unit weight norm.
+    /// Unitize to unit bulk norm.
+    ///
+    /// For a flector to represent a proper rigid reflection, the bulk norm
+    /// (e1² + e2² + e3² + e123²) should be 1.
     pub fn unitized(&self) -> Self {
-        let wn = self.weight_norm();
-        if wn < T::epsilon() {
+        use crate::norm::DegenerateNormed;
+        let bn = self.bulk_norm();
+        if bn < T::epsilon() {
             return *self;
         }
         Self::new_unchecked(
-            self.e1() / wn,
-            self.e2() / wn,
-            self.e3() / wn,
-            self.e0() / wn,
-            self.e023() / wn,
-            self.e031() / wn,
-            self.e012() / wn,
-            self.e123() / wn,
+            self.e1() / bn,
+            self.e2() / bn,
+            self.e3() / bn,
+            self.e0() / bn,
+            self.e023() / bn,
+            self.e031() / bn,
+            self.e012() / bn,
+            self.e123() / bn,
         )
     }
 

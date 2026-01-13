@@ -487,6 +487,106 @@ impl<T: Float> BitXor<Vector<T>> for Vector<T> {
         exterior_vector_vector(&self, &rhs)
     }
 }
+impl<T: Float> crate::norm::Normed for Bivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.xy() * self.xy() + self.xz() * self.xz() + self.yz() * self.yz()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.xy() * factor, self.xz() * factor, self.yz() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Rotor<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s() + self.xy() * self.xy() + self.xz() * self.xz() + self.yz() * self.yz()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(
+            self.s() * factor,
+            self.xy() * factor,
+            self.xz() * factor,
+            self.yz() * factor,
+        )
+    }
+}
+impl<T: Float> crate::norm::Normed for Scalar<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.s() * self.s()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.s() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Trivector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.xyz() * self.xyz()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.xyz() * factor)
+    }
+}
+impl<T: Float> crate::norm::Normed for Vector<T> {
+    type Scalar = T;
+    #[inline]
+    fn norm_squared(&self) -> T {
+        self.x() * self.x() + self.y() * self.y() + self.z() * self.z()
+    }
+    fn try_normalize(&self) -> Option<Self> {
+        let n = self.norm();
+        if n < T::epsilon() {
+            None
+        } else {
+            Some(self.scale(T::one() / n))
+        }
+    }
+    #[inline]
+    fn scale(&self, factor: T) -> Self {
+        Self::new(self.x() * factor, self.y() * factor, self.z() * factor)
+    }
+}
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Bivector<T> {
     type Epsilon = T;
     fn default_epsilon() -> Self::Epsilon {

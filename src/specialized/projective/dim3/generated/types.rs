@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 7 | e1e2e3 | `e023` |\n| 11 | e1e2e4 | `e031` |\n| 13 | e1e3e4 | `e012` |\n| 14 | e2e3e4 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -183,7 +183,7 @@ impl<T: Float> Default for Flector<T> {
         Self::zero()
     }
 }
-#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `e01` |\n| 5 | e1e3 | `e02` |\n| 6 | e2e3 | `e03` |\n| 9 | e1e4 | `e23` |\n| 10 | e2e4 | `e31` |\n| 12 | e3e4 | `e12` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
+#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -265,7 +265,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e1e2 element."]
+    #[doc = "Creates the unit e1e4 element."]
     #[inline]
     pub fn unit_e01() -> Self {
         Self::new(
@@ -277,7 +277,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e1e3 element."]
+    #[doc = "Creates the unit e2e4 element."]
     #[inline]
     pub fn unit_e02() -> Self {
         Self::new(
@@ -289,7 +289,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e2e3 element."]
+    #[doc = "Creates the unit e3e4 element."]
     #[inline]
     pub fn unit_e03() -> Self {
         Self::new(
@@ -301,7 +301,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e1e4 element."]
+    #[doc = "Creates the unit e2e3 element."]
     #[inline]
     pub fn unit_e23() -> Self {
         Self::new(
@@ -313,7 +313,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e2e4 element."]
+    #[doc = "Creates the unit e1e3 element."]
     #[inline]
     pub fn unit_e31() -> Self {
         Self::new(
@@ -325,7 +325,7 @@ impl<T: Float> Line<T> {
             T::zero(),
         )
     }
-    #[doc = "Creates the unit e3e4 element."]
+    #[doc = "Creates the unit e1e2 element."]
     #[inline]
     pub fn unit_e12() -> Self {
         Self::new(
@@ -408,7 +408,7 @@ impl<T: Float> Default for Line<T> {
         Self::zero()
     }
 }
-#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `e23` |\n| 5 | e1e3 | `e31` |\n| 6 | e2e3 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -597,7 +597,7 @@ impl<T: Float> Default for Motor<T> {
         Self::identity()
     }
 }
-#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `e023` |\n| 11 | e1e2e4 | `e031` |\n| 13 | e1e3e4 | `e012` |\n| 14 | e2e3e4 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -656,22 +656,22 @@ impl<T: Float> Plane<T> {
     pub fn zero() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e2e3 element."]
+    #[doc = "Creates the unit e2e3e4 element."]
     #[inline]
     pub fn unit_e023() -> Self {
         Self::new(T::one(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e2e4 element."]
+    #[doc = "Creates the unit e1e3e4 element."]
     #[inline]
     pub fn unit_e031() -> Self {
         Self::new(T::zero(), T::one(), T::zero(), T::zero())
     }
-    #[doc = "Creates the unit e1e3e4 element."]
+    #[doc = "Creates the unit e1e2e4 element."]
     #[inline]
     pub fn unit_e012() -> Self {
         Self::new(T::zero(), T::zero(), T::one(), T::zero())
     }
-    #[doc = "Creates the unit e2e3e4 element."]
+    #[doc = "Creates the unit e1e2e3 element."]
     #[inline]
     pub fn unit_e123() -> Self {
         Self::new(T::zero(), T::zero(), T::zero(), T::one())

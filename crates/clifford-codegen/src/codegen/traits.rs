@@ -81,6 +81,7 @@ impl<'a> TraitsGenerator<'a> {
         let header = self.generate_header();
         let imports = self.generate_imports();
         let ops = self.generate_all_ops();
+        let normed = self.generate_all_normed();
         let approx = self.generate_all_approx();
         let arbitrary = self.generate_all_arbitrary();
         let verification_tests = self.generate_verification_tests_raw();
@@ -93,6 +94,11 @@ impl<'a> TraitsGenerator<'a> {
             // Operator Implementations
             // ============================================================
             #ops
+
+            // ============================================================
+            // Normed Trait Implementations
+            // ============================================================
+            #normed
 
             // ============================================================
             // Approx Trait Implementations
@@ -402,6 +408,190 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    // ========================================================================
+    // Normed Trait Implementations
+    // ========================================================================
+
+    /// Generates all Normed trait implementations.
+    fn generate_all_normed(&self) -> TokenStream {
+        let impls: Vec<TokenStream> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|ty| self.generate_normed_impl(ty))
+            .collect();
+
+        // For PGA algebras (with degenerate basis), also generate DegenerateNormed
+        let degenerate_impls: Vec<TokenStream> = if self.spec.signature.r > 0 {
+            self.spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none())
+                .filter_map(|ty| self.generate_degenerate_normed_impl(ty))
+                .collect()
+        } else {
+            Vec::new()
+        };
+
+        quote! {
+            #(#impls)*
+            #(#degenerate_impls)*
+        }
+    }
+
+    /// Generates `impl Normed for Type<T>`.
+    fn generate_normed_impl(&self, ty: &TypeSpec) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+
+        // Generate norm_squared: sum of squares of all fields
+        let norm_squared_terms: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        // Generate scale: multiply each field by factor
+        let scale_fields: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * factor }
+            })
+            .collect();
+
+        // Handle edge case where type has no fields
+        let norm_squared_expr = if norm_squared_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#norm_squared_terms)+* }
+        };
+
+        quote! {
+            impl<T: Float> crate::norm::Normed for #name<T> {
+                type Scalar = T;
+
+                #[inline]
+                fn norm_squared(&self) -> T {
+                    #norm_squared_expr
+                }
+
+                fn try_normalize(&self) -> Option<Self> {
+                    let n = self.norm();
+                    if n < T::epsilon() {
+                        None
+                    } else {
+                        Some(self.scale(T::one() / n))
+                    }
+                }
+
+                #[inline]
+                fn scale(&self, factor: T) -> Self {
+                    Self::new(#(#scale_fields),*)
+                }
+            }
+        }
+    }
+
+    /// Generates `impl DegenerateNormed for Type<T>` for PGA types.
+    ///
+    /// Returns None if the type has no bulk or weight components.
+    fn generate_degenerate_normed_impl(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        let name = format_ident!("{}", ty.name);
+
+        // Find indices of degenerate basis vectors (those with metric == 0)
+        let degenerate_indices: Vec<usize> = self
+            .spec
+            .signature
+            .basis
+            .iter()
+            .filter(|b| b.metric == 0)
+            .map(|b| b.index)
+            .collect();
+
+        // Partition fields into bulk (no degenerate basis) and weight (has degenerate basis)
+        let (bulk_fields, weight_fields): (Vec<_>, Vec<_>) = ty.fields.iter().partition(|f| {
+            // Check if this field's blade involves any degenerate basis vector
+            !degenerate_indices.iter().any(|&deg_idx| {
+                // Check if bit `deg_idx` is set in the blade_index
+                (f.blade_index >> deg_idx) & 1 == 1
+            })
+        });
+
+        // Don't generate if there are no fields in either category
+        if bulk_fields.is_empty() && weight_fields.is_empty() {
+            return None;
+        }
+
+        // Generate bulk_norm_squared: sum of squares of bulk fields
+        let bulk_norm_terms: Vec<TokenStream> = bulk_fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        // Generate weight_norm_squared: sum of squares of weight fields
+        let weight_norm_terms: Vec<TokenStream> = weight_fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * self.#fname() }
+            })
+            .collect();
+
+        let bulk_norm_expr = if bulk_norm_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#bulk_norm_terms)+* }
+        };
+
+        let weight_norm_expr = if weight_norm_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#weight_norm_terms)+* }
+        };
+
+        // Generate scale fields for try_unitize
+        let scale_fields: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|f| {
+                let fname = format_ident!("{}", f.name);
+                quote! { self.#fname() * inv_w }
+            })
+            .collect();
+
+        Some(quote! {
+            impl<T: Float> crate::norm::DegenerateNormed for #name<T> {
+                #[inline]
+                fn bulk_norm_squared(&self) -> T {
+                    #bulk_norm_expr
+                }
+
+                #[inline]
+                fn weight_norm_squared(&self) -> T {
+                    #weight_norm_expr
+                }
+
+                fn try_unitize(&self) -> Option<Self> {
+                    let w = self.weight_norm();
+                    if w < T::epsilon() {
+                        None
+                    } else {
+                        let inv_w = T::one() / w;
+                        Some(Self::new(#(#scale_fields),*))
+                    }
+                }
+            }
+        })
     }
 
     // ========================================================================
@@ -826,7 +1016,7 @@ mod tests {
 
     #[test]
     fn generates_add_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -839,7 +1029,7 @@ mod tests {
 
     #[test]
     fn generates_sub_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -852,7 +1042,7 @@ mod tests {
 
     #[test]
     fn generates_neg_impl() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -865,7 +1055,7 @@ mod tests {
 
     #[test]
     fn generates_scalar_mul() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -881,7 +1071,7 @@ mod tests {
 
     #[test]
     fn generates_geometric_mul() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -895,7 +1085,7 @@ mod tests {
 
     #[test]
     fn generates_exterior() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -910,7 +1100,7 @@ mod tests {
 
     #[test]
     fn generates_approx_impls() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -925,7 +1115,7 @@ mod tests {
 
     #[test]
     fn generates_arbitrary_impls() {
-        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
