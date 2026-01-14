@@ -35,10 +35,6 @@ mod tests {
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
         assert_eq!(rotor.grades, vec![0, 2]);
         assert_eq!(rotor.fields.len(), 2);
-
-        // Check options
-        assert!(spec.options.generate_serde);
-        assert!(spec.options.generate_arbitrary);
     }
 
     #[test]

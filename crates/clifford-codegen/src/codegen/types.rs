@@ -123,19 +123,11 @@ impl<'a> TypeGenerator<'a> {
 
     /// Generates import statements.
     fn generate_imports(&self) -> TokenStream {
-        let serde_import = if self.spec.options.generate_serde {
-            quote! {
-                #[cfg(feature = "serde")]
-                use serde::{Serialize, Deserialize};
-            }
-        } else {
-            quote! {}
-        };
-
         quote! {
             use crate::scalar::Float;
 
-            #serde_import
+            #[cfg(feature = "serde")]
+            use serde::{Serialize, Deserialize};
         }
     }
 
@@ -231,15 +223,9 @@ impl<'a> TypeGenerator<'a> {
 
     /// Generates derive macros.
     fn generate_derives(&self) -> TokenStream {
-        if self.spec.options.generate_serde {
-            quote! {
-                #[derive(Clone, Copy, Debug, PartialEq)]
-                #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-            }
-        } else {
-            quote! {
-                #[derive(Clone, Copy, Debug, PartialEq)]
-            }
+        quote! {
+            #[derive(Clone, Copy, Debug, PartialEq)]
+            #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
         }
     }
 

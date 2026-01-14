@@ -9,8 +9,8 @@ use crate::discovery::{ProductType, infer_all_products};
 
 use super::error::ParseError;
 use super::ir::{
-    AlgebraSpec, BasisVector, FieldSpec, GenerationOptions, ProductEntry, ProductsSpec,
-    SignatureSpec, TypeSpec, VersorSpec,
+    AlgebraSpec, BasisVector, FieldSpec, ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
+    VersorSpec,
 };
 use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec};
 
@@ -72,11 +72,6 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
         blade_names,
         types,
         products,
-        options: GenerationOptions {
-            generate_serde: raw.options.generate_serde,
-            generate_arbitrary: raw.options.generate_arbitrary,
-            generate_tests: raw.options.generate_tests,
-        },
     })
 }
 

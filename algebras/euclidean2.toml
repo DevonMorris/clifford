@@ -34,8 +34,3 @@ grades = [0, 2]
 description = "2D rotor (unit versor for rotations)"
 fields = ["s", "xy"]
 versor = true
-
-[options]
-generate_serde = true
-generate_arbitrary = true
-generate_nalgebra = true

@@ -87,8 +87,3 @@ description = "3D reflection/glide transformation"
 fields = ["e1", "e2", "e3", "e0", "e023", "e031", "e012", "e123"]
 versor = true
 sandwich = { targets = ["Point", "Line", "Plane", "Motor", "Flector"] }
-
-[options]
-generate_serde = true
-generate_arbitrary = true
-generate_nalgebra = true

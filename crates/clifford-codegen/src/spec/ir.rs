@@ -25,8 +25,6 @@ pub struct AlgebraSpec {
     pub types: Vec<TypeSpec>,
     /// Product specifications.
     pub products: ProductsSpec,
-    /// Code generation options.
-    pub options: GenerationOptions,
 }
 
 /// Metric signature specification.
@@ -285,15 +283,4 @@ pub struct ProductEntry {
     pub output: String,
     /// Whether the output is a constrained type (uses new_unchecked).
     pub output_constrained: bool,
-}
-
-/// Code generation options.
-#[derive(Debug, Clone, Default)]
-pub struct GenerationOptions {
-    /// Generate serde implementations.
-    pub generate_serde: bool,
-    /// Generate Arbitrary implementations for proptest.
-    pub generate_arbitrary: bool,
-    /// Generate test modules.
-    pub generate_tests: bool,
 }

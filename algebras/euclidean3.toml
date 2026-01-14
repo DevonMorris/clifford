@@ -45,8 +45,3 @@ fields = ["xyz"]
 
 # Note: Entity_0_3 (scalar + pseudoscalar) is valid but rarely used
 # Note: Entity_1_3 (vector + trivector) is the odd subalgebra
-
-[options]
-generate_serde = true
-generate_arbitrary = true
-generate_nalgebra = true

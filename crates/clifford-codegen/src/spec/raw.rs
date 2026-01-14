@@ -21,9 +21,6 @@ pub struct RawAlgebraSpec {
     /// Type definitions.
     #[serde(default)]
     pub types: HashMap<String, RawTypeSpec>,
-    /// Generation options.
-    #[serde(default)]
-    pub options: RawOptions,
 }
 
 /// Raw algebra info section.
@@ -86,33 +83,4 @@ pub struct RawSandwichConfig {
     /// - Empty to auto-detect targets based on grade compatibility
     #[serde(default)]
     pub targets: Vec<String>,
-}
-
-/// Raw generation options.
-#[derive(Debug, Deserialize)]
-pub struct RawOptions {
-    /// Generate serde implementations.
-    #[serde(default)]
-    pub generate_serde: bool,
-    /// Generate Arbitrary implementations.
-    #[serde(default = "default_true")]
-    pub generate_arbitrary: bool,
-    /// Generate test modules.
-    #[serde(default = "default_true")]
-    pub generate_tests: bool,
-}
-
-impl Default for RawOptions {
-    fn default() -> Self {
-        Self {
-            generate_serde: false,
-            generate_arbitrary: true,
-            generate_tests: true,
-        }
-    }
-}
-
-/// Default value helper for serde.
-fn default_true() -> bool {
-    true
 }
