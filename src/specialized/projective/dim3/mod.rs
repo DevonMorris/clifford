@@ -143,7 +143,6 @@ mod nalgebra;
 mod rerun;
 
 // Re-export generated types and wrapper aliases
-pub use generated::products;
 pub use generated::types::*;
 
 #[cfg(any(

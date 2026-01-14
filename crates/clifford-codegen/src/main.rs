@@ -25,7 +25,7 @@ use clap::{Parser, Subcommand};
 
 use clifford_codegen::algebra::{Algebra, ProductTable};
 use clifford_codegen::codegen::{
-    ConversionsGenerator, ProductGenerator, TraitsGenerator, TypeGenerator, format_tokens,
+    ConversionsGenerator, TraitsGenerator, TypeGenerator, format_tokens,
 };
 use clifford_codegen::discovery::{discover_entities, generate_toml_template};
 use clifford_codegen::spec::parse_spec;
@@ -240,14 +240,12 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
 
     // Create generators
     let type_gen = TypeGenerator::new(&spec, &algebra);
-    let product_gen = ProductGenerator::new(&spec, &algebra, table.clone());
     let traits_gen = TraitsGenerator::new(&spec, &algebra, table);
     let conversions_gen = ConversionsGenerator::new(&spec, &algebra);
 
     // Generate files (traits is special - returns tuple)
     let files = vec![
         ("types.rs", type_gen.generate_types_file()),
-        ("products.rs", product_gen.generate_products_file()),
         (
             "conversions.rs",
             conversions_gen.generate_conversions_file(),
@@ -317,7 +315,6 @@ fn generate_mod_file(
 
     let mut mods = vec![
         quote! { pub mod types; },
-        quote! { pub mod products; },
         quote! { pub mod traits; },
         quote! { pub mod conversions; },
     ];
@@ -348,7 +345,6 @@ fn verify(path: &std::path::Path, spec_path: Option<&std::path::Path>) -> Result
         let spec_content = std::fs::read_to_string(spec_path)?;
         let spec = parse_spec(&spec_content)?;
         let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
-        let table = ProductTable::new(&algebra);
 
         println!("  Comparing against: {}", spec_path.display());
 
@@ -364,20 +360,6 @@ fn verify(path: &std::path::Path, spec_path: Option<&std::path::Path>) -> Result
                 return Err(anyhow!("Generated code doesn't match specification"));
             }
             println!("  types.rs: OK");
-        }
-
-        // Check products.rs
-        let product_gen = ProductGenerator::new(&spec, &algebra, table);
-        let expected_products = format_tokens(&product_gen.generate_products_file());
-        let products_path = path.join("products.rs");
-
-        if products_path.exists() {
-            let actual_products = std::fs::read_to_string(&products_path)?;
-            if normalize_whitespace(&expected_products) != normalize_whitespace(&actual_products) {
-                println!("  products.rs: MISMATCH");
-                return Err(anyhow!("Generated code doesn't match specification"));
-            }
-            println!("  products.rs: OK");
         }
     }
 

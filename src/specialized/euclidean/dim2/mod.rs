@@ -51,8 +51,5 @@ mod rerun;
 // Re-export generated types and wrapper aliases
 pub use generated::types::*;
 
-// Re-export products module for direct access to algebraic products
-pub use generated::products;
-
 // Re-export Even alias from extensions
 pub use extensions::Even;

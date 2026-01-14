@@ -7,6 +7,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
+use clifford::ops::Wedge;
 use clifford::specialized::euclidean::{dim2, dim3};
 use criterion::{Criterion, criterion_group, criterion_main};
 
@@ -28,7 +29,7 @@ fn bench_vec2_wedge(c: &mut Criterion) {
     let b: dim2::Vector<f64> = dim2::Vector::new(3.0, 4.0);
 
     c.bench_function("euclidean/dim2/vector_wedge", |bencher| {
-        bencher.iter(|| black_box(a).wedge(black_box(b)))
+        bencher.iter(|| black_box(a).wedge(&black_box(b)))
     });
 }
 
@@ -86,7 +87,7 @@ fn bench_vec3_wedge(c: &mut Criterion) {
     let b: dim3::Vector<f64> = dim3::Vector::new(4.0, 5.0, 6.0);
 
     c.bench_function("euclidean/dim3/vector_wedge", |bencher| {
-        bencher.iter(|| black_box(a).wedge(black_box(b)))
+        bencher.iter(|| black_box(a).wedge(&black_box(b)))
     });
 }
 
