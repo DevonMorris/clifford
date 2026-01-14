@@ -244,67 +244,88 @@ impl<T: Float> Line<T> {
     }
 
     /// Creates a line from Plücker coordinates without validation.
+    ///
+    /// # Field mapping
+    ///
+    /// Plücker coordinates map to the lexicographic field order as:
+    /// - direction (e01, e02, e03) → (dir_x, dir_y, dir_z) at positions 2, 4, 5
+    /// - moment (e23, e31, e12) → (moment_x, -moment_y, moment_z) at positions 3, 1, 0
+    ///
+    /// Note: moment_y is negated due to the e31 sign convention.
     #[inline]
     pub fn from_plucker(direction: &EuclideanVector<T>, moment: &EuclideanVector<T>) -> Self {
+        // Lexicographic field order: [moment_z, moment_y, dir_x, moment_x, dir_y, dir_z]
+        // Position 0: e12 = moment_z, Position 1: e13=e31 = -moment_y
+        // Position 2: e14=e01 = dir_x, Position 3: e23 = moment_x
+        // Position 4: e24=e02 = dir_y, Position 5: e34=e03 = dir_z
         Self::new_unchecked(
-            direction.x(),
-            direction.y(),
-            direction.z(),
-            moment.x(),
-            moment.y(),
-            moment.z(),
+            moment.z(),     // position 0: moment_z (e12)
+            -moment.y(),    // position 1: moment_y (e13=e31, negated for sign)
+            direction.x(),  // position 2: dir_x (e14=e01)
+            moment.x(),     // position 3: moment_x (e23)
+            direction.y(),  // position 4: dir_y (e24=e02)
+            direction.z(),  // position 5: dir_z (e34=e03)
         )
     }
 
     /// X-axis (line through origin along x).
     #[inline]
     pub fn x_axis() -> Self {
+        // Direction = (1, 0, 0), Moment = (0, 0, 0)
+        // Field order: [moment_z, moment_y, dir_x, moment_x, dir_y, dir_z]
         Self::new_unchecked(
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // moment_z
+            T::zero(),  // moment_y
+            T::one(),   // dir_x = 1
+            T::zero(),  // moment_x
+            T::zero(),  // dir_y
+            T::zero(),  // dir_z
         )
     }
 
     /// Y-axis.
     #[inline]
     pub fn y_axis() -> Self {
+        // Direction = (0, 1, 0), Moment = (0, 0, 0)
         Self::new_unchecked(
-            T::zero(),
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // moment_z
+            T::zero(),  // moment_y
+            T::zero(),  // dir_x
+            T::zero(),  // moment_x
+            T::one(),   // dir_y = 1
+            T::zero(),  // dir_z
         )
     }
 
     /// Z-axis.
     #[inline]
     pub fn z_axis() -> Self {
+        // Direction = (0, 0, 1), Moment = (0, 0, 0)
         Self::new_unchecked(
-            T::zero(),
-            T::zero(),
-            T::one(),
-            T::zero(),
-            T::zero(),
-            T::zero(),
+            T::zero(),  // moment_z
+            T::zero(),  // moment_y
+            T::zero(),  // dir_x
+            T::zero(),  // moment_x
+            T::zero(),  // dir_y
+            T::one(),   // dir_z = 1
         )
     }
 
     /// Direction vector (e01, e02, e03).
+    ///
+    /// Returns the direction part of the Plücker coordinates.
     #[inline]
     pub fn direction(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.moment_x(), self.moment_y(), self.moment_z())
+        EuclideanVector::new(self.dir_x(), self.dir_y(), self.dir_z())
     }
 
     /// Moment vector (e23, e31, e12).
+    ///
+    /// Returns the moment part of the Plücker coordinates.
+    /// Note: moment_y is negated to account for the e31 sign convention.
     #[inline]
     pub fn moment(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.dir_x(), self.dir_y(), self.dir_z())
+        EuclideanVector::new(self.moment_x(), -self.moment_y(), self.moment_z())
     }
 
     /// Weight norm (direction magnitude).
