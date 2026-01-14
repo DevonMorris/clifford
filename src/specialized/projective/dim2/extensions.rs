@@ -3,7 +3,7 @@
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to 2D projective geometry.
 
-use super::types::{Flector, Line, Motor, Point, Trivector};
+use super::generated::types::{Flector, Line, Motor, Point, Trivector};
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim2::Vector as EuclideanVector;
 
