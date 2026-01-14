@@ -25,15 +25,13 @@
 //! - `UnitQuaternion` for rotation
 //! - `Translation3` for translation
 //!
-//! # Rotation Convention Difference
+//! # Rotation Convention
 //!
-//! **Important:** PGA rotation factories use the opposite direction convention from nalgebra.
-//! - `Motor::from_rotation_z(θ)` rotates by `θ` in PGA convention
-//! - This equals `na::UnitQuaternion::from_axis_angle(&z, -θ)` in nalgebra convention
+//! PGA rotation factories use the same direction convention as nalgebra (right-hand rule CCW).
+//! - `Motor::from_rotation_z(θ)` rotates by `θ` counterclockwise around z (when viewed from +z)
+//! - This equals `na::UnitQuaternion::from_axis_angle(&z, θ)` in nalgebra
 //!
-//! The Motor ↔ Isometry conversion handles this automatically: converting a motor to
-//! an isometry and back preserves the transformation semantics perfectly. The convention
-//! difference only matters when creating rotations directly from angle values.
+//! The Motor ↔ Isometry conversion preserves transformation semantics perfectly.
 //!
 //! # Example
 //!
@@ -479,18 +477,16 @@ mod tests {
 
         /// Verify from_rotation_x produces equivalent results.
         ///
-        /// Note: PGA rotation convention is opposite to nalgebra quaternion convention.
-        /// Motor::from_rotation_x(angle) equals nalgebra rotation by -angle.
+        /// PGA rotation matches nalgebra quaternion convention (right-hand rule CCW).
         #[test]
         fn rotation_x_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_x(angle);
-            // PGA rotates opposite to nalgebra convention, so use -angle
             let iso = na::Isometry3::from_parts(
                 na::Translation3::identity(),
-                na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), -angle),
+                na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), angle),
             );
 
             let result_ga = motor.transform(&*p);
@@ -504,18 +500,16 @@ mod tests {
 
         /// Verify from_rotation_y produces equivalent results.
         ///
-        /// Note: PGA rotation convention is opposite to nalgebra quaternion convention.
-        /// Motor::from_rotation_y(angle) equals nalgebra rotation by -angle.
+        /// PGA rotation matches nalgebra quaternion convention (right-hand rule CCW).
         #[test]
         fn rotation_y_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_y(angle);
-            // PGA rotates opposite to nalgebra convention, so use -angle
             let iso = na::Isometry3::from_parts(
                 na::Translation3::identity(),
-                na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), -angle),
+                na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), angle),
             );
 
             let result_ga = motor.transform(&*p);
@@ -529,18 +523,16 @@ mod tests {
 
         /// Verify from_rotation_z produces equivalent results.
         ///
-        /// Note: PGA rotation convention is opposite to nalgebra quaternion convention.
-        /// Motor::from_rotation_z(angle) equals nalgebra rotation by -angle.
+        /// PGA rotation matches nalgebra quaternion convention (right-hand rule CCW).
         #[test]
         fn rotation_z_factory_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             p in any::<UnitizedPoint<f64>>(),
         ) {
             let motor = Motor::from_rotation_z(angle);
-            // PGA rotates opposite to nalgebra convention, so use -angle
             let iso = na::Isometry3::from_parts(
                 na::Translation3::identity(),
-                na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), -angle),
+                na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), angle),
             );
 
             let result_ga = motor.transform(&*p);
@@ -554,8 +546,7 @@ mod tests {
 
         /// Verify from_axis_angle produces equivalent results.
         ///
-        /// Note: PGA rotation convention is opposite to nalgebra quaternion convention.
-        /// Motor::from_axis_angle(axis, angle) equals nalgebra rotation by -angle.
+        /// PGA rotation matches nalgebra quaternion convention (right-hand rule CCW).
         #[test]
         fn axis_angle_factory_equivalence(
             ax in -1.0f64..1.0,
@@ -571,11 +562,10 @@ mod tests {
             let axis = crate::specialized::euclidean::dim3::Vector::new(ax, ay, az);
             let motor = Motor::from_axis_angle(&axis, angle);
 
-            // PGA rotates opposite to nalgebra convention, so use -angle
             let na_axis = na::Unit::new_normalize(na::Vector3::new(ax, ay, az));
             let iso = na::Isometry3::from_parts(
                 na::Translation3::identity(),
-                na::UnitQuaternion::from_axis_angle(&na_axis, -angle),
+                na::UnitQuaternion::from_axis_angle(&na_axis, angle),
             );
 
             let result_ga = motor.transform(&*p);

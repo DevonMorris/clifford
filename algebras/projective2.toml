@@ -1,0 +1,83 @@
+# 2D Projective Geometric Algebra (PGA)
+# Cl(2,0,1) - 2 positive bases, 1 degenerate basis
+#
+# Point-based formulation where:
+# - Grade 1 = Points (homogeneous coordinates)
+# - Grade 2 = Lines
+# - Grade 1+3 = Motors (rigid transformations via antisandwich)
+# - Grade 0+2 = Flectors (reflections via antisandwich)
+#
+# Note: In 2D PGA (odd dimension n=3), complement flips parity, so the
+# ODD subalgebra [1,3] is closed under antiproduct. This is why Motor
+# uses [1,3] instead of the traditional [0,2] - it enables proper
+# antisandwich-based transforms.
+
+[algebra]
+name = "projective2"
+module_path = "projective::dim2"
+description = "2D Projective Geometric Algebra"
+
+[signature]
+positive = ["e1", "e2"]
+negative = []
+zero = ["e0"]
+
+[blades]
+# Scalar (grade 0)
+# (implicit)
+
+# Vectors (grade 1) - represent points in homogeneous coordinates
+e1 = "e1"
+e2 = "e2"
+e3 = "e0"  # e3 is the degenerate basis, named e0 in PGA convention
+
+# Bivectors (grade 2) - represent lines
+# Euclidean bivector (rotation part)
+e12 = "e12"
+# Translation bivectors (e0 wedge ei)
+e13 = "e01"
+e23 = "e02"
+
+# Trivector (grade 3) - pseudoscalar
+e123 = "e012"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+fields = ["s"]
+
+[types.Point]
+grades = [1]
+description = "2D point in homogeneous coordinates"
+fields = ["e1", "e2", "e0"]
+
+[types.Line]
+grades = [2]
+description = "2D line"
+fields = ["e01", "e02", "e12"]
+
+[types.Trivector]
+grades = [3]
+fields = ["e012"]
+
+[types.Motor]
+grades = [1, 3]
+description = "2D rigid transformation (rotation + translation) via antisandwich"
+fields = ["e1", "e2", "e0", "e012"]
+versor = true
+sandwich = { targets = ["Point", "Line", "Motor", "Flector"] }
+
+[types.Flector]
+grades = [0, 2]
+description = "2D reflection/glide transformation via antisandwich"
+fields = ["s", "e01", "e02", "e12"]
+versor = true
+sandwich = { targets = ["Point", "Line", "Motor", "Flector"] }
+
+[options]
+generate_serde = true
+generate_arbitrary = true
+generate_nalgebra = true

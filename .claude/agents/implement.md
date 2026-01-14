@@ -124,6 +124,44 @@ Generated products use `new_unchecked()` for constrained types because:
 
 Constraints matter for: `normalize()`, factory methods, `try_from_components()`
 
+### Versor Parity Rules and the Antiproduct
+
+**Critical for PGA algebras:** Versors must be defined with correct grade parity for the antiproduct to work.
+
+The **antiproduct** is defined as: `a ⊛ b = ∁(∁a × ∁b)` where `∁` is the complement.
+
+The complement maps grade `k` → grade `(n-k)`. This has different effects based on dimension:
+
+| Dimension | Complement Effect | Antiproduct Parity |
+|-----------|-------------------|-------------------|
+| Even (n=4, 3D PGA) | Preserves parity | Same as geometric product |
+| Odd (n=3, 2D PGA) | Flips parity | Opposite of geometric product |
+
+**Geometric product parity rules:**
+- Even × Even = Even
+- Odd × Odd = Even
+- Even × Odd = Odd
+
+**Antiproduct parity rules (odd dimension):**
+- Even ⊛ Even = **Odd** (flipped!)
+- Odd ⊛ Odd = **Odd** (closed!)
+- Even ⊛ Odd = **Even** (flipped!)
+
+**Consequence for versor definitions:**
+
+For versors to be closed under antiproduct composition:
+
+| Algebra | Motor grades | Flector grades |
+|---------|--------------|----------------|
+| 3D PGA (n=4, even) | [0, 2, 4] (even) | [1, 3] (odd) |
+| 2D PGA (n=3, odd) | [1, 3] (odd) | [0, 2] (even) |
+
+This ensures `Motor ⊛ Motor = Motor` in all PGA algebras.
+
+**Why antisandwich for transformations:**
+
+In PGA, the regular sandwich `V × X × rev(V)` fails for translations because `e0² = 0` causes terms to vanish. The antisandwich `V ⊛ X ⊛ antirev(V)` goes through complements, avoiding the degenerate metric issue. The `Transform` trait uses antisandwich for this reason.
+
 ### Adding New Operations to Codegen
 
 When adding a new product or unary operation to codegen, you must:
