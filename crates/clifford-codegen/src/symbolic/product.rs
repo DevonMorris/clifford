@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use symbolica::atom::{Atom, DefaultNamespace};
 use symbolica::parser::ParseSettings;
 
-use crate::algebra::{Algebra, Blade, ProductTable, left_contraction_grade, outer_grade};
+use crate::algebra::{Algebra, Blade, ProductTable};
 use crate::spec::TypeSpec;
 
 /// The kind of product to compute symbolically.
@@ -26,8 +26,10 @@ pub enum ProductKind {
     Wedge,
     /// Inner product (symmetric, Hestenes inner).
     Inner,
-    /// Left contraction (inner product).
+    /// Left contraction (a ⌋ b, grade gb - ga when ga <= gb).
     LeftContraction,
+    /// Right contraction (a ⌊ b, grade ga - gb when gb <= ga).
+    RightContraction,
     /// Antiwedge product (∨, regressive/meet).
     Antiwedge,
     /// Bulk contraction (a ∨ b★).
@@ -38,6 +40,12 @@ pub enum ProductKind {
     BulkExpansion,
     /// Weight expansion (a ∧ b☆).
     WeightExpansion,
+    /// Dot product (• metric inner, same-grade only, returns scalar).
+    Dot,
+    /// Antidot product (⊚ metric antiproduct inner, same-antigrade only, returns scalar).
+    Antidot,
+    /// Scalar product (grade-0 projection of geometric product).
+    Scalar,
 }
 
 /// A symbolic field expression.
@@ -141,7 +149,6 @@ impl SymbolicProduct {
         a_symbols: &HashMap<String, Atom>,
         b_symbols: &HashMap<String, Atom>,
     ) -> Atom {
-        let dim = self.table.dim();
         let mut terms: Vec<Atom> = Vec::new();
 
         for field_a in &type_a.fields {
@@ -149,60 +156,33 @@ impl SymbolicProduct {
                 let a_blade = field_a.blade_index;
                 let b_blade = field_b.blade_index;
 
-                // Compute the product based on kind
-                let (sign, result, include) = match kind {
-                    ProductKind::Geometric => {
-                        let (s, r) = self.table.geometric(a_blade, b_blade);
-                        (s, r, true)
+                // Compute the product based on kind using ProductTable methods
+                let (sign, result) = match kind {
+                    ProductKind::Geometric => self.table.geometric(a_blade, b_blade),
+                    ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
+                    ProductKind::Wedge => self.table.exterior(a_blade, b_blade),
+                    ProductKind::Inner => self.table.interior(a_blade, b_blade),
+                    ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
+                    ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
+                    ProductKind::Antiwedge => self.table.regressive(a_blade, b_blade),
+                    ProductKind::BulkContraction => self.table.bulk_contraction(a_blade, b_blade),
+                    ProductKind::WeightContraction => {
+                        self.table.weight_contraction(a_blade, b_blade)
                     }
-                    ProductKind::Antigeometric => {
-                        // Antiproduct: complement(complement(a) × complement(b))
-                        let (s, r) = self.table.antiproduct(a_blade, b_blade);
-                        (s, r, true)
-                    }
-                    ProductKind::Wedge => {
+                    ProductKind::BulkExpansion => self.table.bulk_expansion(a_blade, b_blade),
+                    ProductKind::WeightExpansion => self.table.weight_expansion(a_blade, b_blade),
+                    ProductKind::Dot => self.table.dot(a_blade, b_blade),
+                    ProductKind::Antidot => self.table.antidot(a_blade, b_blade),
+                    ProductKind::Scalar => {
+                        // Scalar product: grade-0 projection of geometric product
                         let (s, r) = self.table.geometric(a_blade, b_blade);
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
+                        // Only include if result is grade 0 (scalar blade index = 0)
                         let result_grade = Blade::from_index(r).grade();
-                        let inc = outer_grade(a_grade, b_grade, dim)
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false);
-                        (s, r, inc)
-                    }
-                    ProductKind::Inner => {
-                        let (s, r) = self.table.geometric(a_blade, b_blade);
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(r).grade();
-                        // Inner product: |ga - gb|
-                        let inc = result_grade == a_grade.abs_diff(b_grade);
-                        (s, r, inc)
-                    }
-                    ProductKind::LeftContraction => {
-                        let (s, r) = self.table.geometric(a_blade, b_blade);
-                        let a_grade = Blade::from_index(a_blade).grade();
-                        let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(r).grade();
-                        let inc = left_contraction_grade(a_grade, b_grade)
-                            .map(|g| g == result_grade)
-                            .unwrap_or(false);
-                        (s, r, inc)
-                    }
-                    // These products are computed via table methods in ProductTable
-                    // and handled in codegen/products.rs directly
-                    ProductKind::Antiwedge
-                    | ProductKind::BulkContraction
-                    | ProductKind::WeightContraction
-                    | ProductKind::BulkExpansion
-                    | ProductKind::WeightExpansion => {
-                        // These are composite products that use dual operations
-                        // They are handled specially in the codegen layer
-                        (0, 0, false)
+                        if result_grade == 0 { (s, r) } else { (0, 0) }
                     }
                 };
 
-                if result != result_blade || sign == 0 || !include {
+                if result != result_blade || sign == 0 {
                     continue;
                 }
 

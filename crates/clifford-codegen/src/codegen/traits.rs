@@ -6,7 +6,7 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::algebra::{Algebra, ProductTable};
+use crate::algebra::{Algebra, Blade, ProductTable};
 use crate::spec::{AlgebraSpec, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
@@ -59,12 +59,18 @@ pub struct TraitsGenerator<'a> {
     spec: &'a AlgebraSpec,
     /// The algebra for computations.
     algebra: &'a Algebra,
+    /// The product table for term computation.
+    table: ProductTable,
 }
 
 impl<'a> TraitsGenerator<'a> {
     /// Creates a new traits generator.
-    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, _table: ProductTable) -> Self {
-        Self { spec, algebra }
+    pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, table: ProductTable) -> Self {
+        Self {
+            spec,
+            algebra,
+            table,
+        }
     }
 
     /// Generates the complete traits file.
@@ -150,7 +156,6 @@ impl<'a> TraitsGenerator<'a> {
                 Reverse, Antireverse, RightComplement, Versor,
             };
             use super::types::{#(#type_names),*};
-            use super::products::*;
 
             use std::ops::{Add, Sub, Neg, Mul, BitXor};
 
@@ -441,22 +446,306 @@ impl<'a> TraitsGenerator<'a> {
             .collect()
     }
 
+    /// Computes sandwich product expressions: v × x × rev(v).
+    ///
+    /// Returns TokenStream expressions for each field of the output type.
+    fn compute_sandwich_expressions(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> Vec<TokenStream> {
+        operand
+            .fields
+            .iter()
+            .map(|field| self.compute_sandwich_field(versor, operand, field.blade_index, false))
+            .collect()
+    }
+
+    /// Computes antisandwich product expressions: v ⊛ x ⊛ antirev(v).
+    ///
+    /// Returns TokenStream expressions for each field of the output type.
+    fn compute_antisandwich_expressions(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> Vec<TokenStream> {
+        operand
+            .fields
+            .iter()
+            .map(|field| self.compute_sandwich_field(versor, operand, field.blade_index, true))
+            .collect()
+    }
+
+    /// Computes a single sandwich field expression.
+    ///
+    /// If `use_antiproduct` is true, uses the antiproduct and antireverse (for antisandwich).
+    fn compute_sandwich_field(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+        result_blade: usize,
+        use_antiproduct: bool,
+    ) -> TokenStream {
+        let dim = self.algebra.dim();
+
+        // Collect terms: for each combination v_i × x_j × rev(v_k) or v_i ⊛ x_j ⊛ antirev(v_k)
+        let mut term_map: std::collections::HashMap<(String, String, String), i8> =
+            std::collections::HashMap::new();
+
+        for field_v1 in &versor.fields {
+            for field_x in &operand.fields {
+                for field_v2 in &versor.fields {
+                    let v1_blade = field_v1.blade_index;
+                    let x_blade = field_x.blade_index;
+                    let v2_blade = field_v2.blade_index;
+
+                    // Compute v_i × x_j (or v_i ⊛ x_j)
+                    let (sign_vx, vx) = if use_antiproduct {
+                        self.table.antiproduct(v1_blade, x_blade)
+                    } else {
+                        self.table.geometric(v1_blade, x_blade)
+                    };
+                    if sign_vx == 0 {
+                        continue;
+                    }
+
+                    // Compute the reverse/antireverse sign
+                    let v2_grade = Blade::from_index(v2_blade).grade();
+                    let rev_sign: i8 = if use_antiproduct {
+                        // Antireverse sign: (-1)^((n-k)(n-k-1)/2)
+                        let antigrade = dim - v2_grade;
+                        if (antigrade * antigrade.saturating_sub(1) / 2).is_multiple_of(2) {
+                            1
+                        } else {
+                            -1
+                        }
+                    } else {
+                        // Reverse sign: (-1)^(k(k-1)/2)
+                        if (v2_grade * v2_grade.saturating_sub(1) / 2).is_multiple_of(2) {
+                            1
+                        } else {
+                            -1
+                        }
+                    };
+
+                    // Compute (v_i × x_j) × rev(v_k) (or (v_i ⊛ x_j) ⊛ antirev(v_k))
+                    let (sign_vxr, result) = if use_antiproduct {
+                        self.table.antiproduct(vx, v2_blade)
+                    } else {
+                        self.table.geometric(vx, v2_blade)
+                    };
+                    if sign_vxr == 0 {
+                        continue;
+                    }
+
+                    if result == result_blade {
+                        let final_sign = sign_vx * sign_vxr * rev_sign;
+                        let key = (
+                            field_v1.name.clone(),
+                            field_x.name.clone(),
+                            field_v2.name.clone(),
+                        );
+                        *term_map.entry(key).or_insert(0) += final_sign;
+                    }
+                }
+            }
+        }
+
+        // Convert to TokenStream
+        if term_map.is_empty() {
+            return quote! { T::zero() };
+        }
+
+        // Filter out zero coefficients and collect non-zero terms
+        let terms: Vec<_> = term_map
+            .into_iter()
+            .filter(|(_, coeff)| *coeff != 0)
+            .collect();
+
+        if terms.is_empty() {
+            return quote! { T::zero() };
+        }
+
+        let mut expr_parts: Vec<TokenStream> = Vec::new();
+        for (i, ((v1, x, v2), coeff)) in terms.iter().enumerate() {
+            let v1_ident = format_ident!("{}", v1);
+            let x_ident = format_ident!("{}", x);
+            let v2_ident = format_ident!("{}", v2);
+
+            let abs_coeff = coeff.abs();
+            let is_negative = *coeff < 0;
+
+            // Build the base product expression
+            let base_expr = quote! { self.#v1_ident() * operand.#x_ident() * self.#v2_ident() };
+
+            // Apply coefficient if not 1
+            let coeff_expr = match abs_coeff {
+                1 => base_expr,
+                2 => quote! { T::TWO * #base_expr },
+                n => {
+                    quote! { T::from_i8(#n) * #base_expr }
+                }
+            };
+
+            // Apply sign and position-based formatting
+            let term_expr = match (i, is_negative) {
+                (0, false) => coeff_expr,
+                (0, true) => quote! { -(#coeff_expr) },
+                (_, false) => quote! { + #coeff_expr },
+                (_, true) => quote! { - #coeff_expr },
+            };
+
+            expr_parts.push(term_expr);
+        }
+
+        quote! { #(#expr_parts)* }
+    }
+
+    /// Computes scalar product expression (grade-0 projection of geometric product).
+    ///
+    /// Returns TokenStream expression for the scalar result.
+    fn compute_scalar_product_expression(&self, a: &TypeSpec, b: &TypeSpec) -> TokenStream {
+        let mut terms: Vec<TokenStream> = Vec::new();
+
+        for field_a in &a.fields {
+            for field_b in &b.fields {
+                let (sign, result) = self
+                    .table
+                    .geometric(field_a.blade_index, field_b.blade_index);
+
+                // Only include if result is grade 0 (scalar blade index = 0)
+                let result_grade = Blade::from_index(result).grade();
+                if result_grade != 0 || sign == 0 {
+                    continue;
+                }
+
+                let a_ident = format_ident!("{}", field_a.name);
+                let b_ident = format_ident!("{}", field_b.name);
+
+                let term_expr = if terms.is_empty() {
+                    if sign > 0 {
+                        quote! { self.#a_ident() * rhs.#b_ident() }
+                    } else {
+                        quote! { -(self.#a_ident() * rhs.#b_ident()) }
+                    }
+                } else if sign > 0 {
+                    quote! { + self.#a_ident() * rhs.#b_ident() }
+                } else {
+                    quote! { - self.#a_ident() * rhs.#b_ident() }
+                };
+                terms.push(term_expr);
+            }
+        }
+
+        if terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#terms)* }
+        }
+    }
+
+    /// Computes dot product expression (same-grade metric inner product).
+    ///
+    /// Returns TokenStream expression for the scalar result.
+    fn compute_dot_expression(&self, a: &TypeSpec, b: &TypeSpec) -> TokenStream {
+        let mut terms: Vec<TokenStream> = Vec::new();
+
+        for field_a in &a.fields {
+            for field_b in &b.fields {
+                let (sign, _result) = self.table.dot(field_a.blade_index, field_b.blade_index);
+
+                // Only include non-zero results
+                if sign == 0 {
+                    continue;
+                }
+
+                let a_ident = format_ident!("{}", field_a.name);
+                let b_ident = format_ident!("{}", field_b.name);
+
+                let term_expr = if terms.is_empty() {
+                    if sign > 0 {
+                        quote! { self.#a_ident() * rhs.#b_ident() }
+                    } else {
+                        quote! { -(self.#a_ident() * rhs.#b_ident()) }
+                    }
+                } else if sign > 0 {
+                    quote! { + self.#a_ident() * rhs.#b_ident() }
+                } else {
+                    quote! { - self.#a_ident() * rhs.#b_ident() }
+                };
+                terms.push(term_expr);
+            }
+        }
+
+        if terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#terms)* }
+        }
+    }
+
+    /// Computes antidot product expression (same-antigrade metric anti-inner product).
+    ///
+    /// Returns TokenStream expression for the scalar result.
+    fn compute_antidot_expression(&self, a: &TypeSpec, b: &TypeSpec) -> TokenStream {
+        let mut terms: Vec<TokenStream> = Vec::new();
+
+        for field_a in &a.fields {
+            for field_b in &b.fields {
+                let (sign, _result) = self.table.antidot(field_a.blade_index, field_b.blade_index);
+
+                // Only include non-zero results
+                if sign == 0 {
+                    continue;
+                }
+
+                let a_ident = format_ident!("{}", field_a.name);
+                let b_ident = format_ident!("{}", field_b.name);
+
+                let term_expr = if terms.is_empty() {
+                    if sign > 0 {
+                        quote! { self.#a_ident() * rhs.#b_ident() }
+                    } else {
+                        quote! { -(self.#a_ident() * rhs.#b_ident()) }
+                    }
+                } else if sign > 0 {
+                    quote! { + self.#a_ident() * rhs.#b_ident() }
+                } else {
+                    quote! { - self.#a_ident() * rhs.#b_ident() }
+                };
+                terms.push(term_expr);
+            }
+        }
+
+        if terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#terms)* }
+        }
+    }
+
     /// Generates exterior product (Type ^ Other -> Output) from a product entry.
     fn generate_exterior_from_entry(
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "exterior_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::Wedge);
+
+        // Generate constructor call with the computed expressions
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> BitXor<#b_name<T>> for #a_name<T> {
@@ -464,7 +753,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn bitxor(self, rhs: #b_name<T>) -> #out_name<T> {
-                    #fn_name(&self, &rhs)
+                    #constructor_call
                 }
             }
         }
@@ -701,15 +990,13 @@ impl<'a> TraitsGenerator<'a> {
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
-        let fn_name = format_ident!(
-            "dot_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the dot product expression
+        let expr = self.compute_dot_expression(a, b);
 
         quote! {
             impl<T: Float> Dot<#b_name<T>> for #a_name<T> {
@@ -717,7 +1004,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn dot(&self, rhs: &#b_name<T>) -> T {
-                    #fn_name(self, rhs)
+                    #expr
                 }
             }
         }
@@ -728,15 +1015,13 @@ impl<'a> TraitsGenerator<'a> {
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
-        let fn_name = format_ident!(
-            "antidot_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the antidot product expression
+        let expr = self.compute_antidot_expression(a, b);
 
         quote! {
             impl<T: Float> Antidot<#b_name<T>> for #a_name<T> {
@@ -744,7 +1029,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn antidot(&self, rhs: &#b_name<T>) -> T {
-                    #fn_name(self, rhs)
+                    #expr
                 }
             }
         }
@@ -756,16 +1041,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "exterior_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::Wedge);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Wedge<#b_name<T>> for #a_name<T> {
@@ -773,7 +1064,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn wedge(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -785,17 +1076,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        // products.rs generates regressive_* for antiwedge/meet products
-        let fn_name = format_ident!(
-            "regressive_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::Antiwedge);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Antiwedge<#b_name<T>> for #a_name<T> {
@@ -803,7 +1099,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn antiwedge(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -815,17 +1111,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        // products.rs generates interior_* for symmetric inner products
-        let fn_name = format_ident!(
-            "interior_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::Inner);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Inner<#b_name<T>> for #a_name<T> {
@@ -833,7 +1134,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn inner(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -845,16 +1146,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "left_contract_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::LeftContraction);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> LeftContract<#b_name<T>> for #a_name<T> {
@@ -862,7 +1169,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn left_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -874,16 +1181,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "right_contract_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::RightContraction);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> RightContract<#b_name<T>> for #a_name<T> {
@@ -891,7 +1204,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn right_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -905,11 +1218,16 @@ impl<'a> TraitsGenerator<'a> {
     ) -> TokenStream {
         let versor_name = format_ident!("{}", versor.name);
         let operand_name = format_ident!("{}", operand.name);
-        let fn_name = format_ident!(
-            "sandwich_{}_{}",
-            versor.name.to_lowercase(),
-            operand.name.to_lowercase()
-        );
+
+        // Compute the sandwich expression for each output field
+        let field_exprs = self.compute_sandwich_expressions(versor, operand);
+
+        // Generate constructor call
+        let constructor_call = if operand.versor.is_some() {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #operand_name::new(#(#field_exprs),*) }
+        };
 
         // For sandwich, output is typically same type as operand
         quote! {
@@ -918,7 +1236,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn sandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
-                    #fn_name(self, operand)
+                    #constructor_call
                 }
             }
         }
@@ -932,11 +1250,16 @@ impl<'a> TraitsGenerator<'a> {
     ) -> TokenStream {
         let versor_name = format_ident!("{}", versor.name);
         let operand_name = format_ident!("{}", operand.name);
-        let fn_name = format_ident!(
-            "antisandwich_{}_{}",
-            versor.name.to_lowercase(),
-            operand.name.to_lowercase()
-        );
+
+        // Compute the antisandwich expression for each output field
+        let field_exprs = self.compute_antisandwich_expressions(versor, operand);
+
+        // Generate constructor call
+        let constructor_call = if operand.versor.is_some() {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #operand_name::new(#(#field_exprs),*) }
+        };
 
         // For antisandwich, output is typically same type as operand
         quote! {
@@ -945,7 +1268,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
-                    #fn_name(self, operand)
+                    #constructor_call
                 }
             }
         }
@@ -1043,15 +1366,13 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         _output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
-        let fn_name = format_ident!(
-            "scalar_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the scalar product expression (grade-0 projection)
+        let expr = self.compute_scalar_product_expression(a, b);
 
         quote! {
             impl<T: Float> ScalarProduct<#b_name<T>> for #a_name<T> {
@@ -1059,7 +1380,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn scalar_product(&self, rhs: &#b_name<T>) -> T {
-                    #fn_name(self, rhs)
+                    #expr
                 }
             }
         }
@@ -1071,16 +1392,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "bulk_contraction_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkContraction);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> BulkContract<#b_name<T>> for #a_name<T> {
@@ -1088,7 +1415,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn bulk_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -1100,16 +1427,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "weight_contraction_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightContraction);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> WeightContract<#b_name<T>> for #a_name<T> {
@@ -1117,7 +1450,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn weight_contract(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -1129,16 +1462,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "bulk_expansion_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkExpansion);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> BulkExpand<#b_name<T>> for #a_name<T> {
@@ -1146,7 +1485,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn bulk_expand(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -1158,16 +1497,22 @@ impl<'a> TraitsGenerator<'a> {
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "weight_expansion_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightExpansion);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> WeightExpand<#b_name<T>> for #a_name<T> {
@@ -1175,7 +1520,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn weight_expand(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
+                    #constructor_call
                 }
             }
         }
@@ -1250,13 +1595,36 @@ impl<'a> TraitsGenerator<'a> {
     /// Generates Reverse trait impl.
     fn generate_reverse_trait(&self, ty: &TypeSpec) -> TokenStream {
         let type_name = format_ident!("{}", ty.name);
-        let fn_name = format_ident!("reverse_{}", ty.name.to_lowercase());
+
+        // Compute field expressions with reverse signs
+        let field_exprs: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let field_name = format_ident!("{}", field.name);
+                let grade = field.grade;
+                // Reverse sign: (-1)^(k(k-1)/2)
+                if (grade * grade.saturating_sub(1) / 2).is_multiple_of(2) {
+                    quote! { self.#field_name() }
+                } else {
+                    quote! { -self.#field_name() }
+                }
+            })
+            .collect();
+
+        // Use unchecked constructor for constrained types
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        let constructor = if has_constraints {
+            quote! { Self::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { Self::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Reverse for #type_name<T> {
                 #[inline]
                 fn reverse(&self) -> Self {
-                    #fn_name(self)
+                    #constructor
                 }
             }
         }
@@ -1265,13 +1633,38 @@ impl<'a> TraitsGenerator<'a> {
     /// Generates Antireverse trait impl.
     fn generate_antireverse_trait(&self, ty: &TypeSpec) -> TokenStream {
         let type_name = format_ident!("{}", ty.name);
-        let fn_name = format_ident!("antireverse_{}", ty.name.to_lowercase());
+        let dim = self.algebra.dim();
+
+        // Compute field expressions with antireverse signs
+        let field_exprs: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let field_name = format_ident!("{}", field.name);
+                let grade = field.grade;
+                let antigrade = dim - grade;
+                // Antireverse sign: (-1)^((n-k)(n-k-1)/2)
+                if (antigrade * antigrade.saturating_sub(1) / 2).is_multiple_of(2) {
+                    quote! { self.#field_name() }
+                } else {
+                    quote! { -self.#field_name() }
+                }
+            })
+            .collect();
+
+        // Use unchecked constructor for constrained types
+        let has_constraints = !ty.solve_for_fields().is_empty();
+        let constructor = if has_constraints {
+            quote! { Self::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { Self::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Antireverse for #type_name<T> {
                 #[inline]
                 fn antireverse(&self) -> Self {
-                    #fn_name(self)
+                    #constructor
                 }
             }
         }
@@ -1282,12 +1675,47 @@ impl<'a> TraitsGenerator<'a> {
     /// Returns None if the complement grades don't map to an existing type.
     fn generate_right_complement_trait(&self, ty: &TypeSpec) -> Option<TokenStream> {
         // Check if there's a matching output type for the complement
-        let output_type = self.find_complement_output_type(ty)?;
+        let output_type_name = self.find_complement_output_type(ty)?;
+        let output_type = self
+            .spec
+            .types
+            .iter()
+            .find(|t| t.name == output_type_name)?;
 
         let type_name = format_ident!("{}", ty.name);
-        // The unary generator produces complement_* functions (which compute right complement)
-        let fn_name = format_ident!("complement_{}", ty.name.to_lowercase());
-        let out_name = format_ident!("{}", output_type);
+        let out_name = format_ident!("{}", output_type_name);
+
+        // Compute field expressions for complement
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|out_field| {
+                // Find the input field that complements to this output blade
+                let out_blade = out_field.blade_index;
+
+                for in_field in &ty.fields {
+                    let (sign, comp_blade) = self.table.complement(in_field.blade_index);
+                    if comp_blade == out_blade && sign != 0 {
+                        let in_name = format_ident!("{}", in_field.name);
+                        return if sign > 0 {
+                            quote! { self.#in_name() }
+                        } else {
+                            quote! { -self.#in_name() }
+                        };
+                    }
+                }
+                // No input blade maps to this output blade
+                quote! { T::zero() }
+            })
+            .collect();
+
+        // Use unchecked constructor for constrained output types
+        let has_constraints = !output_type.solve_for_fields().is_empty();
+        let constructor = if has_constraints {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         Some(quote! {
             impl<T: Float> RightComplement for #type_name<T> {
@@ -1295,7 +1723,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn right_complement(&self) -> #out_name<T> {
-                    #fn_name(self)
+                    #constructor
                 }
             }
         })
