@@ -3,6 +3,7 @@
 //! This module provides optimized, ergonomic types for point-based PGA organized
 //! by dimension. Currently supported:
 //!
+//! - **[`dim2`]**: 2D PGA `Cl(2,0,1)`: Point, Line, Motor, Flector
 //! - **[`dim3`]**: 3D PGA `Cl(3,0,1)`: Point, Line, Plane, Motor, Flector
 //!
 //! # From Homogeneous Coordinates to PGA
@@ -82,6 +83,7 @@
 //!
 //! ```text
 //! projective/
+//!   dim2/   - 2D PGA: Point, Line, Motor, Flector
 //!   dim3/   - 3D PGA: Point, Line, Plane, Motor, Flector
 //! ```
 //!
@@ -99,6 +101,7 @@
 //! let line: Line<f64> = Line::z_axis();
 //! ```
 
+pub mod dim2;
 pub mod dim3;
 mod errors;
 

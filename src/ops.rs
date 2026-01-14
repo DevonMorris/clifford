@@ -675,11 +675,21 @@ pub trait Transform<Operand> {
     /// The output type (same as operand for grade-preserving transforms).
     type Output;
 
-    /// Transforms the operand using `self ⊛ operand ⊛ rev(self)`.
+    /// Transforms the operand using `self ⊛ operand ⊛ antirev(self)` (antisandwich product).
     fn transform(&self, operand: &Operand) -> Self::Output;
 }
 
-/// Blanket implementation of Transform for any type implementing Antisandwich.
+/// Blanket implementation of Transform using antisandwich.
+///
+/// In PGA, the antisandwich product is required for correct transformations
+/// because the degenerate metric (e0² = 0) causes sandwich terms to vanish.
+/// The antisandwich uses the antiproduct which goes through complements,
+/// avoiding the degenerate metric issue.
+///
+/// For this to work correctly, versors must be defined so they are closed
+/// under the antiproduct:
+/// - Even dimension (e.g., 3D PGA, n=4): Motor = even grades, Flector = odd grades
+/// - Odd dimension (e.g., 2D PGA, n=3): Motor = odd grades, Flector = even grades
 impl<T, Operand> Transform<Operand> for T
 where
     T: Antisandwich<Operand>,
