@@ -8,6 +8,7 @@ use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade};
 use crate::spec::{AlgebraSpec, TypeSpec};
+use crate::symbolic::{ConstraintDeriver, ConstraintSolver, SolutionType};
 
 /// Generates Rust struct definitions for algebra types.
 ///
@@ -253,6 +254,7 @@ impl<'a> TypeGenerator<'a> {
     fn generate_impl(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
         let constructor = self.generate_constructor(ty);
+        let constraint_constructors = self.generate_constraint_constructors(ty);
         let accessors = self.generate_accessors(ty);
         let zero = self.generate_zero(ty);
         let unit_elements = self.generate_unit_elements(ty);
@@ -263,6 +265,7 @@ impl<'a> TypeGenerator<'a> {
         quote! {
             impl<T: Float> #name<T> {
                 #constructor
+                #constraint_constructors
                 #accessors
                 #zero
                 #unit_elements
@@ -317,6 +320,205 @@ impl<'a> TypeGenerator<'a> {
                 Self::new(#(#field_inits),*)
             }
         }
+    }
+
+    /// Generates constraint-checking constructors for types with geometric constraints.
+    ///
+    /// For types with derived constraints (e.g., Motor with Study condition), generates:
+    /// - `new_checked()` - validates the constraint and returns `Result<Self, ConstraintError>`
+    /// - `from_components()` - takes N-1 free parameters and computes the constrained field
+    ///
+    /// Returns empty TokenStream for types without constraints.
+    fn generate_constraint_constructors(&self, ty: &TypeSpec) -> TokenStream {
+        // Derive constraint from algebra structure
+        let deriver = ConstraintDeriver::new(self.algebra);
+        let constraint = match deriver.derive_geometric_constraint(ty, "self") {
+            Some(c) => c,
+            None => return quote! {}, // No constraint for this type
+        };
+
+        // Only handle single-constraint cases
+        if constraint.zero_expressions.len() != 1 {
+            return quote! {};
+        }
+
+        let expr = &constraint.zero_expressions[0];
+        let expr_str = format!("{} = 0", expr);
+
+        // Find the highest-grade field to solve for (typically pseudoscalar like e0123)
+        let solve_for_field = match ty.fields.iter().max_by_key(|f| f.grade) {
+            Some(f) => f,
+            None => return quote! {},
+        };
+
+        // Try to solve the constraint
+        let solver = ConstraintSolver::new();
+        let symbol_name = format!("self_{}", solve_for_field.name);
+        let solution = match solver.solve(&expr_str, &symbol_name) {
+            Ok(s) => s,
+            Err(_) => return quote! {},
+        };
+
+        // Skip quadratic constraints for now (they require sqrt)
+        if solution.solution_type == SolutionType::Quadratic {
+            return quote! {};
+        }
+
+        let new_checked = self.generate_new_checked(ty, &solution);
+        let from_components = self.generate_from_components(ty, &solution);
+
+        quote! {
+            #new_checked
+            #from_components
+        }
+    }
+
+    /// Generates the `new_checked()` constructor that validates the constraint.
+    fn generate_new_checked(&self, ty: &TypeSpec, solution: &crate::symbolic::SolveResult) -> TokenStream {
+        // Get all field params
+        let params: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let name = format_ident!("{}", field.name);
+                quote! { #name: T }
+            })
+            .collect();
+
+        let field_inits: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let name = format_ident!("{}", field.name);
+                quote! { #name }
+            })
+            .collect();
+
+        // Build the expected value expression from the solution
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
+        let solve_for_name = format_ident!("{}", solve_for_field.name);
+
+        let numerator_expr = self.convert_constraint_solution_to_tokens(&solution.numerator, ty);
+        let expected_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_expr = self.convert_constraint_solution_to_tokens(divisor, ty);
+            quote! { (#numerator_expr) / (#divisor_expr) }
+        } else {
+            numerator_expr
+        };
+
+        let constraint_name = format!("{} constraint", ty.name);
+
+        quote! {
+            /// Creates a new element, validating the geometric constraint.
+            ///
+            /// Returns `Err` if the constraint is violated beyond the given tolerance.
+            #[inline]
+            pub fn new_checked(#(#params),*, tolerance: T) -> Result<Self, &'static str> {
+                let expected = #expected_expr;
+                let actual = #solve_for_name;
+                if (actual - expected).abs() > tolerance {
+                    return Err(#constraint_name);
+                }
+                Ok(Self::new(#(#field_inits),*))
+            }
+        }
+    }
+
+    /// Generates the `from_components()` constructor that computes the constrained field.
+    fn generate_from_components(&self, ty: &TypeSpec, solution: &crate::symbolic::SolveResult) -> TokenStream {
+        // Find the solve_for field
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
+
+        // Generate params for free fields (all except solve_for)
+        let free_params: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .map(|field| {
+                let name = format_ident!("{}", field.name);
+                quote! { #name: T }
+            })
+            .collect();
+
+        // Build the computed value expression
+        let numerator_expr = self.convert_constraint_solution_to_tokens(&solution.numerator, ty);
+        let computed_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_expr = self.convert_constraint_solution_to_tokens(divisor, ty);
+            quote! { (#numerator_expr) / (#divisor_expr) }
+        } else {
+            numerator_expr
+        };
+
+        // Build field initializers
+        let field_inits: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let field_name = format_ident!("{}", field.name);
+                if field.name == solve_for_field.name {
+                    computed_expr.clone()
+                } else {
+                    quote! { #field_name }
+                }
+            })
+            .collect();
+
+        // Check if there's a divisor that could be zero
+        let doc = format!(
+            "Creates a {} from {} independent components, computing `{}`.\n\n\
+             Returns `None` if the divisor would be zero (unstable computation).",
+            ty.name,
+            free_params.len(),
+            solve_for_field.name
+        );
+
+        if let Some(ref divisor) = solution.divisor {
+            let divisor_check = self.convert_constraint_solution_to_tokens(divisor, ty);
+            quote! {
+                #[doc = #doc]
+                #[inline]
+                pub fn from_components(#(#free_params),*) -> Option<Self> {
+                    if (#divisor_check).abs() < T::epsilon() {
+                        return None;
+                    }
+                    Some(Self::new(#(#field_inits),*))
+                }
+            }
+        } else {
+            let doc_no_div = format!(
+                "Creates a {} from {} independent components, computing `{}`.",
+                ty.name,
+                free_params.len(),
+                solve_for_field.name
+            );
+            quote! {
+                #[doc = #doc_no_div]
+                #[inline]
+                pub fn from_components(#(#free_params),*) -> Self {
+                    Self::new(#(#field_inits),*)
+                }
+            }
+        }
+    }
+
+    /// Converts a solution expression string to TokenStream.
+    ///
+    /// Replaces "self_fieldname" patterns with actual field references.
+    fn convert_constraint_solution_to_tokens(&self, expr: &str, ty: &TypeSpec) -> TokenStream {
+        let mut result = expr.to_string();
+
+        // Replace "self_fieldname" with just "fieldname"
+        // Do longer names first to avoid partial replacements
+        let mut sorted_fields: Vec<_> = ty.fields.iter().collect();
+        sorted_fields.sort_by(|a, b| b.name.len().cmp(&a.name.len()));
+
+        for field in sorted_fields {
+            let self_pattern = format!("self_{}", field.name);
+            result = result.replace(&self_pattern, &field.name);
+        }
+
+        // Parse and convert to TokenStream
+        result.parse().unwrap_or_else(|_| quote! { T::zero() })
     }
 
     /// Generates accessor methods for each field.
