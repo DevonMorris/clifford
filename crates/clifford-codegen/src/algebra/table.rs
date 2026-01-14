@@ -3287,4 +3287,54 @@ mod full_cayley_tests {
         assert_eq!(table.antiproduct(15, 14), (-1, 14));
         assert_eq!(table.antiproduct(15, 15), (1, 15));
     }
+
+    #[test]
+    fn pga_2d_antiproduct_pseudoscalar_identity() {
+        // 2D PGA: Cl(2,0,1)
+        let algebra = Algebra::new(2, 0, 1);
+        let table = ProductTable::new(&algebra);
+
+        // Blade indices for 2D PGA (8 blades):
+        // 0 = scalar (grade 0)
+        // 1 = e1, 2 = e2, 4 = e0 (grade 1)
+        // 3 = e12, 5 = e01, 6 = e02 (grade 2)
+        // 7 = e012 (grade 3, pseudoscalar)
+
+        let pseudoscalar = 7;
+
+        // Test: pseudoscalar should act as identity for antiproduct
+        // i.e., pseudoscalar ⊛ x = ±x for all x
+        println!("2D PGA pseudoscalar (e012) antiproduct:");
+        for i in 0..8 {
+            let (sign, result) = table.antiproduct(pseudoscalar, i);
+            println!("  e012 ⊛ blade[{}] = ({}, {})", i, sign, result);
+            // The result blade should equal input blade (identity behavior)
+            assert_eq!(
+                result, i,
+                "pseudoscalar ⊛ blade[{}] should give blade[{}]",
+                i, i
+            );
+        }
+    }
+
+    #[test]
+    fn pga_2d_motor_point_antiproduct() {
+        // 2D PGA: Cl(2,0,1)
+        let algebra = Algebra::new(2, 0, 1);
+        let table = ProductTable::new(&algebra);
+
+        // Motor blades: s=0, e01=5, e02=6, e12=3
+        // Point blades: e1=1, e2=2, e0=4
+
+        println!("2D PGA Motor ⊛ Point antiproducts:");
+        let motor_blades = [(0, "s"), (5, "e01"), (6, "e02"), (3, "e12")];
+        let point_blades = [(1, "e1"), (2, "e2"), (4, "e0")];
+
+        for &(m, m_name) in &motor_blades {
+            for &(p, p_name) in &point_blades {
+                let (sign, result) = table.antiproduct(m, p);
+                println!("  {} ⊛ {} = ({}, {})", m_name, p_name, sign, result);
+            }
+        }
+    }
 }

@@ -764,14 +764,14 @@ impl<T: Float> Motor<T> {
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
         Self::new_unchecked(
-            T::zero(),   // s
-            dx * half,   // e23 (τₓ = translation x)
-            -dy * half,  // e31 (negated: e31 = -e13)
-            dz * half,   // e12 (τᵤ = translation z)
-            T::zero(),   // e01
-            T::zero(),   // e02
-            T::zero(),   // e03
-            T::one(),    // e0123 (antiscalar identity)
+            T::zero(),  // s
+            dx * half,  // e23 (τₓ = translation x)
+            -dy * half, // e31 (negated: e31 = -e13)
+            dz * half,  // e12 (τᵤ = translation z)
+            T::zero(),  // e01
+            T::zero(),  // e02
+            T::zero(),  // e03
+            T::one(),   // e0123 (antiscalar identity)
         )
     }
 
@@ -783,14 +783,14 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),    // s
-            T::zero(),    // e23
-            T::zero(),    // e31
-            T::zero(),    // e12
-            -half.sin(),  // e01 (rotation around x-axis)
-            T::zero(),    // e02
-            T::zero(),    // e03
-            half.cos(),   // e0123 = cos(θ/2)
+            T::zero(),   // s
+            T::zero(),   // e23
+            T::zero(),   // e31
+            T::zero(),   // e12
+            -half.sin(), // e01 (rotation around x-axis)
+            T::zero(),   // e02
+            T::zero(),   // e03
+            half.cos(),  // e0123 = cos(θ/2)
         )
     }
 
@@ -802,14 +802,14 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),    // s
-            T::zero(),    // e23
-            T::zero(),    // e31
-            T::zero(),    // e12
-            T::zero(),    // e01
-            -half.sin(),  // e02 (rotation around y-axis)
-            T::zero(),    // e03
-            half.cos(),   // e0123 = cos(θ/2)
+            T::zero(),   // s
+            T::zero(),   // e23
+            T::zero(),   // e31
+            T::zero(),   // e12
+            T::zero(),   // e01
+            -half.sin(), // e02 (rotation around y-axis)
+            T::zero(),   // e03
+            half.cos(),  // e0123 = cos(θ/2)
         )
     }
 
@@ -821,14 +821,14 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation_z(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),    // s
-            T::zero(),    // e23
-            T::zero(),    // e31
-            T::zero(),    // e12
-            T::zero(),    // e01
-            T::zero(),    // e02
-            -half.sin(),  // e03 (rotation around z-axis)
-            half.cos(),   // e0123 = cos(θ/2)
+            T::zero(),   // s
+            T::zero(),   // e23
+            T::zero(),   // e31
+            T::zero(),   // e12
+            T::zero(),   // e01
+            T::zero(),   // e02
+            -half.sin(), // e03 (rotation around z-axis)
+            half.cos(),  // e0123 = cos(θ/2)
         )
     }
 
@@ -871,9 +871,9 @@ impl<T: Float> Motor<T> {
             sin_a * m.x() + half_dist * cos_a * d.x(), // e23 (translation)
             sin_a * m.y() + half_dist * cos_a * d.y(), // e31 (translation)
             sin_a * m.z() + half_dist * cos_a * d.z(), // e12 (translation)
-            sin_a * d.x(), // e01 (rotation)
-            sin_a * d.y(), // e02 (rotation)
-            sin_a * d.z(), // e03 (rotation)
+            sin_a * d.x(),                             // e01 (rotation)
+            sin_a * d.y(),                             // e02 (rotation)
+            sin_a * d.z(),                             // e03 (rotation)
             -half_dist * sin_a,
         )
     }
