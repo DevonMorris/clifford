@@ -4,7 +4,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::algebra::{Algebra, binomial};
+use crate::algebra::{Algebra, binomial, versor_parity};
 use crate::discovery::{ProductType, infer_all_products};
 
 use super::error::ParseError;
@@ -282,16 +282,14 @@ fn parse_type(
     // No user-defined constraints are read from TOML
     let constraints = Vec::new();
 
-    // Parse versor information
-    let versor = if raw.versor {
+    // Auto-identify versors based on grade parity
+    // A type is a versor if all its grades have the same parity (all even or all odd)
+    let versor = if versor_parity(&raw.grades).is_some() {
         Some(VersorSpec {
             // is_unit will be determined by inferred constraints in Phase 4
             is_unit: false,
-            sandwich_targets: raw
-                .sandwich
-                .as_ref()
-                .map(|s| s.targets.clone())
-                .unwrap_or_default(),
+            // sandwich_targets are auto-inferred during code generation
+            sandwich_targets: Vec::new(),
         })
     } else {
         None

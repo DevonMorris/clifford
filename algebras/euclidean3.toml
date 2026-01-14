@@ -33,10 +33,6 @@ fields = ["xy", "xz", "yz"]
 grades = [0, 2]
 description = "3D rotor (unit versor for rotations)"
 fields = ["s", "xy", "xz", "yz"]
-versor = true
-
-[types.Rotor.sandwich]
-targets = ["Vector", "Bivector", "Rotor"]
 
 [types.Trivector]
 grades = [3]
