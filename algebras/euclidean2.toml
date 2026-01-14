@@ -33,4 +33,3 @@ fields = ["xy"]
 grades = [0, 2]
 description = "2D rotor (unit versor for rotations)"
 fields = ["s", "xy"]
-versor = true
