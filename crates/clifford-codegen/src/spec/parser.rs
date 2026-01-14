@@ -279,8 +279,9 @@ fn parse_type(
     }
 
     // Auto-identify versors based on grade parity
-    // A type is a versor if all its grades have the same parity (all even or all odd)
-    let versor = if versor_parity(&raw.grades).is_some() {
+    // A type is a versor if it has MULTIPLE grades that all have the same parity (all even or all odd)
+    // Single-grade types (Point, Line, Vector, etc.) are blades, not versors
+    let versor = if raw.grades.len() > 1 && versor_parity(&raw.grades).is_some() {
         Some(VersorSpec {
             // is_unit will be determined by inferred constraints in Phase 4
             is_unit: false,

@@ -1469,55 +1469,20 @@ impl<'a> TraitsGenerator<'a> {
     ///
     /// A type is a valid target if the sandwich product V * X * rev(V) produces
     /// the same grades as X (grade-preserving transformation).
-    fn infer_sandwich_targets(&self, versor_type: &TypeSpec) -> Vec<String> {
-        let mut targets = Vec::new();
-        let dim = self.algebra.dim();
-
-        for candidate in &self.spec.types {
-            // Skip aliases
-            if candidate.alias_of.is_some() {
-                continue;
-            }
-
-            // Check if sandwich preserves grades
-            let output_grades =
-                self.compute_sandwich_output_grades(&versor_type.grades, &candidate.grades, dim);
-
-            // Valid target if output grades exactly match candidate grades
-            let candidate_grades_set: std::collections::HashSet<usize> =
-                candidate.grades.iter().copied().collect();
-            if output_grades == candidate_grades_set {
-                targets.push(candidate.name.clone());
-            }
-        }
-
-        targets
-    }
-
-    /// Computes output grades of a sandwich product V * X * rev(V).
-    fn compute_sandwich_output_grades(
-        &self,
-        versor_grades: &[usize],
-        operand_grades: &[usize],
-        dim: usize,
-    ) -> std::collections::HashSet<usize> {
-        use crate::algebra::geometric_grades;
-        let mut output = std::collections::HashSet::new();
-
-        for &vg in versor_grades {
-            for &xg in operand_grades {
-                for &wg in versor_grades {
-                    // Compute possible output grades from v * x * w
-                    let vx_grades = geometric_grades(vg, xg, dim);
-                    for vxg in vx_grades {
-                        let vxw_grades = geometric_grades(vxg, wg, dim);
-                        output.extend(vxw_grades);
-                    }
-                }
-            }
-        }
-
-        output
+    fn infer_sandwich_targets(&self, _versor_type: &TypeSpec) -> Vec<String> {
+        // Versors have the grade-preserving property: V * X * rev(V) preserves the grade of X.
+        // This means ANY type can be a valid sandwich target for a versor.
+        // We include all non-alias types as valid targets.
+        //
+        // Note: This is a fundamental property of versors in geometric algebra.
+        // A versor is a product of unit vectors, and conjugation by a versor
+        // preserves grades (it only rotates/reflects within each grade subspace).
+        self.spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|t| t.name.clone())
+            .collect()
     }
 
     // ========================================================================
