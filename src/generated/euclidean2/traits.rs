@@ -397,13 +397,6 @@ impl<T: Float> BitXor<Vector<T>> for Vector<T> {
         Bivector::new(-(rhs.x() * self.y()) + rhs.y() * self.x())
     }
 }
-impl<T: Float> Wedge<Rotor<T>> for Bivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Rotor<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
-    }
-}
 impl<T: Float> Wedge<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
@@ -411,49 +404,11 @@ impl<T: Float> Wedge<Scalar<T>> for Bivector<T> {
         Bivector::new(self.xy() * rhs.s())
     }
 }
-impl<T: Float> Wedge<Bivector<T>> for Rotor<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> Wedge<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            rhs.s() * self.s(),
-            self.xy() * rhs.s() + rhs.xy() * self.s(),
-        )
-    }
-}
-impl<T: Float> Wedge<Scalar<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), self.xy() * rhs.s())
-    }
-}
-impl<T: Float> Wedge<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
-    }
-}
 impl<T: Float> Wedge<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> Wedge<Rotor<T>> for Scalar<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), rhs.xy() * self.s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
@@ -468,13 +423,6 @@ impl<T: Float> Wedge<Vector<T>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
-    }
-}
-impl<T: Float> Wedge<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Vector<T> {
@@ -498,13 +446,6 @@ impl<T: Float> Antiwedge<Bivector<T>> for Bivector<T> {
         Bivector::new(self.xy() * rhs.xy())
     }
 }
-impl<T: Float> Antiwedge<Rotor<T>> for Bivector<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(self.xy() * rhs.s(), self.xy() * rhs.xy())
-    }
-}
 impl<T: Float> Antiwedge<Scalar<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -519,37 +460,6 @@ impl<T: Float> Antiwedge<Vector<T>> for Bivector<T> {
         Vector::new(-(self.xy() * rhs.x()), -(self.xy() * rhs.y()))
     }
 }
-impl<T: Float> Antiwedge<Bivector<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.xy() * self.s(), self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> Antiwedge<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            self.xy() * rhs.s() + rhs.xy() * self.s(),
-            self.xy() * rhs.xy(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Scalar<T>> for Rotor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(self.xy() * rhs.s())
-    }
-}
-impl<T: Float> Antiwedge<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(self.xy() * rhs.x()), -(self.xy() * rhs.y()))
-    }
-}
 impl<T: Float> Antiwedge<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -557,24 +467,10 @@ impl<T: Float> Antiwedge<Bivector<T>> for Scalar<T> {
         Scalar::new(rhs.xy() * self.s())
     }
 }
-impl<T: Float> Antiwedge<Rotor<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Rotor<T>) -> Scalar<T> {
-        Scalar::new(rhs.xy() * self.s())
-    }
-}
 impl<T: Float> Antiwedge<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
-    }
-}
-impl<T: Float> Antiwedge<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Rotor<T>) -> Vector<T> {
         Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
     }
 }
@@ -592,13 +488,6 @@ impl<T: Float> Inner<Bivector<T>> for Bivector<T> {
         Scalar::new(-(self.xy() * rhs.xy()))
     }
 }
-impl<T: Float> Inner<Rotor<T>> for Bivector<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), self.xy() * rhs.s())
-    }
-}
 impl<T: Float> Inner<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
@@ -613,52 +502,11 @@ impl<T: Float> Inner<Vector<T>> for Bivector<T> {
         Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
-impl<T: Float> Inner<Bivector<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), rhs.xy() * self.s())
-    }
-}
-impl<T: Float> Inner<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            -(self.xy() * rhs.xy()) + rhs.s() * self.s(),
-            self.xy() * rhs.s() + rhs.xy() * self.s(),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), self.xy() * rhs.s())
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(
-            self.xy() * rhs.y() + rhs.x() * self.s(),
-            -(self.xy() * rhs.x()) + rhs.y() * self.s(),
-        )
-    }
-}
 impl<T: Float> Inner<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn inner(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> Inner<Rotor<T>> for Scalar<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), rhs.xy() * self.s())
     }
 }
 impl<T: Float> Inner<Scalar<T>> for Scalar<T> {
@@ -682,16 +530,6 @@ impl<T: Float> Inner<Bivector<T>> for Vector<T> {
         Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
     }
 }
-impl<T: Float> Inner<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(
-            -(rhs.xy() * self.y()) + rhs.s() * self.x(),
-            rhs.xy() * self.x() + rhs.s() * self.y(),
-        )
-    }
-}
 impl<T: Float> Inner<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
@@ -713,56 +551,11 @@ impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
         Scalar::new(-(self.xy() * rhs.xy()))
     }
 }
-impl<T: Float> LeftContract<Rotor<T>> for Bivector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> LeftContract<Bivector<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), rhs.xy() * self.s())
-    }
-}
-impl<T: Float> LeftContract<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            -(self.xy() * rhs.xy()) + rhs.s() * self.s(),
-            rhs.xy() * self.s(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Scalar<T>> for Rotor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> LeftContract<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
-    }
-}
 impl<T: Float> LeftContract<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> LeftContract<Rotor<T>> for Scalar<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), rhs.xy() * self.s())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
@@ -786,13 +579,6 @@ impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
         Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
     }
 }
-impl<T: Float> LeftContract<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
-    }
-}
 impl<T: Float> LeftContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -805,13 +591,6 @@ impl<T: Float> RightContract<Bivector<T>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> RightContract<Rotor<T>> for Bivector<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), self.xy() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Bivector<T> {
@@ -828,56 +607,11 @@ impl<T: Float> RightContract<Vector<T>> for Bivector<T> {
         Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
-impl<T: Float> RightContract<Bivector<T>> for Rotor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> RightContract<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            -(self.xy() * rhs.xy()) + rhs.s() * self.s(),
-            self.xy() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> RightContract<Scalar<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), self.xy() * rhs.s())
-    }
-}
-impl<T: Float> RightContract<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
-    }
-}
-impl<T: Float> RightContract<Rotor<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
-    }
-}
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
         Scalar::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> RightContract<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Vector<T> {
@@ -899,12 +633,14 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.s() * self.s() - self.xy() * operand.xy() * self.s()
-                + self.xy() * operand.s() * self.xy()
-                + self.s() * operand.xy() * self.xy(),
-            self.s() * operand.xy() * self.s() + self.xy() * operand.s() * self.s()
-                - self.s() * operand.s() * self.xy()
-                + self.xy() * operand.xy() * self.xy(),
+            self.xy() * operand.s() * self.xy()
+                + self.s() * operand.xy() * self.xy()
+                + self.s() * operand.s() * self.s()
+                - self.xy() * operand.xy() * self.s(),
+            self.xy() * operand.s() * self.s()
+                + self.s() * operand.xy() * self.s()
+                + self.xy() * operand.xy() * self.xy()
+                - self.s() * operand.s() * self.xy(),
         )
     }
 }
@@ -913,13 +649,13 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            -(self.xy() * operand.x() * self.xy())
-                + self.s() * operand.x() * self.s()
-                + self.s() * operand.y() * self.xy()
-                + self.xy() * operand.y() * self.s(),
-            -(self.xy() * operand.y() * self.xy()) + self.s() * operand.y() * self.s()
+            self.xy() * operand.y() * self.s() + self.s() * operand.x() * self.s()
+                - self.xy() * operand.x() * self.xy()
+                + self.s() * operand.y() * self.xy(),
+            self.s() * operand.y() * self.s()
+                - self.s() * operand.x() * self.xy()
                 - self.xy() * operand.x() * self.s()
-                - self.s() * operand.x() * self.xy(),
+                - self.xy() * operand.y() * self.xy(),
         )
     }
 }
@@ -928,11 +664,12 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.xy() * self.xy() + self.xy() * operand.s() * self.xy()
-                - self.xy() * operand.xy() * self.s()
-                + self.s() * operand.s() * self.s(),
-            self.s() * operand.xy() * self.s() - self.s() * operand.s() * self.xy()
-                + self.xy() * operand.s() * self.s()
+            -(self.xy() * operand.xy() * self.s())
+                + self.s() * operand.xy() * self.xy()
+                + self.s() * operand.s() * self.s()
+                + self.xy() * operand.s() * self.xy(),
+            self.s() * operand.xy() * self.s() + self.xy() * operand.s() * self.s()
+                - self.s() * operand.s() * self.xy()
                 + self.xy() * operand.xy() * self.xy(),
         )
     }
@@ -942,13 +679,14 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            self.xy() * operand.y() * self.s()
+            -(self.s() * operand.x() * self.s())
                 + self.s() * operand.y() * self.xy()
-                + self.xy() * operand.x() * self.xy()
-                - self.s() * operand.x() * self.s(),
-            -(self.s() * operand.x() * self.xy()) + self.xy() * operand.y() * self.xy()
+                + self.xy() * operand.y() * self.s()
+                + self.xy() * operand.x() * self.xy(),
+            -(self.s() * operand.x() * self.xy())
                 - self.s() * operand.y() * self.s()
-                - self.xy() * operand.x() * self.s(),
+                - self.xy() * operand.x() * self.s()
+                + self.xy() * operand.y() * self.xy(),
         )
     }
 }
@@ -964,41 +702,6 @@ impl<T: Float> ScalarProduct<Bivector<T>> for Bivector<T> {
     #[inline]
     fn scalar_product(&self, rhs: &Bivector<T>) -> T {
         -(self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> ScalarProduct<Rotor<T>> for Bivector<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
-        -(self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> ScalarProduct<Bivector<T>> for Rotor<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Bivector<T>) -> T {
-        -(self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> ScalarProduct<Rotor<T>> for Rotor<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
-        self.s() * rhs.s() - self.xy() * rhs.xy()
-    }
-}
-impl<T: Float> ScalarProduct<Scalar<T>> for Rotor<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.s() * rhs.s()
-    }
-}
-impl<T: Float> ScalarProduct<Rotor<T>> for Scalar<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Rotor<T>) -> T {
-        self.s() * rhs.s()
     }
 }
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
@@ -1022,13 +725,6 @@ impl<T: Float> BulkContract<Bivector<T>> for Bivector<T> {
         Scalar::new(self.xy() * rhs.xy())
     }
 }
-impl<T: Float> BulkContract<Rotor<T>> for Bivector<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(self.xy() * rhs.xy(), self.xy() * rhs.s())
-    }
-}
 impl<T: Float> BulkContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
@@ -1043,56 +739,11 @@ impl<T: Float> BulkContract<Vector<T>> for Bivector<T> {
         Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
-impl<T: Float> BulkContract<Bivector<T>> for Rotor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> BulkContract<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            self.xy() * rhs.xy() + rhs.s() * self.s(),
-            self.xy() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Scalar<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), self.xy() * rhs.s())
-    }
-}
-impl<T: Float> BulkContract<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
-    }
-}
-impl<T: Float> BulkContract<Rotor<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
-    }
-}
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
         Scalar::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> BulkContract<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(-(rhs.s() * self.x()), -(rhs.s() * self.y()))
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Vector<T> {
@@ -1116,13 +767,6 @@ impl<T: Float> WeightContract<Bivector<T>> for Bivector<T> {
         Scalar::new(-(self.xy() * rhs.xy()))
     }
 }
-impl<T: Float> WeightContract<Rotor<T>> for Bivector<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), -(self.xy() * rhs.s()))
-    }
-}
 impl<T: Float> WeightContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
@@ -1137,56 +781,11 @@ impl<T: Float> WeightContract<Vector<T>> for Bivector<T> {
         Vector::new(-(self.xy() * rhs.y()), self.xy() * rhs.x())
     }
 }
-impl<T: Float> WeightContract<Bivector<T>> for Rotor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> WeightContract<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            -(self.xy() * rhs.xy()) + -(rhs.s() * self.s()),
-            -(self.xy() * rhs.s()),
-        )
-    }
-}
-impl<T: Float> WeightContract<Scalar<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(rhs.s() * self.s()), -(self.xy() * rhs.s()))
-    }
-}
-impl<T: Float> WeightContract<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(self.xy() * rhs.y()), self.xy() * rhs.x())
-    }
-}
-impl<T: Float> WeightContract<Rotor<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Rotor<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.s() * self.s()))
-    }
-}
 impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
         Scalar::new(-(rhs.s() * self.s()))
-    }
-}
-impl<T: Float> WeightContract<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Vector<T> {
@@ -1210,56 +809,11 @@ impl<T: Float> BulkExpand<Bivector<T>> for Bivector<T> {
         Bivector::new(self.xy() * rhs.xy())
     }
 }
-impl<T: Float> BulkExpand<Rotor<T>> for Bivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Rotor<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> BulkExpand<Bivector<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.xy() * self.s(), self.xy() * rhs.xy())
-    }
-}
-impl<T: Float> BulkExpand<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            rhs.xy() * self.s(),
-            self.xy() * rhs.xy() + rhs.s() * self.s(),
-        )
-    }
-}
-impl<T: Float> BulkExpand<Scalar<T>> for Rotor<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> BulkExpand<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(rhs.y() * self.s()), rhs.x() * self.s())
-    }
-}
 impl<T: Float> BulkExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> BulkExpand<Rotor<T>> for Scalar<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.xy() * self.s(), rhs.s() * self.s())
     }
 }
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
@@ -1283,13 +837,6 @@ impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
         Vector::new(rhs.xy() * self.x(), rhs.xy() * self.y())
     }
 }
-impl<T: Float> BulkExpand<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Rotor<T>) -> Vector<T> {
-        Vector::new(rhs.xy() * self.x(), rhs.xy() * self.y())
-    }
-}
 impl<T: Float> BulkExpand<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
@@ -1304,56 +851,11 @@ impl<T: Float> WeightExpand<Bivector<T>> for Bivector<T> {
         Bivector::new(-(self.xy() * rhs.xy()))
     }
 }
-impl<T: Float> WeightExpand<Rotor<T>> for Bivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Rotor<T>) -> Bivector<T> {
-        Bivector::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> WeightExpand<Bivector<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(rhs.xy() * self.s()), -(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> WeightExpand<Rotor<T>> for Rotor<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(
-            -(rhs.xy() * self.s()),
-            -(self.xy() * rhs.xy()) + -(rhs.s() * self.s()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Scalar<T>> for Rotor<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(-(rhs.s() * self.s()))
-    }
-}
-impl<T: Float> WeightExpand<Vector<T>> for Rotor<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.y() * self.s(), -(rhs.x() * self.s()))
-    }
-}
 impl<T: Float> WeightExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new(-(rhs.xy() * self.s()))
-    }
-}
-impl<T: Float> WeightExpand<Rotor<T>> for Scalar<T> {
-    type Output = Rotor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(rhs.xy() * self.s()), -(rhs.s() * self.s()))
     }
 }
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
@@ -1374,13 +876,6 @@ impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
-    }
-}
-impl<T: Float> WeightExpand<Rotor<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Rotor<T>) -> Vector<T> {
         Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
     }
 }

@@ -981,93 +981,6 @@ impl<T: Float> BitXor<Scalar<T>> for Trivector<T> {
         Trivector::new(rhs.s() * self.e012())
     }
 }
-impl<T: Float> Wedge<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.s() * rhs.e12() + self.e12() * rhs.s(),
-            self.s() * rhs.e01() + self.e01() * rhs.s(),
-            self.s() * rhs.e02() + self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Wedge<Line<T>> for Flector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Line<T>) -> Line<T> {
-        Line::new(
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> Wedge<Motor<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-            self.s() * rhs.e012()
-                + self.e12() * rhs.e0()
-                + -(self.e01() * rhs.e2())
-                + self.e02() * rhs.e1(),
-        )
-    }
-}
-impl<T: Float> Wedge<Point<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Point<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-            self.e12() * rhs.e0() + -(self.e01() * rhs.e2()) + self.e02() * rhs.e1(),
-        )
-    }
-}
-impl<T: Float> Wedge<Scalar<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Scalar<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Wedge<Trivector<T>> for Flector<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new(self.s() * rhs.e012())
-    }
-}
-impl<T: Float> Wedge<Flector<T>> for Line<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Line<T> {
-        Line::new(
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Wedge<Motor<T>> for Line<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Motor<T>) -> Trivector<T> {
-        Trivector::new(self.e12() * rhs.e0() + -(self.e01() * rhs.e2()) + self.e02() * rhs.e1())
-    }
-}
 impl<T: Float> Wedge<Point<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -1086,90 +999,11 @@ impl<T: Float> Wedge<Scalar<T>> for Line<T> {
         )
     }
 }
-impl<T: Float> Wedge<Flector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.s() * self.e012()
-                + rhs.e12() * self.e0()
-                + -(rhs.e01() * self.e2())
-                + rhs.e02() * self.e1(),
-        )
-    }
-}
-impl<T: Float> Wedge<Line<T>> for Motor<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Line<T>) -> Trivector<T> {
-        Trivector::new(rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1())
-    }
-}
-impl<T: Float> Wedge<Motor<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(
-            -(rhs.e1() * self.e2()) + rhs.e2() * self.e1(),
-            -(rhs.e1() * self.e0()) + rhs.e0() * self.e1(),
-            -(rhs.e2() * self.e0()) + rhs.e0() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Wedge<Point<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Point<T>) -> Line<T> {
-        Line::new(
-            -(rhs.e1() * self.e2()) + rhs.e2() * self.e1(),
-            -(rhs.e1() * self.e0()) + rhs.e0() * self.e1(),
-            -(rhs.e2() * self.e0()) + rhs.e0() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Wedge<Scalar<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Scalar<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Wedge<Flector<T>> for Point<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1(),
-        )
-    }
-}
 impl<T: Float> Wedge<Line<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Line<T>) -> Trivector<T> {
         Trivector::new(rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1())
-    }
-}
-impl<T: Float> Wedge<Motor<T>> for Point<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(
-            -(rhs.e1() * self.e2()) + rhs.e2() * self.e1(),
-            -(rhs.e1() * self.e0()) + rhs.e0() * self.e1(),
-            -(rhs.e2() * self.e0()) + rhs.e0() * self.e2(),
-        )
     }
 }
 impl<T: Float> Wedge<Point<T>> for Point<T> {
@@ -1194,18 +1028,6 @@ impl<T: Float> Wedge<Scalar<T>> for Point<T> {
         )
     }
 }
-impl<T: Float> Wedge<Flector<T>> for Scalar<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
 impl<T: Float> Wedge<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -1214,18 +1036,6 @@ impl<T: Float> Wedge<Line<T>> for Scalar<T> {
             self.s() * rhs.e12(),
             self.s() * rhs.e01(),
             self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> Wedge<Motor<T>> for Scalar<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-            self.s() * rhs.e012(),
         )
     }
 }
@@ -1254,85 +1064,11 @@ impl<T: Float> Wedge<Trivector<T>> for Scalar<T> {
         Trivector::new(self.s() * rhs.e012())
     }
 }
-impl<T: Float> Wedge<Flector<T>> for Trivector<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn wedge(&self, rhs: &Flector<T>) -> Trivector<T> {
-        Trivector::new(rhs.s() * self.e012())
-    }
-}
 impl<T: Float> Wedge<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Trivector<T> {
         Trivector::new(rhs.s() * self.e012())
-    }
-}
-impl<T: Float> Antiwedge<Flector<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e01() + -(self.e01() * rhs.e12()),
-            self.e12() * rhs.e02() + -(self.e02() * rhs.e12()),
-            self.e01() * rhs.e02() + -(self.e02() * rhs.e01()),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Line<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e01() + -(self.e01() * rhs.e12()),
-            self.e12() * rhs.e02() + -(self.e02() * rhs.e12()),
-            self.e01() * rhs.e02() + -(self.e02() * rhs.e01()),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Motor<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.e012()
-                + self.e12() * rhs.e0()
-                + -(self.e01() * rhs.e2())
-                + self.e02() * rhs.e1(),
-            self.e12() * rhs.e012(),
-            self.e01() * rhs.e012(),
-            self.e02() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Point<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Point<T>) -> Scalar<T> {
-        Scalar::new(self.e12() * rhs.e0() + -(self.e01() * rhs.e2()) + self.e02() * rhs.e1())
-    }
-}
-impl<T: Float> Antiwedge<Trivector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Trivector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.e012(),
-            self.e12() * rhs.e012(),
-            self.e01() * rhs.e012(),
-            self.e02() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Flector<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e01() + -(self.e01() * rhs.e12()),
-            self.e12() * rhs.e02() + -(self.e02() * rhs.e12()),
-            self.e01() * rhs.e02() + -(self.e02() * rhs.e01()),
-        )
     }
 }
 impl<T: Float> Antiwedge<Line<T>> for Line<T> {
@@ -1343,18 +1079,6 @@ impl<T: Float> Antiwedge<Line<T>> for Line<T> {
             self.e12() * rhs.e01() + -(self.e01() * rhs.e12()),
             self.e12() * rhs.e02() + -(self.e02() * rhs.e12()),
             self.e01() * rhs.e02() + -(self.e02() * rhs.e01()),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Motor<T>> for Line<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.e12() * rhs.e0() + -(self.e01() * rhs.e2()) + self.e02() * rhs.e1(),
-            self.e12() * rhs.e012(),
-            self.e01() * rhs.e012(),
-            self.e02() * rhs.e012(),
         )
     }
 }
@@ -1376,98 +1100,11 @@ impl<T: Float> Antiwedge<Trivector<T>> for Line<T> {
         )
     }
 }
-impl<T: Float> Antiwedge<Flector<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.s() * self.e012()
-                + rhs.e12() * self.e0()
-                + -(rhs.e01() * self.e2())
-                + rhs.e02() * self.e1(),
-            rhs.e12() * self.e012(),
-            rhs.e01() * self.e012(),
-            rhs.e02() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Line<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Line<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1(),
-            rhs.e12() * self.e012(),
-            rhs.e01() * self.e012(),
-            rhs.e02() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Motor<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.e1() * self.e012() + rhs.e012() * self.e1(),
-            rhs.e2() * self.e012() + rhs.e012() * self.e2(),
-            rhs.e0() * self.e012() + rhs.e012() * self.e0(),
-            rhs.e012() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Point<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(
-            rhs.e1() * self.e012(),
-            rhs.e2() * self.e012(),
-            rhs.e0() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Scalar<T>> for Motor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.e012())
-    }
-}
-impl<T: Float> Antiwedge<Trivector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Trivector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.e012() * self.e1(),
-            rhs.e012() * self.e2(),
-            rhs.e012() * self.e0(),
-            rhs.e012() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Flector<T>> for Point<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1())
-    }
-}
 impl<T: Float> Antiwedge<Line<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(rhs.e12() * self.e0() + -(rhs.e01() * self.e2()) + rhs.e02() * self.e1())
-    }
-}
-impl<T: Float> Antiwedge<Motor<T>> for Point<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            rhs.e012() * self.e1(),
-            rhs.e012() * self.e2(),
-            rhs.e012() * self.e0(),
-        )
     }
 }
 impl<T: Float> Antiwedge<Trivector<T>> for Point<T> {
@@ -1481,30 +1118,11 @@ impl<T: Float> Antiwedge<Trivector<T>> for Point<T> {
         )
     }
 }
-impl<T: Float> Antiwedge<Motor<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Scalar<T> {
-        Scalar::new(self.s() * rhs.e012())
-    }
-}
 impl<T: Float> Antiwedge<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Scalar<T> {
         Scalar::new(self.s() * rhs.e012())
-    }
-}
-impl<T: Float> Antiwedge<Flector<T>> for Trivector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.s() * self.e012(),
-            rhs.e12() * self.e012(),
-            rhs.e01() * self.e012(),
-            rhs.e02() * self.e012(),
-        )
     }
 }
 impl<T: Float> Antiwedge<Line<T>> for Trivector<T> {
@@ -1515,18 +1133,6 @@ impl<T: Float> Antiwedge<Line<T>> for Trivector<T> {
             rhs.e12() * self.e012(),
             rhs.e01() * self.e012(),
             rhs.e02() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Antiwedge<Motor<T>> for Trivector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn antiwedge(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.e1() * self.e012(),
-            rhs.e2() * self.e012(),
-            rhs.e0() * self.e012(),
-            rhs.e012() * self.e012(),
         )
     }
 }
@@ -1555,108 +1161,11 @@ impl<T: Float> Antiwedge<Trivector<T>> for Trivector<T> {
         Trivector::new(rhs.e012() * self.e012())
     }
 }
-impl<T: Float> Inner<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s() + -(self.e12() * rhs.e12()),
-            self.s() * rhs.e12() + self.e12() * rhs.s(),
-            self.s() * rhs.e01() + self.e01() * rhs.s(),
-            self.s() * rhs.e02() + self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Inner<Line<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Line<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.e12() * rhs.e12()),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1() + self.e12() * rhs.e2(),
-            self.s() * rhs.e2() + -(self.e12() * rhs.e1()),
-            self.s() * rhs.e0()
-                + -(self.e12() * rhs.e012())
-                + -(self.e01() * rhs.e1())
-                + -(self.e02() * rhs.e2()),
-            self.s() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> Inner<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn inner(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(
-            self.s() * rhs.e1() + self.e12() * rhs.e2(),
-            self.s() * rhs.e2() + -(self.e12() * rhs.e1()),
-            self.s() * rhs.e0() + -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            -(self.e12() * rhs.e012()),
-            self.s() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> Inner<Flector<T>> for Line<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.e12() * rhs.e12()),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
 impl<T: Float> Inner<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn inner(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(-(self.e12() * rhs.e12()))
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e2(),
-            -(self.e12() * rhs.e1()),
-            -(self.e12() * rhs.e012()) + -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()),
-        )
     }
 }
 impl<T: Float> Inner<Point<T>> for Line<T> {
@@ -1688,86 +1197,6 @@ impl<T: Float> Inner<Trivector<T>> for Line<T> {
         Point::new(T::zero(), T::zero(), -(self.e12() * rhs.e012()))
     }
 }
-impl<T: Float> Inner<Flector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1() + -(rhs.e12() * self.e2()),
-            rhs.s() * self.e2() + rhs.e12() * self.e1(),
-            rhs.s() * self.e0()
-                + -(rhs.e12() * self.e012())
-                + rhs.e01() * self.e1()
-                + rhs.e02() * self.e2(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Inner<Line<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn inner(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e12() * self.e2()),
-            rhs.e12() * self.e1(),
-            -(rhs.e12() * self.e012()) + rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()) + -(rhs.e012() * self.e2()),
-            rhs.e1() * self.e012() + rhs.e012() * self.e1(),
-        )
-    }
-}
-impl<T: Float> Inner<Point<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Point<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()),
-            rhs.e1() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Line<T> {
-        Line::new(T::zero(), -(rhs.e012() * self.e2()), rhs.e012() * self.e1())
-    }
-}
-impl<T: Float> Inner<Flector<T>> for Point<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            rhs.s() * self.e1() + -(rhs.e12() * self.e2()),
-            rhs.s() * self.e2() + rhs.e12() * self.e1(),
-            rhs.s() * self.e0() + rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
 impl<T: Float> Inner<Line<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1776,18 +1205,6 @@ impl<T: Float> Inner<Line<T>> for Point<T> {
             -(rhs.e12() * self.e2()),
             rhs.e12() * self.e1(),
             rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Point<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e012() * self.e2()),
-            rhs.e012() * self.e1(),
         )
     }
 }
@@ -1816,18 +1233,6 @@ impl<T: Float> Inner<Trivector<T>> for Point<T> {
         Line::new(T::zero(), -(rhs.e012() * self.e2()), rhs.e012() * self.e1())
     }
 }
-impl<T: Float> Inner<Flector<T>> for Scalar<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
 impl<T: Float> Inner<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -1836,18 +1241,6 @@ impl<T: Float> Inner<Line<T>> for Scalar<T> {
             self.s() * rhs.e12(),
             self.s() * rhs.e01(),
             self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Scalar<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-            self.s() * rhs.e012(),
         )
     }
 }
@@ -1876,30 +1269,11 @@ impl<T: Float> Inner<Trivector<T>> for Scalar<T> {
         Trivector::new(self.s() * rhs.e012())
     }
 }
-impl<T: Float> Inner<Flector<T>> for Trivector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn inner(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            -(rhs.e12() * self.e012()),
-            rhs.s() * self.e012(),
-        )
-    }
-}
 impl<T: Float> Inner<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
     fn inner(&self, rhs: &Line<T>) -> Point<T> {
         Point::new(T::zero(), T::zero(), -(rhs.e12() * self.e012()))
-    }
-}
-impl<T: Float> Inner<Motor<T>> for Trivector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn inner(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(T::zero(), -(rhs.e2() * self.e012()), rhs.e1() * self.e012())
     }
 }
 impl<T: Float> Inner<Point<T>> for Trivector<T> {
@@ -1916,79 +1290,6 @@ impl<T: Float> Inner<Scalar<T>> for Trivector<T> {
         Trivector::new(rhs.s() * self.e012())
     }
 }
-impl<T: Float> LeftContract<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s() + -(self.e12() * rhs.e12()),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Line<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Line<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.e12() * rhs.e12()),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Motor<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0() + -(self.e12() * rhs.e012()),
-            self.s() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Scalar<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(self.s() * rhs.s())
-    }
-}
-impl<T: Float> LeftContract<Trivector<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Trivector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            -(self.e12() * rhs.e012()),
-            self.s() * rhs.e012(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Flector<T>> for Line<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(-(self.e12() * rhs.e12()))
-    }
-}
 impl<T: Float> LeftContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1996,77 +1297,11 @@ impl<T: Float> LeftContract<Line<T>> for Line<T> {
         Scalar::new(-(self.e12() * rhs.e12()))
     }
 }
-impl<T: Float> LeftContract<Motor<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), -(self.e12() * rhs.e012()))
-    }
-}
 impl<T: Float> LeftContract<Trivector<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Point<T> {
         Point::new(T::zero(), T::zero(), -(self.e12() * rhs.e012()))
-    }
-}
-impl<T: Float> LeftContract<Flector<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e12() * self.e2()),
-            rhs.e12() * self.e1(),
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Line<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e12() * self.e2()),
-            rhs.e12() * self.e1(),
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Motor<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e012() * self.e2()),
-            rhs.e012() * self.e1(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Point<T>> for Motor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Point<T>) -> Scalar<T> {
-        Scalar::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
-impl<T: Float> LeftContract<Trivector<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Trivector<T>) -> Line<T> {
-        Line::new(T::zero(), -(rhs.e012() * self.e2()), rhs.e012() * self.e1())
-    }
-}
-impl<T: Float> LeftContract<Flector<T>> for Point<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e12() * self.e2()),
-            rhs.e12() * self.e1(),
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
     }
 }
 impl<T: Float> LeftContract<Line<T>> for Point<T> {
@@ -2077,18 +1312,6 @@ impl<T: Float> LeftContract<Line<T>> for Point<T> {
             -(rhs.e12() * self.e2()),
             rhs.e12() * self.e1(),
             rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Motor<T>> for Point<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e012() * self.e2()),
-            rhs.e012() * self.e1(),
         )
     }
 }
@@ -2106,18 +1329,6 @@ impl<T: Float> LeftContract<Trivector<T>> for Point<T> {
         Line::new(T::zero(), -(rhs.e012() * self.e2()), rhs.e012() * self.e1())
     }
 }
-impl<T: Float> LeftContract<Flector<T>> for Scalar<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.s() * rhs.e12(),
-            self.s() * rhs.e01(),
-            self.s() * rhs.e02(),
-        )
-    }
-}
 impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -2126,18 +1337,6 @@ impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
             self.s() * rhs.e12(),
             self.s() * rhs.e01(),
             self.s() * rhs.e02(),
-        )
-    }
-}
-impl<T: Float> LeftContract<Motor<T>> for Scalar<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn left_contract(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            self.s() * rhs.e1(),
-            self.s() * rhs.e2(),
-            self.s() * rhs.e0(),
-            self.s() * rhs.e012(),
         )
     }
 }
@@ -2166,87 +1365,11 @@ impl<T: Float> LeftContract<Trivector<T>> for Scalar<T> {
         Trivector::new(self.s() * rhs.e012())
     }
 }
-impl<T: Float> RightContract<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s() + -(self.e12() * rhs.e12()),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> RightContract<Line<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Line<T>) -> Scalar<T> {
-        Scalar::new(-(self.e12() * rhs.e12()))
-    }
-}
-impl<T: Float> RightContract<Motor<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e2(),
-            -(self.e12() * rhs.e1()),
-            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()),
-        )
-    }
-}
-impl<T: Float> RightContract<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e2(),
-            -(self.e12() * rhs.e1()),
-            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()),
-        )
-    }
-}
-impl<T: Float> RightContract<Scalar<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Scalar<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> RightContract<Flector<T>> for Line<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.e12() * rhs.e12()),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
 impl<T: Float> RightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(-(self.e12() * rhs.e12()))
-    }
-}
-impl<T: Float> RightContract<Motor<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            self.e12() * rhs.e2(),
-            -(self.e12() * rhs.e1()),
-            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()),
-        )
     }
 }
 impl<T: Float> RightContract<Point<T>> for Line<T> {
@@ -2271,79 +1394,6 @@ impl<T: Float> RightContract<Scalar<T>> for Line<T> {
         )
     }
 }
-impl<T: Float> RightContract<Flector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0() + -(rhs.e12() * self.e012()),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> RightContract<Line<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), -(rhs.e12() * self.e012()))
-    }
-}
-impl<T: Float> RightContract<Motor<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()),
-            rhs.e1() * self.e012(),
-        )
-    }
-}
-impl<T: Float> RightContract<Point<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Point<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()),
-            rhs.e1() * self.e012(),
-        )
-    }
-}
-impl<T: Float> RightContract<Scalar<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Scalar<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> RightContract<Flector<T>> for Point<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-        )
-    }
-}
-impl<T: Float> RightContract<Motor<T>> for Point<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
-        Scalar::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
 impl<T: Float> RightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -2362,13 +1412,6 @@ impl<T: Float> RightContract<Scalar<T>> for Point<T> {
         )
     }
 }
-impl<T: Float> RightContract<Flector<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(self.s() * rhs.s())
-    }
-}
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -2376,30 +1419,11 @@ impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
         Scalar::new(self.s() * rhs.s())
     }
 }
-impl<T: Float> RightContract<Flector<T>> for Trivector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            -(rhs.e12() * self.e012()),
-            rhs.s() * self.e012(),
-        )
-    }
-}
 impl<T: Float> RightContract<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
     fn right_contract(&self, rhs: &Line<T>) -> Point<T> {
         Point::new(T::zero(), T::zero(), -(rhs.e12() * self.e012()))
-    }
-}
-impl<T: Float> RightContract<Motor<T>> for Trivector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn right_contract(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(T::zero(), -(rhs.e2() * self.e012()), rhs.e1() * self.e012())
     }
 }
 impl<T: Float> RightContract<Point<T>> for Trivector<T> {
@@ -2421,23 +1445,21 @@ impl<T: Float> Sandwich<Point<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new(
-            -(self.e12() * operand.e1() * self.e12())
-                + self.e12() * operand.e2() * self.s()
-                + self.s() * operand.e1() * self.s()
-                + self.s() * operand.e2() * self.e12(),
-            -(self.s() * operand.e1() * self.e12()) - self.e12() * operand.e1() * self.s()
-                + self.s() * operand.e2() * self.s()
-                - self.e12() * operand.e2() * self.e12(),
-            self.e12() * operand.e1() * self.e02()
+            self.s() * operand.e1() * self.s() + self.s() * operand.e2() * self.e12()
+                - self.e12() * operand.e1() * self.e12()
+                + self.e12() * operand.e2() * self.s(),
+            -(self.e12() * operand.e2() * self.e12()) + self.s() * operand.e2() * self.s()
+                - self.e12() * operand.e1() * self.s()
+                - self.s() * operand.e1() * self.e12(),
+            -(self.e01() * operand.e2() * self.e12()) + self.e12() * operand.e0() * self.e12()
                 - self.s() * operand.e1() * self.e01()
                 - self.s() * operand.e2() * self.e02()
-                - self.e01() * operand.e2() * self.e12()
                 - self.e01() * operand.e1() * self.s()
+                - self.e12() * operand.e2() * self.e01()
                 + self.e02() * operand.e1() * self.e12()
-                + self.s() * operand.e0() * self.s()
                 - self.e02() * operand.e2() * self.s()
-                + self.e12() * operand.e0() * self.e12()
-                - self.e12() * operand.e2() * self.e01(),
+                + self.e12() * operand.e1() * self.e02()
+                + self.s() * operand.e0() * self.s(),
         )
     }
 }
@@ -2446,21 +1468,21 @@ impl<T: Float> Sandwich<Line<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e12() * operand.e12() * self.e12() + self.s() * operand.e12() * self.s(),
-            -(self.e12() * operand.e01() * self.e12()) + self.e12() * operand.e02() * self.s()
-                - self.e02() * operand.e12() * self.s()
-                + self.s() * operand.e02() * self.e12()
-                - self.s() * operand.e12() * self.e02()
+            self.s() * operand.e12() * self.s() + self.e12() * operand.e12() * self.e12(),
+            self.e12() * operand.e12() * self.e01() + self.s() * operand.e02() * self.e12()
+                - self.e12() * operand.e01() * self.e12()
                 + self.s() * operand.e01() * self.s()
-                + self.e12() * operand.e12() * self.e01()
-                + self.e01() * operand.e12() * self.e12(),
-            -(self.e12() * operand.e01() * self.s()) + self.e12() * operand.e12() * self.e02()
-                - self.s() * operand.e01() * self.e12()
-                + self.s() * operand.e12() * self.e01()
+                - self.s() * operand.e12() * self.e02()
+                - self.e02() * operand.e12() * self.s()
+                + self.e01() * operand.e12() * self.e12()
+                + self.e12() * operand.e02() * self.s(),
+            self.e12() * operand.e12() * self.e02() - self.e12() * operand.e02() * self.e12()
                 + self.e02() * operand.e12() * self.e12()
+                - self.s() * operand.e01() * self.e12()
+                + self.s() * operand.e02() * self.s()
                 + self.e01() * operand.e12() * self.s()
-                - self.e12() * operand.e02() * self.e12()
-                + self.s() * operand.e02() * self.s(),
+                + self.s() * operand.e12() * self.e01()
+                - self.e12() * operand.e01() * self.s(),
         )
     }
 }
@@ -2469,35 +1491,36 @@ impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e12() * operand.e2() * self.s() - self.e12() * operand.e1() * self.e12()
-                + self.s() * operand.e2() * self.e12()
+            self.e12() * operand.e2() * self.s() + self.s() * operand.e2() * self.e12()
+                - self.e12() * operand.e1() * self.e12()
                 + self.s() * operand.e1() * self.s(),
-            -(self.e12() * operand.e2() * self.e12()) + self.s() * operand.e2() * self.s()
+            self.s() * operand.e2() * self.s()
+                - self.e12() * operand.e1() * self.s()
                 - self.s() * operand.e1() * self.e12()
-                - self.e12() * operand.e1() * self.s(),
-            self.e02() * operand.e1() * self.e12() - self.e02() * operand.e2() * self.s()
-                + self.s() * operand.e0() * self.s()
-                - self.s() * operand.e1() * self.e01()
-                + self.e12() * operand.e1() * self.e02()
+                - self.e12() * operand.e2() * self.e12(),
+            self.e12() * operand.e1() * self.e02()
                 - self.e01() * operand.e1() * self.s()
+                - self.e02() * operand.e2() * self.s()
+                + self.e12() * operand.e0() * self.e12()
                 - self.e12() * operand.e012() * self.s()
                 - self.s() * operand.e2() * self.e02()
+                - self.e01() * operand.e2() * self.e12()
+                - self.s() * operand.e1() * self.e01()
+                + self.s() * operand.e0() * self.s()
                 + self.s() * operand.e012() * self.e12()
-                - self.e12() * operand.e2() * self.e01()
-                + self.e12() * operand.e0() * self.e12()
-                - self.e01() * operand.e2() * self.e12(),
-            self.e01() * operand.e1() * self.e12()
-                + self.e12() * operand.e012() * self.e12()
-                + self.e02() * operand.e1() * self.s()
-                + self.s() * operand.e2() * self.e01()
+                + self.e02() * operand.e1() * self.e12()
+                - self.e12() * operand.e2() * self.e01(),
+            self.e12() * operand.e012() * self.e12() + self.e01() * operand.e1() * self.e12()
                 - self.s() * operand.e1() * self.e02()
-                - self.e01() * operand.e2() * self.s()
-                - self.e12() * operand.e1() * self.e01()
-                - self.e12() * operand.e2() * self.e02()
-                + self.e02() * operand.e2() * self.e12()
-                + self.e12() * operand.e0() * self.s()
                 + self.s() * operand.e012() * self.s()
-                - self.s() * operand.e0() * self.e12(),
+                - self.e12() * operand.e1() * self.e01()
+                - self.e01() * operand.e2() * self.s()
+                + self.e02() * operand.e1() * self.s()
+                + self.e12() * operand.e0() * self.s()
+                + self.e02() * operand.e2() * self.e12()
+                - self.s() * operand.e0() * self.e12()
+                + self.s() * operand.e2() * self.e01()
+                - self.e12() * operand.e2() * self.e02(),
         )
     }
 }
@@ -2506,36 +1529,35 @@ impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.s() * operand.e12() * self.e12() + self.e12() * operand.s() * self.e12()
+            self.e12() * operand.s() * self.e12() + self.s() * operand.s() * self.s()
                 - self.e12() * operand.e12() * self.s()
-                + self.s() * operand.s() * self.s(),
-            -(self.s() * operand.s() * self.e12())
-                + self.e12() * operand.s() * self.s()
+                + self.s() * operand.e12() * self.e12(),
+            self.e12() * operand.s() * self.s() - self.s() * operand.s() * self.e12()
                 + self.s() * operand.e12() * self.s()
                 + self.e12() * operand.e12() * self.e12(),
-            -(self.e12() * operand.e01() * self.e12()) + self.s() * operand.e02() * self.e12()
-                - self.e12() * operand.s() * self.e02()
-                - self.s() * operand.s() * self.e01()
-                - self.s() * operand.e12() * self.e02()
-                + self.e01() * operand.s() * self.s()
+            self.s() * operand.e01() * self.s()
                 + self.e12() * operand.e02() * self.s()
+                + self.e01() * operand.s() * self.s()
                 + self.e01() * operand.e12() * self.e12()
-                + self.s() * operand.e01() * self.s()
-                + self.e12() * operand.e12() * self.e01()
                 + self.e02() * operand.s() * self.e12()
+                - self.s() * operand.s() * self.e01()
+                - self.e12() * operand.e01() * self.e12()
+                - self.e12() * operand.s() * self.e02()
+                - self.s() * operand.e12() * self.e02()
+                + self.e12() * operand.e12() * self.e01()
+                + self.s() * operand.e02() * self.e12()
                 - self.e02() * operand.e12() * self.s(),
-            self.e02() * operand.s() * self.s()
-                + self.s() * operand.e02() * self.s()
-                + self.s() * operand.e12() * self.e01()
-                - self.e12() * operand.e02() * self.e12()
-                + self.e12() * operand.s() * self.e01()
-                + self.e02() * operand.e12() * self.e12()
+            self.s() * operand.e02() * self.s() - self.s() * operand.e01() * self.e12()
                 + self.e12() * operand.e12() * self.e02()
                 - self.e12() * operand.e01() * self.s()
-                - self.s() * operand.e01() * self.e12()
-                + self.e01() * operand.e12() * self.s()
+                - self.e12() * operand.e02() * self.e12()
+                - self.e01() * operand.s() * self.e12()
                 - self.s() * operand.s() * self.e02()
-                - self.e01() * operand.s() * self.e12(),
+                + self.e12() * operand.s() * self.e01()
+                + self.s() * operand.e12() * self.e01()
+                + self.e01() * operand.e12() * self.s()
+                + self.e02() * operand.s() * self.s()
+                + self.e02() * operand.e12() * self.e12(),
         )
     }
 }
@@ -2544,23 +1566,24 @@ impl<T: Float> Sandwich<Point<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new(
-            self.e1() * operand.e2() * self.e2()
-                + self.e1() * operand.e1() * self.e1()
+            -(self.e2() * operand.e1() * self.e2())
                 + self.e2() * operand.e2() * self.e1()
-                - self.e2() * operand.e1() * self.e2(),
-            self.e1() * operand.e1() * self.e2() - self.e1() * operand.e2() * self.e1()
+                + self.e1() * operand.e2() * self.e2()
+                + self.e1() * operand.e1() * self.e1(),
+            -(self.e1() * operand.e2() * self.e1())
+                + self.e1() * operand.e1() * self.e2()
                 + self.e2() * operand.e1() * self.e1()
                 + self.e2() * operand.e2() * self.e2(),
             -(self.e2() * operand.e0() * self.e2())
-                + self.e1() * operand.e1() * self.e0()
+                + self.e1() * operand.e2() * self.e012()
                 + self.e2() * operand.e2() * self.e0()
-                + self.e012() * operand.e2() * self.e1()
-                - self.e2() * operand.e1() * self.e012()
                 - self.e012() * operand.e1() * self.e2()
-                + self.e0() * operand.e2() * self.e2()
-                + self.e0() * operand.e1() * self.e1()
+                + self.e1() * operand.e1() * self.e0()
                 - self.e1() * operand.e0() * self.e1()
-                + self.e1() * operand.e2() * self.e012(),
+                + self.e0() * operand.e2() * self.e2()
+                + self.e012() * operand.e2() * self.e1()
+                + self.e0() * operand.e1() * self.e1()
+                - self.e2() * operand.e1() * self.e012(),
         )
     }
 }
@@ -2569,23 +1592,21 @@ impl<T: Float> Sandwich<Line<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            -(self.e1() * operand.e12() * self.e1()) - self.e2() * operand.e12() * self.e2(),
-            -(self.e2() * operand.e02() * self.e1())
-                + self.e1() * operand.e12() * self.e012()
-                + self.e2() * operand.e01() * self.e2()
+            -(self.e2() * operand.e12() * self.e2()) - self.e1() * operand.e12() * self.e1(),
+            self.e1() * operand.e12() * self.e012() - self.e0() * operand.e12() * self.e2()
                 + self.e012() * operand.e12() * self.e1()
                 - self.e2() * operand.e12() * self.e0()
+                - self.e1() * operand.e01() * self.e1()
                 - self.e1() * operand.e02() * self.e2()
-                - self.e0() * operand.e12() * self.e2()
-                - self.e1() * operand.e01() * self.e1(),
-            self.e0() * operand.e12() * self.e1()
-                - self.e1() * operand.e01() * self.e2()
-                - self.e2() * operand.e01() * self.e1()
+                - self.e2() * operand.e02() * self.e1()
+                + self.e2() * operand.e01() * self.e2(),
+            self.e1() * operand.e12() * self.e0() + self.e0() * operand.e12() * self.e1()
                 - self.e2() * operand.e02() * self.e2()
-                + self.e1() * operand.e12() * self.e0()
+                - self.e2() * operand.e01() * self.e1()
                 + self.e1() * operand.e02() * self.e1()
-                + self.e2() * operand.e12() * self.e012()
-                + self.e012() * operand.e12() * self.e2(),
+                + self.e012() * operand.e12() * self.e2()
+                - self.e1() * operand.e01() * self.e2()
+                + self.e2() * operand.e12() * self.e012(),
         )
     }
 }
@@ -2597,32 +1618,33 @@ impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
             self.e1() * operand.e1() * self.e1() - self.e2() * operand.e1() * self.e2()
                 + self.e1() * operand.e2() * self.e2()
                 + self.e2() * operand.e2() * self.e1(),
-            self.e1() * operand.e1() * self.e2() + self.e2() * operand.e2() * self.e2()
+            self.e2() * operand.e2() * self.e2() + self.e2() * operand.e1() * self.e1()
                 - self.e1() * operand.e2() * self.e1()
-                + self.e2() * operand.e1() * self.e1(),
-            self.e0() * operand.e2() * self.e2()
+                + self.e1() * operand.e1() * self.e2(),
+            -(self.e2() * operand.e0() * self.e2())
                 + self.e012() * operand.e2() * self.e1()
-                + self.e1() * operand.e1() * self.e0()
-                + self.e0() * operand.e1() * self.e1()
-                - self.e1() * operand.e0() * self.e1()
-                - self.e2() * operand.e1() * self.e012()
                 + self.e2() * operand.e012() * self.e1()
                 - self.e012() * operand.e1() * self.e2()
+                - self.e2() * operand.e1() * self.e012()
+                - self.e1() * operand.e0() * self.e1()
                 - self.e1() * operand.e012() * self.e2()
-                + self.e1() * operand.e2() * self.e012()
                 + self.e2() * operand.e2() * self.e0()
-                - self.e2() * operand.e0() * self.e2(),
-            self.e012() * operand.e2() * self.e2() - self.e1() * operand.e0() * self.e2()
+                + self.e0() * operand.e1() * self.e1()
+                + self.e1() * operand.e1() * self.e0()
+                + self.e1() * operand.e2() * self.e012()
+                + self.e0() * operand.e2() * self.e2(),
+            self.e1() * operand.e2() * self.e0()
                 + self.e1() * operand.e012() * self.e1()
-                - self.e1() * operand.e1() * self.e012()
-                - self.e2() * operand.e2() * self.e012()
-                + self.e2() * operand.e012() * self.e2()
-                + self.e1() * operand.e2() * self.e0()
-                + self.e0() * operand.e1() * self.e2()
+                + self.e2() * operand.e0() * self.e1()
                 - self.e0() * operand.e2() * self.e1()
                 + self.e012() * operand.e1() * self.e1()
-                + self.e2() * operand.e0() * self.e1()
-                - self.e2() * operand.e1() * self.e0(),
+                + self.e012() * operand.e2() * self.e2()
+                + self.e2() * operand.e012() * self.e2()
+                - self.e2() * operand.e1() * self.e0()
+                + self.e0() * operand.e1() * self.e2()
+                - self.e2() * operand.e2() * self.e012()
+                - self.e1() * operand.e1() * self.e012()
+                - self.e1() * operand.e0() * self.e2(),
         )
     }
 }
@@ -2631,36 +1653,35 @@ impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.e1() * operand.s() * self.e1() - self.e2() * operand.e12() * self.e1()
-                + self.e2() * operand.s() * self.e2()
-                + self.e1() * operand.e12() * self.e2(),
-            self.e1() * operand.s() * self.e2()
+            self.e2() * operand.s() * self.e2()
+                + self.e1() * operand.e12() * self.e2()
+                + self.e1() * operand.s() * self.e1()
+                - self.e2() * operand.e12() * self.e1(),
+            -(self.e2() * operand.e12() * self.e2()) + self.e1() * operand.s() * self.e2()
                 - self.e1() * operand.e12() * self.e1()
-                - self.e2() * operand.s() * self.e1()
-                - self.e2() * operand.e12() * self.e2(),
-            self.e2() * operand.e01() * self.e2()
+                - self.e2() * operand.s() * self.e1(),
+            self.e1() * operand.s() * self.e0()
+                - self.e1() * operand.e01() * self.e1()
                 - self.e2() * operand.e02() * self.e1()
-                - self.e1() * operand.e02() * self.e2()
-                + self.e012() * operand.e12() * self.e1()
-                + self.e1() * operand.e12() * self.e012()
-                + self.e1() * operand.s() * self.e0()
-                - self.e2() * operand.e12() * self.e0()
-                - self.e0() * operand.s() * self.e1()
-                - self.e0() * operand.e12() * self.e2()
-                + self.e2() * operand.s() * self.e012()
                 - self.e012() * operand.s() * self.e2()
-                - self.e1() * operand.e01() * self.e1(),
-            -(self.e2() * operand.e01() * self.e1())
+                + self.e2() * operand.s() * self.e012()
+                - self.e2() * operand.e12() * self.e0()
+                - self.e0() * operand.e12() * self.e2()
+                + self.e1() * operand.e12() * self.e012()
+                + self.e2() * operand.e01() * self.e2()
+                - self.e1() * operand.e02() * self.e2()
+                - self.e0() * operand.s() * self.e1()
+                + self.e012() * operand.e12() * self.e1(),
+            -(self.e0() * operand.s() * self.e2()) - self.e1() * operand.e01() * self.e2()
                 + self.e1() * operand.e02() * self.e1()
-                + self.e2() * operand.e12() * self.e012()
-                - self.e2() * operand.e02() * self.e2()
-                - self.e0() * operand.s() * self.e2()
-                + self.e0() * operand.e12() * self.e1()
-                - self.e1() * operand.e01() * self.e2()
-                + self.e1() * operand.e12() * self.e0()
-                - self.e1() * operand.s() * self.e012()
                 + self.e2() * operand.s() * self.e0()
+                - self.e2() * operand.e01() * self.e1()
                 + self.e012() * operand.s() * self.e1()
+                + self.e2() * operand.e12() * self.e012()
+                + self.e1() * operand.e12() * self.e0()
+                - self.e2() * operand.e02() * self.e2()
+                - self.e1() * operand.s() * self.e012()
+                + self.e0() * operand.e12() * self.e1()
                 + self.e012() * operand.e12() * self.e2(),
         )
     }
@@ -2671,21 +1692,21 @@ impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new(
             -(self.e01() * operand.e1() * self.e01())
-                - self.s() * operand.e0() * self.e01()
-                - self.e02() * operand.e2() * self.e01()
                 + self.e02() * operand.e1() * self.e02()
                 + self.e12() * operand.e0() * self.e02()
                 - self.e01() * operand.e2() * self.e02()
-                - self.e01() * operand.e0() * self.s()
-                + self.e02() * operand.e0() * self.e12(),
-            -(self.e02() * operand.e1() * self.e01())
+                + self.e02() * operand.e0() * self.e12()
+                - self.s() * operand.e0() * self.e01()
+                - self.e02() * operand.e2() * self.e01()
+                - self.e01() * operand.e0() * self.s(),
+            -(self.e02() * operand.e0() * self.s())
                 - self.s() * operand.e0() * self.e02()
                 - self.e12() * operand.e0() * self.e01()
-                + self.e01() * operand.e2() * self.e01()
-                - self.e02() * operand.e2() * self.e02()
-                - self.e01() * operand.e0() * self.e12()
                 - self.e01() * operand.e1() * self.e02()
-                - self.e02() * operand.e0() * self.s(),
+                + self.e01() * operand.e2() * self.e01()
+                - self.e01() * operand.e0() * self.e12()
+                - self.e02() * operand.e1() * self.e01()
+                - self.e02() * operand.e2() * self.e02(),
             -(self.e01() * operand.e0() * self.e01()) - self.e02() * operand.e0() * self.e02(),
         )
     }
@@ -2695,22 +1716,23 @@ impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e02() * operand.e02() * self.e12() - self.s() * operand.e01() * self.e02()
+            -(self.e02() * operand.e12() * self.e02())
+                + self.e12() * operand.e02() * self.e02()
+                + self.e02() * operand.e02() * self.e12()
                 + self.e01() * operand.e01() * self.e12()
-                - self.e01() * operand.e12() * self.e01()
-                + self.s() * operand.e02() * self.e01()
-                - self.e02() * operand.e12() * self.e02()
-                - self.e02() * operand.e01() * self.s()
-                + self.e01() * operand.e02() * self.s()
                 + self.e12() * operand.e01() * self.e01()
-                + self.e12() * operand.e02() * self.e02(),
-            self.e01() * operand.e02() * self.e02() - self.e02() * operand.e01() * self.e02()
-                + self.e02() * operand.e02() * self.e01()
-                + self.e01() * operand.e01() * self.e01(),
-            self.e02() * operand.e01() * self.e01()
+                + self.s() * operand.e02() * self.e01()
+                - self.e01() * operand.e12() * self.e01()
+                - self.s() * operand.e01() * self.e02()
+                + self.e01() * operand.e02() * self.s()
+                - self.e02() * operand.e01() * self.s(),
+            self.e02() * operand.e02() * self.e01()
+                + self.e01() * operand.e01() * self.e01()
+                + self.e01() * operand.e02() * self.e02()
+                - self.e02() * operand.e01() * self.e02(),
+            self.e02() * operand.e01() * self.e01() - self.e01() * operand.e02() * self.e01()
                 + self.e02() * operand.e02() * self.e02()
-                + self.e01() * operand.e01() * self.e02()
-                - self.e01() * operand.e02() * self.e01(),
+                + self.e01() * operand.e01() * self.e02(),
         )
     }
 }
@@ -2719,35 +1741,37 @@ impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(self.e02() * operand.e2() * self.e01()) + self.e02() * operand.e0() * self.e12()
-                - self.s() * operand.e0() * self.e01()
-                + self.e02() * operand.e1() * self.e02()
-                - self.e02() * operand.e012() * self.s()
-                + self.e12() * operand.e012() * self.e01()
+            -(self.e01() * operand.e2() * self.e02())
                 + self.s() * operand.e012() * self.e02()
+                + self.e12() * operand.e012() * self.e01()
+                - self.e02() * operand.e012() * self.s()
                 + self.e12() * operand.e0() * self.e02()
+                - self.e02() * operand.e2() * self.e01()
+                + self.e02() * operand.e0() * self.e12()
+                + self.e02() * operand.e1() * self.e02()
+                - self.s() * operand.e0() * self.e01()
                 - self.e01() * operand.e1() * self.e01()
-                - self.e01() * operand.e2() * self.e02()
                 - self.e01() * operand.e0() * self.s()
                 - self.e01() * operand.e012() * self.e12(),
-            -(self.e12() * operand.e0() * self.e01()) + self.e12() * operand.e012() * self.e02()
-                - self.s() * operand.e0() * self.e02()
-                + self.e01() * operand.e012() * self.s()
-                - self.e01() * operand.e1() * self.e02()
-                - self.e02() * operand.e1() * self.e01()
-                - self.e02() * operand.e2() * self.e02()
+            self.e01() * operand.e012() * self.s()
                 - self.e02() * operand.e0() * self.s()
-                - self.e02() * operand.e012() * self.e12()
+                - self.e01() * operand.e1() * self.e02()
                 - self.e01() * operand.e0() * self.e12()
+                - self.e02() * operand.e012() * self.e12()
+                - self.e02() * operand.e2() * self.e02()
                 + self.e01() * operand.e2() * self.e01()
-                - self.s() * operand.e012() * self.e01(),
-            self.e01() * operand.e012() * self.e02()
-                - self.e02() * operand.e0() * self.e02()
+                - self.s() * operand.e012() * self.e01()
+                - self.e02() * operand.e1() * self.e01()
+                - self.e12() * operand.e0() * self.e01()
+                - self.s() * operand.e0() * self.e02()
+                + self.e12() * operand.e012() * self.e02(),
+            -(self.e02() * operand.e0() * self.e02()) + self.e01() * operand.e012() * self.e02()
                 - self.e02() * operand.e012() * self.e01()
                 - self.e01() * operand.e0() * self.e01(),
-            self.e01() * operand.e012() * self.e01() - self.e02() * operand.e0() * self.e01()
+            self.e01() * operand.e0() * self.e02()
+                + self.e01() * operand.e012() * self.e01()
                 + self.e02() * operand.e012() * self.e02()
-                + self.e01() * operand.e0() * self.e02(),
+                - self.e02() * operand.e0() * self.e01(),
         )
     }
 }
@@ -2756,35 +1780,35 @@ impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -(self.e12() * operand.e02() * self.e01())
-                + self.e01() * operand.e02() * self.e12()
+            -(self.e02() * operand.e02() * self.s()) - self.e01() * operand.e01() * self.s()
                 + self.e02() * operand.e12() * self.e01()
-                + self.s() * operand.e01() * self.e01()
-                - self.e01() * operand.e01() * self.s()
-                + self.s() * operand.e02() * self.e02()
                 + self.e02() * operand.s() * self.e02()
                 - self.e02() * operand.e01() * self.e12()
-                - self.e02() * operand.e02() * self.s()
                 - self.e01() * operand.e12() * self.e02()
+                - self.e12() * operand.e02() * self.e01()
+                + self.e12() * operand.e01() * self.e02()
+                + self.s() * operand.e01() * self.e01()
                 + self.e01() * operand.s() * self.e01()
-                + self.e12() * operand.e01() * self.e02(),
-            self.e12() * operand.e01() * self.e01() + self.s() * operand.e02() * self.e01()
-                - self.s() * operand.e01() * self.e02()
+                + self.s() * operand.e02() * self.e02()
+                + self.e01() * operand.e02() * self.e12(),
+            self.e12() * operand.e01() * self.e01() + self.e01() * operand.e01() * self.e12()
+                - self.e01() * operand.e12() * self.e01()
+                + self.e02() * operand.s() * self.e01()
+                - self.e02() * operand.e12() * self.e02()
+                - self.e02() * operand.e01() * self.s()
                 - self.e01() * operand.s() * self.e02()
                 + self.e01() * operand.e02() * self.s()
                 + self.e02() * operand.e02() * self.e12()
-                + self.e01() * operand.e01() * self.e12()
-                - self.e01() * operand.e12() * self.e01()
+                + self.s() * operand.e02() * self.e01()
                 + self.e12() * operand.e02() * self.e02()
-                - self.e02() * operand.e12() * self.e02()
-                - self.e02() * operand.e01() * self.s()
-                + self.e02() * operand.s() * self.e01(),
-            self.e01() * operand.e01() * self.e01() + self.e01() * operand.e02() * self.e02()
-                - self.e02() * operand.e01() * self.e02()
-                + self.e02() * operand.e02() * self.e01(),
-            self.e02() * operand.e01() * self.e01() - self.e01() * operand.e02() * self.e01()
+                - self.s() * operand.e01() * self.e02(),
+            self.e01() * operand.e01() * self.e01() - self.e02() * operand.e01() * self.e02()
+                + self.e02() * operand.e02() * self.e01()
+                + self.e01() * operand.e02() * self.e02(),
+            self.e02() * operand.e02() * self.e02()
                 + self.e01() * operand.e01() * self.e02()
-                + self.e02() * operand.e02() * self.e02(),
+                + self.e02() * operand.e01() * self.e01()
+                - self.e01() * operand.e02() * self.e01(),
         )
     }
 }
@@ -2793,22 +1817,21 @@ impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new(
-            self.e012() * operand.e1() * self.e012()
-                + self.e012() * operand.e2() * self.e0()
-                + self.e0() * operand.e0() * self.e1()
-                - self.e012() * operand.e0() * self.e2()
-                + self.e1() * operand.e0() * self.e0()
+            self.e012() * operand.e1() * self.e012() - self.e012() * operand.e0() * self.e2()
                 + self.e0() * operand.e2() * self.e012()
+                + self.e012() * operand.e2() * self.e0()
+                + self.e1() * operand.e0() * self.e0()
                 - self.e2() * operand.e0() * self.e012()
-                - self.e0() * operand.e1() * self.e0(),
+                - self.e0() * operand.e1() * self.e0()
+                + self.e0() * operand.e0() * self.e1(),
             self.e1() * operand.e0() * self.e012()
-                + self.e2() * operand.e0() * self.e0()
-                + self.e012() * operand.e2() * self.e012()
-                - self.e0() * operand.e2() * self.e0()
-                + self.e0() * operand.e0() * self.e2()
-                - self.e012() * operand.e1() * self.e0()
                 + self.e012() * operand.e0() * self.e1()
-                - self.e0() * operand.e1() * self.e012(),
+                + self.e0() * operand.e0() * self.e2()
+                + self.e2() * operand.e0() * self.e0()
+                - self.e0() * operand.e2() * self.e0()
+                - self.e0() * operand.e1() * self.e012()
+                + self.e012() * operand.e2() * self.e012()
+                - self.e012() * operand.e1() * self.e0(),
             self.e012() * operand.e0() * self.e012() + self.e0() * operand.e0() * self.e0(),
         )
     }
@@ -2818,22 +1841,22 @@ impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e012() * operand.e02() * self.e2()
-                + self.e1() * operand.e02() * self.e0()
-                + self.e0() * operand.e02() * self.e1()
-                + self.e1() * operand.e01() * self.e012()
-                + self.e2() * operand.e02() * self.e012()
+            self.e1() * operand.e02() * self.e0()
                 + self.e0() * operand.e12() * self.e0()
-                - self.e2() * operand.e01() * self.e0()
+                + self.e012() * operand.e02() * self.e2()
+                + self.e2() * operand.e02() * self.e012()
                 + self.e012() * operand.e12() * self.e012()
+                - self.e2() * operand.e01() * self.e0()
+                + self.e1() * operand.e01() * self.e012()
                 - self.e0() * operand.e01() * self.e2()
+                + self.e0() * operand.e02() * self.e1()
                 + self.e012() * operand.e01() * self.e1(),
-            self.e012() * operand.e02() * self.e0()
+            -(self.e0() * operand.e01() * self.e0())
                 + self.e0() * operand.e02() * self.e012()
-                + self.e012() * operand.e01() * self.e012()
-                - self.e0() * operand.e01() * self.e0(),
-            -(self.e0() * operand.e01() * self.e012())
-                - self.e0() * operand.e02() * self.e0()
+                + self.e012() * operand.e02() * self.e0()
+                + self.e012() * operand.e01() * self.e012(),
+            -(self.e0() * operand.e02() * self.e0())
+                - self.e0() * operand.e01() * self.e012()
                 - self.e012() * operand.e01() * self.e0()
                 + self.e012() * operand.e02() * self.e012(),
         )
@@ -2844,36 +1867,36 @@ impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e1() * operand.e012() * self.e012()
-                + self.e1() * operand.e0() * self.e0()
+            -(self.e0() * operand.e012() * self.e2())
                 + self.e2() * operand.e012() * self.e0()
-                - self.e012() * operand.e0() * self.e2()
                 + self.e0() * operand.e0() * self.e1()
-                - self.e0() * operand.e1() * self.e0()
-                - self.e2() * operand.e0() * self.e012()
-                + self.e0() * operand.e2() * self.e012()
-                + self.e012() * operand.e1() * self.e012()
                 + self.e012() * operand.e2() * self.e0()
-                - self.e0() * operand.e012() * self.e2()
-                - self.e012() * operand.e012() * self.e1(),
-            self.e2() * operand.e0() * self.e0() - self.e1() * operand.e012() * self.e0()
-                + self.e1() * operand.e0() * self.e012()
-                + self.e2() * operand.e012() * self.e012()
+                - self.e012() * operand.e0() * self.e2()
+                + self.e012() * operand.e1() * self.e012()
+                + self.e1() * operand.e012() * self.e012()
+                + self.e1() * operand.e0() * self.e0()
+                + self.e0() * operand.e2() * self.e012()
+                - self.e2() * operand.e0() * self.e012()
+                - self.e012() * operand.e012() * self.e1()
+                - self.e0() * operand.e1() * self.e0(),
+            self.e012() * operand.e0() * self.e1() + self.e0() * operand.e012() * self.e1()
                 - self.e0() * operand.e1() * self.e012()
-                - self.e0() * operand.e2() * self.e0()
-                + self.e0() * operand.e012() * self.e1()
+                + self.e2() * operand.e012() * self.e012()
                 + self.e0() * operand.e0() * self.e2()
-                - self.e012() * operand.e012() * self.e2()
-                + self.e012() * operand.e2() * self.e012()
                 - self.e012() * operand.e1() * self.e0()
-                + self.e012() * operand.e0() * self.e1(),
-            -(self.e012() * operand.e012() * self.e0())
-                + self.e0() * operand.e0() * self.e0()
+                + self.e1() * operand.e0() * self.e012()
+                - self.e0() * operand.e2() * self.e0()
+                + self.e012() * operand.e2() * self.e012()
+                + self.e2() * operand.e0() * self.e0()
+                - self.e012() * operand.e012() * self.e2()
+                - self.e1() * operand.e012() * self.e0(),
+            self.e012() * operand.e0() * self.e012()
                 + self.e0() * operand.e012() * self.e012()
-                + self.e012() * operand.e0() * self.e012(),
-            self.e0() * operand.e012() * self.e0()
+                + self.e0() * operand.e0() * self.e0()
+                - self.e012() * operand.e012() * self.e0(),
+            self.e012() * operand.e012() * self.e012()
+                + self.e0() * operand.e012() * self.e0()
                 + self.e012() * operand.e0() * self.e0()
-                + self.e012() * operand.e012() * self.e012()
                 - self.e0() * operand.e0() * self.e012(),
         )
     }
@@ -2883,36 +1906,36 @@ impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -(self.e1() * operand.e01() * self.e0()) - self.e2() * operand.e02() * self.e0()
-                + self.e0() * operand.e12() * self.e012()
+            -(self.e2() * operand.e02() * self.e0())
                 - self.e2() * operand.e01() * self.e012()
-                + self.e0() * operand.e02() * self.e2()
-                + self.e0() * operand.e01() * self.e1()
-                + self.e012() * operand.s() * self.e012()
-                + self.e1() * operand.e02() * self.e012()
-                - self.e012() * operand.e12() * self.e0()
                 - self.e012() * operand.e02() * self.e1()
+                - self.e1() * operand.e01() * self.e0()
+                + self.e0() * operand.s() * self.e0()
+                + self.e0() * operand.e12() * self.e012()
+                + self.e012() * operand.s() * self.e012()
                 + self.e012() * operand.e01() * self.e2()
-                + self.e0() * operand.s() * self.e0(),
-            self.e012() * operand.e01() * self.e1() + self.e012() * operand.s() * self.e0()
-                - self.e2() * operand.e01() * self.e0()
-                + self.e012() * operand.e02() * self.e2()
-                + self.e0() * operand.e12() * self.e0()
-                + self.e1() * operand.e01() * self.e012()
-                + self.e012() * operand.e12() * self.e012()
-                + self.e0() * operand.e02() * self.e1()
+                + self.e0() * operand.e01() * self.e1()
+                + self.e1() * operand.e02() * self.e012()
+                + self.e0() * operand.e02() * self.e2()
+                - self.e012() * operand.e12() * self.e0(),
+            -(self.e2() * operand.e01() * self.e0()) - self.e0() * operand.s() * self.e012()
                 + self.e1() * operand.e02() * self.e0()
+                + self.e0() * operand.e12() * self.e0()
+                + self.e012() * operand.e02() * self.e2()
+                + self.e0() * operand.e02() * self.e1()
+                + self.e012() * operand.e12() * self.e012()
+                + self.e012() * operand.e01() * self.e1()
+                + self.e1() * operand.e01() * self.e012()
                 - self.e0() * operand.e01() * self.e2()
-                + self.e2() * operand.e02() * self.e012()
-                - self.e0() * operand.s() * self.e012(),
-            -(self.e0() * operand.e01() * self.e0())
-                + self.e0() * operand.e02() * self.e012()
+                + self.e012() * operand.s() * self.e0()
+                + self.e2() * operand.e02() * self.e012(),
+            self.e0() * operand.e02() * self.e012()
                 + self.e012() * operand.e01() * self.e012()
-                + self.e012() * operand.e02() * self.e0(),
-            self.e012() * operand.e02() * self.e012()
-                - self.e0() * operand.e01() * self.e012()
-                - self.e0() * operand.e02() * self.e0()
-                - self.e012() * operand.e01() * self.e0(),
+                + self.e012() * operand.e02() * self.e0()
+                - self.e0() * operand.e01() * self.e0(),
+            -(self.e012() * operand.e01() * self.e0()) - self.e0() * operand.e01() * self.e012()
+                + self.e012() * operand.e02() * self.e012()
+                - self.e0() * operand.e02() * self.e0(),
         )
     }
 }
@@ -2944,60 +1967,11 @@ impl<T: Float> Versor<Motor<T>> for Motor<T> {
         *self * *other
     }
 }
-impl<T: Float> ScalarProduct<Flector<T>> for Flector<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Flector<T>) -> T {
-        self.s() * rhs.s() - self.e12() * rhs.e12()
-    }
-}
-impl<T: Float> ScalarProduct<Line<T>> for Flector<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Line<T>) -> T {
-        -(self.e12() * rhs.e12())
-    }
-}
-impl<T: Float> ScalarProduct<Scalar<T>> for Flector<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.s() * rhs.s()
-    }
-}
-impl<T: Float> ScalarProduct<Flector<T>> for Line<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Flector<T>) -> T {
-        -(self.e12() * rhs.e12())
-    }
-}
 impl<T: Float> ScalarProduct<Line<T>> for Line<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Line<T>) -> T {
         -(self.e12() * rhs.e12())
-    }
-}
-impl<T: Float> ScalarProduct<Motor<T>> for Motor<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Motor<T>) -> T {
-        self.e1() * rhs.e1() + self.e2() * rhs.e2()
-    }
-}
-impl<T: Float> ScalarProduct<Point<T>> for Motor<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Point<T>) -> T {
-        self.e1() * rhs.e1() + self.e2() * rhs.e2()
-    }
-}
-impl<T: Float> ScalarProduct<Motor<T>> for Point<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Motor<T>) -> T {
-        self.e1() * rhs.e1() + self.e2() * rhs.e2()
     }
 }
 impl<T: Float> ScalarProduct<Point<T>> for Point<T> {
@@ -3007,13 +1981,6 @@ impl<T: Float> ScalarProduct<Point<T>> for Point<T> {
         self.e1() * rhs.e1() + self.e2() * rhs.e2()
     }
 }
-impl<T: Float> ScalarProduct<Flector<T>> for Scalar<T> {
-    type Scalar = T;
-    #[inline]
-    fn scalar_product(&self, rhs: &Flector<T>) -> T {
-        self.s() * rhs.s()
-    }
-}
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
     type Scalar = T;
     #[inline]
@@ -3021,87 +1988,11 @@ impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
         self.s() * rhs.s()
     }
 }
-impl<T: Float> BulkContract<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s() + self.e12() * rhs.e12(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Line<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Line<T>) -> Scalar<T> {
-        Scalar::new(self.e12() * rhs.e12())
-    }
-}
-impl<T: Float> BulkContract<Motor<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            -(self.e12() * rhs.e2()),
-            self.e12() * rhs.e1(),
-            self.e01() * rhs.e1() + self.e02() * rhs.e2(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(
-            -(self.e12() * rhs.e2()),
-            self.e12() * rhs.e1(),
-            self.e01() * rhs.e1() + self.e02() * rhs.e2(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Scalar<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Scalar<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.s() * rhs.s(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Flector<T>> for Line<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.e12() * rhs.e12(),
-            self.e12() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-        )
-    }
-}
 impl<T: Float> BulkContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(self.e12() * rhs.e12())
-    }
-}
-impl<T: Float> BulkContract<Motor<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(
-            -(self.e12() * rhs.e2()),
-            self.e12() * rhs.e1(),
-            self.e01() * rhs.e1() + self.e02() * rhs.e2(),
-        )
     }
 }
 impl<T: Float> BulkContract<Point<T>> for Line<T> {
@@ -3126,79 +2017,6 @@ impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
         )
     }
 }
-impl<T: Float> BulkContract<Flector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0() + rhs.e12() * self.e012(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Line<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), rhs.e12() * self.e012())
-    }
-}
-impl<T: Float> BulkContract<Motor<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()),
-            rhs.e1() * self.e012(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Point<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Point<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            rhs.e1() * self.e1() + rhs.e2() * self.e2(),
-            T::zero(),
-            -(rhs.e2() * self.e012()),
-            rhs.e1() * self.e012(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Scalar<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Scalar<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Flector<T>> for Point<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            rhs.s() * self.e1(),
-            rhs.s() * self.e2(),
-            rhs.s() * self.e0(),
-        )
-    }
-}
-impl<T: Float> BulkContract<Motor<T>> for Point<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
-        Scalar::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
 impl<T: Float> BulkContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -3217,13 +2035,6 @@ impl<T: Float> BulkContract<Scalar<T>> for Point<T> {
         )
     }
 }
-impl<T: Float> BulkContract<Flector<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(self.s() * rhs.s())
-    }
-}
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -3231,30 +2042,11 @@ impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
         Scalar::new(self.s() * rhs.s())
     }
 }
-impl<T: Float> BulkContract<Flector<T>> for Trivector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            rhs.e12() * self.e012(),
-            rhs.s() * self.e012(),
-        )
-    }
-}
 impl<T: Float> BulkContract<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Line<T>) -> Point<T> {
         Point::new(T::zero(), T::zero(), rhs.e12() * self.e012())
-    }
-}
-impl<T: Float> BulkContract<Motor<T>> for Trivector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_contract(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(T::zero(), -(rhs.e2() * self.e012()), rhs.e1() * self.e012())
     }
 }
 impl<T: Float> BulkContract<Point<T>> for Trivector<T> {
@@ -3271,53 +2063,11 @@ impl<T: Float> BulkContract<Scalar<T>> for Trivector<T> {
         Trivector::new(rhs.s() * self.e012())
     }
 }
-impl<T: Float> WeightContract<Flector<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
-impl<T: Float> WeightContract<Line<T>> for Flector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Line<T>) -> Scalar<T> {
-        Scalar::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
-impl<T: Float> WeightContract<Motor<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(self.e01() * rhs.e0(), self.e02() * rhs.e0(), T::zero())
-    }
-}
-impl<T: Float> WeightContract<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Point<T>) -> Point<T> {
-        Point::new(self.e01() * rhs.e0(), self.e02() * rhs.e0(), T::zero())
-    }
-}
-impl<T: Float> WeightContract<Flector<T>> for Line<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Flector<T>) -> Scalar<T> {
-        Scalar::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
 impl<T: Float> WeightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
-impl<T: Float> WeightContract<Motor<T>> for Line<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Motor<T>) -> Point<T> {
-        Point::new(self.e01() * rhs.e0(), self.e02() * rhs.e0(), T::zero())
     }
 }
 impl<T: Float> WeightContract<Point<T>> for Line<T> {
@@ -3327,82 +2077,11 @@ impl<T: Float> WeightContract<Point<T>> for Line<T> {
         Point::new(self.e01() * rhs.e0(), self.e02() * rhs.e0(), T::zero())
     }
 }
-impl<T: Float> WeightContract<Flector<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e02() * self.e012()),
-            rhs.e01() * self.e012(),
-            T::zero(),
-        )
-    }
-}
-impl<T: Float> WeightContract<Line<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Line<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e02() * self.e012()),
-            rhs.e01() * self.e012(),
-            T::zero(),
-        )
-    }
-}
-impl<T: Float> WeightContract<Motor<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(rhs.e0() * self.e0()) + -(rhs.e012() * self.e012()),
-            -(rhs.e0() * self.e012()),
-            T::zero(),
-            T::zero(),
-        )
-    }
-}
-impl<T: Float> WeightContract<Point<T>> for Motor<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Point<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(rhs.e0() * self.e0()),
-            -(rhs.e0() * self.e012()),
-            T::zero(),
-            T::zero(),
-        )
-    }
-}
-impl<T: Float> WeightContract<Trivector<T>> for Motor<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.e012() * self.e012()))
-    }
-}
-impl<T: Float> WeightContract<Motor<T>> for Point<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Motor<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.e0() * self.e0()))
-    }
-}
 impl<T: Float> WeightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Point<T>) -> Scalar<T> {
         Scalar::new(-(rhs.e0() * self.e0()))
-    }
-}
-impl<T: Float> WeightContract<Flector<T>> for Trivector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(
-            -(rhs.e02() * self.e012()),
-            rhs.e01() * self.e012(),
-            T::zero(),
-        )
     }
 }
 impl<T: Float> WeightContract<Line<T>> for Trivector<T> {
@@ -3412,18 +2091,6 @@ impl<T: Float> WeightContract<Line<T>> for Trivector<T> {
         Point::new(
             -(rhs.e02() * self.e012()),
             rhs.e01() * self.e012(),
-            T::zero(),
-        )
-    }
-}
-impl<T: Float> WeightContract<Motor<T>> for Trivector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_contract(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(rhs.e012() * self.e012()),
-            -(rhs.e0() * self.e012()),
-            T::zero(),
             T::zero(),
         )
     }
@@ -3442,98 +2109,11 @@ impl<T: Float> WeightContract<Trivector<T>> for Trivector<T> {
         Scalar::new(-(rhs.e012() * self.e012()))
     }
 }
-impl<T: Float> BulkExpand<Flector<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            self.s() * rhs.e12(),
-            self.s() * rhs.s() + self.e12() * rhs.e12(),
-        )
-    }
-}
-impl<T: Float> BulkExpand<Line<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Line<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            self.s() * rhs.e12(),
-            self.e12() * rhs.e12(),
-        )
-    }
-}
-impl<T: Float> BulkExpand<Motor<T>> for Flector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(T::zero(), -(self.s() * rhs.e2()), self.s() * rhs.e1())
-    }
-}
-impl<T: Float> BulkExpand<Point<T>> for Flector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Point<T>) -> Line<T> {
-        Line::new(T::zero(), -(self.s() * rhs.e2()), self.s() * rhs.e1())
-    }
-}
-impl<T: Float> BulkExpand<Scalar<T>> for Flector<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new(self.s() * rhs.s())
-    }
-}
-impl<T: Float> BulkExpand<Flector<T>> for Line<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Flector<T>) -> Trivector<T> {
-        Trivector::new(self.e12() * rhs.e12())
-    }
-}
 impl<T: Float> BulkExpand<Line<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Line<T>) -> Trivector<T> {
         Trivector::new(self.e12() * rhs.e12())
-    }
-}
-impl<T: Float> BulkExpand<Flector<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Flector<T>) -> Line<T> {
-        Line::new(T::zero(), rhs.e12() * self.e1(), rhs.e12() * self.e2())
-    }
-}
-impl<T: Float> BulkExpand<Line<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Line<T>) -> Line<T> {
-        Line::new(T::zero(), rhs.e12() * self.e1(), rhs.e12() * self.e2())
-    }
-}
-impl<T: Float> BulkExpand<Motor<T>> for Motor<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Motor<T>) -> Trivector<T> {
-        Trivector::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
-impl<T: Float> BulkExpand<Point<T>> for Motor<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Point<T>) -> Trivector<T> {
-        Trivector::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
-impl<T: Float> BulkExpand<Flector<T>> for Point<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Flector<T>) -> Line<T> {
-        Line::new(T::zero(), rhs.e12() * self.e1(), rhs.e12() * self.e2())
     }
 }
 impl<T: Float> BulkExpand<Line<T>> for Point<T> {
@@ -3543,13 +2123,6 @@ impl<T: Float> BulkExpand<Line<T>> for Point<T> {
         Line::new(T::zero(), rhs.e12() * self.e1(), rhs.e12() * self.e2())
     }
 }
-impl<T: Float> BulkExpand<Motor<T>> for Point<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Motor<T>) -> Trivector<T> {
-        Trivector::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
-    }
-}
 impl<T: Float> BulkExpand<Point<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -3557,30 +2130,11 @@ impl<T: Float> BulkExpand<Point<T>> for Point<T> {
         Trivector::new(rhs.e1() * self.e1() + rhs.e2() * self.e2())
     }
 }
-impl<T: Float> BulkExpand<Flector<T>> for Scalar<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            T::zero(),
-            T::zero(),
-            self.s() * rhs.e12(),
-            self.s() * rhs.s(),
-        )
-    }
-}
 impl<T: Float> BulkExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Line<T>) -> Point<T> {
         Point::new(T::zero(), T::zero(), self.s() * rhs.e12())
-    }
-}
-impl<T: Float> BulkExpand<Motor<T>> for Scalar<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn bulk_expand(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(T::zero(), -(self.s() * rhs.e2()), self.s() * rhs.e1())
     }
 }
 impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
@@ -3597,84 +2151,11 @@ impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
         Trivector::new(self.s() * rhs.s())
     }
 }
-impl<T: Float> WeightExpand<Flector<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Flector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(self.s() * rhs.e02()),
-            self.s() * rhs.e01(),
-            T::zero(),
-            -(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Line<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Line<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(self.s() * rhs.e02()),
-            self.s() * rhs.e01(),
-            T::zero(),
-            -(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.s() * rhs.e012()),
-            -(self.s() * rhs.e0()) + -(self.e12() * rhs.e012()),
-            -(self.e01() * rhs.e012()),
-            -(self.e02() * rhs.e012()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Point<T>> for Flector<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Point<T>) -> Line<T> {
-        Line::new(-(self.s() * rhs.e0()), T::zero(), T::zero())
-    }
-}
-impl<T: Float> WeightExpand<Trivector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Trivector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.s() * rhs.e012()),
-            -(self.e12() * rhs.e012()),
-            -(self.e01() * rhs.e012()),
-            -(self.e02() * rhs.e012()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Flector<T>> for Line<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Flector<T>) -> Trivector<T> {
-        Trivector::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
 impl<T: Float> WeightExpand<Line<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Line<T>) -> Trivector<T> {
         Trivector::new(-(self.e01() * rhs.e01()) + -(self.e02() * rhs.e02()))
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Line<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Line<T> {
-        Line::new(
-            -(self.e12() * rhs.e012()),
-            -(self.e01() * rhs.e012()),
-            -(self.e02() * rhs.e012()),
-        )
     }
 }
 impl<T: Float> WeightExpand<Trivector<T>> for Line<T> {
@@ -3688,70 +2169,6 @@ impl<T: Float> WeightExpand<Trivector<T>> for Line<T> {
         )
     }
 }
-impl<T: Float> WeightExpand<Flector<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Flector<T>) -> Line<T> {
-        Line::new(
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-            rhs.e02() * self.e0(),
-            -(rhs.e01() * self.e0()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Line<T>> for Motor<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Line<T>) -> Line<T> {
-        Line::new(
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-            rhs.e02() * self.e0(),
-            -(rhs.e01() * self.e0()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(rhs.e012() * self.e1()),
-            -(rhs.e012() * self.e2()),
-            -(rhs.e012() * self.e0()),
-            -(rhs.e0() * self.e0()) + -(rhs.e012() * self.e012()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Point<T>> for Motor<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Point<T>) -> Trivector<T> {
-        Trivector::new(-(rhs.e0() * self.e0()))
-    }
-}
-impl<T: Float> WeightExpand<Trivector<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Trivector<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(rhs.e012() * self.e1()),
-            -(rhs.e012() * self.e2()),
-            -(rhs.e012() * self.e0()),
-            -(rhs.e012() * self.e012()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Flector<T>> for Point<T> {
-    type Output = Line<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Flector<T>) -> Line<T> {
-        Line::new(
-            rhs.e01() * self.e1() + rhs.e02() * self.e2(),
-            rhs.e02() * self.e0(),
-            -(rhs.e01() * self.e0()),
-        )
-    }
-}
 impl<T: Float> WeightExpand<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -3760,18 +2177,6 @@ impl<T: Float> WeightExpand<Line<T>> for Point<T> {
             rhs.e01() * self.e1() + rhs.e02() * self.e2(),
             rhs.e02() * self.e0(),
             -(rhs.e01() * self.e0()),
-        )
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Point<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(rhs.e012() * self.e1()),
-            -(rhs.e012() * self.e2()),
-            -(rhs.e012() * self.e0()),
-            -(rhs.e0() * self.e0()),
         )
     }
 }
@@ -3793,30 +2198,11 @@ impl<T: Float> WeightExpand<Trivector<T>> for Point<T> {
         )
     }
 }
-impl<T: Float> WeightExpand<Flector<T>> for Scalar<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Flector<T>) -> Point<T> {
-        Point::new(-(self.s() * rhs.e02()), self.s() * rhs.e01(), T::zero())
-    }
-}
 impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Line<T>) -> Point<T> {
         Point::new(-(self.s() * rhs.e02()), self.s() * rhs.e01(), T::zero())
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Scalar<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            -(self.s() * rhs.e012()),
-            -(self.s() * rhs.e0()),
-            T::zero(),
-            T::zero(),
-        )
     }
 }
 impl<T: Float> WeightExpand<Point<T>> for Scalar<T> {
@@ -3831,13 +2217,6 @@ impl<T: Float> WeightExpand<Trivector<T>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
         Scalar::new(-(self.s() * rhs.e012()))
-    }
-}
-impl<T: Float> WeightExpand<Motor<T>> for Trivector<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn weight_expand(&self, rhs: &Motor<T>) -> Trivector<T> {
-        Trivector::new(-(rhs.e012() * self.e012()))
     }
 }
 impl<T: Float> WeightExpand<Trivector<T>> for Trivector<T> {

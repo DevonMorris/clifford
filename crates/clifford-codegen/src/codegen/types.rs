@@ -614,143 +614,81 @@ impl<'a> TypeGenerator<'a> {
         }
     }
 
-    /// Generates wrapper type aliases based on algebra type.
+    /// Generates wrapper type aliases for all entity types.
     ///
-    /// For Euclidean algebras (no degenerate basis), generates `Unit<T>` aliases:
+    /// For every entity type (except Scalar and type aliases), generates:
+    /// - `Bulk<Type>` alias: `BulkVector<T> = Bulk<Vector<T>>`
+    /// - `Unitized<Type>` alias: `UnitizedVector<T> = Unitized<Vector<T>>`
+    ///
+    /// Additionally for Euclidean algebras, generates `Unit<T>` aliases:
     /// - `UnitVector<T> = Unit<Vector<T>>`
-    /// - `UnitBivector<T> = Unit<Bivector<T>>`
-    /// - `UnitRotor<T> = Unit<Rotor<T>>`
-    ///
-    /// For PGA algebras (has degenerate basis), generates:
-    /// - `Bulk<T>` aliases for versors (Motor, Flector): `BulkMotor<T> = Bulk<Motor<T>>`
-    /// - `Unitized<T>` aliases for finite entities (Point, Plane, Line): `UnitizedPoint<T> = Unitized<Point<T>>`
-    /// - `Ideal<T>` aliases for at-infinity entities (Point, Plane, Line): `IdealPoint<T> = Ideal<Point<T>>`
     fn generate_wrapper_aliases(&self) -> TokenStream {
+        let mut aliases = Vec::new();
         let is_pga = self.spec.signature.r > 0;
 
-        if is_pga {
-            self.generate_pga_wrapper_aliases()
-        } else {
-            self.generate_euclidean_wrapper_aliases()
-        }
-    }
-
-    /// Generates Unit<T> wrapper aliases for Euclidean algebras.
-    fn generate_euclidean_wrapper_aliases(&self) -> TokenStream {
-        let mut aliases = Vec::new();
-
         for ty in &self.spec.types {
-            // Skip aliases
+            // Skip type aliases
             if ty.alias_of.is_some() {
                 continue;
             }
 
-            // Generate Unit aliases for types that make sense to normalize:
-            // - Single-grade types (Vector, Bivector, Trivector)
-            // - Rotor types (grades [0, 2])
-            let should_generate = ty.grades.len() == 1
-                || (ty.grades.contains(&0) && ty.grades.contains(&2) && ty.grades.len() == 2);
-
-            if should_generate {
-                let type_name = format_ident!("{}", ty.name);
-                let alias_name = format_ident!("Unit{}", ty.name);
-                let doc = format!(
-                    "A unit {} (Euclidean norm = 1).\n\n\
-                     This type alias provides compile-time documentation that the \
-                     {} has been normalized.",
-                    ty.name, ty.name
-                );
-
-                aliases.push(quote! {
-                    #[doc = #doc]
-                    pub type #alias_name<T> = crate::wrappers::Unit<#type_name<T>>;
-                });
-            }
-        }
-
-        if aliases.is_empty() {
-            quote! {}
-        } else {
-            quote! {
-                // ============================================================================
-                // Wrapper Type Aliases
-                // ============================================================================
-
-                #(#aliases)*
-            }
-        }
-    }
-
-    /// Generates Bulk<T>, Unitized<T>, and Ideal<T> wrapper aliases for PGA algebras.
-    fn generate_pga_wrapper_aliases(&self) -> TokenStream {
-        let mut aliases = Vec::new();
-
-        // Versor type names that get Bulk<T> wrappers
-        let versor_names = ["Motor", "Flector"];
-
-        // Homogeneous geometric entity names that get Unitized<T> and Ideal<T> wrappers
-        let homogeneous_names = ["Point", "Plane", "Line"];
-
-        for ty in &self.spec.types {
-            // Skip aliases
-            if ty.alias_of.is_some() {
+            // Skip Scalar type - no need for Bulk/Unitized wrappers
+            if ty.name == "Scalar" {
                 continue;
             }
 
             let type_name = format_ident!("{}", ty.name);
 
-            // Check if it's a versor type
-            if versor_names.contains(&ty.name.as_str()) {
-                let alias_name = format_ident!("Bulk{}", ty.name);
-                let doc = format!(
-                    "A bulk-normalized {} (bulk norm = 1).\n\n\
-                     For a {} to represent a proper rigid transformation, the bulk norm \
-                     (non-degenerate part) should be 1. This type alias provides compile-time \
-                     documentation that the {} has been bulk-normalized.",
-                    ty.name, ty.name, ty.name
-                );
+            // Generate Bulk<T> alias for all entity types
+            let bulk_alias = format_ident!("Bulk{}", ty.name);
+            let bulk_doc = format!(
+                "A bulk-normalized {} (bulk norm = 1).\n\n\
+                 This type alias wraps {} in `Bulk<T>`, which normalizes by the bulk \
+                 (non-degenerate) part of the norm.",
+                ty.name, ty.name
+            );
 
-                aliases.push(quote! {
-                    #[doc = #doc]
-                    pub type #alias_name<T> = crate::wrappers::Bulk<#type_name<T>>;
-                });
-            }
+            aliases.push(quote! {
+                #[doc = #bulk_doc]
+                pub type #bulk_alias<T> = crate::wrappers::Bulk<#type_name<T>>;
+            });
 
-            // Check if it's a homogeneous geometric entity
-            if homogeneous_names.contains(&ty.name.as_str()) {
-                // Generate Unitized<T> alias for finite (weight = 1) normalization
-                let unitized_alias = format_ident!("Unitized{}", ty.name);
-                let unitized_doc = format!(
-                    "A unitized {} (weight norm = 1).\n\n\
-                     In PGA, geometric entities are represented in homogeneous coordinates. \
-                     A unitized {} has been weight-normalized to standard form, representing \
-                     a finite (non-ideal) {}.",
-                    ty.name.to_lowercase(),
-                    ty.name.to_lowercase(),
-                    ty.name.to_lowercase()
-                );
+            // Generate Unitized<T> alias for all entity types
+            let unitized_alias = format_ident!("Unitized{}", ty.name);
+            let unitized_doc = format!(
+                "A unitized {} (weight norm = 1).\n\n\
+                 This type alias wraps {} in `Unitized<T>`, which normalizes by the weight \
+                 (degenerate) part of the norm.",
+                ty.name, ty.name
+            );
 
-                aliases.push(quote! {
-                    #[doc = #unitized_doc]
-                    pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
-                });
+            aliases.push(quote! {
+                #[doc = #unitized_doc]
+                pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
+            });
 
-                // Generate Ideal<T> alias for at-infinity (weight ≈ 0) constraint
-                let ideal_alias = format_ident!("Ideal{}", ty.name);
-                let ideal_doc = format!(
-                    "An ideal {} (weight ≈ 0).\n\n\
-                     An ideal {} lies at infinity (has zero weight component). \
-                     This is a constraint wrapper that verifies the {} is ideal, \
-                     not a normalization wrapper.",
-                    ty.name.to_lowercase(),
-                    ty.name.to_lowercase(),
-                    ty.name.to_lowercase()
-                );
+            // For Euclidean algebras, also generate Unit<T> aliases for appropriate types
+            if !is_pga {
+                // Generate Unit aliases for types that make sense to normalize:
+                // - Single-grade types (Vector, Bivector, Trivector)
+                // - Rotor types (grades [0, 2])
+                let should_generate_unit = ty.grades.len() == 1
+                    || (ty.grades.contains(&0) && ty.grades.contains(&2) && ty.grades.len() == 2);
 
-                aliases.push(quote! {
-                    #[doc = #ideal_doc]
-                    pub type #ideal_alias<T> = crate::wrappers::Ideal<#type_name<T>>;
-                });
+                if should_generate_unit {
+                    let unit_alias = format_ident!("Unit{}", ty.name);
+                    let unit_doc = format!(
+                        "A unit {} (Euclidean norm = 1).\n\n\
+                         This type alias provides compile-time documentation that the \
+                         {} has been normalized.",
+                        ty.name, ty.name
+                    );
+
+                    aliases.push(quote! {
+                        #[doc = #unit_doc]
+                        pub type #unit_alias<T> = crate::wrappers::Unit<#type_name<T>>;
+                    });
+                }
             }
         }
 

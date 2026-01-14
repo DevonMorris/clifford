@@ -763,6 +763,15 @@ impl<'a> TraitsGenerator<'a> {
     // Product Trait Implementations (clifford::ops)
     // ========================================================================
 
+    /// Checks if a type represents a single-grade blade (not a versor/multivector).
+    ///
+    /// Single-grade types have exactly one grade and are not marked as versors.
+    /// Examples: Scalar (grade 0), Vector (grade 1), Bivector (grade 2), etc.
+    /// Counter-examples: Rotor (grades 0,2), Motor (grades 0,2,0123), Flector (grades 1,3,...)
+    fn is_single_grade_blade(&self, ty: &TypeSpec) -> bool {
+        ty.grades.len() == 1 && ty.versor.is_none()
+    }
+
     /// Generates all product trait implementations.
     fn generate_all_product_traits(&self) -> TokenStream {
         let mut impls = Vec::new();
@@ -771,58 +780,71 @@ impl<'a> TraitsGenerator<'a> {
         // The geometric product cannot be type-safe for single-grade elements.
         // Use Dot for same-grade scalar products, or Mul operator for versors.
 
-        // Wedge trait
+        // Product traits are only implemented for single-grade blade types.
+        // Versors (Motor, Flector, Rotor) use Sandwich/Antisandwich instead.
+
+        // Wedge trait - single-grade types only
         for entry in &self.spec.products.wedge {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_wedge_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_wedge_trait(a, b, out, entry));
+                }
             }
         }
 
-        // Antiwedge trait
+        // Antiwedge trait - single-grade types only
         for entry in &self.spec.products.antiwedge {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_antiwedge_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_antiwedge_trait(a, b, out, entry));
+                }
             }
         }
 
-        // Inner trait
+        // Inner trait - single-grade types only
         for entry in &self.spec.products.inner {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_inner_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_inner_trait(a, b, out, entry));
+                }
             }
         }
 
-        // LeftContract trait
+        // LeftContract trait - single-grade types only
         for entry in &self.spec.products.left_contraction {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_left_contract_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_left_contract_trait(a, b, out, entry));
+                }
             }
         }
 
-        // RightContract trait
+        // RightContract trait - single-grade types only
         for entry in &self.spec.products.right_contraction {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_right_contract_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_right_contract_trait(a, b, out, entry));
+                }
             }
         }
 
@@ -876,58 +898,68 @@ impl<'a> TraitsGenerator<'a> {
         // Provides compose() method for versor composition
         impls.extend(self.generate_versor_traits());
 
-        // ScalarProduct trait
+        // ScalarProduct trait - single-grade types only
         for entry in &self.spec.products.scalar {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_scalar_product_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_scalar_product_trait(a, b, out, entry));
+                }
             }
         }
 
-        // BulkContract trait
+        // BulkContract trait - single-grade types only
         for entry in &self.spec.products.bulk_contraction {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_bulk_contract_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_bulk_contract_trait(a, b, out, entry));
+                }
             }
         }
 
-        // WeightContract trait
+        // WeightContract trait - single-grade types only
         for entry in &self.spec.products.weight_contraction {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_weight_contract_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_weight_contract_trait(a, b, out, entry));
+                }
             }
         }
 
-        // BulkExpand trait
+        // BulkExpand trait - single-grade types only
         for entry in &self.spec.products.bulk_expansion {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_bulk_expand_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_bulk_expand_trait(a, b, out, entry));
+                }
             }
         }
 
-        // WeightExpand trait
+        // WeightExpand trait - single-grade types only
         for entry in &self.spec.products.weight_expansion {
             if let (Some(a), Some(b), Some(out)) = (
                 self.find_type(&entry.lhs),
                 self.find_type(&entry.rhs),
                 self.find_type(&entry.output),
             ) {
-                impls.push(self.generate_weight_expand_trait(a, b, out, entry));
+                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
+                    impls.push(self.generate_weight_expand_trait(a, b, out, entry));
+                }
             }
         }
 
