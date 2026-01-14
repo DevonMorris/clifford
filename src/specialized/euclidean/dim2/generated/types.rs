@@ -462,11 +462,21 @@ impl<T: Float> Default for Vector<T> {
         Self::zero()
     }
 }
+#[doc = "A bulk-normalized Bivector (bulk norm = 1).\n\nThis type alias wraps Bivector in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkBivector<T> = crate::wrappers::Bulk<Bivector<T>>;
+#[doc = "A unitized Bivector (weight norm = 1).\n\nThis type alias wraps Bivector in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedBivector<T> = crate::wrappers::Unitized<Bivector<T>>;
 #[doc = "A unit Bivector (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Bivector has been normalized."]
 pub type UnitBivector<T> = crate::wrappers::Unit<Bivector<T>>;
+#[doc = "A bulk-normalized Rotor (bulk norm = 1).\n\nThis type alias wraps Rotor in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkRotor<T> = crate::wrappers::Bulk<Rotor<T>>;
+#[doc = "A unitized Rotor (weight norm = 1).\n\nThis type alias wraps Rotor in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedRotor<T> = crate::wrappers::Unitized<Rotor<T>>;
 #[doc = "A unit Rotor (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Rotor has been normalized."]
 pub type UnitRotor<T> = crate::wrappers::Unit<Rotor<T>>;
-#[doc = "A unit Scalar (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Scalar has been normalized."]
-pub type UnitScalar<T> = crate::wrappers::Unit<Scalar<T>>;
+#[doc = "A bulk-normalized Vector (bulk norm = 1).\n\nThis type alias wraps Vector in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkVector<T> = crate::wrappers::Bulk<Vector<T>>;
+#[doc = "A unitized Vector (weight norm = 1).\n\nThis type alias wraps Vector in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedVector<T> = crate::wrappers::Unitized<Vector<T>>;
 #[doc = "A unit Vector (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Vector has been normalized."]
 pub type UnitVector<T> = crate::wrappers::Unit<Vector<T>>;

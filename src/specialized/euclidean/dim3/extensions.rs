@@ -3,8 +3,8 @@
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to Euclidean 3D geometry.
 
-use super::generated::products;
 use super::generated::types::{Bivector, Rotor, Trivector, Vector};
+use crate::ops::Wedge;
 use crate::scalar::Float;
 
 // ============================================================================
@@ -30,26 +30,6 @@ impl<T: Float> Vector<T> {
         self.x() * other.x() + self.y() * other.y() + self.z() * other.z()
     }
 
-    /// Wedge product (outer product): `a ∧ b`.
-    ///
-    /// Returns the bivector representing the oriented plane spanned by
-    /// the two vectors.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim3::{Vector, Bivector};
-    ///
-    /// let a = Vector::<f64>::unit_x();
-    /// let b = Vector::<f64>::unit_y();
-    /// let ab = a.wedge(b);
-    /// assert_eq!(ab, Bivector::unit_xy());
-    /// ```
-    #[inline]
-    pub fn wedge(self, other: Self) -> Bivector<T> {
-        products::exterior_vector_vector(&self, &other)
-    }
-
     /// Cross product: `a × b`.
     ///
     /// Computed as the Hodge dual of the wedge product.
@@ -67,26 +47,7 @@ impl<T: Float> Vector<T> {
     /// ```
     #[inline]
     pub fn cross(self, other: Self) -> Self {
-        self.wedge(other).dual()
-    }
-
-    /// Geometric product of two vectors: `ab = a·b + a∧b`.
-    ///
-    /// Returns a rotor (scalar + bivector).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim3::Vector;
-    ///
-    /// let a = Vector::new(1.0, 0.0, 0.0);
-    /// let b = Vector::new(0.0, 1.0, 0.0);
-    /// let ab = a.geometric(b);
-    /// assert_eq!(ab.s(), 0.0);  // perpendicular, no dot product
-    /// ```
-    #[inline]
-    pub fn geometric(self, other: Self) -> Rotor<T> {
-        products::geometric_vector_vector(&self, &other)
+        self.wedge(&other).dual()
     }
 
     /// Returns a normalized (unit length) version of this vector.
@@ -221,7 +182,7 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
         let dot = a.dot(b);
-        let wedge = a.wedge(b);
+        let wedge = a.wedge(&b);
 
         let sum_sq = (T::one() + dot) * (T::one() + dot) + wedge.norm_squared();
 
@@ -235,7 +196,7 @@ impl<T: Float> Rotor<T> {
                 Vector::unit_z()
             };
             let axis = a.cross(perp).normalized();
-            let plane = a.wedge(axis).normalized();
+            let plane = a.wedge(&axis).normalized();
             return Self::from_angle_plane(T::PI, plane);
         }
 
@@ -292,7 +253,7 @@ impl<T: Float> Rotor<T> {
     /// The result applies `self` first, then `other`.
     #[inline]
     pub fn compose(&self, other: Self) -> Self {
-        products::geometric_rotor_rotor(&other, self)
+        other * *self
     }
 
     /// Spherical linear interpolation between two rotors.

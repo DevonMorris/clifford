@@ -3,7 +3,6 @@
 //! This module provides optimized, ergonomic types for point-based PGA organized
 //! by dimension. Currently supported:
 //!
-//! - **[`dim2`]**: 2D PGA `Cl(2,0,1)`: Point, Line, Motor
 //! - **[`dim3`]**: 3D PGA `Cl(3,0,1)`: Point, Line, Plane, Motor, Flector
 //!
 //! # From Homogeneous Coordinates to PGA
@@ -41,12 +40,12 @@
 //!
 //! In PGA, geometric objects are represented by blades of different grades:
 //!
-//! | Grade | 2D PGA | 3D PGA |
-//! |-------|--------|--------|
-//! | 1 | Point | Point |
-//! | 2 | Line | Line |
-//! | 3 | (pseudoscalar) | Plane |
-//! | 4 | — | (pseudoscalar) |
+//! | Grade | 3D PGA |
+//! |-------|--------|
+//! | 1 | Point |
+//! | 2 | Line |
+//! | 3 | Plane |
+//! | 4 | (pseudoscalar) |
 //!
 //! Higher-grade objects are built from lower-grade ones using the **wedge product**
 //! (see Join and Meet in [`dim3`]).
@@ -83,31 +82,23 @@
 //!
 //! ```text
 //! projective/
-//!   dim2/   - 2D PGA: Point, Line, Motor
 //!   dim3/   - 3D PGA: Point, Line, Plane, Motor, Flector
 //! ```
 //!
 //! # Example
 //!
 //! ```
-//! use clifford::specialized::projective::dim2::{Point, Line, Motor};
+//! use clifford::specialized::projective::dim3::{Point, Line, Motor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // Create points using from_cartesian (sets w=1)
-//! let p1: Point<f64> = Point::from_cartesian(0.0, 0.0);  // Origin
-//! let p2: Point<f64> = Point::from_cartesian(1.0, 0.0);  // Point at (1, 0)
+//! let p1: Point<f64> = Point::from_cartesian(0.0, 0.0, 0.0);  // Origin
+//! let p2: Point<f64> = Point::from_cartesian(1.0, 0.0, 0.0);  // Point at (1, 0, 0)
 //!
-//! // Line meet - intersection of two lines
-//! let x_axis: Line<f64> = Line::x_axis();
-//! let y_axis: Line<f64> = Line::y_axis();
-//! let intersection = x_axis.meet(&y_axis);
-//!
-//! // Motor: 90° rotation then translate by (1, 2)
-//! let motor = Motor::from_translation(1.0, 2.0)
-//!     .compose(&Motor::from_rotation(FRAC_PI_2));
+//! // Line meet - intersection of line and plane
+//! let line: Line<f64> = Line::z_axis();
 //! ```
 
-pub mod dim2;
 pub mod dim3;
 mod errors;
 

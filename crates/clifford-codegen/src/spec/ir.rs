@@ -240,14 +240,14 @@ pub struct FieldSpec {
 /// - `∨` = antiwedge (regressive product)
 /// - `★` = dual (bulk dual)
 /// - `☆` = antidual (weight dual)
+/// - `•` = dot (metric inner product, same-grade only)
+/// - `⊚` = antidot (metric antiproduct inner, same-antigrade only)
 #[derive(Debug, Clone, Default)]
 pub struct ProductsSpec {
-    /// Geometric product entries.
+    /// Geometric product entries (used for Mul operator on versors).
     pub geometric: Vec<ProductEntry>,
     /// Wedge product entries (∧, exterior, grade-raising).
     pub wedge: Vec<ProductEntry>,
-    /// Inner product entries (symmetric, Hestenes inner, grade |ga - gb|).
-    pub inner: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.
@@ -256,7 +256,7 @@ pub struct ProductsSpec {
     pub antiwedge: Vec<ProductEntry>,
     /// Scalar product entries.
     pub scalar: Vec<ProductEntry>,
-    /// Antigeometric product entries.
+    /// Antigeometric product entries (used for antisandwich computation).
     pub antigeometric: Vec<ProductEntry>,
     /// Antiscalar product entries.
     pub antiscalar: Vec<ProductEntry>,
@@ -268,6 +268,10 @@ pub struct ProductsSpec {
     pub bulk_expansion: Vec<ProductEntry>,
     /// Weight expansion entries (a ∧ b☆).
     pub weight_expansion: Vec<ProductEntry>,
+    /// Dot product entries (•, metric inner, same-grade only, returns scalar).
+    pub dot: Vec<ProductEntry>,
+    /// Antidot product entries (⊚, metric antiproduct inner, same-antigrade only, returns scalar).
+    pub antidot: Vec<ProductEntry>,
 }
 
 /// A single product entry specifying lhs × rhs → output.

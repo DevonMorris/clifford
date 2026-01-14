@@ -25,8 +25,7 @@
 //! rec.log("point", &rerun::Points3D::new([point]))?;
 //!
 //! // Log a motor transform
-//! let motor = Motor::from_rotation_z(FRAC_PI_4)
-//!     .compose(&Motor::from_translation(1.0, 0.0, 0.0));
+//! let motor = Motor::from_rotation_z(FRAC_PI_4);
 //! rec.log("transform", &rerun::Transform3D::from(motor))?;
 //! ```
 
@@ -87,8 +86,7 @@ impl From<Motor<f32>> for rerun::Transform3D {
     /// use clifford::specialized::projective::dim3::Motor;
     /// use std::f32::consts::FRAC_PI_2;
     ///
-    /// let motor = Motor::from_rotation_z(FRAC_PI_2)
-    ///     .compose(&Motor::from_translation(1.0, 2.0, 3.0));
+    /// let motor = Motor::from_rotation_z(FRAC_PI_2);
     /// let transform: rerun::Transform3D = motor.into();
     /// ```
     #[inline]

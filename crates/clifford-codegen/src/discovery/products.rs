@@ -9,8 +9,8 @@
 //! components.
 
 use crate::algebra::{
-    Algebra, ProductTable, blades_of_grades, geometric_grades, grade, inner_grade,
-    left_contraction_grade, outer_grade,
+    Algebra, ProductTable, blades_of_grades, geometric_grades, grade, left_contraction_grade,
+    outer_grade,
 };
 use std::collections::BTreeSet;
 
@@ -21,8 +21,6 @@ pub enum ProductType {
     Geometric,
     /// Exterior (wedge) product: `a ∧ b`
     Exterior,
-    /// Inner product: `a · b` (symmetric)
-    Inner,
     /// Left contraction: `a ⌋ b`
     LeftContraction,
     /// Right contraction: `a ⌊ b`
@@ -43,6 +41,10 @@ pub enum ProductType {
     BulkExpansion,
     /// Weight expansion: `a ∧ b☆` (wedge with weight dual)
     WeightExpansion,
+    /// Dot product: `a • b` (metric inner, same-grade only, returns scalar)
+    Dot,
+    /// Antidot product: `a ⊚ b` (metric antiproduct inner, same-antigrade only, returns scalar)
+    Antidot,
 }
 
 impl ProductType {
@@ -51,7 +53,6 @@ impl ProductType {
         &[
             ProductType::Geometric,
             ProductType::Exterior,
-            ProductType::Inner,
             ProductType::LeftContraction,
             ProductType::RightContraction,
             ProductType::Regressive,
@@ -62,6 +63,8 @@ impl ProductType {
             ProductType::WeightContraction,
             ProductType::BulkExpansion,
             ProductType::WeightExpansion,
+            ProductType::Dot,
+            ProductType::Antidot,
         ]
     }
 
@@ -70,7 +73,6 @@ impl ProductType {
         match self {
             ProductType::Geometric => "geometric",
             ProductType::Exterior => "exterior",
-            ProductType::Inner => "inner",
             ProductType::LeftContraction => "left_contraction",
             ProductType::RightContraction => "right_contraction",
             ProductType::Regressive => "regressive",
@@ -81,6 +83,8 @@ impl ProductType {
             ProductType::WeightContraction => "weight_contraction",
             ProductType::BulkExpansion => "bulk_expansion",
             ProductType::WeightExpansion => "weight_expansion",
+            ProductType::Dot => "dot",
+            ProductType::Antidot => "antidot",
         }
     }
 }
@@ -148,9 +152,6 @@ pub fn infer_output_grades(
                         output_set.insert(g);
                     }
                 }
-                ProductType::Inner => {
-                    output_set.insert(inner_grade(ga, gb));
-                }
                 ProductType::LeftContraction => {
                     if let Some(g) = left_contraction_grade(ga, gb) {
                         output_set.insert(g);
@@ -205,6 +206,21 @@ pub fn infer_output_grades(
                     let result = ga + dim - gb;
                     if result <= dim {
                         output_set.insert(result);
+                    }
+                }
+                ProductType::Dot => {
+                    // Dot product: only same-grade elements produce non-zero
+                    // Returns scalar (grade 0)
+                    if ga == gb {
+                        output_set.insert(0);
+                    }
+                }
+                ProductType::Antidot => {
+                    // Antidot product: only same-antigrade elements produce non-zero
+                    // Since antigrade = dim - grade, same-antigrade means same-grade
+                    // Returns scalar (grade 0)
+                    if ga == gb {
+                        output_set.insert(0);
                     }
                 }
             }
@@ -277,6 +293,14 @@ pub fn infer_output_grades_precise(
                     let (sign, result) = table.weight_expansion(a, b);
                     (sign, grade(result))
                 }
+                ProductType::Dot => {
+                    let (sign, result) = table.dot(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Antidot => {
+                    let (sign, result) = table.antidot(a, b);
+                    (sign, grade(result))
+                }
                 _ => {
                     // All other products derive from the geometric product
                     let (sign, result) = table.geometric(a, b);
@@ -297,10 +321,6 @@ pub fn infer_output_grades_precise(
                 ProductType::Exterior => {
                     // Already filtered by exterior method, but verify grade
                     result_grade == ga + gb
-                }
-                ProductType::Inner => {
-                    // Inner product: only grade |ga - gb| terms
-                    result_grade == ga.abs_diff(gb)
                 }
                 ProductType::LeftContraction => {
                     // Left contraction: only grade gb - ga terms (when ga <= gb)
@@ -332,6 +352,14 @@ pub fn infer_output_grades_precise(
                 | ProductType::WeightExpansion => {
                     // Already computed correctly by specialized table methods
                     true
+                }
+                ProductType::Dot => {
+                    // Dot product: only same-grade, only scalar output
+                    ga == gb && result_grade == 0
+                }
+                ProductType::Antidot => {
+                    // Antidot product: only same-antigrade (same-grade), only scalar output
+                    ga == gb && result_grade == 0
                 }
             };
 
@@ -513,24 +541,6 @@ mod tests {
     }
 
     #[test]
-    fn inner_vector_vector() {
-        let algebra = Algebra::euclidean(3);
-
-        // Vector · Vector = Scalar
-        let output = infer_output_grades(&[1], &[1], ProductType::Inner, &algebra);
-        assert_eq!(output, vec![0]);
-    }
-
-    #[test]
-    fn inner_bivector_vector() {
-        let algebra = Algebra::euclidean(3);
-
-        // Bivector · Vector = Vector
-        let output = infer_output_grades(&[2], &[1], ProductType::Inner, &algebra);
-        assert_eq!(output, vec![1]);
-    }
-
-    #[test]
     fn left_contraction_vector_bivector() {
         let algebra = Algebra::euclidean(3);
 
@@ -597,12 +607,6 @@ mod tests {
         );
         assert_eq!(result.output_grades, vec![2]);
         assert_eq!(result.matching_entity, Some("Entity_2".to_string()));
-        assert!(!result.is_zero);
-
-        // Vector · Vector should match Entity_0 (grade 0)
-        let result = infer_product(&[1], &[1], ProductType::Inner, &entities, &algebra, &table);
-        assert_eq!(result.output_grades, vec![0]);
-        assert_eq!(result.matching_entity, Some("Entity_0".to_string()));
         assert!(!result.is_zero);
     }
 

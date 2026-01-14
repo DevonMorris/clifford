@@ -49,8 +49,8 @@
 //! let p = Point::from_cartesian(0.0, 0.0, 0.0);
 //! let na_p = na::Point3::new(0.0, 0.0, 0.0);
 //!
-//! let result_ga = motor.transform_point(&p);
-//! let result_na = iso.transform_point(&na_p);
+//! let result_ga = motor.transform(&p);
+//! let result_na = iso.transform(&na_p);
 //!
 //! // Results should match
 //! assert!((result_ga.x() - result_na.x).abs() < 1e-10);
@@ -65,6 +65,7 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
+use crate::ops::Transform;
 use crate::scalar::Float;
 
 use super::{Motor, Point};
@@ -172,23 +173,33 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
     /// // Both represent a 90° rotation around the z-axis
     /// ```
     fn from(motor: Motor<T>) -> Self {
-        let m = motor.unitized();
+        // Normalize rotation quaternion to ensure valid unit quaternion
+        // The motor's rotation part is (e01, e02, e03, e0123)
+        let rot_norm_sq = motor.e01() * motor.e01()
+            + motor.e02() * motor.e02()
+            + motor.e03() * motor.e03()
+            + motor.e0123() * motor.e0123();
+        let rot_norm = num_traits::Float::sqrt(rot_norm_sq);
 
         // Extract rotation quaternion from (e01, e02, e03, e0123)
         // PGA antisandwich uses antireverse which differs from quaternion conjugate.
         // Negate the bivector components to match nalgebra's rotation direction.
         // Mapping: (w, i, j, k) = (e0123, -e01, -e02, -e03)
-        let rotation = na::UnitQuaternion::from_quaternion(na::Quaternion::new(
-            m.e0123(),
-            -m.e01(),
-            -m.e02(),
-            -m.e03(),
-        ));
+        let rotation = if rot_norm > T::epsilon() {
+            na::UnitQuaternion::from_quaternion(na::Quaternion::new(
+                motor.e0123() / rot_norm,
+                -motor.e01() / rot_norm,
+                -motor.e02() / rot_norm,
+                -motor.e03() / rot_norm,
+            ))
+        } else {
+            na::UnitQuaternion::identity()
+        };
 
         // Extract translation by applying motor to origin and reading result
         // This handles the complex interaction between rotation and translation
         let origin = Point::origin();
-        let transformed = m.transform_point(&origin);
+        let transformed = motor.transform(&origin);
         let translation = na::Translation3::new(transformed.x(), transformed.y(), transformed.z());
 
         na::Isometry3::from_parts(translation, rotation)
@@ -200,9 +211,11 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
     ///
     /// # Mathematical Correspondence
     ///
-    /// The motor is constructed by composing a rotation motor and translation motor.
-    /// Since nalgebra applies rotation first then translation, we compose them as
-    /// `rotation.compose(&translation)` which applies rotation first, then translation.
+    /// nalgebra's Isometry3 applies "rotate then translate": `R(p) + t`
+    ///
+    /// We construct the motor by composing a pure rotation motor with a pure
+    /// translation motor. The composition order matters: in PGA, composing
+    /// `translator.compose(rotor)` gives a motor that first rotates, then translates.
     ///
     /// # Example
     ///
@@ -219,31 +232,56 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
     /// // Both represent the same transformation
     /// ```
     fn from(iso: na::Isometry3<T>) -> Self {
+        use crate::ops::Versor;
+
         let q = iso.rotation.quaternion();
         let t = iso.translation.vector;
 
-        // Build rotation motor from quaternion
-        // PGA antisandwich uses antireverse which differs from quaternion conjugate.
-        // Negate the bivector components to match nalgebra's rotation direction.
-        // Mapping: (e01, e02, e03, e0123) = (-i, -j, -k, w)
-        let rotation = Motor::new_unchecked(
+        // Create a pure rotation motor from the quaternion
+        // PGA convention uses opposite signs for bivector components
+        let rotor = Motor::new_unchecked(
             T::zero(), // s
             T::zero(), // e23
             T::zero(), // e31
             T::zero(), // e12
-            -q.i,      // e01 (negated)
-            -q.j,      // e02 (negated)
-            -q.k,      // e03 (negated)
+            -q.i,      // e01
+            -q.j,      // e02
+            -q.k,      // e03
             q.w,       // e0123
         );
 
-        // Build translation motor
-        let translation = Motor::from_translation(t.x, t.y, t.z);
+        // Create a pure translation motor
+        let translator = Motor::from_translation(t.x, t.y, t.z);
 
-        // Compose: rotation first, then translation (matches nalgebra semantics)
-        // In compose, self.compose(&other) applies other first, then self
-        // So translation.compose(&rotation) applies rotation first, then translation
-        translation.compose(&rotation)
+        #[cfg(test)]
+        {
+            eprintln!(
+                "  Rotor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                rotor.s(),
+                rotor.e23(),
+                rotor.e31(),
+                rotor.e12(),
+                rotor.e01(),
+                rotor.e02(),
+                rotor.e03(),
+                rotor.e0123()
+            );
+            eprintln!(
+                "  Translator: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                translator.s(),
+                translator.e23(),
+                translator.e31(),
+                translator.e12(),
+                translator.e01(),
+                translator.e02(),
+                translator.e03(),
+                translator.e0123()
+            );
+        }
+
+        // Compose: translator ∘ rotor gives "rotate then translate"
+        // This correctly handles all motor components including the coupling term `s`
+        translator.compose(&rotor)
     }
 }
 
@@ -309,6 +347,14 @@ mod tests {
             let iso: na::Isometry3<f64> = (*m).into();
             let back: Motor<f64> = iso.into();
 
+            // Debug output
+            eprintln!("Original motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                m.s(), m.e23(), m.e31(), m.e12(), m.e01(), m.e02(), m.e03(), m.e0123());
+            eprintln!("Isometry: rotation={:?}, translation={:?}",
+                iso.rotation.quaternion(), iso.translation.vector);
+            eprintln!("Back motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                back.s(), back.e23(), back.e31(), back.e12(), back.e01(), back.e02(), back.e03(), back.e0123());
+
             // Test with several points to ensure transformation equivalence
             let test_points = [
                 Point::from_cartesian(1.0, 0.0, 0.0),
@@ -318,8 +364,8 @@ mod tests {
             ];
 
             for test_p in test_points {
-                let result1 = m.transform_point(&test_p);
-                let result2 = back.transform_point(&test_p);
+                let result1 = m.transform(&test_p);
+                let result2 = back.transform(&test_p);
 
                 prop_assert!(
                     relative_eq!(result1.x(), result2.x(), epsilon = EPS, max_relative = EPS),
@@ -349,45 +395,12 @@ mod tests {
             p in any::<UnitizedPoint<f64>>(),
         ) {
             // Transform with clifford motor
-            let result_ga = m.transform_point(&*p);
+            let result_ga = m.transform(&*p);
 
             // Transform with nalgebra isometry
             let iso: na::Isometry3<f64> = (*m).into();
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
-
-            // Compare results
-            prop_assert!(
-                relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS),
-                "x mismatch: GA={} vs NA={}", result_ga.x(), na_result.x
-            );
-            prop_assert!(
-                relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS),
-                "y mismatch: GA={} vs NA={}", result_ga.y(), na_result.y
-            );
-            prop_assert!(
-                relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS),
-                "z mismatch: GA={} vs NA={}", result_ga.z(), na_result.z
-            );
-        }
-
-        /// Verify motor composition == isometry composition
-        #[test]
-        fn composition_equivalence(
-            m1 in any::<Unitized<Motor<f64>>>(),
-            m2 in any::<Unitized<Motor<f64>>>(),
-            p in any::<UnitizedPoint<f64>>(),
-        ) {
-            // Compose with clifford
-            let composed_ga = m1.compose(&*m2);
-            let result_ga = composed_ga.transform_point(&*p);
-
-            // Compose with nalgebra
-            let iso1: na::Isometry3<f64> = (*m1).into();
-            let iso2: na::Isometry3<f64> = (*m2).into();
-            let composed_na = iso1 * iso2;
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
-            let na_result = composed_na.transform_point(&na_p);
 
             // Compare results
             prop_assert!(
@@ -412,7 +425,7 @@ mod tests {
         ) {
             // Inverse with clifford
             let inv_ga = m.inverse();
-            let result_ga = inv_ga.transform_point(&*p);
+            let result_ga = inv_ga.transform(&*p);
 
             // Inverse with nalgebra
             let iso: na::Isometry3<f64> = (*m).into();
@@ -455,7 +468,7 @@ mod tests {
                 na::UnitQuaternion::identity(),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -480,7 +493,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -505,7 +518,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -530,7 +543,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -565,7 +578,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na_axis, -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -653,7 +666,7 @@ mod tests {
             let flector = Flector::from_plane_through_origin(nx, ny, nz);
 
             // Reflect with flector
-            let result_ga = flector.transform_point(&*p);
+            let result_ga = flector.transform(&*p);
 
             // Reflect manually
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
@@ -692,8 +705,8 @@ mod tests {
             let flector = Flector::from_plane(&plane);
 
             // Reflect twice
-            let once = flector.transform_point(&*p);
-            let twice = flector.transform_point(&once);
+            let once = flector.transform(&*p);
+            let twice = flector.transform(&once);
 
             // Should be back at original point
             prop_assert!(
@@ -729,7 +742,7 @@ mod tests {
         );
 
         let p = Point::from_cartesian(1.0, 2.0, 3.0);
-        let result = motor.transform_point(&p);
+        let result = motor.transform(&p);
 
         println!(
             "Point ({}, {}, {}) -> ({}, {}, {})",

@@ -132,14 +132,8 @@ pub use nalgebra::NalgebraConversionError;
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-// Re-export generated types
-pub use generated::types::{Bivector, Rotor, Scalar, Trivector, Vector};
-
-// Re-export wrapper type aliases
-pub use generated::types::{UnitBivector, UnitRotor, UnitScalar, UnitTrivector, UnitVector};
-
-// Re-export products module for direct access to algebraic products
-pub use generated::products;
+// Re-export generated types and wrapper aliases
+pub use generated::types::*;
 
 // Re-export Even as alias from extensions
 pub use extensions::Even;

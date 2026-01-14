@@ -23,73 +23,7 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
-use clifford::specialized::projective::{dim2, dim3};
-
-// ============================================================================
-// 2D Motor vs Isometry2 - Transform Point
-// ============================================================================
-
-fn bench_pga2_motor_transform_clifford(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
-    let p = dim2::Point::new(3.0, 4.0);
-
-    c.bench_function("pga_comparison/2d_transform_point/clifford", |bencher| {
-        bencher.iter(|| black_box(motor).transform_point(&black_box(p)))
-    });
-}
-
-fn bench_pga2_isometry_transform_nalgebra(c: &mut Criterion) {
-    let iso = na::Isometry2::new(na::Vector2::new(1.0, 2.0), FRAC_PI_4);
-    let p = na::Point2::new(3.0, 4.0);
-
-    c.bench_function("pga_comparison/2d_transform_point/nalgebra", |bencher| {
-        bencher.iter(|| black_box(iso) * black_box(p))
-    });
-}
-
-// ============================================================================
-// 2D Motor vs Isometry2 - Compose
-// ============================================================================
-
-fn bench_pga2_motor_compose_clifford(c: &mut Criterion) {
-    let m1 = dim2::Motor::from_rotation(FRAC_PI_4);
-    let m2 = dim2::Motor::from_translation(1.0, 2.0);
-
-    c.bench_function("pga_comparison/2d_compose/clifford", |bencher| {
-        bencher.iter(|| black_box(m1).compose(&black_box(m2)))
-    });
-}
-
-fn bench_pga2_isometry_compose_nalgebra(c: &mut Criterion) {
-    let iso1 = na::Isometry2::rotation(FRAC_PI_4);
-    let iso2 = na::Isometry2::translation(1.0, 2.0);
-
-    c.bench_function("pga_comparison/2d_compose/nalgebra", |bencher| {
-        bencher.iter(|| black_box(iso1) * black_box(iso2))
-    });
-}
-
-// ============================================================================
-// 2D Motor vs Isometry2 - Inverse
-// ============================================================================
-
-fn bench_pga2_motor_inverse_clifford(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
-
-    c.bench_function("pga_comparison/2d_inverse/clifford", |bencher| {
-        bencher.iter(|| black_box(motor).inverse())
-    });
-}
-
-fn bench_pga2_isometry_inverse_nalgebra(c: &mut Criterion) {
-    let iso = na::Isometry2::new(na::Vector2::new(1.0, 2.0), FRAC_PI_4);
-
-    c.bench_function("pga_comparison/2d_inverse/nalgebra", |bencher| {
-        bencher.iter(|| black_box(iso).inverse())
-    });
-}
+use clifford::specialized::projective::dim3;
 
 // ============================================================================
 // 3D Motor vs Isometry3 - Transform Point
@@ -192,35 +126,6 @@ fn bench_pga3_batch_nalgebra(c: &mut Criterion) {
         .collect();
 
     c.bench_function("pga_comparison/3d_batch_100/nalgebra", |bencher| {
-        bencher.iter(|| {
-            points
-                .iter()
-                .map(|p| black_box(iso) * p)
-                .collect::<Vec<_>>()
-        })
-    });
-}
-
-fn bench_pga2_batch_clifford(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
-    let points: Vec<dim2::Point<f64>> = (0..100).map(|i| dim2::Point::new(i as f64, 0.0)).collect();
-
-    c.bench_function("pga_comparison/2d_batch_100/clifford", |bencher| {
-        bencher.iter(|| {
-            points
-                .iter()
-                .map(|p| black_box(motor).transform_point(p))
-                .collect::<Vec<_>>()
-        })
-    });
-}
-
-fn bench_pga2_batch_nalgebra(c: &mut Criterion) {
-    let iso = na::Isometry2::new(na::Vector2::new(1.0, 2.0), FRAC_PI_4);
-    let points: Vec<na::Point2<f64>> = (0..100).map(|i| na::Point2::new(i as f64, 0.0)).collect();
-
-    c.bench_function("pga_comparison/2d_batch_100/nalgebra", |bencher| {
         bencher.iter(|| {
             points
                 .iter()
@@ -348,18 +253,6 @@ fn bench_pga3_left_contraction(c: &mut Criterion) {
 // ============================================================================
 
 criterion_group!(
-    pga2_comparison,
-    bench_pga2_motor_transform_clifford,
-    bench_pga2_isometry_transform_nalgebra,
-    bench_pga2_motor_compose_clifford,
-    bench_pga2_isometry_compose_nalgebra,
-    bench_pga2_motor_inverse_clifford,
-    bench_pga2_isometry_inverse_nalgebra,
-    bench_pga2_batch_clifford,
-    bench_pga2_batch_nalgebra,
-);
-
-criterion_group!(
     pga3_comparison,
     bench_pga3_motor_transform_clifford,
     bench_pga3_isometry_transform_nalgebra,
@@ -389,9 +282,4 @@ criterion_group!(
     bench_pga3_left_contraction,
 );
 
-criterion_main!(
-    pga2_comparison,
-    pga3_comparison,
-    pga_conversions,
-    pga_specific
-);
+criterion_main!(pga3_comparison, pga_conversions, pga_specific);

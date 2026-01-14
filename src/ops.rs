@@ -8,20 +8,36 @@
 //!
 //! | Trait | Symbol | Description |
 //! |-------|--------|-------------|
-//! | [`GeometricProduct`] | `×` | Full geometric product |
 //! | [`Wedge`] | `∧` | Exterior/wedge product (grade-raising) |
 //! | [`Antiwedge`] | `∨` | Regressive product (antigrade-raising) |
-//! | [`Inner`] | `·` | Symmetric inner product |
+//! | [`Join`] | `∨` | Alias for Wedge (PGA terminology) |
+//! | [`Meet`] | `∧` | Alias for Antiwedge (PGA terminology) |
+//! | [`Dot`] | `•` | Metric dot product (same-grade only) |
+//! | [`Antidot`] | `⊚` | Metric antidot product |
 //! | [`LeftContract`] | `⌋` | Left contraction |
 //! | [`RightContract`] | `⌊` | Right contraction |
 //! | [`BulkContract`] | `a ∨ b★` | Bulk contraction |
 //! | [`WeightContract`] | `a ∨ b☆` | Weight contraction |
 //! | [`Sandwich`] | `v × x × ṽ` | Sandwich product |
+//! | [`Versor`] | `a ⟇ b` | Versor composition |
+//!
+//! # Type Safety
+//!
+//! All product traits in this module are **type-safe**: the output type is
+//! determined by the input types and the product kind. This is achieved by:
+//!
+//! - **Grade-preserving products** (Sandwich, Antisandwich) return the same type
+//! - **Grade-changing products** (Wedge, Antiwedge) have deterministic output grades
+//! - **Scalar products** (Dot, Antidot) always return the scalar type
+//!
+//! The geometric product is **not** provided as a trait because it produces
+//! mixed-grade outputs that cannot be represented by a single specialized type.
+//! Use the grade-specific products instead.
 //!
 //! # Example
 //!
 //! ```ignore
-//! use clifford::ops::{Wedge, Sandwich};
+//! use clifford::ops::{Wedge, Sandwich, Dot};
 //! use clifford::specialized::projective::dim3::{Point, Motor};
 //!
 //! // Create a line through two points using wedge product
@@ -29,32 +45,15 @@
 //!
 //! // Transform a point using sandwich product
 //! let transformed = motor.sandwich(&point);
+//!
+//! // Compute dot product for angles/magnitudes
+//! let cos_angle = v1.dot(&v2);
 //! ```
 //!
 //! # Implementation
 //!
 //! These traits are implemented by the code generator for specialized types.
 //! The implementations delegate to optimized free functions.
-
-/// Geometric product.
-///
-/// The geometric product is the fundamental product in Geometric Algebra,
-/// combining the inner and outer products: `ab = a·b + a∧b` for vectors.
-///
-/// # Example
-///
-/// ```ignore
-/// use clifford::ops::GeometricProduct;
-///
-/// let result = a.geometric(&b);
-/// ```
-pub trait GeometricProduct<Rhs = Self> {
-    /// The output type of the geometric product.
-    type Output;
-
-    /// Computes the geometric product `self * rhs`.
-    fn geometric(&self, rhs: &Rhs) -> Self::Output;
-}
 
 /// Wedge (exterior) product.
 ///
@@ -108,25 +107,6 @@ pub trait Antiwedge<Rhs = Self> {
 
     /// Computes the antiwedge product `self ∨ rhs`.
     fn antiwedge(&self, rhs: &Rhs) -> Self::Output;
-}
-
-/// Symmetric inner product (Hestenes inner product).
-///
-/// The inner product reduces grade: `grade(a · b) = |grade(a) - grade(b)|`.
-///
-/// # Example
-///
-/// ```ignore
-/// use clifford::ops::Inner;
-///
-/// let scalar = vector1.inner(&vector2);
-/// ```
-pub trait Inner<Rhs = Self> {
-    /// The output type of the inner product.
-    type Output;
-
-    /// Computes the inner product `self · rhs`.
-    fn inner(&self, rhs: &Rhs) -> Self::Output;
 }
 
 /// Left contraction.
@@ -312,24 +292,69 @@ pub trait Antisandwich<Operand> {
     fn antisandwich(&self, operand: &Operand) -> Self::Output;
 }
 
-/// Antigeometric product.
+/// Dot product (metric inner product).
 ///
-/// The geometric antiproduct is the complement of the geometric product:
-/// `a ⟇ b = complement(complement(a) × complement(b))`.
+/// The dot product `a • b` is non-zero only when `grade(a) = grade(b)`.
+/// It measures the "alignment" between same-grade elements using the metric.
+///
+/// Defined as: `a • b = aᵀ G b` where G is the metric exomorphism matrix.
+///
+/// # Properties
+///
+/// - Only same-grade elements produce non-zero results
+/// - Symmetric: `a • b = b • a`
+/// - Returns a scalar
 ///
 /// # Example
 ///
 /// ```ignore
-/// use clifford::ops::Antigeometric;
+/// use clifford::ops::Dot;
 ///
-/// let result = a.antigeometric(&b);
+/// let cos_angle: f64 = vector1.dot(&vector2);
+/// let bivector_magnitude_sq: f64 = bivector.dot(&bivector);
 /// ```
-pub trait Antigeometric<Rhs = Self> {
-    /// The output type of the antigeometric product.
-    type Output;
+///
+/// # Reference
+///
+/// [RGA Dot Products](https://rigidgeometricalgebra.org/wiki/index.php?title=Dot_products)
+pub trait Dot<Rhs = Self> {
+    /// The scalar type.
+    type Scalar;
 
-    /// Computes the antigeometric product.
-    fn antigeometric(&self, rhs: &Rhs) -> Self::Output;
+    /// Computes the dot product `self • rhs`.
+    fn dot(&self, rhs: &Rhs) -> Self::Scalar;
+}
+
+/// Antidot product (metric antiproduct inner product).
+///
+/// The antidot product `a ⊚ b` is the De Morgan dual of the dot product:
+/// `a ⊚ b = ā • b̄` (complement dot complement).
+///
+/// Defined as: `a ⊚ b = aᵀ 𝔾 b` where 𝔾 is the metric antiexomorphism matrix.
+///
+/// # Properties
+///
+/// - Only same-antigrade elements produce non-zero results
+/// - Symmetric
+/// - Returns a scalar
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Antidot;
+///
+/// let result: f64 = plane1.antidot(&plane2);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Dot Products](https://rigidgeometricalgebra.org/wiki/index.php?title=Dot_products)
+pub trait Antidot<Rhs = Self> {
+    /// The scalar type.
+    type Scalar;
+
+    /// Computes the antidot product `self ⊚ rhs`.
+    fn antidot(&self, rhs: &Rhs) -> Self::Scalar;
 }
 
 // ============================================================================
@@ -445,4 +470,224 @@ pub trait WeightDual {
 
     /// Computes the weight dual (antidual).
     fn weight_dual(&self) -> Self::Output;
+}
+
+// ============================================================================
+// Versor Operations
+// ============================================================================
+
+/// Versor composition.
+///
+/// Versors are elements that represent transformations. This trait enables
+/// composing versors where the result type may differ from the input types.
+///
+/// In Geometric Algebra, versors include:
+///
+/// - **Rotors**: Represent rotations (Euclidean and PGA)
+/// - **Motors**: Represent rigid motions (rotation + translation) in PGA
+/// - **Flectors**: Represent reflections and glide reflections in PGA
+///
+/// The `compose` method combines two versors into a single versor representing
+/// the sequential application of both transformations: `(a.compose(b)).sandwich(x)`
+/// is equivalent to `a.sandwich(b.sandwich(x))`.
+///
+/// # Mathematical Definition
+///
+/// For PGA versors, composition is the geometric product (which uses the
+/// antigeometric structure internally). The output type depends on the inputs:
+///
+/// - Motor × Motor → Motor (even × even = even)
+/// - Flector × Flector → Motor (odd × odd = even)
+/// - Motor × Flector → Flector (even × odd = odd)
+/// - Flector × Motor → Flector (odd × even = odd)
+///
+/// # Properties
+///
+/// - Associative: `a.compose(b).compose(c) = a.compose(b.compose(c))`
+/// - Identity: The scalar `1` acts as identity
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Versor;
+///
+/// // Compose two motors (returns Motor)
+/// let combined_motion: Motor<f64> = motor1.compose(&motor2);
+///
+/// // Compose two flectors (returns Motor)
+/// let motor: Motor<f64> = flector1.compose(&flector2);
+///
+/// // Compose motor with flector (returns Flector)
+/// let flector: Flector<f64> = motor.compose(&flector);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Motors](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor)
+pub trait Versor<Rhs = Self> {
+    /// The output type of the composition.
+    type Output;
+
+    /// Composes this versor with another, returning a versor representing
+    /// the sequential application of both transformations.
+    fn compose(&self, other: &Rhs) -> Self::Output;
+}
+
+// ============================================================================
+// Join and Meet (aliases for Wedge and Antiwedge)
+// ============================================================================
+
+/// Join product (alias for wedge/exterior product).
+///
+/// The join `a ∨ b` is the wedge product `a ∧ b`. It "joins" two geometric
+/// elements to create a higher-dimensional element spanning both.
+///
+/// In PGA terminology:
+/// - Two points joined give the line through them
+/// - A point and line joined give the plane containing both
+/// - A point, line, and plane joined give the volume
+///
+/// # Relationship to Wedge
+///
+/// This trait is automatically implemented for any type implementing [`Wedge`].
+/// It provides a more intuitive name for PGA operations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Join;
+///
+/// // Line through two points
+/// let line = p1.join(&p2);
+///
+/// // Plane through point and line
+/// let plane = point.join(&line);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Wedge Product](https://rigidgeometricalgebra.org/wiki/index.php?title=Wedge_product)
+pub trait Join<Rhs = Self> {
+    /// The output type of the join.
+    type Output;
+
+    /// Computes the join `self ∨ rhs` (wedge product).
+    fn join(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Blanket implementation of Join for any type implementing Wedge.
+impl<T, Rhs> Join<Rhs> for T
+where
+    T: Wedge<Rhs>,
+{
+    type Output = <T as Wedge<Rhs>>::Output;
+
+    #[inline]
+    fn join(&self, rhs: &Rhs) -> Self::Output {
+        self.wedge(rhs)
+    }
+}
+
+/// Meet product (alias for antiwedge/regressive product).
+///
+/// The meet `a ∧ b` is the antiwedge product `a ∨ b`. It finds the
+/// "intersection" of two geometric elements.
+///
+/// In PGA terminology:
+/// - Two planes meet at a line
+/// - A plane and line meet at a point
+/// - Two lines meet at a point (if they intersect)
+///
+/// # Relationship to Antiwedge
+///
+/// This trait is automatically implemented for any type implementing [`Antiwedge`].
+/// It provides a more intuitive name for PGA operations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Meet;
+///
+/// // Line where two planes intersect
+/// let line = plane1.meet(&plane2);
+///
+/// // Point where plane and line intersect
+/// let point = plane.meet(&line);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Antiwedge Product](https://rigidgeometricalgebra.org/wiki/index.php?title=Antiwedge_product)
+pub trait Meet<Rhs = Self> {
+    /// The output type of the meet.
+    type Output;
+
+    /// Computes the meet `self ∧ rhs` (antiwedge product).
+    fn meet(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Blanket implementation of Meet for any type implementing Antiwedge.
+impl<T, Rhs> Meet<Rhs> for T
+where
+    T: Antiwedge<Rhs>,
+{
+    type Output = <T as Antiwedge<Rhs>>::Output;
+
+    #[inline]
+    fn meet(&self, rhs: &Rhs) -> Self::Output {
+        self.antiwedge(rhs)
+    }
+}
+
+/// Transform operation (alias for antisandwich product).
+///
+/// The transform `versor.transform(element)` is the antisandwich product
+/// `versor ⊛ element ⊛ rev(versor)` where ⊛ is the geometric antiproduct.
+///
+/// In PGA, transformations (rotations, translations, reflections) are applied
+/// via the antisandwich product. This trait provides a more intuitive name
+/// for this operation.
+///
+/// # Relationship to Antisandwich
+///
+/// This trait is automatically implemented for any type implementing [`Antisandwich`].
+/// It provides a domain-appropriate name for applying geometric transformations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Transform;
+///
+/// // Apply motor (rotation + translation) to a point
+/// let transformed_point = motor.transform(&point);
+///
+/// // Apply motor to a line
+/// let transformed_line = motor.transform(&line);
+///
+/// // Apply motor to a plane
+/// let transformed_plane = motor.transform(&plane);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Transformations](https://rigidgeometricalgebra.org/wiki/index.php?title=Transformations)
+pub trait Transform<Operand> {
+    /// The output type (same as operand for grade-preserving transforms).
+    type Output;
+
+    /// Transforms the operand using `self ⊛ operand ⊛ rev(self)`.
+    fn transform(&self, operand: &Operand) -> Self::Output;
+}
+
+/// Blanket implementation of Transform for any type implementing Antisandwich.
+impl<T, Operand> Transform<Operand> for T
+where
+    T: Antisandwich<Operand>,
+{
+    type Output = <T as Antisandwich<Operand>>::Output;
+
+    #[inline]
+    fn transform(&self, operand: &Operand) -> Self::Output {
+        self.antisandwich(operand)
+    }
 }

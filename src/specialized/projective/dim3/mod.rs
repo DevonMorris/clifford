@@ -83,24 +83,11 @@
 //!
 //! Motors transform objects via the **sandwich product**: `X' = M X M̃`
 //!
-//! ## Motor Composition
-//!
-//! ```text
-//! // Transform by M₁ then M₂
-//! let combined = m2.compose(&m1);  // M₂ * M₁
-//!
-//! // Same as applying m1 then m2:
-//! let p1 = m1.transform_point(&p);
-//! let p2 = m2.transform_point(&p1);
-//! // p2 == combined.transform_point(&p)
-//! ```
-//!
 //! ## Motor from Components
 //!
 //! - `Motor::from_rotation_x(angle)`, `_y`, `_z` — pure rotation
 //! - `Motor::from_translation(dx, dy, dz)` — pure translation
 //! - `Motor::from_axis_angle(&axis, angle)` — rotation around arbitrary axis
-//! - Compose with `.compose()` for combined transforms
 //!
 //! # Flectors: Reflections
 //!
@@ -137,9 +124,6 @@
 //!
 //! // Create a translation motor
 //! let translation = Motor::from_translation(1.0, 2.0, 3.0);
-//!
-//! // Compose motors
-//! let combined = rotor.compose(&translation);
 //! ```
 
 // Generated code (do not edit manually)
@@ -158,15 +142,8 @@ mod nalgebra;
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-// Re-export generated types and products
-pub use generated::products;
-pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};
-
-// Re-export wrapper type aliases
-pub use generated::types::{
-    BulkFlector, BulkMotor, IdealLine, IdealPlane, IdealPoint, UnitizedLine, UnitizedPlane,
-    UnitizedPoint,
-};
+// Re-export generated types and wrapper aliases
+pub use generated::types::*;
 
 #[cfg(any(
     feature = "nalgebra-0_32",

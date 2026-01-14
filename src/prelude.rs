@@ -19,9 +19,9 @@ pub use crate::norm::{
     CausalCharacter, ConformalNormed, DegenerateNormed, IndefiniteNormed, Normed,
 };
 pub use crate::ops::{
-    Antigeometric, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkDual, BulkExpand,
-    GeometricProduct, Inner, LeftComplement, LeftContract, Reverse, RightComplement, RightContract,
-    Sandwich, ScalarProduct, Wedge, WeightContract, WeightDual, WeightExpand,
+    Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkDual, BulkExpand, Dot, Join,
+    LeftComplement, LeftContract, Meet, Reverse, RightComplement, RightContract, Sandwich,
+    ScalarProduct, Transform, Versor, Wedge, WeightContract, WeightDual, WeightExpand,
 };
 pub use crate::scalar::Float;
 pub use crate::signature::{
