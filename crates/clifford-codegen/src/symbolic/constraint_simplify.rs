@@ -4,12 +4,9 @@
 //! For example, if a Rotor satisfies `s*s + xy*xy + xz*xz + yz*yz = 1`,
 //! any occurrence of that pattern in an expression can be replaced with `1`.
 
-use std::borrow::Cow;
+use symbolica::atom::{Atom, AtomCore};
 
-use symbolica::atom::{Atom, AtomCore, DefaultNamespace};
-use symbolica::parser::ParseSettings;
-
-use crate::spec::{TypeSpec, UserConstraint};
+use crate::spec::TypeSpec;
 
 /// Simplifies expressions using type constraints.
 ///
@@ -33,123 +30,20 @@ impl ConstraintSimplifier {
     ///
     /// # Arguments
     ///
-    /// * `types` - The types being operated on (with their constraints)
+    /// * `types` - The types being operated on
     /// * `prefixes` - The variable prefixes used (e.g., "a", "b")
+    ///
+    /// Note: Constraints are now auto-derived during code generation rather than
+    /// stored in TypeSpec. This simplifier currently returns an empty instance.
+    /// Constraint-based simplification can be reimplemented using ConstraintDeriver
+    /// if needed.
+    #[allow(unused_variables)]
     pub fn new(types: &[&TypeSpec], prefixes: &[&str]) -> Self {
-        let mut substitutions = Vec::new();
-
-        for (ty, prefix) in types.iter().zip(prefixes.iter()) {
-            for constraint in &ty.constraints {
-                if let Some((pattern, value)) = Self::build_substitution(ty, constraint, prefix) {
-                    substitutions.push((pattern, value));
-                }
-            }
+        // Constraints are now auto-derived, not stored in TypeSpec.
+        // Return empty simplifier for now.
+        Self {
+            substitutions: Vec::new(),
         }
-
-        Self { substitutions }
-    }
-
-    /// Builds a substitution rule from a constraint.
-    ///
-    /// Returns (pattern_atom, replacement_atom) if the constraint can be used
-    /// for substitution.
-    fn build_substitution(
-        ty: &TypeSpec,
-        constraint: &UserConstraint,
-        prefix: &str,
-    ) -> Option<(Atom, Atom)> {
-        // Parse constraint expression: "s*s + xy*xy + xz*xz + yz*yz = 1"
-        let parts: Vec<&str> = constraint.expression.split('=').collect();
-        if parts.len() != 2 {
-            return None;
-        }
-
-        let lhs = parts[0].trim();
-        let rhs = parts[1].trim();
-
-        // Parse RHS as a constant
-        let rhs_value: i64 = rhs.parse().ok()?;
-
-        // Build the pattern with prefixed variables
-        let pattern_str = Self::prefix_expression(lhs, &ty.fields, prefix);
-
-        // Parse as Symbolica atoms
-        let pattern = Self::parse_atom(&pattern_str)?;
-        let value = Atom::num(rhs_value);
-
-        // Expand the pattern to canonical form
-        let expanded_pattern = pattern.expand();
-
-        Some((expanded_pattern, value))
-    }
-
-    /// Prefixes all field names in an expression.
-    ///
-    /// Converts "s*s + xy*xy" to "a_s*a_s + a_xy*a_xy" with prefix "a".
-    fn prefix_expression(expr: &str, fields: &[crate::spec::FieldSpec], prefix: &str) -> String {
-        let field_names: Vec<&str> = fields.iter().map(|f| f.name.as_str()).collect();
-
-        let mut result = expr.to_string();
-
-        // Sort by length descending to avoid partial replacements
-        let mut sorted_names = field_names.clone();
-        sorted_names.sort_by_key(|b| std::cmp::Reverse(b.len()));
-
-        for name in sorted_names {
-            // Replace field name with prefixed version
-            // Use word boundaries to avoid partial matches
-            let prefixed = format!("{}_{}", prefix, name);
-
-            // Simple replacement - assumes field names are distinct tokens
-            // This works because field names don't contain operators
-            result = Self::replace_identifier(&result, name, &prefixed);
-        }
-
-        result
-    }
-
-    /// Replaces an identifier in an expression, respecting word boundaries.
-    fn replace_identifier(expr: &str, from: &str, to: &str) -> String {
-        let mut result = String::new();
-        let mut current_word = String::new();
-
-        for c in expr.chars() {
-            if c.is_alphanumeric() || c == '_' {
-                current_word.push(c);
-            } else {
-                if !current_word.is_empty() {
-                    if current_word == from {
-                        result.push_str(to);
-                    } else {
-                        result.push_str(&current_word);
-                    }
-                    current_word.clear();
-                }
-                result.push(c);
-            }
-        }
-
-        // Don't forget the last word
-        if !current_word.is_empty() {
-            if current_word == from {
-                result.push_str(to);
-            } else {
-                result.push_str(&current_word);
-            }
-        }
-
-        result
-    }
-
-    /// Parses a string into a Symbolica Atom.
-    fn parse_atom(s: &str) -> Option<Atom> {
-        let input = DefaultNamespace {
-            namespace: Cow::Borrowed(env!("CARGO_CRATE_NAME")),
-            data: s,
-            file: Cow::Borrowed(file!()),
-            line: line!() as usize,
-        };
-        Atom::parse(input, ParseSettings::symbolica()).ok()
     }
 
     /// Applies constraint substitutions to an expression.
@@ -254,78 +148,32 @@ impl ConstraintSimplifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spec::FieldSpec;
+    use std::borrow::Cow;
     use std::sync::Mutex;
+    use symbolica::atom::DefaultNamespace;
+    use symbolica::parser::ParseSettings;
 
     // Symbolica uses global state that conflicts when tests run in parallel.
     // Tests prefixed with `symbolica_` are configured to run serially via nextest.
     // The mutex provides a fallback for `cargo test` users.
     static SYMBOLICA_LOCK: Mutex<()> = Mutex::new(());
 
-    fn make_rotor_type() -> TypeSpec {
-        TypeSpec {
-            name: "Rotor".to_string(),
-            grades: vec![0, 2],
-            description: None,
-            fields: vec![
-                FieldSpec {
-                    name: "s".to_string(),
-                    blade_index: 0,
-                    grade: 0,
-                },
-                FieldSpec {
-                    name: "xy".to_string(),
-                    blade_index: 3,
-                    grade: 2,
-                },
-                FieldSpec {
-                    name: "xz".to_string(),
-                    blade_index: 5,
-                    grade: 2,
-                },
-                FieldSpec {
-                    name: "yz".to_string(),
-                    blade_index: 6,
-                    grade: 2,
-                },
-            ],
-            alias_of: None,
-            constraints: vec![crate::spec::UserConstraint {
-                name: "unit".to_string(),
-                description: None,
-                expression: "s*s + xy*xy + xz*xz + yz*yz = 1".to_string(),
-                solve_for: Some("s".to_string()),
-                sign: crate::spec::SignConvention::Positive,
-                enforce: None,
-                has_domain_restriction: true,
-            }],
-            versor: None,
-        }
+    fn parse_atom(s: &str) -> Atom {
+        let input = DefaultNamespace {
+            namespace: Cow::Borrowed(env!("CARGO_CRATE_NAME")),
+            data: s,
+            file: Cow::Borrowed(file!()),
+            line: line!() as usize,
+        };
+        Atom::parse(input, ParseSettings::symbolica()).unwrap()
     }
 
     #[test]
-    fn symbolica_prefix_expression_works() {
+    fn symbolica_empty_simplifier_returns_unchanged() {
         let _guard = SYMBOLICA_LOCK.lock().unwrap();
-        let rotor = make_rotor_type();
-        let result = ConstraintSimplifier::prefix_expression(
-            "s*s + xy*xy + xz*xz + yz*yz",
-            &rotor.fields,
-            "a",
-        );
-        assert!(result.contains("a_s"));
-        assert!(result.contains("a_xy"));
-        assert!(result.contains("a_xz"));
-        assert!(result.contains("a_yz"));
-    }
-
-    #[test]
-    fn symbolica_replace_identifier_works() {
-        let _guard = SYMBOLICA_LOCK.lock().unwrap();
-        let result = ConstraintSimplifier::replace_identifier("s*s + s", "s", "a_s");
-        assert_eq!(result, "a_s*a_s + a_s");
-
-        // Shouldn't replace partial matches
-        let result = ConstraintSimplifier::replace_identifier("xy*xyz", "xy", "a_xy");
-        assert_eq!(result, "a_xy*xyz");
+        let simplifier = ConstraintSimplifier::new(&[], &[]);
+        let expr = parse_atom("a + b");
+        let result = simplifier.apply(&expr);
+        assert_eq!(result, expr);
     }
 }

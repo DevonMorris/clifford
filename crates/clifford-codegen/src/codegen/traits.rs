@@ -1544,13 +1544,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { Self::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { Self::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { Self::new(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Reverse for #type_name<T> {
@@ -1584,13 +1578,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { Self::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { Self::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { Self::new(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Antireverse for #type_name<T> {
@@ -1641,13 +1629,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained output types
-        let has_constraints = !output_type.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #out_name::new(#(#field_exprs),*) };
 
         Some(quote! {
             impl<T: Float> RightComplement for #type_name<T> {

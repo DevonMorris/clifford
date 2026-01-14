@@ -30,7 +30,6 @@
 //! [types.Rotor]
 //! grades = [0, 2]
 //! fields = ["s", "xy", "xz", "yz"]
-//! constraint = "s * s + xy * xy + xz * xz + yz * yz = 1"  # Optional constraint
 //! ```
 //!
 //! # Example
@@ -63,7 +62,6 @@ mod raw;
 pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
-    AlgebraSpec, BasisVector, FieldSpec, ProductEntry, ProductsSpec, SignConvention, SignatureSpec,
-    TypeSpec, UserConstraint,
+    AlgebraSpec, BasisVector, FieldSpec, ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
 };
 pub use parser::parse_spec;

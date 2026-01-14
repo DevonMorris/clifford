@@ -559,13 +559,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { new_unchecked }
-        } else {
-            quote! { new }
-        };
+        let constructor = quote! { new };
 
         quote! {
             /// Returns the antireverse.

@@ -210,33 +210,13 @@ impl<'a> ConversionsGenerator<'a> {
             })
             .collect();
 
-        // Use new_unchecked for constrained types since the multivector
-        // may not satisfy the geometric constraint
-        let has_solve_for = !ty.solve_for_fields().is_empty();
-        let constructor = if has_solve_for {
-            quote! { Self::new_unchecked(#(#field_extracts),*) }
-        } else {
-            quote! { Self::new(#(#field_extracts),*) }
-        };
+        let constructor = quote! { Self::new(#(#field_extracts),*) };
 
-        let doc = if has_solve_for {
-            quote! {
-                /// Extracts this type from a multivector.
-                ///
-                /// Note: This is a lossy projection that only extracts the relevant
-                /// grades. Other components of the multivector are discarded.
-                ///
-                /// **Warning:** Uses `new_unchecked()` since the source multivector
-                /// may not satisfy the geometric constraint. Verify the constraint
-                /// manually if needed.
-            }
-        } else {
-            quote! {
-                /// Extracts this type from a multivector.
-                ///
-                /// Note: This is a lossy projection that only extracts the relevant
-                /// grades. Other components of the multivector are discarded.
-            }
+        let doc = quote! {
+            /// Extracts this type from a multivector.
+            ///
+            /// Note: This is a lossy projection that only extracts the relevant
+            /// grades. Other components of the multivector are discarded.
         };
 
         quote! {
