@@ -57,7 +57,10 @@ fields = ["x", "y", "w"]
 [types.Line]
 grades = [2]
 description = "2D line"
-fields = ["mx", "my", "d"]
+# Line equation: normal_x * x + normal_y * y + dist = 0
+# The normal vector (normal_x, normal_y) is perpendicular to the line.
+# The dist component is the signed distance from the origin (scaled by normal magnitude).
+fields = ["normal_x", "normal_y", "dist"]
 
 [types.Trivector]
 grades = [3]
@@ -71,4 +74,6 @@ fields = ["x", "y", "w", "ps"]
 [types.Flector]
 grades = [0, 2]
 description = "2D reflection/glide transformation via antisandwich"
-fields = ["s", "mx", "my", "d"]
+# Grade 0: scalar (s)
+# Grade 2: Line components (normal_x, normal_y, dist) representing the reflection line
+fields = ["s", "normal_x", "normal_y", "dist"]

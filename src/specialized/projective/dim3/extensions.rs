@@ -298,13 +298,13 @@ impl<T: Float> Line<T> {
     /// Direction vector (e01, e02, e03).
     #[inline]
     pub fn direction(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.mx(), self.my(), self.mz())
+        EuclideanVector::new(self.moment_x(), self.moment_y(), self.moment_z())
     }
 
     /// Moment vector (e23, e31, e12).
     #[inline]
     pub fn moment(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.dx(), self.dy(), self.dz())
+        EuclideanVector::new(self.dir_x(), self.dir_y(), self.dir_z())
     }
 
     /// Weight norm (direction magnitude).
@@ -326,19 +326,21 @@ impl<T: Float> Line<T> {
             return *self;
         }
         Self::new_unchecked(
-            self.mx() / wn,
-            self.my() / wn,
-            self.mz() / wn,
-            self.dx() / wn,
-            self.dy() / wn,
-            self.dz() / wn,
+            self.moment_x() / wn,
+            self.moment_y() / wn,
+            self.moment_z() / wn,
+            self.dir_x() / wn,
+            self.dir_y() / wn,
+            self.dir_z() / wn,
         )
     }
 
     /// Plücker condition residual: d · m.
     #[inline]
     pub fn plucker_residual(&self) -> T {
-        self.mx() * self.dx() + self.my() * self.dy() + self.mz() * self.dz()
+        self.moment_x() * self.dir_x()
+            + self.moment_y() * self.dir_y()
+            + self.moment_z() * self.dir_z()
     }
 
     /// Check if line satisfies Plücker condition.
@@ -360,12 +362,12 @@ impl<T: Float> Line<T> {
     /// Inner product (dot product) with another line.
     #[inline]
     pub fn dot(&self, other: &Line<T>) -> T {
-        self.mx() * other.mx()
-            + self.my() * other.my()
-            + self.mz() * other.mz()
-            + self.dx() * other.dx()
-            + self.dy() * other.dy()
-            + self.dz() * other.dz()
+        self.moment_x() * other.moment_x()
+            + self.moment_y() * other.moment_y()
+            + self.moment_z() * other.moment_z()
+            + self.dir_x() * other.dir_x()
+            + self.dir_y() * other.dir_y()
+            + self.dir_z() * other.dir_z()
     }
 
     /// Geometric norm.
@@ -434,7 +436,9 @@ impl<T: Float> Line<T> {
     /// Squared weight norm (direction magnitude squared).
     #[inline]
     pub fn weight_norm_squared(&self) -> T {
-        self.mx() * self.mx() + self.my() * self.my() + self.mz() * self.mz()
+        self.moment_x() * self.moment_x()
+            + self.moment_y() * self.moment_y()
+            + self.moment_z() * self.moment_z()
     }
 
     /// Computes the Plücker inner product (used for testing intersection/parallelism).
@@ -446,24 +450,24 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn plucker_inner(&self, other: &Line<T>) -> T {
         // direction1 · moment2 + direction2 · moment1
-        self.mx() * other.dx()
-            + self.my() * other.dy()
-            + self.mz() * other.dz()
-            + other.mx() * self.dx()
-            + other.my() * self.dy()
-            + other.mz() * self.dz()
+        self.moment_x() * other.dir_x()
+            + self.moment_y() * other.dir_y()
+            + self.moment_z() * other.dir_z()
+            + other.moment_x() * self.dir_x()
+            + other.moment_y() * self.dir_y()
+            + other.moment_z() * self.dir_z()
     }
 
     /// Distance from a point to this line.
     ///
     /// The line should be unitized for accurate results.
     pub fn distance_to_point(&self, p: &Point<T>) -> T {
-        let d1 = self.mx();
-        let d2 = self.my();
-        let d3 = self.mz();
-        let m1 = self.dx();
-        let m2 = self.dy();
-        let m3 = self.dz();
+        let d1 = self.moment_x();
+        let d2 = self.moment_y();
+        let d3 = self.moment_z();
+        let m1 = self.dir_x();
+        let m2 = self.dir_y();
+        let m3 = self.dir_z();
 
         let px = p.x();
         let py = p.y();
@@ -535,14 +539,14 @@ impl<T: Float> Line<T> {
 impl<T: Float> Plane<T> {
     /// Create plane from normal and distance.
     ///
-    /// The plane equation is `n·x + d = 0`.
-    pub fn from_normal_and_distance(cart_nx: T, cart_ny: T, cart_nz: T, dist: T) -> Self {
+    /// The plane equation is `n·x + dist = 0`.
+    pub fn from_normal_and_distance(cart_nx: T, cart_ny: T, cart_nz: T, distance: T) -> Self {
         // PGA trivector basis mapping:
         // - nx (field) = e123 (ideal plane component)
         // - ny (field) = e012 = Cartesian nz (plane perpendicular to z)
         // - nz (field) = e031 = Cartesian ny (plane perpendicular to y), negated for e31 convention
-        // - d (field) = e023 = Cartesian nx (plane perpendicular to x)
-        Self::new(dist, cart_nz, -cart_ny, cart_nx)
+        // - dist (field) = e023 = Cartesian nx (plane perpendicular to x)
+        Self::new(distance, cart_nz, -cart_ny, cart_nx)
     }
 
     /// XY plane (z = 0).
@@ -578,10 +582,10 @@ impl<T: Float> Plane<T> {
 
     /// Distance from origin (signed).
     ///
-    /// Stored in the d field (e123 ideal component).
+    /// Stored in the dist field (e123 ideal component).
     #[inline]
     pub fn distance_from_origin(&self) -> T {
-        self.d()
+        self.dist()
     }
 
     /// Weight norm (normal magnitude).
@@ -593,7 +597,7 @@ impl<T: Float> Plane<T> {
     /// Bulk norm (distance component magnitude).
     #[inline]
     pub fn bulk_norm(&self) -> T {
-        self.d().abs()
+        self.dist().abs()
     }
 
     /// Unitize to unit normal.
@@ -602,9 +606,9 @@ impl<T: Float> Plane<T> {
         if wn < T::epsilon() {
             return *self;
         }
-        // Field order is [d, nz, ny, nx]
+        // Field order is [dist, nz, ny, nx]
         Self::new(
-            self.d() / wn,
+            self.dist() / wn,
             self.nz() / wn,
             self.ny() / wn,
             self.nx() / wn,
@@ -620,7 +624,7 @@ impl<T: Float> Plane<T> {
     /// Attitude (ideal line at infinity).
     #[inline]
     pub fn attitude(&self) -> T {
-        self.d()
+        self.dist()
     }
 
     /// Geometric norm.
@@ -662,7 +666,7 @@ impl<T: Float> Plane<T> {
     /// Signed distance from a point to this plane.
     pub fn signed_distance(&self, point: &Point<T>) -> T {
         let p = self.unitized();
-        (p.nx() * point.x() + p.ny() * point.y() + p.nz() * point.z() + p.d() * point.w())
+        (p.nx() * point.x() + p.ny() * point.y() + p.nz() * point.z() + p.dist() * point.w())
             / point.w()
     }
 
@@ -993,13 +997,13 @@ impl<T: Float> Flector<T> {
     /// Create flector from reflection plane.
     pub fn from_plane(plane: &Plane<T>) -> Self {
         let p = plane.unitized();
-        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
+        // Flector field order: [px, py, pz, pw, dist, nz, ny, nx]
         Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
             T::zero(),
-            p.d(),
+            p.dist(),
             p.nz(),
             p.ny(),
             p.nx(),
@@ -1009,14 +1013,14 @@ impl<T: Float> Flector<T> {
     /// Create reflection through plane at origin with Cartesian normal.
     pub fn from_plane_through_origin(cart_nx: T, cart_ny: T, cart_nz: T) -> Self {
         let norm = (cart_nx * cart_nx + cart_ny * cart_ny + cart_nz * cart_nz).sqrt();
-        // Convert Cartesian to PGA: nx=cart_nx, ny=-cart_ny (e031 sign), nz=cart_nz, d=0
-        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
+        // Convert Cartesian to PGA: nx=cart_nx, ny=-cart_ny (e031 sign), nz=cart_nz, dist=0
+        // Flector field order: [px, py, pz, pw, dist, nz, ny, nx]
         Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
             T::zero(),
-            T::zero(),       // d
+            T::zero(),       // dist
             cart_nz / norm,  // nz
             -cart_ny / norm, // ny (negated for e031)
             cart_nx / norm,  // nx
@@ -1050,8 +1054,8 @@ impl<T: Float> Flector<T> {
     /// Plane part (grade 3).
     #[inline]
     pub fn plane_part(&self) -> Plane<T> {
-        // Plane::new expects [d, nz, ny, nx]
-        Plane::new(self.d(), self.nz(), self.ny(), self.nx())
+        // Plane::new expects [dist, nz, ny, nx]
+        Plane::new(self.dist(), self.nz(), self.ny(), self.nx())
     }
 
     /// Check if this is a pure reflection (no point part).
@@ -1071,13 +1075,13 @@ impl<T: Float> Flector<T> {
         if bn < T::epsilon() {
             return *self;
         }
-        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
+        // Flector field order: [px, py, pz, pw, dist, nz, ny, nx]
         Self::new_unchecked(
             self.px() / bn,
             self.py() / bn,
             self.pz() / bn,
             self.pw() / bn,
-            self.d() / bn,
+            self.dist() / bn,
             self.nz() / bn,
             self.ny() / bn,
             self.nx() / bn,
@@ -1316,7 +1320,7 @@ mod tests {
         let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
 
         eprintln!(
-            "Flector: px={}, py={}, pz={}, pw={}, nx={}, ny={}, nz={}, d={}",
+            "Flector: px={}, py={}, pz={}, pw={}, nx={}, ny={}, nz={}, dist={}",
             f.px(),
             f.py(),
             f.pz(),
@@ -1324,7 +1328,7 @@ mod tests {
             f.nx(),
             f.ny(),
             f.nz(),
-            f.d()
+            f.dist()
         );
         eprintln!("Input point: ({}, {}, {}, {})", p.x(), p.y(), p.z(), p.w());
 

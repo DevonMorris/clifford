@@ -133,27 +133,27 @@ impl<T: Float> Line<T> {
         Self::new(T::zero(), T::zero(), T::one())
     }
 
-    /// Normal vector (mx, my).
+    /// Normal vector (normal_x, normal_y).
     #[inline]
     pub fn normal(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.mx(), self.my())
+        EuclideanVector::new(self.normal_x(), self.normal_y())
     }
 
-    /// Distance from origin (d component).
+    /// Distance from origin (dist component).
     #[inline]
     pub fn distance_from_origin(&self) -> T {
-        self.d()
+        self.dist()
     }
 
     /// Check if line passes through origin.
     pub fn through_origin(&self, epsilon: T) -> bool {
-        self.d().abs() < epsilon
+        self.dist().abs() < epsilon
     }
 
     /// Check if two lines are parallel.
     pub fn is_parallel(&self, other: &Line<T>, epsilon: T) -> bool {
         // Lines are parallel if their normals are parallel
-        let cross = self.mx() * other.my() - self.my() * other.mx();
+        let cross = self.normal_x() * other.normal_y() - self.normal_y() * other.normal_x();
         cross.abs() < epsilon
     }
 
@@ -162,7 +162,9 @@ impl<T: Float> Line<T> {
         use crate::norm::DegenerateNormed;
         let n1 = self.try_unitize().unwrap_or(*self);
         let n2 = other.try_unitize().unwrap_or(*other);
-        let cos_angle = (n1.mx() * n2.mx() + n1.my() * n2.my()).abs().min(T::one());
+        let cos_angle = (n1.normal_x() * n2.normal_x() + n1.normal_y() * n2.normal_y())
+            .abs()
+            .min(T::one());
         cos_angle.acos()
     }
 
@@ -172,7 +174,7 @@ impl<T: Float> Line<T> {
     pub fn signed_distance(&self, point: &Point<T>) -> T {
         use crate::norm::DegenerateNormed;
         let l = self.try_unitize().unwrap_or(*self);
-        (l.mx() * point.x() + l.my() * point.y() + l.d() * point.w()) / point.w()
+        (l.normal_x() * point.x() + l.normal_y() * point.y() + l.dist() * point.w()) / point.w()
     }
 
     /// Distance from a point to this line.
@@ -322,7 +324,7 @@ impl<T: Float> Flector<T> {
     pub fn from_line(line: &Line<T>) -> Self {
         use crate::norm::DegenerateNormed;
         let l = line.try_unitize().unwrap_or(*line);
-        Self::new(T::zero(), l.mx(), l.my(), l.d())
+        Self::new(T::zero(), l.normal_x(), l.normal_y(), l.dist())
     }
 
     /// Reflect through y-axis (x = 0).
@@ -346,7 +348,7 @@ impl<T: Float> Flector<T> {
     /// Line part (the grade-2 reflection line).
     #[inline]
     pub fn line_part(&self) -> Line<T> {
-        Line::new(self.mx(), self.my(), self.d())
+        Line::new(self.normal_x(), self.normal_y(), self.dist())
     }
 
     /// Check if this is a pure reflection (no scalar component).
@@ -476,10 +478,10 @@ mod tests {
         let line = p1.join(&p2);
 
         // Line through origin and (1, 0) is the x-axis (y = 0)
-        // The wedge product gives my component (e01) for this line
-        assert!(line.my().abs() > 0.1);
-        // And the line should pass through origin (mx = 0, d = 0)
-        assert!(line.mx().abs() < 0.1);
+        // The wedge product gives normal_y component (e01) for this line
+        assert!(line.normal_y().abs() > 0.1);
+        // And the line should pass through origin (normal_x = 0, dist = 0)
+        assert!(line.normal_x().abs() < 0.1);
     }
 
     #[test]
@@ -511,11 +513,11 @@ mod tests {
         let p = Point::<f64>::from_cartesian(1.0, 2.0);
 
         eprintln!(
-            "Flector: s={}, mx={}, my={}, d={}",
+            "Flector: s={}, normal_x={}, normal_y={}, dist={}",
             f.s(),
-            f.mx(),
-            f.my(),
-            f.d()
+            f.normal_x(),
+            f.normal_y(),
+            f.dist()
         );
         eprintln!("Point: x={}, y={}, w={}", p.x(), p.y(), p.w());
 

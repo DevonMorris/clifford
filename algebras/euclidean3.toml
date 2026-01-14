@@ -27,11 +27,20 @@ fields = ["x", "y", "z"]
 [types.Bivector]
 grades = [2]
 description = "3D bivector"
+# IMPORTANT: The bivector components represent rotation AXES, not directions.
+# - bz (e12): rotation around the z-axis (in the xy-plane)
+# - by (e13): rotation around the y-axis (in the xz-plane)
+# - bx (e23): rotation around the x-axis (in the yz-plane)
+# The field ordering (bz, by, bx) follows lexicographic blade order (e12, e13, e23),
+# which happens to be reverse alphabetical for the axis names.
 fields = ["bz", "by", "bx"]
 
 [types.Rotor]
 grades = [0, 2]
 description = "3D rotor (unit versor for rotations)"
+# Rotors represent 3D rotations via the sandwich product: R * v * R^-1
+# - s: scalar part (cos(theta/2) for a rotation by angle theta)
+# - bz, by, bx: bivector parts representing the rotation plane/axis (see Bivector docs)
 fields = ["s", "bz", "by", "bx"]
 
 [types.Trivector]
