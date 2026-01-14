@@ -718,12 +718,13 @@ impl<T: Float> Plane<T> {
 impl<T: Float> Motor<T> {
     /// Identity motor (leaves all elements unchanged).
     ///
-    /// In PGA with the antisandwich product, the identity is the pseudoscalar 𝟙 = e₀₁₂₃.
+    /// In PGA with the sandwich product, the identity is the scalar s = 1.
     ///
     /// # Example
     ///
     /// ```
     /// use clifford::specialized::projective::dim3::{Motor, Point};
+    /// use clifford::ops::Transform;
     ///
     /// let m = Motor::<f64>::identity();
     /// let p = Point::from_cartesian(1.0, 2.0, 3.0);
@@ -732,6 +733,12 @@ impl<T: Float> Motor<T> {
     /// ```
     #[inline]
     pub fn identity() -> Self {
+        // In PGA with antiproduct-based composition and antisandwich-based
+        // transforms, the identity motor is the pseudoscalar e0123=1, not
+        // the scalar s=1. This is because:
+        // - compose() uses antiproduct: M1 ⊛ M2 = ∁(∁M1 × ∁M2)
+        // - transform() uses antisandwich: M ⊛ X ⊛ antirev(M)
+        // The pseudoscalar is the identity for the antiproduct.
         Self::new_unchecked(
             T::zero(),
             T::zero(),
@@ -748,67 +755,80 @@ impl<T: Float> Motor<T> {
     ///
     /// Creates a motor that translates by the vector (dx, dy, dz).
     ///
-    /// In PGA with our basis ordering, translation is encoded with specific sign conventions
-    /// determined by the antisandwich formula.
+    /// Translation motor in RGA convention: T = τₓe₂₃ - τᵧe₃₁ + τᵤe₁₂ + e₀₁₂₃
+    /// where τ = (dx/2, dy/2, dz/2) is half the displacement.
+    /// Note: e31 has opposite sign due to cyclic ordering (e31 = -e13).
+    ///
+    /// This uses e0123 (antiscalar) as the identity, matching rotation motors,
+    /// so they compose correctly under antiproduct.
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
         Self::new_unchecked(
-            T::zero(),  // s
-            dx * half,  // e23
-            -dy * half, // e31 (negated due to antisymmetric basis ordering: e31 = -e13)
-            dz * half,  // e12
-            T::zero(),  // e01
-            T::zero(),  // e02
-            T::zero(),  // e03
-            T::one(),   // e0123 (identity part)
+            T::zero(),   // s
+            dx * half,   // e23 (τₓ = translation x)
+            -dy * half,  // e31 (negated: e31 = -e13)
+            dz * half,   // e12 (τᵤ = translation z)
+            T::zero(),   // e01
+            T::zero(),   // e02
+            T::zero(),   // e03
+            T::one(),    // e0123 (antiscalar identity)
         )
     }
 
     /// Pure rotation around x-axis through origin.
     ///
-    /// In PGA, the rotation formula is R = l·sin(φ/2) + 𝟙·cos(φ/2)
-    /// where l is the line (axis) and the antisandwich applies the rotation twice.
+    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e01
+    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
+    /// The bivector e01 is the complement of e23 (yz-plane), giving rotation around x.
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),  // s
-            T::zero(),  // e23
-            T::zero(),  // e31
-            T::zero(),  // e12
-            half.sin(), // e01 (x direction)
-            T::zero(),  // e02
-            T::zero(),  // e03
-            half.cos(), // e0123
+            T::zero(),    // s
+            T::zero(),    // e23
+            T::zero(),    // e31
+            T::zero(),    // e12
+            -half.sin(),  // e01 (rotation around x-axis)
+            T::zero(),    // e02
+            T::zero(),    // e03
+            half.cos(),   // e0123 = cos(θ/2)
         )
     }
 
     /// Pure rotation around y-axis through origin.
+    ///
+    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e02
+    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
+    /// The bivector e02 is the complement of e31 (zx-plane), giving rotation around y.
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),  // s
-            T::zero(),  // e23
-            T::zero(),  // e31
-            T::zero(),  // e12
-            T::zero(),  // e01
-            half.sin(), // e02 (y direction)
-            T::zero(),  // e03
-            half.cos(), // e0123
+            T::zero(),    // s
+            T::zero(),    // e23
+            T::zero(),    // e31
+            T::zero(),    // e12
+            T::zero(),    // e01
+            -half.sin(),  // e02 (rotation around y-axis)
+            T::zero(),    // e03
+            half.cos(),   // e0123 = cos(θ/2)
         )
     }
 
     /// Pure rotation around z-axis through origin.
+    ///
+    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e03
+    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
+    /// The bivector e03 is the complement of e12 (xy-plane), giving rotation around z.
     pub fn from_rotation_z(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new_unchecked(
-            T::zero(),  // s
-            T::zero(),  // e23
-            T::zero(),  // e31
-            T::zero(),  // e12
-            T::zero(),  // e01
-            T::zero(),  // e02
-            half.sin(), // e03 (z direction)
-            half.cos(), // e0123
+            T::zero(),    // s
+            T::zero(),    // e23
+            T::zero(),    // e31
+            T::zero(),    // e12
+            T::zero(),    // e01
+            T::zero(),    // e02
+            -half.sin(),  // e03 (rotation around z-axis)
+            half.cos(),   // e0123 = cos(θ/2)
         )
     }
 
@@ -816,19 +836,22 @@ impl<T: Float> Motor<T> {
     ///
     /// The axis vector determines the rotation axis (will be normalized).
     /// The rotation follows the right-hand rule.
+    ///
+    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*(ax*e01 + ay*e02 + az*e03)
+    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
     pub fn from_axis_angle(axis: &EuclideanVector<T>, angle: T) -> Self {
         let half = angle / T::TWO;
         let (sin_half, cos_half) = (half.sin(), half.cos());
         let axis_norm = axis.normalized();
         Self::new_unchecked(
-            T::zero(),                // s
-            T::zero(),                // e23
-            T::zero(),                // e31
-            T::zero(),                // e12
-            sin_half * axis_norm.x(), // e01
-            sin_half * axis_norm.y(), // e02
-            sin_half * axis_norm.z(), // e03
-            cos_half,                 // e0123
+            T::zero(),                 // s
+            T::zero(),                 // e23
+            T::zero(),                 // e31
+            T::zero(),                 // e12
+            -sin_half * axis_norm.x(), // e01 (rotation around x-axis)
+            -sin_half * axis_norm.y(), // e02 (rotation around y-axis)
+            -sin_half * axis_norm.z(), // e03 (rotation around z-axis)
+            cos_half,                  // e0123 = cos(θ/2)
         )
     }
 
@@ -845,12 +868,12 @@ impl<T: Float> Motor<T> {
 
         Self::new_unchecked(
             cos_a,
-            sin_a * d.x(),
-            sin_a * d.y(),
-            sin_a * d.z(),
-            sin_a * m.x() + half_dist * cos_a * d.x(),
-            sin_a * m.y() + half_dist * cos_a * d.y(),
-            sin_a * m.z() + half_dist * cos_a * d.z(),
+            sin_a * m.x() + half_dist * cos_a * d.x(), // e23 (translation)
+            sin_a * m.y() + half_dist * cos_a * d.y(), // e31 (translation)
+            sin_a * m.z() + half_dist * cos_a * d.z(), // e12 (translation)
+            sin_a * d.x(), // e01 (rotation)
+            sin_a * d.y(), // e02 (rotation)
+            sin_a * d.z(), // e03 (rotation)
             -half_dist * sin_a,
         )
     }
