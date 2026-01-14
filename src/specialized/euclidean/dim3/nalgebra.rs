@@ -124,8 +124,9 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Vector3<T> {
     /// ```
     #[inline]
     fn from(b: Bivector<T>) -> Self {
-        // dual: Bivector(xy, xz, yz) -> Vector(yz, -xz, xy)
-        na::Vector3::new(b.yz(), -b.xz(), b.xy())
+        // dual: Bivector(bz, by, bx) -> Vector(bx, -by, bz)
+        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
+        na::Vector3::new(b.bx(), -b.by(), b.bz())
     }
 }
 
@@ -193,15 +194,16 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Matrix3<T> {
     /// ```
     #[inline]
     fn from(b: Bivector<T>) -> Self {
+        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
         na::Matrix3::new(
             T::zero(),
-            -b.xy(),
-            -b.xz(), // row 0
-            b.xy(),
+            -b.bz(),
+            -b.by(), // row 0
+            b.bz(),
             T::zero(),
-            -b.yz(), // row 1
-            b.xz(),
-            b.yz(),
+            -b.bx(), // row 1
+            b.by(),
+            b.bx(),
             T::zero(), // row 2
         )
     }
@@ -282,8 +284,9 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     fn from(rotor: Rotor<T>) -> Self {
         let r = rotor.normalize();
         // Negate bivector components: sandwich R v R̃ rotates opposite to rotor angle
-        // Mapping: (w, i, j, k) = (s, -yz, xz, -xy)
-        let q = na::Quaternion::new(r.s(), -r.yz(), r.xz(), -r.xy());
+        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
+        // Mapping: (w, i, j, k) = (s, -bx, by, -bz)
+        let q = na::Quaternion::new(r.s(), -r.bx(), r.by(), -r.bz());
         na::UnitQuaternion::new_normalize(q)
     }
 }
@@ -308,7 +311,8 @@ impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
     #[inline]
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
-        // Inverse mapping with negation: (s, xy, xz, yz) = (w, -k, j, -i)
+        // Inverse mapping with negation: (s, bz, by, bx) = (w, -k, j, -i)
+        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
         // Use new_unchecked since unit quaternion guarantees unit rotor
         Rotor::new_unchecked(q.w, -q.k, q.j, -q.i)
     }

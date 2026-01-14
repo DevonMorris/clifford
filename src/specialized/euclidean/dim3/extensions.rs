@@ -75,7 +75,7 @@ impl<T: Float> Bivector<T> {
     /// ```
     /// use clifford::specialized::euclidean::dim3::{Vector, Bivector};
     ///
-    /// let b = Bivector::<f64>::unit_xy();
+    /// let b = Bivector::<f64>::unit_bz();
     /// assert_eq!(b.dual(), Vector::unit_z());
     /// ```
     #[inline]
@@ -90,7 +90,7 @@ impl<T: Float> Bivector<T> {
     #[inline]
     pub fn normalized(&self) -> Self {
         let n = self.norm();
-        Self::new(self.xy() / n, self.xz() / n, self.yz() / n)
+        Self::new(self.bz() / n, self.by() / n, self.bx() / n)
     }
 }
 
@@ -100,19 +100,15 @@ impl<T: Float> Bivector<T> {
 
 impl<T: Float> Trivector<T> {
     /// Creates the unit pseudoscalar `e₁₂₃`.
-    ///
-    /// Alias for `unit_xyz()` for backward compatibility.
     #[inline]
     pub fn unit() -> Self {
-        Self::unit_xyz()
+        Self::unit_ps()
     }
 
-    /// Returns the coefficient (alias for `xyz()`).
-    ///
-    /// Provided for backward compatibility.
+    /// Returns the coefficient (alias for `ps()`).
     #[inline]
     pub fn value(&self) -> T {
-        self.xyz()
+        self.ps()
     }
 }
 
@@ -123,8 +119,8 @@ impl<T: Float> Trivector<T> {
 impl<T: Float> Rotor<T> {
     /// Returns the bivector part as a Bivector.
     #[inline]
-    pub fn b(&self) -> Bivector<T> {
-        Bivector::new(self.xy(), self.xz(), self.yz())
+    pub fn bivector(&self) -> Bivector<T> {
+        Bivector::new(self.bz(), self.by(), self.bx())
     }
 
     /// Creates a rotor from a rotation angle and plane (bivector).
@@ -151,9 +147,9 @@ impl<T: Float> Rotor<T> {
         let b = plane.normalized();
         Self::new_unchecked(
             cos_half,
-            sin_half * b.xy(),
-            sin_half * b.xz(),
-            sin_half * b.yz(),
+            sin_half * b.bz(),
+            sin_half * b.by(),
+            sin_half * b.bx(),
         )
     }
 
@@ -187,7 +183,7 @@ impl<T: Float> Rotor<T> {
         let dot = b_norm.dot(a_norm);
         let wedge = b_norm.wedge(&a_norm);
 
-        let r = Self::new_unchecked(T::one() + dot, wedge.xy(), wedge.xz(), wedge.yz());
+        let r = Self::new_unchecked(T::one() + dot, wedge.bz(), wedge.by(), wedge.bx());
         r.normalize()
     }
 
@@ -200,9 +196,9 @@ impl<T: Float> Rotor<T> {
         let rev = self.reverse();
         Self::new_unchecked(
             rev.s() / norm_sq,
-            rev.xy() / norm_sq,
-            rev.xz() / norm_sq,
-            rev.yz() / norm_sq,
+            rev.bz() / norm_sq,
+            rev.by() / norm_sq,
+            rev.bx() / norm_sq,
         )
     }
 
@@ -247,9 +243,9 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn slerp(&self, other: Self, t: T) -> Self {
         let dot = self.s() * other.s()
-            + self.xy() * other.xy()
-            + self.xz() * other.xz()
-            + self.yz() * other.yz();
+            + self.bz() * other.bz()
+            + self.by() * other.by()
+            + self.bx() * other.bx();
 
         let dot = if dot > T::one() {
             T::one()
@@ -265,9 +261,9 @@ impl<T: Float> Rotor<T> {
             // Linear interpolation for small angles, then normalize
             return Self::new_unchecked(
                 self.s() * (T::one() - t) + other.s() * t,
-                self.xy() * (T::one() - t) + other.xy() * t,
-                self.xz() * (T::one() - t) + other.xz() * t,
-                self.yz() * (T::one() - t) + other.yz() * t,
+                self.bz() * (T::one() - t) + other.bz() * t,
+                self.by() * (T::one() - t) + other.by() * t,
+                self.bx() * (T::one() - t) + other.bx() * t,
             )
             .normalize();
         }
@@ -279,9 +275,9 @@ impl<T: Float> Rotor<T> {
         // Spherical interpolation preserves unit norm
         Self::new_unchecked(
             self.s() * s1 + other.s() * s2,
-            self.xy() * s1 + other.xy() * s2,
-            self.xz() * s1 + other.xz() * s2,
-            self.yz() * s1 + other.yz() * s2,
+            self.bz() * s1 + other.bz() * s2,
+            self.by() * s1 + other.by() * s2,
+            self.bx() * s1 + other.bx() * s2,
         )
     }
 }

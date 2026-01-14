@@ -58,28 +58,36 @@ fields = ["s"]
 [types.Point]
 grades = [1]
 description = "3D point in homogeneous coordinates"
-fields = ["e1", "e2", "e3", "e0"]
+fields = ["x", "y", "z", "w"]
 
 [types.Line]
 grades = [2]
 description = "3D line in Plücker coordinates"
-fields = ["e01", "e02", "e03", "e23", "e31", "e12"]
+# Lexicographic: e12 (mz), e13=e31 (-my), e14=e01 (dx), e23 (mx), e24=e02 (dy), e34=e03 (dz)
+fields = ["mz", "my", "dx", "mx", "dy", "dz"]
 
 [types.Plane]
 grades = [3]
 description = "3D plane"
-fields = ["e023", "e031", "e012", "e123"]
+# Lexicographic internal order: e123, e124, e134, e234
+# Maps to PGA: e123 (d), e012 (nz), e031 (-ny), e023 (nx)
+fields = ["d", "nz", "ny", "nx"]
 
 [types.Quadvector]
 grades = [4]
-fields = ["e0123"]
+fields = ["ps"]
 
 [types.Motor]
 grades = [0, 2, 4]
 description = "3D rigid transformation (rotation + translation)"
-fields = ["s", "e23", "e31", "e12", "e01", "e02", "e03", "e0123"]
+# Grade 0: scalar
+# Grade 2 lexicographic: e12 (bz), e13=e31 (by), e14=e01 (tx), e23 (bx), e24=e02 (ty), e34=e03 (tz)
+# Grade 4: pseudoscalar
+fields = ["s", "bz", "by", "tx", "bx", "ty", "tz", "ps"]
 
 [types.Flector]
 grades = [1, 3]
 description = "3D reflection/glide transformation"
-fields = ["e1", "e2", "e3", "e0", "e023", "e031", "e012", "e123"]
+# Grade 1: [e1, e2, e3, e4=e0] → [px, py, pz, pw]
+# Grade 3: [e123, e124=e012, e134=e031, e234=e023] → [d, nz, ny, nx]
+fields = ["px", "py", "pz", "pw", "d", "nz", "ny", "nx"]

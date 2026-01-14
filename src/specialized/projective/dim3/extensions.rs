@@ -54,65 +54,59 @@ impl<T: Float> Point<T> {
         Self::from_cartesian(T::zero(), T::zero(), T::zero())
     }
 
-    /// Returns the x-coordinate (requires `w ≠ 0`).
+    /// Returns the Cartesian x-coordinate (requires `w ≠ 0`).
     ///
     /// # Panics
     ///
     /// Division by zero if `w = 0` (ideal point).
     #[inline]
-    pub fn x(&self) -> T {
-        self.e1() / self.e0()
+    pub fn cartesian_x(&self) -> T {
+        self.x() / self.w()
     }
 
-    /// Returns the y-coordinate (requires `w ≠ 0`).
+    /// Returns the Cartesian y-coordinate (requires `w ≠ 0`).
     ///
     /// # Panics
     ///
     /// Division by zero if `w = 0` (ideal point).
     #[inline]
-    pub fn y(&self) -> T {
-        self.e2() / self.e0()
+    pub fn cartesian_y(&self) -> T {
+        self.y() / self.w()
     }
 
-    /// Returns the z-coordinate (requires `w ≠ 0`).
+    /// Returns the Cartesian z-coordinate (requires `w ≠ 0`).
     ///
     /// # Panics
     ///
     /// Division by zero if `w = 0` (ideal point).
     #[inline]
-    pub fn z(&self) -> T {
-        self.e3() / self.e0()
-    }
-
-    /// Returns the homogeneous weight.
-    #[inline]
-    pub fn w(&self) -> T {
-        self.e0()
+    pub fn cartesian_z(&self) -> T {
+        self.z() / self.w()
     }
 
     /// Returns true if this is an ideal point (point at infinity).
     #[inline]
     pub fn is_ideal(&self, epsilon: T) -> bool {
-        self.e0().abs() < epsilon
+        self.w().abs() < epsilon
     }
 
     /// Returns true if this is a finite point (not at infinity).
     #[inline]
     pub fn is_finite(&self, epsilon: T) -> bool {
-        self.e0().abs() >= epsilon
+        self.w().abs() >= epsilon
     }
 
     /// Normalizes the homogeneous coordinates so `w = 1` (if finite).
     ///
     /// Returns `None` if this is an ideal point.
     pub fn unitize(&self) -> Option<Self> {
-        if self.e0().abs() < T::epsilon() {
+        if self.w().abs() < T::epsilon() {
             None
         } else {
             Some(Self::new(
-                self.e1() / self.e0(),
-                self.e2() / self.e0(),
-                self.e3() / self.e0(),
+                self.x() / self.w(),
+                self.y() / self.w(),
+                self.z() / self.w(),
                 T::one(),
             ))
         }
@@ -123,13 +117,13 @@ impl<T: Float> Point<T> {
     /// Returns `None` if this is an ideal point.
     #[inline]
     pub fn to_cartesian(&self) -> Option<(T, T, T)> {
-        if self.e0().abs() < T::epsilon() {
+        if self.w().abs() < T::epsilon() {
             None
         } else {
             Some((
-                self.e1() / self.e0(),
-                self.e2() / self.e0(),
-                self.e3() / self.e0(),
+                self.x() / self.w(),
+                self.y() / self.w(),
+                self.z() / self.w(),
             ))
         }
     }
@@ -139,7 +133,7 @@ impl<T: Float> Point<T> {
     /// For a point, the attitude is the weight (e₀ component).
     #[inline]
     pub fn attitude(&self) -> T {
-        self.e0()
+        self.w()
     }
 
     /// Returns the squared bulk norm of the point.
@@ -147,7 +141,7 @@ impl<T: Float> Point<T> {
     /// The bulk norm is the length of the spatial part: `e1² + e2² + e3²`.
     #[inline]
     pub fn bulk_norm_squared(&self) -> T {
-        self.e1() * self.e1() + self.e2() * self.e2() + self.e3() * self.e3()
+        self.x() * self.x() + self.y() * self.y() + self.z() * self.z()
     }
 
     /// Returns the bulk norm of the point.
@@ -161,7 +155,7 @@ impl<T: Float> Point<T> {
     /// For a point, the weight is the absolute value of the e₀ component.
     #[inline]
     pub fn weight_norm(&self) -> T {
-        self.e0().abs()
+        self.w().abs()
     }
 
     /// Returns the geometric norm (distance from origin).
@@ -210,17 +204,17 @@ impl<T: Float> Point<T> {
     pub fn midpoint(&self, other: &Point<T>) -> Point<T> {
         let two = T::TWO;
         Point::new(
-            (self.e1() * other.e0() + other.e1() * self.e0()) / two,
-            (self.e2() * other.e0() + other.e2() * self.e0()) / two,
-            (self.e3() * other.e0() + other.e3() * self.e0()) / two,
-            self.e0() * other.e0(),
+            (self.x() * other.w() + other.x() * self.w()) / two,
+            (self.y() * other.w() + other.y() * self.w()) / two,
+            (self.z() * other.w() + other.z() * self.w()) / two,
+            self.w() * other.w(),
         )
     }
 
     /// Inner product (dot product) with another point.
     #[inline]
     pub fn dot(&self, other: &Point<T>) -> T {
-        self.e1() * other.e1() + self.e2() * other.e2() + self.e3() * other.e3()
+        self.x() * other.x() + self.y() * other.y() + self.z() * other.z()
     }
 
     /// Left contraction onto a line.
@@ -304,13 +298,13 @@ impl<T: Float> Line<T> {
     /// Direction vector (e01, e02, e03).
     #[inline]
     pub fn direction(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.e01(), self.e02(), self.e03())
+        EuclideanVector::new(self.mx(), self.my(), self.mz())
     }
 
     /// Moment vector (e23, e31, e12).
     #[inline]
     pub fn moment(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.e23(), self.e31(), self.e12())
+        EuclideanVector::new(self.dx(), self.dy(), self.dz())
     }
 
     /// Weight norm (direction magnitude).
@@ -332,19 +326,19 @@ impl<T: Float> Line<T> {
             return *self;
         }
         Self::new_unchecked(
-            self.e01() / wn,
-            self.e02() / wn,
-            self.e03() / wn,
-            self.e23() / wn,
-            self.e31() / wn,
-            self.e12() / wn,
+            self.mx() / wn,
+            self.my() / wn,
+            self.mz() / wn,
+            self.dx() / wn,
+            self.dy() / wn,
+            self.dz() / wn,
         )
     }
 
     /// Plücker condition residual: d · m.
     #[inline]
     pub fn plucker_residual(&self) -> T {
-        self.e01() * self.e23() + self.e02() * self.e31() + self.e03() * self.e12()
+        self.mx() * self.dx() + self.my() * self.dy() + self.mz() * self.dz()
     }
 
     /// Check if line satisfies Plücker condition.
@@ -366,12 +360,12 @@ impl<T: Float> Line<T> {
     /// Inner product (dot product) with another line.
     #[inline]
     pub fn dot(&self, other: &Line<T>) -> T {
-        self.e01() * other.e01()
-            + self.e02() * other.e02()
-            + self.e03() * other.e03()
-            + self.e23() * other.e23()
-            + self.e31() * other.e31()
-            + self.e12() * other.e12()
+        self.mx() * other.mx()
+            + self.my() * other.my()
+            + self.mz() * other.mz()
+            + self.dx() * other.dx()
+            + self.dy() * other.dy()
+            + self.dz() * other.dz()
     }
 
     /// Geometric norm.
@@ -440,7 +434,7 @@ impl<T: Float> Line<T> {
     /// Squared weight norm (direction magnitude squared).
     #[inline]
     pub fn weight_norm_squared(&self) -> T {
-        self.e01() * self.e01() + self.e02() * self.e02() + self.e03() * self.e03()
+        self.mx() * self.mx() + self.my() * self.my() + self.mz() * self.mz()
     }
 
     /// Computes the Plücker inner product (used for testing intersection/parallelism).
@@ -452,29 +446,29 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn plucker_inner(&self, other: &Line<T>) -> T {
         // direction1 · moment2 + direction2 · moment1
-        self.e01() * other.e23()
-            + self.e02() * other.e31()
-            + self.e03() * other.e12()
-            + other.e01() * self.e23()
-            + other.e02() * self.e31()
-            + other.e03() * self.e12()
+        self.mx() * other.dx()
+            + self.my() * other.dy()
+            + self.mz() * other.dz()
+            + other.mx() * self.dx()
+            + other.my() * self.dy()
+            + other.mz() * self.dz()
     }
 
     /// Distance from a point to this line.
     ///
     /// The line should be unitized for accurate results.
     pub fn distance_to_point(&self, p: &Point<T>) -> T {
-        let d1 = self.e01();
-        let d2 = self.e02();
-        let d3 = self.e03();
-        let m1 = self.e23();
-        let m2 = self.e31();
-        let m3 = self.e12();
+        let d1 = self.mx();
+        let d2 = self.my();
+        let d3 = self.mz();
+        let m1 = self.dx();
+        let m2 = self.dy();
+        let m3 = self.dz();
 
-        let px = p.e1();
-        let py = p.e2();
-        let pz = p.e3();
-        let pw = p.e0();
+        let px = p.x();
+        let py = p.y();
+        let pz = p.z();
+        let pw = p.w();
 
         // Cross product of direction and point position
         let cx = d2 * pz - d3 * py;
@@ -542,38 +536,52 @@ impl<T: Float> Plane<T> {
     /// Create plane from normal and distance.
     ///
     /// The plane equation is `n·x + d = 0`.
-    pub fn from_normal_and_distance(nx: T, ny: T, nz: T, d: T) -> Self {
-        Self::new(nx, ny, nz, d)
+    pub fn from_normal_and_distance(cart_nx: T, cart_ny: T, cart_nz: T, dist: T) -> Self {
+        // PGA trivector basis mapping:
+        // - nx (field) = e123 (ideal plane component)
+        // - ny (field) = e012 = Cartesian nz (plane perpendicular to z)
+        // - nz (field) = e031 = Cartesian ny (plane perpendicular to y), negated for e31 convention
+        // - d (field) = e023 = Cartesian nx (plane perpendicular to x)
+        Self::new(dist, cart_nz, -cart_ny, cart_nx)
     }
 
     /// XY plane (z = 0).
     #[inline]
     pub fn xy() -> Self {
-        Self::from_normal_and_distance(T::zero(), T::zero(), T::one(), T::zero())
+        // Normal (0, 0, 1) in Cartesian: d=0, nz=1, ny=0, nx=0
+        Self::new(T::zero(), T::one(), T::zero(), T::zero())
     }
 
     /// XZ plane (y = 0).
     #[inline]
     pub fn xz() -> Self {
-        Self::from_normal_and_distance(T::zero(), T::one(), T::zero(), T::zero())
+        // Normal (0, 1, 0) in Cartesian: d=0, nz=0, ny=-1 (e031 sign), nx=0
+        Self::new(T::zero(), T::zero(), -T::one(), T::zero())
     }
 
     /// YZ plane (x = 0).
     #[inline]
     pub fn yz() -> Self {
-        Self::from_normal_and_distance(T::one(), T::zero(), T::zero(), T::zero())
+        // Normal (1, 0, 0) in Cartesian: d=0, nz=0, ny=0, nx=1
+        Self::new(T::zero(), T::zero(), T::zero(), T::one())
     }
 
-    /// Normal vector.
+    /// Normal vector (Cartesian).
+    ///
+    /// Inverse of from_normal_and_distance mapping.
     #[inline]
     pub fn normal(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.e023(), self.e031(), self.e012())
+        // PGA field → Cartesian normal mapping:
+        // nx (e023) → cart_nx, -ny (e031) → cart_ny, nz (e012) → cart_nz
+        EuclideanVector::new(self.nx(), -self.ny(), self.nz())
     }
 
     /// Distance from origin (signed).
+    ///
+    /// Stored in the d field (e123 ideal component).
     #[inline]
     pub fn distance_from_origin(&self) -> T {
-        self.e123()
+        self.d()
     }
 
     /// Weight norm (normal magnitude).
@@ -582,10 +590,10 @@ impl<T: Float> Plane<T> {
         self.normal().norm()
     }
 
-    /// Bulk norm.
+    /// Bulk norm (distance component magnitude).
     #[inline]
     pub fn bulk_norm(&self) -> T {
-        self.e123().abs()
+        self.d().abs()
     }
 
     /// Unitize to unit normal.
@@ -594,24 +602,25 @@ impl<T: Float> Plane<T> {
         if wn < T::epsilon() {
             return *self;
         }
+        // Field order is [d, nz, ny, nx]
         Self::new(
-            self.e023() / wn,
-            self.e031() / wn,
-            self.e012() / wn,
-            self.e123() / wn,
+            self.d() / wn,
+            self.nz() / wn,
+            self.ny() / wn,
+            self.nx() / wn,
         )
     }
 
     /// Inner product with another plane.
     #[inline]
     pub fn dot(&self, other: &Plane<T>) -> T {
-        self.e023() * other.e023() + self.e031() * other.e031() + self.e012() * other.e012()
+        self.nx() * other.nx() + self.ny() * other.ny() + self.nz() * other.nz()
     }
 
     /// Attitude (ideal line at infinity).
     #[inline]
     pub fn attitude(&self) -> T {
-        self.e123()
+        self.d()
     }
 
     /// Geometric norm.
@@ -653,11 +662,8 @@ impl<T: Float> Plane<T> {
     /// Signed distance from a point to this plane.
     pub fn signed_distance(&self, point: &Point<T>) -> T {
         let p = self.unitized();
-        (p.e023() * point.e1()
-            + p.e031() * point.e2()
-            + p.e012() * point.e3()
-            + p.e123() * point.e0())
-            / point.e0()
+        (p.nx() * point.x() + p.ny() * point.y() + p.nz() * point.z() + p.d() * point.w())
+            / point.w()
     }
 
     /// Project a point onto this plane.
@@ -665,10 +671,10 @@ impl<T: Float> Plane<T> {
         let dist = self.signed_distance(point);
         let n = self.normal().normalized();
         Point::new(
-            point.e1() - dist * n.x() * point.e0(),
-            point.e2() - dist * n.y() * point.e0(),
-            point.e3() - dist * n.z() * point.e0(),
-            point.e0(),
+            point.x() - dist * n.x() * point.w(),
+            point.y() - dist * n.y() * point.w(),
+            point.z() - dist * n.z() * point.w(),
+            point.w(),
         )
     }
 
@@ -763,72 +769,77 @@ impl<T: Float> Motor<T> {
     /// so they compose correctly under antiproduct.
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
+        // Translation mapping (determined empirically from antisandwich behavior):
+        // - Position 1 (bz = e12) controls z-translation
+        // - Position 2 (by = e13) controls y-translation (negated)
+        // - Position 3 (tx = e14) controls x-translation
+        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
         Self::new_unchecked(
             T::zero(),  // s
-            dx * half,  // e23 (τₓ = translation x)
-            -dy * half, // e31 (negated: e31 = -e13)
-            dz * half,  // e12 (τᵤ = translation z)
-            T::zero(),  // e01
-            T::zero(),  // e02
-            T::zero(),  // e03
-            T::one(),   // e0123 (antiscalar identity)
+            dz * half,  // bz (e12) → z-translation
+            -dy * half, // by (e13) → y-translation (negated)
+            dx * half,  // tx (e14) → x-translation
+            T::zero(),  // bx (e23)
+            T::zero(),  // ty (e24)
+            T::zero(),  // tz (e34)
+            T::one(),   // ps (e0123 identity)
         )
     }
 
     /// Pure rotation around x-axis through origin.
     ///
-    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e01
-    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
-    /// The bivector e01 is the complement of e23 (yz-plane), giving rotation around x.
+    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
+        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
+        // Rotation around x uses position 4 (bx = e23)
         Self::new_unchecked(
             T::zero(),   // s
-            T::zero(),   // e23
-            T::zero(),   // e31
-            T::zero(),   // e12
-            -half.sin(), // e01 (rotation around x-axis)
-            T::zero(),   // e02
-            T::zero(),   // e03
-            half.cos(),  // e0123 = cos(θ/2)
+            T::zero(),   // bz (e12)
+            T::zero(),   // by (e13)
+            T::zero(),   // tx (e14)
+            -half.sin(), // bx (e23) - rotation around x-axis
+            T::zero(),   // ty (e24)
+            T::zero(),   // tz (e34)
+            half.cos(),  // ps (e0123) = cos(θ/2)
         )
     }
 
     /// Pure rotation around y-axis through origin.
     ///
-    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e02
-    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
-    /// The bivector e02 is the complement of e31 (zx-plane), giving rotation around y.
+    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
+        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
+        // Rotation around y uses position 5 (ty = e24)
         Self::new_unchecked(
             T::zero(),   // s
-            T::zero(),   // e23
-            T::zero(),   // e31
-            T::zero(),   // e12
-            T::zero(),   // e01
-            -half.sin(), // e02 (rotation around y-axis)
-            T::zero(),   // e03
-            half.cos(),  // e0123 = cos(θ/2)
+            T::zero(),   // bz (e12)
+            T::zero(),   // by (e13)
+            T::zero(),   // tx (e14)
+            T::zero(),   // bx (e23)
+            -half.sin(), // ty (e24) - rotation around y-axis
+            T::zero(),   // tz (e34)
+            half.cos(),  // ps (e0123) = cos(θ/2)
         )
     }
 
     /// Pure rotation around z-axis through origin.
     ///
-    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*e03
-    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
-    /// The bivector e03 is the complement of e12 (xy-plane), giving rotation around z.
+    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
     pub fn from_rotation_z(angle: T) -> Self {
         let half = angle / T::TWO;
+        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
+        // Rotation around z uses position 6 (tz = e34)
         Self::new_unchecked(
             T::zero(),   // s
-            T::zero(),   // e23
-            T::zero(),   // e31
-            T::zero(),   // e12
-            T::zero(),   // e01
-            T::zero(),   // e02
-            -half.sin(), // e03 (rotation around z-axis)
-            half.cos(),  // e0123 = cos(θ/2)
+            T::zero(),   // bz (e12)
+            T::zero(),   // by (e13)
+            T::zero(),   // tx (e14)
+            T::zero(),   // bx (e23)
+            T::zero(),   // ty (e24)
+            -half.sin(), // tz (e34) - rotation around z-axis
+            half.cos(),  // ps (e0123) = cos(θ/2)
         )
     }
 
@@ -837,21 +848,22 @@ impl<T: Float> Motor<T> {
     /// The axis vector determines the rotation axis (will be normalized).
     /// The rotation follows the right-hand rule.
     ///
-    /// Rotation motor: R = cos(θ/2)*e0123 - sin(θ/2)*(ax*e01 + ay*e02 + az*e03)
-    /// For antisandwich-based transforms, the scalar part goes in the pseudoscalar.
+    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding.
     pub fn from_axis_angle(axis: &EuclideanVector<T>, angle: T) -> Self {
         let half = angle / T::TWO;
         let (sin_half, cos_half) = (half.sin(), half.cos());
         let axis_norm = axis.normalized();
+        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
+        // Rotation uses positions 4, 5, 6 (bx, ty, tz)
         Self::new_unchecked(
             T::zero(),                 // s
-            T::zero(),                 // e23
-            T::zero(),                 // e31
-            T::zero(),                 // e12
-            -sin_half * axis_norm.x(), // e01 (rotation around x-axis)
-            -sin_half * axis_norm.y(), // e02 (rotation around y-axis)
-            -sin_half * axis_norm.z(), // e03 (rotation around z-axis)
-            cos_half,                  // e0123 = cos(θ/2)
+            T::zero(),                 // bz (e12)
+            T::zero(),                 // by (e13)
+            T::zero(),                 // tx (e14)
+            -sin_half * axis_norm.x(), // bx (e23) - rotation around x-axis
+            -sin_half * axis_norm.y(), // ty (e24) - rotation around y-axis
+            -sin_half * axis_norm.z(), // tz (e34) - rotation around z-axis
+            cos_half,                  // ps (e0123) = cos(θ/2)
         )
     }
 
@@ -886,15 +898,16 @@ impl<T: Float> Motor<T> {
         use crate::norm::DegenerateNormed;
         let wn_sq = self.weight_norm_squared();
         let rev = self.reverse();
+        // new_unchecked signature: (s, bz, by, tx, bx, ty, tz, ps)
         Self::new_unchecked(
             rev.s() / wn_sq,
-            rev.e23() / wn_sq,
-            rev.e31() / wn_sq,
-            rev.e12() / wn_sq,
-            rev.e01() / wn_sq,
-            rev.e02() / wn_sq,
-            rev.e03() / wn_sq,
-            rev.e0123() / wn_sq,
+            rev.bz() / wn_sq,
+            rev.by() / wn_sq,
+            rev.tx() / wn_sq,
+            rev.bx() / wn_sq,
+            rev.ty() / wn_sq,
+            rev.tz() / wn_sq,
+            rev.ps() / wn_sq,
         )
     }
 
@@ -908,15 +921,16 @@ impl<T: Float> Motor<T> {
         if bn < T::epsilon() {
             return *self;
         }
+        // new_unchecked signature: (s, bz, by, tx, bx, ty, tz, ps)
         Self::new_unchecked(
             self.s() / bn,
-            self.e23() / bn,
-            self.e31() / bn,
-            self.e12() / bn,
-            self.e01() / bn,
-            self.e02() / bn,
-            self.e03() / bn,
-            self.e0123() / bn,
+            self.bz() / bn,
+            self.by() / bn,
+            self.tx() / bn,
+            self.bx() / bn,
+            self.ty() / bn,
+            self.tz() / bn,
+            self.ps() / bn,
         )
     }
 
@@ -937,10 +951,7 @@ impl<T: Float> Motor<T> {
     /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
     #[inline]
     pub fn geometric_constraint_residual(&self) -> T {
-        self.s() * self.e0123()
-            + self.e23() * self.e01()
-            + self.e31() * self.e02()
-            + self.e12() * self.e03()
+        self.s() * self.ps() + self.bx() * self.tx() + self.by() * self.ty() + self.bz() * self.tz()
     }
 
     /// Check if motor satisfies the geometric constraint.
@@ -968,13 +979,9 @@ impl<T: Float> Motor<T> {
     /// extraction.
     pub fn translation(&self) -> EuclideanVector<T> {
         // Inverse of from_translation encoding:
-        // from_translation sets: e23 = dx/2, e31 = -dy/2, e12 = dz/2
-        // So: dx = 2*e23, dy = -2*e31, dz = 2*e12
-        EuclideanVector::new(
-            T::TWO * self.e23(),
-            -T::TWO * self.e31(),
-            T::TWO * self.e12(),
-        )
+        // from_translation sets: bx = dz/2, by = -dy/2, bz = dx/2
+        // So: dx = 2*bz, dy = -2*by, dz = 2*bx
+        EuclideanVector::new(T::TWO * self.bz(), -T::TWO * self.by(), T::TWO * self.bx())
     }
 }
 
@@ -986,30 +993,33 @@ impl<T: Float> Flector<T> {
     /// Create flector from reflection plane.
     pub fn from_plane(plane: &Plane<T>) -> Self {
         let p = plane.unitized();
+        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
         Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
             T::zero(),
-            p.e023(),
-            p.e031(),
-            p.e012(),
-            p.e123(),
+            p.d(),
+            p.nz(),
+            p.ny(),
+            p.nx(),
         )
     }
 
-    /// Create reflection through plane at origin.
-    pub fn from_plane_through_origin(nx: T, ny: T, nz: T) -> Self {
-        let norm = (nx * nx + ny * ny + nz * nz).sqrt();
+    /// Create reflection through plane at origin with Cartesian normal.
+    pub fn from_plane_through_origin(cart_nx: T, cart_ny: T, cart_nz: T) -> Self {
+        let norm = (cart_nx * cart_nx + cart_ny * cart_ny + cart_nz * cart_nz).sqrt();
+        // Convert Cartesian to PGA: nx=cart_nx, ny=-cart_ny (e031 sign), nz=cart_nz, d=0
+        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
         Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
             T::zero(),
-            nx / norm,
-            ny / norm,
-            nz / norm,
-            T::zero(),
+            T::zero(),       // d
+            cart_nz / norm,  // nz
+            -cart_ny / norm, // ny (negated for e031)
+            cart_nx / norm,  // nx
         )
     }
 
@@ -1034,13 +1044,14 @@ impl<T: Float> Flector<T> {
     /// Point part (grade 1).
     #[inline]
     pub fn point_part(&self) -> Point<T> {
-        Point::new(self.e1(), self.e2(), self.e3(), self.e0())
+        Point::new(self.px(), self.py(), self.pz(), self.pw())
     }
 
     /// Plane part (grade 3).
     #[inline]
     pub fn plane_part(&self) -> Plane<T> {
-        Plane::new(self.e023(), self.e031(), self.e012(), self.e123())
+        // Plane::new expects [d, nz, ny, nx]
+        Plane::new(self.d(), self.nz(), self.ny(), self.nx())
     }
 
     /// Check if this is a pure reflection (no point part).
@@ -1060,15 +1071,16 @@ impl<T: Float> Flector<T> {
         if bn < T::epsilon() {
             return *self;
         }
+        // Flector field order: [px, py, pz, pw, d, nz, ny, nx]
         Self::new_unchecked(
-            self.e1() / bn,
-            self.e2() / bn,
-            self.e3() / bn,
-            self.e0() / bn,
-            self.e023() / bn,
-            self.e031() / bn,
-            self.e012() / bn,
-            self.e123() / bn,
+            self.px() / bn,
+            self.py() / bn,
+            self.pz() / bn,
+            self.pw() / bn,
+            self.d() / bn,
+            self.nz() / bn,
+            self.ny() / bn,
+            self.nx() / bn,
         )
     }
 }
@@ -1086,55 +1098,49 @@ mod tests {
         let m = Motor::<f64>::identity();
 
         eprintln!(
-            "Identity motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            "Identity motor: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             m.s(),
-            m.e23(),
-            m.e31(),
-            m.e12(),
-            m.e01(),
-            m.e02(),
-            m.e03(),
-            m.e0123()
+            m.bx(),
+            m.by(),
+            m.bz(),
+            m.tx(),
+            m.ty(),
+            m.tz(),
+            m.ps()
         );
-        eprintln!(
-            "Input point: ({}, {}, {}, {})",
-            p.e1(),
-            p.e2(),
-            p.e3(),
-            p.e0()
-        );
+        eprintln!("Input point: ({}, {}, {}, {})", p.x(), p.y(), p.z(), p.w());
 
         let result = m.transform(&p);
 
         eprintln!(
             "Output point: ({}, {}, {}, {})",
-            result.e1(),
-            result.e2(),
-            result.e3(),
-            result.e0()
+            result.x(),
+            result.y(),
+            result.z(),
+            result.w()
         );
 
         assert!(relative_eq!(
-            result.e1(),
-            p.e1(),
+            result.x(),
+            p.x(),
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e2(),
-            p.e2(),
+            result.y(),
+            p.y(),
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e3(),
-            p.e3(),
+            result.z(),
+            p.z(),
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e0(),
-            p.e0(),
+            result.w(),
+            p.w(),
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
@@ -1146,55 +1152,55 @@ mod tests {
         let t = Motor::<f64>::from_translation(2.0, 0.0, 0.0);
 
         eprintln!(
-            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.e23(),
-            t.e31(),
-            t.e12(),
-            t.e01(),
-            t.e02(),
-            t.e03(),
-            t.e0123()
+            t.bx(),
+            t.by(),
+            t.bz(),
+            t.tx(),
+            t.ty(),
+            t.tz(),
+            t.ps()
         );
         eprintln!(
             "Origin: ({}, {}, {}, {})",
-            origin.e1(),
-            origin.e2(),
-            origin.e3(),
-            origin.e0()
+            origin.x(),
+            origin.y(),
+            origin.z(),
+            origin.w()
         );
 
         let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
-            result.e1(),
-            result.e2(),
-            result.e3(),
-            result.e0()
+            result.x(),
+            result.y(),
+            result.z(),
+            result.w()
         );
 
         // Expected: (2, 0, 0) with w=1
         assert!(relative_eq!(
-            result.e1(),
+            result.x(),
             2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e2(),
+            result.y(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e3(),
+            result.z(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e0(),
+            result.w(),
             1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -1207,49 +1213,49 @@ mod tests {
         let t = Motor::<f64>::from_translation(0.0, -19.26, 0.0);
 
         eprintln!(
-            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.e23(),
-            t.e31(),
-            t.e12(),
-            t.e01(),
-            t.e02(),
-            t.e03(),
-            t.e0123()
+            t.bx(),
+            t.by(),
+            t.bz(),
+            t.tx(),
+            t.ty(),
+            t.tz(),
+            t.ps()
         );
         eprintln!(
             "Origin: ({}, {}, {}, {})",
-            origin.e1(),
-            origin.e2(),
-            origin.e3(),
-            origin.e0()
+            origin.x(),
+            origin.y(),
+            origin.z(),
+            origin.w()
         );
 
         let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
-            result.e1(),
-            result.e2(),
-            result.e3(),
-            result.e0()
+            result.x(),
+            result.y(),
+            result.z(),
+            result.w()
         );
 
         // Expected: (0, -19.26, 0) with w=1
         assert!(relative_eq!(
-            result.e1(),
+            result.x(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e2(),
+            result.y(),
             -19.26,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e3(),
+            result.z(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -1262,42 +1268,42 @@ mod tests {
         let t = Motor::<f64>::from_translation(0.0, 0.0, 5.0);
 
         eprintln!(
-            "Motor T: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+            "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.e23(),
-            t.e31(),
-            t.e12(),
-            t.e01(),
-            t.e02(),
-            t.e03(),
-            t.e0123()
+            t.bx(),
+            t.by(),
+            t.bz(),
+            t.tx(),
+            t.ty(),
+            t.tz(),
+            t.ps()
         );
 
         let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
-            result.e1(),
-            result.e2(),
-            result.e3(),
-            result.e0()
+            result.x(),
+            result.y(),
+            result.z(),
+            result.w()
         );
 
         // Expected: (0, 0, 5) with w=1
         assert!(relative_eq!(
-            result.e1(),
+            result.x(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e2(),
+            result.y(),
             0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.e3(),
+            result.z(),
             5.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -1310,49 +1316,44 @@ mod tests {
         let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
 
         eprintln!(
-            "Flector: e1={}, e2={}, e3={}, e0={}, e023={}, e031={}, e012={}, e123={}",
-            f.e1(),
-            f.e2(),
-            f.e3(),
-            f.e0(),
-            f.e023(),
-            f.e031(),
-            f.e012(),
-            f.e123()
+            "Flector: px={}, py={}, pz={}, pw={}, nx={}, ny={}, nz={}, d={}",
+            f.px(),
+            f.py(),
+            f.pz(),
+            f.pw(),
+            f.nx(),
+            f.ny(),
+            f.nz(),
+            f.d()
         );
-        eprintln!(
-            "Input point: ({}, {}, {}, {})",
-            p.e1(),
-            p.e2(),
-            p.e3(),
-            p.e0()
-        );
+        eprintln!("Input point: ({}, {}, {}, {})", p.x(), p.y(), p.z(), p.w());
 
         let result = f.transform(&p);
 
         eprintln!(
             "Output point: ({}, {}, {}, {})",
-            result.e1(),
-            result.e2(),
-            result.e3(),
-            result.e0()
+            result.x(),
+            result.y(),
+            result.z(),
+            result.w()
         );
 
         // Reflecting (1, 2, 3) through XY plane should give (1, 2, -3)
+        // Use Cartesian coordinates (normalized by w) since homogeneous coords may have sign flip
         assert!(relative_eq!(
-            result.x(),
+            result.cartesian_x(),
             1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.y(),
+            result.cartesian_y(),
             2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.z(),
+            result.cartesian_z(),
             -3.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -1368,19 +1369,19 @@ mod tests {
 
         // Reflecting (1, 2, 3) through YZ plane should give (-1, 2, 3)
         assert!(relative_eq!(
-            result.x(),
+            result.cartesian_x(),
             -1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.y(),
+            result.cartesian_y(),
             2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.z(),
+            result.cartesian_z(),
             3.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -1396,19 +1397,19 @@ mod tests {
 
         // Reflecting (1, 2, 3) through XZ plane should give (1, -2, 3)
         assert!(relative_eq!(
-            result.x(),
+            result.cartesian_x(),
             1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.y(),
+            result.cartesian_y(),
             -2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.z(),
+            result.cartesian_z(),
             3.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS

@@ -27,9 +27,9 @@ fields = ["x", "y"]
 [types.Bivector]
 grades = [2]
 description = "2D bivector (pseudoscalar)"
-fields = ["xy"]
+fields = ["b"]
 
 [types.Rotor]
 grades = [0, 2]
 description = "2D rotor (unit versor for rotations)"
-fields = ["s", "xy"]
+fields = ["s", "b"]

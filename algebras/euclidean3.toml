@@ -27,17 +27,17 @@ fields = ["x", "y", "z"]
 [types.Bivector]
 grades = [2]
 description = "3D bivector"
-fields = ["xy", "xz", "yz"]
+fields = ["bz", "by", "bx"]
 
 [types.Rotor]
 grades = [0, 2]
 description = "3D rotor (unit versor for rotations)"
-fields = ["s", "xy", "xz", "yz"]
+fields = ["s", "bz", "by", "bx"]
 
 [types.Trivector]
 grades = [3]
 description = "3D trivector (pseudoscalar)"
-fields = ["xyz"]
+fields = ["ps"]
 
 # Note: Entity_0_3 (scalar + pseudoscalar) is valid but rarely used
 # Note: Entity_1_3 (vector + trivector) is the odd subalgebra

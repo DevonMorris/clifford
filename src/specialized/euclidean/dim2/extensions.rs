@@ -54,19 +54,15 @@ impl<T: Float> Vector<T> {
 
 impl<T: Float> Bivector<T> {
     /// Creates the unit bivector `e₁₂`.
-    ///
-    /// Alias for `unit_xy()` for backward compatibility.
     #[inline]
     pub fn unit() -> Self {
-        Self::unit_xy()
+        Self::unit_b()
     }
 
-    /// Returns the coefficient (alias for `xy()`).
-    ///
-    /// Provided for backward compatibility.
+    /// Returns the coefficient (alias for `b()`).
     #[inline]
     pub fn value(&self) -> T {
-        self.xy()
+        self.b()
     }
 }
 
@@ -137,7 +133,7 @@ impl<T: Float> Rotor<T> {
         let norm_sq = self.norm_squared();
         let rev = self.reverse();
         // Use new_unchecked since inverse preserves unit constraint
-        Self::new_unchecked(rev.s() / norm_sq, rev.xy() / norm_sq)
+        Self::new_unchecked(rev.s() / norm_sq, rev.b() / norm_sq)
     }
 
     /// Applies this rotation to a vector using the sandwich product: `v' = R v R̃`.
@@ -185,7 +181,7 @@ impl<T: Float> Rotor<T> {
     pub fn lerp(&self, other: Self, t: T) -> Self {
         Self::new_unchecked(
             self.s() * (T::one() - t) + other.s() * t,
-            self.xy() * (T::one() - t) + other.xy() * t,
+            self.b() * (T::one() - t) + other.b() * t,
         )
         .normalize()
     }
@@ -201,7 +197,7 @@ impl<T: Float> Rotor<T> {
     /// * `t` - Interpolation parameter in [0, 1]
     #[inline]
     pub fn slerp(&self, other: Self, t: T) -> Self {
-        let dot = self.s() * other.s() + self.xy() * other.xy();
+        let dot = self.s() * other.s() + self.b() * other.b();
 
         let dot = if dot > T::one() {
             T::one()
@@ -224,7 +220,7 @@ impl<T: Float> Rotor<T> {
         // Spherical interpolation preserves unit norm
         Self::new_unchecked(
             self.s() * s1 + other.s() * s2,
-            self.xy() * s1 + other.xy() * s2,
+            self.b() * s1 + other.b() * s2,
         )
     }
 
@@ -235,6 +231,6 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn angle(&self) -> T {
         // Negate xy because from_angle stores -sin(θ/2) in the bivector component
-        T::atan2(-self.xy(), self.s()) * T::TWO
+        T::atan2(-self.b(), self.s()) * T::TWO
     }
 }
