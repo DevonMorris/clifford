@@ -451,7 +451,7 @@ impl<T: Float> Point<T> {
     pub fn unit_e2() -> Self {
         Self::new(T::zero(), T::one(), T::zero())
     }
-    #[doc = "Creates the unit e3 element."]
+    #[doc = "Creates the unit e0 element."]
     #[inline]
     pub fn unit_e0() -> Self {
         Self::new(T::zero(), T::zero(), T::one())

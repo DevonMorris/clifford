@@ -675,7 +675,7 @@ pub trait Transform<Operand> {
     /// The output type (same as operand for grade-preserving transforms).
     type Output;
 
-    /// Transforms the operand using `self × operand × rev(self)` (sandwich product).
+    /// Transforms the operand using `self ⊛ operand ⊛ antirev(self)` (antisandwich product).
     fn transform(&self, operand: &Operand) -> Self::Output;
 }
 
