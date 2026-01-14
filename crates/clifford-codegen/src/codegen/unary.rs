@@ -82,13 +82,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #type_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #type_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #type_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Reverses the {} (negates grades where k(k-1)/2 is odd).",
@@ -140,13 +134,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #type_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #type_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #type_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Antireverses the {} (negates grades where (n-k)(n-k-1)/2 is odd).",
@@ -225,13 +213,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !output_type.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #output_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #output_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #output_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Computes the right complement of {} -> {}.",

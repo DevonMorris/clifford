@@ -45,8 +45,7 @@ mod dim2_tests {
 
         /// Rotation equivalence: clifford and nalgebra rotations produce same result
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
-        fn rotation_equivalence(
+                fn rotation_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             vx in -100.0..100.0,
             vy in -100.0..100.0,
@@ -101,8 +100,7 @@ mod dim3_tests {
 
         /// Bivector to nalgebra vector matches Bivector::dual()
         #[test]
-        #[ignore = "dual needs generated Hodge star"]
-        fn bivector_to_vector_matches_dual(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
+                fn bivector_to_vector_matches_dual(xy in -100.0..100.0, xz in -100.0..100.0, yz in -100.0..100.0) {
             let b = dim3::Bivector::new(xy, xz, yz);
             let dual = b.dual();
             let na_v: na::Vector3<f64> = b.into();
@@ -141,7 +139,6 @@ mod dim3_tests {
 
         /// Rotor <-> UnitQuaternion rotation equivalence
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
         fn rotor_quaternion_rotation_equivalence(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             axis_x in -1.0f64..1.0,
@@ -153,12 +150,15 @@ mod dim3_tests {
         ) {
             // Normalize axis
             let axis_norm = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
-            let (ax, ay, az) = (axis_x / axis_norm, axis_y / axis_norm, axis_z / axis_norm);
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(
+                axis_x / axis_norm,
+                axis_y / axis_norm,
+                axis_z / axis_norm,
+            ));
 
-            // Create rotor from angle and plane (plane is perpendicular to axis)
-            // The dual of the axis vector gives the rotation plane bivector
-            let plane = dim3::Bivector::new(az, -ay, ax); // dual of axis
-            let rotor = dim3::Rotor::from_angle_plane(angle, plane.normalized());
+            // Create rotor from quaternion
+            let q = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
+            let rotor: dim3::Rotor<f64> = q.into();
 
             let v = dim3::Vector::new(vx, vy, vz);
 
@@ -166,9 +166,9 @@ mod dim3_tests {
             let rotated_cliff = rotor.rotate(v);
 
             // Rotate with nalgebra quaternion
-            let q: na::UnitQuaternion<f64> = rotor.into();
+            let q_back: na::UnitQuaternion<f64> = rotor.into();
             let na_v: na::Vector3<f64> = v.into();
-            let rotated_na = q * na_v;
+            let rotated_na = q_back * na_v;
 
             // Convert back and compare
             let rotated_back: dim3::Vector<f64> = rotated_na.into();
@@ -180,7 +180,6 @@ mod dim3_tests {
 
         /// Rotor <-> Rotation3 roundtrip via rotation equivalence
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
         fn rotor_rotation3_roundtrip(
             angle in -std::f64::consts::PI..std::f64::consts::PI,
             axis_x in -1.0f64..1.0,
@@ -188,10 +187,15 @@ mod dim3_tests {
             axis_z in 0.1f64..1.0,
         ) {
             let axis_norm = (axis_x * axis_x + axis_y * axis_y + axis_z * axis_z).sqrt();
-            let (ax, ay, az) = (axis_x / axis_norm, axis_y / axis_norm, axis_z / axis_norm);
+            let na_axis = na::Unit::new_normalize(na::Vector3::new(
+                axis_x / axis_norm,
+                axis_y / axis_norm,
+                axis_z / axis_norm,
+            ));
 
-            let plane = dim3::Bivector::new(az, -ay, ax).normalized();
-            let rotor = dim3::Rotor::from_angle_plane(angle, plane);
+            // Create rotor from quaternion
+            let q = na::UnitQuaternion::from_axis_angle(&na_axis, angle);
+            let rotor: dim3::Rotor<f64> = q.into();
 
             let rot: na::Rotation3<f64> = rotor.into();
             let back: dim3::Rotor<f64> = rot.into();
@@ -222,15 +226,30 @@ mod dim3_tests {
     fn specific_quaternion_mapping() {
         use std::f64::consts::FRAC_PI_2;
 
-        // 90° rotation around z-axis (xy-plane)
-        let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_2, dim3::Bivector::unit_xy());
-        let q: na::UnitQuaternion<f64> = rotor.into();
+        // 90° rotation around z-axis
+        let na_axis = na::Unit::new_normalize(na::Vector3::z());
+        let q = na::UnitQuaternion::from_axis_angle(&na_axis, FRAC_PI_2);
+        let rotor: dim3::Rotor<f64> = q.into();
 
-        // For xy-plane rotation, quaternion k component should be non-zero
-        // Mapping: (w, i, j, k) = (s, yz, -xz, xy)
-        let q_inner = q.quaternion();
-        assert!(q_inner.k.abs() > 0.1); // xy component -> k
-        assert!(q_inner.i.abs() < ABS_DIFF_EQ_EPS); // yz component -> i
-        assert!(q_inner.j.abs() < ABS_DIFF_EQ_EPS); // -xz component -> j
+        // Convert back and verify roundtrip
+        let q_back: na::UnitQuaternion<f64> = rotor.into();
+        let q_inner = q_back.quaternion();
+
+        // The quaternion should represent a 90° rotation around z
+        // w = cos(45°), k = sin(45°), i = j = 0
+        let expected_w = (std::f64::consts::FRAC_PI_4).cos();
+        let expected_k = (std::f64::consts::FRAC_PI_4).sin();
+        assert!(abs_diff_eq!(
+            q_inner.w,
+            expected_w,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            q_inner.k,
+            expected_k,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(q_inner.i, 0.0, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(q_inner.j, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }
 }

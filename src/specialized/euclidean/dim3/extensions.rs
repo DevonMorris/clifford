@@ -4,7 +4,7 @@
 //! to the generated types that are specific to Euclidean 3D geometry.
 
 use super::generated::types::{Bivector, Rotor, Trivector, Vector};
-use crate::ops::Wedge;
+use crate::ops::{RightComplement, Transform, Wedge};
 use crate::scalar::Float;
 
 // ============================================================================
@@ -37,7 +37,7 @@ impl<T: Float> Vector<T> {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim3::Vector;
     ///
     /// let x = Vector::<f64>::unit_x();
@@ -72,7 +72,7 @@ impl<T: Float> Bivector<T> {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim3::{Vector, Bivector};
     ///
     /// let b = Bivector::<f64>::unit_xy();
@@ -80,7 +80,7 @@ impl<T: Float> Bivector<T> {
     /// ```
     #[inline]
     pub fn dual(&self) -> Vector<T> {
-        todo!("dual needs generated Hodge star")
+        self.right_complement()
     }
 
     /// Returns a normalized (unit) bivector.
@@ -117,31 +117,28 @@ impl<T: Float> Trivector<T> {
 }
 
 // ============================================================================
-// Rotor extensions
+// Rotor extensions (grades [0, 2]: scalar + bivector)
 // ============================================================================
 
 impl<T: Float> Rotor<T> {
     /// Returns the bivector part as a Bivector.
-    ///
-    /// Provided for backward compatibility with code that used
-    /// the previous struct layout.
     #[inline]
     pub fn b(&self) -> Bivector<T> {
         Bivector::new(self.xy(), self.xz(), self.yz())
     }
 
-    /// Creates a rotor from an angle and rotation plane (unit bivector).
+    /// Creates a rotor from a rotation angle and plane (bivector).
     ///
-    /// The rotor `R = cos(θ/2) + sin(θ/2)B` rotates by angle `θ` in plane `B`.
+    /// The rotor `R = cos(θ/2) + sin(θ/2)B̂` rotates by angle `θ` in the plane `B`.
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// use clifford::specialized::euclidean::dim3::{Rotor, Bivector, Vector};
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
-    /// // 90° rotation in xy-plane
+    /// // 90° rotation in the xy-plane (around z-axis)
     /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
     /// let v = Vector::unit_x();
     /// let rotated = r.rotate(v);
@@ -150,14 +147,13 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self {
         let half = angle / T::TWO;
-        let cos_half = half.cos();
-        let sin_half = half.sin();
-        // Use new_unchecked since angle/plane construction guarantees unit norm
+        let (sin_half, cos_half) = (half.sin(), half.cos());
+        let b = plane.normalized();
         Self::new_unchecked(
             cos_half,
-            plane.xy() * sin_half,
-            plane.xz() * sin_half,
-            plane.yz() * sin_half,
+            sin_half * b.xy(),
+            sin_half * b.xz(),
+            sin_half * b.yz(),
         )
     }
 
@@ -168,7 +164,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
     /// use approx::abs_diff_eq;
     ///
@@ -178,36 +174,21 @@ impl<T: Float> Rotor<T> {
     /// let rotated = r.rotate(a);
     /// assert!(abs_diff_eq!(rotated.x(), b.x(), epsilon = 1e-10));
     /// assert!(abs_diff_eq!(rotated.y(), b.y(), epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.z(), b.z(), epsilon = 1e-10));
     /// ```
     #[inline]
     pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
-        let dot = a.dot(b);
-        let wedge = a.wedge(&b);
+        // R = (1 + b*a) / |1 + b*a|
+        // This gives the rotor for the shortest rotation from a to b
+        let a_norm = a.normalized();
+        let b_norm = b.normalized();
 
-        let sum_sq = (T::one() + dot) * (T::one() + dot) + wedge.norm_squared();
+        // Compute 1 + b*a = 1 + b·a + b∧a
+        let dot = b_norm.dot(a_norm);
+        let wedge = b_norm.wedge(&a_norm);
 
-        if sum_sq < T::epsilon() {
-            // Vectors are anti-parallel, need to find perpendicular axis
-            let perp = if a.x().abs() < a.y().abs() && a.x().abs() < a.z().abs() {
-                Vector::unit_x()
-            } else if a.y().abs() < a.z().abs() {
-                Vector::unit_y()
-            } else {
-                Vector::unit_z()
-            };
-            let axis = a.cross(perp).normalized();
-            let plane = a.wedge(&axis).normalized();
-            return Self::from_angle_plane(T::PI, plane);
-        }
-
-        let norm = sum_sq.sqrt();
-        // Use new_unchecked since we're constructing from geometric product
-        Self::new_unchecked(
-            (T::one() + dot) / norm,
-            wedge.xy() / norm,
-            wedge.xz() / norm,
-            wedge.yz() / norm,
-        )
+        let r = Self::new_unchecked(T::one() + dot, wedge.xy(), wedge.xz(), wedge.yz());
+        r.normalize()
     }
 
     /// Returns the inverse rotor: `R⁻¹ = R̃ / |R|²`.
@@ -217,7 +198,6 @@ impl<T: Float> Rotor<T> {
     pub fn inverse(&self) -> Self {
         let norm_sq = self.norm_squared();
         let rev = self.reverse();
-        // Use new_unchecked since inverse preserves unit constraint
         Self::new_unchecked(
             rev.s() / norm_sq,
             rev.xy() / norm_sq,
@@ -226,15 +206,14 @@ impl<T: Float> Rotor<T> {
         )
     }
 
-    /// Applies this rotation to a vector: `v' = R̃ v R`.
+    /// Applies this rotation to a vector via the sandwich product.
     ///
-    /// Note: Some sources use `R v R̃`. We use `R̃ v R` which gives counterclockwise
-    /// rotation when looking along the rotation axis.
+    /// For Euclidean GA (non-degenerate), the Transform trait uses sandwich.
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// use clifford::specialized::euclidean::dim3::{Rotor, Bivector, Vector};
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
@@ -244,8 +223,8 @@ impl<T: Float> Rotor<T> {
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
-    pub fn rotate(&self, _v: Vector<T>) -> Vector<T> {
-        todo!("rotate needs generated sandwich product")
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
+        self.transform(&v)
     }
 
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.
@@ -306,13 +285,3 @@ impl<T: Float> Rotor<T> {
         )
     }
 }
-
-// ============================================================================
-// Even type (alias for Rotor)
-// ============================================================================
-
-/// Even subalgebra element (scalar + bivector).
-///
-/// This is a type alias for [`Rotor`], since in 3D Euclidean GA
-/// the even subalgebra elements and rotors have the same structure.
-pub type Even<T> = Rotor<T>;

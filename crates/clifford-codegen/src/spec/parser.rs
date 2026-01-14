@@ -278,13 +278,10 @@ fn parse_type(
         }
     }
 
-    // Constraints are now inferred automatically during code generation (Phase 4)
-    // No user-defined constraints are read from TOML
-    let constraints = Vec::new();
-
     // Auto-identify versors based on grade parity
-    // A type is a versor if all its grades have the same parity (all even or all odd)
-    let versor = if versor_parity(&raw.grades).is_some() {
+    // A type is a versor if it has MULTIPLE grades that all have the same parity (all even or all odd)
+    // Single-grade types (Point, Line, Vector, etc.) are blades, not versors
+    let versor = if raw.grades.len() > 1 && versor_parity(&raw.grades).is_some() {
         Some(VersorSpec {
             // is_unit will be determined by inferred constraints in Phase 4
             is_unit: false,
@@ -301,7 +298,6 @@ fn parse_type(
         description: raw.description.clone(),
         fields,
         alias_of: raw.alias_of.clone(),
-        constraints,
         versor,
     })
 }
@@ -928,7 +924,6 @@ mod tests {
                 },
             ],
             alias_of: None,
-            constraints: vec![],
             versor: None,
         };
         assert!(super::validate_canonical_field_order(&valid_type));
@@ -956,7 +951,6 @@ mod tests {
                 }, // Wrong!
             ],
             alias_of: None,
-            constraints: vec![],
             versor: None,
         };
         assert!(!super::validate_canonical_field_order(&invalid_type));
@@ -989,7 +983,6 @@ mod tests {
                 },
             ],
             alias_of: None,
-            constraints: vec![],
             versor: None,
         };
         assert!(super::validate_canonical_field_order(&valid_rotor));

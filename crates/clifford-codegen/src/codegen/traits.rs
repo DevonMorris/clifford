@@ -147,13 +147,23 @@ impl<'a> TraitsGenerator<'a> {
             .map(|t| format_ident!("{}", t.name))
             .collect();
 
+        // Check if any Versor trait impls will actually be generated
+        // (versors need Mul output type to match a known type)
+        let has_versor_impls = self.will_generate_versor_impls();
+
+        let versor_import = if has_versor_impls {
+            quote! { Versor, }
+        } else {
+            quote! {}
+        };
+
         quote! {
             use crate::scalar::Float;
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
-                Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
+                Sandwich, Antisandwich, Transform, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot,
-                Reverse, Antireverse, RightComplement, Versor,
+                Reverse, Antireverse, RightComplement, #versor_import
             };
             use super::types::{#(#type_names),*};
 
@@ -220,7 +230,7 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Generates a constructor call.
     fn generate_constructor_call(_ty: &TypeSpec, field_exprs: &[TokenStream]) -> TokenStream {
-        quote! { Self::new(#(#field_exprs),*) }
+        quote! { Self::new_unchecked(#(#field_exprs),*) }
     }
 
     /// Generates Add implementation.
@@ -373,7 +383,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -829,6 +839,29 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // Transform trait - delegates to Sandwich (non-degenerate) or Antisandwich (degenerate)
+        // based on whether the algebra has zero elements in its signature
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(
+                            self.generate_transform_trait_from_versor(versor_type, target_type),
+                        );
+                    }
+                }
+            }
+        }
+
         // Versor trait - generated for versor types (Rotor, Motor, Flector)
         // Provides compose() method for versor composition
         impls.extend(self.generate_versor_traits());
@@ -1022,7 +1055,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1057,7 +1090,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1092,7 +1125,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1127,7 +1160,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1158,7 +1191,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if operand.versor.is_some() {
             quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #operand_name::new(#(#field_exprs),*) }
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         };
 
         // For sandwich, output is typically same type as operand
@@ -1190,7 +1223,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if operand.versor.is_some() {
             quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #operand_name::new(#(#field_exprs),*) }
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         };
 
         // For antisandwich, output is typically same type as operand
@@ -1201,6 +1234,41 @@ impl<'a> TraitsGenerator<'a> {
                 #[inline]
                 fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
                     #constructor_call
+                }
+            }
+        }
+    }
+
+    /// Generates Transform trait impl from versor type.
+    ///
+    /// The Transform trait delegates to either Sandwich or Antisandwich based on
+    /// whether the algebra has degenerate elements (zero basis vectors):
+    /// - Non-degenerate (r = 0): uses Sandwich
+    /// - Degenerate (r > 0): uses Antisandwich
+    fn generate_transform_trait_from_versor(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+
+        // Check if algebra is degenerate (has zero elements in signature)
+        let is_degenerate = self.spec.signature.r > 0;
+
+        let method_call = if is_degenerate {
+            quote! { self.antisandwich(operand) }
+        } else {
+            quote! { self.sandwich(operand) }
+        };
+
+        quote! {
+            impl<T: Float> Transform<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn transform(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                    #method_call
                 }
             }
         }
@@ -1292,6 +1360,28 @@ impl<'a> TraitsGenerator<'a> {
         None
     }
 
+    /// Checks if any Versor trait impls will be generated.
+    ///
+    /// Returns true if there's at least one pair of versor types where
+    /// their geometric product produces a known output type.
+    fn will_generate_versor_impls(&self) -> bool {
+        let versor_types: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none() && t.versor.is_some())
+            .collect();
+
+        for lhs in &versor_types {
+            for rhs in &versor_types {
+                if self.find_mul_output_type(&lhs.name, &rhs.name).is_some() {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     /// Generates ScalarProduct trait impl.
     fn generate_scalar_product_trait(
         &self,
@@ -1338,7 +1428,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1373,7 +1463,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1408,7 +1498,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1443,7 +1533,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1469,55 +1559,20 @@ impl<'a> TraitsGenerator<'a> {
     ///
     /// A type is a valid target if the sandwich product V * X * rev(V) produces
     /// the same grades as X (grade-preserving transformation).
-    fn infer_sandwich_targets(&self, versor_type: &TypeSpec) -> Vec<String> {
-        let mut targets = Vec::new();
-        let dim = self.algebra.dim();
-
-        for candidate in &self.spec.types {
-            // Skip aliases
-            if candidate.alias_of.is_some() {
-                continue;
-            }
-
-            // Check if sandwich preserves grades
-            let output_grades =
-                self.compute_sandwich_output_grades(&versor_type.grades, &candidate.grades, dim);
-
-            // Valid target if output grades exactly match candidate grades
-            let candidate_grades_set: std::collections::HashSet<usize> =
-                candidate.grades.iter().copied().collect();
-            if output_grades == candidate_grades_set {
-                targets.push(candidate.name.clone());
-            }
-        }
-
-        targets
-    }
-
-    /// Computes output grades of a sandwich product V * X * rev(V).
-    fn compute_sandwich_output_grades(
-        &self,
-        versor_grades: &[usize],
-        operand_grades: &[usize],
-        dim: usize,
-    ) -> std::collections::HashSet<usize> {
-        use crate::algebra::geometric_grades;
-        let mut output = std::collections::HashSet::new();
-
-        for &vg in versor_grades {
-            for &xg in operand_grades {
-                for &wg in versor_grades {
-                    // Compute possible output grades from v * x * w
-                    let vx_grades = geometric_grades(vg, xg, dim);
-                    for vxg in vx_grades {
-                        let vxw_grades = geometric_grades(vxg, wg, dim);
-                        output.extend(vxw_grades);
-                    }
-                }
-            }
-        }
-
-        output
+    fn infer_sandwich_targets(&self, _versor_type: &TypeSpec) -> Vec<String> {
+        // Versors have the grade-preserving property: V * X * rev(V) preserves the grade of X.
+        // This means ANY type can be a valid sandwich target for a versor.
+        // We include all non-alias types as valid targets.
+        //
+        // Note: This is a fundamental property of versors in geometric algebra.
+        // A versor is a product of unit vectors, and conjugation by a versor
+        // preserves grades (it only rotates/reflects within each grade subspace).
+        self.spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none())
+            .map(|t| t.name.clone())
+            .collect()
     }
 
     // ========================================================================
@@ -1544,13 +1599,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { Self::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { Self::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { Self::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Reverse for #type_name<T> {
@@ -1584,13 +1633,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !ty.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { Self::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { Self::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { Self::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Antireverse for #type_name<T> {
@@ -1641,13 +1684,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        // Use unchecked constructor for constrained output types
-        let has_constraints = !output_type.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             impl<T: Float> RightComplement for #type_name<T> {
@@ -1774,7 +1811,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn scale(&self, factor: T) -> Self {
-                    Self::new(#(#scale_fields),*)
+                    Self::new_unchecked(#(#scale_fields),*)
                 }
             }
         }
@@ -1868,7 +1905,7 @@ impl<'a> TraitsGenerator<'a> {
                         None
                     } else {
                         let inv_w = T::one() / w;
-                        Some(Self::new(#(#scale_fields),*))
+                        Some(Self::new_unchecked(#(#scale_fields),*))
                     }
                 }
             }
@@ -2144,7 +2181,7 @@ impl<'a> TraitsGenerator<'a> {
                         (-100.0f64..100.0)
                             #filter_chain
                             .prop_map(|#var| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2160,7 +2197,7 @@ impl<'a> TraitsGenerator<'a> {
                         (#(#range_tuple),*)
                             #filter_chain
                             .prop_map(|(#(#prop_map_args),*)| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2257,7 +2294,7 @@ impl<'a> TraitsGenerator<'a> {
                 fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                     (#(#range_tuple),*)
                         .prop_map(|(#(#prop_map_args),*)| {
-                            #name::new(#(#field_inits),*)
+                            #name::new_unchecked(#(#field_inits),*)
                         })
                         .boxed()
                 }
@@ -2291,7 +2328,7 @@ impl<'a> TraitsGenerator<'a> {
                     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                         (-100.0f64..100.0)
                             .prop_map(|x0| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2313,7 +2350,7 @@ impl<'a> TraitsGenerator<'a> {
                     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                         (#(#range_tuple),*)
                             .prop_map(|(#(#prop_map_args),*)| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }

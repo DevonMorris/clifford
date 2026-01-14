@@ -258,7 +258,7 @@ impl<T: Float + na::Scalar> TryFrom<na::Matrix3<T>> for Bivector<T> {
 // ============================================================================
 
 impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
-    /// Converts a 3D rotor to a nalgebra unit quaternion.
+    /// Converts a 3D rotor (grades [0, 2]) to a nalgebra unit quaternion.
     ///
     /// # Mathematical Correspondence
     ///
@@ -266,81 +266,51 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     /// `q = w + i·i + j·j + k·k` where:
     ///
     /// - `w = s` (scalar part)
-    /// - `i = yz` (rotation in yz-plane ↔ around x-axis)
-    /// - `j = -xz` (rotation in xz-plane ↔ around y-axis, note sign)
-    /// - `k = xy` (rotation in xy-plane ↔ around z-axis)
+    /// - `i = -yz` (e₂₃ rotation = around x-axis, negated for sandwich direction)
+    /// - `j = xz` (e₁₃ rotation = around y-axis)
+    /// - `k = -xy` (e₁₂ rotation = around z-axis, negated for sandwich direction)
     ///
-    /// The sign difference for `j` arises from the handedness conventions:
-    /// bivector `e₁₃` represents the xz-plane with orientation `e₁ ∧ e₃`,
-    /// while quaternion `j` rotates around the positive y-axis.
+    /// Note: The bivector components are negated because the sandwich product
+    /// `R v R̃` rotates in the opposite direction from what the rotor components
+    /// suggest. This negation ensures the quaternion produces the same rotation.
     ///
     /// # Normalization
     ///
     /// The input rotor is normalized before conversion to ensure a valid
     /// unit quaternion.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor};
-    /// use nalgebra::UnitQuaternion;
-    /// use std::f64::consts::FRAC_PI_2;
-    ///
-    /// // 90° rotation around z-axis
-    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
-    /// let q: UnitQuaternion<f64> = rotor.into();
-    ///
-    /// // Verify the quaternion represents the same rotation
-    /// let axis = q.axis().unwrap();
-    /// assert!((axis.z.abs() - 1.0).abs() < 1e-10); // rotation around z
-    /// ```
     #[inline]
     fn from(rotor: Rotor<T>) -> Self {
         let r = rotor.normalize();
-        // Mapping: (w, i, j, k) = (s, yz, -xz, xy)
-        let q = na::Quaternion::new(r.s(), r.b().yz(), -r.b().xz(), r.b().xy());
+        // Negate bivector components: sandwich R v R̃ rotates opposite to rotor angle
+        // Mapping: (w, i, j, k) = (s, -yz, xz, -xy)
+        let q = na::Quaternion::new(r.s(), -r.yz(), r.xz(), -r.xy());
         na::UnitQuaternion::new_normalize(q)
     }
 }
 
 impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
-    /// Converts a nalgebra unit quaternion to a 3D rotor.
+    /// Converts a nalgebra unit quaternion to a 3D rotor (grades [0, 2]).
     ///
     /// # Mathematical Correspondence
     ///
     /// A quaternion `q = w + i·i + j·j + k·k` maps to rotor
     /// `R = s + xy·e₁₂ + xz·e₁₃ + yz·e₂₃` where:
     ///
-    /// - `s = w` (scalar part)
-    /// - `xy = k` (xy-plane ↔ z-axis rotation)
-    /// - `xz = -j` (xz-plane ↔ y-axis rotation, note sign)
-    /// - `yz = i` (yz-plane ↔ x-axis rotation)
+    /// - `s = w` (scalar from quaternion scalar)
+    /// - `xy = -k` (e₁₂ from negated quaternion k, for sandwich direction)
+    /// - `xz = j` (e₁₃ from quaternion j)
+    /// - `yz = -i` (e₂₃ from negated quaternion i, for sandwich direction)
     ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
-    /// use nalgebra::{UnitQuaternion, Vector3};
-    /// use std::f64::consts::FRAC_PI_2;
-    ///
-    /// // Create quaternion for 90° rotation around z-axis
-    /// let q = UnitQuaternion::from_axis_angle(
-    ///     &nalgebra::Unit::new_normalize(Vector3::z()),
-    ///     FRAC_PI_2,
-    /// );
-    /// let rotor: Rotor<f64> = q.into();
-    ///
-    /// // Apply rotation: x-axis should become y-axis
-    /// let v = Vector::unit_x();
-    /// let rotated = rotor.rotate(v);
-    /// assert!((rotated.y - 1.0).abs() < 1e-10);
-    /// ```
+    /// Note: The bivector components are negated because the sandwich product
+    /// `R v R̃` rotates in the opposite direction from what the rotor components
+    /// suggest. This negation ensures the rotor produces the same rotation as
+    /// the input quaternion.
     #[inline]
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
-        // Inverse mapping: s=w, xy=k, xz=-j, yz=i
+        // Inverse mapping with negation: (s, xy, xz, yz) = (w, -k, j, -i)
         // Use new_unchecked since unit quaternion guarantees unit rotor
-        Rotor::new_unchecked(q.w, q.k, -q.j, q.i)
+        Rotor::new_unchecked(q.w, -q.k, q.j, -q.i)
     }
 }
 
@@ -403,6 +373,7 @@ impl<T: Float + na::RealField> From<na::Rotation3<T>> for Rotor<T> {
 mod tests {
     use super::*;
     use crate::test_utils::RELATIVE_EQ_EPS;
+    use crate::wrappers::Unit;
     use approx::relative_eq;
     use proptest::prelude::*;
 
@@ -442,11 +413,8 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
-        fn rotor_quaternion_roundtrip(r in any::<Rotor<f64>>()) {
-            // Normalize for this test
-            let r = r.normalize();
-            let q: na::UnitQuaternion<f64> = r.into();
+        fn rotor_quaternion_roundtrip(r in any::<Unit<Rotor<f64>>>()) {
+            let q: na::UnitQuaternion<f64> = r.into_inner().into();
             let back: Rotor<f64> = q.into();
 
             // Rotors have double cover: r and -r represent the same rotation
@@ -458,10 +426,8 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
-        fn rotor_rotation3_roundtrip(r in any::<Rotor<f64>>()) {
-            let r = r.normalize();
-            let rot: na::Rotation3<f64> = r.into();
+        fn rotor_rotation3_roundtrip(r in any::<Unit<Rotor<f64>>>()) {
+            let rot: na::Rotation3<f64> = r.into_inner().into();
             let back: Rotor<f64> = rot.into();
 
             let test_v = Vector::new(1.0, 2.0, 3.0);
@@ -471,19 +437,17 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
         fn rotor_quaternion_rotation_equivalence(
-            r in any::<Rotor<f64>>(),
+            r in any::<Unit<Rotor<f64>>>(),
             v in any::<Vector<f64>>(),
         ) {
-            let r = r.normalize();
             let na_v: na::Vector3<f64> = v.into();
 
             // Rotate with clifford rotor
             let rotated_ga = r.rotate(v);
 
             // Rotate with nalgebra quaternion
-            let q: na::UnitQuaternion<f64> = r.into();
+            let q: na::UnitQuaternion<f64> = r.into_inner().into();
             let rotated_na = q * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();
@@ -491,7 +455,6 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "dual needs generated Hodge star"]
         fn bivector_dual_matches_method(b in any::<Bivector<f64>>()) {
             // Conversion to nalgebra should match the dual() method
             let na_v: na::Vector3<f64> = b.into();

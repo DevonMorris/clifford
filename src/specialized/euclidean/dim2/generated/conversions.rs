@@ -33,7 +33,7 @@ impl<T: Float> From<Multivector<T, Euclidean2>> for Bivector<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Euclidean2>) -> Self {
-        Self::new(mv.get(Blade::from_index(3usize)))
+        Self::new_unchecked(mv.get(Blade::from_index(3usize)))
     }
 }
 impl<T: Float> From<Multivector<T, Euclidean2>> for Rotor<T> {
@@ -42,7 +42,7 @@ impl<T: Float> From<Multivector<T, Euclidean2>> for Rotor<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Euclidean2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(0usize)),
             mv.get(Blade::from_index(3usize)),
         )
@@ -54,7 +54,7 @@ impl<T: Float> From<Multivector<T, Euclidean2>> for Scalar<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Euclidean2>) -> Self {
-        Self::new(mv.get(Blade::from_index(0usize)))
+        Self::new_unchecked(mv.get(Blade::from_index(0usize)))
     }
 }
 impl<T: Float> From<Multivector<T, Euclidean2>> for Vector<T> {
@@ -63,7 +63,7 @@ impl<T: Float> From<Multivector<T, Euclidean2>> for Vector<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Euclidean2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(1usize)),
             mv.get(Blade::from_index(2usize)),
         )

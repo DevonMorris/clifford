@@ -126,12 +126,6 @@ pub struct TypeSpec {
     pub fields: Vec<FieldSpec>,
     /// If this type aliases another (same storage layout).
     pub alias_of: Option<String>,
-    /// Constraints on this type (both algebraic and user-defined).
-    ///
-    /// Constraints with `solve_for` reduce the parameter count in constructors.
-    /// Linear constraints are always solvable; quadratic constraints may require
-    /// `Option<Self>` return type due to domain restrictions.
-    pub constraints: Vec<UserConstraint>,
     /// Versor information (if this type is a versor).
     ///
     /// If present, this type can transform other elements via the sandwich
@@ -154,70 +148,6 @@ pub struct VersorSpec {
     ///
     /// Empty means auto-detect based on grade compatibility.
     pub sandwich_targets: Vec<String>,
-}
-
-/// Sign convention for constraints with ± ambiguity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum SignConvention {
-    /// Use positive root (default).
-    #[default]
-    Positive,
-    /// Use negative root.
-    Negative,
-}
-
-/// User-defined constraint on a type.
-#[derive(Debug, Clone)]
-pub struct UserConstraint {
-    /// Constraint name (e.g., "unit", "normalized").
-    pub name: String,
-    /// Documentation.
-    pub description: Option<String>,
-    /// Constraint expression (e.g., "s*s + e12*e12 + e13*e13 + e23*e23 = 1").
-    pub expression: String,
-    /// Field to solve for. If present, this constraint reduces the parameter count.
-    pub solve_for: Option<String>,
-    /// Sign convention for ± ambiguity.
-    pub sign: SignConvention,
-    /// Enforcement method to generate (e.g., "normalize").
-    pub enforce: Option<String>,
-    /// Whether this constraint has domain restrictions (e.g., requires sqrt).
-    /// If true, `new()` returns `Option<Self>`.
-    pub has_domain_restriction: bool,
-}
-
-impl TypeSpec {
-    /// Returns true if this type has any constraints.
-    pub fn has_constraint(&self) -> bool {
-        !self.constraints.is_empty()
-    }
-
-    /// Returns all solve_for fields that need to be computed.
-    pub fn solve_for_fields(&self) -> Vec<&str> {
-        self.constraints
-            .iter()
-            .filter_map(|c| c.solve_for.as_deref())
-            .collect()
-    }
-
-    /// Returns true if any solvable constraint has domain restrictions.
-    ///
-    /// If true, `new()` should return `Option<Self>` instead of `Self`.
-    pub fn has_domain_restrictions(&self) -> bool {
-        self.constraints
-            .iter()
-            .any(|c| c.solve_for.is_some() && c.has_domain_restriction)
-    }
-
-    /// Returns all user-defined constraints that should be solved.
-    pub fn solvable_user_constraints(&self) -> impl Iterator<Item = &UserConstraint> {
-        self.constraints.iter().filter(|c| c.solve_for.is_some())
-    }
-
-    /// Returns all user-defined constraints with enforcement methods.
-    pub fn enforceable_constraints(&self) -> impl Iterator<Item = &UserConstraint> {
-        self.constraints.iter().filter(|c| c.enforce.is_some())
-    }
 }
 
 /// A field in a type.

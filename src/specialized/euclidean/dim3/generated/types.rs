@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "3D bivector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Bivector;\n\nlet v = Bivector::new(1.0, 2.0, 3.0);\n```"]
+#[doc = "3D bivector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Bivector;\n\nlet v = Bivector::new_unchecked(1.0, 2.0, 3.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -53,22 +53,22 @@ impl<T: Float> Bivector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1e2 element."]
     #[inline]
     pub fn unit_xy() -> Self {
-        Self::new(T::one(), T::zero(), T::zero())
+        Self::new_unchecked(T::one(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1e3 element."]
     #[inline]
     pub fn unit_xz() -> Self {
-        Self::new(T::zero(), T::one(), T::zero())
+        Self::new_unchecked(T::zero(), T::one(), T::zero())
     }
     #[doc = "Creates the unit e2e3 element."]
     #[inline]
     pub fn unit_yz() -> Self {
-        Self::new(T::zero(), T::zero(), T::one())
+        Self::new_unchecked(T::zero(), T::zero(), T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -106,7 +106,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.xy * s, self.xz * s, self.yz * s)
+        Self::new_unchecked(self.xy * s, self.xz * s, self.yz * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -119,7 +119,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(-self.xy, -self.xz, -self.yz)
+        Self::new_unchecked(-self.xy, -self.xz, -self.yz)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -134,7 +134,7 @@ impl<T: Float> Bivector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(self.xy, self.xz, self.yz)
+        Self::new_unchecked(self.xy, self.xz, self.yz)
     }
 }
 impl<T: Float> Default for Bivector<T> {
@@ -142,7 +142,7 @@ impl<T: Float> Default for Bivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Rotor;\n\nlet v = Rotor::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Rotor;\n\nlet v = Rotor::new_unchecked(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -194,7 +194,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -232,7 +232,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.s * s, self.xy * s, self.xz * s, self.yz * s)
+        Self::new_unchecked(self.s * s, self.xy * s, self.xz * s, self.yz * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -245,7 +245,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.s, -self.xy, -self.xz, -self.yz)
+        Self::new_unchecked(self.s, -self.xy, -self.xz, -self.yz)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -260,7 +260,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.s, self.xy, self.xz, self.yz)
+        Self::new_unchecked(-self.s, self.xy, self.xz, self.yz)
     }
 }
 impl<T: Float> Default for Rotor<T> {
@@ -268,7 +268,7 @@ impl<T: Float> Default for Rotor<T> {
         Self::zero()
     }
 }
-#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
+#[doc = "Scalar (grade-0 element)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Scalar;\n\nlet v = Scalar::new_unchecked(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -299,12 +299,12 @@ impl<T: Float> Scalar<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero())
+        Self::new_unchecked(T::zero())
     }
     #[doc = "Creates the unit s element."]
     #[inline]
     pub fn unit_s() -> Self {
-        Self::new(T::one())
+        Self::new_unchecked(T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -342,7 +342,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.s * s)
+        Self::new_unchecked(self.s * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -355,7 +355,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.s)
+        Self::new_unchecked(self.s)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -370,7 +370,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.s)
+        Self::new_unchecked(-self.s)
     }
 }
 impl<T: Float> Default for Scalar<T> {
@@ -378,7 +378,7 @@ impl<T: Float> Default for Scalar<T> {
         Self::zero()
     }
 }
-#[doc = "3D trivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `xyz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Trivector;\n\nlet v = Trivector::new(1.0);\n```"]
+#[doc = "3D trivector (pseudoscalar)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 7 | e1e2e3 | `xyz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Trivector;\n\nlet v = Trivector::new_unchecked(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -409,12 +409,12 @@ impl<T: Float> Trivector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero())
+        Self::new_unchecked(T::zero())
     }
     #[doc = "Creates the unit e1e2e3 element."]
     #[inline]
     pub fn unit_xyz() -> Self {
-        Self::new(T::one())
+        Self::new_unchecked(T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -452,7 +452,7 @@ impl<T: Float> Trivector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.xyz * s)
+        Self::new_unchecked(self.xyz * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -465,7 +465,7 @@ impl<T: Float> Trivector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(-self.xyz)
+        Self::new_unchecked(-self.xyz)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -480,7 +480,7 @@ impl<T: Float> Trivector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(self.xyz)
+        Self::new_unchecked(self.xyz)
     }
 }
 impl<T: Float> Default for Trivector<T> {
@@ -488,7 +488,7 @@ impl<T: Float> Default for Trivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n| 4 | e3 | `z` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Vector;\n\nlet v = Vector::new(1.0, 2.0, 3.0);\n```"]
+#[doc = "3D vector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n| 4 | e3 | `z` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Vector;\n\nlet v = Vector::new_unchecked(1.0, 2.0, 3.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -533,22 +533,22 @@ impl<T: Float> Vector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1 element."]
     #[inline]
     pub fn unit_x() -> Self {
-        Self::new(T::one(), T::zero(), T::zero())
+        Self::new_unchecked(T::one(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e2 element."]
     #[inline]
     pub fn unit_y() -> Self {
-        Self::new(T::zero(), T::one(), T::zero())
+        Self::new_unchecked(T::zero(), T::one(), T::zero())
     }
     #[doc = "Creates the unit e3 element."]
     #[inline]
     pub fn unit_z() -> Self {
-        Self::new(T::zero(), T::zero(), T::one())
+        Self::new_unchecked(T::zero(), T::zero(), T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -586,7 +586,7 @@ impl<T: Float> Vector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.x * s, self.y * s, self.z * s)
+        Self::new_unchecked(self.x * s, self.y * s, self.z * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -599,7 +599,7 @@ impl<T: Float> Vector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.x, self.y, self.z)
+        Self::new_unchecked(self.x, self.y, self.z)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -614,7 +614,7 @@ impl<T: Float> Vector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.x, -self.y, -self.z)
+        Self::new_unchecked(-self.x, -self.y, -self.z)
     }
 }
 impl<T: Float> Default for Vector<T> {

@@ -183,13 +183,7 @@ impl<'a> ProjectionGenerator<'a> {
             type_a.name, type_b.name, output_type.name
         );
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !output_type.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             #[doc = #doc]
@@ -263,13 +257,7 @@ impl<'a> ProjectionGenerator<'a> {
             type_a.name, type_b.name, output_type.name
         );
 
-        // Use unchecked constructor for constrained types
-        let has_constraints = !output_type.solve_for_fields().is_empty();
-        let constructor = if has_constraints {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             #[doc = #doc]

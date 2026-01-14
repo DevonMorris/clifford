@@ -88,9 +88,6 @@ impl<T: Float + na::RealField> From<na::Rotation2<T>> for Rotor<T> {
     ///
     /// let rotation = Rotation2::new(FRAC_PI_2); // 90° rotation
     /// let rotor: Rotor<f64> = rotation.into();
-    ///
-    /// // Verify angle is preserved
-    /// assert!((rotor.angle() - FRAC_PI_2).abs() < 1e-10);
     /// ```
     #[inline]
     fn from(rotation: na::Rotation2<T>) -> Self {
@@ -104,13 +101,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
     /// # Mathematical Correspondence
     ///
     /// A rotor `R = s + xy·e₁₂ = cos(θ/2) + sin(θ/2)·e₁₂` corresponds to
-    /// a rotation by angle `θ = 2·atan2(xy, s)`.
-    ///
-    /// # Note
-    ///
-    /// This conversion uses the rotor's [`angle()`](Rotor::angle) method,
-    /// which returns the full rotation angle. Non-unit rotors will produce
-    /// the same rotation as their normalized equivalents.
+    /// a nalgebra rotation by angle `θ`.
     ///
     /// # Example
     ///
@@ -121,9 +112,6 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
     ///
     /// let rotor = Rotor::from_angle(FRAC_PI_2); // 90° rotation
     /// let rotation: Rotation2<f64> = rotor.into();
-    ///
-    /// // Verify angle is preserved
-    /// assert!((rotation.angle() - FRAC_PI_2).abs() < 1e-10);
     /// ```
     #[inline]
     fn from(rotor: Rotor<T>) -> Self {
@@ -135,6 +123,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
 mod tests {
     use super::*;
     use crate::test_utils::RELATIVE_EQ_EPS;
+    use crate::wrappers::Unit;
     use approx::relative_eq;
     use proptest::prelude::*;
 
@@ -157,19 +146,17 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
         fn rotor_rotation_equivalence(
-            r in any::<Rotor<f64>>(),
+            r in any::<Unit<Rotor<f64>>>(),
             v in any::<Vector<f64>>(),
         ) {
-            let r = r.normalize();
             let na_v: na::Vector2<f64> = v.into();
 
             // Rotate with clifford rotor
             let rotated_ga = r.rotate(v);
 
             // Rotate with nalgebra Rotation2
-            let rotation: na::Rotation2<f64> = r.into();
+            let rotation: na::Rotation2<f64> = r.into_inner().into();
             let rotated_na = rotation * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();

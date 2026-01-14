@@ -5,7 +5,7 @@
 use super::types::{Bivector, Rotor, Scalar, Vector};
 use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, LeftContract,
-    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
+    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Transform, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -15,21 +15,21 @@ impl<T: Float> Add for Bivector<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new(self.xy() + rhs.xy())
+        Self::new_unchecked(self.xy() + rhs.xy())
     }
 }
 impl<T: Float> Sub for Bivector<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new(self.xy() - rhs.xy())
+        Self::new_unchecked(self.xy() - rhs.xy())
     }
 }
 impl<T: Float> Neg for Bivector<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.xy())
+        Self::new_unchecked(-self.xy())
     }
 }
 impl<T: Float> Mul<T> for Bivector<T> {
@@ -57,7 +57,7 @@ impl<T: Float> Mul<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
+        Scalar::new_unchecked(-(self.xy() * rhs.xy()))
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Bivector<T> {
@@ -71,35 +71,35 @@ impl<T: Float> Mul<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
+        Bivector::new_unchecked(self.xy() * rhs.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
+        Vector::new_unchecked(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
 impl<T: Float> Add for Rotor<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new(self.s() + rhs.s(), self.xy() + rhs.xy())
+        Self::new_unchecked(self.s() + rhs.s(), self.xy() + rhs.xy())
     }
 }
 impl<T: Float> Sub for Rotor<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new(self.s() - rhs.s(), self.xy() - rhs.xy())
+        Self::new_unchecked(self.s() - rhs.s(), self.xy() - rhs.xy())
     }
 }
 impl<T: Float> Neg for Rotor<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.s(), -self.xy())
+        Self::new_unchecked(-self.s(), -self.xy())
     }
 }
 impl<T: Float> Mul<T> for Rotor<T> {
@@ -127,7 +127,7 @@ impl<T: Float> Mul<Bivector<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.xy() * rhs.xy()), rhs.xy() * self.s())
+        Rotor::new_unchecked(-(self.xy() * rhs.xy()), self.s() * rhs.xy())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Rotor<T> {
@@ -135,8 +135,8 @@ impl<T: Float> Mul<Rotor<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.xy() * rhs.xy()) + rhs.s() * self.s(),
-            self.xy() * rhs.s() + rhs.xy() * self.s(),
+            -(self.xy() * rhs.xy()) + self.s() * rhs.s(),
+            self.xy() * rhs.s() + self.s() * rhs.xy(),
         )
     }
 }
@@ -144,16 +144,16 @@ impl<T: Float> Mul<Scalar<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), self.xy() * rhs.s())
+        Rotor::new_unchecked(self.s() * rhs.s(), self.xy() * rhs.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Rotor<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new(
-            self.xy() * rhs.y() + rhs.x() * self.s(),
-            -(self.xy() * rhs.x()) + rhs.y() * self.s(),
+        Vector::new_unchecked(
+            self.xy() * rhs.y() + self.s() * rhs.x(),
+            -(self.xy() * rhs.x()) + self.s() * rhs.y(),
         )
     }
 }
@@ -161,21 +161,21 @@ impl<T: Float> Add for Scalar<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new(self.s() + rhs.s())
+        Self::new_unchecked(self.s() + rhs.s())
     }
 }
 impl<T: Float> Sub for Scalar<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new(self.s() - rhs.s())
+        Self::new_unchecked(self.s() - rhs.s())
     }
 }
 impl<T: Float> Neg for Scalar<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.s())
+        Self::new_unchecked(-self.s())
     }
 }
 impl<T: Float> Mul<T> for Scalar<T> {
@@ -203,49 +203,49 @@ impl<T: Float> Mul<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Bivector<T> {
-        Bivector::new(rhs.xy() * self.s())
+        Bivector::new_unchecked(self.s() * rhs.xy())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(rhs.s() * self.s(), rhs.xy() * self.s())
+        Rotor::new_unchecked(self.s() * rhs.s(), self.s() * rhs.xy())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
+        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
     }
 }
 impl<T: Float> Add for Vector<T> {
     type Output = Self;
     #[inline]
     fn add(self, rhs: Self) -> Self {
-        Self::new(self.x() + rhs.x(), self.y() + rhs.y())
+        Self::new_unchecked(self.x() + rhs.x(), self.y() + rhs.y())
     }
 }
 impl<T: Float> Sub for Vector<T> {
     type Output = Self;
     #[inline]
     fn sub(self, rhs: Self) -> Self {
-        Self::new(self.x() - rhs.x(), self.y() - rhs.y())
+        Self::new_unchecked(self.x() - rhs.x(), self.y() - rhs.y())
     }
 }
 impl<T: Float> Neg for Vector<T> {
     type Output = Self;
     #[inline]
     fn neg(self) -> Self {
-        Self::new(-self.x(), -self.y())
+        Self::new_unchecked(-self.x(), -self.y())
     }
 }
 impl<T: Float> Mul<T> for Vector<T> {
@@ -273,16 +273,16 @@ impl<T: Float> Mul<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
+        Vector::new_unchecked(-(self.y() * rhs.xy()), self.x() * rhs.xy())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Vector<T> {
-        Vector::new(
-            -(rhs.xy() * self.y()) + rhs.s() * self.x(),
-            rhs.xy() * self.x() + rhs.s() * self.y(),
+        Vector::new_unchecked(
+            self.x() * rhs.s() + -(self.y() * rhs.xy()),
+            self.x() * rhs.xy() + self.y() * rhs.s(),
         )
     }
 }
@@ -290,7 +290,7 @@ impl<T: Float> Mul<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
+        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Vector<T> {
@@ -298,8 +298,8 @@ impl<T: Float> Mul<Vector<T>> for Vector<T> {
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            rhs.x() * self.x() + rhs.y() * self.y(),
-            -(rhs.x() * self.y()) + rhs.y() * self.x(),
+            self.x() * rhs.x() + self.y() * rhs.y(),
+            self.x() * rhs.y() + -(self.y() * rhs.x()),
         )
     }
 }
@@ -307,168 +307,177 @@ impl<T: Float> Wedge<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
+        Bivector::new_unchecked(self.xy() * rhs.s())
     }
 }
 impl<T: Float> Wedge<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(rhs.xy() * self.s())
+        Bivector::new_unchecked(self.s() * rhs.xy())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> Wedge<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
+        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
+        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
     }
 }
 impl<T: Float> Wedge<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new(-(rhs.x() * self.y()) + rhs.y() * self.x())
+        Bivector::new_unchecked(self.x() * rhs.y() + -(self.y() * rhs.x()))
     }
 }
 impl<T: Float> Antiwedge<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.xy())
+        Bivector::new_unchecked(self.xy() * rhs.xy())
     }
 }
 impl<T: Float> Antiwedge<Scalar<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(self.xy() * rhs.s())
+        Scalar::new_unchecked(self.xy() * rhs.s())
     }
 }
 impl<T: Float> Antiwedge<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(self.xy() * rhs.x()), -(self.xy() * rhs.y()))
+        Vector::new_unchecked(-(self.xy() * rhs.x()), -(self.xy() * rhs.y()))
     }
 }
 impl<T: Float> Antiwedge<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(rhs.xy() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.xy())
     }
 }
 impl<T: Float> Antiwedge<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
+        Vector::new_unchecked(-(self.x() * rhs.xy()), -(self.y() * rhs.xy()))
     }
 }
 impl<T: Float> Antiwedge<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.x() * self.y()) + rhs.y() * self.x())
+        Scalar::new_unchecked(self.x() * rhs.y() + -(self.y() * rhs.x()))
     }
 }
 impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
+        Scalar::new_unchecked(-(self.xy() * rhs.xy()))
     }
 }
 impl<T: Float> LeftContract<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(rhs.xy() * self.s())
+        Bivector::new_unchecked(self.s() * rhs.xy())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> LeftContract<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
+        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
     }
 }
 impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
+        Vector::new_unchecked(-(self.y() * rhs.xy()), self.x() * rhs.xy())
     }
 }
 impl<T: Float> LeftContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(rhs.x() * self.x() + rhs.y() * self.y())
+        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
     }
 }
 impl<T: Float> RightContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
+        Scalar::new_unchecked(-(self.xy() * rhs.xy()))
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
+        Bivector::new_unchecked(self.xy() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
+        Vector::new_unchecked(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
+        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(rhs.x() * self.x() + rhs.y() * self.y())
+        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
+    }
+}
+impl<T: Float> Sandwich<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
+        Bivector::new_unchecked(
+            self.s() * operand.xy() * self.s() + self.xy() * operand.xy() * self.xy(),
+        )
     }
 }
 impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
@@ -477,12 +486,20 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             self.s() * operand.s() * self.s() - self.xy() * operand.xy() * self.s()
-                + self.xy() * operand.s() * self.xy()
-                + self.s() * operand.xy() * self.xy(),
-            -(self.s() * operand.s() * self.xy())
-                + self.xy() * operand.xy() * self.xy()
-                + self.s() * operand.xy() * self.s()
+                + self.s() * operand.xy() * self.xy()
+                + self.xy() * operand.s() * self.xy(),
+            self.xy() * operand.xy() * self.xy() + self.s() * operand.xy() * self.s()
+                - self.s() * operand.s() * self.xy()
                 + self.xy() * operand.s() * self.s(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new_unchecked(
+            self.s() * operand.s() * self.s() + self.xy() * operand.s() * self.xy(),
         )
     }
 }
@@ -490,14 +507,24 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     type Output = Vector<T>;
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
-        Vector::new(
-            self.s() * operand.x() * self.s() - self.xy() * operand.x() * self.xy()
+        Vector::new_unchecked(
+            -(self.xy() * operand.x() * self.xy())
                 + self.s() * operand.y() * self.xy()
+                + self.s() * operand.x() * self.s()
                 + self.xy() * operand.y() * self.s(),
-            -(self.s() * operand.x() * self.xy())
-                - self.xy() * operand.x() * self.s()
+            -(self.xy() * operand.x() * self.s())
+                - self.s() * operand.x() * self.xy()
                 - self.xy() * operand.y() * self.xy()
                 + self.s() * operand.y() * self.s(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
+        Bivector::new_unchecked(
+            self.s() * operand.xy() * self.s() + self.xy() * operand.xy() * self.xy(),
         )
     }
 }
@@ -506,12 +533,23 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.xy() * self.xy() + self.xy() * operand.s() * self.xy()
-                - self.xy() * operand.xy() * self.s()
+            -(self.xy() * operand.xy() * self.s())
+                + self.xy() * operand.s() * self.xy()
+                + self.s() * operand.xy() * self.xy()
                 + self.s() * operand.s() * self.s(),
-            self.xy() * operand.s() * self.s() + self.s() * operand.xy() * self.s()
-                - self.s() * operand.s() * self.xy()
-                + self.xy() * operand.xy() * self.xy(),
+            -(self.s() * operand.s() * self.xy())
+                + self.s() * operand.xy() * self.s()
+                + self.xy() * operand.xy() * self.xy()
+                + self.xy() * operand.s() * self.s(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Scalar<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new_unchecked(
+            self.s() * operand.s() * self.s() + self.xy() * operand.s() * self.xy(),
         )
     }
 }
@@ -519,15 +557,42 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     type Output = Vector<T>;
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
-        Vector::new(
-            -(self.s() * operand.x() * self.s())
-                + self.s() * operand.y() * self.xy()
+        Vector::new_unchecked(
+            self.s() * operand.y() * self.xy() - self.s() * operand.x() * self.s()
                 + self.xy() * operand.x() * self.xy()
                 + self.xy() * operand.y() * self.s(),
-            -(self.s() * operand.y() * self.s()) - self.xy() * operand.x() * self.s()
-                + self.xy() * operand.y() * self.xy()
-                - self.s() * operand.x() * self.xy(),
+            -(self.s() * operand.x() * self.xy()) + self.xy() * operand.y() * self.xy()
+                - self.xy() * operand.x() * self.s()
+                - self.s() * operand.y() * self.s(),
         )
+    }
+}
+impl<T: Float> Transform<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn transform(&self, operand: &Bivector<T>) -> Bivector<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn transform(&self, operand: &Rotor<T>) -> Rotor<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Scalar<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn transform(&self, operand: &Scalar<T>) -> Scalar<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn transform(&self, operand: &Vector<T>) -> Vector<T> {
+        self.sandwich(operand)
     }
 }
 impl<T: Float> Versor<Rotor<T>> for Rotor<T> {
@@ -562,168 +627,168 @@ impl<T: Float> BulkContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(self.xy() * rhs.xy())
+        Scalar::new_unchecked(self.xy() * rhs.xy())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
+        Bivector::new_unchecked(self.xy() * rhs.s())
     }
 }
 impl<T: Float> BulkContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
+        Vector::new_unchecked(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(-(rhs.s() * self.x()), -(rhs.s() * self.y()))
+        Vector::new_unchecked(-(self.x() * rhs.s()), -(self.y() * rhs.s()))
     }
 }
 impl<T: Float> BulkContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(rhs.x() * self.x() + rhs.y() * self.y())
+        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
     }
 }
 impl<T: Float> WeightContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
+        Scalar::new_unchecked(-(self.xy() * rhs.xy()))
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(-(self.xy() * rhs.s()))
+        Bivector::new_unchecked(-(self.xy() * rhs.s()))
     }
 }
 impl<T: Float> WeightContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(self.xy() * rhs.y()), self.xy() * rhs.x())
+        Vector::new_unchecked(-(self.xy() * rhs.y()), self.xy() * rhs.x())
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.s() * self.s()))
+        Scalar::new_unchecked(-(self.s() * rhs.s()))
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
+        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
     }
 }
 impl<T: Float> WeightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.x() * self.x()) + -(rhs.y() * self.y()))
+        Scalar::new_unchecked(-(self.x() * rhs.x()) + -(self.y() * rhs.y()))
     }
 }
 impl<T: Float> BulkExpand<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.xy())
+        Bivector::new_unchecked(self.xy() * rhs.xy())
     }
 }
 impl<T: Float> BulkExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(rhs.xy() * self.s())
+        Scalar::new_unchecked(self.s() * rhs.xy())
     }
 }
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(rhs.s() * self.s())
+        Bivector::new_unchecked(self.s() * rhs.s())
     }
 }
 impl<T: Float> BulkExpand<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(-(rhs.y() * self.s()), rhs.x() * self.s())
+        Vector::new_unchecked(-(self.s() * rhs.y()), self.s() * rhs.x())
     }
 }
 impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(rhs.xy() * self.x(), rhs.xy() * self.y())
+        Vector::new_unchecked(self.x() * rhs.xy(), self.y() * rhs.xy())
     }
 }
 impl<T: Float> BulkExpand<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new(rhs.x() * self.x() + rhs.y() * self.y())
+        Bivector::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
     }
 }
 impl<T: Float> WeightExpand<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(-(self.xy() * rhs.xy()))
+        Bivector::new_unchecked(-(self.xy() * rhs.xy()))
     }
 }
 impl<T: Float> WeightExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.xy() * self.s()))
+        Scalar::new_unchecked(-(self.s() * rhs.xy()))
     }
 }
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(-(rhs.s() * self.s()))
+        Bivector::new_unchecked(-(self.s() * rhs.s()))
     }
 }
 impl<T: Float> WeightExpand<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.y() * self.s(), -(rhs.x() * self.s()))
+        Vector::new_unchecked(self.s() * rhs.y(), -(self.s() * rhs.x()))
     }
 }
 impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.x()), -(rhs.xy() * self.y()))
+        Vector::new_unchecked(-(self.x() * rhs.xy()), -(self.y() * rhs.xy()))
     }
 }
 impl<T: Float> WeightExpand<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new(-(rhs.x() * self.x()) + -(rhs.y() * self.y()))
+        Bivector::new_unchecked(-(self.x() * rhs.x()) + -(self.y() * rhs.y()))
     }
 }
 impl<T: Float> Dot<Bivector<T>> for Bivector<T> {
@@ -841,77 +906,77 @@ impl<T: Float> Antidot<Vector<T>> for Vector<T> {
 impl<T: Float> Reverse for Bivector<T> {
     #[inline]
     fn reverse(&self) -> Self {
-        Self::new(-self.xy())
+        Self::new_unchecked(-self.xy())
     }
 }
 impl<T: Float> Reverse for Rotor<T> {
     #[inline]
     fn reverse(&self) -> Self {
-        Self::new(self.s(), -self.xy())
+        Self::new_unchecked(self.s(), -self.xy())
     }
 }
 impl<T: Float> Reverse for Scalar<T> {
     #[inline]
     fn reverse(&self) -> Self {
-        Self::new(self.s())
+        Self::new_unchecked(self.s())
     }
 }
 impl<T: Float> Reverse for Vector<T> {
     #[inline]
     fn reverse(&self) -> Self {
-        Self::new(self.x(), self.y())
+        Self::new_unchecked(self.x(), self.y())
     }
 }
 impl<T: Float> Antireverse for Bivector<T> {
     #[inline]
     fn antireverse(&self) -> Self {
-        Self::new(self.xy())
+        Self::new_unchecked(self.xy())
     }
 }
 impl<T: Float> Antireverse for Rotor<T> {
     #[inline]
     fn antireverse(&self) -> Self {
-        Self::new(-self.s(), self.xy())
+        Self::new_unchecked(-self.s(), self.xy())
     }
 }
 impl<T: Float> Antireverse for Scalar<T> {
     #[inline]
     fn antireverse(&self) -> Self {
-        Self::new(-self.s())
+        Self::new_unchecked(-self.s())
     }
 }
 impl<T: Float> Antireverse for Vector<T> {
     #[inline]
     fn antireverse(&self) -> Self {
-        Self::new(self.x(), self.y())
+        Self::new_unchecked(self.x(), self.y())
     }
 }
 impl<T: Float> RightComplement for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_complement(&self) -> Scalar<T> {
-        Scalar::new(self.xy())
+        Scalar::new_unchecked(self.xy())
     }
 }
 impl<T: Float> RightComplement for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn right_complement(&self) -> Rotor<T> {
-        Rotor::new(self.xy(), self.s())
+        Rotor::new_unchecked(self.xy(), self.s())
     }
 }
 impl<T: Float> RightComplement for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn right_complement(&self) -> Bivector<T> {
-        Bivector::new(self.s())
+        Bivector::new_unchecked(self.s())
     }
 }
 impl<T: Float> RightComplement for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_complement(&self) -> Vector<T> {
-        Vector::new(-self.y(), self.x())
+        Vector::new_unchecked(-self.y(), self.x())
     }
 }
 impl<T: Float> crate::norm::Normed for Bivector<T> {
@@ -930,7 +995,7 @@ impl<T: Float> crate::norm::Normed for Bivector<T> {
     }
     #[inline]
     fn scale(&self, factor: T) -> Self {
-        Self::new(self.xy() * factor)
+        Self::new_unchecked(self.xy() * factor)
     }
 }
 impl<T: Float> crate::norm::Normed for Rotor<T> {
@@ -949,7 +1014,7 @@ impl<T: Float> crate::norm::Normed for Rotor<T> {
     }
     #[inline]
     fn scale(&self, factor: T) -> Self {
-        Self::new(self.s() * factor, self.xy() * factor)
+        Self::new_unchecked(self.s() * factor, self.xy() * factor)
     }
 }
 impl<T: Float> crate::norm::Normed for Scalar<T> {
@@ -968,7 +1033,7 @@ impl<T: Float> crate::norm::Normed for Scalar<T> {
     }
     #[inline]
     fn scale(&self, factor: T) -> Self {
-        Self::new(self.s() * factor)
+        Self::new_unchecked(self.s() * factor)
     }
 }
 impl<T: Float> crate::norm::Normed for Vector<T> {
@@ -987,7 +1052,7 @@ impl<T: Float> crate::norm::Normed for Vector<T> {
     }
     #[inline]
     fn scale(&self, factor: T) -> Self {
-        Self::new(self.x() * factor, self.y() * factor)
+        Self::new_unchecked(self.x() * factor, self.y() * factor)
     }
 }
 impl<T: Float + AbsDiffEq<Epsilon = T>> AbsDiffEq for Bivector<T> {
@@ -1126,7 +1191,7 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (-100.0f64..100.0)
-                .prop_map(|x0| Bivector::new(T::from_f64(x0)))
+                .prop_map(|x0| Bivector::new_unchecked(T::from_f64(x0)))
                 .boxed()
         }
     }
@@ -1135,7 +1200,7 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (-100.0f64..100.0, -100.0f64..100.0)
-                .prop_map(|(x0, x1)| Rotor::new(T::from_f64(x0), T::from_f64(x1)))
+                .prop_map(|(x0, x1)| Rotor::new_unchecked(T::from_f64(x0), T::from_f64(x1)))
                 .boxed()
         }
     }
@@ -1144,7 +1209,7 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (-100.0f64..100.0)
-                .prop_map(|x0| Scalar::new(T::from_f64(x0)))
+                .prop_map(|x0| Scalar::new_unchecked(T::from_f64(x0)))
                 .boxed()
         }
     }
@@ -1153,7 +1218,7 @@ mod arbitrary_impls {
         type Strategy = BoxedStrategy<Self>;
         fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
             (-100.0f64..100.0, -100.0f64..100.0)
-                .prop_map(|(x0, x1)| Vector::new(T::from_f64(x0), T::from_f64(x1)))
+                .prop_map(|(x0, x1)| Vector::new_unchecked(T::from_f64(x0), T::from_f64(x1)))
                 .boxed()
         }
     }
