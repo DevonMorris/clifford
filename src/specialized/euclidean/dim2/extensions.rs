@@ -4,6 +4,7 @@
 //! to the generated types that are specific to Euclidean 2D geometry.
 
 use super::generated::types::{Bivector, Rotor, Vector};
+use crate::ops::Transform;
 use crate::scalar::Float;
 
 // ============================================================================
@@ -80,7 +81,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
@@ -105,7 +106,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use approx::abs_diff_eq;
     ///
@@ -136,15 +137,11 @@ impl<T: Float> Rotor<T> {
         Self::new_unchecked(rev.s() / norm_sq, rev.xy() / norm_sq)
     }
 
-    /// Applies this rotation to a vector: `v' = R̃ v R`.
-    ///
-    /// In 2D, both `R v R̃` and `R̃ v R` give the same result since the
-    /// even subalgebra is commutative. We document `R̃ v R` for consistency
-    /// with the 3D convention, which gives counterclockwise rotation.
+    /// Applies this rotation to a vector using the sandwich product: `v' = R v R̃`.
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
@@ -155,8 +152,8 @@ impl<T: Float> Rotor<T> {
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
-    pub fn rotate(&self, _v: Vector<T>) -> Vector<T> {
-        todo!("rotate needs generated sandwich product")
+    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
+        self.transform(&v)
     }
 
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.

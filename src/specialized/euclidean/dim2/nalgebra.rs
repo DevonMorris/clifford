@@ -135,6 +135,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
 mod tests {
     use super::*;
     use crate::test_utils::RELATIVE_EQ_EPS;
+    use crate::wrappers::Unit;
     use approx::relative_eq;
     use proptest::prelude::*;
 
@@ -157,19 +158,17 @@ mod tests {
         }
 
         #[test]
-        #[ignore = "rotate needs generated sandwich product"]
         fn rotor_rotation_equivalence(
-            r in any::<Rotor<f64>>(),
+            r in any::<Unit<Rotor<f64>>>(),
             v in any::<Vector<f64>>(),
         ) {
-            let r = r.normalize();
             let na_v: na::Vector2<f64> = v.into();
 
             // Rotate with clifford rotor
             let rotated_ga = r.rotate(v);
 
             // Rotate with nalgebra Rotation2
-            let rotation: na::Rotation2<f64> = r.into();
+            let rotation: na::Rotation2<f64> = r.into_inner().into();
             let rotated_na = rotation * na_v;
 
             let rotated_back: Vector<f64> = rotated_na.into();

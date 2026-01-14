@@ -142,25 +142,25 @@ impl<T: Float> Default for Bivector<T> {
         Self::zero()
     }
 }
-#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 3 | e1e2 | `xy` |\n| 5 | e1e3 | `xz` |\n| 6 | e2e3 | `yz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Rotor;\n\nlet v = Rotor::new_unchecked(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D rotor (unit versor for rotations)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `x` |\n| 2 | e2 | `y` |\n| 4 | e3 | `z` |\n| 7 | e1e2e3 | `xyz` |\n\n\n# Example\n\n```\nuse clifford::specialized::euclidean::dim3::Rotor;\n\nlet v = Rotor::new_unchecked(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct Rotor<T: Float> {
-    #[doc = "Coefficient of `s`."]
-    s: T,
-    #[doc = "Coefficient of `xy`."]
-    xy: T,
-    #[doc = "Coefficient of `xz`."]
-    xz: T,
-    #[doc = "Coefficient of `yz`."]
-    yz: T,
+    #[doc = "Coefficient of `x`."]
+    x: T,
+    #[doc = "Coefficient of `y`."]
+    y: T,
+    #[doc = "Coefficient of `z`."]
+    z: T,
+    #[doc = "Coefficient of `xyz`."]
+    xyz: T,
 }
 impl<T: Float> Rotor<T> {
     #[doc = r" Creates a new element from components."]
     #[inline]
-    pub fn new(s: T, xy: T, xz: T, yz: T) -> Self {
-        Self { s, xy, xz, yz }
+    pub fn new(x: T, y: T, z: T, xyz: T) -> Self {
+        Self { x, y, z, xyz }
     }
     #[doc = r" Creates a new element from components without validation."]
     #[doc = r""]
@@ -168,28 +168,28 @@ impl<T: Float> Rotor<T> {
     #[doc = r" that have geometric constraints, where unchecked construction is"]
     #[doc = r" used in performance-critical code or trusted contexts."]
     #[inline]
-    pub fn new_unchecked(s: T, xy: T, xz: T, yz: T) -> Self {
-        Self::new(s, xy, xz, yz)
+    pub fn new_unchecked(x: T, y: T, z: T, xyz: T) -> Self {
+        Self::new(x, y, z, xyz)
     }
-    #[doc = "Returns the `s` coefficient."]
+    #[doc = "Returns the `x` coefficient."]
     #[inline]
-    pub fn s(&self) -> T {
-        self.s
+    pub fn x(&self) -> T {
+        self.x
     }
-    #[doc = "Returns the `xy` coefficient."]
+    #[doc = "Returns the `y` coefficient."]
     #[inline]
-    pub fn xy(&self) -> T {
-        self.xy
+    pub fn y(&self) -> T {
+        self.y
     }
-    #[doc = "Returns the `xz` coefficient."]
+    #[doc = "Returns the `z` coefficient."]
     #[inline]
-    pub fn xz(&self) -> T {
-        self.xz
+    pub fn z(&self) -> T {
+        self.z
     }
-    #[doc = "Returns the `yz` coefficient."]
+    #[doc = "Returns the `xyz` coefficient."]
     #[inline]
-    pub fn yz(&self) -> T {
-        self.yz
+    pub fn xyz(&self) -> T {
+        self.xyz
     }
     #[doc = r" Creates the zero element."]
     #[inline]
@@ -201,7 +201,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" This is the sum of squares of all components."]
     #[inline]
     pub fn norm_squared(&self) -> T {
-        self.s * self.s + self.xy * self.xy + self.xz * self.xz + self.yz * self.yz
+        self.x * self.x + self.y * self.y + self.z * self.z + self.xyz * self.xyz
     }
     #[doc = r" Returns the Euclidean norm."]
     #[inline]
@@ -232,7 +232,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new_unchecked(self.s * s, self.xy * s, self.xz * s, self.yz * s)
+        Self::new_unchecked(self.x * s, self.y * s, self.z * s, self.xyz * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -245,7 +245,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new_unchecked(self.s, -self.xy, -self.xz, -self.yz)
+        Self::new_unchecked(self.x, self.y, self.z, -self.xyz)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -260,7 +260,7 @@ impl<T: Float> Rotor<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new_unchecked(-self.s, self.xy, self.xz, self.yz)
+        Self::new_unchecked(-self.x, -self.y, -self.z, self.xyz)
     }
 }
 impl<T: Float> Default for Rotor<T> {
@@ -632,8 +632,6 @@ pub type UnitBivector<T> = crate::wrappers::Unit<Bivector<T>>;
 pub type BulkRotor<T> = crate::wrappers::Bulk<Rotor<T>>;
 #[doc = "A unitized Rotor (weight norm = 1).\n\nThis type alias wraps Rotor in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
 pub type UnitizedRotor<T> = crate::wrappers::Unitized<Rotor<T>>;
-#[doc = "A unit Rotor (Euclidean norm = 1).\n\nThis type alias provides compile-time documentation that the Rotor has been normalized."]
-pub type UnitRotor<T> = crate::wrappers::Unit<Rotor<T>>;
 #[doc = "A bulk-normalized Trivector (bulk norm = 1).\n\nThis type alias wraps Trivector in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
 pub type BulkTrivector<T> = crate::wrappers::Bulk<Trivector<T>>;
 #[doc = "A unitized Trivector (weight norm = 1).\n\nThis type alias wraps Trivector in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]

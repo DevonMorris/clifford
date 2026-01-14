@@ -147,13 +147,23 @@ impl<'a> TraitsGenerator<'a> {
             .map(|t| format_ident!("{}", t.name))
             .collect();
 
+        // Check if any Versor trait impls will actually be generated
+        // (versors need Mul output type to match a known type)
+        let has_versor_impls = self.will_generate_versor_impls();
+
+        let versor_import = if has_versor_impls {
+            quote! { Versor, }
+        } else {
+            quote! {}
+        };
+
         quote! {
             use crate::scalar::Float;
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
                 Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot,
-                Reverse, Antireverse, RightComplement, Versor,
+                Reverse, Antireverse, RightComplement, #versor_import
             };
             use super::types::{#(#type_names),*};
 
@@ -1290,6 +1300,28 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
         None
+    }
+
+    /// Checks if any Versor trait impls will be generated.
+    ///
+    /// Returns true if there's at least one pair of versor types where
+    /// their geometric product produces a known output type.
+    fn will_generate_versor_impls(&self) -> bool {
+        let versor_types: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none() && t.versor.is_some())
+            .collect();
+
+        for lhs in &versor_types {
+            for rhs in &versor_types {
+                if self.find_mul_output_type(&lhs.name, &rhs.name).is_some() {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     /// Generates ScalarProduct trait impl.

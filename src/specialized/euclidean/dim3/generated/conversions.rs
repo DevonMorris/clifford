@@ -24,14 +24,14 @@ impl<T: Float> From<Bivector<T>> for Multivector<T, Euclidean3> {
 impl<T: Float> From<Rotor<T>> for Multivector<T, Euclidean3> {
     fn from(value: Rotor<T>) -> Self {
         Self::from_coeffs(&[
-            value.s(),
+            T::zero(),
+            value.x(),
+            value.y(),
+            T::zero(),
+            value.z(),
             T::zero(),
             T::zero(),
-            value.xy(),
-            T::zero(),
-            value.xz(),
-            value.yz(),
-            T::zero(),
+            value.xyz(),
         ])
     }
 }
@@ -97,10 +97,10 @@ impl<T: Float> From<Multivector<T, Euclidean3>> for Rotor<T> {
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Euclidean3>) -> Self {
         Self::new_unchecked(
-            mv.get(Blade::from_index(0usize)),
-            mv.get(Blade::from_index(3usize)),
-            mv.get(Blade::from_index(5usize)),
-            mv.get(Blade::from_index(6usize)),
+            mv.get(Blade::from_index(1usize)),
+            mv.get(Blade::from_index(2usize)),
+            mv.get(Blade::from_index(4usize)),
+            mv.get(Blade::from_index(7usize)),
         )
     }
 }
