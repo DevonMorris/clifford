@@ -241,9 +241,9 @@ impl<T: Float> Motor<T> {
     pub fn from_translation(dx: T, dy: T) -> Self {
         let half = T::one() / T::TWO;
         Self::new(
-            dy * half,  // x
-            -dx * half, // y
-            T::zero(),  // w
+            dy * half,  // ty (controls y-translation)
+            -dx * half, // tx (controls x-translation)
+            T::zero(),  // r (rotation)
             T::one(),   // ps (identity part)
         )
     }
@@ -255,10 +255,10 @@ impl<T: Float> Motor<T> {
     pub fn from_rotation(angle: T) -> Self {
         let half = angle / T::TWO;
         Self::new(
-            T::zero(),   // x
-            T::zero(),   // y
-            -half.sin(), // w
-            half.cos(),  // ps
+            T::zero(),   // ty
+            T::zero(),   // tx
+            -half.sin(), // r (rotation = -sin(θ/2))
+            half.cos(),  // ps (= cos(θ/2))
         )
     }
 
@@ -286,9 +286,9 @@ impl<T: Float> Motor<T> {
         }
         let rev = self.antireverse();
         Self::new(
-            rev.x() / norm_sq,
-            rev.y() / norm_sq,
-            rev.w() / norm_sq,
+            rev.ty() / norm_sq,
+            rev.tx() / norm_sq,
+            rev.r() / norm_sq,
             rev.ps() / norm_sq,
         )
     }
@@ -296,7 +296,7 @@ impl<T: Float> Motor<T> {
     /// Extract rotation angle.
     pub fn rotation_angle(&self) -> T {
         let cos_half = self.ps().min(T::one()).max(-T::one());
-        let sin_half = self.w();
+        let sin_half = self.r();
         sin_half.atan2(cos_half) * T::TWO
     }
 
@@ -305,9 +305,9 @@ impl<T: Float> Motor<T> {
     /// For a pure translation motor, this returns the translation vector.
     pub fn translation(&self) -> EuclideanVector<T> {
         // Inverse of from_translation encoding:
-        // from_translation sets: x = dy/2, y = -dx/2
-        // So: dx = -2*y, dy = 2*x
-        EuclideanVector::new(-T::TWO * self.y(), T::TWO * self.x())
+        // from_translation sets: ty = dy/2, tx = -dx/2
+        // So: dx = -2*tx, dy = 2*ty
+        EuclideanVector::new(-T::TWO * self.tx(), T::TWO * self.ty())
     }
 }
 

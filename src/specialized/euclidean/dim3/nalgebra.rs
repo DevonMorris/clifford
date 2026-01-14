@@ -118,15 +118,15 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Vector3<T> {
     /// use nalgebra::Vector3;
     ///
     /// // The xy-plane bivector is dual to the z-axis
-    /// let b = Bivector::unit_xy();
+    /// let b = Bivector::unit_rz();
     /// let v: Vector3<f64> = b.into();
     /// assert!((v.z - 1.0).abs() < 1e-10);
     /// ```
     #[inline]
     fn from(b: Bivector<T>) -> Self {
-        // dual: Bivector(bz, by, bx) -> Vector(bx, -by, bz)
-        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
-        na::Vector3::new(b.bx(), -b.by(), b.bz())
+        // dual: Bivector(rz, ry, rx) -> Vector(rx, -ry, rz)
+        // rz = e12 (xy-plane), ry = e13 (xz-plane), rx = e23 (yz-plane)
+        na::Vector3::new(b.rx(), -b.ry(), b.rz())
     }
 }
 
@@ -194,16 +194,16 @@ impl<T: Float + na::Scalar> From<Bivector<T>> for na::Matrix3<T> {
     /// ```
     #[inline]
     fn from(b: Bivector<T>) -> Self {
-        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
+        // rz = e12 (xy-plane), ry = e13 (xz-plane), rx = e23 (yz-plane)
         na::Matrix3::new(
             T::zero(),
-            -b.bz(),
-            -b.by(), // row 0
-            b.bz(),
+            -b.rz(),
+            -b.ry(), // row 0
+            b.rz(),
             T::zero(),
-            -b.bx(), // row 1
-            b.by(),
-            b.bx(),
+            -b.rx(), // row 1
+            b.ry(),
+            b.rx(),
             T::zero(), // row 2
         )
     }
@@ -284,9 +284,9 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     fn from(rotor: Rotor<T>) -> Self {
         let r = rotor.normalize();
         // Negate bivector components: sandwich R v R̃ rotates opposite to rotor angle
-        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
-        // Mapping: (w, i, j, k) = (s, -bx, by, -bz)
-        let q = na::Quaternion::new(r.s(), -r.bx(), r.by(), -r.bz());
+        // rz = e12 (xy-plane), ry = e13 (xz-plane), rx = e23 (yz-plane)
+        // Mapping: (w, i, j, k) = (s, -rx, ry, -rz)
+        let q = na::Quaternion::new(r.s(), -r.rx(), r.ry(), -r.rz());
         na::UnitQuaternion::new_normalize(q)
     }
 }
@@ -311,8 +311,8 @@ impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
     #[inline]
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
-        // Inverse mapping with negation: (s, bz, by, bx) = (w, -k, j, -i)
-        // bz = e12 (xy-plane), by = e13 (xz-plane), bx = e23 (yz-plane)
+        // Inverse mapping with negation: (s, rz, ry, rx) = (w, -k, j, -i)
+        // rz = e12 (xy-plane), ry = e13 (xz-plane), rx = e23 (yz-plane)
         // Use new_unchecked since unit quaternion guarantees unit rotor
         Rotor::new_unchecked(q.w, -q.k, q.j, -q.i)
     }
@@ -332,7 +332,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation3<T> {
     /// use nalgebra::Rotation3;
     /// use std::f64::consts::FRAC_PI_2;
     ///
-    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let rot: Rotation3<f64> = rotor.into();
     ///
     /// // Rotation matrix should rotate x to y
