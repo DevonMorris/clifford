@@ -384,34 +384,34 @@ impl<T: Float> Mul<Flector<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.e2() * self.e12() + rhs.e3() * self.e31() + -(rhs.e123() * self.e23()),
-            -(rhs.e1() * self.e12()) + rhs.e3() * self.e23() + rhs.e123() * self.e31(),
-            -(rhs.e1() * self.e31()) + -(rhs.e2() * self.e23()) + -(rhs.e123() * self.e12()),
-            -(rhs.e1() * self.e01())
-                + -(rhs.e2() * self.e02())
-                + -(rhs.e3() * self.e03())
-                + -(rhs.e023() * self.e23())
-                + -(rhs.e031() * self.e31())
-                + -(rhs.e012() * self.e12()),
-            rhs.e2() * self.e03()
-                + -(rhs.e3() * self.e02())
-                + rhs.e0() * self.e23()
-                + -(rhs.e031() * self.e12())
-                + rhs.e012() * self.e31()
-                + -(rhs.e123() * self.e01()),
-            rhs.e1() * self.e03()
-                + -(rhs.e3() * self.e01())
-                + rhs.e0() * self.e31()
-                + rhs.e023() * self.e12()
-                + -(rhs.e012() * self.e23())
-                + rhs.e123() * self.e02(),
-            rhs.e1() * self.e02()
-                + -(rhs.e2() * self.e01())
-                + rhs.e0() * self.e12()
-                + -(rhs.e023() * self.e31())
-                + rhs.e031() * self.e23()
-                + -(rhs.e123() * self.e03()),
-            rhs.e1() * self.e23() + -(rhs.e2() * self.e31()) + rhs.e3() * self.e12(),
+            -(self.e23() * rhs.e123()) + self.e31() * rhs.e3() + self.e12() * rhs.e2(),
+            self.e23() * rhs.e3() + self.e31() * rhs.e123() + -(self.e12() * rhs.e1()),
+            -(self.e23() * rhs.e2()) + -(self.e31() * rhs.e1()) + -(self.e12() * rhs.e123()),
+            -(self.e01() * rhs.e1())
+                + -(self.e02() * rhs.e2())
+                + -(self.e03() * rhs.e3())
+                + -(self.e23() * rhs.e023())
+                + -(self.e31() * rhs.e031())
+                + -(self.e12() * rhs.e012()),
+            -(self.e01() * rhs.e123())
+                + -(self.e02() * rhs.e3())
+                + self.e03() * rhs.e2()
+                + self.e23() * rhs.e0()
+                + self.e31() * rhs.e012()
+                + -(self.e12() * rhs.e031()),
+            -(self.e01() * rhs.e3())
+                + self.e02() * rhs.e123()
+                + self.e03() * rhs.e1()
+                + -(self.e23() * rhs.e012())
+                + self.e31() * rhs.e0()
+                + self.e12() * rhs.e023(),
+            -(self.e01() * rhs.e2())
+                + self.e02() * rhs.e1()
+                + -(self.e03() * rhs.e123())
+                + self.e23() * rhs.e031()
+                + -(self.e31() * rhs.e023())
+                + self.e12() * rhs.e0(),
+            self.e23() * rhs.e1() + -(self.e31() * rhs.e2()) + self.e12() * rhs.e3(),
         )
     }
 }
@@ -420,28 +420,28 @@ impl<T: Float> Mul<Line<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Line<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(rhs.e23() * self.e23()) + -(rhs.e31() * self.e31()) + -(rhs.e12() * self.e12()),
-            -(rhs.e31() * self.e12()) + rhs.e12() * self.e31(),
-            rhs.e23() * self.e12() + -(rhs.e12() * self.e23()),
-            -(rhs.e23() * self.e31()) + rhs.e31() * self.e23(),
-            rhs.e02() * self.e12()
-                + rhs.e03() * self.e31()
-                + -(rhs.e31() * self.e03())
-                + -(rhs.e12() * self.e02()),
-            -(rhs.e01() * self.e12())
-                + rhs.e03() * self.e23()
-                + -(rhs.e23() * self.e03())
-                + rhs.e12() * self.e01(),
-            -(rhs.e01() * self.e31())
-                + -(rhs.e02() * self.e23())
-                + rhs.e23() * self.e02()
-                + rhs.e31() * self.e01(),
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03(),
+            -(self.e23() * rhs.e23()) + -(self.e31() * rhs.e31()) + -(self.e12() * rhs.e12()),
+            self.e31() * rhs.e12() + -(self.e12() * rhs.e31()),
+            -(self.e23() * rhs.e12()) + self.e12() * rhs.e23(),
+            self.e23() * rhs.e31() + -(self.e31() * rhs.e23()),
+            -(self.e02() * rhs.e12())
+                + -(self.e03() * rhs.e31())
+                + self.e31() * rhs.e03()
+                + self.e12() * rhs.e02(),
+            self.e01() * rhs.e12()
+                + -(self.e03() * rhs.e23())
+                + self.e23() * rhs.e03()
+                + -(self.e12() * rhs.e01()),
+            self.e01() * rhs.e31()
+                + self.e02() * rhs.e23()
+                + -(self.e23() * rhs.e02())
+                + -(self.e31() * rhs.e01()),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03(),
         )
     }
 }
@@ -450,34 +450,34 @@ impl<T: Float> Mul<Motor<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(rhs.e23() * self.e23()) + -(rhs.e31() * self.e31()) + -(rhs.e12() * self.e12()),
-            -(rhs.e31() * self.e12()) + rhs.e12() * self.e31() + rhs.s() * self.e23(),
-            rhs.e23() * self.e12() + -(rhs.e12() * self.e23()) + rhs.s() * self.e31(),
-            -(rhs.e23() * self.e31()) + rhs.e31() * self.e23() + rhs.s() * self.e12(),
-            rhs.e02() * self.e12()
-                + rhs.e03() * self.e31()
-                + -(rhs.e31() * self.e03())
-                + -(rhs.e12() * self.e02())
-                + rhs.s() * self.e01()
-                + -(rhs.e0123() * self.e23()),
-            -(rhs.e01() * self.e12())
-                + rhs.e03() * self.e23()
-                + -(rhs.e23() * self.e03())
-                + rhs.e12() * self.e01()
-                + rhs.s() * self.e02()
-                + rhs.e0123() * self.e31(),
-            -(rhs.e01() * self.e31())
-                + -(rhs.e02() * self.e23())
-                + rhs.e23() * self.e02()
-                + rhs.e31() * self.e01()
-                + rhs.s() * self.e03()
-                + -(rhs.e0123() * self.e12()),
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03(),
+            -(self.e23() * rhs.e23()) + -(self.e31() * rhs.e31()) + -(self.e12() * rhs.e12()),
+            self.e23() * rhs.s() + self.e31() * rhs.e12() + -(self.e12() * rhs.e31()),
+            -(self.e23() * rhs.e12()) + self.e31() * rhs.s() + self.e12() * rhs.e23(),
+            self.e23() * rhs.e31() + -(self.e31() * rhs.e23()) + self.e12() * rhs.s(),
+            self.e01() * rhs.s()
+                + -(self.e02() * rhs.e12())
+                + -(self.e03() * rhs.e31())
+                + -(self.e23() * rhs.e0123())
+                + self.e31() * rhs.e03()
+                + self.e12() * rhs.e02(),
+            self.e01() * rhs.e12()
+                + self.e02() * rhs.s()
+                + -(self.e03() * rhs.e23())
+                + self.e23() * rhs.e03()
+                + self.e31() * rhs.e0123()
+                + -(self.e12() * rhs.e01()),
+            self.e01() * rhs.e31()
+                + self.e02() * rhs.e23()
+                + self.e03() * rhs.s()
+                + -(self.e23() * rhs.e02())
+                + -(self.e31() * rhs.e01())
+                + -(self.e12() * rhs.e0123()),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03(),
         )
     }
 }
@@ -486,13 +486,13 @@ impl<T: Float> Mul<Plane<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Plane<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -(rhs.e123() * self.e23()),
-            rhs.e123() * self.e31(),
-            -(rhs.e123() * self.e12()),
-            -(rhs.e023() * self.e23()) + -(rhs.e031() * self.e31()) + -(rhs.e012() * self.e12()),
-            -(rhs.e031() * self.e12()) + rhs.e012() * self.e31() + -(rhs.e123() * self.e01()),
-            rhs.e023() * self.e12() + -(rhs.e012() * self.e23()) + rhs.e123() * self.e02(),
-            -(rhs.e023() * self.e31()) + rhs.e031() * self.e23() + -(rhs.e123() * self.e03()),
+            -(self.e23() * rhs.e123()),
+            self.e31() * rhs.e123(),
+            -(self.e12() * rhs.e123()),
+            -(self.e23() * rhs.e023()) + -(self.e31() * rhs.e031()) + -(self.e12() * rhs.e012()),
+            -(self.e01() * rhs.e123()) + self.e31() * rhs.e012() + -(self.e12() * rhs.e031()),
+            self.e02() * rhs.e123() + -(self.e23() * rhs.e012()) + self.e12() * rhs.e023(),
+            -(self.e03() * rhs.e123()) + self.e23() * rhs.e031() + -(self.e31() * rhs.e023()),
             T::zero(),
         )
     }
@@ -502,14 +502,14 @@ impl<T: Float> Mul<Point<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Point<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.e2() * self.e12() + rhs.e3() * self.e31(),
-            -(rhs.e1() * self.e12()) + rhs.e3() * self.e23(),
-            -(rhs.e1() * self.e31()) + -(rhs.e2() * self.e23()),
-            -(rhs.e1() * self.e01()) + -(rhs.e2() * self.e02()) + -(rhs.e3() * self.e03()),
-            rhs.e2() * self.e03() + -(rhs.e3() * self.e02()) + rhs.e0() * self.e23(),
-            rhs.e1() * self.e03() + -(rhs.e3() * self.e01()) + rhs.e0() * self.e31(),
-            rhs.e1() * self.e02() + -(rhs.e2() * self.e01()) + rhs.e0() * self.e12(),
-            rhs.e1() * self.e23() + -(rhs.e2() * self.e31()) + rhs.e3() * self.e12(),
+            self.e31() * rhs.e3() + self.e12() * rhs.e2(),
+            self.e23() * rhs.e3() + -(self.e12() * rhs.e1()),
+            -(self.e23() * rhs.e2()) + -(self.e31() * rhs.e1()),
+            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()) + -(self.e03() * rhs.e3()),
+            -(self.e02() * rhs.e3()) + self.e03() * rhs.e2() + self.e23() * rhs.e0(),
+            -(self.e01() * rhs.e3()) + self.e03() * rhs.e1() + self.e31() * rhs.e0(),
+            -(self.e01() * rhs.e2()) + self.e02() * rhs.e1() + self.e12() * rhs.e0(),
+            self.e23() * rhs.e1() + -(self.e31() * rhs.e2()) + self.e12() * rhs.e3(),
         )
     }
 }
@@ -518,9 +518,9 @@ impl<T: Float> Mul<Quadvector<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Quadvector<T>) -> Line<T> {
         Line::new(
-            -(rhs.e0123() * self.e23()),
-            rhs.e0123() * self.e31(),
-            -(rhs.e0123() * self.e12()),
+            -(self.e23() * rhs.e0123()),
+            self.e31() * rhs.e0123(),
+            -(self.e12() * rhs.e0123()),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -532,12 +532,12 @@ impl<T: Float> Mul<Scalar<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Line<T> {
         Line::new(
-            rhs.s() * self.e01(),
-            rhs.s() * self.e02(),
-            rhs.s() * self.e03(),
-            rhs.s() * self.e23(),
-            rhs.s() * self.e31(),
-            rhs.s() * self.e12(),
+            self.e01() * rhs.s(),
+            self.e02() * rhs.s(),
+            self.e03() * rhs.s(),
+            self.e23() * rhs.s(),
+            self.e31() * rhs.s(),
+            self.e12() * rhs.s(),
         )
     }
 }
@@ -615,54 +615,54 @@ impl<T: Float> Mul<Flector<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.e1() * self.s()
-                + rhs.e2() * self.e12()
-                + rhs.e3() * self.e31()
-                + -(rhs.e123() * self.e23()),
-            -(rhs.e1() * self.e12())
-                + rhs.e2() * self.s()
-                + rhs.e3() * self.e23()
-                + rhs.e123() * self.e31(),
-            -(rhs.e1() * self.e31())
-                + -(rhs.e2() * self.e23())
-                + rhs.e3() * self.s()
-                + -(rhs.e123() * self.e12()),
-            -(rhs.e1() * self.e01())
-                + -(rhs.e2() * self.e02())
-                + -(rhs.e3() * self.e03())
-                + rhs.e0() * self.s()
-                + -(rhs.e023() * self.e23())
-                + -(rhs.e031() * self.e31())
-                + -(rhs.e012() * self.e12())
-                + rhs.e123() * self.e0123(),
-            -(rhs.e1() * self.e0123())
-                + rhs.e2() * self.e03()
-                + -(rhs.e3() * self.e02())
-                + rhs.e0() * self.e23()
-                + rhs.e023() * self.s()
-                + -(rhs.e031() * self.e12())
-                + rhs.e012() * self.e31()
-                + -(rhs.e123() * self.e01()),
-            rhs.e1() * self.e03()
-                + rhs.e2() * self.e0123()
-                + -(rhs.e3() * self.e01())
-                + rhs.e0() * self.e31()
-                + rhs.e023() * self.e12()
-                + rhs.e031() * self.s()
-                + -(rhs.e012() * self.e23())
-                + rhs.e123() * self.e02(),
-            rhs.e1() * self.e02()
-                + -(rhs.e2() * self.e01())
-                + -(rhs.e3() * self.e0123())
-                + rhs.e0() * self.e12()
-                + -(rhs.e023() * self.e31())
-                + rhs.e031() * self.e23()
-                + rhs.e012() * self.s()
-                + -(rhs.e123() * self.e03()),
-            rhs.e1() * self.e23()
-                + -(rhs.e2() * self.e31())
-                + rhs.e3() * self.e12()
-                + rhs.e123() * self.s(),
+            -(self.e23() * rhs.e123())
+                + self.e31() * rhs.e3()
+                + self.e12() * rhs.e2()
+                + self.s() * rhs.e1(),
+            self.e23() * rhs.e3()
+                + self.e31() * rhs.e123()
+                + -(self.e12() * rhs.e1())
+                + self.s() * rhs.e2(),
+            -(self.e23() * rhs.e2())
+                + -(self.e31() * rhs.e1())
+                + -(self.e12() * rhs.e123())
+                + self.s() * rhs.e3(),
+            -(self.e01() * rhs.e1())
+                + -(self.e02() * rhs.e2())
+                + -(self.e03() * rhs.e3())
+                + -(self.e23() * rhs.e023())
+                + -(self.e31() * rhs.e031())
+                + -(self.e12() * rhs.e012())
+                + self.s() * rhs.e0()
+                + self.e0123() * rhs.e123(),
+            -(self.e01() * rhs.e123())
+                + -(self.e02() * rhs.e3())
+                + self.e03() * rhs.e2()
+                + self.e23() * rhs.e0()
+                + self.e31() * rhs.e012()
+                + -(self.e12() * rhs.e031())
+                + self.s() * rhs.e023()
+                + -(self.e0123() * rhs.e1()),
+            -(self.e01() * rhs.e3())
+                + self.e02() * rhs.e123()
+                + self.e03() * rhs.e1()
+                + -(self.e23() * rhs.e012())
+                + self.e31() * rhs.e0()
+                + self.e12() * rhs.e023()
+                + self.s() * rhs.e031()
+                + self.e0123() * rhs.e2(),
+            -(self.e01() * rhs.e2())
+                + self.e02() * rhs.e1()
+                + -(self.e03() * rhs.e123())
+                + self.e23() * rhs.e031()
+                + -(self.e31() * rhs.e023())
+                + self.e12() * rhs.e0()
+                + self.s() * rhs.e012()
+                + -(self.e0123() * rhs.e3()),
+            self.e23() * rhs.e1()
+                + -(self.e31() * rhs.e2())
+                + self.e12() * rhs.e3()
+                + self.s() * rhs.e123(),
         )
     }
 }
@@ -671,34 +671,34 @@ impl<T: Float> Mul<Line<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Line<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(rhs.e23() * self.e23()) + -(rhs.e31() * self.e31()) + -(rhs.e12() * self.e12()),
-            rhs.e23() * self.s() + -(rhs.e31() * self.e12()) + rhs.e12() * self.e31(),
-            rhs.e23() * self.e12() + rhs.e31() * self.s() + -(rhs.e12() * self.e23()),
-            -(rhs.e23() * self.e31()) + rhs.e31() * self.e23() + rhs.e12() * self.s(),
-            rhs.e01() * self.s()
-                + rhs.e02() * self.e12()
-                + rhs.e03() * self.e31()
-                + -(rhs.e23() * self.e0123())
-                + -(rhs.e31() * self.e03())
-                + -(rhs.e12() * self.e02()),
-            -(rhs.e01() * self.e12())
-                + rhs.e02() * self.s()
-                + rhs.e03() * self.e23()
-                + -(rhs.e23() * self.e03())
-                + rhs.e31() * self.e0123()
-                + rhs.e12() * self.e01(),
-            -(rhs.e01() * self.e31())
-                + -(rhs.e02() * self.e23())
-                + rhs.e03() * self.s()
-                + rhs.e23() * self.e02()
-                + rhs.e31() * self.e01()
-                + -(rhs.e12() * self.e0123()),
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03(),
+            -(self.e23() * rhs.e23()) + -(self.e31() * rhs.e31()) + -(self.e12() * rhs.e12()),
+            self.e31() * rhs.e12() + -(self.e12() * rhs.e31()) + self.s() * rhs.e23(),
+            -(self.e23() * rhs.e12()) + self.e12() * rhs.e23() + self.s() * rhs.e31(),
+            self.e23() * rhs.e31() + -(self.e31() * rhs.e23()) + self.s() * rhs.e12(),
+            -(self.e02() * rhs.e12())
+                + -(self.e03() * rhs.e31())
+                + self.e31() * rhs.e03()
+                + self.e12() * rhs.e02()
+                + self.s() * rhs.e01()
+                + -(self.e0123() * rhs.e23()),
+            self.e01() * rhs.e12()
+                + -(self.e03() * rhs.e23())
+                + self.e23() * rhs.e03()
+                + -(self.e12() * rhs.e01())
+                + self.s() * rhs.e02()
+                + self.e0123() * rhs.e31(),
+            self.e01() * rhs.e31()
+                + self.e02() * rhs.e23()
+                + -(self.e23() * rhs.e02())
+                + -(self.e31() * rhs.e01())
+                + self.s() * rhs.e03()
+                + -(self.e0123() * rhs.e12()),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03(),
         )
     }
 }
@@ -707,54 +707,54 @@ impl<T: Float> Mul<Motor<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(rhs.e23() * self.e23())
-                + -(rhs.e31() * self.e31())
-                + -(rhs.e12() * self.e12())
-                + rhs.s() * self.s(),
-            rhs.e23() * self.s()
-                + -(rhs.e31() * self.e12())
-                + rhs.e12() * self.e31()
-                + rhs.s() * self.e23(),
-            rhs.e23() * self.e12()
-                + rhs.e31() * self.s()
-                + -(rhs.e12() * self.e23())
-                + rhs.s() * self.e31(),
-            -(rhs.e23() * self.e31())
-                + rhs.e31() * self.e23()
-                + rhs.e12() * self.s()
-                + rhs.s() * self.e12(),
-            rhs.e01() * self.s()
-                + rhs.e02() * self.e12()
-                + rhs.e03() * self.e31()
-                + -(rhs.e23() * self.e0123())
-                + -(rhs.e31() * self.e03())
-                + -(rhs.e12() * self.e02())
-                + rhs.s() * self.e01()
-                + -(rhs.e0123() * self.e23()),
-            -(rhs.e01() * self.e12())
-                + rhs.e02() * self.s()
-                + rhs.e03() * self.e23()
-                + -(rhs.e23() * self.e03())
-                + rhs.e31() * self.e0123()
-                + rhs.e12() * self.e01()
-                + rhs.s() * self.e02()
-                + rhs.e0123() * self.e31(),
-            -(rhs.e01() * self.e31())
-                + -(rhs.e02() * self.e23())
-                + rhs.e03() * self.s()
-                + rhs.e23() * self.e02()
-                + rhs.e31() * self.e01()
-                + -(rhs.e12() * self.e0123())
-                + rhs.s() * self.e03()
-                + -(rhs.e0123() * self.e12()),
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03()
-                + rhs.s() * self.e0123()
-                + rhs.e0123() * self.s(),
+            -(self.e23() * rhs.e23())
+                + -(self.e31() * rhs.e31())
+                + -(self.e12() * rhs.e12())
+                + self.s() * rhs.s(),
+            self.e23() * rhs.s()
+                + self.e31() * rhs.e12()
+                + -(self.e12() * rhs.e31())
+                + self.s() * rhs.e23(),
+            -(self.e23() * rhs.e12())
+                + self.e31() * rhs.s()
+                + self.e12() * rhs.e23()
+                + self.s() * rhs.e31(),
+            self.e23() * rhs.e31()
+                + -(self.e31() * rhs.e23())
+                + self.e12() * rhs.s()
+                + self.s() * rhs.e12(),
+            self.e01() * rhs.s()
+                + -(self.e02() * rhs.e12())
+                + -(self.e03() * rhs.e31())
+                + -(self.e23() * rhs.e0123())
+                + self.e31() * rhs.e03()
+                + self.e12() * rhs.e02()
+                + self.s() * rhs.e01()
+                + -(self.e0123() * rhs.e23()),
+            self.e01() * rhs.e12()
+                + self.e02() * rhs.s()
+                + -(self.e03() * rhs.e23())
+                + self.e23() * rhs.e03()
+                + self.e31() * rhs.e0123()
+                + -(self.e12() * rhs.e01())
+                + self.s() * rhs.e02()
+                + self.e0123() * rhs.e31(),
+            self.e01() * rhs.e31()
+                + self.e02() * rhs.e23()
+                + self.e03() * rhs.s()
+                + -(self.e23() * rhs.e02())
+                + -(self.e31() * rhs.e01())
+                + -(self.e12() * rhs.e0123())
+                + self.s() * rhs.e03()
+                + -(self.e0123() * rhs.e12()),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03()
+                + self.s() * rhs.e0123()
+                + self.e0123() * rhs.s(),
         )
     }
 }
@@ -763,26 +763,26 @@ impl<T: Float> Mul<Plane<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Plane<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -(rhs.e123() * self.e23()),
-            rhs.e123() * self.e31(),
-            -(rhs.e123() * self.e12()),
-            -(rhs.e023() * self.e23())
-                + -(rhs.e031() * self.e31())
-                + -(rhs.e012() * self.e12())
-                + rhs.e123() * self.e0123(),
-            rhs.e023() * self.s()
-                + -(rhs.e031() * self.e12())
-                + rhs.e012() * self.e31()
-                + -(rhs.e123() * self.e01()),
-            rhs.e023() * self.e12()
-                + rhs.e031() * self.s()
-                + -(rhs.e012() * self.e23())
-                + rhs.e123() * self.e02(),
-            -(rhs.e023() * self.e31())
-                + rhs.e031() * self.e23()
-                + rhs.e012() * self.s()
-                + -(rhs.e123() * self.e03()),
-            rhs.e123() * self.s(),
+            -(self.e23() * rhs.e123()),
+            self.e31() * rhs.e123(),
+            -(self.e12() * rhs.e123()),
+            -(self.e23() * rhs.e023())
+                + -(self.e31() * rhs.e031())
+                + -(self.e12() * rhs.e012())
+                + self.e0123() * rhs.e123(),
+            -(self.e01() * rhs.e123())
+                + self.e31() * rhs.e012()
+                + -(self.e12() * rhs.e031())
+                + self.s() * rhs.e023(),
+            self.e02() * rhs.e123()
+                + -(self.e23() * rhs.e012())
+                + self.e12() * rhs.e023()
+                + self.s() * rhs.e031(),
+            -(self.e03() * rhs.e123())
+                + self.e23() * rhs.e031()
+                + -(self.e31() * rhs.e023())
+                + self.s() * rhs.e012(),
+            self.s() * rhs.e123(),
         )
     }
 }
@@ -791,26 +791,26 @@ impl<T: Float> Mul<Point<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Point<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.e1() * self.s() + rhs.e2() * self.e12() + rhs.e3() * self.e31(),
-            -(rhs.e1() * self.e12()) + rhs.e2() * self.s() + rhs.e3() * self.e23(),
-            -(rhs.e1() * self.e31()) + -(rhs.e2() * self.e23()) + rhs.e3() * self.s(),
-            -(rhs.e1() * self.e01())
-                + -(rhs.e2() * self.e02())
-                + -(rhs.e3() * self.e03())
-                + rhs.e0() * self.s(),
-            -(rhs.e1() * self.e0123())
-                + rhs.e2() * self.e03()
-                + -(rhs.e3() * self.e02())
-                + rhs.e0() * self.e23(),
-            rhs.e1() * self.e03()
-                + rhs.e2() * self.e0123()
-                + -(rhs.e3() * self.e01())
-                + rhs.e0() * self.e31(),
-            rhs.e1() * self.e02()
-                + -(rhs.e2() * self.e01())
-                + -(rhs.e3() * self.e0123())
-                + rhs.e0() * self.e12(),
-            rhs.e1() * self.e23() + -(rhs.e2() * self.e31()) + rhs.e3() * self.e12(),
+            self.e31() * rhs.e3() + self.e12() * rhs.e2() + self.s() * rhs.e1(),
+            self.e23() * rhs.e3() + -(self.e12() * rhs.e1()) + self.s() * rhs.e2(),
+            -(self.e23() * rhs.e2()) + -(self.e31() * rhs.e1()) + self.s() * rhs.e3(),
+            -(self.e01() * rhs.e1())
+                + -(self.e02() * rhs.e2())
+                + -(self.e03() * rhs.e3())
+                + self.s() * rhs.e0(),
+            -(self.e02() * rhs.e3())
+                + self.e03() * rhs.e2()
+                + self.e23() * rhs.e0()
+                + -(self.e0123() * rhs.e1()),
+            -(self.e01() * rhs.e3())
+                + self.e03() * rhs.e1()
+                + self.e31() * rhs.e0()
+                + self.e0123() * rhs.e2(),
+            -(self.e01() * rhs.e2())
+                + self.e02() * rhs.e1()
+                + self.e12() * rhs.e0()
+                + -(self.e0123() * rhs.e3()),
+            self.e23() * rhs.e1() + -(self.e31() * rhs.e2()) + self.e12() * rhs.e3(),
         )
     }
 }
@@ -819,14 +819,14 @@ impl<T: Float> Mul<Scalar<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Motor<T> {
         Motor::new_unchecked(
-            rhs.s() * self.s(),
-            rhs.s() * self.e23(),
-            rhs.s() * self.e31(),
-            rhs.s() * self.e12(),
-            rhs.s() * self.e01(),
-            rhs.s() * self.e02(),
-            rhs.s() * self.e03(),
-            rhs.s() * self.e0123(),
+            self.s() * rhs.s(),
+            self.e23() * rhs.s(),
+            self.e31() * rhs.s(),
+            self.e12() * rhs.s(),
+            self.e01() * rhs.s(),
+            self.e02() * rhs.s(),
+            self.e03() * rhs.s(),
+            self.e0123() * rhs.s(),
         )
     }
 }
@@ -1176,10 +1176,10 @@ impl<T: Float> Mul<Flector<T>> for Quadvector<T> {
             T::zero(),
             T::zero(),
             T::zero(),
-            rhs.e123() * self.e0123(),
-            -(rhs.e1() * self.e0123()),
-            rhs.e2() * self.e0123(),
-            -(rhs.e3() * self.e0123()),
+            self.e0123() * rhs.e123(),
+            -(self.e0123() * rhs.e1()),
+            self.e0123() * rhs.e2(),
+            -(self.e0123() * rhs.e3()),
             T::zero(),
         )
     }
@@ -1189,9 +1189,9 @@ impl<T: Float> Mul<Line<T>> for Quadvector<T> {
     #[inline]
     fn mul(self, rhs: Line<T>) -> Line<T> {
         Line::new(
-            -(rhs.e23() * self.e0123()),
-            rhs.e31() * self.e0123(),
-            -(rhs.e12() * self.e0123()),
+            -(self.e0123() * rhs.e23()),
+            self.e0123() * rhs.e31(),
+            -(self.e0123() * rhs.e12()),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -1202,7 +1202,7 @@ impl<T: Float> Mul<Plane<T>> for Quadvector<T> {
     type Output = Point<T>;
     #[inline]
     fn mul(self, rhs: Plane<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), T::zero(), rhs.e123() * self.e0123())
+        Point::new(T::zero(), T::zero(), T::zero(), self.e0123() * rhs.e123())
     }
 }
 impl<T: Float> Mul<Point<T>> for Quadvector<T> {
@@ -1210,9 +1210,9 @@ impl<T: Float> Mul<Point<T>> for Quadvector<T> {
     #[inline]
     fn mul(self, rhs: Point<T>) -> Plane<T> {
         Plane::new(
-            -(rhs.e1() * self.e0123()),
-            rhs.e2() * self.e0123(),
-            -(rhs.e3() * self.e0123()),
+            -(self.e0123() * rhs.e1()),
+            self.e0123() * rhs.e2(),
+            -(self.e0123() * rhs.e3()),
             T::zero(),
         )
     }
@@ -1221,7 +1221,7 @@ impl<T: Float> Mul<Scalar<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.s() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.s())
     }
 }
 impl<T: Float> Add for Scalar<T> {
@@ -1271,14 +1271,14 @@ impl<T: Float> Mul<Flector<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.e1() * self.s(),
-            rhs.e2() * self.s(),
-            rhs.e3() * self.s(),
-            rhs.e0() * self.s(),
-            rhs.e023() * self.s(),
-            rhs.e031() * self.s(),
-            rhs.e012() * self.s(),
-            rhs.e123() * self.s(),
+            self.s() * rhs.e1(),
+            self.s() * rhs.e2(),
+            self.s() * rhs.e3(),
+            self.s() * rhs.e0(),
+            self.s() * rhs.e023(),
+            self.s() * rhs.e031(),
+            self.s() * rhs.e012(),
+            self.s() * rhs.e123(),
         )
     }
 }
@@ -1287,12 +1287,12 @@ impl<T: Float> Mul<Line<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Line<T>) -> Line<T> {
         Line::new(
-            rhs.e01() * self.s(),
-            rhs.e02() * self.s(),
-            rhs.e03() * self.s(),
-            rhs.e23() * self.s(),
-            rhs.e31() * self.s(),
-            rhs.e12() * self.s(),
+            self.s() * rhs.e01(),
+            self.s() * rhs.e02(),
+            self.s() * rhs.e03(),
+            self.s() * rhs.e23(),
+            self.s() * rhs.e31(),
+            self.s() * rhs.e12(),
         )
     }
 }
@@ -1301,14 +1301,14 @@ impl<T: Float> Mul<Motor<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            rhs.s() * self.s(),
-            rhs.e23() * self.s(),
-            rhs.e31() * self.s(),
-            rhs.e12() * self.s(),
-            rhs.e01() * self.s(),
-            rhs.e02() * self.s(),
-            rhs.e03() * self.s(),
-            rhs.e0123() * self.s(),
+            self.s() * rhs.s(),
+            self.s() * rhs.e23(),
+            self.s() * rhs.e31(),
+            self.s() * rhs.e12(),
+            self.s() * rhs.e01(),
+            self.s() * rhs.e02(),
+            self.s() * rhs.e03(),
+            self.s() * rhs.e0123(),
         )
     }
 }
@@ -1317,10 +1317,10 @@ impl<T: Float> Mul<Plane<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Plane<T>) -> Plane<T> {
         Plane::new(
-            rhs.e023() * self.s(),
-            rhs.e031() * self.s(),
-            rhs.e012() * self.s(),
-            rhs.e123() * self.s(),
+            self.s() * rhs.e023(),
+            self.s() * rhs.e031(),
+            self.s() * rhs.e012(),
+            self.s() * rhs.e123(),
         )
     }
 }
@@ -1329,10 +1329,10 @@ impl<T: Float> Mul<Point<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Point<T>) -> Point<T> {
         Point::new(
-            rhs.e1() * self.s(),
-            rhs.e2() * self.s(),
-            rhs.e3() * self.s(),
-            rhs.e0() * self.s(),
+            self.s() * rhs.e1(),
+            self.s() * rhs.e2(),
+            self.s() * rhs.e3(),
+            self.s() * rhs.e0(),
         )
     }
 }
@@ -1340,14 +1340,14 @@ impl<T: Float> Mul<Quadvector<T>> for Scalar<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn mul(self, rhs: Quadvector<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e0123() * self.s())
+        Quadvector::new(self.s() * rhs.e0123())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new(self.s() * rhs.s())
     }
 }
 impl<T: Float> Wedge<Line<T>> for Line<T> {
@@ -1355,12 +1355,12 @@ impl<T: Float> Wedge<Line<T>> for Line<T> {
     #[inline]
     fn wedge(&self, rhs: &Line<T>) -> Quadvector<T> {
         Quadvector::new(
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03(),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03(),
         )
     }
 }
@@ -1369,10 +1369,10 @@ impl<T: Float> Wedge<Point<T>> for Line<T> {
     #[inline]
     fn wedge(&self, rhs: &Point<T>) -> Plane<T> {
         Plane::new(
-            rhs.e2() * self.e03() + -(rhs.e3() * self.e02()) + rhs.e0() * self.e23(),
-            rhs.e1() * self.e03() + -(rhs.e3() * self.e01()) + rhs.e0() * self.e31(),
-            rhs.e1() * self.e02() + -(rhs.e2() * self.e01()) + rhs.e0() * self.e12(),
-            rhs.e1() * self.e23() + -(rhs.e2() * self.e31()) + rhs.e3() * self.e12(),
+            -(self.e02() * rhs.e3()) + self.e03() * rhs.e2() + self.e23() * rhs.e0(),
+            -(self.e01() * rhs.e3()) + self.e03() * rhs.e1() + self.e31() * rhs.e0(),
+            -(self.e01() * rhs.e2()) + self.e02() * rhs.e1() + self.e12() * rhs.e0(),
+            self.e23() * rhs.e1() + -(self.e31() * rhs.e2()) + self.e12() * rhs.e3(),
         )
     }
 }
@@ -1381,12 +1381,12 @@ impl<T: Float> Wedge<Scalar<T>> for Line<T> {
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new(
-            rhs.s() * self.e01(),
-            rhs.s() * self.e02(),
-            rhs.s() * self.e03(),
-            rhs.s() * self.e23(),
-            rhs.s() * self.e31(),
-            rhs.s() * self.e12(),
+            self.e01() * rhs.s(),
+            self.e02() * rhs.s(),
+            self.e03() * rhs.s(),
+            self.e23() * rhs.s(),
+            self.e31() * rhs.s(),
+            self.e12() * rhs.s(),
         )
     }
 }
@@ -1468,7 +1468,7 @@ impl<T: Float> Wedge<Scalar<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.s() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.s())
     }
 }
 impl<T: Float> Wedge<Line<T>> for Scalar<T> {
@@ -1476,12 +1476,12 @@ impl<T: Float> Wedge<Line<T>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            rhs.e01() * self.s(),
-            rhs.e02() * self.s(),
-            rhs.e03() * self.s(),
-            rhs.e23() * self.s(),
-            rhs.e31() * self.s(),
-            rhs.e12() * self.s(),
+            self.s() * rhs.e01(),
+            self.s() * rhs.e02(),
+            self.s() * rhs.e03(),
+            self.s() * rhs.e23(),
+            self.s() * rhs.e31(),
+            self.s() * rhs.e12(),
         )
     }
 }
@@ -1490,10 +1490,10 @@ impl<T: Float> Wedge<Plane<T>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Plane<T>) -> Plane<T> {
         Plane::new(
-            rhs.e023() * self.s(),
-            rhs.e031() * self.s(),
-            rhs.e012() * self.s(),
-            rhs.e123() * self.s(),
+            self.s() * rhs.e023(),
+            self.s() * rhs.e031(),
+            self.s() * rhs.e012(),
+            self.s() * rhs.e123(),
         )
     }
 }
@@ -1502,10 +1502,10 @@ impl<T: Float> Wedge<Point<T>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            rhs.e1() * self.s(),
-            rhs.e2() * self.s(),
-            rhs.e3() * self.s(),
-            rhs.e0() * self.s(),
+            self.s() * rhs.e1(),
+            self.s() * rhs.e2(),
+            self.s() * rhs.e3(),
+            self.s() * rhs.e0(),
         )
     }
 }
@@ -1513,14 +1513,14 @@ impl<T: Float> Wedge<Quadvector<T>> for Scalar<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn wedge(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e0123() * self.s())
+        Quadvector::new(self.s() * rhs.e0123())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new(self.s() * rhs.s())
     }
 }
 impl<T: Float> Antiwedge<Line<T>> for Line<T> {
@@ -1528,12 +1528,12 @@ impl<T: Float> Antiwedge<Line<T>> for Line<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(
-            rhs.e01() * self.e23()
-                + -(rhs.e02() * self.e31())
-                + rhs.e03() * self.e12()
-                + rhs.e23() * self.e01()
-                + -(rhs.e31() * self.e02())
-                + rhs.e12() * self.e03(),
+            self.e01() * rhs.e23()
+                + -(self.e02() * rhs.e31())
+                + self.e03() * rhs.e12()
+                + self.e23() * rhs.e01()
+                + -(self.e31() * rhs.e02())
+                + self.e12() * rhs.e03(),
         )
     }
 }
@@ -1542,10 +1542,10 @@ impl<T: Float> Antiwedge<Plane<T>> for Line<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Plane<T>) -> Point<T> {
         Point::new(
-            -(rhs.e031() * self.e12()) + rhs.e012() * self.e31() + -(rhs.e123() * self.e01()),
-            -(rhs.e023() * self.e12()) + rhs.e012() * self.e23() + -(rhs.e123() * self.e02()),
-            -(rhs.e023() * self.e31()) + rhs.e031() * self.e23() + -(rhs.e123() * self.e03()),
-            -(rhs.e023() * self.e01()) + rhs.e031() * self.e02() + -(rhs.e012() * self.e03()),
+            -(self.e01() * rhs.e123()) + self.e31() * rhs.e012() + -(self.e12() * rhs.e031()),
+            -(self.e02() * rhs.e123()) + self.e23() * rhs.e012() + -(self.e12() * rhs.e023()),
+            -(self.e03() * rhs.e123()) + self.e23() * rhs.e031() + -(self.e31() * rhs.e023()),
+            -(self.e01() * rhs.e023()) + self.e02() * rhs.e031() + -(self.e03() * rhs.e012()),
         )
     }
 }
@@ -1554,12 +1554,12 @@ impl<T: Float> Antiwedge<Quadvector<T>> for Line<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Quadvector<T>) -> Line<T> {
         Line::new(
-            rhs.e0123() * self.e01(),
-            rhs.e0123() * self.e02(),
-            rhs.e0123() * self.e03(),
-            rhs.e0123() * self.e23(),
-            rhs.e0123() * self.e31(),
-            rhs.e0123() * self.e12(),
+            self.e01() * rhs.e0123(),
+            self.e02() * rhs.e0123(),
+            self.e03() * rhs.e0123(),
+            self.e23() * rhs.e0123(),
+            self.e31() * rhs.e0123(),
+            self.e12() * rhs.e0123(),
         )
     }
 }
@@ -1642,12 +1642,12 @@ impl<T: Float> Antiwedge<Line<T>> for Quadvector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            rhs.e01() * self.e0123(),
-            rhs.e02() * self.e0123(),
-            rhs.e03() * self.e0123(),
-            rhs.e23() * self.e0123(),
-            rhs.e31() * self.e0123(),
-            rhs.e12() * self.e0123(),
+            self.e0123() * rhs.e01(),
+            self.e0123() * rhs.e02(),
+            self.e0123() * rhs.e03(),
+            self.e0123() * rhs.e23(),
+            self.e0123() * rhs.e31(),
+            self.e0123() * rhs.e12(),
         )
     }
 }
@@ -1656,10 +1656,10 @@ impl<T: Float> Antiwedge<Plane<T>> for Quadvector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Plane<T>) -> Plane<T> {
         Plane::new(
-            -(rhs.e023() * self.e0123()),
-            -(rhs.e031() * self.e0123()),
-            -(rhs.e012() * self.e0123()),
-            -(rhs.e123() * self.e0123()),
+            -(self.e0123() * rhs.e023()),
+            -(self.e0123() * rhs.e031()),
+            -(self.e0123() * rhs.e012()),
+            -(self.e0123() * rhs.e123()),
         )
     }
 }
@@ -1668,10 +1668,10 @@ impl<T: Float> Antiwedge<Point<T>> for Quadvector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            -(rhs.e1() * self.e0123()),
-            -(rhs.e2() * self.e0123()),
-            -(rhs.e3() * self.e0123()),
-            -(rhs.e0() * self.e0123()),
+            -(self.e0123() * rhs.e1()),
+            -(self.e0123() * rhs.e2()),
+            -(self.e0123() * rhs.e3()),
+            -(self.e0123() * rhs.e0()),
         )
     }
 }
@@ -1679,21 +1679,21 @@ impl<T: Float> Antiwedge<Quadvector<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e0123() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.e0123())
     }
 }
 impl<T: Float> Antiwedge<Scalar<T>> for Quadvector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.e0123())
+        Scalar::new(self.e0123() * rhs.s())
     }
 }
 impl<T: Float> Antiwedge<Quadvector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Quadvector<T>) -> Scalar<T> {
-        Scalar::new(rhs.e0123() * self.s())
+        Scalar::new(self.s() * rhs.e0123())
     }
 }
 impl<T: Float> LeftContract<Line<T>> for Line<T> {
@@ -1701,7 +1701,7 @@ impl<T: Float> LeftContract<Line<T>> for Line<T> {
     #[inline]
     fn left_contract(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(
-            -(rhs.e23() * self.e23()) + -(rhs.e31() * self.e31()) + -(rhs.e12() * self.e12()),
+            -(self.e23() * rhs.e23()) + -(self.e31() * rhs.e31()) + -(self.e12() * rhs.e12()),
         )
     }
 }
@@ -1710,10 +1710,10 @@ impl<T: Float> LeftContract<Plane<T>> for Line<T> {
     #[inline]
     fn left_contract(&self, rhs: &Plane<T>) -> Point<T> {
         Point::new(
-            -(rhs.e123() * self.e23()),
-            rhs.e123() * self.e31(),
-            -(rhs.e123() * self.e12()),
-            -(rhs.e023() * self.e23()) + -(rhs.e031() * self.e31()) + -(rhs.e012() * self.e12()),
+            -(self.e23() * rhs.e123()),
+            self.e31() * rhs.e123(),
+            -(self.e12() * rhs.e123()),
+            -(self.e23() * rhs.e023()) + -(self.e31() * rhs.e031()) + -(self.e12() * rhs.e012()),
         )
     }
 }
@@ -1722,9 +1722,9 @@ impl<T: Float> LeftContract<Quadvector<T>> for Line<T> {
     #[inline]
     fn left_contract(&self, rhs: &Quadvector<T>) -> Line<T> {
         Line::new(
-            -(rhs.e0123() * self.e23()),
-            rhs.e0123() * self.e31(),
-            -(rhs.e0123() * self.e12()),
+            -(self.e23() * rhs.e0123()),
+            self.e31() * rhs.e0123(),
+            -(self.e12() * rhs.e0123()),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -1800,12 +1800,12 @@ impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            rhs.e01() * self.s(),
-            rhs.e02() * self.s(),
-            rhs.e03() * self.s(),
-            rhs.e23() * self.s(),
-            rhs.e31() * self.s(),
-            rhs.e12() * self.s(),
+            self.s() * rhs.e01(),
+            self.s() * rhs.e02(),
+            self.s() * rhs.e03(),
+            self.s() * rhs.e23(),
+            self.s() * rhs.e31(),
+            self.s() * rhs.e12(),
         )
     }
 }
@@ -1814,10 +1814,10 @@ impl<T: Float> LeftContract<Plane<T>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Plane<T>) -> Plane<T> {
         Plane::new(
-            rhs.e023() * self.s(),
-            rhs.e031() * self.s(),
-            rhs.e012() * self.s(),
-            rhs.e123() * self.s(),
+            self.s() * rhs.e023(),
+            self.s() * rhs.e031(),
+            self.s() * rhs.e012(),
+            self.s() * rhs.e123(),
         )
     }
 }
@@ -1826,10 +1826,10 @@ impl<T: Float> LeftContract<Point<T>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            rhs.e1() * self.s(),
-            rhs.e2() * self.s(),
-            rhs.e3() * self.s(),
-            rhs.e0() * self.s(),
+            self.s() * rhs.e1(),
+            self.s() * rhs.e2(),
+            self.s() * rhs.e3(),
+            self.s() * rhs.e0(),
         )
     }
 }
@@ -1837,14 +1837,14 @@ impl<T: Float> LeftContract<Quadvector<T>> for Scalar<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e0123() * self.s())
+        Quadvector::new(self.s() * rhs.e0123())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new(self.s() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Line<T>> for Line<T> {
@@ -1852,7 +1852,7 @@ impl<T: Float> RightContract<Line<T>> for Line<T> {
     #[inline]
     fn right_contract(&self, rhs: &Line<T>) -> Scalar<T> {
         Scalar::new(
-            -(rhs.e23() * self.e23()) + -(rhs.e31() * self.e31()) + -(rhs.e12() * self.e12()),
+            -(self.e23() * rhs.e23()) + -(self.e31() * rhs.e31()) + -(self.e12() * rhs.e12()),
         )
     }
 }
@@ -1861,10 +1861,10 @@ impl<T: Float> RightContract<Point<T>> for Line<T> {
     #[inline]
     fn right_contract(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            rhs.e2() * self.e12() + rhs.e3() * self.e31(),
-            -(rhs.e1() * self.e12()) + rhs.e3() * self.e23(),
-            -(rhs.e1() * self.e31()) + -(rhs.e2() * self.e23()),
-            -(rhs.e1() * self.e01()) + -(rhs.e2() * self.e02()) + -(rhs.e3() * self.e03()),
+            self.e31() * rhs.e3() + self.e12() * rhs.e2(),
+            self.e23() * rhs.e3() + -(self.e12() * rhs.e1()),
+            -(self.e23() * rhs.e2()) + -(self.e31() * rhs.e1()),
+            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()) + -(self.e03() * rhs.e3()),
         )
     }
 }
@@ -1873,12 +1873,12 @@ impl<T: Float> RightContract<Scalar<T>> for Line<T> {
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new(
-            rhs.s() * self.e01(),
-            rhs.s() * self.e02(),
-            rhs.s() * self.e03(),
-            rhs.s() * self.e23(),
-            rhs.s() * self.e31(),
-            rhs.s() * self.e12(),
+            self.e01() * rhs.s(),
+            self.e02() * rhs.s(),
+            self.e03() * rhs.s(),
+            self.e23() * rhs.s(),
+            self.e31() * rhs.s(),
+            self.e12() * rhs.s(),
         )
     }
 }
@@ -1951,9 +1951,9 @@ impl<T: Float> RightContract<Line<T>> for Quadvector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            -(rhs.e23() * self.e0123()),
-            rhs.e31() * self.e0123(),
-            -(rhs.e12() * self.e0123()),
+            -(self.e0123() * rhs.e23()),
+            self.e0123() * rhs.e31(),
+            -(self.e0123() * rhs.e12()),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -1964,7 +1964,7 @@ impl<T: Float> RightContract<Plane<T>> for Quadvector<T> {
     type Output = Point<T>;
     #[inline]
     fn right_contract(&self, rhs: &Plane<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), T::zero(), rhs.e123() * self.e0123())
+        Point::new(T::zero(), T::zero(), T::zero(), self.e0123() * rhs.e123())
     }
 }
 impl<T: Float> RightContract<Point<T>> for Quadvector<T> {
@@ -1972,9 +1972,9 @@ impl<T: Float> RightContract<Point<T>> for Quadvector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Point<T>) -> Plane<T> {
         Plane::new(
-            -(rhs.e1() * self.e0123()),
-            rhs.e2() * self.e0123(),
-            -(rhs.e3() * self.e0123()),
+            -(self.e0123() * rhs.e1()),
+            self.e0123() * rhs.e2(),
+            -(self.e0123() * rhs.e3()),
             T::zero(),
         )
     }
@@ -1983,84 +1983,270 @@ impl<T: Float> RightContract<Scalar<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.s() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.s())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new(self.s() * rhs.s())
     }
 }
-impl<T: Float> Sandwich<Point<T>> for Flector<T> {
-    type Output = Point<T>;
+impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
+    type Output = Flector<T>;
     #[inline]
-    fn sandwich(&self, operand: &Point<T>) -> Point<T> {
-        Point::new(
-            -(self.e3() * operand.e2() * self.e123()) + self.e2() * operand.e2() * self.e1()
-                - self.e3() * operand.e1() * self.e3()
+    fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
+        Flector::new_unchecked(
+            self.e1() * operand.e3() * self.e3() - self.e2() * operand.e1() * self.e2()
+                + self.e2() * operand.e2() * self.e1()
+                - self.e3() * operand.e2() * self.e123()
+                + self.e123() * operand.e1() * self.e123()
                 - self.e123() * operand.e2() * self.e3()
                 + self.e1() * operand.e2() * self.e2()
-                + self.e1() * operand.e1() * self.e1()
-                + self.e1() * operand.e3() * self.e3()
-                + self.e2() * operand.e3() * self.e123()
-                - self.e2() * operand.e1() * self.e2()
+                - self.e3() * operand.e1() * self.e3()
+                + self.e123() * operand.e3() * self.e2()
+                - self.e123() * operand.e123() * self.e1()
+                + self.e1() * operand.e123() * self.e123()
                 + self.e3() * operand.e3() * self.e1()
-                + self.e123() * operand.e1() * self.e123()
-                + self.e123() * operand.e3() * self.e2(),
-            self.e2() * operand.e1() * self.e1()
-                - self.e1() * operand.e2() * self.e1()
+                + self.e1() * operand.e1() * self.e1()
+                + self.e2() * operand.e3() * self.e123()
+                - self.e2() * operand.e123() * self.e3()
+                + self.e3() * operand.e123() * self.e2(),
+            self.e1() * operand.e123() * self.e3()
                 - self.e1() * operand.e3() * self.e123()
-                + self.e2() * operand.e3() * self.e3()
+                - self.e1() * operand.e2() * self.e1()
+                - self.e123() * operand.e3() * self.e1()
                 + self.e123() * operand.e1() * self.e3()
-                + self.e1() * operand.e1() * self.e2()
-                - self.e3() * operand.e2() * self.e3()
+                - self.e123() * operand.e123() * self.e2()
                 + self.e123() * operand.e2() * self.e123()
+                + self.e1() * operand.e1() * self.e2()
+                + self.e2() * operand.e1() * self.e1()
+                + self.e2() * operand.e3() * self.e3()
                 + self.e2() * operand.e2() * self.e2()
-                + self.e3() * operand.e3() * self.e2()
+                - self.e3() * operand.e2() * self.e3()
                 + self.e3() * operand.e1() * self.e123()
-                - self.e123() * operand.e3() * self.e1(),
-            self.e3() * operand.e2() * self.e2()
-                + self.e1() * operand.e1() * self.e3()
-                + self.e1() * operand.e2() * self.e123()
-                + self.e3() * operand.e1() * self.e1()
-                - self.e2() * operand.e1() * self.e123()
-                + self.e2() * operand.e2() * self.e3()
+                + self.e3() * operand.e3() * self.e2()
+                + self.e2() * operand.e123() * self.e123()
+                - self.e3() * operand.e123() * self.e1(),
+            -(self.e123() * operand.e1() * self.e2()) + self.e3() * operand.e1() * self.e1()
+                - self.e123() * operand.e123() * self.e3()
+                - self.e1() * operand.e123() * self.e2()
                 - self.e2() * operand.e3() * self.e2()
+                - self.e2() * operand.e1() * self.e123()
+                + self.e3() * operand.e123() * self.e123()
+                + self.e3() * operand.e2() * self.e2()
+                + self.e1() * operand.e1() * self.e3()
+                + self.e2() * operand.e123() * self.e1()
                 + self.e3() * operand.e3() * self.e3()
-                - self.e123() * operand.e1() * self.e2()
+                + self.e2() * operand.e2() * self.e3()
                 + self.e123() * operand.e2() * self.e1()
                 + self.e123() * operand.e3() * self.e123()
+                + self.e1() * operand.e2() * self.e123()
                 - self.e1() * operand.e3() * self.e1(),
-            -(self.e3() * operand.e1() * self.e031())
-                + self.e2() * operand.e3() * self.e023()
-                + self.e023() * operand.e1() * self.e123()
-                - self.e123() * operand.e2() * self.e031()
-                + self.e031() * operand.e3() * self.e1()
-                + self.e123() * operand.e3() * self.e012()
-                - self.e123() * operand.e0() * self.e123()
-                - self.e3() * operand.e0() * self.e3()
-                - self.e2() * operand.e1() * self.e012()
-                + self.e123() * operand.e1() * self.e023()
-                - self.e023() * operand.e2() * self.e3()
+            -(self.e1() * operand.e012() * self.e2()) - self.e3() * operand.e1() * self.e031()
+                + self.e3() * operand.e031() * self.e1()
                 - self.e2() * operand.e0() * self.e2()
+                + self.e2() * operand.e031() * self.e123()
                 + self.e1() * operand.e2() * self.e012()
-                + self.e1() * operand.e1() * self.e0()
-                - self.e3() * operand.e2() * self.e023()
-                - self.e031() * operand.e1() * self.e3()
-                + self.e3() * operand.e3() * self.e0()
-                - self.e1() * operand.e0() * self.e1()
-                + self.e0() * operand.e1() * self.e1()
-                + self.e1() * operand.e3() * self.e031()
+                + self.e2() * operand.e2() * self.e0()
                 + self.e0() * operand.e3() * self.e3()
-                - self.e031() * operand.e2() * self.e123()
-                - self.e012() * operand.e1() * self.e2()
-                + self.e023() * operand.e3() * self.e2()
+                - self.e023() * operand.e123() * self.e1()
+                + self.e031() * operand.e123() * self.e2()
+                - self.e2() * operand.e123() * self.e031()
+                + self.e1() * operand.e1() * self.e0()
+                + self.e123() * operand.e3() * self.e012()
+                + self.e2() * operand.e012() * self.e1()
+                + self.e023() * operand.e1() * self.e123()
+                - self.e2() * operand.e1() * self.e012()
+                + self.e3() * operand.e3() * self.e0()
+                - self.e2() * operand.e023() * self.e3()
+                + self.e3() * operand.e023() * self.e2()
                 + self.e0() * operand.e2() * self.e2()
-                + self.e012() * operand.e2() * self.e1()
+                - self.e023() * operand.e2() * self.e3()
+                + self.e031() * operand.e3() * self.e1()
                 + self.e012() * operand.e3() * self.e123()
-                + self.e2() * operand.e2() * self.e0(),
+                - self.e3() * operand.e012() * self.e123()
+                - self.e1() * operand.e031() * self.e3()
+                - self.e012() * operand.e123() * self.e3()
+                + self.e1() * operand.e123() * self.e023()
+                + self.e123() * operand.e1() * self.e023()
+                - self.e3() * operand.e0() * self.e3()
+                - self.e1() * operand.e023() * self.e123()
+                + self.e2() * operand.e3() * self.e023()
+                - self.e031() * operand.e1() * self.e3()
+                - self.e031() * operand.e2() * self.e123()
+                - self.e123() * operand.e2() * self.e031()
+                - self.e123() * operand.e031() * self.e2()
+                - self.e3() * operand.e2() * self.e023()
+                + self.e3() * operand.e123() * self.e012()
+                + self.e123() * operand.e012() * self.e3()
+                - self.e123() * operand.e123() * self.e0()
+                + self.e012() * operand.e2() * self.e1()
+                - self.e1() * operand.e0() * self.e1()
+                + self.e123() * operand.e023() * self.e1()
+                + self.e1() * operand.e3() * self.e031()
+                - self.e012() * operand.e1() * self.e2()
+                + self.e0() * operand.e123() * self.e123()
+                + self.e0() * operand.e1() * self.e1()
+                - self.e123() * operand.e0() * self.e123()
+                + self.e023() * operand.e3() * self.e2(),
+            self.e023() * operand.e1() * self.e1() + self.e123() * operand.e3() * self.e031()
+                - self.e123() * operand.e031() * self.e3()
+                + self.e1() * operand.e0() * self.e123()
+                + self.e023() * operand.e2() * self.e2()
+                + self.e2() * operand.e023() * self.e2()
+                - self.e031() * operand.e3() * self.e123()
+                - self.e012() * operand.e2() * self.e123()
+                - self.e123() * operand.e023() * self.e123()
+                + self.e1() * operand.e2() * self.e031()
+                + self.e123() * operand.e1() * self.e0()
+                - self.e0() * operand.e1() * self.e123()
+                + self.e2() * operand.e123() * self.e012()
+                - self.e3() * operand.e2() * self.e0()
+                + self.e3() * operand.e123() * self.e031()
+                + self.e2() * operand.e3() * self.e0()
+                - self.e0() * operand.e3() * self.e2()
+                - self.e012() * operand.e1() * self.e3()
+                + self.e123() * operand.e2() * self.e012()
+                - self.e2() * operand.e012() * self.e123()
+                - self.e1() * operand.e012() * self.e3()
+                - self.e1() * operand.e3() * self.e012()
+                - self.e2() * operand.e1() * self.e031()
+                - self.e2() * operand.e0() * self.e3()
+                - self.e3() * operand.e3() * self.e023()
+                + self.e3() * operand.e1() * self.e012()
+                - self.e3() * operand.e012() * self.e1()
+                + self.e023() * operand.e3() * self.e3()
+                - self.e3() * operand.e031() * self.e123()
+                - self.e031() * operand.e2() * self.e1()
+                + self.e031() * operand.e123() * self.e3()
+                - self.e123() * operand.e0() * self.e1()
+                + self.e0() * operand.e123() * self.e1()
+                + self.e3() * operand.e0() * self.e2()
+                + self.e2() * operand.e031() * self.e1()
+                - self.e2() * operand.e2() * self.e023()
+                + self.e1() * operand.e031() * self.e2()
+                + self.e023() * operand.e123() * self.e123()
+                + self.e012() * operand.e3() * self.e1()
+                + self.e3() * operand.e023() * self.e3()
+                + self.e031() * operand.e1() * self.e2()
+                + self.e012() * operand.e123() * self.e2()
+                - self.e123() * operand.e012() * self.e2()
+                + self.e123() * operand.e123() * self.e023()
+                - self.e1() * operand.e1() * self.e023()
+                + self.e0() * operand.e2() * self.e3()
+                + self.e1() * operand.e123() * self.e0()
+                - self.e1() * operand.e023() * self.e1(),
+            -(self.e2() * operand.e123() * self.e0()) + self.e031() * operand.e123() * self.e123()
+                - self.e2() * operand.e2() * self.e031()
+                - self.e012() * operand.e1() * self.e123()
+                + self.e3() * operand.e012() * self.e2()
+                + self.e0() * operand.e2() * self.e123()
+                - self.e123() * operand.e012() * self.e1()
+                + self.e2() * operand.e012() * self.e3()
+                - self.e1() * operand.e012() * self.e123()
+                - self.e123() * operand.e2() * self.e0()
+                + self.e2() * operand.e3() * self.e012()
+                - self.e023() * operand.e1() * self.e2()
+                - self.e012() * operand.e3() * self.e2()
+                - self.e123() * operand.e3() * self.e023()
+                + self.e0() * operand.e1() * self.e3()
+                + self.e1() * operand.e3() * self.e0()
+                + self.e031() * operand.e2() * self.e2()
+                - self.e1() * operand.e0() * self.e3()
+                + self.e031() * operand.e1() * self.e1()
+                - self.e1() * operand.e1() * self.e031()
+                + self.e3() * operand.e031() * self.e3()
+                + self.e023() * operand.e2() * self.e1()
+                + self.e023() * operand.e3() * self.e123()
+                - self.e1() * operand.e2() * self.e023()
+                + self.e2() * operand.e1() * self.e023()
+                + self.e012() * operand.e2() * self.e3()
+                - self.e2() * operand.e0() * self.e123()
+                - self.e3() * operand.e3() * self.e031()
+                - self.e0() * operand.e3() * self.e1()
+                - self.e0() * operand.e123() * self.e2()
+                - self.e2() * operand.e031() * self.e2()
+                + self.e1() * operand.e023() * self.e2()
+                - self.e3() * operand.e2() * self.e012()
+                + self.e3() * operand.e023() * self.e123()
+                + self.e1() * operand.e031() * self.e1()
+                - self.e023() * operand.e123() * self.e3()
+                + self.e012() * operand.e123() * self.e1()
+                + self.e123() * operand.e1() * self.e012()
+                + self.e123() * operand.e023() * self.e3()
+                - self.e123() * operand.e031() * self.e123()
+                - self.e3() * operand.e123() * self.e023()
+                + self.e123() * operand.e123() * self.e031()
+                + self.e3() * operand.e0() * self.e1()
+                + self.e2() * operand.e023() * self.e1()
+                - self.e3() * operand.e1() * self.e0()
+                + self.e031() * operand.e3() * self.e3()
+                + self.e1() * operand.e123() * self.e012()
+                + self.e123() * operand.e0() * self.e2(),
+            self.e031() * operand.e3() * self.e2() - self.e2() * operand.e123() * self.e023()
+                + self.e3() * operand.e2() * self.e031()
+                + self.e1() * operand.e3() * self.e023()
+                - self.e023() * operand.e3() * self.e1()
+                + self.e023() * operand.e1() * self.e3()
+                - self.e3() * operand.e1() * self.e023()
+                + self.e012() * operand.e3() * self.e3()
+                + self.e123() * operand.e023() * self.e2()
+                + self.e123() * operand.e123() * self.e012()
+                - self.e1() * operand.e023() * self.e3()
+                - self.e031() * operand.e2() * self.e3()
+                - self.e2() * operand.e3() * self.e031()
+                - self.e1() * operand.e0() * self.e2()
+                + self.e012() * operand.e2() * self.e2()
+                - self.e123() * operand.e1() * self.e031()
+                - self.e123() * operand.e0() * self.e3()
+                - self.e2() * operand.e2() * self.e012()
+                - self.e3() * operand.e012() * self.e3()
+                + self.e3() * operand.e123() * self.e0()
+                + self.e2() * operand.e023() * self.e123()
+                + self.e0() * operand.e123() * self.e3()
+                + self.e012() * operand.e1() * self.e1()
+                - self.e0() * operand.e3() * self.e123()
+                + self.e012() * operand.e123() * self.e123()
+                + self.e2() * operand.e031() * self.e3()
+                - self.e1() * operand.e1() * self.e012()
+                + self.e0() * operand.e1() * self.e2()
+                - self.e0() * operand.e2() * self.e1()
+                + self.e123() * operand.e3() * self.e0()
+                + self.e2() * operand.e012() * self.e2()
+                - self.e3() * operand.e023() * self.e1()
+                + self.e1() * operand.e012() * self.e1()
+                - self.e023() * operand.e123() * self.e2()
+                + self.e2() * operand.e0() * self.e1()
+                + self.e1() * operand.e031() * self.e123()
+                + self.e123() * operand.e031() * self.e1()
+                + self.e3() * operand.e0() * self.e123()
+                - self.e3() * operand.e3() * self.e012()
+                - self.e123() * operand.e012() * self.e123()
+                - self.e123() * operand.e2() * self.e023()
+                - self.e031() * operand.e123() * self.e1()
+                - self.e2() * operand.e1() * self.e0()
+                + self.e023() * operand.e2() * self.e123()
+                - self.e1() * operand.e123() * self.e031()
+                + self.e1() * operand.e2() * self.e0()
+                + self.e3() * operand.e031() * self.e2()
+                + self.e031() * operand.e1() * self.e123(),
+            self.e2() * operand.e3() * self.e1() + self.e1() * operand.e123() * self.e1()
+                - self.e2() * operand.e1() * self.e3()
+                + self.e123() * operand.e123() * self.e123()
+                + self.e123() * operand.e1() * self.e1()
+                + self.e3() * operand.e1() * self.e2()
+                - self.e2() * operand.e2() * self.e123()
+                + self.e123() * operand.e3() * self.e3()
+                + self.e3() * operand.e123() * self.e3()
+                - self.e1() * operand.e3() * self.e2()
+                - self.e3() * operand.e2() * self.e1()
+                + self.e2() * operand.e123() * self.e2()
+                - self.e1() * operand.e1() * self.e123()
+                + self.e123() * operand.e2() * self.e2()
+                + self.e1() * operand.e2() * self.e3()
+                - self.e3() * operand.e3() * self.e123(),
         )
     }
 }
@@ -2069,149 +2255,408 @@ impl<T: Float> Sandwich<Line<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e2() * operand.e23() * self.e031()
-                - self.e0() * operand.e12() * self.e2()
-                - self.e2() * operand.e03() * self.e123()
-                - self.e1() * operand.e02() * self.e2()
+            -(self.e023() * operand.e31() * self.e2()) - self.e3() * operand.e31() * self.e0()
+                + self.e123() * operand.e31() * self.e012()
+                - self.e012() * operand.e23() * self.e3()
+                - self.e123() * operand.e12() * self.e031()
+                - self.e3() * operand.e03() * self.e1()
                 + self.e3() * operand.e12() * self.e023()
+                + self.e3() * operand.e01() * self.e3()
+                + self.e031() * operand.e23() * self.e2()
+                - self.e123() * operand.e03() * self.e2()
+                + self.e031() * operand.e31() * self.e1()
+                - self.e1() * operand.e01() * self.e1()
+                - self.e123() * operand.e01() * self.e123()
+                - self.e2() * operand.e12() * self.e0()
+                - self.e0() * operand.e31() * self.e3()
                 + self.e012() * operand.e31() * self.e123()
                 + self.e1() * operand.e23() * self.e023()
-                - self.e3() * operand.e03() * self.e1()
-                - self.e1() * operand.e01() * self.e1()
-                - self.e123() * operand.e03() * self.e2()
-                + self.e023() * operand.e12() * self.e3()
-                - self.e123() * operand.e12() * self.e031()
-                - self.e1() * operand.e03() * self.e3()
-                + self.e123() * operand.e31() * self.e012()
-                + self.e3() * operand.e01() * self.e3()
-                - self.e3() * operand.e23() * self.e012()
-                - self.e012() * operand.e23() * self.e3()
-                - self.e023() * operand.e31() * self.e2()
-                + self.e031() * operand.e23() * self.e2()
-                + self.e1() * operand.e12() * self.e012()
-                - self.e0() * operand.e23() * self.e123()
-                - self.e123() * operand.e01() * self.e123()
-                + self.e2() * operand.e01() * self.e2()
-                - self.e2() * operand.e12() * self.e0()
-                + self.e012() * operand.e12() * self.e1()
                 + self.e3() * operand.e02() * self.e123()
                 + self.e123() * operand.e02() * self.e3()
-                + self.e031() * operand.e31() * self.e1()
-                - self.e0() * operand.e31() * self.e3()
-                + self.e1() * operand.e31() * self.e031()
+                - self.e3() * operand.e23() * self.e012()
                 + self.e023() * operand.e23() * self.e1()
-                - self.e3() * operand.e31() * self.e0()
-                - self.e031() * operand.e12() * self.e123()
-                - self.e2() * operand.e02() * self.e1()
                 - self.e2() * operand.e31() * self.e023()
-                - self.e123() * operand.e23() * self.e0(),
-            self.e2() * operand.e12() * self.e012()
-                - self.e123() * operand.e12() * self.e023()
-                - self.e031() * operand.e12() * self.e3()
-                - self.e023() * operand.e12() * self.e123()
-                - self.e123() * operand.e01() * self.e3()
-                + self.e1() * operand.e31() * self.e023()
+                - self.e1() * operand.e02() * self.e2()
+                - self.e1() * operand.e03() * self.e3()
+                - self.e123() * operand.e23() * self.e0()
+                + self.e1() * operand.e31() * self.e031()
+                - self.e2() * operand.e03() * self.e123()
+                - self.e2() * operand.e02() * self.e1()
+                + self.e023() * operand.e12() * self.e3()
+                - self.e0() * operand.e23() * self.e123()
+                + self.e2() * operand.e01() * self.e2()
+                - self.e0() * operand.e12() * self.e2()
+                + self.e2() * operand.e23() * self.e031()
+                + self.e012() * operand.e12() * self.e1()
+                + self.e1() * operand.e12() * self.e012()
+                - self.e031() * operand.e12() * self.e123(),
+            -(self.e2() * operand.e01() * self.e1())
                 - self.e1() * operand.e01() * self.e2()
-                + self.e123() * operand.e03() * self.e1()
-                + self.e123() * operand.e31() * self.e0()
-                + self.e1() * operand.e03() * self.e123()
-                + self.e1() * operand.e12() * self.e0()
-                - self.e2() * operand.e03() * self.e3()
-                + self.e031() * operand.e31() * self.e2()
-                - self.e3() * operand.e03() * self.e2()
-                + self.e023() * operand.e23() * self.e2()
+                - self.e123() * operand.e01() * self.e3()
                 + self.e012() * operand.e31() * self.e3()
-                - self.e2() * operand.e01() * self.e1()
                 - self.e123() * operand.e02() * self.e123()
-                + self.e2() * operand.e31() * self.e031()
                 - self.e1() * operand.e23() * self.e031()
                 + self.e012() * operand.e23() * self.e123()
+                + self.e123() * operand.e03() * self.e1()
                 + self.e123() * operand.e23() * self.e012()
-                - self.e3() * operand.e12() * self.e031()
-                - self.e3() * operand.e01() * self.e123()
-                - self.e3() * operand.e23() * self.e0()
-                + self.e0() * operand.e31() * self.e123()
-                + self.e023() * operand.e31() * self.e1()
-                - self.e031() * operand.e23() * self.e1()
                 - self.e0() * operand.e23() * self.e3()
-                + self.e3() * operand.e02() * self.e3()
-                + self.e2() * operand.e23() * self.e023()
                 - self.e2() * operand.e02() * self.e2()
-                + self.e0() * operand.e12() * self.e1()
-                + self.e012() * operand.e12() * self.e2()
+                - self.e031() * operand.e12() * self.e3()
                 + self.e3() * operand.e31() * self.e012()
-                + self.e1() * operand.e02() * self.e1(),
-            self.e031() * operand.e12() * self.e2()
-                + self.e1() * operand.e31() * self.e0()
-                + self.e031() * operand.e23() * self.e123()
-                - self.e123() * operand.e12() * self.e0()
-                - self.e3() * operand.e02() * self.e2()
-                - self.e1() * operand.e02() * self.e123()
-                - self.e2() * operand.e31() * self.e012()
-                + self.e031() * operand.e31() * self.e3()
-                + self.e2() * operand.e12() * self.e031()
-                + self.e3() * operand.e23() * self.e023()
-                - self.e023() * operand.e12() * self.e1()
-                - self.e0() * operand.e12() * self.e123()
-                - self.e3() * operand.e03() * self.e3()
-                + self.e2() * operand.e03() * self.e2()
-                + self.e012() * operand.e12() * self.e3()
-                + self.e123() * operand.e23() * self.e031()
-                - self.e1() * operand.e01() * self.e3()
-                - self.e123() * operand.e31() * self.e023()
-                - self.e123() * operand.e03() * self.e123()
-                + self.e2() * operand.e01() * self.e123()
-                - self.e012() * operand.e31() * self.e2()
-                + self.e1() * operand.e23() * self.e012()
-                + self.e012() * operand.e23() * self.e1()
-                - self.e3() * operand.e01() * self.e1()
+                + self.e023() * operand.e31() * self.e1()
+                - self.e3() * operand.e12() * self.e031()
+                + self.e023() * operand.e23() * self.e2()
+                - self.e3() * operand.e01() * self.e123()
+                - self.e3() * operand.e03() * self.e2()
+                + self.e2() * operand.e31() * self.e031()
+                + self.e3() * operand.e02() * self.e3()
+                + self.e123() * operand.e31() * self.e0()
+                + self.e1() * operand.e02() * self.e1()
+                + self.e1() * operand.e31() * self.e023()
+                + self.e012() * operand.e12() * self.e2()
+                - self.e123() * operand.e12() * self.e023()
+                + self.e2() * operand.e23() * self.e023()
+                - self.e023() * operand.e12() * self.e123()
+                + self.e1() * operand.e03() * self.e123()
+                + self.e0() * operand.e31() * self.e123()
+                - self.e2() * operand.e03() * self.e3()
+                - self.e031() * operand.e23() * self.e1()
+                + self.e1() * operand.e12() * self.e0()
+                + self.e2() * operand.e12() * self.e012()
+                + self.e031() * operand.e31() * self.e2()
+                - self.e3() * operand.e23() * self.e0()
+                + self.e0() * operand.e12() * self.e1(),
+            self.e2() * operand.e03() * self.e2()
                 + self.e3() * operand.e31() * self.e031()
-                + self.e2() * operand.e23() * self.e0()
-                - self.e2() * operand.e02() * self.e3()
-                + self.e023() * operand.e23() * self.e3()
+                + self.e123() * operand.e23() * self.e031()
                 + self.e1() * operand.e03() * self.e1()
-                - self.e023() * operand.e31() * self.e123()
-                - self.e1() * operand.e12() * self.e023()
+                + self.e2() * operand.e12() * self.e031()
+                - self.e123() * operand.e31() * self.e023()
+                + self.e012() * operand.e23() * self.e1()
+                - self.e0() * operand.e12() * self.e123()
                 + self.e123() * operand.e01() * self.e2()
-                - self.e123() * operand.e02() * self.e1()
-                + self.e3() * operand.e12() * self.e012()
+                - self.e012() * operand.e31() * self.e2()
+                - self.e123() * operand.e03() * self.e123()
+                - self.e1() * operand.e12() * self.e023()
+                + self.e031() * operand.e12() * self.e2()
+                + self.e1() * operand.e31() * self.e0()
                 + self.e0() * operand.e23() * self.e2()
-                + self.e0() * operand.e31() * self.e1(),
-            self.e3() * operand.e31() * self.e123()
-                + self.e1() * operand.e23() * self.e1()
-                + self.e123() * operand.e12() * self.e2()
-                + self.e123() * operand.e23() * self.e123()
-                - self.e3() * operand.e23() * self.e3()
+                + self.e012() * operand.e12() * self.e3()
+                + self.e3() * operand.e12() * self.e012()
+                - self.e2() * operand.e31() * self.e012()
+                - self.e3() * operand.e01() * self.e1()
+                - self.e1() * operand.e01() * self.e3()
+                - self.e3() * operand.e02() * self.e2()
+                - self.e2() * operand.e02() * self.e3()
+                - self.e3() * operand.e03() * self.e3()
+                + self.e1() * operand.e23() * self.e012()
+                + self.e031() * operand.e31() * self.e3()
+                - self.e123() * operand.e12() * self.e0()
+                + self.e2() * operand.e23() * self.e0()
+                - self.e1() * operand.e02() * self.e123()
+                + self.e0() * operand.e31() * self.e1()
+                + self.e023() * operand.e23() * self.e3()
+                + self.e3() * operand.e23() * self.e023()
+                + self.e031() * operand.e23() * self.e123()
+                - self.e123() * operand.e02() * self.e1()
+                - self.e023() * operand.e12() * self.e1()
+                + self.e2() * operand.e01() * self.e123()
+                - self.e023() * operand.e31() * self.e123(),
+            -(self.e1() * operand.e31() * self.e2()) + self.e123() * operand.e31() * self.e3()
                 - self.e2() * operand.e23() * self.e2()
-                + self.e1() * operand.e12() * self.e3()
-                + self.e3() * operand.e12() * self.e1()
+                + self.e1() * operand.e23() * self.e1()
+                - self.e3() * operand.e23() * self.e3()
                 - self.e2() * operand.e31() * self.e1()
-                + self.e123() * operand.e31() * self.e3()
+                + self.e123() * operand.e23() * self.e123()
+                + self.e3() * operand.e12() * self.e1()
+                + self.e123() * operand.e12() * self.e2()
+                + self.e1() * operand.e12() * self.e3()
                 + self.e2() * operand.e12() * self.e123()
-                - self.e1() * operand.e31() * self.e2(),
-            -(self.e2() * operand.e12() * self.e3())
+                + self.e3() * operand.e31() * self.e123(),
+            self.e123() * operand.e31() * self.e123() - self.e1() * operand.e31() * self.e1()
+                + self.e123() * operand.e12() * self.e1()
+                - self.e1() * operand.e23() * self.e2()
+                - self.e3() * operand.e23() * self.e123()
+                - self.e3() * operand.e31() * self.e3()
+                + self.e1() * operand.e12() * self.e123()
                 - self.e3() * operand.e12() * self.e2()
                 - self.e123() * operand.e23() * self.e3()
-                + self.e123() * operand.e12() * self.e1()
-                - self.e3() * operand.e23() * self.e123()
-                - self.e2() * operand.e23() * self.e1()
                 + self.e2() * operand.e31() * self.e2()
-                + self.e1() * operand.e12() * self.e123()
-                - self.e1() * operand.e31() * self.e1()
-                - self.e1() * operand.e23() * self.e2()
-                + self.e123() * operand.e31() * self.e123()
-                - self.e3() * operand.e31() * self.e3(),
-            self.e3() * operand.e12() * self.e3() + self.e3() * operand.e23() * self.e1()
-                - self.e1() * operand.e31() * self.e123()
-                - self.e123() * operand.e23() * self.e2()
-                - self.e123() * operand.e31() * self.e1()
-                - self.e2() * operand.e31() * self.e3()
+                - self.e2() * operand.e12() * self.e3()
+                - self.e2() * operand.e23() * self.e1(),
+            -(self.e123() * operand.e23() * self.e2())
                 - self.e2() * operand.e23() * self.e123()
-                - self.e2() * operand.e12() * self.e2()
+                - self.e2() * operand.e31() * self.e3()
                 - self.e3() * operand.e31() * self.e2()
-                + self.e1() * operand.e23() * self.e3()
                 + self.e123() * operand.e12() * self.e123()
-                - self.e1() * operand.e12() * self.e1(),
+                - self.e1() * operand.e31() * self.e123()
+                - self.e1() * operand.e12() * self.e1()
+                + self.e3() * operand.e12() * self.e3()
+                + self.e3() * operand.e23() * self.e1()
+                - self.e123() * operand.e31() * self.e1()
+                - self.e2() * operand.e12() * self.e2()
+                + self.e1() * operand.e23() * self.e3(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        Motor::new_unchecked(
+            self.e3() * operand.s() * self.e3() - self.e123() * operand.e12() * self.e3()
+                + self.e1() * operand.s() * self.e1()
+                - self.e3() * operand.e23() * self.e2()
+                + self.e2() * operand.e23() * self.e3()
+                - self.e2() * operand.e31() * self.e123()
+                + self.e1() * operand.e12() * self.e2()
+                + self.e2() * operand.s() * self.e2()
+                + self.e123() * operand.s() * self.e123()
+                + self.e3() * operand.e12() * self.e123()
+                + self.e1() * operand.e23() * self.e123()
+                - self.e2() * operand.e12() * self.e1()
+                - self.e3() * operand.e31() * self.e1()
+                + self.e1() * operand.e31() * self.e3()
+                + self.e123() * operand.e31() * self.e2()
+                - self.e123() * operand.e23() * self.e1(),
+            self.e1() * operand.e12() * self.e3()
+                - self.e2() * operand.e31() * self.e1()
+                - self.e2() * operand.e23() * self.e2()
+                + self.e2() * operand.s() * self.e3()
+                - self.e1() * operand.e31() * self.e2()
+                + self.e2() * operand.e12() * self.e123()
+                + self.e3() * operand.e31() * self.e123()
+                - self.e3() * operand.s() * self.e2()
+                + self.e123() * operand.s() * self.e1()
+                + self.e3() * operand.e12() * self.e1()
+                - self.e1() * operand.s() * self.e123()
+                + self.e1() * operand.e23() * self.e1()
+                + self.e123() * operand.e23() * self.e123()
+                + self.e123() * operand.e12() * self.e2()
+                - self.e3() * operand.e23() * self.e3()
+                + self.e123() * operand.e31() * self.e3(),
+            -(self.e123() * operand.s() * self.e2()) - self.e1() * operand.e31() * self.e1()
+                + self.e1() * operand.e12() * self.e123()
+                - self.e3() * operand.e23() * self.e123()
+                + self.e1() * operand.s() * self.e3()
+                - self.e3() * operand.s() * self.e1()
+                - self.e3() * operand.e12() * self.e2()
+                - self.e123() * operand.e23() * self.e3()
+                - self.e2() * operand.e23() * self.e1()
+                + self.e123() * operand.e31() * self.e123()
+                + self.e2() * operand.e31() * self.e2()
+                - self.e3() * operand.e31() * self.e3()
+                - self.e2() * operand.e12() * self.e3()
+                + self.e123() * operand.e12() * self.e1()
+                + self.e2() * operand.s() * self.e123()
+                - self.e1() * operand.e23() * self.e2(),
+            -(self.e2() * operand.e12() * self.e2())
+                + self.e3() * operand.e23() * self.e1()
+                + self.e123() * operand.s() * self.e3()
+                + self.e123() * operand.e12() * self.e123()
+                - self.e1() * operand.e12() * self.e1()
+                + self.e1() * operand.s() * self.e2()
+                - self.e2() * operand.e31() * self.e3()
+                - self.e3() * operand.e31() * self.e2()
+                + self.e3() * operand.e12() * self.e3()
+                - self.e1() * operand.e31() * self.e123()
+                + self.e1() * operand.e23() * self.e3()
+                - self.e2() * operand.e23() * self.e123()
+                - self.e123() * operand.e23() * self.e2()
+                - self.e2() * operand.s() * self.e1()
+                - self.e3() * operand.s() * self.e123()
+                - self.e123() * operand.e31() * self.e1(),
+            -(self.e1() * operand.e02() * self.e2())
+                - self.e012() * operand.s() * self.e2()
+                - self.e1() * operand.e0123() * self.e123()
+                + self.e3() * operand.e12() * self.e023()
+                + self.e2() * operand.e0123() * self.e3()
+                + self.e3() * operand.e01() * self.e3()
+                + self.e1() * operand.e12() * self.e012()
+                - self.e2() * operand.e31() * self.e023()
+                + self.e1() * operand.e31() * self.e031()
+                + self.e3() * operand.s() * self.e031()
+                - self.e0() * operand.e31() * self.e3()
+                - self.e012() * operand.e23() * self.e3()
+                + self.e123() * operand.s() * self.e023()
+                + self.e1() * operand.e23() * self.e023()
+                + self.e2() * operand.e01() * self.e2()
+                + self.e1() * operand.s() * self.e0()
+                - self.e123() * operand.e23() * self.e0()
+                + self.e123() * operand.e31() * self.e012()
+                - self.e3() * operand.e31() * self.e0()
+                - self.e031() * operand.e12() * self.e123()
+                - self.e123() * operand.e12() * self.e031()
+                + self.e031() * operand.e23() * self.e2()
+                - self.e123() * operand.e01() * self.e123()
+                - self.e0() * operand.e23() * self.e123()
+                - self.e2() * operand.e03() * self.e123()
+                - self.e1() * operand.e03() * self.e3()
+                - self.e3() * operand.e0123() * self.e2()
+                + self.e123() * operand.e0123() * self.e1()
+                - self.e023() * operand.s() * self.e123()
+                + self.e023() * operand.e23() * self.e1()
+                + self.e012() * operand.e12() * self.e1()
+                + self.e3() * operand.e02() * self.e123()
+                + self.e2() * operand.s() * self.e012()
+                + self.e023() * operand.e12() * self.e3()
+                - self.e2() * operand.e12() * self.e0()
+                - self.e0() * operand.s() * self.e1()
+                + self.e123() * operand.e02() * self.e3()
+                + self.e031() * operand.e31() * self.e1()
+                - self.e123() * operand.e03() * self.e2()
+                + self.e2() * operand.e23() * self.e031()
+                - self.e2() * operand.e02() * self.e1()
+                - self.e023() * operand.e31() * self.e2()
+                - self.e0() * operand.e12() * self.e2()
+                - self.e3() * operand.e23() * self.e012()
+                - self.e031() * operand.s() * self.e3()
+                + self.e012() * operand.e31() * self.e123()
+                - self.e1() * operand.e01() * self.e1()
+                - self.e3() * operand.e03() * self.e1(),
+            self.e1() * operand.e12() * self.e0() + self.e023() * operand.e23() * self.e2()
+                - self.e1() * operand.e01() * self.e2()
+                - self.e031() * operand.e12() * self.e3()
+                + self.e012() * operand.e12() * self.e2()
+                + self.e0() * operand.e12() * self.e1()
+                - self.e0() * operand.e23() * self.e3()
+                - self.e2() * operand.e01() * self.e1()
+                + self.e012() * operand.e31() * self.e3()
+                - self.e3() * operand.e12() * self.e031()
+                + self.e012() * operand.e23() * self.e123()
+                - self.e031() * operand.e23() * self.e1()
+                - self.e123() * operand.e01() * self.e3()
+                - self.e123() * operand.e02() * self.e123()
+                + self.e123() * operand.e0123() * self.e2()
+                + self.e123() * operand.e23() * self.e012()
+                - self.e2() * operand.e03() * self.e3()
+                - self.e3() * operand.e03() * self.e2()
+                - self.e023() * operand.e12() * self.e123()
+                - self.e023() * operand.s() * self.e3()
+                + self.e3() * operand.e31() * self.e012()
+                + self.e012() * operand.s() * self.e1()
+                + self.e2() * operand.e23() * self.e023()
+                + self.e2() * operand.e31() * self.e031()
+                - self.e0() * operand.s() * self.e2()
+                - self.e2() * operand.e02() * self.e2()
+                + self.e1() * operand.e02() * self.e1()
+                - self.e3() * operand.e01() * self.e123()
+                + self.e123() * operand.e31() * self.e0()
+                - self.e123() * operand.e12() * self.e023()
+                + self.e1() * operand.e03() * self.e123()
+                - self.e2() * operand.e0123() * self.e123()
+                + self.e031() * operand.s() * self.e123()
+                - self.e123() * operand.s() * self.e031()
+                - self.e3() * operand.e23() * self.e0()
+                + self.e2() * operand.s() * self.e0()
+                + self.e0() * operand.e31() * self.e123()
+                + self.e023() * operand.e31() * self.e1()
+                + self.e3() * operand.e0123() * self.e1()
+                - self.e1() * operand.s() * self.e012()
+                + self.e1() * operand.e31() * self.e023()
+                + self.e123() * operand.e03() * self.e1()
+                + self.e3() * operand.e02() * self.e3()
+                + self.e2() * operand.e12() * self.e012()
+                + self.e3() * operand.s() * self.e023()
+                + self.e031() * operand.e31() * self.e2()
+                - self.e1() * operand.e23() * self.e031()
+                - self.e1() * operand.e0123() * self.e3(),
+            self.e123() * operand.e0123() * self.e3()
+                + self.e1() * operand.e31() * self.e0()
+                + self.e023() * operand.e23() * self.e3()
+                - self.e0() * operand.e12() * self.e123()
+                + self.e2() * operand.e01() * self.e123()
+                - self.e1() * operand.s() * self.e031()
+                + self.e1() * operand.e23() * self.e012()
+                + self.e2() * operand.e12() * self.e031()
+                - self.e3() * operand.e02() * self.e2()
+                + self.e3() * operand.s() * self.e0()
+                - self.e123() * operand.e03() * self.e123()
+                - self.e1() * operand.e01() * self.e3()
+                + self.e1() * operand.e03() * self.e1()
+                + self.e123() * operand.s() * self.e012()
+                - self.e1() * operand.e02() * self.e123()
+                - self.e2() * operand.e31() * self.e012()
+                + self.e3() * operand.e12() * self.e012()
+                + self.e0() * operand.e31() * self.e1()
+                - self.e2() * operand.e0123() * self.e1()
+                - self.e023() * operand.e31() * self.e123()
+                - self.e023() * operand.e12() * self.e1()
+                + self.e123() * operand.e23() * self.e031()
+                + self.e3() * operand.e31() * self.e031()
+                + self.e123() * operand.e01() * self.e2()
+                + self.e031() * operand.e12() * self.e2()
+                - self.e2() * operand.s() * self.e023()
+                + self.e012() * operand.e12() * self.e3()
+                + self.e3() * operand.e23() * self.e023()
+                - self.e012() * operand.e31() * self.e2()
+                - self.e123() * operand.e12() * self.e0()
+                + self.e0() * operand.e23() * self.e2()
+                - self.e3() * operand.e0123() * self.e123()
+                - self.e012() * operand.s() * self.e123()
+                + self.e2() * operand.e23() * self.e0()
+                - self.e0() * operand.s() * self.e3()
+                + self.e012() * operand.e23() * self.e1()
+                - self.e2() * operand.e02() * self.e3()
+                - self.e3() * operand.e03() * self.e3()
+                + self.e1() * operand.e0123() * self.e2()
+                + self.e031() * operand.e31() * self.e3()
+                - self.e1() * operand.e12() * self.e023()
+                + self.e2() * operand.e03() * self.e2()
+                + self.e031() * operand.s() * self.e1()
+                + self.e031() * operand.e23() * self.e123()
+                + self.e023() * operand.s() * self.e2()
+                - self.e123() * operand.e31() * self.e023()
+                - self.e123() * operand.e02() * self.e1()
+                - self.e3() * operand.e01() * self.e1(),
+            self.e0() * operand.s() * self.e123()
+                - self.e3() * operand.e01() * self.e2()
+                - self.e0() * operand.e23() * self.e1()
+                - self.e123() * operand.e01() * self.e1()
+                + self.e0() * operand.e31() * self.e2()
+                - self.e3() * operand.s() * self.e012()
+                + self.e3() * operand.e12() * self.e0()
+                + self.e1() * operand.e23() * self.e0()
+                - self.e023() * operand.s() * self.e1()
+                - self.e023() * operand.e31() * self.e3()
+                - self.e031() * operand.e31() * self.e123()
+                - self.e031() * operand.e12() * self.e1()
+                + self.e3() * operand.e31() * self.e023()
+                + self.e1() * operand.e01() * self.e123()
+                + self.e012() * operand.e23() * self.e2()
+                - self.e012() * operand.e12() * self.e123()
+                - self.e2() * operand.e31() * self.e0()
+                + self.e123() * operand.s() * self.e0()
+                + self.e123() * operand.e23() * self.e023()
+                - self.e1() * operand.e31() * self.e012()
+                - self.e1() * operand.e0123() * self.e1()
+                + self.e2() * operand.e02() * self.e123()
+                - self.e2() * operand.e0123() * self.e2()
+                + self.e3() * operand.e03() * self.e123()
+                + self.e1() * operand.e03() * self.e2()
+                - self.e2() * operand.e03() * self.e1()
+                - self.e0() * operand.e12() * self.e3()
+                + self.e123() * operand.e31() * self.e031()
+                + self.e123() * operand.e12() * self.e012()
+                + self.e031() * operand.e23() * self.e3()
+                - self.e1() * operand.s() * self.e023()
+                + self.e2() * operand.s() * self.e031()
+                + self.e2() * operand.e01() * self.e3()
+                - self.e012() * operand.s() * self.e3()
+                - self.e023() * operand.e12() * self.e2()
+                - self.e123() * operand.e0123() * self.e123()
+                + self.e1() * operand.e12() * self.e031()
+                - self.e2() * operand.e23() * self.e012()
+                + self.e012() * operand.e31() * self.e1()
+                - self.e3() * operand.e23() * self.e031()
+                + self.e3() * operand.e02() * self.e1()
+                - self.e3() * operand.e0123() * self.e3()
+                - self.e123() * operand.e03() * self.e3()
+                - self.e023() * operand.e23() * self.e123()
+                - self.e1() * operand.e02() * self.e3()
+                + self.e031() * operand.s() * self.e2()
+                + self.e2() * operand.e12() * self.e023()
+                - self.e123() * operand.e02() * self.e2(),
         )
     }
 }
@@ -2221,1135 +2666,160 @@ impl<T: Float> Sandwich<Plane<T>> for Flector<T> {
     fn sandwich(&self, operand: &Plane<T>) -> Plane<T> {
         Plane::new(
             self.e031() * operand.e123() * self.e3() + self.e0() * operand.e123() * self.e1()
-                - self.e2() * operand.e012() * self.e123()
+                - self.e1() * operand.e023() * self.e1()
+                + self.e3() * operand.e123() * self.e031()
+                + self.e1() * operand.e031() * self.e2()
+                + self.e3() * operand.e023() * self.e3()
+                + self.e2() * operand.e123() * self.e012()
+                - self.e3() * operand.e031() * self.e123()
                 + self.e012() * operand.e123() * self.e2()
+                - self.e123() * operand.e023() * self.e123()
                 + self.e023() * operand.e123() * self.e123()
-                + self.e1() * operand.e123() * self.e0()
+                - self.e123() * operand.e031() * self.e3()
                 + self.e123() * operand.e123() * self.e023()
                 - self.e1() * operand.e012() * self.e3()
-                - self.e3() * operand.e031() * self.e123()
-                + self.e2() * operand.e023() * self.e2()
                 + self.e2() * operand.e031() * self.e1()
-                + self.e3() * operand.e123() * self.e031()
-                - self.e123() * operand.e023() * self.e123()
-                - self.e123() * operand.e031() * self.e3()
                 - self.e123() * operand.e012() * self.e2()
-                - self.e3() * operand.e012() * self.e1()
-                + self.e3() * operand.e023() * self.e3()
-                - self.e1() * operand.e023() * self.e1()
-                + self.e2() * operand.e123() * self.e012()
-                + self.e1() * operand.e031() * self.e2(),
-            self.e123() * operand.e023() * self.e3() + self.e1() * operand.e023() * self.e2()
-                - self.e1() * operand.e012() * self.e123()
-                - self.e3() * operand.e123() * self.e023()
-                - self.e023() * operand.e123() * self.e3()
-                - self.e123() * operand.e012() * self.e1()
-                + self.e2() * operand.e023() * self.e1()
-                - self.e0() * operand.e123() * self.e2()
-                - self.e123() * operand.e031() * self.e123()
-                + self.e012() * operand.e123() * self.e1()
-                - self.e2() * operand.e123() * self.e0()
-                + self.e031() * operand.e123() * self.e123()
-                + self.e3() * operand.e012() * self.e2()
-                + self.e1() * operand.e123() * self.e012()
-                + self.e3() * operand.e023() * self.e123()
+                + self.e2() * operand.e023() * self.e2()
+                + self.e1() * operand.e123() * self.e0()
+                - self.e2() * operand.e012() * self.e123()
+                - self.e3() * operand.e012() * self.e1(),
+            self.e1() * operand.e023() * self.e2()
                 + self.e1() * operand.e031() * self.e1()
-                + self.e3() * operand.e031() * self.e3()
-                + self.e123() * operand.e123() * self.e031()
+                + self.e2() * operand.e023() * self.e1()
                 - self.e2() * operand.e031() * self.e2()
+                + self.e123() * operand.e023() * self.e3()
+                + self.e012() * operand.e123() * self.e1()
+                + self.e1() * operand.e123() * self.e012()
+                - self.e3() * operand.e123() * self.e023()
+                + self.e3() * operand.e012() * self.e2()
+                + self.e3() * operand.e031() * self.e3()
+                + self.e031() * operand.e123() * self.e123()
+                - self.e1() * operand.e012() * self.e123()
+                - self.e123() * operand.e031() * self.e123()
+                - self.e023() * operand.e123() * self.e3()
+                + self.e123() * operand.e123() * self.e031()
+                - self.e2() * operand.e123() * self.e0()
+                - self.e123() * operand.e012() * self.e1()
+                + self.e3() * operand.e023() * self.e123()
+                - self.e0() * operand.e123() * self.e2()
                 + self.e2() * operand.e012() * self.e3(),
-            self.e1() * operand.e031() * self.e123() - self.e1() * operand.e023() * self.e3()
+            self.e123() * operand.e123() * self.e012() - self.e1() * operand.e123() * self.e031()
                 + self.e2() * operand.e023() * self.e123()
+                + self.e012() * operand.e123() * self.e123()
                 + self.e2() * operand.e031() * self.e3()
+                - self.e3() * operand.e023() * self.e1()
+                + self.e0() * operand.e123() * self.e3()
                 + self.e123() * operand.e023() * self.e2()
+                - self.e3() * operand.e012() * self.e3()
+                + self.e1() * operand.e031() * self.e123()
+                + self.e3() * operand.e123() * self.e0()
+                - self.e1() * operand.e023() * self.e3()
+                - self.e2() * operand.e123() * self.e023()
+                + self.e2() * operand.e012() * self.e2()
+                - self.e031() * operand.e123() * self.e1()
+                - self.e023() * operand.e123() * self.e2()
+                + self.e3() * operand.e031() * self.e2()
                 + self.e123() * operand.e031() * self.e1()
                 - self.e123() * operand.e012() * self.e123()
-                - self.e2() * operand.e123() * self.e023()
-                + self.e012() * operand.e123() * self.e123()
-                + self.e0() * operand.e123() * self.e3()
-                + self.e1() * operand.e012() * self.e1()
-                - self.e3() * operand.e023() * self.e1()
-                + self.e3() * operand.e123() * self.e0()
-                - self.e1() * operand.e123() * self.e031()
-                - self.e3() * operand.e012() * self.e3()
-                - self.e023() * operand.e123() * self.e2()
-                - self.e031() * operand.e123() * self.e1()
-                + self.e123() * operand.e123() * self.e012()
-                + self.e2() * operand.e012() * self.e2()
-                + self.e3() * operand.e031() * self.e2(),
-            self.e1() * operand.e123() * self.e1()
+                + self.e1() * operand.e012() * self.e1(),
+            self.e123() * operand.e123() * self.e123()
+                + self.e1() * operand.e123() * self.e1()
                 + self.e2() * operand.e123() * self.e2()
-                + self.e123() * operand.e123() * self.e123()
                 + self.e3() * operand.e123() * self.e3(),
         )
     }
 }
-impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(self.e3() * operand.e23() * self.e2()) - self.e123() * operand.e23() * self.e1()
-                + self.e1() * operand.e12() * self.e2()
-                + self.e2() * operand.s() * self.e2()
-                + self.e1() * operand.e23() * self.e123()
-                + self.e123() * operand.e31() * self.e2()
-                - self.e123() * operand.e12() * self.e3()
-                + self.e2() * operand.e23() * self.e3()
-                + self.e1() * operand.e31() * self.e3()
-                + self.e3() * operand.e12() * self.e123()
-                - self.e2() * operand.e12() * self.e1()
-                - self.e3() * operand.e31() * self.e1()
-                + self.e1() * operand.s() * self.e1()
-                + self.e123() * operand.s() * self.e123()
-                - self.e2() * operand.e31() * self.e123()
-                + self.e3() * operand.s() * self.e3(),
-            -(self.e3() * operand.e23() * self.e3()) + self.e123() * operand.e12() * self.e2()
-                - self.e1() * operand.e31() * self.e2()
-                - self.e2() * operand.e31() * self.e1()
-                + self.e1() * operand.e12() * self.e3()
-                + self.e2() * operand.s() * self.e3()
-                + self.e123() * operand.s() * self.e1()
-                - self.e2() * operand.e23() * self.e2()
-                + self.e3() * operand.e12() * self.e1()
-                + self.e123() * operand.e31() * self.e3()
-                + self.e123() * operand.e23() * self.e123()
-                + self.e1() * operand.e23() * self.e1()
-                + self.e2() * operand.e12() * self.e123()
-                + self.e3() * operand.e31() * self.e123()
-                - self.e3() * operand.s() * self.e2()
-                - self.e1() * operand.s() * self.e123(),
-            -(self.e1() * operand.e31() * self.e1()) + self.e2() * operand.s() * self.e123()
-                - self.e123() * operand.s() * self.e2()
-                - self.e3() * operand.e31() * self.e3()
-                - self.e2() * operand.e23() * self.e1()
-                + self.e2() * operand.e31() * self.e2()
-                - self.e3() * operand.s() * self.e1()
-                + self.e1() * operand.s() * self.e3()
-                - self.e3() * operand.e23() * self.e123()
-                - self.e1() * operand.e23() * self.e2()
-                + self.e123() * operand.e31() * self.e123()
-                + self.e123() * operand.e12() * self.e1()
-                + self.e1() * operand.e12() * self.e123()
-                - self.e3() * operand.e12() * self.e2()
-                - self.e2() * operand.e12() * self.e3()
-                - self.e123() * operand.e23() * self.e3(),
-            -(self.e3() * operand.e31() * self.e2()) - self.e3() * operand.s() * self.e123()
-                + self.e123() * operand.s() * self.e3()
-                + self.e3() * operand.e12() * self.e3()
-                - self.e2() * operand.e12() * self.e2()
-                - self.e2() * operand.e23() * self.e123()
-                - self.e2() * operand.s() * self.e1()
-                + self.e3() * operand.e23() * self.e1()
-                + self.e123() * operand.e12() * self.e123()
-                - self.e1() * operand.e31() * self.e123()
-                + self.e1() * operand.e23() * self.e3()
-                - self.e123() * operand.e23() * self.e2()
-                - self.e123() * operand.e31() * self.e1()
-                + self.e1() * operand.s() * self.e2()
-                - self.e2() * operand.e31() * self.e3()
-                - self.e1() * operand.e12() * self.e1(),
-            -(self.e031() * operand.s() * self.e3())
-                - self.e012() * operand.e23() * self.e3()
-                - self.e2() * operand.e02() * self.e1()
-                - self.e2() * operand.e03() * self.e123()
-                + self.e3() * operand.e12() * self.e023()
-                + self.e3() * operand.e01() * self.e3()
-                + self.e3() * operand.e02() * self.e123()
-                + self.e012() * operand.e12() * self.e1()
-                + self.e1() * operand.e31() * self.e031()
-                - self.e123() * operand.e01() * self.e123()
-                + self.e031() * operand.e31() * self.e1()
-                - self.e2() * operand.e12() * self.e0()
-                - self.e1() * operand.e03() * self.e3()
-                - self.e3() * operand.e0123() * self.e2()
-                - self.e3() * operand.e23() * self.e012()
-                - self.e0() * operand.e31() * self.e3()
-                - self.e012() * operand.s() * self.e2()
-                + self.e123() * operand.s() * self.e023()
-                + self.e2() * operand.e01() * self.e2()
-                - self.e123() * operand.e23() * self.e0()
-                + self.e023() * operand.e23() * self.e1()
-                - self.e023() * operand.e31() * self.e2()
-                - self.e2() * operand.e31() * self.e023()
-                - self.e123() * operand.e03() * self.e2()
-                + self.e1() * operand.e23() * self.e023()
-                - self.e3() * operand.e31() * self.e0()
-                - self.e3() * operand.e03() * self.e1()
-                + self.e123() * operand.e02() * self.e3()
-                - self.e0() * operand.e23() * self.e123()
-                + self.e031() * operand.e23() * self.e2()
-                + self.e123() * operand.e0123() * self.e1()
-                - self.e1() * operand.e01() * self.e1()
-                - self.e1() * operand.e0123() * self.e123()
-                - self.e123() * operand.e12() * self.e031()
-                + self.e2() * operand.s() * self.e012()
-                - self.e0() * operand.s() * self.e1()
-                + self.e2() * operand.e23() * self.e031()
-                + self.e023() * operand.e12() * self.e3()
-                + self.e1() * operand.e12() * self.e012()
-                + self.e1() * operand.s() * self.e0()
-                + self.e2() * operand.e0123() * self.e3()
-                + self.e012() * operand.e31() * self.e123()
-                - self.e0() * operand.e12() * self.e2()
-                + self.e123() * operand.e31() * self.e012()
-                - self.e031() * operand.e12() * self.e123()
-                - self.e1() * operand.e02() * self.e2()
-                + self.e3() * operand.s() * self.e031()
-                - self.e023() * operand.s() * self.e123(),
-            self.e1() * operand.e12() * self.e0() + self.e3() * operand.e31() * self.e012()
-                - self.e023() * operand.e12() * self.e123()
-                + self.e123() * operand.e31() * self.e0()
-                - self.e0() * operand.e23() * self.e3()
-                + self.e123() * operand.e23() * self.e012()
-                + self.e123() * operand.e03() * self.e1()
-                + self.e0() * operand.e31() * self.e123()
-                - self.e2() * operand.e0123() * self.e123()
-                + self.e031() * operand.s() * self.e123()
-                - self.e2() * operand.e02() * self.e2()
-                + self.e023() * operand.e23() * self.e2()
-                + self.e2() * operand.e31() * self.e031()
-                - self.e023() * operand.s() * self.e3()
-                - self.e031() * operand.e23() * self.e1()
-                - self.e123() * operand.e01() * self.e3()
-                + self.e2() * operand.s() * self.e0()
-                + self.e2() * operand.e23() * self.e023()
-                - self.e1() * operand.e01() * self.e2()
-                + self.e031() * operand.e31() * self.e2()
-                + self.e023() * operand.e31() * self.e1()
-                + self.e2() * operand.e12() * self.e012()
-                + self.e0() * operand.e12() * self.e1()
-                + self.e3() * operand.e02() * self.e3()
-                + self.e1() * operand.e03() * self.e123()
-                + self.e012() * operand.s() * self.e1()
-                - self.e123() * operand.e12() * self.e023()
-                + self.e012() * operand.e12() * self.e2()
-                - self.e3() * operand.e01() * self.e123()
-                + self.e1() * operand.e02() * self.e1()
-                + self.e3() * operand.e0123() * self.e1()
-                - self.e0() * operand.s() * self.e2()
-                - self.e3() * operand.e12() * self.e031()
-                + self.e012() * operand.e23() * self.e123()
-                + self.e3() * operand.s() * self.e023()
-                - self.e2() * operand.e03() * self.e3()
-                - self.e031() * operand.e12() * self.e3()
-                - self.e1() * operand.s() * self.e012()
-                + self.e1() * operand.e31() * self.e023()
-                - self.e3() * operand.e23() * self.e0()
-                + self.e012() * operand.e31() * self.e3()
-                - self.e1() * operand.e23() * self.e031()
-                - self.e2() * operand.e01() * self.e1()
-                - self.e3() * operand.e03() * self.e2()
-                - self.e1() * operand.e0123() * self.e3()
-                - self.e123() * operand.s() * self.e031()
-                - self.e123() * operand.e02() * self.e123()
-                + self.e123() * operand.e0123() * self.e2(),
-            self.e123() * operand.e0123() * self.e3()
-                - self.e1() * operand.s() * self.e031()
-                - self.e023() * operand.e12() * self.e1()
-                + self.e3() * operand.e23() * self.e023()
-                - self.e2() * operand.e02() * self.e3()
-                + self.e031() * operand.e23() * self.e123()
-                - self.e1() * operand.e02() * self.e123()
-                + self.e2() * operand.e01() * self.e123()
-                + self.e012() * operand.e23() * self.e1()
-                - self.e3() * operand.e03() * self.e3()
-                - self.e012() * operand.s() * self.e123()
-                - self.e123() * operand.e03() * self.e123()
-                - self.e0() * operand.s() * self.e3()
-                + self.e1() * operand.e23() * self.e012()
-                - self.e012() * operand.e31() * self.e2()
-                + self.e2() * operand.e03() * self.e2()
-                - self.e1() * operand.e01() * self.e3()
-                - self.e3() * operand.e02() * self.e2()
-                + self.e023() * operand.s() * self.e2()
-                + self.e0() * operand.e31() * self.e1()
-                - self.e023() * operand.e31() * self.e123()
-                - self.e0() * operand.e12() * self.e123()
-                + self.e123() * operand.s() * self.e012()
-                - self.e2() * operand.s() * self.e023()
-                + self.e2() * operand.e23() * self.e0()
-                + self.e1() * operand.e0123() * self.e2()
-                + self.e1() * operand.e31() * self.e0()
-                + self.e123() * operand.e23() * self.e031()
-                - self.e3() * operand.e01() * self.e1()
-                + self.e2() * operand.e12() * self.e031()
-                - self.e123() * operand.e12() * self.e0()
-                - self.e2() * operand.e0123() * self.e1()
-                + self.e0() * operand.e23() * self.e2()
-                + self.e031() * operand.s() * self.e1()
-                + self.e023() * operand.e23() * self.e3()
-                + self.e012() * operand.e12() * self.e3()
-                + self.e3() * operand.e31() * self.e031()
-                + self.e031() * operand.e12() * self.e2()
-                - self.e3() * operand.e0123() * self.e123()
-                + self.e123() * operand.e01() * self.e2()
-                + self.e3() * operand.s() * self.e0()
-                - self.e1() * operand.e12() * self.e023()
-                + self.e3() * operand.e12() * self.e012()
-                + self.e1() * operand.e03() * self.e1()
-                - self.e2() * operand.e31() * self.e012()
-                - self.e123() * operand.e31() * self.e023()
-                - self.e123() * operand.e02() * self.e1()
-                + self.e031() * operand.e31() * self.e3(),
-            -(self.e0() * operand.e23() * self.e1())
-                - self.e3() * operand.e01() * self.e2()
-                - self.e1() * operand.e02() * self.e3()
-                + self.e123() * operand.e23() * self.e023()
-                - self.e2() * operand.e03() * self.e1()
-                - self.e0() * operand.e12() * self.e3()
-                - self.e123() * operand.e01() * self.e1()
-                - self.e023() * operand.e12() * self.e2()
-                - self.e012() * operand.e12() * self.e123()
-                + self.e1() * operand.e12() * self.e031()
-                - self.e031() * operand.e12() * self.e1()
-                + self.e012() * operand.e23() * self.e2()
-                - self.e123() * operand.e0123() * self.e123()
-                + self.e1() * operand.e01() * self.e123()
-                + self.e123() * operand.e12() * self.e012()
-                - self.e023() * operand.s() * self.e1()
-                + self.e2() * operand.s() * self.e031()
-                + self.e2() * operand.e12() * self.e023()
-                + self.e031() * operand.e23() * self.e3()
-                - self.e1() * operand.e31() * self.e012()
-                - self.e123() * operand.e02() * self.e2()
-                - self.e2() * operand.e23() * self.e012()
-                + self.e2() * operand.e02() * self.e123()
-                - self.e1() * operand.e0123() * self.e1()
-                - self.e012() * operand.s() * self.e3()
-                + self.e2() * operand.e01() * self.e3()
-                - self.e123() * operand.e03() * self.e3()
-                + self.e012() * operand.e31() * self.e1()
-                - self.e1() * operand.s() * self.e023()
-                + self.e3() * operand.e02() * self.e1()
-                + self.e123() * operand.s() * self.e0()
-                - self.e3() * operand.s() * self.e012()
-                + self.e1() * operand.e23() * self.e0()
-                - self.e3() * operand.e0123() * self.e3()
-                - self.e023() * operand.e23() * self.e123()
-                - self.e023() * operand.e31() * self.e3()
-                + self.e3() * operand.e31() * self.e023()
-                - self.e3() * operand.e23() * self.e031()
-                + self.e3() * operand.e12() * self.e0()
-                + self.e3() * operand.e03() * self.e123()
-                - self.e2() * operand.e31() * self.e0()
-                + self.e0() * operand.e31() * self.e2()
-                - self.e2() * operand.e0123() * self.e2()
-                + self.e0() * operand.s() * self.e123()
-                - self.e031() * operand.e31() * self.e123()
-                + self.e123() * operand.e31() * self.e031()
-                + self.e1() * operand.e03() * self.e2()
-                + self.e031() * operand.s() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
-    type Output = Flector<T>;
-    #[inline]
-    fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
-        Flector::new_unchecked(
-            self.e1() * operand.e2() * self.e2()
-                - self.e123() * operand.e2() * self.e3()
-                - self.e2() * operand.e1() * self.e2()
-                + self.e123() * operand.e1() * self.e123()
-                + self.e123() * operand.e3() * self.e2()
-                + self.e2() * operand.e2() * self.e1()
-                + self.e1() * operand.e1() * self.e1()
-                - self.e3() * operand.e2() * self.e123()
-                - self.e2() * operand.e123() * self.e3()
-                + self.e1() * operand.e3() * self.e3()
-                + self.e3() * operand.e3() * self.e1()
-                + self.e1() * operand.e123() * self.e123()
-                + self.e2() * operand.e3() * self.e123()
-                - self.e3() * operand.e1() * self.e3()
-                - self.e123() * operand.e123() * self.e1()
-                + self.e3() * operand.e123() * self.e2(),
-            self.e2() * operand.e1() * self.e1() - self.e123() * operand.e3() * self.e1()
-                + self.e123() * operand.e2() * self.e123()
-                + self.e123() * operand.e1() * self.e3()
-                - self.e1() * operand.e2() * self.e1()
-                + self.e1() * operand.e1() * self.e2()
-                + self.e3() * operand.e3() * self.e2()
-                + self.e3() * operand.e1() * self.e123()
-                - self.e3() * operand.e2() * self.e3()
-                - self.e3() * operand.e123() * self.e1()
-                + self.e2() * operand.e3() * self.e3()
-                - self.e1() * operand.e3() * self.e123()
-                + self.e2() * operand.e2() * self.e2()
-                + self.e1() * operand.e123() * self.e3()
-                + self.e2() * operand.e123() * self.e123()
-                - self.e123() * operand.e123() * self.e2(),
-            -(self.e1() * operand.e123() * self.e2())
-                - self.e123() * operand.e1() * self.e2()
-                - self.e2() * operand.e1() * self.e123()
-                + self.e1() * operand.e2() * self.e123()
-                + self.e123() * operand.e2() * self.e1()
-                + self.e3() * operand.e2() * self.e2()
-                + self.e2() * operand.e2() * self.e3()
-                - self.e2() * operand.e3() * self.e2()
-                + self.e3() * operand.e3() * self.e3()
-                + self.e3() * operand.e123() * self.e123()
-                - self.e123() * operand.e123() * self.e3()
-                + self.e123() * operand.e3() * self.e123()
-                + self.e1() * operand.e1() * self.e3()
-                - self.e1() * operand.e3() * self.e1()
-                + self.e2() * operand.e123() * self.e1()
-                + self.e3() * operand.e1() * self.e1(),
-            -(self.e2() * operand.e0() * self.e2()) + self.e012() * operand.e2() * self.e1()
-                - self.e012() * operand.e123() * self.e3()
-                + self.e123() * operand.e3() * self.e012()
-                - self.e2() * operand.e1() * self.e012()
-                - self.e012() * operand.e1() * self.e2()
-                + self.e2() * operand.e3() * self.e023()
-                + self.e1() * operand.e2() * self.e012()
-                - self.e123() * operand.e0() * self.e123()
-                + self.e1() * operand.e3() * self.e031()
-                + self.e1() * operand.e123() * self.e023()
-                + self.e123() * operand.e023() * self.e1()
-                + self.e123() * operand.e012() * self.e3()
-                + self.e3() * operand.e023() * self.e2()
-                + self.e012() * operand.e3() * self.e123()
-                + self.e0() * operand.e2() * self.e2()
-                - self.e1() * operand.e0() * self.e1()
-                - self.e023() * operand.e2() * self.e3()
-                - self.e1() * operand.e023() * self.e123()
-                + self.e2() * operand.e2() * self.e0()
-                + self.e2() * operand.e012() * self.e1()
-                - self.e031() * operand.e1() * self.e3()
-                - self.e3() * operand.e012() * self.e123()
-                + self.e3() * operand.e3() * self.e0()
-                + self.e3() * operand.e123() * self.e012()
-                + self.e1() * operand.e1() * self.e0()
-                + self.e0() * operand.e123() * self.e123()
-                - self.e031() * operand.e2() * self.e123()
-                + self.e031() * operand.e3() * self.e1()
-                + self.e031() * operand.e123() * self.e2()
-                - self.e1() * operand.e012() * self.e2()
-                - self.e123() * operand.e2() * self.e031()
-                - self.e123() * operand.e031() * self.e2()
-                - self.e123() * operand.e123() * self.e0()
-                + self.e0() * operand.e1() * self.e1()
-                + self.e123() * operand.e1() * self.e023()
-                + self.e023() * operand.e3() * self.e2()
-                - self.e1() * operand.e031() * self.e3()
-                + self.e2() * operand.e031() * self.e123()
-                - self.e3() * operand.e2() * self.e023()
-                - self.e3() * operand.e1() * self.e031()
-                - self.e3() * operand.e0() * self.e3()
-                + self.e023() * operand.e1() * self.e123()
-                - self.e023() * operand.e123() * self.e1()
-                + self.e0() * operand.e3() * self.e3()
-                - self.e2() * operand.e023() * self.e3()
-                - self.e2() * operand.e123() * self.e031()
-                + self.e3() * operand.e031() * self.e1(),
-            -(self.e2() * operand.e0() * self.e3())
-                - self.e3() * operand.e012() * self.e1()
-                - self.e0() * operand.e1() * self.e123()
-                - self.e0() * operand.e3() * self.e2()
-                + self.e023() * operand.e123() * self.e123()
-                - self.e012() * operand.e1() * self.e3()
-                + self.e012() * operand.e123() * self.e2()
-                + self.e0() * operand.e2() * self.e3()
-                - self.e2() * operand.e2() * self.e023()
-                + self.e2() * operand.e123() * self.e012()
-                + self.e123() * operand.e3() * self.e031()
-                + self.e1() * operand.e031() * self.e2()
-                - self.e1() * operand.e012() * self.e3()
-                - self.e3() * operand.e3() * self.e023()
-                + self.e0() * operand.e123() * self.e1()
-                - self.e031() * operand.e2() * self.e1()
-                + self.e1() * operand.e123() * self.e0()
-                + self.e031() * operand.e123() * self.e3()
-                - self.e012() * operand.e2() * self.e123()
-                + self.e1() * operand.e2() * self.e031()
-                + self.e123() * operand.e1() * self.e0()
-                - self.e123() * operand.e031() * self.e3()
-                + self.e2() * operand.e3() * self.e0()
-                - self.e123() * operand.e012() * self.e2()
-                - self.e123() * operand.e0() * self.e1()
-                + self.e123() * operand.e123() * self.e023()
-                + self.e2() * operand.e023() * self.e2()
-                - self.e1() * operand.e1() * self.e023()
-                + self.e3() * operand.e1() * self.e012()
-                + self.e3() * operand.e023() * self.e3()
-                + self.e2() * operand.e031() * self.e1()
-                + self.e3() * operand.e123() * self.e031()
-                + self.e023() * operand.e1() * self.e1()
-                - self.e2() * operand.e012() * self.e123()
-                - self.e3() * operand.e031() * self.e123()
-                - self.e1() * operand.e3() * self.e012()
-                + self.e023() * operand.e2() * self.e2()
-                + self.e031() * operand.e1() * self.e2()
-                - self.e031() * operand.e3() * self.e123()
-                - self.e123() * operand.e023() * self.e123()
-                - self.e2() * operand.e1() * self.e031()
-                + self.e3() * operand.e0() * self.e2()
-                + self.e123() * operand.e2() * self.e012()
-                - self.e1() * operand.e023() * self.e1()
-                + self.e1() * operand.e0() * self.e123()
-                - self.e3() * operand.e2() * self.e0()
-                + self.e012() * operand.e3() * self.e1()
-                + self.e023() * operand.e3() * self.e3(),
-            self.e2() * operand.e3() * self.e012()
-                + self.e2() * operand.e012() * self.e3()
-                + self.e3() * operand.e031() * self.e3()
-                + self.e023() * operand.e3() * self.e123()
-                + self.e123() * operand.e023() * self.e3()
-                - self.e123() * operand.e012() * self.e1()
-                + self.e1() * operand.e3() * self.e0()
-                + self.e3() * operand.e023() * self.e123()
-                - self.e023() * operand.e123() * self.e3()
-                + self.e031() * operand.e1() * self.e1()
-                - self.e123() * operand.e3() * self.e023()
-                - self.e1() * operand.e2() * self.e023()
-                - self.e0() * operand.e123() * self.e2()
-                + self.e123() * operand.e0() * self.e2()
-                - self.e3() * operand.e1() * self.e0()
-                + self.e3() * operand.e0() * self.e1()
-                - self.e3() * operand.e123() * self.e023()
-                - self.e023() * operand.e1() * self.e2()
-                - self.e2() * operand.e2() * self.e031()
-                - self.e2() * operand.e031() * self.e2()
-                - self.e3() * operand.e2() * self.e012()
-                - self.e012() * operand.e1() * self.e123()
-                + self.e2() * operand.e023() * self.e1()
-                + self.e031() * operand.e2() * self.e2()
-                + self.e123() * operand.e1() * self.e012()
-                + self.e1() * operand.e031() * self.e1()
-                - self.e1() * operand.e012() * self.e123()
-                + self.e031() * operand.e3() * self.e3()
-                - self.e3() * operand.e3() * self.e031()
-                + self.e0() * operand.e1() * self.e3()
-                + self.e012() * operand.e123() * self.e1()
-                - self.e0() * operand.e3() * self.e1()
-                + self.e1() * operand.e023() * self.e2()
-                + self.e2() * operand.e1() * self.e023()
-                + self.e031() * operand.e123() * self.e123()
-                - self.e1() * operand.e0() * self.e3()
-                - self.e2() * operand.e0() * self.e123()
-                - self.e1() * operand.e1() * self.e031()
-                + self.e3() * operand.e012() * self.e2()
-                - self.e123() * operand.e2() * self.e0()
-                + self.e012() * operand.e2() * self.e3()
-                + self.e123() * operand.e123() * self.e031()
-                - self.e2() * operand.e123() * self.e0()
-                + self.e023() * operand.e2() * self.e1()
-                + self.e1() * operand.e123() * self.e012()
-                - self.e123() * operand.e031() * self.e123()
-                + self.e0() * operand.e2() * self.e123()
-                - self.e012() * operand.e3() * self.e2(),
-            -(self.e0() * operand.e2() * self.e1()) - self.e1() * operand.e023() * self.e3()
-                + self.e2() * operand.e012() * self.e2()
-                + self.e2() * operand.e0() * self.e1()
-                - self.e3() * operand.e3() * self.e012()
-                - self.e3() * operand.e023() * self.e1()
-                + self.e023() * operand.e2() * self.e123()
-                - self.e023() * operand.e3() * self.e1()
-                - self.e123() * operand.e0() * self.e3()
-                - self.e031() * operand.e2() * self.e3()
-                - self.e3() * operand.e1() * self.e023()
-                + self.e023() * operand.e1() * self.e3()
-                - self.e2() * operand.e3() * self.e031()
-                + self.e123() * operand.e3() * self.e0()
-                - self.e2() * operand.e1() * self.e0()
-                + self.e3() * operand.e2() * self.e031()
-                + self.e123() * operand.e123() * self.e012()
-                - self.e0() * operand.e3() * self.e123()
-                + self.e123() * operand.e031() * self.e1()
-                + self.e3() * operand.e0() * self.e123()
-                + self.e1() * operand.e3() * self.e023()
-                + self.e1() * operand.e031() * self.e123()
-                - self.e2() * operand.e123() * self.e023()
-                + self.e012() * operand.e1() * self.e1()
-                + self.e2() * operand.e031() * self.e3()
-                - self.e123() * operand.e2() * self.e023()
-                + self.e0() * operand.e1() * self.e2()
-                - self.e023() * operand.e123() * self.e2()
-                + self.e012() * operand.e123() * self.e123()
-                - self.e123() * operand.e012() * self.e123()
-                + self.e012() * operand.e3() * self.e3()
-                + self.e1() * operand.e2() * self.e0()
-                + self.e123() * operand.e023() * self.e2()
-                - self.e2() * operand.e2() * self.e012()
-                - self.e1() * operand.e0() * self.e2()
-                + self.e2() * operand.e023() * self.e123()
-                - self.e1() * operand.e123() * self.e031()
-                + self.e3() * operand.e031() * self.e2()
-                + self.e1() * operand.e012() * self.e1()
-                + self.e031() * operand.e3() * self.e2()
-                - self.e031() * operand.e123() * self.e1()
-                - self.e1() * operand.e1() * self.e012()
-                - self.e3() * operand.e012() * self.e3()
-                + self.e012() * operand.e2() * self.e2()
-                - self.e123() * operand.e1() * self.e031()
-                + self.e0() * operand.e123() * self.e3()
-                + self.e3() * operand.e123() * self.e0()
-                + self.e031() * operand.e1() * self.e123(),
-            -(self.e3() * operand.e2() * self.e1())
-                + self.e2() * operand.e3() * self.e1()
-                + self.e1() * operand.e2() * self.e3()
-                - self.e2() * operand.e1() * self.e3()
-                + self.e3() * operand.e123() * self.e3()
-                - self.e1() * operand.e3() * self.e2()
-                + self.e123() * operand.e123() * self.e123()
-                + self.e1() * operand.e123() * self.e1()
-                - self.e1() * operand.e1() * self.e123()
-                + self.e3() * operand.e1() * self.e2()
-                + self.e123() * operand.e2() * self.e2()
-                + self.e123() * operand.e1() * self.e1()
-                - self.e2() * operand.e2() * self.e123()
-                - self.e3() * operand.e3() * self.e123()
-                + self.e123() * operand.e3() * self.e3()
-                + self.e2() * operand.e123() * self.e2(),
-        )
-    }
-}
-impl<T: Float> Sandwich<Point<T>> for Motor<T> {
+impl<T: Float> Sandwich<Point<T>> for Flector<T> {
     type Output = Point<T>;
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new(
-            self.e23() * operand.e3() * self.e12()
-                - self.e31() * operand.e2() * self.e23()
-                - self.e23() * operand.e2() * self.e31()
-                + self.e12() * operand.e2() * self.s()
-                + self.s() * operand.e3() * self.e31()
-                - self.e12() * operand.e1() * self.e12()
-                - self.e31() * operand.e1() * self.e31()
-                + self.e31() * operand.e3() * self.s()
-                + self.e12() * operand.e3() * self.e23()
-                + self.s() * operand.e1() * self.s()
-                + self.s() * operand.e2() * self.e12()
-                + self.e23() * operand.e1() * self.e23(),
-            -(self.e12() * operand.e1() * self.s()) - self.e31() * operand.e3() * self.e12()
-                + self.e23() * operand.e3() * self.s()
-                - self.e23() * operand.e2() * self.e23()
-                - self.e12() * operand.e3() * self.e31()
-                - self.e23() * operand.e1() * self.e31()
-                - self.e31() * operand.e1() * self.e23()
-                - self.e12() * operand.e2() * self.e12()
-                - self.s() * operand.e1() * self.e12()
-                + self.s() * operand.e3() * self.e23()
-                + self.e31() * operand.e2() * self.e31()
-                + self.s() * operand.e2() * self.s(),
-            -(self.s() * operand.e2() * self.e23())
-                - self.e31() * operand.e3() * self.e31()
-                - self.e23() * operand.e3() * self.e23()
-                + self.e12() * operand.e3() * self.e12()
-                - self.e12() * operand.e2() * self.e31()
-                + self.e23() * operand.e1() * self.e12()
-                - self.e23() * operand.e2() * self.s()
-                - self.s() * operand.e1() * self.e31()
-                + self.e12() * operand.e1() * self.e23()
-                - self.e31() * operand.e2() * self.e12()
-                + self.s() * operand.e3() * self.s()
-                - self.e31() * operand.e1() * self.s(),
-            -(self.e23() * operand.e3() * self.e02()) + self.e12() * operand.e0() * self.e12()
-                - self.e01() * operand.e3() * self.e31()
-                - self.e02() * operand.e2() * self.s()
-                - self.s() * operand.e3() * self.e03()
-                + self.e03() * operand.e2() * self.e23()
-                - self.e23() * operand.e1() * self.e0123()
-                - self.e01() * operand.e2() * self.e12()
-                + self.e03() * operand.e1() * self.e31()
-                - self.e0123() * operand.e3() * self.e12()
-                + self.e23() * operand.e0() * self.e23()
-                - self.e02() * operand.e3() * self.e23()
-                + self.e12() * operand.e1() * self.e02()
-                - self.e12() * operand.e3() * self.e0123()
-                + self.e02() * operand.e1() * self.e12()
-                - self.e0123() * operand.e1() * self.e23()
-                + self.e0123() * operand.e2() * self.e31()
-                - self.s() * operand.e1() * self.e01()
-                - self.s() * operand.e2() * self.e02()
-                + self.e31() * operand.e2() * self.e0123()
-                - self.e01() * operand.e1() * self.s()
-                - self.e12() * operand.e2() * self.e01()
-                + self.e23() * operand.e2() * self.e03()
-                - self.e31() * operand.e3() * self.e01()
-                + self.e31() * operand.e1() * self.e03()
-                + self.e31() * operand.e0() * self.e31()
-                - self.e03() * operand.e3() * self.s()
-                + self.s() * operand.e0() * self.s(),
+            self.e1() * operand.e1() * self.e1() + self.e1() * operand.e2() * self.e2()
+                - self.e2() * operand.e1() * self.e2()
+                + self.e3() * operand.e3() * self.e1()
+                + self.e123() * operand.e3() * self.e2()
+                + self.e2() * operand.e2() * self.e1()
+                + self.e1() * operand.e3() * self.e3()
+                + self.e2() * operand.e3() * self.e123()
+                - self.e123() * operand.e2() * self.e3()
+                - self.e3() * operand.e1() * self.e3()
+                - self.e3() * operand.e2() * self.e123()
+                + self.e123() * operand.e1() * self.e123(),
+            self.e2() * operand.e2() * self.e2() - self.e3() * operand.e2() * self.e3()
+                + self.e2() * operand.e3() * self.e3()
+                + self.e3() * operand.e3() * self.e2()
+                + self.e2() * operand.e1() * self.e1()
+                + self.e123() * operand.e2() * self.e123()
+                + self.e3() * operand.e1() * self.e123()
+                + self.e1() * operand.e1() * self.e2()
+                - self.e123() * operand.e3() * self.e1()
+                - self.e1() * operand.e3() * self.e123()
+                - self.e1() * operand.e2() * self.e1()
+                + self.e123() * operand.e1() * self.e3(),
+            self.e3() * operand.e2() * self.e2() + self.e1() * operand.e1() * self.e3()
+                - self.e2() * operand.e1() * self.e123()
+                + self.e3() * operand.e1() * self.e1()
+                - self.e123() * operand.e1() * self.e2()
+                + self.e123() * operand.e2() * self.e1()
+                + self.e123() * operand.e3() * self.e123()
+                - self.e1() * operand.e3() * self.e1()
+                + self.e1() * operand.e2() * self.e123()
+                - self.e2() * operand.e3() * self.e2()
+                + self.e3() * operand.e3() * self.e3()
+                + self.e2() * operand.e2() * self.e3(),
+            -(self.e2() * operand.e0() * self.e2())
+                - self.e3() * operand.e1() * self.e031()
+                - self.e3() * operand.e2() * self.e023()
+                - self.e3() * operand.e0() * self.e3()
+                + self.e0() * operand.e3() * self.e3()
+                + self.e2() * operand.e3() * self.e023()
+                + self.e023() * operand.e1() * self.e123()
+                - self.e012() * operand.e1() * self.e2()
+                + self.e123() * operand.e3() * self.e012()
+                + self.e023() * operand.e3() * self.e2()
+                + self.e012() * operand.e3() * self.e123()
+                - self.e1() * operand.e0() * self.e1()
+                - self.e031() * operand.e2() * self.e123()
+                + self.e012() * operand.e2() * self.e1()
+                + self.e0() * operand.e2() * self.e2()
+                - self.e031() * operand.e1() * self.e3()
+                - self.e123() * operand.e2() * self.e031()
+                - self.e123() * operand.e0() * self.e123()
+                + self.e2() * operand.e2() * self.e0()
+                + self.e031() * operand.e3() * self.e1()
+                + self.e1() * operand.e2() * self.e012()
+                + self.e1() * operand.e3() * self.e031()
+                - self.e2() * operand.e1() * self.e012()
+                + self.e1() * operand.e1() * self.e0()
+                - self.e023() * operand.e2() * self.e3()
+                + self.e123() * operand.e1() * self.e023()
+                + self.e0() * operand.e1() * self.e1()
+                + self.e3() * operand.e3() * self.e0(),
         )
     }
 }
-impl<T: Float> Sandwich<Line<T>> for Motor<T> {
-    type Output = Line<T>;
+impl<T: Float> Sandwich<Quadvector<T>> for Flector<T> {
+    type Output = Quadvector<T>;
     #[inline]
-    fn sandwich(&self, operand: &Line<T>) -> Line<T> {
-        Line::new(
-            -(self.e02() * operand.e12() * self.s()) - self.e0123() * operand.e23() * self.s()
-                + self.s() * operand.e02() * self.e12()
-                + self.e02() * operand.e23() * self.e31()
-                - self.e12() * operand.e01() * self.e12()
-                + self.e12() * operand.e03() * self.e23()
-                - self.e03() * operand.e23() * self.e12()
-                + self.e23() * operand.e23() * self.e01()
-                + self.e12() * operand.e12() * self.e01()
-                + self.e01() * operand.e12() * self.e12()
-                + self.e23() * operand.e12() * self.e03()
-                - self.e31() * operand.e02() * self.e23()
-                + self.e12() * operand.e02() * self.s()
-                - self.s() * operand.e12() * self.e02()
-                + self.e31() * operand.e23() * self.e02()
-                + self.e31() * operand.e31() * self.e01()
-                + self.e03() * operand.e12() * self.e23()
-                + self.e23() * operand.e03() * self.e12()
-                + self.e23() * operand.e01() * self.e23()
-                - self.s() * operand.e23() * self.e0123()
-                - self.e23() * operand.e02() * self.e31()
-                - self.s() * operand.e31() * self.e03()
-                + self.e01() * operand.e31() * self.e31()
-                + self.s() * operand.e03() * self.e31()
-                + self.e12() * operand.e31() * self.e0123()
-                + self.e31() * operand.e03() * self.s()
-                + self.e01() * operand.e23() * self.e23()
-                - self.e23() * operand.e31() * self.e02()
-                - self.e12() * operand.e23() * self.e03()
-                - self.e0123() * operand.e12() * self.e31()
-                - self.e02() * operand.e31() * self.e23()
-                + self.e0123() * operand.e31() * self.e12()
-                - self.e31() * operand.e12() * self.e0123()
-                + self.s() * operand.e01() * self.s()
-                - self.e03() * operand.e31() * self.s()
-                - self.e31() * operand.e01() * self.e31(),
-            -(self.s() * operand.e01() * self.e12())
-                - self.e23() * operand.e02() * self.e23()
-                - self.e31() * operand.e03() * self.e12()
-                + self.e31() * operand.e02() * self.e31()
-                + self.s() * operand.e03() * self.e23()
-                + self.e0123() * operand.e31() * self.s()
-                - self.s() * operand.e23() * self.e03()
-                + self.e12() * operand.e31() * self.e03()
-                + self.s() * operand.e02() * self.s()
-                - self.e12() * operand.e01() * self.s()
-                + self.s() * operand.e12() * self.e01()
-                + self.e31() * operand.e31() * self.e02()
-                - self.e01() * operand.e23() * self.e31()
-                + self.e01() * operand.e31() * self.e23()
-                - self.e0123() * operand.e12() * self.e23()
-                - self.e31() * operand.e01() * self.e23()
-                + self.s() * operand.e31() * self.e0123()
-                + self.e02() * operand.e31() * self.e31()
-                + self.e02() * operand.e23() * self.e23()
-                - self.e12() * operand.e03() * self.e31()
-                + self.e23() * operand.e03() * self.s()
-                - self.e31() * operand.e12() * self.e03()
-                + self.e23() * operand.e31() * self.e01()
-                - self.e23() * operand.e12() * self.e0123()
-                - self.e23() * operand.e01() * self.e31()
-                + self.e12() * operand.e23() * self.e0123()
-                + self.e23() * operand.e23() * self.e02()
-                + self.e02() * operand.e12() * self.e12()
-                - self.e03() * operand.e23() * self.s()
-                + self.e03() * operand.e31() * self.e12()
-                + self.e0123() * operand.e23() * self.e12()
-                + self.e12() * operand.e12() * self.e02()
-                + self.e01() * operand.e12() * self.s()
-                - self.e03() * operand.e12() * self.e31()
-                - self.e31() * operand.e23() * self.e01()
-                - self.e12() * operand.e02() * self.e12(),
-            -(self.e31() * operand.e02() * self.e12()) + self.s() * operand.e23() * self.e02()
-                - self.e23() * operand.e12() * self.e01()
-                + self.e03() * operand.e31() * self.e31()
-                + self.e31() * operand.e12() * self.e02()
-                - self.e0123() * operand.e12() * self.s()
-                - self.e0123() * operand.e31() * self.e23()
-                - self.s() * operand.e12() * self.e0123()
-                - self.e23() * operand.e02() * self.s()
-                + self.e31() * operand.e31() * self.e03()
-                - self.e12() * operand.e02() * self.e31()
-                + self.e12() * operand.e23() * self.e01()
-                + self.e03() * operand.e23() * self.e23()
-                - self.e02() * operand.e31() * self.e12()
-                + self.e23() * operand.e01() * self.e12()
-                + self.s() * operand.e31() * self.e01()
-                + self.e01() * operand.e23() * self.e12()
-                - self.s() * operand.e02() * self.e23()
-                - self.e31() * operand.e01() * self.s()
-                - self.e12() * operand.e31() * self.e02()
-                - self.e23() * operand.e31() * self.e0123()
-                + self.s() * operand.e03() * self.s()
-                + self.e12() * operand.e01() * self.e23()
-                + self.e12() * operand.e12() * self.e03()
-                + self.e31() * operand.e23() * self.e0123()
-                + self.e23() * operand.e23() * self.e03()
-                - self.e23() * operand.e03() * self.e23()
-                + self.e12() * operand.e03() * self.e12()
-                - self.e01() * operand.e12() * self.e23()
-                + self.e03() * operand.e12() * self.e12()
-                + self.e02() * operand.e23() * self.s()
-                + self.e0123() * operand.e23() * self.e31()
-                - self.s() * operand.e01() * self.e31()
-                - self.e31() * operand.e03() * self.e31()
-                + self.e01() * operand.e31() * self.s()
-                + self.e02() * operand.e12() * self.e31(),
-            -(self.e12() * operand.e23() * self.e12())
-                + self.s() * operand.e12() * self.e31()
-                + self.e23() * operand.e23() * self.e23()
-                + self.e23() * operand.e12() * self.e12()
-                + self.e12() * operand.e12() * self.e23()
-                + self.e23() * operand.e31() * self.e31()
-                - self.e12() * operand.e31() * self.s()
-                + self.s() * operand.e23() * self.s()
-                + self.e31() * operand.e31() * self.e23()
-                - self.e31() * operand.e23() * self.e31()
-                + self.e31() * operand.e12() * self.s()
-                - self.s() * operand.e31() * self.e12(),
-            self.e12() * operand.e23() * self.s()
-                - self.e12() * operand.e31() * self.e12()
-                - self.e23() * operand.e12() * self.s()
-                + self.s() * operand.e23() * self.e12()
-                + self.e12() * operand.e12() * self.e31()
-                - self.s() * operand.e12() * self.e23()
-                + self.s() * operand.e31() * self.s()
-                + self.e23() * operand.e23() * self.e31()
-                + self.e31() * operand.e31() * self.e31()
-                + self.e31() * operand.e23() * self.e23()
-                + self.e31() * operand.e12() * self.e12()
-                - self.e23() * operand.e31() * self.e23(),
-            -(self.s() * operand.e23() * self.e31()) + self.e12() * operand.e23() * self.e23()
-                - self.e31() * operand.e23() * self.s()
-                + self.e31() * operand.e31() * self.e12()
-                + self.s() * operand.e31() * self.e23()
-                + self.e12() * operand.e12() * self.e12()
-                + self.e23() * operand.e31() * self.s()
-                - self.e23() * operand.e12() * self.e23()
-                + self.e12() * operand.e31() * self.e31()
-                + self.s() * operand.e12() * self.s()
-                + self.e23() * operand.e23() * self.e12()
-                - self.e31() * operand.e12() * self.e31(),
+    fn sandwich(&self, operand: &Quadvector<T>) -> Quadvector<T> {
+        Quadvector::new(
+            -(self.e1() * operand.e0123() * self.e1())
+                - self.e2() * operand.e0123() * self.e2()
+                - self.e123() * operand.e0123() * self.e123()
+                - self.e3() * operand.e0123() * self.e3(),
         )
     }
 }
-impl<T: Float> Sandwich<Plane<T>> for Motor<T> {
-    type Output = Plane<T>;
+impl<T: Float> Sandwich<Scalar<T>> for Flector<T> {
+    type Output = Scalar<T>;
     #[inline]
-    fn sandwich(&self, operand: &Plane<T>) -> Plane<T> {
-        Plane::new(
-            -(self.s() * operand.e123() * self.e01()) - self.e12() * operand.e023() * self.e12()
-                + self.s() * operand.e012() * self.e31()
-                + self.e31() * operand.e031() * self.e23()
-                + self.s() * operand.e023() * self.s()
-                - self.e12() * operand.e031() * self.s()
-                - self.e0123() * operand.e123() * self.e23()
-                - self.e31() * operand.e023() * self.e31()
-                - self.e31() * operand.e123() * self.e03()
-                + self.e23() * operand.e031() * self.e31()
-                + self.e12() * operand.e012() * self.e23()
-                - self.e01() * operand.e123() * self.s()
-                - self.s() * operand.e031() * self.e12()
-                - self.e23() * operand.e123() * self.e0123()
-                - self.e02() * operand.e123() * self.e12()
-                + self.e23() * operand.e023() * self.e23()
-                - self.e03() * operand.e123() * self.e31()
-                + self.e23() * operand.e012() * self.e12()
-                + self.e31() * operand.e012() * self.s()
-                - self.e12() * operand.e123() * self.e02(),
-            self.s() * operand.e123() * self.e02()
-                + self.e31() * operand.e031() * self.e31()
-                + self.s() * operand.e031() * self.s()
-                - self.e12() * operand.e123() * self.e01()
-                + self.e31() * operand.e023() * self.e23()
-                + self.e23() * operand.e023() * self.e31()
-                + self.e12() * operand.e023() * self.s()
-                - self.e31() * operand.e123() * self.e0123()
-                + self.s() * operand.e023() * self.e12()
-                - self.e23() * operand.e031() * self.e23()
-                - self.e23() * operand.e012() * self.s()
-                + self.e23() * operand.e123() * self.e03()
-                + self.e03() * operand.e123() * self.e23()
-                - self.e0123() * operand.e123() * self.e31()
-                - self.s() * operand.e012() * self.e23()
-                + self.e02() * operand.e123() * self.s()
-                - self.e12() * operand.e031() * self.e12()
-                + self.e12() * operand.e012() * self.e31()
-                + self.e31() * operand.e012() * self.e12()
-                - self.e01() * operand.e123() * self.e12(),
-            -(self.e23() * operand.e012() * self.e23())
-                + self.e23() * operand.e123() * self.e02()
-                + self.e01() * operand.e123() * self.e31()
-                + self.e12() * operand.e031() * self.e31()
-                + self.e23() * operand.e023() * self.e12()
-                - self.e31() * operand.e023() * self.s()
-                + self.e12() * operand.e012() * self.e12()
-                - self.e12() * operand.e123() * self.e0123()
-                + self.s() * operand.e031() * self.e23()
-                + self.e31() * operand.e031() * self.e12()
-                - self.e03() * operand.e123() * self.s()
-                + self.e02() * operand.e123() * self.e23()
-                - self.s() * operand.e123() * self.e03()
-                + self.s() * operand.e012() * self.s()
-                - self.s() * operand.e023() * self.e31()
-                - self.e0123() * operand.e123() * self.e12()
-                + self.e12() * operand.e023() * self.e23()
-                - self.e31() * operand.e012() * self.e31()
-                + self.e31() * operand.e123() * self.e01()
-                + self.e23() * operand.e031() * self.s(),
-            self.e23() * operand.e123() * self.e23()
-                + self.e31() * operand.e123() * self.e31()
-                + self.s() * operand.e123() * self.s()
-                + self.e12() * operand.e123() * self.e12(),
-        )
-    }
-}
-impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
-    type Output = Motor<T>;
-    #[inline]
-    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
-        Motor::new_unchecked(
-            -(self.e31() * operand.e31() * self.s()) + self.s() * operand.s() * self.s()
-                - self.e31() * operand.e23() * self.e12()
-                - self.e12() * operand.e12() * self.s()
-                - self.e23() * operand.e12() * self.e31()
-                + self.s() * operand.e12() * self.e12()
-                + self.e23() * operand.e31() * self.e12()
-                + self.e31() * operand.s() * self.e31()
-                - self.e12() * operand.e31() * self.e23()
-                + self.e12() * operand.s() * self.e12()
-                + self.e12() * operand.e23() * self.e31()
-                + self.e23() * operand.s() * self.e23()
-                - self.e23() * operand.e23() * self.s()
-                + self.s() * operand.e31() * self.e31()
-                + self.s() * operand.e23() * self.e23()
-                + self.e31() * operand.e12() * self.e23(),
-            self.s() * operand.e23() * self.s() + self.e12() * operand.e12() * self.e23()
-                - self.e12() * operand.e23() * self.e12()
-                + self.e12() * operand.s() * self.e31()
-                - self.e31() * operand.e23() * self.e31()
-                - self.s() * operand.e31() * self.e12()
-                + self.e23() * operand.e23() * self.e23()
-                - self.e31() * operand.s() * self.e12()
-                - self.s() * operand.s() * self.e23()
-                + self.e31() * operand.e31() * self.e23()
-                + self.e23() * operand.e31() * self.e31()
-                + self.e31() * operand.e12() * self.s()
-                + self.s() * operand.e12() * self.e31()
-                + self.e23() * operand.e12() * self.e12()
-                + self.e23() * operand.s() * self.s()
-                - self.e12() * operand.e31() * self.s(),
-            self.e31() * operand.e23() * self.e23() - self.e23() * operand.e31() * self.e23()
-                + self.s() * operand.e23() * self.e12()
-                - self.e23() * operand.e12() * self.s()
-                + self.e12() * operand.e23() * self.s()
-                - self.e12() * operand.e31() * self.e12()
-                - self.s() * operand.e12() * self.e23()
-                + self.e12() * operand.e12() * self.e31()
-                + self.e31() * operand.e12() * self.e12()
-                + self.e23() * operand.e23() * self.e31()
-                + self.e31() * operand.s() * self.s()
-                - self.s() * operand.s() * self.e31()
-                + self.s() * operand.e31() * self.s()
-                + self.e31() * operand.e31() * self.e31()
-                - self.e12() * operand.s() * self.e23()
-                + self.e23() * operand.s() * self.e12(),
-            self.e23() * operand.e31() * self.s() - self.e23() * operand.s() * self.e31()
-                + self.e12() * operand.e12() * self.e12()
-                - self.s() * operand.s() * self.e12()
-                + self.e12() * operand.e23() * self.e23()
-                - self.e31() * operand.e12() * self.e31()
-                + self.e31() * operand.s() * self.e23()
-                + self.e23() * operand.e23() * self.e12()
-                + self.e12() * operand.e31() * self.e31()
-                - self.s() * operand.e23() * self.e31()
-                - self.e23() * operand.e12() * self.e23()
-                + self.s() * operand.e31() * self.e23()
-                - self.e31() * operand.e23() * self.s()
-                + self.e31() * operand.e31() * self.e12()
-                + self.s() * operand.e12() * self.s()
-                + self.e12() * operand.s() * self.s(),
-            -(self.e23() * operand.e02() * self.e31())
-                + self.e01() * operand.s() * self.s()
-                + self.s() * operand.e0123() * self.e23()
-                + self.e23() * operand.e01() * self.e23()
-                - self.e03() * operand.e23() * self.e12()
-                + self.s() * operand.e02() * self.e12()
-                - self.e23() * operand.s() * self.e0123()
-                + self.e31() * operand.e03() * self.s()
-                + self.s() * operand.e01() * self.s()
-                + self.e01() * operand.e23() * self.e23()
-                + self.e01() * operand.e12() * self.e12()
-                - self.s() * operand.e23() * self.e0123()
-                + self.e23() * operand.e12() * self.e03()
-                - self.e23() * operand.e0123() * self.s()
-                - self.e31() * operand.s() * self.e03()
-                + self.e31() * operand.e23() * self.e02()
-                - self.e31() * operand.e01() * self.e31()
-                - self.e31() * operand.e02() * self.e23()
-                - self.e23() * operand.e31() * self.e02()
-                + self.e01() * operand.e31() * self.e31()
-                + self.e02() * operand.e23() * self.e31()
-                - self.e02() * operand.e31() * self.e23()
-                - self.e02() * operand.e12() * self.s()
-                + self.e31() * operand.e31() * self.e01()
-                + self.e03() * operand.s() * self.e31()
-                - self.e03() * operand.e31() * self.s()
-                - self.e0123() * operand.e23() * self.s()
-                + self.e12() * operand.e31() * self.e0123()
-                - self.e12() * operand.e23() * self.e03()
-                + self.e23() * operand.e23() * self.e01()
-                + self.e0123() * operand.e31() * self.e12()
-                + self.e03() * operand.e12() * self.e23()
-                - self.s() * operand.s() * self.e01()
-                + self.e0123() * operand.s() * self.e23()
-                - self.e0123() * operand.e12() * self.e31()
-                + self.e12() * operand.e12() * self.e01()
-                - self.s() * operand.e12() * self.e02()
-                + self.e12() * operand.e02() * self.s()
-                + self.e31() * operand.e0123() * self.e12()
-                - self.e12() * operand.e0123() * self.e31()
-                - self.s() * operand.e31() * self.e03()
-                - self.e31() * operand.e12() * self.e0123()
-                + self.s() * operand.e03() * self.e31()
-                + self.e02() * operand.s() * self.e12()
-                + self.e12() * operand.e03() * self.e23()
-                - self.e12() * operand.s() * self.e02()
-                + self.e23() * operand.e03() * self.e12()
-                - self.e12() * operand.e01() * self.e12(),
-            self.e12() * operand.s() * self.e01()
-                - self.e23() * operand.e02() * self.e23()
-                - self.e31() * operand.e01() * self.e23()
-                + self.e01() * operand.e12() * self.s()
-                + self.e12() * operand.e12() * self.e02()
-                + self.s() * operand.e31() * self.e0123()
-                + self.e03() * operand.e31() * self.e12()
-                - self.s() * operand.s() * self.e02()
-                + self.e0123() * operand.e31() * self.s()
-                + self.e23() * operand.e03() * self.s()
-                - self.e0123() * operand.e12() * self.e23()
-                - self.e12() * operand.e0123() * self.e23()
-                + self.e02() * operand.e23() * self.e23()
-                - self.s() * operand.e23() * self.e03()
-                + self.e02() * operand.e12() * self.e12()
-                - self.e03() * operand.e23() * self.s()
-                - self.e31() * operand.e12() * self.e03()
-                - self.e23() * operand.s() * self.e03()
-                + self.e12() * operand.e31() * self.e03()
-                + self.e23() * operand.e31() * self.e01()
-                + self.e12() * operand.e23() * self.e0123()
-                - self.e23() * operand.e01() * self.e31()
-                + self.e23() * operand.e23() * self.e02()
-                + self.s() * operand.e03() * self.e23()
-                + self.e31() * operand.e31() * self.e02()
-                + self.e31() * operand.e02() * self.e31()
-                - self.e31() * operand.e23() * self.e01()
-                - self.e31() * operand.e03() * self.e12()
-                + self.s() * operand.e02() * self.s()
-                + self.e31() * operand.e0123() * self.s()
-                + self.e23() * operand.e0123() * self.e12()
-                + self.s() * operand.e12() * self.e01()
-                - self.e23() * operand.e12() * self.e0123()
-                - self.e12() * operand.e02() * self.e12()
-                - self.e12() * operand.e01() * self.s()
-                - self.e12() * operand.e03() * self.e31()
-                - self.e01() * operand.e23() * self.e31()
-                + self.e01() * operand.e31() * self.e23()
-                - self.e01() * operand.s() * self.e12()
-                + self.e03() * operand.s() * self.e23()
-                - self.e03() * operand.e12() * self.e31()
-                - self.e0123() * operand.s() * self.e31()
-                + self.e31() * operand.s() * self.e0123()
-                - self.s() * operand.e0123() * self.e31()
-                + self.e02() * operand.s() * self.s()
-                + self.e0123() * operand.e23() * self.e12()
-                - self.s() * operand.e01() * self.e12()
-                + self.e02() * operand.e31() * self.e31(),
-            self.e02() * operand.e12() * self.e31() + self.e0123() * operand.e23() * self.e31()
-                - self.e12() * operand.s() * self.e0123()
-                + self.e31() * operand.e31() * self.e03()
-                + self.s() * operand.e0123() * self.e12()
-                - self.e23() * operand.e12() * self.e01()
-                - self.e12() * operand.e31() * self.e02()
-                + self.e01() * operand.e23() * self.e12()
-                - self.e01() * operand.e12() * self.e23()
-                + self.e0123() * operand.s() * self.e12()
-                - self.e23() * operand.e31() * self.e0123()
-                + self.e23() * operand.e0123() * self.e31()
-                - self.e02() * operand.e31() * self.e12()
-                + self.e31() * operand.e12() * self.e02()
-                - self.e31() * operand.e0123() * self.e23()
-                + self.s() * operand.e03() * self.s()
-                + self.e12() * operand.e03() * self.e12()
-                + self.e03() * operand.e23() * self.e23()
-                - self.e0123() * operand.e31() * self.e23()
-                - self.e0123() * operand.e12() * self.s()
-                + self.e12() * operand.e23() * self.e01()
-                - self.e01() * operand.s() * self.e31()
-                - self.e02() * operand.s() * self.e23()
-                + self.e23() * operand.s() * self.e02()
-                + self.s() * operand.e31() * self.e01()
-                - self.s() * operand.e02() * self.e23()
-                + self.e23() * operand.e01() * self.e12()
-                - self.e12() * operand.e02() * self.e31()
-                + self.e03() * operand.s() * self.s()
-                - self.s() * operand.e12() * self.e0123()
-                + self.s() * operand.e23() * self.e02()
-                - self.e31() * operand.e02() * self.e12()
-                + self.e31() * operand.s() * self.e01()
-                + self.e12() * operand.e12() * self.e03()
-                + self.e23() * operand.e23() * self.e03()
-                + self.e12() * operand.e01() * self.e23()
-                + self.e03() * operand.e31() * self.e31()
-                + self.e03() * operand.e12() * self.e12()
-                + self.e02() * operand.e23() * self.s()
-                - self.s() * operand.s() * self.e03()
-                - self.e31() * operand.e03() * self.e31()
-                - self.s() * operand.e01() * self.e31()
-                - self.e12() * operand.e0123() * self.s()
-                + self.e31() * operand.e23() * self.e0123()
-                + self.e01() * operand.e31() * self.s()
-                - self.e23() * operand.e03() * self.e23()
-                - self.e31() * operand.e01() * self.s()
-                - self.e23() * operand.e02() * self.s(),
-            -(self.e23() * operand.e23() * self.e0123())
-                + self.e0123() * operand.e31() * self.e31()
-                + self.e0123() * operand.s() * self.s()
-                - self.e02() * operand.e31() * self.s()
-                + self.e0123() * operand.e12() * self.e12()
-                + self.e0123() * operand.e23() * self.e23()
-                - self.s() * operand.e12() * self.e03()
-                + self.s() * operand.e02() * self.e31()
-                + self.s() * operand.s() * self.e0123()
-                + self.s() * operand.e0123() * self.s()
-                + self.e01() * operand.e12() * self.e31()
-                - self.s() * operand.e03() * self.e12()
-                + self.e12() * operand.e23() * self.e02()
-                - self.s() * operand.e23() * self.e01()
-                - self.e31() * operand.e02() * self.s()
-                + self.e23() * operand.e03() * self.e31()
-                - self.e12() * operand.s() * self.e03()
-                - self.e03() * operand.s() * self.e12()
-                + self.e03() * operand.e31() * self.e23()
-                + self.e23() * operand.e0123() * self.e23()
-                - self.e23() * operand.s() * self.e01()
-                - self.e31() * operand.e12() * self.e01()
-                - self.e31() * operand.e03() * self.e23()
-                + self.e01() * operand.e23() * self.s()
-                - self.e12() * operand.e02() * self.e23()
-                + self.e03() * operand.e12() * self.s()
-                - self.e02() * operand.e23() * self.e12()
-                - self.e23() * operand.e31() * self.e03()
-                + self.e31() * operand.s() * self.e02()
-                - self.e12() * operand.e01() * self.e31()
-                - self.e31() * operand.e31() * self.e0123()
-                + self.e12() * operand.e03() * self.s()
-                + self.e12() * operand.e0123() * self.e12()
-                + self.e31() * operand.e01() * self.e12()
-                + self.e31() * operand.e0123() * self.e31()
-                + self.s() * operand.e31() * self.e02()
-                - self.e01() * operand.s() * self.e23()
-                - self.e01() * operand.e31() * self.e12()
-                + self.e02() * operand.s() * self.e31()
-                + self.e23() * operand.e02() * self.e12()
-                + self.e02() * operand.e12() * self.e23()
-                - self.e12() * operand.e12() * self.e0123()
-                + self.e31() * operand.e23() * self.e03()
-                - self.e23() * operand.e12() * self.e02()
-                - self.e03() * operand.e23() * self.e31()
-                + self.e12() * operand.e31() * self.e01()
-                + self.e23() * operand.e01() * self.s()
-                - self.s() * operand.e01() * self.e23(),
+    fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new(
+            self.e2() * operand.s() * self.e2()
+                + self.e1() * operand.s() * self.e1()
+                + self.e3() * operand.s() * self.e3()
+                + self.e123() * operand.s() * self.e123(),
         )
     }
 }
@@ -3358,808 +2828,837 @@ impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.s() * operand.e3() * self.e31() - self.e12() * operand.e1() * self.e12()
-                + self.s() * operand.e1() * self.s()
-                + self.e12() * operand.e2() * self.s()
-                + self.e31() * operand.e3() * self.s()
-                + self.s() * operand.e123() * self.e23()
-                + self.e23() * operand.e3() * self.e12()
-                - self.e31() * operand.e2() * self.e23()
-                + self.e12() * operand.e3() * self.e23()
-                - self.e12() * operand.e123() * self.e31()
-                - self.e23() * operand.e123() * self.s()
-                - self.e31() * operand.e1() * self.e31()
+            -(self.e23() * operand.e123() * self.s())
                 + self.e31() * operand.e123() * self.e12()
+                + self.e12() * operand.e3() * self.e23()
+                + self.e31() * operand.e3() * self.s()
+                - self.e12() * operand.e1() * self.e12()
+                + self.s() * operand.e3() * self.e31()
                 + self.s() * operand.e2() * self.e12()
-                + self.e23() * operand.e1() * self.e23()
-                - self.e23() * operand.e2() * self.e31(),
-            -(self.e31() * operand.e3() * self.e12()) + self.e23() * operand.e123() * self.e12()
-                - self.e31() * operand.e1() * self.e23()
-                + self.e31() * operand.e123() * self.s()
-                + self.s() * operand.e3() * self.e23()
+                - self.e31() * operand.e2() * self.e23()
+                + self.s() * operand.e1() * self.s()
+                + self.e23() * operand.e3() * self.e12()
+                + self.e12() * operand.e2() * self.s()
+                - self.e31() * operand.e1() * self.e31()
+                + self.s() * operand.e123() * self.e23()
+                - self.e23() * operand.e2() * self.e31()
+                - self.e12() * operand.e123() * self.e31()
+                + self.e23() * operand.e1() * self.e23(),
+            self.s() * operand.e3() * self.e23() + self.s() * operand.e2() * self.s()
+                - self.e12() * operand.e2() * self.e12()
+                + self.e23() * operand.e123() * self.e12()
                 - self.s() * operand.e123() * self.e31()
                 - self.e12() * operand.e123() * self.e23()
-                - self.e12() * operand.e1() * self.s()
-                + self.e31() * operand.e2() * self.e31()
-                - self.e12() * operand.e2() * self.e12()
-                + self.e23() * operand.e3() * self.s()
-                + self.s() * operand.e2() * self.s()
+                - self.e23() * operand.e2() * self.e23()
                 - self.e12() * operand.e3() * self.e31()
-                - self.e23() * operand.e1() * self.e31()
+                + self.e23() * operand.e3() * self.s()
+                + self.e31() * operand.e2() * self.e31()
                 - self.s() * operand.e1() * self.e12()
-                - self.e23() * operand.e2() * self.e23(),
-            -(self.e31() * operand.e1() * self.s())
+                - self.e23() * operand.e1() * self.e31()
+                - self.e31() * operand.e3() * self.e12()
+                - self.e12() * operand.e1() * self.s()
+                + self.e31() * operand.e123() * self.s()
+                - self.e31() * operand.e1() * self.e23(),
+            -(self.e23() * operand.e2() * self.s())
+                + self.e12() * operand.e1() * self.e23()
+                + self.e12() * operand.e3() * self.e12()
                 - self.e31() * operand.e3() * self.e31()
                 - self.e12() * operand.e123() * self.s()
-                + self.e23() * operand.e1() * self.e12()
-                + self.e12() * operand.e1() * self.e23()
-                - self.e23() * operand.e2() * self.s()
-                - self.e12() * operand.e2() * self.e31()
-                + self.s() * operand.e3() * self.s()
                 - self.s() * operand.e2() * self.e23()
-                - self.e23() * operand.e3() * self.e23()
-                - self.s() * operand.e1() * self.e31()
-                - self.e31() * operand.e123() * self.e23()
-                + self.e12() * operand.e3() * self.e12()
+                + self.e23() * operand.e1() * self.e12()
                 + self.e23() * operand.e123() * self.e31()
+                - self.s() * operand.e1() * self.e31()
+                - self.e31() * operand.e1() * self.s()
+                - self.e31() * operand.e123() * self.e23()
+                - self.e23() * operand.e3() * self.e23()
+                + self.s() * operand.e3() * self.s()
+                - self.e12() * operand.e2() * self.e31()
                 + self.s() * operand.e123() * self.e12()
                 - self.e31() * operand.e2() * self.e12(),
-            self.e12() * operand.e0() * self.e12() + self.e12() * operand.e1() * self.e02()
-                - self.e03() * operand.e3() * self.s()
-                - self.e31() * operand.e023() * self.e12()
-                - self.s() * operand.e3() * self.e03()
-                + self.e12() * operand.e123() * self.e03()
-                + self.e0123() * operand.e123() * self.s()
-                + self.s() * operand.e012() * self.e12()
-                + self.e23() * operand.e123() * self.e01()
-                - self.e12() * operand.e3() * self.e0123()
-                - self.e23() * operand.e3() * self.e02()
-                - self.e12() * operand.e2() * self.e01()
-                + self.e31() * operand.e0() * self.e31()
-                - self.e12() * operand.e031() * self.e23()
-                - self.e12() * operand.e012() * self.s()
-                + self.e31() * operand.e012() * self.e23()
-                + self.e03() * operand.e2() * self.e23()
-                - self.e31() * operand.e3() * self.e01()
-                + self.s() * operand.e0() * self.s()
-                - self.e23() * operand.e012() * self.e31()
-                + self.e23() * operand.e2() * self.e03()
-                - self.e23() * operand.e1() * self.e0123()
-                + self.s() * operand.e031() * self.e31()
-                - self.e01() * operand.e1() * self.s()
-                + self.e31() * operand.e1() * self.e03()
-                - self.e02() * operand.e2() * self.s()
-                - self.e01() * operand.e3() * self.e31()
-                - self.e02() * operand.e3() * self.e23()
-                + self.e03() * operand.e1() * self.e31()
-                - self.e0123() * operand.e3() * self.e12()
-                + self.e12() * operand.e023() * self.e31()
-                - self.e31() * operand.e123() * self.e02()
-                - self.e03() * operand.e123() * self.e12()
-                + self.e31() * operand.e2() * self.e0123()
-                - self.s() * operand.e2() * self.e02()
-                - self.e01() * operand.e2() * self.e12()
-                + self.e02() * operand.e123() * self.e31()
-                - self.s() * operand.e123() * self.e0123()
-                + self.e0123() * operand.e2() * self.e31()
-                + self.e23() * operand.e0() * self.e23()
-                - self.e0123() * operand.e1() * self.e23()
-                + self.e23() * operand.e031() * self.e12()
-                + self.e02() * operand.e1() * self.e12()
-                - self.e31() * operand.e031() * self.s()
-                - self.e23() * operand.e023() * self.s()
-                + self.s() * operand.e023() * self.e23()
+            self.e23() * operand.e031() * self.e12() + self.s() * operand.e031() * self.e31()
                 - self.e01() * operand.e123() * self.e23()
-                - self.s() * operand.e1() * self.e01(),
-            -(self.e31() * operand.e0() * self.e12()) + self.e03() * operand.e3() * self.e23()
-                - self.e31() * operand.e023() * self.e31()
-                + self.s() * operand.e1() * self.e0123()
-                - self.e23() * operand.e1() * self.e01()
-                - self.s() * operand.e123() * self.e01()
-                + self.e23() * operand.e012() * self.e12()
-                + self.e31() * operand.e3() * self.e0123()
-                + self.e31() * operand.e031() * self.e23()
-                + self.e31() * operand.e012() * self.s()
+                - self.e12() * operand.e031() * self.e23()
+                - self.e0123() * operand.e1() * self.e23()
+                - self.e31() * operand.e031() * self.s()
+                + self.e23() * operand.e2() * self.e03()
+                + self.e03() * operand.e1() * self.e31()
+                - self.s() * operand.e2() * self.e02()
+                - self.e23() * operand.e3() * self.e02()
+                + self.e23() * operand.e123() * self.e01()
+                + self.e02() * operand.e1() * self.e12()
+                - self.e31() * operand.e023() * self.e12()
+                + self.e03() * operand.e2() * self.e23()
+                + self.e0123() * operand.e123() * self.s()
+                - self.e01() * operand.e2() * self.e12()
+                + self.s() * operand.e0() * self.s()
+                + self.e12() * operand.e1() * self.e02()
+                - self.s() * operand.e1() * self.e01()
+                - self.e23() * operand.e1() * self.e0123()
+                + self.e12() * operand.e023() * self.e31()
+                - self.s() * operand.e123() * self.e0123()
+                + self.s() * operand.e012() * self.e12()
+                + self.e12() * operand.e123() * self.e03()
+                - self.e12() * operand.e3() * self.e0123()
+                - self.e23() * operand.e023() * self.s()
+                - self.e02() * operand.e3() * self.e23()
+                + self.e02() * operand.e123() * self.e31()
+                - self.e03() * operand.e123() * self.e12()
+                + self.e0123() * operand.e2() * self.e31()
+                - self.e02() * operand.e2() * self.s()
+                - self.e12() * operand.e012() * self.s()
+                - self.e0123() * operand.e3() * self.e12()
+                - self.e31() * operand.e123() * self.e02()
+                - self.e03() * operand.e3() * self.s()
+                + self.e31() * operand.e0() * self.e31()
+                - self.e23() * operand.e012() * self.e31()
+                + self.e31() * operand.e012() * self.e23()
+                + self.e31() * operand.e1() * self.e03()
+                + self.s() * operand.e023() * self.e23()
+                - self.e01() * operand.e1() * self.s()
+                - self.e31() * operand.e3() * self.e01()
+                + self.e31() * operand.e2() * self.e0123()
+                - self.e12() * operand.e2() * self.e01()
+                - self.e01() * operand.e3() * self.e31()
+                + self.e12() * operand.e0() * self.e12()
+                + self.e23() * operand.e0() * self.e23()
+                - self.s() * operand.e3() * self.e03(),
+            self.e12() * operand.e012() * self.e23() + self.e31() * operand.e031() * self.e23()
                 - self.s() * operand.e031() * self.e12()
-                - self.e31() * operand.e123() * self.e03()
-                - self.e01() * operand.e123() * self.s()
-                + self.s() * operand.e3() * self.e02()
-                - self.e23() * operand.e3() * self.e03()
-                + self.e23() * operand.e023() * self.e23()
-                - self.e31() * operand.e1() * self.e02()
-                + self.e23() * operand.e0() * self.s()
-                - self.e12() * operand.e3() * self.e01()
-                - self.e12() * operand.e023() * self.e12()
-                + self.e12() * operand.e1() * self.e03()
-                + self.s() * operand.e023() * self.s()
-                - self.e01() * operand.e2() * self.e31()
-                - self.e02() * operand.e3() * self.s()
-                - self.e02() * operand.e123() * self.e12()
-                - self.e03() * operand.e1() * self.e12()
-                - self.e03() * operand.e123() * self.e31()
-                - self.s() * operand.e0() * self.e23()
-                - self.e12() * operand.e031() * self.s()
-                + self.e12() * operand.e012() * self.e23()
                 + self.e01() * operand.e1() * self.e23()
-                + self.e01() * operand.e3() * self.e12()
-                + self.e02() * operand.e1() * self.e31()
-                + self.e31() * operand.e2() * self.e01()
-                + self.e02() * operand.e2() * self.e23()
+                - self.e02() * operand.e3() * self.s()
                 - self.e0123() * operand.e1() * self.s()
-                - self.e23() * operand.e123() * self.e0123()
-                - self.s() * operand.e2() * self.e03()
+                - self.e01() * operand.e123() * self.s()
+                - self.e31() * operand.e023() * self.e31()
                 - self.e0123() * operand.e2() * self.e12()
-                + self.e12() * operand.e0() * self.e31()
+                - self.e23() * operand.e3() * self.e03()
+                - self.e12() * operand.e123() * self.e02()
+                - self.e01() * operand.e2() * self.e31()
+                + self.e31() * operand.e012() * self.s()
+                + self.e23() * operand.e012() * self.e12()
+                - self.s() * operand.e2() * self.e03()
+                - self.e23() * operand.e1() * self.e01()
                 - self.e0123() * operand.e3() * self.e31()
+                - self.e12() * operand.e031() * self.s()
+                + self.e03() * operand.e2() * self.s()
+                - self.e31() * operand.e1() * self.e02()
+                + self.e31() * operand.e2() * self.e01()
+                + self.e12() * operand.e0() * self.e31()
+                + self.s() * operand.e023() * self.s()
+                + self.e03() * operand.e3() * self.e23()
+                + self.e02() * operand.e1() * self.e31()
+                + self.e12() * operand.e1() * self.e03()
+                + self.e23() * operand.e0() * self.s()
+                + self.e01() * operand.e3() * self.e12()
+                + self.s() * operand.e1() * self.e0123()
                 - self.e0123() * operand.e123() * self.e23()
                 + self.s() * operand.e012() * self.e31()
-                + self.e23() * operand.e031() * self.e31()
-                + self.e03() * operand.e2() * self.s()
-                - self.e12() * operand.e123() * self.e02()
+                - self.e23() * operand.e2() * self.e02()
                 + self.e12() * operand.e2() * self.e0123()
-                - self.e23() * operand.e2() * self.e02(),
-            -(self.e0123() * operand.e1() * self.e12())
-                + self.s() * operand.e031() * self.s()
-                + self.s() * operand.e123() * self.e02()
-                + self.e23() * operand.e023() * self.e31()
-                - self.e02() * operand.e1() * self.e23()
-                + self.s() * operand.e023() * self.e12()
-                - self.s() * operand.e0() * self.e31()
-                + self.e23() * operand.e0() * self.e12()
-                - self.e31() * operand.e3() * self.e03()
-                + self.e31() * operand.e031() * self.e31()
-                + self.e23() * operand.e123() * self.e03()
-                - self.e01() * operand.e3() * self.s()
-                + self.e02() * operand.e123() * self.s()
-                - self.e31() * operand.e2() * self.e02()
-                + self.e03() * operand.e123() * self.e23()
-                + self.e23() * operand.e1() * self.e02()
-                - self.s() * operand.e1() * self.e03()
-                - self.e23() * operand.e3() * self.e0123()
-                - self.s() * operand.e012() * self.e23()
-                + self.e01() * operand.e1() * self.e31()
-                + self.e02() * operand.e2() * self.e31()
-                + self.e12() * operand.e1() * self.e0123()
-                - self.e02() * operand.e3() * self.e12()
-                + self.e03() * operand.e3() * self.e31()
-                + self.e03() * operand.e2() * self.e12()
-                - self.e0123() * operand.e123() * self.e31()
-                + self.e31() * operand.e012() * self.e12()
-                + self.e31() * operand.e0() * self.s()
-                + self.e0123() * operand.e3() * self.e23()
-                - self.s() * operand.e2() * self.e0123()
-                + self.e12() * operand.e3() * self.e02()
-                + self.e03() * operand.e1() * self.s()
-                - self.e23() * operand.e2() * self.e01()
-                + self.e0123() * operand.e2() * self.s()
-                + self.s() * operand.e3() * self.e01()
+                - self.s() * operand.e0() * self.e23()
+                - self.e12() * operand.e023() * self.e12()
+                + self.s() * operand.e3() * self.e02()
+                + self.e23() * operand.e031() * self.e31()
+                - self.e31() * operand.e0() * self.e12()
+                - self.e02() * operand.e123() * self.e12()
+                - self.e23() * operand.e123() * self.e0123()
+                - self.e03() * operand.e123() * self.e31()
+                - self.s() * operand.e123() * self.e01()
+                - self.e31() * operand.e123() * self.e03()
+                - self.e03() * operand.e1() * self.e12()
+                + self.e02() * operand.e2() * self.e23()
+                + self.e23() * operand.e023() * self.e23()
+                - self.e12() * operand.e3() * self.e01()
+                + self.e31() * operand.e3() * self.e0123(),
+            self.e02() * operand.e123() * self.s()
                 - self.e23() * operand.e012() * self.s()
-                + self.e31() * operand.e023() * self.e23()
                 - self.e12() * operand.e2() * self.e03()
-                - self.e31() * operand.e1() * self.e01()
-                - self.e31() * operand.e123() * self.e0123()
+                + self.e23() * operand.e123() * self.e03()
+                + self.e23() * operand.e0() * self.e12()
+                - self.e23() * operand.e3() * self.e0123()
+                + self.e31() * operand.e012() * self.e12()
                 - self.e12() * operand.e0() * self.e23()
-                + self.e12() * operand.e023() * self.s()
-                - self.e12() * operand.e123() * self.e01()
-                - self.e12() * operand.e031() * self.e12()
-                - self.e01() * operand.e123() * self.e12()
-                - self.e23() * operand.e031() * self.e23()
+                + self.e01() * operand.e2() * self.e23()
+                - self.s() * operand.e2() * self.e0123()
                 + self.e12() * operand.e012() * self.e31()
-                + self.e01() * operand.e2() * self.e23(),
-            self.e01() * operand.e123() * self.e31()
-                + self.e02() * operand.e1() * self.s()
-                + self.s() * operand.e031() * self.e23()
-                - self.e01() * operand.e2() * self.s()
-                - self.e03() * operand.e2() * self.e31()
-                + self.s() * operand.e3() * self.e0123()
-                - self.e03() * operand.e123() * self.s()
-                - self.s() * operand.e023() * self.e31()
-                - self.e23() * operand.e012() * self.e23()
-                + self.e03() * operand.e1() * self.e23()
-                + self.e01() * operand.e1() * self.e12()
-                - self.e01() * operand.e3() * self.e23()
-                + self.e02() * operand.e3() * self.e31()
-                - self.e0123() * operand.e3() * self.s()
-                - self.s() * operand.e0() * self.e12()
-                + self.e12() * operand.e023() * self.e23()
-                + self.e0123() * operand.e1() * self.e31()
-                - self.e23() * operand.e1() * self.e03()
-                - self.e31() * operand.e1() * self.e0123()
-                - self.s() * operand.e1() * self.e02()
-                + self.e23() * operand.e031() * self.s()
-                + self.e31() * operand.e0() * self.e23()
-                - self.e31() * operand.e3() * self.e02()
-                + self.e02() * operand.e123() * self.e23()
-                - self.e12() * operand.e123() * self.e0123()
-                + self.e03() * operand.e3() * self.e12()
-                + self.s() * operand.e2() * self.e01()
-                - self.e23() * operand.e0() * self.e31()
-                + self.e0123() * operand.e2() * self.e23()
-                - self.e0123() * operand.e123() * self.e12()
+                - self.e02() * operand.e1() * self.e23()
+                + self.e12() * operand.e1() * self.e0123()
+                + self.e03() * operand.e3() * self.e31()
+                - self.e31() * operand.e3() * self.e03()
+                - self.e01() * operand.e3() * self.s()
+                + self.e0123() * operand.e3() * self.e23()
+                + self.e12() * operand.e023() * self.s()
+                - self.e0123() * operand.e1() * self.e12()
+                + self.e12() * operand.e3() * self.e02()
+                - self.s() * operand.e1() * self.e03()
+                + self.s() * operand.e123() * self.e02()
+                - self.s() * operand.e0() * self.e31()
+                + self.e23() * operand.e1() * self.e02()
+                - self.e12() * operand.e123() * self.e01()
+                + self.e02() * operand.e2() * self.e31()
+                + self.e03() * operand.e1() * self.s()
+                + self.e0123() * operand.e2() * self.s()
+                - self.s() * operand.e012() * self.e23()
+                - self.e31() * operand.e1() * self.e01()
+                - self.e31() * operand.e2() * self.e02()
+                - self.e23() * operand.e2() * self.e01()
+                - self.e12() * operand.e031() * self.e12()
+                + self.e31() * operand.e031() * self.e31()
+                + self.e01() * operand.e1() * self.e31()
+                + self.s() * operand.e031() * self.s()
+                + self.e31() * operand.e0() * self.s()
+                - self.e01() * operand.e123() * self.e12()
+                - self.e02() * operand.e3() * self.e12()
+                + self.e23() * operand.e023() * self.e31()
+                + self.s() * operand.e3() * self.e01()
+                + self.e03() * operand.e2() * self.e12()
+                + self.e03() * operand.e123() * self.e23()
+                + self.e31() * operand.e023() * self.e23()
+                - self.e0123() * operand.e123() * self.e31()
+                - self.e31() * operand.e123() * self.e0123()
+                - self.e23() * operand.e031() * self.e23()
+                + self.s() * operand.e023() * self.e12(),
+            self.e23() * operand.e123() * self.e02()
                 + self.e12() * operand.e031() * self.e31()
-                + self.e02() * operand.e2() * self.e12()
+                + self.s() * operand.e031() * self.e23()
+                - self.e31() * operand.e1() * self.e0123()
+                + self.e31() * operand.e123() * self.e01()
+                + self.s() * operand.e3() * self.e0123()
                 - self.e23() * operand.e2() * self.e0123()
                 + self.e23() * operand.e3() * self.e01()
-                - self.e31() * operand.e012() * self.e31()
-                - self.e12() * operand.e3() * self.e03()
-                + self.e31() * operand.e123() * self.e01()
-                - self.s() * operand.e123() * self.e03()
+                + self.e12() * operand.e023() * self.e23()
+                + self.e02() * operand.e2() * self.e12()
+                + self.e03() * operand.e3() * self.e12()
+                + self.e0123() * operand.e1() * self.e31()
+                + self.e31() * operand.e031() * self.e12()
+                + self.e02() * operand.e3() * self.e31()
+                + self.e0123() * operand.e2() * self.e23()
                 + self.e31() * operand.e2() * self.e03()
                 - self.e31() * operand.e023() * self.s()
-                + self.e23() * operand.e023() * self.e12()
-                + self.e23() * operand.e123() * self.e02()
+                - self.e31() * operand.e012() * self.e31()
+                + self.e02() * operand.e123() * self.e23()
+                - self.s() * operand.e0() * self.e12()
+                - self.s() * operand.e123() * self.e03()
+                - self.e01() * operand.e2() * self.s()
+                - self.e03() * operand.e123() * self.s()
                 + self.e12() * operand.e0() * self.s()
-                - self.e12() * operand.e2() * self.e02()
+                + self.s() * operand.e2() * self.e01()
+                - self.e03() * operand.e2() * self.e31()
+                - self.e0123() * operand.e3() * self.s()
+                + self.e23() * operand.e023() * self.e12()
+                - self.s() * operand.e1() * self.e02()
+                - self.e23() * operand.e1() * self.e03()
+                + self.e01() * operand.e123() * self.e31()
+                - self.e23() * operand.e0() * self.e31()
+                + self.e03() * operand.e1() * self.e23()
                 + self.s() * operand.e012() * self.s()
+                + self.e23() * operand.e031() * self.s()
+                - self.s() * operand.e023() * self.e31()
                 - self.e12() * operand.e1() * self.e01()
-                + self.e31() * operand.e031() * self.e12()
-                + self.e12() * operand.e012() * self.e12(),
-            self.e23() * operand.e123() * self.e23() + self.e31() * operand.e1() * self.e12()
-                - self.e31() * operand.e3() * self.e23()
-                + self.s() * operand.e2() * self.e31()
-                - self.s() * operand.e3() * self.e12()
-                + self.e31() * operand.e123() * self.e31()
-                - self.e31() * operand.e2() * self.s()
-                - self.s() * operand.e1() * self.e23()
-                - self.e12() * operand.e2() * self.e23()
+                - self.e12() * operand.e3() * self.e03()
+                + self.e12() * operand.e012() * self.e12()
+                - self.e23() * operand.e012() * self.e23()
+                - self.e12() * operand.e123() * self.e0123()
+                + self.e31() * operand.e0() * self.e23()
+                + self.e01() * operand.e1() * self.e12()
+                - self.e01() * operand.e3() * self.e23()
+                - self.e31() * operand.e3() * self.e02()
+                + self.e02() * operand.e1() * self.s()
+                - self.e12() * operand.e2() * self.e02()
+                - self.e0123() * operand.e123() * self.e12(),
+            self.s() * operand.e123() * self.s()
                 + self.e23() * operand.e3() * self.e31()
-                + self.e12() * operand.e3() * self.s()
-                + self.s() * operand.e123() * self.s()
-                - self.e12() * operand.e1() * self.e31()
-                + self.e23() * operand.e1() * self.s()
+                + self.s() * operand.e2() * self.e31()
                 + self.e23() * operand.e2() * self.e12()
+                - self.e12() * operand.e2() * self.e23()
+                + self.e31() * operand.e1() * self.e12()
+                + self.e12() * operand.e3() * self.s()
+                + self.e23() * operand.e1() * self.s()
+                - self.s() * operand.e3() * self.e12()
+                - self.s() * operand.e1() * self.e23()
+                + self.e31() * operand.e123() * self.e31()
+                - self.e12() * operand.e1() * self.e31()
+                - self.e31() * operand.e3() * self.e23()
+                - self.e31() * operand.e2() * self.s()
+                + self.e23() * operand.e123() * self.e23()
                 + self.e12() * operand.e123() * self.e12(),
         )
     }
 }
-impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
-        Point::new(
-            self.e012() * operand.e0() * self.e2() + self.e2() * operand.e0() * self.e012()
-                - self.e0() * operand.e3() * self.e031()
-                + self.e023() * operand.e3() * self.e012()
-                - self.e123() * operand.e0() * self.e023()
-                - self.e031() * operand.e1() * self.e031()
-                - self.e023() * operand.e0() * self.e123()
-                - self.e031() * operand.e2() * self.e023()
-                - self.e012() * operand.e1() * self.e012()
-                + self.e0() * operand.e1() * self.e0()
-                - self.e0() * operand.e0() * self.e1()
-                - self.e031() * operand.e3() * self.e0()
-                - self.e012() * operand.e2() * self.e0()
-                - self.e023() * operand.e2() * self.e031()
-                + self.e012() * operand.e3() * self.e023()
-                - self.e1() * operand.e0() * self.e0()
-                + self.e031() * operand.e0() * self.e3()
-                + self.e3() * operand.e0() * self.e031()
-                - self.e0() * operand.e2() * self.e012()
-                + self.e023() * operand.e1() * self.e023(),
-            -(self.e031() * operand.e1() * self.e023())
-                + self.e012() * operand.e1() * self.e0()
-                + self.e031() * operand.e2() * self.e031()
-                - self.e012() * operand.e0() * self.e1()
-                + self.e123() * operand.e0() * self.e031()
-                - self.e0() * operand.e3() * self.e023()
-                - self.e1() * operand.e0() * self.e012()
-                + self.e0() * operand.e1() * self.e012()
-                - self.e031() * operand.e3() * self.e012()
-                + self.e031() * operand.e0() * self.e123()
-                - self.e023() * operand.e2() * self.e023()
-                - self.e012() * operand.e3() * self.e031()
-                - self.e0() * operand.e0() * self.e2()
-                - self.e2() * operand.e0() * self.e0()
-                - self.e012() * operand.e2() * self.e012()
-                - self.e023() * operand.e3() * self.e0()
-                + self.e023() * operand.e0() * self.e3()
-                - self.e023() * operand.e1() * self.e031()
-                + self.e0() * operand.e2() * self.e0()
-                + self.e3() * operand.e0() * self.e023(),
-            -(self.e012() * operand.e2() * self.e031())
-                - self.e023() * operand.e0() * self.e2()
-                - self.e123() * operand.e0() * self.e012()
-                + self.e0() * operand.e2() * self.e023()
-                - self.e012() * operand.e0() * self.e123()
-                + self.e012() * operand.e1() * self.e023()
-                - self.e023() * operand.e3() * self.e023()
-                + self.e0() * operand.e3() * self.e0()
-                + self.e023() * operand.e1() * self.e012()
-                - self.e2() * operand.e0() * self.e023()
-                - self.e031() * operand.e2() * self.e012()
-                - self.e3() * operand.e0() * self.e0()
-                - self.e031() * operand.e3() * self.e031()
-                + self.e0() * operand.e1() * self.e031()
-                + self.e012() * operand.e3() * self.e012()
-                - self.e0() * operand.e0() * self.e3()
-                + self.e023() * operand.e2() * self.e0()
-                + self.e031() * operand.e1() * self.e0()
-                - self.e1() * operand.e0() * self.e031()
-                - self.e031() * operand.e0() * self.e1(),
-            -(self.e012() * operand.e0() * self.e012())
-                - self.e023() * operand.e0() * self.e023()
-                - self.e031() * operand.e0() * self.e031()
-                - self.e0() * operand.e0() * self.e0(),
-        )
-    }
-}
-impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
+impl<T: Float> Sandwich<Line<T>> for Motor<T> {
     type Output = Line<T>;
     #[inline]
-    fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
+    fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e0() * operand.e03() * self.e031()
-                + self.e012() * operand.e01() * self.e012()
-                + self.e012() * operand.e02() * self.e0()
-                - self.e023() * operand.e01() * self.e023()
-                + self.e023() * operand.e02() * self.e031()
-                + self.e0() * operand.e02() * self.e012()
-                - self.e0() * operand.e01() * self.e0()
-                + self.e031() * operand.e02() * self.e023()
-                + self.e031() * operand.e01() * self.e031()
-                + self.e031() * operand.e03() * self.e0()
-                - self.e012() * operand.e03() * self.e023()
-                - self.e023() * operand.e03() * self.e012(),
-            self.e0() * operand.e03() * self.e023()
-                + self.e023() * operand.e02() * self.e023()
-                + self.e023() * operand.e03() * self.e0()
-                - self.e012() * operand.e01() * self.e0()
-                + self.e012() * operand.e02() * self.e012()
-                + self.e012() * operand.e03() * self.e031()
-                + self.e023() * operand.e01() * self.e031()
-                + self.e031() * operand.e01() * self.e023()
-                - self.e031() * operand.e02() * self.e031()
-                - self.e0() * operand.e01() * self.e012()
-                + self.e031() * operand.e03() * self.e012()
-                - self.e0() * operand.e02() * self.e0(),
-            -(self.e0() * operand.e02() * self.e023())
-                - self.e0() * operand.e03() * self.e0()
-                - self.e0() * operand.e01() * self.e031()
-                + self.e031() * operand.e03() * self.e031()
-                - self.e012() * operand.e01() * self.e023()
-                - self.e023() * operand.e02() * self.e0()
-                - self.e012() * operand.e03() * self.e012()
-                - self.e023() * operand.e01() * self.e012()
-                + self.e012() * operand.e02() * self.e031()
-                + self.e031() * operand.e02() * self.e012()
-                - self.e031() * operand.e01() * self.e0()
-                + self.e023() * operand.e03() * self.e023(),
-            -(self.e123() * operand.e01() * self.e0())
-                + self.e123() * operand.e02() * self.e012()
-                + self.e023() * operand.e23() * self.e023()
-                - self.e031() * operand.e02() * self.e1()
-                - self.e3() * operand.e02() * self.e0()
-                - self.e1() * operand.e02() * self.e031()
-                + self.e2() * operand.e03() * self.e0()
-                - self.e031() * operand.e23() * self.e031()
-                - self.e012() * operand.e01() * self.e3()
-                + self.e012() * operand.e02() * self.e123()
-                + self.e012() * operand.e31() * self.e0()
-                + self.e031() * operand.e03() * self.e123()
-                - self.e012() * operand.e23() * self.e012()
-                + self.e1() * operand.e03() * self.e012()
-                - self.e0() * operand.e01() * self.e123()
-                + self.e023() * operand.e01() * self.e1()
-                + self.e023() * operand.e12() * self.e012()
-                - self.e031() * operand.e12() * self.e0()
-                + self.e023() * operand.e02() * self.e2()
-                + self.e0() * operand.e31() * self.e012()
-                + self.e3() * operand.e03() * self.e023()
-                + self.e023() * operand.e31() * self.e031()
-                + self.e2() * operand.e02() * self.e023()
-                + self.e1() * operand.e01() * self.e023()
-                - self.e0() * operand.e12() * self.e031()
-                + self.e031() * operand.e31() * self.e023()
-                + self.e0() * operand.e03() * self.e2()
-                - self.e3() * operand.e01() * self.e012()
-                + self.e023() * operand.e03() * self.e3()
-                + self.e2() * operand.e01() * self.e031()
-                + self.e031() * operand.e01() * self.e2()
-                + self.e012() * operand.e12() * self.e023()
-                - self.e0() * operand.e02() * self.e3()
-                + self.e0() * operand.e23() * self.e0()
-                + self.e012() * operand.e03() * self.e1()
-                + self.e123() * operand.e03() * self.e031(),
-            -(self.e0() * operand.e01() * self.e3()) - self.e023() * operand.e01() * self.e2()
-                + self.e1() * operand.e03() * self.e0()
-                + self.e031() * operand.e12() * self.e012()
-                - self.e012() * operand.e31() * self.e012()
-                + self.e2() * operand.e02() * self.e031()
-                - self.e0() * operand.e23() * self.e012()
-                - self.e2() * operand.e03() * self.e012()
-                - self.e3() * operand.e01() * self.e0()
-                + self.e031() * operand.e01() * self.e1()
-                - self.e2() * operand.e01() * self.e023()
-                + self.e031() * operand.e31() * self.e031()
-                + self.e3() * operand.e02() * self.e012()
-                + self.e123() * operand.e01() * self.e012()
-                - self.e023() * operand.e03() * self.e123()
-                + self.e123() * operand.e02() * self.e0()
-                + self.e1() * operand.e01() * self.e031()
-                - self.e012() * operand.e23() * self.e0()
-                + self.e023() * operand.e12() * self.e0()
-                - self.e023() * operand.e31() * self.e023()
-                + self.e0() * operand.e03() * self.e1()
-                + self.e0() * operand.e12() * self.e023()
-                + self.e023() * operand.e02() * self.e1()
-                + self.e012() * operand.e02() * self.e3()
-                + self.e1() * operand.e02() * self.e023()
-                + self.e031() * operand.e03() * self.e3()
-                + self.e012() * operand.e01() * self.e123()
-                - self.e012() * operand.e03() * self.e2()
-                + self.e031() * operand.e02() * self.e2()
-                + self.e012() * operand.e12() * self.e031()
-                + self.e023() * operand.e23() * self.e031()
-                + self.e0() * operand.e02() * self.e123()
-                + self.e031() * operand.e23() * self.e023()
-                + self.e3() * operand.e03() * self.e031()
-                + self.e0() * operand.e31() * self.e0()
-                - self.e123() * operand.e03() * self.e023(),
-            -(self.e1() * operand.e03() * self.e023())
-                - self.e031() * operand.e12() * self.e031()
-                - self.e023() * operand.e02() * self.e123()
-                + self.e023() * operand.e23() * self.e012()
-                - self.e023() * operand.e12() * self.e023()
-                - self.e2() * operand.e01() * self.e0()
-                - self.e031() * operand.e02() * self.e3()
-                + self.e0() * operand.e23() * self.e031()
-                + self.e031() * operand.e31() * self.e012()
-                + self.e2() * operand.e02() * self.e012()
-                + self.e012() * operand.e23() * self.e023()
-                + self.e012() * operand.e31() * self.e031()
-                + self.e3() * operand.e03() * self.e012()
-                + self.e0() * operand.e12() * self.e0()
-                - self.e023() * operand.e31() * self.e0()
-                + self.e031() * operand.e03() * self.e2()
-                + self.e3() * operand.e01() * self.e023()
-                + self.e0() * operand.e02() * self.e1()
-                - self.e0() * operand.e03() * self.e123()
-                + self.e1() * operand.e02() * self.e0()
-                - self.e123() * operand.e01() * self.e031()
-                - self.e3() * operand.e02() * self.e031()
-                - self.e0() * operand.e01() * self.e2()
-                - self.e023() * operand.e03() * self.e1()
-                - self.e0() * operand.e31() * self.e023()
-                - self.e123() * operand.e03() * self.e0()
-                + self.e1() * operand.e01() * self.e012()
-                + self.e012() * operand.e12() * self.e012()
-                - self.e123() * operand.e02() * self.e023()
-                - self.e031() * operand.e01() * self.e123()
-                + self.e031() * operand.e23() * self.e0()
-                + self.e012() * operand.e01() * self.e1()
-                + self.e012() * operand.e02() * self.e2()
-                + self.e012() * operand.e03() * self.e3()
-                + self.e023() * operand.e01() * self.e3()
-                + self.e2() * operand.e03() * self.e031(),
+            self.e03() * operand.e12() * self.e23() + self.e0123() * operand.e31() * self.e12()
+                - self.s() * operand.e23() * self.e0123()
+                + self.s() * operand.e03() * self.e31()
+                - self.e23() * operand.e31() * self.e02()
+                + self.e12() * operand.e03() * self.e23()
+                + self.e12() * operand.e02() * self.s()
+                - self.e12() * operand.e23() * self.e03()
+                - self.e03() * operand.e23() * self.e12()
+                + self.e01() * operand.e31() * self.e31()
+                + self.e23() * operand.e23() * self.e01()
+                - self.e0123() * operand.e12() * self.e31()
+                + self.e23() * operand.e12() * self.e03()
+                + self.e01() * operand.e12() * self.e12()
+                + self.e02() * operand.e23() * self.e31()
+                + self.s() * operand.e02() * self.e12()
+                - self.e0123() * operand.e23() * self.s()
+                - self.s() * operand.e12() * self.e02()
+                + self.s() * operand.e01() * self.s()
+                + self.e31() * operand.e23() * self.e02()
+                - self.e31() * operand.e12() * self.e0123()
+                - self.e02() * operand.e31() * self.e23()
+                + self.e23() * operand.e03() * self.e12()
+                + self.e01() * operand.e23() * self.e23()
+                - self.s() * operand.e31() * self.e03()
+                - self.e03() * operand.e31() * self.s()
+                - self.e23() * operand.e02() * self.e31()
+                + self.e31() * operand.e03() * self.s()
+                + self.e12() * operand.e12() * self.e01()
+                + self.e12() * operand.e31() * self.e0123()
+                - self.e02() * operand.e12() * self.s()
+                - self.e31() * operand.e02() * self.e23()
+                - self.e31() * operand.e01() * self.e31()
+                - self.e12() * operand.e01() * self.e12()
+                + self.e23() * operand.e01() * self.e23()
+                + self.e31() * operand.e31() * self.e01(),
+            self.e03() * operand.e31() * self.e12()
+                - self.e03() * operand.e12() * self.e31()
+                - self.e0123() * operand.e12() * self.e23()
+                - self.e03() * operand.e23() * self.s()
+                + self.e01() * operand.e31() * self.e23()
+                + self.e31() * operand.e31() * self.e02()
+                - self.e23() * operand.e12() * self.e0123()
+                + self.e23() * operand.e31() * self.e01()
+                - self.e12() * operand.e02() * self.e12()
+                - self.e01() * operand.e23() * self.e31()
+                + self.e02() * operand.e12() * self.e12()
+                - self.e31() * operand.e03() * self.e12()
+                + self.e02() * operand.e23() * self.e23()
+                + self.e12() * operand.e23() * self.e0123()
+                - self.s() * operand.e01() * self.e12()
+                - self.e12() * operand.e01() * self.s()
+                + self.e02() * operand.e31() * self.e31()
+                + self.e31() * operand.e02() * self.e31()
+                - self.e31() * operand.e23() * self.e01()
+                - self.e31() * operand.e12() * self.e03()
+                + self.e23() * operand.e03() * self.s()
+                + self.e23() * operand.e23() * self.e02()
+                - self.e12() * operand.e03() * self.e31()
+                + self.e0123() * operand.e23() * self.e12()
+                - self.s() * operand.e23() * self.e03()
+                + self.s() * operand.e31() * self.e0123()
+                + self.e12() * operand.e31() * self.e03()
+                + self.e12() * operand.e12() * self.e02()
+                + self.e01() * operand.e12() * self.s()
+                + self.s() * operand.e02() * self.s()
+                + self.s() * operand.e03() * self.e23()
+                + self.e0123() * operand.e31() * self.s()
+                - self.e23() * operand.e02() * self.e23()
+                - self.e31() * operand.e01() * self.e23()
+                + self.s() * operand.e12() * self.e01()
+                - self.e23() * operand.e01() * self.e31(),
+            -(self.e23() * operand.e12() * self.e01())
+                + self.s() * operand.e03() * self.s()
+                + self.s() * operand.e31() * self.e01()
+                + self.e12() * operand.e12() * self.e03()
+                + self.e02() * operand.e12() * self.e31()
+                - self.e0123() * operand.e12() * self.s()
+                + self.e31() * operand.e23() * self.e0123()
+                - self.s() * operand.e01() * self.e31()
+                - self.s() * operand.e12() * self.e0123()
+                - self.e23() * operand.e31() * self.e0123()
+                - self.e31() * operand.e03() * self.e31()
+                - self.e31() * operand.e01() * self.s()
+                + self.e31() * operand.e12() * self.e02()
+                + self.e23() * operand.e01() * self.e12()
+                + self.e12() * operand.e01() * self.e23()
+                + self.e01() * operand.e23() * self.e12()
+                - self.e12() * operand.e31() * self.e02()
+                + self.e03() * operand.e23() * self.e23()
+                + self.e0123() * operand.e23() * self.e31()
+                - self.e01() * operand.e12() * self.e23()
+                - self.e23() * operand.e03() * self.e23()
+                - self.e0123() * operand.e31() * self.e23()
+                + self.e23() * operand.e23() * self.e03()
+                + self.e31() * operand.e31() * self.e03()
+                + self.e12() * operand.e03() * self.e12()
+                + self.e01() * operand.e31() * self.s()
+                + self.e12() * operand.e23() * self.e01()
+                + self.s() * operand.e23() * self.e02()
+                + self.e03() * operand.e31() * self.e31()
+                - self.e02() * operand.e31() * self.e12()
+                + self.e03() * operand.e12() * self.e12()
+                + self.e02() * operand.e23() * self.s()
+                - self.s() * operand.e02() * self.e23()
+                - self.e23() * operand.e02() * self.s()
+                - self.e31() * operand.e02() * self.e12()
+                - self.e12() * operand.e02() * self.e31(),
+            self.e12() * operand.e12() * self.e23() - self.s() * operand.e31() * self.e12()
+                + self.e23() * operand.e31() * self.e31()
+                + self.s() * operand.e12() * self.e31()
+                + self.e23() * operand.e12() * self.e12()
+                - self.e31() * operand.e23() * self.e31()
+                + self.e31() * operand.e12() * self.s()
+                - self.e12() * operand.e23() * self.e12()
+                - self.e12() * operand.e31() * self.s()
+                + self.s() * operand.e23() * self.s()
+                + self.e23() * operand.e23() * self.e23()
+                + self.e31() * operand.e31() * self.e23(),
+            self.e31() * operand.e31() * self.e31() - self.s() * operand.e12() * self.e23()
+                + self.e31() * operand.e12() * self.e12()
+                + self.s() * operand.e23() * self.e12()
+                + self.e12() * operand.e23() * self.s()
+                + self.e12() * operand.e12() * self.e31()
+                - self.e12() * operand.e31() * self.e12()
+                - self.e23() * operand.e31() * self.e23()
+                - self.e23() * operand.e12() * self.s()
+                + self.e23() * operand.e23() * self.e31()
+                + self.s() * operand.e31() * self.s()
+                + self.e31() * operand.e23() * self.e23(),
+            -(self.s() * operand.e23() * self.e31())
+                + self.e23() * operand.e31() * self.s()
+                + self.e23() * operand.e23() * self.e12()
+                - self.e23() * operand.e12() * self.e23()
+                - self.e31() * operand.e23() * self.s()
+                - self.e31() * operand.e12() * self.e31()
+                + self.s() * operand.e12() * self.s()
+                + self.e12() * operand.e23() * self.e23()
+                + self.s() * operand.e31() * self.e23()
+                + self.e12() * operand.e31() * self.e31()
+                + self.e12() * operand.e12() * self.e12()
+                + self.e31() * operand.e31() * self.e12(),
         )
     }
 }
-impl<T: Float> Antisandwich<Plane<T>> for Flector<T> {
-    type Output = Plane<T>;
-    #[inline]
-    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
-        Plane::new(
-            -(self.e0() * operand.e031() * self.e012())
-                - self.e0() * operand.e023() * self.e0()
-                - self.e023() * operand.e031() * self.e031()
-                - self.e012() * operand.e012() * self.e023()
-                - self.e023() * operand.e023() * self.e023()
-                - self.e031() * operand.e031() * self.e023()
-                + self.e031() * operand.e023() * self.e031()
-                + self.e012() * operand.e023() * self.e012()
-                - self.e012() * operand.e031() * self.e0()
-                + self.e0() * operand.e012() * self.e031()
-                + self.e031() * operand.e012() * self.e0()
-                - self.e023() * operand.e012() * self.e012(),
-            -(self.e031() * operand.e012() * self.e012())
-                + self.e012() * operand.e023() * self.e0()
-                - self.e023() * operand.e012() * self.e0()
-                - self.e012() * operand.e012() * self.e031()
-                + self.e023() * operand.e031() * self.e023()
-                - self.e0() * operand.e031() * self.e0()
-                + self.e012() * operand.e031() * self.e012()
-                - self.e0() * operand.e012() * self.e023()
-                - self.e031() * operand.e023() * self.e023()
-                + self.e0() * operand.e023() * self.e012()
-                - self.e023() * operand.e023() * self.e031()
-                - self.e031() * operand.e031() * self.e031(),
-            -(self.e031() * operand.e023() * self.e0())
-                - self.e012() * operand.e012() * self.e012()
-                + self.e0() * operand.e031() * self.e023()
-                - self.e031() * operand.e031() * self.e012()
-                - self.e012() * operand.e023() * self.e023()
-                + self.e023() * operand.e031() * self.e0()
-                - self.e0() * operand.e023() * self.e031()
-                - self.e0() * operand.e012() * self.e0()
-                + self.e023() * operand.e012() * self.e023()
-                + self.e031() * operand.e012() * self.e031()
-                - self.e023() * operand.e023() * self.e012()
-                - self.e012() * operand.e031() * self.e031(),
-            self.e1() * operand.e012() * self.e031()
-                - self.e031() * operand.e031() * self.e123()
-                - self.e123() * operand.e012() * self.e012()
-                - self.e3() * operand.e012() * self.e0()
-                + self.e3() * operand.e031() * self.e023()
-                - self.e1() * operand.e031() * self.e012()
-                - self.e3() * operand.e023() * self.e031()
-                + self.e023() * operand.e012() * self.e2()
-                - self.e0() * operand.e023() * self.e1()
-                + self.e023() * operand.e123() * self.e023()
-                - self.e023() * operand.e023() * self.e123()
-                + self.e0() * operand.e123() * self.e0()
-                - self.e012() * operand.e023() * self.e2()
-                + self.e2() * operand.e012() * self.e023()
-                - self.e1() * operand.e023() * self.e0()
-                + self.e031() * operand.e012() * self.e1()
-                + self.e0() * operand.e031() * self.e2()
-                + self.e023() * operand.e031() * self.e3()
-                - self.e012() * operand.e031() * self.e1()
-                - self.e123() * operand.e023() * self.e023()
-                + self.e012() * operand.e123() * self.e012()
-                - self.e012() * operand.e012() * self.e123()
-                - self.e123() * operand.e031() * self.e031()
-                + self.e2() * operand.e031() * self.e0()
-                - self.e0() * operand.e012() * self.e3()
-                + self.e031() * operand.e123() * self.e031()
-                - self.e2() * operand.e023() * self.e012()
-                - self.e031() * operand.e023() * self.e3(),
-        )
-    }
-}
-impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
+impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
     type Output = Motor<T>;
     #[inline]
-    fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
+    fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e0() * operand.e0123() * self.e123() + self.e031() * operand.s() * self.e031()
-                - self.e123() * operand.e01() * self.e023()
-                - self.e3() * operand.e0123() * self.e012()
-                + self.e0() * operand.e23() * self.e023()
-                - self.e023() * operand.e0123() * self.e1()
-                + self.e012() * operand.s() * self.e012()
-                - self.e023() * operand.e23() * self.e0()
-                - self.e031() * operand.e12() * self.e023()
-                - self.e031() * operand.e31() * self.e0()
-                - self.e2() * operand.e01() * self.e012()
-                + self.e0() * operand.e02() * self.e2()
-                + self.e023() * operand.s() * self.e023()
-                + self.e031() * operand.e01() * self.e3()
-                + self.e012() * operand.e31() * self.e023()
-                + self.e2() * operand.e03() * self.e023()
-                - self.e2() * operand.e02() * self.e0()
-                - self.e3() * operand.e02() * self.e023()
-                - self.e023() * operand.e03() * self.e2()
-                - self.e3() * operand.e03() * self.e0()
-                + self.e123() * operand.e0123() * self.e0()
-                + self.e2() * operand.e0123() * self.e031()
-                - self.e012() * operand.e23() * self.e031()
-                - self.e012() * operand.e12() * self.e0()
-                - self.e031() * operand.e03() * self.e1()
-                - self.e1() * operand.e01() * self.e0()
-                + self.e1() * operand.e03() * self.e031()
-                - self.e012() * operand.e02() * self.e1()
-                + self.e1() * operand.e02() * self.e012()
-                + self.e0() * operand.e31() * self.e031()
-                + self.e0() * operand.e12() * self.e012()
-                - self.e023() * operand.e31() * self.e012()
-                + self.e023() * operand.e12() * self.e031()
-                + self.e031() * operand.e0123() * self.e2()
-                + self.e0() * operand.s() * self.e0()
-                + self.e0() * operand.e01() * self.e1()
-                - self.e3() * operand.e01() * self.e031()
-                + self.e012() * operand.e01() * self.e2()
-                + self.e0() * operand.e03() * self.e3()
-                + self.e023() * operand.e02() * self.e3()
-                - self.e031() * operand.e02() * self.e123()
-                + self.e012() * operand.e03() * self.e123()
-                + self.e123() * operand.e02() * self.e031()
-                + self.e023() * operand.e01() * self.e123()
-                - self.e123() * operand.e03() * self.e012()
-                + self.e031() * operand.e23() * self.e012()
-                - self.e1() * operand.e0123() * self.e023()
-                - self.e012() * operand.e0123() * self.e3(),
-            self.e1() * operand.e03() * self.e012() - self.e031() * operand.e23() * self.e031()
-                + self.e012() * operand.e02() * self.e123()
-                + self.e031() * operand.e01() * self.e2()
-                + self.e012() * operand.e31() * self.e0()
-                - self.e012() * operand.e0123() * self.e2()
-                - self.e123() * operand.e01() * self.e0()
-                + self.e2() * operand.e0123() * self.e012()
-                + self.e123() * operand.e02() * self.e012()
-                + self.e0() * operand.e03() * self.e2()
-                + self.e031() * operand.e03() * self.e123()
-                - self.e031() * operand.e12() * self.e0()
-                - self.e123() * operand.e0123() * self.e023()
-                + self.e0() * operand.e23() * self.e0()
-                - self.e012() * operand.s() * self.e031()
-                + self.e2() * operand.e03() * self.e0()
-                + self.e012() * operand.e03() * self.e1()
-                - self.e0() * operand.e12() * self.e031()
-                + self.e123() * operand.e03() * self.e031()
-                - self.e1() * operand.e02() * self.e031()
-                + self.e2() * operand.e01() * self.e031()
-                - self.e1() * operand.e0123() * self.e0()
-                - self.e3() * operand.e01() * self.e012()
-                - self.e3() * operand.e02() * self.e0()
-                + self.e3() * operand.e03() * self.e023()
-                + self.e3() * operand.e0123() * self.e031()
-                - self.e0() * operand.e02() * self.e3()
-                + self.e023() * operand.e01() * self.e1()
-                + self.e023() * operand.e0123() * self.e123()
-                - self.e0() * operand.s() * self.e023()
-                + self.e031() * operand.s() * self.e012()
-                + self.e1() * operand.e01() * self.e023()
-                + self.e012() * operand.e12() * self.e023()
-                + self.e023() * operand.e31() * self.e031()
-                - self.e012() * operand.e01() * self.e3()
-                - self.e031() * operand.e0123() * self.e3()
-                - self.e012() * operand.e23() * self.e012()
-                + self.e031() * operand.e31() * self.e023()
-                - self.e031() * operand.e02() * self.e1()
-                + self.e023() * operand.s() * self.e0()
-                - self.e0() * operand.e01() * self.e123()
-                + self.e023() * operand.e03() * self.e3()
-                + self.e023() * operand.e23() * self.e023()
-                + self.e2() * operand.e02() * self.e023()
-                + self.e023() * operand.e02() * self.e2()
-                + self.e023() * operand.e12() * self.e012()
-                + self.e0() * operand.e31() * self.e012()
-                + self.e0() * operand.e0123() * self.e1(),
-            self.e0() * operand.e31() * self.e0() + self.e031() * operand.e31() * self.e031()
-                - self.e0() * operand.e23() * self.e012()
-                + self.e023() * operand.e12() * self.e0()
-                + self.e2() * operand.e0123() * self.e0()
-                + self.e031() * operand.e02() * self.e2()
-                + self.e031() * operand.e12() * self.e012()
-                + self.e023() * operand.e02() * self.e1()
-                + self.e012() * operand.e12() * self.e031()
-                - self.e012() * operand.e03() * self.e2()
-                - self.e012() * operand.e0123() * self.e1()
-                + self.e3() * operand.e03() * self.e031()
-                + self.e3() * operand.e02() * self.e012()
-                + self.e2() * operand.e02() * self.e031()
-                + self.e1() * operand.e0123() * self.e012()
-                - self.e0() * operand.e01() * self.e3()
-                - self.e023() * operand.e03() * self.e123()
-                + self.e023() * operand.e0123() * self.e3()
-                - self.e0() * operand.s() * self.e031()
-                + self.e012() * operand.s() * self.e023()
-                - self.e023() * operand.e31() * self.e023()
-                + self.e031() * operand.s() * self.e0()
-                - self.e012() * operand.e31() * self.e012()
-                + self.e012() * operand.e01() * self.e123()
-                - self.e123() * operand.e0123() * self.e031()
-                - self.e0() * operand.e0123() * self.e2()
-                + self.e023() * operand.e23() * self.e031()
-                + self.e031() * operand.e03() * self.e3()
-                + self.e012() * operand.e02() * self.e3()
-                - self.e023() * operand.s() * self.e012()
-                + self.e0() * operand.e02() * self.e123()
-                + self.e0() * operand.e12() * self.e023()
-                - self.e012() * operand.e23() * self.e0()
-                - self.e123() * operand.e03() * self.e023()
-                + self.e123() * operand.e01() * self.e012()
-                - self.e2() * operand.e03() * self.e012()
-                + self.e1() * operand.e03() * self.e0()
-                - self.e3() * operand.e0123() * self.e023()
-                + self.e1() * operand.e01() * self.e031()
-                + self.e0() * operand.e03() * self.e1()
-                + self.e031() * operand.e0123() * self.e123()
-                - self.e2() * operand.e01() * self.e023()
-                + self.e031() * operand.e23() * self.e023()
-                - self.e3() * operand.e01() * self.e0()
-                + self.e123() * operand.e02() * self.e0()
-                + self.e1() * operand.e02() * self.e023()
-                + self.e031() * operand.e01() * self.e1()
-                - self.e023() * operand.e01() * self.e2(),
-            -(self.e1() * operand.e03() * self.e023())
-                - self.e3() * operand.e02() * self.e031()
-                - self.e0() * operand.e03() * self.e123()
-                - self.e031() * operand.e02() * self.e3()
-                + self.e012() * operand.s() * self.e0()
-                + self.e031() * operand.e31() * self.e012()
-                + self.e0() * operand.e0123() * self.e3()
-                - self.e1() * operand.e0123() * self.e031()
-                + self.e012() * operand.e23() * self.e023()
-                + self.e031() * operand.e0123() * self.e1()
-                - self.e2() * operand.e01() * self.e0()
-                + self.e012() * operand.e12() * self.e012()
-                + self.e012() * operand.e01() * self.e1()
-                + self.e023() * operand.e23() * self.e012()
-                + self.e031() * operand.e23() * self.e0()
-                + self.e3() * operand.e03() * self.e012()
-                - self.e023() * operand.e02() * self.e123()
-                - self.e031() * operand.e12() * self.e031()
-                + self.e1() * operand.e02() * self.e0()
-                + self.e0() * operand.e12() * self.e0()
-                - self.e023() * operand.e31() * self.e0()
-                + self.e023() * operand.s() * self.e031()
-                - self.e023() * operand.e03() * self.e1()
-                - self.e2() * operand.e0123() * self.e023()
-                - self.e031() * operand.e01() * self.e123()
-                + self.e0() * operand.e02() * self.e1()
-                + self.e0() * operand.e23() * self.e031()
-                + self.e031() * operand.e03() * self.e2()
-                - self.e031() * operand.s() * self.e023()
-                + self.e2() * operand.e03() * self.e031()
-                + self.e012() * operand.e31() * self.e031()
-                + self.e1() * operand.e01() * self.e012()
-                - self.e0() * operand.e31() * self.e023()
-                - self.e023() * operand.e12() * self.e023()
-                - self.e3() * operand.e0123() * self.e0()
-                + self.e2() * operand.e02() * self.e012()
-                + self.e012() * operand.e03() * self.e3()
-                + self.e012() * operand.e0123() * self.e123()
-                - self.e123() * operand.e01() * self.e031()
-                - self.e123() * operand.e02() * self.e023()
-                - self.e123() * operand.e03() * self.e0()
-                + self.e012() * operand.e02() * self.e2()
-                - self.e0() * operand.e01() * self.e2()
-                - self.e123() * operand.e0123() * self.e012()
-                - self.e0() * operand.s() * self.e012()
-                + self.e023() * operand.e01() * self.e3()
-                + self.e023() * operand.e0123() * self.e2()
-                + self.e3() * operand.e01() * self.e023(),
-            -(self.e0() * operand.e01() * self.e0()) + self.e0() * operand.e02() * self.e012()
-                - self.e023() * operand.e03() * self.e012()
-                + self.e012() * operand.e02() * self.e0()
-                + self.e031() * operand.e0123() * self.e012()
-                + self.e012() * operand.e01() * self.e012()
-                + self.e0() * operand.e03() * self.e031()
-                + self.e031() * operand.e02() * self.e023()
-                + self.e023() * operand.e0123() * self.e0()
-                - self.e012() * operand.e03() * self.e023()
-                - self.e012() * operand.e0123() * self.e031()
-                - self.e023() * operand.e01() * self.e023()
-                + self.e031() * operand.e01() * self.e031()
-                - self.e0() * operand.e0123() * self.e023()
-                + self.e031() * operand.e03() * self.e0()
-                + self.e023() * operand.e02() * self.e031(),
-            -(self.e0() * operand.e01() * self.e012()) + self.e023() * operand.e02() * self.e023()
-                - self.e031() * operand.e0123() * self.e0()
-                + self.e023() * operand.e01() * self.e031()
-                + self.e012() * operand.e03() * self.e031()
-                - self.e012() * operand.e01() * self.e0()
-                - self.e031() * operand.e02() * self.e031()
-                + self.e031() * operand.e01() * self.e023()
-                + self.e023() * operand.e0123() * self.e012()
-                + self.e031() * operand.e03() * self.e012()
-                - self.e0() * operand.e02() * self.e0()
-                + self.e012() * operand.e02() * self.e012()
-                + self.e0() * operand.e03() * self.e023()
-                + self.e023() * operand.e03() * self.e0()
-                - self.e012() * operand.e0123() * self.e023()
-                + self.e0() * operand.e0123() * self.e031(),
-            self.e023() * operand.e03() * self.e023() - self.e031() * operand.e0123() * self.e023()
-                + self.e031() * operand.e03() * self.e031()
-                - self.e0() * operand.e0123() * self.e012()
-                + self.e031() * operand.e02() * self.e012()
-                - self.e023() * operand.e02() * self.e0()
-                - self.e023() * operand.e01() * self.e012()
-                - self.e012() * operand.e01() * self.e023()
-                - self.e0() * operand.e01() * self.e031()
-                - self.e0() * operand.e02() * self.e023()
-                - self.e012() * operand.e03() * self.e012()
-                + self.e023() * operand.e0123() * self.e031()
-                - self.e031() * operand.e01() * self.e0()
-                + self.e012() * operand.e02() * self.e031()
-                - self.e0() * operand.e03() * self.e0()
-                + self.e012() * operand.e0123() * self.e0(),
-            self.e023() * operand.e02() * self.e012() + self.e031() * operand.e01() * self.e012()
-                - self.e023() * operand.e0123() * self.e023()
-                + self.e0() * operand.e03() * self.e012()
-                - self.e012() * operand.e0123() * self.e012()
-                - self.e012() * operand.e03() * self.e0()
-                - self.e0() * operand.e0123() * self.e0()
-                + self.e0() * operand.e01() * self.e023()
-                - self.e012() * operand.e01() * self.e031()
-                - self.e023() * operand.e01() * self.e0()
-                - self.e0() * operand.e02() * self.e031()
-                - self.e012() * operand.e02() * self.e023()
-                - self.e031() * operand.e0123() * self.e031()
-                + self.e023() * operand.e03() * self.e031()
-                + self.e031() * operand.e02() * self.e0()
-                - self.e031() * operand.e03() * self.e023(),
+            self.e23() * operand.s() * self.e23() + self.s() * operand.e23() * self.e23()
+                - self.e23() * operand.e12() * self.e31()
+                + self.e31() * operand.s() * self.e31()
+                + self.e12() * operand.e23() * self.e31()
+                + self.s() * operand.e31() * self.e31()
+                - self.e31() * operand.e31() * self.s()
+                + self.s() * operand.e12() * self.e12()
+                + self.e12() * operand.s() * self.e12()
+                - self.e23() * operand.e23() * self.s()
+                - self.e31() * operand.e23() * self.e12()
+                + self.e31() * operand.e12() * self.e23()
+                - self.e12() * operand.e12() * self.s()
+                + self.e23() * operand.e31() * self.e12()
+                - self.e12() * operand.e31() * self.e23()
+                + self.s() * operand.s() * self.s(),
+            -(self.e12() * operand.e23() * self.e12())
+                + self.e23() * operand.e12() * self.e12()
+                + self.s() * operand.e12() * self.e31()
+                - self.e31() * operand.e23() * self.e31()
+                + self.e31() * operand.e31() * self.e23()
+                + self.e12() * operand.s() * self.e31()
+                + self.s() * operand.e23() * self.s()
+                + self.e23() * operand.s() * self.s()
+                + self.e23() * operand.e31() * self.e31()
+                - self.s() * operand.s() * self.e23()
+                - self.s() * operand.e31() * self.e12()
+                + self.e12() * operand.e12() * self.e23()
+                - self.e12() * operand.e31() * self.s()
+                - self.e31() * operand.s() * self.e12()
+                + self.e31() * operand.e12() * self.s()
+                + self.e23() * operand.e23() * self.e23(),
+            self.s() * operand.e23() * self.e12()
+                + self.e23() * operand.e23() * self.e31()
+                + self.e12() * operand.e23() * self.s()
+                + self.e31() * operand.e12() * self.e12()
+                + self.e23() * operand.s() * self.e12()
+                + self.e12() * operand.e12() * self.e31()
+                - self.e12() * operand.s() * self.e23()
+                + self.e31() * operand.s() * self.s()
+                - self.s() * operand.e12() * self.e23()
+                - self.e12() * operand.e31() * self.e12()
+                + self.e31() * operand.e23() * self.e23()
+                - self.s() * operand.s() * self.e31()
+                + self.s() * operand.e31() * self.s()
+                + self.e31() * operand.e31() * self.e31()
+                - self.e23() * operand.e31() * self.e23()
+                - self.e23() * operand.e12() * self.s(),
+            self.e31() * operand.e31() * self.e12()
+                + self.e12() * operand.e31() * self.e31()
+                + self.s() * operand.e12() * self.s()
+                + self.e12() * operand.e23() * self.e23()
+                - self.e31() * operand.e12() * self.e31()
+                + self.e23() * operand.e23() * self.e12()
+                - self.e23() * operand.s() * self.e31()
+                + self.e23() * operand.e31() * self.s()
+                - self.s() * operand.s() * self.e12()
+                - self.s() * operand.e23() * self.e31()
+                + self.e12() * operand.e12() * self.e12()
+                + self.e12() * operand.s() * self.s()
+                + self.s() * operand.e31() * self.e23()
+                + self.e31() * operand.s() * self.e23()
+                - self.e31() * operand.e23() * self.s()
+                - self.e23() * operand.e12() * self.e23(),
+            -(self.e0123() * operand.e12() * self.e31())
+                + self.s() * operand.e02() * self.e12()
+                + self.e01() * operand.e31() * self.e31()
+                - self.e02() * operand.e31() * self.e23()
+                + self.e31() * operand.e23() * self.e02()
+                - self.e23() * operand.e31() * self.e02()
+                + self.e01() * operand.s() * self.s()
+                - self.e12() * operand.s() * self.e02()
+                - self.e31() * operand.e02() * self.e23()
+                + self.e23() * operand.e23() * self.e01()
+                + self.e23() * operand.e01() * self.e23()
+                + self.e31() * operand.e03() * self.s()
+                - self.s() * operand.e23() * self.e0123()
+                + self.e01() * operand.e12() * self.e12()
+                + self.e02() * operand.s() * self.e12()
+                - self.e02() * operand.e12() * self.s()
+                - self.e31() * operand.s() * self.e03()
+                + self.e03() * operand.e12() * self.e23()
+                - self.e0123() * operand.e23() * self.s()
+                - self.s() * operand.e31() * self.e03()
+                + self.e31() * operand.e31() * self.e01()
+                + self.s() * operand.e01() * self.s()
+                + self.e23() * operand.e03() * self.e12()
+                - self.e23() * operand.e02() * self.e31()
+                + self.e02() * operand.e23() * self.e31()
+                - self.e31() * operand.e12() * self.e0123()
+                + self.e0123() * operand.s() * self.e23()
+                - self.e23() * operand.s() * self.e0123()
+                + self.e0123() * operand.e31() * self.e12()
+                - self.s() * operand.s() * self.e01()
+                + self.e23() * operand.e12() * self.e03()
+                - self.e12() * operand.e01() * self.e12()
+                - self.e12() * operand.e0123() * self.e31()
+                + self.e03() * operand.s() * self.e31()
+                + self.s() * operand.e0123() * self.e23()
+                - self.e31() * operand.e01() * self.e31()
+                - self.e12() * operand.e23() * self.e03()
+                + self.e12() * operand.e12() * self.e01()
+                - self.e03() * operand.e23() * self.e12()
+                - self.e03() * operand.e31() * self.s()
+                + self.s() * operand.e03() * self.e31()
+                + self.e12() * operand.e03() * self.e23()
+                - self.e23() * operand.e0123() * self.s()
+                + self.e31() * operand.e0123() * self.e12()
+                + self.e12() * operand.e02() * self.s()
+                - self.s() * operand.e12() * self.e02()
+                + self.e12() * operand.e31() * self.e0123()
+                + self.e01() * operand.e23() * self.e23(),
+            self.e12() * operand.e23() * self.e0123()
+                + self.e31() * operand.e31() * self.e02()
+                + self.e03() * operand.s() * self.e23()
+                + self.e12() * operand.e12() * self.e02()
+                - self.e23() * operand.e12() * self.e0123()
+                + self.s() * operand.e12() * self.e01()
+                - self.e23() * operand.e01() * self.e31()
+                - self.s() * operand.e0123() * self.e31()
+                + self.s() * operand.e03() * self.e23()
+                - self.e31() * operand.e12() * self.e03()
+                - self.e31() * operand.e01() * self.e23()
+                - self.e31() * operand.e03() * self.e12()
+                - self.e12() * operand.e02() * self.e12()
+                + self.e02() * operand.e31() * self.e31()
+                + self.e12() * operand.e31() * self.e03()
+                + self.e23() * operand.e23() * self.e02()
+                - self.e12() * operand.e03() * self.e31()
+                - self.e01() * operand.s() * self.e12()
+                - self.e0123() * operand.s() * self.e31()
+                + self.e23() * operand.e0123() * self.e12()
+                + self.s() * operand.e31() * self.e0123()
+                + self.e02() * operand.e12() * self.e12()
+                - self.e03() * operand.e12() * self.e31()
+                + self.e0123() * operand.e31() * self.s()
+                - self.s() * operand.s() * self.e02()
+                + self.e01() * operand.e31() * self.e23()
+                - self.e23() * operand.s() * self.e03()
+                + self.e01() * operand.e12() * self.s()
+                + self.e02() * operand.e23() * self.e23()
+                - self.s() * operand.e23() * self.e03()
+                + self.e0123() * operand.e23() * self.e12()
+                - self.e12() * operand.e01() * self.s()
+                - self.e01() * operand.e23() * self.e31()
+                + self.e23() * operand.e03() * self.s()
+                - self.e0123() * operand.e12() * self.e23()
+                + self.e31() * operand.s() * self.e0123()
+                - self.e12() * operand.e0123() * self.e23()
+                + self.e02() * operand.s() * self.s()
+                + self.e03() * operand.e31() * self.e12()
+                + self.e31() * operand.e0123() * self.s()
+                + self.e31() * operand.e02() * self.e31()
+                - self.e31() * operand.e23() * self.e01()
+                + self.e23() * operand.e31() * self.e01()
+                + self.e12() * operand.s() * self.e01()
+                - self.e23() * operand.e02() * self.e23()
+                - self.e03() * operand.e23() * self.s()
+                - self.s() * operand.e01() * self.e12()
+                + self.s() * operand.e02() * self.s(),
+            -(self.e01() * operand.s() * self.e31()) - self.e02() * operand.e31() * self.e12()
+                + self.e0123() * operand.e23() * self.e31()
+                - self.e23() * operand.e12() * self.e01()
+                + self.s() * operand.e0123() * self.e12()
+                - self.e31() * operand.e02() * self.e12()
+                + self.e12() * operand.e12() * self.e03()
+                + self.s() * operand.e03() * self.s()
+                - self.e12() * operand.s() * self.e0123()
+                - self.e12() * operand.e0123() * self.s()
+                + self.s() * operand.e23() * self.e02()
+                + self.e01() * operand.e31() * self.s()
+                - self.e02() * operand.s() * self.e23()
+                + self.e03() * operand.s() * self.s()
+                - self.e0123() * operand.e31() * self.e23()
+                - self.e23() * operand.e03() * self.e23()
+                + self.e03() * operand.e23() * self.e23()
+                + self.e31() * operand.e12() * self.e02()
+                - self.s() * operand.s() * self.e03()
+                + self.s() * operand.e31() * self.e01()
+                + self.e23() * operand.e0123() * self.e31()
+                + self.e31() * operand.e23() * self.e0123()
+                + self.e23() * operand.s() * self.e02()
+                - self.s() * operand.e02() * self.e23()
+                - self.e31() * operand.e0123() * self.e23()
+                + self.e12() * operand.e23() * self.e01()
+                - self.e31() * operand.e01() * self.s()
+                + self.e23() * operand.e23() * self.e03()
+                + self.e01() * operand.e23() * self.e12()
+                - self.e0123() * operand.e12() * self.s()
+                + self.e31() * operand.s() * self.e01()
+                + self.e31() * operand.e31() * self.e03()
+                + self.e12() * operand.e01() * self.e23()
+                - self.s() * operand.e01() * self.e31()
+                - self.e23() * operand.e31() * self.e0123()
+                + self.e02() * operand.e23() * self.s()
+                + self.e0123() * operand.s() * self.e12()
+                - self.s() * operand.e12() * self.e0123()
+                - self.e31() * operand.e03() * self.e31()
+                - self.e12() * operand.e02() * self.e31()
+                + self.e12() * operand.e03() * self.e12()
+                + self.e03() * operand.e31() * self.e31()
+                - self.e12() * operand.e31() * self.e02()
+                - self.e23() * operand.e02() * self.s()
+                - self.e01() * operand.e12() * self.e23()
+                + self.e02() * operand.e12() * self.e31()
+                + self.e03() * operand.e12() * self.e12()
+                + self.e23() * operand.e01() * self.e12(),
+            self.e02() * operand.e12() * self.e23()
+                + self.s() * operand.s() * self.e0123()
+                + self.e31() * operand.e01() * self.e12()
+                - self.e03() * operand.s() * self.e12()
+                + self.e03() * operand.e31() * self.e23()
+                - self.e01() * operand.s() * self.e23()
+                - self.s() * operand.e03() * self.e12()
+                + self.e31() * operand.e23() * self.e03()
+                + self.e31() * operand.e0123() * self.e31()
+                - self.e23() * operand.e23() * self.e0123()
+                - self.e02() * operand.e31() * self.s()
+                - self.e12() * operand.e01() * self.e31()
+                + self.s() * operand.e31() * self.e02()
+                - self.e03() * operand.e23() * self.e31()
+                - self.e31() * operand.e31() * self.e0123()
+                + self.e12() * operand.e31() * self.e01()
+                + self.e0123() * operand.e31() * self.e31()
+                - self.e23() * operand.e31() * self.e03()
+                + self.e12() * operand.e0123() * self.e12()
+                + self.e0123() * operand.s() * self.s()
+                + self.e23() * operand.e03() * self.e31()
+                + self.s() * operand.e02() * self.e31()
+                - self.e31() * operand.e12() * self.e01()
+                - self.e23() * operand.s() * self.e01()
+                - self.s() * operand.e12() * self.e03()
+                - self.e01() * operand.e31() * self.e12()
+                + self.e12() * operand.e23() * self.e02()
+                - self.s() * operand.e23() * self.e01()
+                + self.e23() * operand.e01() * self.s()
+                - self.e12() * operand.e02() * self.e23()
+                + self.e03() * operand.e12() * self.s()
+                + self.e31() * operand.s() * self.e02()
+                + self.e12() * operand.e03() * self.s()
+                + self.s() * operand.e0123() * self.s()
+                - self.e23() * operand.e12() * self.e02()
+                - self.e12() * operand.e12() * self.e0123()
+                + self.e02() * operand.s() * self.e31()
+                + self.e0123() * operand.e23() * self.e23()
+                + self.e01() * operand.e12() * self.e31()
+                - self.e02() * operand.e23() * self.e12()
+                + self.e23() * operand.e0123() * self.e23()
+                + self.e0123() * operand.e12() * self.e12()
+                - self.e12() * operand.s() * self.e03()
+                + self.e23() * operand.e02() * self.e12()
+                - self.e31() * operand.e02() * self.s()
+                - self.e31() * operand.e03() * self.e23()
+                - self.s() * operand.e01() * self.e23()
+                + self.e01() * operand.e23() * self.s(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Plane<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        Plane::new(
+            -(self.e12() * operand.e123() * self.e02())
+                - self.e02() * operand.e123() * self.e12()
+                - self.e12() * operand.e031() * self.s()
+                + self.e31() * operand.e031() * self.e23()
+                - self.e01() * operand.e123() * self.s()
+                + self.e23() * operand.e023() * self.e23()
+                + self.e12() * operand.e012() * self.e23()
+                + self.s() * operand.e012() * self.e31()
+                - self.s() * operand.e031() * self.e12()
+                - self.e12() * operand.e023() * self.e12()
+                - self.e0123() * operand.e123() * self.e23()
+                + self.e31() * operand.e012() * self.s()
+                - self.e23() * operand.e123() * self.e0123()
+                - self.e31() * operand.e123() * self.e03()
+                - self.s() * operand.e123() * self.e01()
+                - self.e31() * operand.e023() * self.e31()
+                - self.e03() * operand.e123() * self.e31()
+                + self.e23() * operand.e031() * self.e31()
+                + self.s() * operand.e023() * self.s()
+                + self.e23() * operand.e012() * self.e12(),
+            -(self.e31() * operand.e123() * self.e0123())
+                + self.e31() * operand.e031() * self.e31()
+                + self.s() * operand.e023() * self.e12()
+                + self.e12() * operand.e012() * self.e31()
+                + self.e02() * operand.e123() * self.s()
+                - self.e23() * operand.e031() * self.e23()
+                + self.e31() * operand.e012() * self.e12()
+                + self.s() * operand.e031() * self.s()
+                + self.e31() * operand.e023() * self.e23()
+                - self.e0123() * operand.e123() * self.e31()
+                - self.s() * operand.e012() * self.e23()
+                + self.e23() * operand.e023() * self.e31()
+                - self.e12() * operand.e123() * self.e01()
+                - self.e01() * operand.e123() * self.e12()
+                + self.e03() * operand.e123() * self.e23()
+                + self.s() * operand.e123() * self.e02()
+                - self.e23() * operand.e012() * self.s()
+                + self.e12() * operand.e023() * self.s()
+                - self.e12() * operand.e031() * self.e12()
+                + self.e23() * operand.e123() * self.e03(),
+            self.e23() * operand.e023() * self.e12()
+                + self.s() * operand.e012() * self.s()
+                + self.e12() * operand.e023() * self.e23()
+                + self.e23() * operand.e123() * self.e02()
+                - self.e12() * operand.e123() * self.e0123()
+                - self.e23() * operand.e012() * self.e23()
+                - self.e31() * operand.e023() * self.s()
+                + self.e31() * operand.e123() * self.e01()
+                + self.e02() * operand.e123() * self.e23()
+                + self.e01() * operand.e123() * self.e31()
+                + self.e23() * operand.e031() * self.s()
+                - self.s() * operand.e123() * self.e03()
+                - self.e03() * operand.e123() * self.s()
+                + self.s() * operand.e031() * self.e23()
+                - self.e0123() * operand.e123() * self.e12()
+                - self.e31() * operand.e012() * self.e31()
+                - self.s() * operand.e023() * self.e31()
+                + self.e12() * operand.e031() * self.e31()
+                + self.e12() * operand.e012() * self.e12()
+                + self.e31() * operand.e031() * self.e12(),
+            self.e31() * operand.e123() * self.e31()
+                + self.e23() * operand.e123() * self.e23()
+                + self.e12() * operand.e123() * self.e12()
+                + self.s() * operand.e123() * self.s(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Point<T>) -> Point<T> {
+        Point::new(
+            self.e12() * operand.e2() * self.s() - self.e12() * operand.e1() * self.e12()
+                + self.e12() * operand.e3() * self.e23()
+                - self.e23() * operand.e2() * self.e31()
+                + self.e23() * operand.e3() * self.e12()
+                - self.e31() * operand.e1() * self.e31()
+                + self.s() * operand.e1() * self.s()
+                + self.e23() * operand.e1() * self.e23()
+                + self.e31() * operand.e3() * self.s()
+                + self.s() * operand.e2() * self.e12()
+                + self.s() * operand.e3() * self.e31()
+                - self.e31() * operand.e2() * self.e23(),
+            -(self.e12() * operand.e2() * self.e12())
+                - self.e12() * operand.e3() * self.e31()
+                - self.s() * operand.e1() * self.e12()
+                + self.e31() * operand.e2() * self.e31()
+                - self.e31() * operand.e3() * self.e12()
+                - self.e31() * operand.e1() * self.e23()
+                + self.s() * operand.e2() * self.s()
+                - self.e23() * operand.e2() * self.e23()
+                - self.e12() * operand.e1() * self.s()
+                + self.e23() * operand.e3() * self.s()
+                + self.s() * operand.e3() * self.e23()
+                - self.e23() * operand.e1() * self.e31(),
+            self.e23() * operand.e1() * self.e12()
+                - self.s() * operand.e1() * self.e31()
+                - self.s() * operand.e2() * self.e23()
+                - self.e23() * operand.e2() * self.s()
+                - self.e31() * operand.e2() * self.e12()
+                + self.s() * operand.e3() * self.s()
+                - self.e23() * operand.e3() * self.e23()
+                - self.e31() * operand.e3() * self.e31()
+                - self.e12() * operand.e2() * self.e31()
+                - self.e31() * operand.e1() * self.s()
+                + self.e12() * operand.e1() * self.e23()
+                + self.e12() * operand.e3() * self.e12(),
+            self.e31() * operand.e1() * self.e03()
+                - self.e02() * operand.e3() * self.e23()
+                - self.e01() * operand.e2() * self.e12()
+                - self.e23() * operand.e1() * self.e0123()
+                - self.e0123() * operand.e3() * self.e12()
+                + self.e12() * operand.e1() * self.e02()
+                - self.e02() * operand.e2() * self.s()
+                - self.e0123() * operand.e1() * self.e23()
+                - self.s() * operand.e1() * self.e01()
+                + self.e31() * operand.e2() * self.e0123()
+                - self.s() * operand.e2() * self.e02()
+                + self.e03() * operand.e2() * self.e23()
+                + self.e12() * operand.e0() * self.e12()
+                - self.e03() * operand.e3() * self.s()
+                + self.e23() * operand.e2() * self.e03()
+                - self.s() * operand.e3() * self.e03()
+                + self.s() * operand.e0() * self.s()
+                - self.e12() * operand.e3() * self.e0123()
+                - self.e01() * operand.e3() * self.e31()
+                + self.e02() * operand.e1() * self.e12()
+                + self.e03() * operand.e1() * self.e31()
+                + self.e0123() * operand.e2() * self.e31()
+                - self.e01() * operand.e1() * self.s()
+                + self.e31() * operand.e0() * self.e31()
+                - self.e23() * operand.e3() * self.e02()
+                - self.e12() * operand.e2() * self.e01()
+                + self.e23() * operand.e0() * self.e23()
+                - self.e31() * operand.e3() * self.e01(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Quadvector<T>> for Motor<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Quadvector<T>) -> Quadvector<T> {
+        Quadvector::new(
+            self.e12() * operand.e0123() * self.e12()
+                + self.e23() * operand.e0123() * self.e23()
+                + self.s() * operand.e0123() * self.s()
+                + self.e31() * operand.e0123() * self.e31(),
+        )
+    }
+}
+impl<T: Float> Sandwich<Scalar<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new(
+            self.s() * operand.s() * self.s()
+                + self.e23() * operand.s() * self.e23()
+                + self.e31() * operand.s() * self.e31()
+                + self.e12() * operand.s() * self.e12(),
         )
     }
 }
@@ -4168,803 +3667,828 @@ impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.e0() * operand.e123() * self.e023() + self.e031() * operand.e012() * self.e123()
+            self.e012() * operand.e123() * self.e031() - self.e2() * operand.e023() * self.e031()
+                + self.e3() * operand.e0() * self.e031()
+                - self.e0() * operand.e0() * self.e1()
+                + self.e123() * operand.e031() * self.e012()
+                - self.e0() * operand.e2() * self.e012()
+                - self.e031() * operand.e3() * self.e0()
+                - self.e1() * operand.e012() * self.e012()
+                - self.e012() * operand.e1() * self.e012()
                 - self.e012() * operand.e031() * self.e123()
+                - self.e031() * operand.e123() * self.e012()
+                + self.e031() * operand.e012() * self.e123()
+                + self.e0() * operand.e012() * self.e2()
+                - self.e1() * operand.e0() * self.e0()
+                - self.e012() * operand.e023() * self.e3()
+                - self.e1() * operand.e023() * self.e023()
+                + self.e012() * operand.e012() * self.e1()
+                + self.e123() * operand.e023() * self.e0()
+                + self.e0() * operand.e031() * self.e3()
+                + self.e031() * operand.e0() * self.e3()
+                - self.e012() * operand.e2() * self.e0()
                 + self.e012() * operand.e3() * self.e023()
                 + self.e012() * operand.e0() * self.e2()
-                - self.e123() * operand.e0() * self.e023()
-                - self.e0() * operand.e3() * self.e031()
-                - self.e023() * operand.e031() * self.e2()
-                + self.e031() * operand.e0() * self.e3()
-                - self.e1() * operand.e012() * self.e012()
-                - self.e2() * operand.e012() * self.e0()
-                - self.e0() * operand.e0() * self.e1()
-                + self.e023() * operand.e012() * self.e3()
-                - self.e012() * operand.e2() * self.e0()
-                - self.e023() * operand.e123() * self.e0()
-                + self.e123() * operand.e031() * self.e012()
+                + self.e031() * operand.e031() * self.e1()
+                + self.e2() * operand.e0() * self.e012()
                 + self.e3() * operand.e023() * self.e012()
-                - self.e3() * operand.e012() * self.e023()
-                + self.e012() * operand.e123() * self.e031()
-                + self.e123() * operand.e023() * self.e0()
-                - self.e1() * operand.e031() * self.e031()
-                + self.e012() * operand.e012() * self.e1()
-                - self.e031() * operand.e2() * self.e023()
-                + self.e0() * operand.e1() * self.e0()
-                - self.e0() * operand.e023() * self.e123()
-                - self.e0() * operand.e2() * self.e012()
+                + self.e023() * operand.e012() * self.e3()
+                - self.e123() * operand.e0() * self.e023()
+                - self.e123() * operand.e012() * self.e031()
                 - self.e023() * operand.e0() * self.e123()
-                - self.e2() * operand.e023() * self.e031()
+                - self.e0() * operand.e023() * self.e123()
+                - self.e023() * operand.e2() * self.e031()
+                - self.e0() * operand.e3() * self.e031()
                 - self.e3() * operand.e031() * self.e0()
+                - self.e3() * operand.e012() * self.e023()
+                + self.e0() * operand.e123() * self.e023()
                 + self.e023() * operand.e1() * self.e023()
                 + self.e023() * operand.e023() * self.e1()
-                - self.e031() * operand.e3() * self.e0()
-                - self.e1() * operand.e0() * self.e0()
-                + self.e031() * operand.e031() * self.e1()
-                + self.e0() * operand.e012() * self.e2()
-                + self.e2() * operand.e031() * self.e023()
-                + self.e0() * operand.e031() * self.e3()
-                - self.e023() * operand.e2() * self.e031()
-                + self.e023() * operand.e3() * self.e012()
-                - self.e031() * operand.e1() * self.e031()
+                - self.e023() * operand.e031() * self.e2()
+                - self.e031() * operand.e2() * self.e023()
                 + self.e031() * operand.e023() * self.e2()
-                - self.e012() * operand.e023() * self.e3()
-                - self.e123() * operand.e012() * self.e031()
-                - self.e012() * operand.e1() * self.e012()
-                - self.e1() * operand.e023() * self.e023()
-                + self.e3() * operand.e0() * self.e031()
-                + self.e2() * operand.e0() * self.e012()
-                - self.e031() * operand.e123() * self.e012(),
-            -(self.e123() * operand.e012() * self.e023())
-                + self.e1() * operand.e023() * self.e031()
-                - self.e023() * operand.e3() * self.e0()
-                + self.e012() * operand.e012() * self.e2()
-                - self.e2() * operand.e031() * self.e031()
-                - self.e023() * operand.e2() * self.e023()
-                - self.e2() * operand.e0() * self.e0()
-                - self.e1() * operand.e031() * self.e023()
-                + self.e0() * operand.e023() * self.e3()
-                + self.e031() * operand.e0() * self.e123()
-                - self.e031() * operand.e012() * self.e3()
-                - self.e012() * operand.e3() * self.e031()
-                + self.e1() * operand.e012() * self.e0()
-                - self.e0() * operand.e0() * self.e2()
-                + self.e012() * operand.e031() * self.e3()
-                - self.e0() * operand.e123() * self.e031()
-                + self.e023() * operand.e023() * self.e2()
-                + self.e031() * operand.e2() * self.e031()
-                + self.e123() * operand.e023() * self.e012()
-                - self.e2() * operand.e023() * self.e023()
-                - self.e012() * operand.e2() * self.e012()
-                - self.e3() * operand.e023() * self.e0()
-                + self.e3() * operand.e0() * self.e023()
-                + self.e0() * operand.e2() * self.e0()
-                + self.e023() * operand.e0() * self.e3()
+                - self.e2() * operand.e012() * self.e0()
+                - self.e1() * operand.e031() * self.e031()
+                - self.e023() * operand.e123() * self.e0()
+                - self.e031() * operand.e1() * self.e031()
+                + self.e2() * operand.e031() * self.e023()
+                + self.e0() * operand.e1() * self.e0()
+                + self.e023() * operand.e3() * self.e012(),
+            self.e031() * operand.e0() * self.e123() - self.e012() * operand.e023() * self.e123()
+                + self.e031() * operand.e031() * self.e2()
                 - self.e031() * operand.e023() * self.e1()
                 - self.e3() * operand.e031() * self.e012()
-                - self.e023() * operand.e123() * self.e012()
-                - self.e031() * operand.e3() * self.e012()
-                + self.e023() * operand.e012() * self.e123()
-                - self.e023() * operand.e1() * self.e031()
-                + self.e023() * operand.e031() * self.e1()
-                + self.e031() * operand.e031() * self.e2()
-                - self.e031() * operand.e1() * self.e023()
-                - self.e012() * operand.e0() * self.e1()
-                - self.e0() * operand.e012() * self.e1()
-                + self.e012() * operand.e123() * self.e023()
+                + self.e023() * operand.e023() * self.e2()
+                + self.e1() * operand.e023() * self.e031()
+                - self.e0() * operand.e0() * self.e2()
                 - self.e1() * operand.e0() * self.e012()
-                + self.e3() * operand.e012() * self.e031()
-                - self.e2() * operand.e012() * self.e012()
-                + self.e123() * operand.e0() * self.e031()
-                - self.e012() * operand.e023() * self.e123()
+                + self.e0() * operand.e2() * self.e0()
+                + self.e3() * operand.e0() * self.e023()
+                + self.e0() * operand.e1() * self.e012()
+                + self.e023() * operand.e012() * self.e123()
+                - self.e2() * operand.e031() * self.e031()
+                - self.e0() * operand.e123() * self.e031()
                 + self.e031() * operand.e123() * self.e0()
                 + self.e012() * operand.e1() * self.e0()
-                - self.e0() * operand.e3() * self.e023()
+                - self.e2() * operand.e012() * self.e012()
+                - self.e012() * operand.e2() * self.e012()
+                + self.e023() * operand.e0() * self.e3()
+                - self.e012() * operand.e0() * self.e1()
+                + self.e3() * operand.e012() * self.e031()
+                + self.e123() * operand.e0() * self.e031()
+                - self.e2() * operand.e0() * self.e0()
                 + self.e0() * operand.e031() * self.e123()
+                - self.e012() * operand.e3() * self.e031()
+                + self.e012() * operand.e123() * self.e023()
+                + self.e123() * operand.e023() * self.e012()
+                - self.e023() * operand.e123() * self.e012()
+                - self.e123() * operand.e012() * self.e023()
+                - self.e031() * operand.e3() * self.e012()
+                - self.e1() * operand.e031() * self.e023()
+                - self.e031() * operand.e1() * self.e023()
                 - self.e123() * operand.e031() * self.e0()
-                + self.e0() * operand.e1() * self.e012(),
-            -(self.e0() * operand.e023() * self.e2()) + self.e012() * operand.e012() * self.e3()
-                - self.e031() * operand.e3() * self.e031()
-                - self.e012() * operand.e0() * self.e123()
-                + self.e0() * operand.e123() * self.e012()
-                - self.e3() * operand.e031() * self.e031()
-                - self.e023() * operand.e3() * self.e023()
-                - self.e023() * operand.e0() * self.e2()
-                - self.e3() * operand.e012() * self.e012()
+                + self.e1() * operand.e012() * self.e0()
+                - self.e023() * operand.e2() * self.e023()
+                - self.e031() * operand.e012() * self.e3()
+                - self.e0() * operand.e3() * self.e023()
+                - self.e0() * operand.e012() * self.e1()
+                + self.e031() * operand.e2() * self.e031()
+                + self.e012() * operand.e031() * self.e3()
+                - self.e2() * operand.e023() * self.e023()
+                + self.e012() * operand.e012() * self.e2()
+                - self.e3() * operand.e023() * self.e0()
+                + self.e023() * operand.e031() * self.e1()
+                - self.e023() * operand.e3() * self.e0()
+                + self.e0() * operand.e023() * self.e3()
+                - self.e023() * operand.e1() * self.e031(),
+            -(self.e012() * operand.e0() * self.e123()) + self.e012() * operand.e023() * self.e1()
                 - self.e123() * operand.e0() * self.e012()
-                + self.e0() * operand.e1() * self.e031()
-                + self.e0() * operand.e3() * self.e0()
-                - self.e1() * operand.e0() * self.e031()
                 - self.e2() * operand.e0() * self.e023()
-                + self.e2() * operand.e023() * self.e0()
-                - self.e012() * operand.e031() * self.e2()
-                + self.e031() * operand.e012() * self.e2()
-                + self.e1() * operand.e031() * self.e0()
-                + self.e023() * operand.e031() * self.e123()
+                + self.e031() * operand.e031() * self.e3()
+                + self.e031() * operand.e123() * self.e023()
+                - self.e0() * operand.e031() * self.e1()
+                - self.e123() * operand.e031() * self.e023()
                 - self.e023() * operand.e012() * self.e1()
+                + self.e123() * operand.e023() * self.e031()
+                - self.e1() * operand.e0() * self.e031()
+                + self.e012() * operand.e3() * self.e012()
                 + self.e1() * operand.e012() * self.e023()
+                + self.e012() * operand.e012() * self.e3()
+                - self.e012() * operand.e123() * self.e0()
+                - self.e3() * operand.e031() * self.e031()
+                + self.e0() * operand.e3() * self.e0()
+                - self.e023() * operand.e0() * self.e2()
+                + self.e2() * operand.e031() * self.e012()
+                + self.e0() * operand.e2() * self.e023()
+                - self.e031() * operand.e023() * self.e123()
+                - self.e0() * operand.e012() * self.e123()
+                + self.e0() * operand.e1() * self.e031()
                 + self.e031() * operand.e1() * self.e0()
                 - self.e031() * operand.e0() * self.e1()
-                + self.e031() * operand.e031() * self.e3()
-                - self.e3() * operand.e0() * self.e0()
-                + self.e012() * operand.e023() * self.e1()
-                - self.e0() * operand.e012() * self.e123()
-                + self.e023() * operand.e1() * self.e012()
+                + self.e031() * operand.e012() * self.e2()
+                - self.e3() * operand.e012() * self.e012()
+                + self.e0() * operand.e123() * self.e012()
+                + self.e2() * operand.e023() * self.e0()
+                - self.e031() * operand.e3() * self.e031()
+                - self.e023() * operand.e3() * self.e023()
                 + self.e023() * operand.e2() * self.e0()
-                - self.e3() * operand.e023() * self.e023()
-                - self.e012() * operand.e2() * self.e031()
-                - self.e012() * operand.e123() * self.e0()
+                - self.e3() * operand.e0() * self.e0()
                 - self.e1() * operand.e023() * self.e012()
-                - self.e023() * operand.e123() * self.e031()
-                + self.e2() * operand.e031() * self.e012()
-                - self.e0() * operand.e0() * self.e3()
                 - self.e2() * operand.e012() * self.e031()
-                - self.e0() * operand.e031() * self.e1()
-                + self.e012() * operand.e3() * self.e012()
-                + self.e123() * operand.e023() * self.e031()
-                + self.e0() * operand.e2() * self.e023()
-                - self.e031() * operand.e2() * self.e012()
-                - self.e031() * operand.e023() * self.e123()
+                + self.e023() * operand.e031() * self.e123()
+                - self.e012() * operand.e031() * self.e2()
+                + self.e123() * operand.e012() * self.e0()
                 + self.e023() * operand.e023() * self.e3()
-                - self.e123() * operand.e031() * self.e023()
+                - self.e023() * operand.e123() * self.e031()
+                + self.e023() * operand.e1() * self.e012()
+                - self.e3() * operand.e023() * self.e023()
+                + self.e1() * operand.e031() * self.e0()
+                - self.e0() * operand.e023() * self.e2()
                 + self.e012() * operand.e1() * self.e023()
-                + self.e031() * operand.e123() * self.e023()
-                + self.e123() * operand.e012() * self.e0(),
-            -(self.e0() * operand.e031() * self.e031()) - self.e012() * operand.e0() * self.e012()
-                + self.e031() * operand.e031() * self.e0()
-                - self.e0() * operand.e0() * self.e0()
-                - self.e023() * operand.e012() * self.e031()
-                + self.e012() * operand.e023() * self.e031()
-                - self.e023() * operand.e0() * self.e023()
-                + self.e023() * operand.e023() * self.e0()
-                - self.e012() * operand.e031() * self.e023()
-                - self.e031() * operand.e0() * self.e031()
-                + self.e023() * operand.e031() * self.e012()
-                + self.e031() * operand.e012() * self.e023()
-                - self.e0() * operand.e023() * self.e023()
+                - self.e0() * operand.e0() * self.e3()
+                - self.e031() * operand.e2() * self.e012()
+                - self.e012() * operand.e2() * self.e031(),
+            self.e023() * operand.e023() * self.e0() - self.e012() * operand.e031() * self.e023()
                 + self.e012() * operand.e012() * self.e0()
+                - self.e0() * operand.e0() * self.e0()
+                - self.e031() * operand.e023() * self.e012()
+                - self.e012() * operand.e0() * self.e012()
+                - self.e031() * operand.e0() * self.e031()
+                + self.e031() * operand.e012() * self.e023()
                 - self.e0() * operand.e012() * self.e012()
-                - self.e031() * operand.e023() * self.e012(),
-            -(self.e012() * operand.e012() * self.e023())
-                - self.e023() * operand.e012() * self.e012()
-                - self.e023() * operand.e023() * self.e023()
-                - self.e031() * operand.e031() * self.e023()
-                + self.e012() * operand.e0() * self.e031()
-                + self.e012() * operand.e023() * self.e012()
-                - self.e031() * operand.e0() * self.e012()
-                - self.e0() * operand.e031() * self.e012()
-                - self.e012() * operand.e031() * self.e0()
+                + self.e031() * operand.e031() * self.e0()
+                + self.e023() * operand.e031() * self.e012()
+                - self.e023() * operand.e0() * self.e023()
+                - self.e0() * operand.e023() * self.e023()
+                - self.e0() * operand.e031() * self.e031()
+                + self.e012() * operand.e023() * self.e031()
+                - self.e023() * operand.e012() * self.e031(),
+            -(self.e0() * operand.e031() * self.e012())
                 + self.e0() * operand.e012() * self.e031()
-                + self.e0() * operand.e0() * self.e023()
-                + self.e031() * operand.e023() * self.e031()
+                + self.e012() * operand.e0() * self.e031()
+                - self.e012() * operand.e031() * self.e0()
+                + self.e012() * operand.e023() * self.e012()
                 - self.e0() * operand.e023() * self.e0()
-                + self.e031() * operand.e012() * self.e0()
+                - self.e012() * operand.e012() * self.e023()
+                - self.e023() * operand.e012() * self.e012()
+                + self.e031() * operand.e023() * self.e031()
                 - self.e023() * operand.e031() * self.e031()
-                - self.e023() * operand.e0() * self.e0(),
-            self.e012() * operand.e023() * self.e0()
+                - self.e023() * operand.e0() * self.e0()
+                - self.e031() * operand.e031() * self.e023()
+                - self.e023() * operand.e023() * self.e023()
+                - self.e031() * operand.e0() * self.e012()
+                + self.e031() * operand.e012() * self.e0()
+                + self.e0() * operand.e0() * self.e023(),
+            self.e012() * operand.e023() * self.e0() - self.e023() * operand.e012() * self.e0()
                 + self.e023() * operand.e031() * self.e023()
-                + self.e023() * operand.e0() * self.e012()
-                - self.e012() * operand.e0() * self.e023()
-                - self.e012() * operand.e012() * self.e031()
-                - self.e031() * operand.e0() * self.e0()
-                - self.e023() * operand.e012() * self.e0()
-                - self.e031() * operand.e023() * self.e023()
-                - self.e031() * operand.e012() * self.e012()
-                - self.e023() * operand.e023() * self.e031()
-                - self.e0() * operand.e031() * self.e0()
                 + self.e0() * operand.e0() * self.e031()
+                - self.e0() * operand.e012() * self.e023()
                 - self.e031() * operand.e031() * self.e031()
-                + self.e0() * operand.e023() * self.e012()
+                - self.e012() * operand.e0() * self.e023()
+                - self.e031() * operand.e023() * self.e023()
+                + self.e023() * operand.e0() * self.e012()
+                - self.e031() * operand.e0() * self.e0()
+                - self.e031() * operand.e012() * self.e012()
                 + self.e012() * operand.e031() * self.e012()
-                - self.e0() * operand.e012() * self.e023(),
-            -(self.e031() * operand.e023() * self.e0())
-                - self.e023() * operand.e023() * self.e012()
-                - self.e031() * operand.e031() * self.e012()
-                + self.e031() * operand.e0() * self.e023()
-                - self.e012() * operand.e031() * self.e031()
-                + self.e023() * operand.e031() * self.e0()
+                - self.e0() * operand.e031() * self.e0()
+                - self.e012() * operand.e012() * self.e031()
+                + self.e0() * operand.e023() * self.e012()
+                - self.e023() * operand.e023() * self.e031(),
+            self.e023() * operand.e031() * self.e0() + self.e023() * operand.e012() * self.e023()
                 - self.e0() * operand.e023() * self.e031()
+                - self.e031() * operand.e031() * self.e012()
                 - self.e023() * operand.e0() * self.e031()
+                - self.e012() * operand.e023() * self.e023()
                 + self.e0() * operand.e0() * self.e012()
-                + self.e023() * operand.e012() * self.e023()
                 + self.e031() * operand.e012() * self.e031()
-                - self.e012() * operand.e0() * self.e0()
-                + self.e0() * operand.e031() * self.e023()
-                - self.e012() * operand.e012() * self.e012()
                 - self.e0() * operand.e012() * self.e0()
-                - self.e012() * operand.e023() * self.e023(),
-            -(self.e0() * operand.e1() * self.e023()) - self.e023() * operand.e023() * self.e123()
-                + self.e012() * operand.e2() * self.e023()
-                - self.e2() * operand.e023() * self.e012()
-                - self.e031() * operand.e1() * self.e012()
-                + self.e023() * operand.e123() * self.e023()
-                + self.e031() * operand.e012() * self.e1()
-                - self.e1() * operand.e031() * self.e012()
-                - self.e0() * operand.e012() * self.e3()
-                + self.e2() * operand.e012() * self.e023()
+                + self.e031() * operand.e0() * self.e023()
+                - self.e031() * operand.e023() * self.e0()
+                + self.e0() * operand.e031() * self.e023()
+                - self.e012() * operand.e031() * self.e031()
+                - self.e012() * operand.e012() * self.e012()
+                - self.e012() * operand.e0() * self.e0()
+                - self.e023() * operand.e023() * self.e012(),
+            self.e012() * operand.e2() * self.e023()
+                + self.e012() * operand.e1() * self.e031()
+                + self.e3() * operand.e0() * self.e012()
+                - self.e123() * operand.e031() * self.e031()
                 + self.e2() * operand.e031() * self.e0()
+                - self.e0() * operand.e012() * self.e3()
                 + self.e023() * operand.e012() * self.e2()
-                + self.e0() * operand.e0() * self.e123()
+                + self.e031() * operand.e3() * self.e023()
+                + self.e031() * operand.e012() * self.e1()
+                - self.e0() * operand.e023() * self.e1()
+                - self.e012() * operand.e012() * self.e123()
+                - self.e023() * operand.e2() * self.e012()
                 + self.e012() * operand.e3() * self.e0()
+                + self.e0() * operand.e2() * self.e031()
+                + self.e031() * operand.e0() * self.e2()
+                - self.e023() * operand.e3() * self.e031()
+                - self.e031() * operand.e023() * self.e3()
+                - self.e0() * operand.e1() * self.e023()
+                + self.e3() * operand.e031() * self.e023()
+                - self.e2() * operand.e0() * self.e031()
+                + self.e0() * operand.e123() * self.e0()
+                - self.e3() * operand.e023() * self.e031()
+                - self.e031() * operand.e031() * self.e123()
+                + self.e0() * operand.e0() * self.e123()
+                - self.e023() * operand.e023() * self.e123()
+                + self.e012() * operand.e123() * self.e012()
+                - self.e012() * operand.e0() * self.e3()
+                - self.e123() * operand.e0() * self.e0()
                 + self.e031() * operand.e123() * self.e031()
                 - self.e123() * operand.e023() * self.e023()
-                - self.e3() * operand.e023() * self.e031()
-                + self.e023() * operand.e031() * self.e3()
-                - self.e123() * operand.e031() * self.e031()
-                + self.e023() * operand.e1() * self.e0()
-                - self.e023() * operand.e0() * self.e1()
-                + self.e031() * operand.e0() * self.e2()
-                - self.e023() * operand.e2() * self.e012()
-                + self.e0() * operand.e031() * self.e2()
-                - self.e012() * operand.e0() * self.e3()
-                - self.e012() * operand.e023() * self.e2()
-                - self.e031() * operand.e023() * self.e3()
-                + self.e012() * operand.e123() * self.e012()
-                - self.e2() * operand.e0() * self.e031()
-                - self.e1() * operand.e023() * self.e0()
-                - self.e023() * operand.e3() * self.e031()
-                + self.e031() * operand.e3() * self.e023()
-                - self.e0() * operand.e023() * self.e1()
-                + self.e3() * operand.e0() * self.e012()
-                - self.e031() * operand.e2() * self.e0()
-                + self.e0() * operand.e123() * self.e0()
-                + self.e012() * operand.e1() * self.e031()
-                - self.e012() * operand.e031() * self.e1()
-                + self.e3() * operand.e031() * self.e023()
-                - self.e3() * operand.e012() * self.e0()
-                + self.e0() * operand.e2() * self.e031()
-                - self.e031() * operand.e031() * self.e123()
-                - self.e123() * operand.e0() * self.e0()
                 - self.e123() * operand.e012() * self.e012()
-                + self.e1() * operand.e0() * self.e023()
+                + self.e2() * operand.e012() * self.e023()
+                + self.e023() * operand.e1() * self.e0()
+                - self.e1() * operand.e031() * self.e012()
+                - self.e1() * operand.e023() * self.e0()
+                - self.e3() * operand.e012() * self.e0()
                 + self.e1() * operand.e012() * self.e031()
+                + self.e0() * operand.e031() * self.e2()
                 - self.e0() * operand.e3() * self.e012()
-                - self.e012() * operand.e012() * self.e123(),
+                - self.e023() * operand.e0() * self.e1()
+                + self.e023() * operand.e031() * self.e3()
+                - self.e031() * operand.e1() * self.e012()
+                - self.e012() * operand.e023() * self.e2()
+                - self.e031() * operand.e2() * self.e0()
+                + self.e1() * operand.e0() * self.e023()
+                - self.e012() * operand.e031() * self.e1()
+                + self.e023() * operand.e123() * self.e023()
+                - self.e2() * operand.e023() * self.e012(),
         )
     }
 }
-impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
-    type Output = Point<T>;
-    #[inline]
-    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
-        Point::new(
-            self.s() * operand.e0() * self.e01() - self.e12() * operand.e0() * self.e02()
-                + self.e01() * operand.e0() * self.s()
-                - self.e02() * operand.e1() * self.e02()
-                + self.e01() * operand.e3() * self.e03()
-                - self.e03() * operand.e1() * self.e03()
-                + self.e0123() * operand.e2() * self.e03()
-                + self.e0123() * operand.e1() * self.e0123()
-                - self.e31() * operand.e0() * self.e03()
-                + self.e23() * operand.e0() * self.e0123()
-                + self.e02() * operand.e2() * self.e01()
-                - self.e02() * operand.e3() * self.e0123()
-                - self.e02() * operand.e0() * self.e12()
-                + self.e03() * operand.e2() * self.e0123()
-                - self.e0123() * operand.e3() * self.e02()
-                + self.e01() * operand.e1() * self.e01()
-                - self.e03() * operand.e0() * self.e31()
-                + self.e0123() * operand.e0() * self.e23()
-                + self.e01() * operand.e2() * self.e02()
-                + self.e03() * operand.e3() * self.e01(),
-            self.e02() * operand.e1() * self.e01() - self.e03() * operand.e1() * self.e0123()
-                + self.e02() * operand.e0() * self.s()
-                + self.s() * operand.e0() * self.e02()
-                + self.e02() * operand.e2() * self.e02()
-                + self.e0123() * operand.e2() * self.e0123()
-                + self.e01() * operand.e0() * self.e12()
-                - self.e23() * operand.e0() * self.e03()
-                + self.e03() * operand.e3() * self.e02()
-                + self.e02() * operand.e3() * self.e03()
-                + self.e0123() * operand.e3() * self.e01()
-                - self.e31() * operand.e0() * self.e0123()
-                - self.e0123() * operand.e0() * self.e31()
-                + self.e12() * operand.e0() * self.e01()
-                - self.e03() * operand.e0() * self.e23()
-                + self.e01() * operand.e1() * self.e02()
-                + self.e01() * operand.e3() * self.e0123()
-                - self.e03() * operand.e2() * self.e03()
-                - self.e01() * operand.e2() * self.e01()
-                - self.e0123() * operand.e1() * self.e03(),
-            self.e03() * operand.e2() * self.e02()
-                + self.e12() * operand.e0() * self.e0123()
-                + self.e02() * operand.e2() * self.e03()
-                + self.e02() * operand.e0() * self.e23()
-                + self.e0123() * operand.e3() * self.e0123()
-                + self.e0123() * operand.e1() * self.e02()
-                + self.e0123() * operand.e0() * self.e12()
-                - self.e02() * operand.e3() * self.e02()
-                + self.e31() * operand.e0() * self.e01()
-                - self.e01() * operand.e2() * self.e0123()
-                - self.e0123() * operand.e2() * self.e01()
-                + self.e03() * operand.e3() * self.e03()
-                + self.s() * operand.e0() * self.e03()
-                + self.e23() * operand.e0() * self.e02()
-                + self.e01() * operand.e0() * self.e31()
-                - self.e01() * operand.e3() * self.e01()
-                + self.e01() * operand.e1() * self.e03()
-                + self.e02() * operand.e1() * self.e0123()
-                + self.e03() * operand.e1() * self.e01()
-                + self.e03() * operand.e0() * self.s(),
-            self.e02() * operand.e0() * self.e02()
-                + self.e03() * operand.e0() * self.e03()
-                + self.e0123() * operand.e0() * self.e0123()
-                + self.e01() * operand.e0() * self.e01(),
-        )
-    }
-}
-impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
+impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
     type Output = Line<T>;
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new(
-            self.e02() * operand.e02() * self.e01()
-                + self.e03() * operand.e02() * self.e0123()
-                + self.e0123() * operand.e02() * self.e03()
-                - self.e03() * operand.e01() * self.e03()
-                + self.e01() * operand.e01() * self.e01()
-                + self.e0123() * operand.e01() * self.e0123()
-                + self.e01() * operand.e03() * self.e03()
-                + self.e01() * operand.e02() * self.e02()
-                - self.e02() * operand.e01() * self.e02()
-                - self.e02() * operand.e03() * self.e0123()
-                + self.e03() * operand.e03() * self.e01()
-                - self.e0123() * operand.e03() * self.e02(),
-            self.e03() * operand.e03() * self.e02() + self.e01() * operand.e03() * self.e0123()
-                - self.e01() * operand.e02() * self.e01()
-                + self.e02() * operand.e01() * self.e01()
-                + self.e01() * operand.e01() * self.e02()
-                - self.e0123() * operand.e01() * self.e03()
-                + self.e0123() * operand.e02() * self.e0123()
-                - self.e03() * operand.e02() * self.e03()
-                - self.e03() * operand.e01() * self.e0123()
-                + self.e02() * operand.e02() * self.e02()
-                + self.e0123() * operand.e03() * self.e01()
-                + self.e02() * operand.e03() * self.e03(),
-            self.e02() * operand.e01() * self.e0123() + self.e03() * operand.e02() * self.e02()
-                - self.e01() * operand.e02() * self.e0123()
-                - self.e0123() * operand.e02() * self.e01()
-                + self.e03() * operand.e01() * self.e01()
-                - self.e01() * operand.e03() * self.e01()
-                + self.e03() * operand.e03() * self.e03()
-                + self.e02() * operand.e02() * self.e03()
-                + self.e0123() * operand.e03() * self.e0123()
-                + self.e0123() * operand.e01() * self.e02()
-                + self.e01() * operand.e01() * self.e03()
-                - self.e02() * operand.e03() * self.e02(),
-            self.e31() * operand.e03() * self.e0123() - self.e03() * operand.e31() * self.e0123()
-                + self.e03() * operand.e03() * self.e23()
-                + self.e0123() * operand.e02() * self.e12()
-                - self.e03() * operand.e02() * self.s()
-                - self.e03() * operand.e23() * self.e03()
-                + self.e01() * operand.e01() * self.e23()
-                + self.e01() * operand.e12() * self.e03()
-                + self.e02() * operand.e01() * self.e31()
-                - self.e02() * operand.e12() * self.e0123()
-                - self.s() * operand.e02() * self.e03()
-                - self.e0123() * operand.e31() * self.e03()
-                - self.e0123() * operand.e12() * self.e02()
-                - self.e01() * operand.e31() * self.e02()
-                - self.e12() * operand.e01() * self.e03()
-                - self.e03() * operand.e01() * self.e12()
-                + self.e02() * operand.e03() * self.s()
-                + self.e12() * operand.e03() * self.e01()
-                + self.e12() * operand.e02() * self.e0123()
-                + self.s() * operand.e03() * self.e02()
-                + self.e03() * operand.e12() * self.e01()
-                - self.e01() * operand.e02() * self.e31()
-                + self.e01() * operand.e03() * self.e12()
-                + self.e01() * operand.e23() * self.e01()
-                - self.e02() * operand.e31() * self.e01()
-                - self.e0123() * operand.e01() * self.s()
-                + self.e0123() * operand.e03() * self.e31()
-                + self.e0123() * operand.e23() * self.e0123()
-                + self.e02() * operand.e02() * self.e23()
-                - self.s() * operand.e01() * self.e0123()
-                - self.e31() * operand.e02() * self.e01()
-                - self.e02() * operand.e23() * self.e02()
-                + self.e23() * operand.e02() * self.e02()
-                + self.e23() * operand.e01() * self.e01()
-                + self.e23() * operand.e03() * self.e03()
-                + self.e31() * operand.e01() * self.e02(),
-            -(self.e02() * operand.e12() * self.e03()) + self.e03() * operand.e23() * self.e0123()
-                - self.e03() * operand.e01() * self.s()
-                + self.e23() * operand.e02() * self.e01()
-                + self.e01() * operand.e01() * self.e31()
-                + self.e03() * operand.e03() * self.e31()
-                - self.e23() * operand.e01() * self.e02()
-                - self.e01() * operand.e23() * self.e02()
-                - self.e02() * operand.e01() * self.e23()
-                - self.e03() * operand.e31() * self.e03()
-                + self.e0123() * operand.e02() * self.s()
-                - self.e12() * operand.e03() * self.e02()
-                + self.e0123() * operand.e23() * self.e03()
-                - self.s() * operand.e01() * self.e03()
-                + self.e0123() * operand.e31() * self.e0123()
-                + self.e31() * operand.e03() * self.e03()
-                - self.e0123() * operand.e03() * self.e23()
-                + self.e01() * operand.e02() * self.e23()
-                + self.s() * operand.e03() * self.e01()
-                + self.s() * operand.e02() * self.e0123()
-                + self.e02() * operand.e31() * self.e02()
-                + self.e0123() * operand.e01() * self.e12()
-                + self.e31() * operand.e02() * self.e02()
-                - self.e03() * operand.e12() * self.e02()
-                - self.e23() * operand.e03() * self.e0123()
-                + self.e12() * operand.e02() * self.e03()
-                - self.e01() * operand.e12() * self.e0123()
-                - self.e02() * operand.e23() * self.e01()
-                - self.e0123() * operand.e12() * self.e01()
-                + self.e12() * operand.e01() * self.e0123()
-                - self.e01() * operand.e31() * self.e01()
-                + self.e31() * operand.e01() * self.e01()
-                - self.e02() * operand.e03() * self.e12()
-                + self.e02() * operand.e02() * self.e31()
-                + self.e03() * operand.e02() * self.e12()
-                + self.e01() * operand.e03() * self.s(),
-            -(self.e31() * operand.e01() * self.e0123()) - self.s() * operand.e01() * self.e02()
-                + self.e23() * operand.e01() * self.e03()
-                - self.e23() * operand.e03() * self.e01()
-                + self.e12() * operand.e02() * self.e02()
-                - self.e02() * operand.e12() * self.e02()
-                - self.s() * operand.e03() * self.e0123()
-                + self.e03() * operand.e12() * self.e03()
-                + self.e03() * operand.e23() * self.e01()
-                + self.e02() * operand.e23() * self.e0123()
-                - self.e03() * operand.e31() * self.e02()
-                - self.e03() * operand.e02() * self.e31()
-                - self.e0123() * operand.e01() * self.e31()
-                + self.e0123() * operand.e31() * self.e01()
-                + self.e01() * operand.e23() * self.e03()
-                + self.e12() * operand.e03() * self.e03()
-                - self.e0123() * operand.e03() * self.s()
-                - self.e01() * operand.e03() * self.e23()
-                - self.e02() * operand.e01() * self.s()
-                - self.e23() * operand.e02() * self.e0123()
-                - self.e0123() * operand.e02() * self.e23()
-                + self.e12() * operand.e01() * self.e01()
-                + self.e01() * operand.e02() * self.s()
-                + self.s() * operand.e02() * self.e01()
-                - self.e02() * operand.e31() * self.e03()
-                + self.e0123() * operand.e23() * self.e02()
-                + self.e01() * operand.e01() * self.e12()
-                + self.e31() * operand.e03() * self.e02()
-                - self.e01() * operand.e12() * self.e01()
-                + self.e03() * operand.e01() * self.e23()
-                + self.e0123() * operand.e12() * self.e0123()
-                + self.e02() * operand.e03() * self.e31()
-                - self.e31() * operand.e02() * self.e03()
-                + self.e03() * operand.e03() * self.e12()
-                + self.e02() * operand.e02() * self.e12()
-                + self.e01() * operand.e31() * self.e0123(),
+            self.e023() * operand.e02() * self.e031() + self.e0() * operand.e03() * self.e031()
+                - self.e012() * operand.e03() * self.e023()
+                + self.e012() * operand.e01() * self.e012()
+                - self.e023() * operand.e01() * self.e023()
+                + self.e0() * operand.e02() * self.e012()
+                - self.e023() * operand.e03() * self.e012()
+                + self.e031() * operand.e02() * self.e023()
+                + self.e031() * operand.e03() * self.e0()
+                + self.e012() * operand.e02() * self.e0()
+                + self.e031() * operand.e01() * self.e031()
+                - self.e0() * operand.e01() * self.e0(),
+            self.e023() * operand.e02() * self.e023()
+                + self.e0() * operand.e03() * self.e023()
+                + self.e023() * operand.e03() * self.e0()
+                + self.e031() * operand.e01() * self.e023()
+                + self.e012() * operand.e02() * self.e012()
+                - self.e0() * operand.e01() * self.e012()
+                - self.e0() * operand.e02() * self.e0()
+                - self.e031() * operand.e02() * self.e031()
+                + self.e031() * operand.e03() * self.e012()
+                - self.e012() * operand.e01() * self.e0()
+                + self.e012() * operand.e03() * self.e031()
+                + self.e023() * operand.e01() * self.e031(),
+            -(self.e0() * operand.e01() * self.e031()) + self.e023() * operand.e03() * self.e023()
+                - self.e023() * operand.e02() * self.e0()
+                - self.e0() * operand.e02() * self.e023()
+                - self.e031() * operand.e01() * self.e0()
+                - self.e023() * operand.e01() * self.e012()
+                + self.e012() * operand.e02() * self.e031()
+                + self.e031() * operand.e03() * self.e031()
+                - self.e012() * operand.e03() * self.e012()
+                + self.e031() * operand.e02() * self.e012()
+                - self.e0() * operand.e03() * self.e0()
+                - self.e012() * operand.e01() * self.e023(),
+            self.e012() * operand.e02() * self.e123() + self.e0() * operand.e03() * self.e2()
+                - self.e031() * operand.e12() * self.e0()
+                + self.e023() * operand.e03() * self.e3()
+                - self.e0() * operand.e02() * self.e3()
+                + self.e123() * operand.e03() * self.e031()
+                + self.e0() * operand.e23() * self.e0()
+                + self.e031() * operand.e03() * self.e123()
+                + self.e031() * operand.e31() * self.e023()
+                + self.e2() * operand.e01() * self.e031()
+                - self.e012() * operand.e01() * self.e3()
+                + self.e031() * operand.e01() * self.e2()
+                + self.e3() * operand.e03() * self.e023()
+                - self.e123() * operand.e01() * self.e0()
+                + self.e023() * operand.e23() * self.e023()
+                + self.e0() * operand.e31() * self.e012()
+                - self.e1() * operand.e02() * self.e031()
+                - self.e0() * operand.e01() * self.e123()
+                + self.e023() * operand.e31() * self.e031()
+                + self.e1() * operand.e03() * self.e012()
+                - self.e012() * operand.e23() * self.e012()
+                - self.e031() * operand.e02() * self.e1()
+                - self.e031() * operand.e23() * self.e031()
+                + self.e023() * operand.e12() * self.e012()
+                + self.e2() * operand.e02() * self.e023()
+                + self.e012() * operand.e03() * self.e1()
+                - self.e3() * operand.e01() * self.e012()
+                + self.e023() * operand.e02() * self.e2()
+                + self.e023() * operand.e01() * self.e1()
+                - self.e0() * operand.e12() * self.e031()
+                + self.e2() * operand.e03() * self.e0()
+                - self.e3() * operand.e02() * self.e0()
+                + self.e1() * operand.e01() * self.e023()
+                + self.e012() * operand.e31() * self.e0()
+                + self.e012() * operand.e12() * self.e023()
+                + self.e123() * operand.e02() * self.e012(),
+            -(self.e023() * operand.e01() * self.e2())
+                + self.e1() * operand.e03() * self.e0()
+                + self.e012() * operand.e02() * self.e3()
+                + self.e1() * operand.e01() * self.e031()
+                + self.e023() * operand.e02() * self.e1()
+                + self.e031() * operand.e23() * self.e023()
+                + self.e0() * operand.e03() * self.e1()
+                + self.e0() * operand.e12() * self.e023()
+                + self.e023() * operand.e23() * self.e031()
+                + self.e012() * operand.e01() * self.e123()
+                + self.e031() * operand.e31() * self.e031()
+                - self.e023() * operand.e31() * self.e023()
+                - self.e2() * operand.e01() * self.e023()
+                + self.e0() * operand.e31() * self.e0()
+                + self.e012() * operand.e12() * self.e031()
+                + self.e123() * operand.e01() * self.e012()
+                - self.e0() * operand.e23() * self.e012()
+                - self.e012() * operand.e03() * self.e2()
+                - self.e012() * operand.e23() * self.e0()
+                + self.e3() * operand.e03() * self.e031()
+                + self.e031() * operand.e03() * self.e3()
+                - self.e123() * operand.e03() * self.e023()
+                + self.e031() * operand.e01() * self.e1()
+                - self.e012() * operand.e31() * self.e012()
+                + self.e2() * operand.e02() * self.e031()
+                + self.e123() * operand.e02() * self.e0()
+                + self.e0() * operand.e02() * self.e123()
+                - self.e3() * operand.e01() * self.e0()
+                - self.e0() * operand.e01() * self.e3()
+                + self.e031() * operand.e02() * self.e2()
+                + self.e3() * operand.e02() * self.e012()
+                + self.e031() * operand.e12() * self.e012()
+                - self.e023() * operand.e03() * self.e123()
+                + self.e1() * operand.e02() * self.e023()
+                + self.e023() * operand.e12() * self.e0()
+                - self.e2() * operand.e03() * self.e012(),
+            -(self.e023() * operand.e03() * self.e1()) + self.e0() * operand.e23() * self.e031()
+                - self.e031() * operand.e12() * self.e031()
+                - self.e023() * operand.e02() * self.e123()
+                - self.e0() * operand.e03() * self.e123()
+                + self.e023() * operand.e23() * self.e012()
+                + self.e3() * operand.e01() * self.e023()
+                - self.e2() * operand.e01() * self.e0()
+                - self.e0() * operand.e01() * self.e2()
+                + self.e0() * operand.e12() * self.e0()
+                - self.e031() * operand.e01() * self.e123()
+                - self.e023() * operand.e31() * self.e0()
+                + self.e012() * operand.e01() * self.e1()
+                - self.e031() * operand.e02() * self.e3()
+                + self.e012() * operand.e23() * self.e023()
+                + self.e023() * operand.e01() * self.e3()
+                - self.e023() * operand.e12() * self.e023()
+                + self.e031() * operand.e31() * self.e012()
+                + self.e012() * operand.e02() * self.e2()
+                - self.e0() * operand.e31() * self.e023()
+                - self.e123() * operand.e01() * self.e031()
+                - self.e123() * operand.e02() * self.e023()
+                + self.e2() * operand.e03() * self.e031()
+                - self.e3() * operand.e02() * self.e031()
+                - self.e123() * operand.e03() * self.e0()
+                + self.e1() * operand.e01() * self.e012()
+                + self.e012() * operand.e03() * self.e3()
+                + self.e0() * operand.e02() * self.e1()
+                - self.e1() * operand.e03() * self.e023()
+                + self.e2() * operand.e02() * self.e012()
+                + self.e031() * operand.e03() * self.e2()
+                + self.e031() * operand.e23() * self.e0()
+                + self.e012() * operand.e12() * self.e012()
+                + self.e012() * operand.e31() * self.e031()
+                + self.e1() * operand.e02() * self.e0()
+                + self.e3() * operand.e03() * self.e012(),
         )
     }
 }
-impl<T: Float> Antisandwich<Plane<T>> for Motor<T> {
-    type Output = Plane<T>;
-    #[inline]
-    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
-        Plane::new(
-            -(self.e01() * operand.e031() * self.e02()) + self.e01() * operand.e012() * self.e03()
-                - self.e02() * operand.e012() * self.e0123()
-                + self.e0123() * operand.e023() * self.e0123()
-                - self.e03() * operand.e031() * self.e0123()
-                + self.e03() * operand.e012() * self.e01()
-                - self.e0123() * operand.e031() * self.e03()
-                - self.e03() * operand.e023() * self.e03()
-                + self.e01() * operand.e023() * self.e01()
-                - self.e02() * operand.e023() * self.e02()
-                - self.e02() * operand.e031() * self.e01()
-                - self.e0123() * operand.e012() * self.e02(),
-            -(self.e01() * operand.e031() * self.e01()) + self.e02() * operand.e031() * self.e02()
-                - self.e01() * operand.e023() * self.e02()
-                - self.e02() * operand.e012() * self.e03()
-                - self.e03() * operand.e031() * self.e03()
-                - self.e02() * operand.e023() * self.e01()
-                - self.e03() * operand.e012() * self.e02()
-                + self.e0123() * operand.e023() * self.e03()
-                + self.e0123() * operand.e031() * self.e0123()
-                + self.e03() * operand.e023() * self.e0123()
-                - self.e01() * operand.e012() * self.e0123()
-                - self.e0123() * operand.e012() * self.e01(),
-            -(self.e02() * operand.e031() * self.e03()) - self.e03() * operand.e031() * self.e02()
-                + self.e01() * operand.e023() * self.e03()
-                + self.e03() * operand.e012() * self.e03()
-                + self.e0123() * operand.e031() * self.e01()
-                + self.e03() * operand.e023() * self.e01()
-                + self.e02() * operand.e023() * self.e0123()
-                + self.e0123() * operand.e023() * self.e02()
-                + self.e01() * operand.e031() * self.e0123()
-                + self.e0123() * operand.e012() * self.e0123()
-                - self.e01() * operand.e012() * self.e01()
-                - self.e02() * operand.e012() * self.e02(),
-            self.s() * operand.e023() * self.e01() - self.e02() * operand.e012() * self.e23()
-                + self.e0123() * operand.e031() * self.e31()
-                + self.e03() * operand.e023() * self.e31()
-                - self.s() * operand.e031() * self.e02()
-                + self.e31() * operand.e023() * self.e03()
-                + self.e01() * operand.e023() * self.s()
-                - self.e31() * operand.e012() * self.e01()
-                + self.e12() * operand.e012() * self.e0123()
-                - self.e01() * operand.e012() * self.e31()
-                + self.e02() * operand.e123() * self.e02()
-                + self.e23() * operand.e023() * self.e0123()
-                + self.e01() * operand.e031() * self.e12()
-                - self.e23() * operand.e031() * self.e03()
-                + self.e31() * operand.e031() * self.e0123()
-                - self.e02() * operand.e031() * self.s()
-                - self.e03() * operand.e031() * self.e23()
-                + self.e12() * operand.e031() * self.e01()
-                - self.e23() * operand.e012() * self.e02()
-                + self.e01() * operand.e123() * self.e01()
-                + self.s() * operand.e012() * self.e03()
-                + self.e12() * operand.e023() * self.e02()
-                + self.e03() * operand.e012() * self.s()
-                + self.e03() * operand.e123() * self.e03()
-                + self.e0123() * operand.e023() * self.e23()
-                + self.e02() * operand.e023() * self.e12()
-                + self.e0123() * operand.e012() * self.e12()
-                + self.e0123() * operand.e123() * self.e0123(),
-        )
-    }
-}
-impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
+impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
     type Output = Motor<T>;
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e03() * operand.s() * self.e03()
-                + self.e0123() * operand.e31() * self.e02()
-                + self.e02() * operand.s() * self.e02()
-                - self.e02() * operand.e23() * self.e03()
-                - self.e01() * operand.e01() * self.s()
-                - self.e01() * operand.e0123() * self.e23()
-                - self.e02() * operand.e02() * self.s()
-                + self.s() * operand.e02() * self.e02()
-                + self.e03() * operand.e31() * self.e01()
-                - self.e02() * operand.e01() * self.e12()
-                + self.s() * operand.e03() * self.e03()
-                - self.e12() * operand.e02() * self.e01()
-                - self.e0123() * operand.e01() * self.e23()
-                - self.e0123() * operand.e23() * self.e01()
-                - self.e02() * operand.e31() * self.e0123()
-                + self.e12() * operand.e01() * self.e02()
-                + self.e01() * operand.s() * self.e01()
-                - self.e01() * operand.e12() * self.e02()
-                + self.e03() * operand.e23() * self.e02()
-                - self.e03() * operand.e03() * self.s()
-                + self.e0123() * operand.e0123() * self.s()
-                - self.e03() * operand.e0123() * self.e12()
-                - self.e01() * operand.e31() * self.e03()
-                + self.s() * operand.e01() * self.e01()
-                + self.e31() * operand.e0123() * self.e02()
-                + self.e23() * operand.e02() * self.e03()
-                + self.e02() * operand.e0123() * self.e31()
-                + self.e12() * operand.e03() * self.e0123()
-                + self.e03() * operand.e12() * self.e0123()
-                - self.e03() * operand.e01() * self.e31()
-                + self.e02() * operand.e12() * self.e01()
-                - self.e0123() * operand.e12() * self.e03()
-                - self.e23() * operand.e03() * self.e02()
-                + self.s() * operand.e0123() * self.e0123()
-                - self.e23() * operand.e0123() * self.e01()
-                + self.e02() * operand.e03() * self.e23()
-                + self.e0123() * operand.e02() * self.e31()
-                + self.e31() * operand.e01() * self.e03()
-                - self.e31() * operand.e02() * self.e0123()
-                - self.e03() * operand.e02() * self.e23()
-                + self.e23() * operand.e01() * self.e0123()
-                - self.e0123() * operand.e03() * self.e12()
-                + self.e0123() * operand.s() * self.e0123()
-                - self.e12() * operand.e0123() * self.e03()
-                + self.e01() * operand.e23() * self.e0123()
-                - self.e31() * operand.e03() * self.e01()
-                + self.e01() * operand.e02() * self.e12()
-                + self.e01() * operand.e03() * self.e31(),
-            -(self.e03() * operand.e23() * self.e03()) - self.e01() * operand.e02() * self.e31()
-                + self.e23() * operand.e03() * self.e03()
-                + self.e03() * operand.e03() * self.e23()
-                + self.e0123() * operand.e03() * self.e31()
-                + self.e23() * operand.e02() * self.e02()
-                + self.e02() * operand.e02() * self.e23()
-                - self.s() * operand.e01() * self.e0123()
-                - self.e03() * operand.e31() * self.e0123()
-                + self.e03() * operand.e12() * self.e01()
-                - self.e0123() * operand.e31() * self.e03()
-                - self.e01() * operand.s() * self.e0123()
-                + self.e23() * operand.e01() * self.e01()
-                - self.e02() * operand.e12() * self.e0123()
-                + self.e23() * operand.e0123() * self.e0123()
-                - self.e02() * operand.e23() * self.e02()
-                + self.s() * operand.e03() * self.e02()
-                - self.e31() * operand.e02() * self.e01()
-                - self.e12() * operand.e01() * self.e03()
-                + self.e12() * operand.e03() * self.e01()
-                + self.e0123() * operand.s() * self.e01()
-                - self.e02() * operand.e31() * self.e01()
-                - self.e0123() * operand.e12() * self.e02()
-                - self.e31() * operand.e0123() * self.e03()
-                + self.e12() * operand.e02() * self.e0123()
-                + self.e01() * operand.e03() * self.e12()
-                + self.e02() * operand.e01() * self.e31()
-                + self.e31() * operand.e03() * self.e0123()
-                + self.e01() * operand.e01() * self.e23()
-                + self.e01() * operand.e12() * self.e03()
-                - self.e01() * operand.e31() * self.e02()
-                - self.e03() * operand.e01() * self.e12()
-                + self.e03() * operand.s() * self.e02()
-                + self.e31() * operand.e01() * self.e02()
-                - self.e02() * operand.s() * self.e03()
-                + self.e02() * operand.e03() * self.s()
-                - self.e0123() * operand.e01() * self.s()
-                - self.e0123() * operand.e0123() * self.e23()
-                - self.e01() * operand.e0123() * self.s()
-                + self.e03() * operand.e0123() * self.e31()
-                + self.e0123() * operand.e23() * self.e0123()
-                - self.s() * operand.e02() * self.e03()
-                + self.e01() * operand.e23() * self.e01()
-                - self.e12() * operand.e0123() * self.e02()
-                + self.e0123() * operand.e02() * self.e12()
-                + self.s() * operand.e0123() * self.e01()
-                + self.e02() * operand.e0123() * self.e12()
-                - self.e03() * operand.e02() * self.s(),
-            -(self.e03() * operand.e0123() * self.e23()) + self.e03() * operand.s() * self.e01()
-                - self.e23() * operand.e03() * self.e0123()
-                + self.e12() * operand.e01() * self.e0123()
-                + self.s() * operand.e03() * self.e01()
-                + self.s() * operand.e02() * self.e0123()
-                - self.e12() * operand.e0123() * self.e01()
-                - self.e12() * operand.e03() * self.e02()
-                - self.e01() * operand.e12() * self.e0123()
-                + self.e02() * operand.e02() * self.e31()
-                - self.e0123() * operand.s() * self.e02()
-                + self.e31() * operand.e0123() * self.e0123()
-                + self.e31() * operand.e03() * self.e03()
-                + self.e0123() * operand.e31() * self.e0123()
-                + self.e03() * operand.e02() * self.e12()
-                - self.s() * operand.e01() * self.e03()
-                + self.e01() * operand.e01() * self.e31()
-                - self.e02() * operand.e03() * self.e12()
-                + self.e03() * operand.e23() * self.e0123()
-                + self.e03() * operand.e03() * self.e31()
-                + self.e01() * operand.e0123() * self.e12()
-                + self.e02() * operand.s() * self.e0123()
-                + self.e31() * operand.e02() * self.e02()
-                + self.e23() * operand.e02() * self.e01()
-                - self.e01() * operand.e31() * self.e01()
-                - self.e03() * operand.e01() * self.s()
-                + self.e01() * operand.e02() * self.e23()
-                - self.e0123() * operand.e12() * self.e01()
-                - self.e0123() * operand.e0123() * self.e31()
-                + self.e02() * operand.e31() * self.e02()
-                - self.e03() * operand.e12() * self.e02()
-                + self.e0123() * operand.e23() * self.e03()
-                + self.e23() * operand.e0123() * self.e03()
-                - self.e02() * operand.e23() * self.e01()
-                + self.e0123() * operand.e01() * self.e12()
-                + self.e0123() * operand.e02() * self.s()
-                - self.e23() * operand.e01() * self.e02()
-                + self.e01() * operand.e03() * self.s()
-                + self.e12() * operand.e02() * self.e03()
-                - self.e01() * operand.e23() * self.e02()
-                - self.e02() * operand.e12() * self.e03()
-                - self.e02() * operand.e01() * self.e23()
-                - self.e01() * operand.s() * self.e03()
-                - self.e03() * operand.e31() * self.e03()
-                + self.e02() * operand.e0123() * self.s()
-                - self.e0123() * operand.e03() * self.e23()
-                - self.s() * operand.e0123() * self.e02()
-                + self.e31() * operand.e01() * self.e01(),
-            -(self.e02() * operand.e31() * self.e03())
-                + self.e03() * operand.e01() * self.e23()
-                + self.e03() * operand.e03() * self.e12()
-                + self.e02() * operand.e02() * self.e12()
-                - self.e01() * operand.e03() * self.e23()
-                + self.e01() * operand.e02() * self.s()
-                - self.e23() * operand.e03() * self.e01()
-                - self.e0123() * operand.e0123() * self.e12()
-                + self.e02() * operand.e03() * self.e31()
-                + self.s() * operand.e02() * self.e01()
-                + self.e12() * operand.e01() * self.e01()
-                - self.e03() * operand.e31() * self.e02()
-                + self.e23() * operand.e01() * self.e03()
-                - self.e31() * operand.e01() * self.e0123()
-                - self.e23() * operand.e02() * self.e0123()
-                + self.e01() * operand.e23() * self.e03()
-                - self.s() * operand.e03() * self.e0123()
-                + self.s() * operand.e0123() * self.e03()
-                + self.e23() * operand.e0123() * self.e02()
-                + self.e02() * operand.e23() * self.e0123()
-                + self.e31() * operand.e03() * self.e02()
-                - self.e03() * operand.s() * self.e0123()
-                - self.e31() * operand.e02() * self.e03()
-                + self.e03() * operand.e23() * self.e01()
-                - self.e03() * operand.e02() * self.e31()
-                - self.e03() * operand.e0123() * self.s()
-                + self.e0123() * operand.s() * self.e03()
-                + self.e0123() * operand.e12() * self.e0123()
-                - self.e0123() * operand.e02() * self.e23()
-                - self.s() * operand.e01() * self.e02()
-                + self.e02() * operand.s() * self.e01()
-                - self.e02() * operand.e0123() * self.e23()
-                + self.e12() * operand.e02() * self.e02()
-                + self.e0123() * operand.e23() * self.e02()
-                - self.e0123() * operand.e01() * self.e31()
-                + self.e01() * operand.e31() * self.e0123()
-                + self.e31() * operand.e0123() * self.e01()
-                - self.e01() * operand.s() * self.e02()
-                + self.e03() * operand.e12() * self.e03()
-                - self.e01() * operand.e12() * self.e01()
-                + self.e0123() * operand.e31() * self.e01()
-                - self.e0123() * operand.e03() * self.s()
-                - self.e01() * operand.e0123() * self.e31()
-                + self.e12() * operand.e03() * self.e03()
-                - self.e02() * operand.e01() * self.s()
-                + self.e12() * operand.e0123() * self.e0123()
-                + self.e01() * operand.e01() * self.e12()
-                - self.e02() * operand.e12() * self.e02(),
-            self.e02() * operand.e0123() * self.e03() - self.e0123() * operand.e0123() * self.e01()
-                + self.e01() * operand.e0123() * self.e0123()
-                + self.e01() * operand.e01() * self.e01()
-                + self.e01() * operand.e02() * self.e02()
-                - self.e03() * operand.e0123() * self.e02()
-                - self.e03() * operand.e01() * self.e03()
-                + self.e0123() * operand.e02() * self.e03()
-                - self.e0123() * operand.e03() * self.e02()
-                - self.e02() * operand.e03() * self.e0123()
-                + self.e01() * operand.e03() * self.e03()
-                + self.e0123() * operand.e01() * self.e0123()
-                - self.e02() * operand.e01() * self.e02()
-                + self.e02() * operand.e02() * self.e01()
-                + self.e03() * operand.e02() * self.e0123()
-                + self.e03() * operand.e03() * self.e01(),
-            self.e02() * operand.e0123() * self.e0123()
-                + self.e01() * operand.e01() * self.e02()
-                + self.e02() * operand.e01() * self.e01()
-                + self.e02() * operand.e03() * self.e03()
-                - self.e03() * operand.e02() * self.e03()
-                - self.e0123() * operand.e0123() * self.e02()
-                - self.e01() * operand.e02() * self.e01()
-                - self.e03() * operand.e01() * self.e0123()
-                + self.e03() * operand.e03() * self.e02()
-                - self.e01() * operand.e0123() * self.e03()
-                + self.e02() * operand.e02() * self.e02()
-                + self.e03() * operand.e0123() * self.e01()
-                + self.e01() * operand.e03() * self.e0123()
-                - self.e0123() * operand.e01() * self.e03()
-                + self.e0123() * operand.e02() * self.e0123()
-                + self.e0123() * operand.e03() * self.e01(),
-            self.e03() * operand.e01() * self.e01() - self.e01() * operand.e02() * self.e0123()
-                + self.e03() * operand.e0123() * self.e0123()
-                - self.e0123() * operand.e0123() * self.e03()
-                - self.e02() * operand.e03() * self.e02()
-                + self.e03() * operand.e02() * self.e02()
-                - self.e02() * operand.e0123() * self.e01()
-                - self.e0123() * operand.e02() * self.e01()
-                + self.e0123() * operand.e03() * self.e0123()
-                - self.e01() * operand.e03() * self.e01()
-                + self.e02() * operand.e01() * self.e0123()
-                + self.e0123() * operand.e01() * self.e02()
-                + self.e01() * operand.e01() * self.e03()
-                + self.e03() * operand.e03() * self.e03()
-                + self.e02() * operand.e02() * self.e03()
-                + self.e01() * operand.e0123() * self.e02(),
-            -(self.e03() * operand.e01() * self.e02())
-                - self.e02() * operand.e03() * self.e01()
-                - self.e03() * operand.e03() * self.e0123()
-                + self.e02() * operand.e01() * self.e03()
-                + self.e0123() * operand.e03() * self.e03()
-                + self.e02() * operand.e0123() * self.e02()
-                + self.e03() * operand.e02() * self.e01()
-                + self.e01() * operand.e0123() * self.e01()
-                + self.e0123() * operand.e02() * self.e02()
-                - self.e01() * operand.e01() * self.e0123()
-                + self.e0123() * operand.e0123() * self.e0123()
-                + self.e03() * operand.e0123() * self.e03()
-                + self.e01() * operand.e03() * self.e02()
-                - self.e01() * operand.e02() * self.e03()
-                + self.e0123() * operand.e01() * self.e01()
-                - self.e02() * operand.e02() * self.e0123(),
+            -(self.e3() * operand.e02() * self.e023()) + self.e1() * operand.e03() * self.e031()
+                - self.e123() * operand.e03() * self.e012()
+                + self.e1() * operand.e02() * self.e012()
+                - self.e2() * operand.e01() * self.e012()
+                + self.e031() * operand.e01() * self.e3()
+                - self.e2() * operand.e02() * self.e0()
+                + self.e023() * operand.e01() * self.e123()
+                - self.e012() * operand.e12() * self.e0()
+                - self.e023() * operand.e03() * self.e2()
+                - self.e012() * operand.e23() * self.e031()
+                - self.e1() * operand.e0123() * self.e023()
+                + self.e0() * operand.e0123() * self.e123()
+                + self.e012() * operand.s() * self.e012()
+                + self.e012() * operand.e01() * self.e2()
+                + self.e0() * operand.e23() * self.e023()
+                - self.e031() * operand.e03() * self.e1()
+                + self.e2() * operand.e03() * self.e023()
+                - self.e3() * operand.e0123() * self.e012()
+                - self.e023() * operand.e0123() * self.e1()
+                + self.e023() * operand.e02() * self.e3()
+                + self.e031() * operand.s() * self.e031()
+                + self.e2() * operand.e0123() * self.e031()
+                + self.e0() * operand.e31() * self.e031()
+                + self.e0() * operand.e03() * self.e3()
+                - self.e031() * operand.e31() * self.e0()
+                + self.e0() * operand.s() * self.e0()
+                - self.e023() * operand.e31() * self.e012()
+                - self.e1() * operand.e01() * self.e0()
+                - self.e031() * operand.e12() * self.e023()
+                + self.e012() * operand.e03() * self.e123()
+                - self.e031() * operand.e02() * self.e123()
+                + self.e023() * operand.e12() * self.e031()
+                + self.e0() * operand.e02() * self.e2()
+                + self.e0() * operand.e01() * self.e1()
+                - self.e012() * operand.e0123() * self.e3()
+                - self.e123() * operand.e01() * self.e023()
+                + self.e123() * operand.e02() * self.e031()
+                + self.e023() * operand.s() * self.e023()
+                - self.e3() * operand.e03() * self.e0()
+                - self.e023() * operand.e23() * self.e0()
+                + self.e031() * operand.e23() * self.e012()
+                + self.e031() * operand.e0123() * self.e2()
+                + self.e012() * operand.e31() * self.e023()
+                + self.e0() * operand.e12() * self.e012()
+                - self.e012() * operand.e02() * self.e1()
+                - self.e3() * operand.e01() * self.e031()
+                + self.e123() * operand.e0123() * self.e0(),
+            self.e012() * operand.e03() * self.e1() - self.e012() * operand.e0123() * self.e2()
+                + self.e031() * operand.e31() * self.e023()
+                + self.e123() * operand.e03() * self.e031()
+                - self.e012() * operand.e01() * self.e3()
+                + self.e2() * operand.e02() * self.e023()
+                + self.e023() * operand.e03() * self.e3()
+                + self.e031() * operand.e03() * self.e123()
+                + self.e2() * operand.e03() * self.e0()
+                + self.e0() * operand.e0123() * self.e1()
+                + self.e023() * operand.s() * self.e0()
+                - self.e031() * operand.e02() * self.e1()
+                + self.e123() * operand.e02() * self.e012()
+                + self.e3() * operand.e0123() * self.e031()
+                + self.e2() * operand.e0123() * self.e012()
+                - self.e123() * operand.e01() * self.e0()
+                - self.e3() * operand.e02() * self.e0()
+                - self.e012() * operand.s() * self.e031()
+                - self.e031() * operand.e12() * self.e0()
+                + self.e031() * operand.s() * self.e012()
+                + self.e3() * operand.e03() * self.e023()
+                - self.e1() * operand.e0123() * self.e0()
+                + self.e0() * operand.e31() * self.e012()
+                + self.e012() * operand.e12() * self.e023()
+                + self.e1() * operand.e01() * self.e023()
+                - self.e123() * operand.e0123() * self.e023()
+                + self.e023() * operand.e31() * self.e031()
+                - self.e3() * operand.e01() * self.e012()
+                + self.e023() * operand.e01() * self.e1()
+                + self.e2() * operand.e01() * self.e031()
+                - self.e0() * operand.e12() * self.e031()
+                - self.e0() * operand.e02() * self.e3()
+                + self.e023() * operand.e02() * self.e2()
+                - self.e031() * operand.e23() * self.e031()
+                + self.e0() * operand.e23() * self.e0()
+                - self.e0() * operand.s() * self.e023()
+                - self.e031() * operand.e0123() * self.e3()
+                + self.e1() * operand.e03() * self.e012()
+                - self.e1() * operand.e02() * self.e031()
+                - self.e0() * operand.e01() * self.e123()
+                + self.e0() * operand.e03() * self.e2()
+                + self.e023() * operand.e23() * self.e023()
+                + self.e023() * operand.e12() * self.e012()
+                + self.e023() * operand.e0123() * self.e123()
+                + self.e031() * operand.e01() * self.e2()
+                - self.e012() * operand.e23() * self.e012()
+                + self.e012() * operand.e31() * self.e0()
+                + self.e012() * operand.e02() * self.e123(),
+            -(self.e2() * operand.e03() * self.e012()) + self.e1() * operand.e03() * self.e0()
+                - self.e2() * operand.e01() * self.e023()
+                + self.e2() * operand.e0123() * self.e0()
+                + self.e0() * operand.e31() * self.e0()
+                + self.e1() * operand.e0123() * self.e012()
+                - self.e0() * operand.e0123() * self.e2()
+                - self.e023() * operand.e31() * self.e023()
+                + self.e023() * operand.e02() * self.e1()
+                - self.e023() * operand.e03() * self.e123()
+                + self.e031() * operand.e01() * self.e1()
+                + self.e031() * operand.e02() * self.e2()
+                + self.e1() * operand.e01() * self.e031()
+                - self.e023() * operand.s() * self.e012()
+                + self.e031() * operand.e0123() * self.e123()
+                + self.e1() * operand.e02() * self.e023()
+                + self.e012() * operand.e01() * self.e123()
+                + self.e0() * operand.e02() * self.e123()
+                - self.e0() * operand.e23() * self.e012()
+                - self.e012() * operand.e23() * self.e0()
+                + self.e0() * operand.e12() * self.e023()
+                + self.e123() * operand.e01() * self.e012()
+                + self.e031() * operand.e12() * self.e012()
+                - self.e123() * operand.e03() * self.e023()
+                + self.e031() * operand.e31() * self.e031()
+                - self.e0() * operand.e01() * self.e3()
+                + self.e023() * operand.e0123() * self.e3()
+                + self.e023() * operand.e23() * self.e031()
+                + self.e3() * operand.e02() * self.e012()
+                - self.e012() * operand.e0123() * self.e1()
+                + self.e012() * operand.s() * self.e023()
+                - self.e3() * operand.e0123() * self.e023()
+                + self.e0() * operand.e03() * self.e1()
+                + self.e031() * operand.e23() * self.e023()
+                + self.e023() * operand.e12() * self.e0()
+                - self.e023() * operand.e01() * self.e2()
+                + self.e2() * operand.e02() * self.e031()
+                + self.e031() * operand.e03() * self.e3()
+                - self.e3() * operand.e01() * self.e0()
+                + self.e031() * operand.s() * self.e0()
+                - self.e012() * operand.e31() * self.e012()
+                + self.e012() * operand.e02() * self.e3()
+                - self.e0() * operand.s() * self.e031()
+                + self.e012() * operand.e12() * self.e031()
+                + self.e3() * operand.e03() * self.e031()
+                - self.e012() * operand.e03() * self.e2()
+                + self.e123() * operand.e02() * self.e0()
+                - self.e123() * operand.e0123() * self.e031(),
+            -(self.e023() * operand.e31() * self.e0())
+                - self.e031() * operand.e01() * self.e123()
+                - self.e1() * operand.e03() * self.e023()
+                + self.e031() * operand.e23() * self.e0()
+                + self.e012() * operand.e23() * self.e023()
+                - self.e2() * operand.e0123() * self.e023()
+                + self.e0() * operand.e23() * self.e031()
+                + self.e023() * operand.e23() * self.e012()
+                + self.e031() * operand.e31() * self.e012()
+                + self.e023() * operand.e01() * self.e3()
+                - self.e3() * operand.e02() * self.e031()
+                - self.e031() * operand.s() * self.e023()
+                + self.e031() * operand.e03() * self.e2()
+                - self.e123() * operand.e01() * self.e031()
+                + self.e012() * operand.e02() * self.e2()
+                + self.e2() * operand.e03() * self.e031()
+                + self.e2() * operand.e02() * self.e012()
+                + self.e031() * operand.e0123() * self.e1()
+                - self.e023() * operand.e12() * self.e023()
+                + self.e012() * operand.e31() * self.e031()
+                - self.e0() * operand.e03() * self.e123()
+                - self.e0() * operand.s() * self.e012()
+                + self.e1() * operand.e02() * self.e0()
+                - self.e123() * operand.e03() * self.e0()
+                - self.e123() * operand.e0123() * self.e012()
+                - self.e1() * operand.e0123() * self.e031()
+                - self.e2() * operand.e01() * self.e0()
+                + self.e023() * operand.s() * self.e031()
+                + self.e012() * operand.e01() * self.e1()
+                - self.e0() * operand.e01() * self.e2()
+                - self.e031() * operand.e12() * self.e031()
+                + self.e012() * operand.e0123() * self.e123()
+                - self.e123() * operand.e02() * self.e023()
+                + self.e0() * operand.e12() * self.e0()
+                + self.e3() * operand.e01() * self.e023()
+                + self.e012() * operand.e12() * self.e012()
+                + self.e0() * operand.e02() * self.e1()
+                + self.e0() * operand.e0123() * self.e3()
+                + self.e023() * operand.e0123() * self.e2()
+                - self.e0() * operand.e31() * self.e023()
+                + self.e1() * operand.e01() * self.e012()
+                - self.e3() * operand.e0123() * self.e0()
+                - self.e023() * operand.e02() * self.e123()
+                - self.e031() * operand.e02() * self.e3()
+                + self.e012() * operand.s() * self.e0()
+                + self.e012() * operand.e03() * self.e3()
+                - self.e023() * operand.e03() * self.e1()
+                + self.e3() * operand.e03() * self.e012(),
+            -(self.e0() * operand.e01() * self.e0()) + self.e0() * operand.e03() * self.e031()
+                - self.e023() * operand.e01() * self.e023()
+                + self.e031() * operand.e02() * self.e023()
+                + self.e031() * operand.e03() * self.e0()
+                - self.e012() * operand.e03() * self.e023()
+                + self.e023() * operand.e0123() * self.e0()
+                + self.e031() * operand.e0123() * self.e012()
+                - self.e023() * operand.e03() * self.e012()
+                + self.e0() * operand.e02() * self.e012()
+                - self.e012() * operand.e0123() * self.e031()
+                + self.e023() * operand.e02() * self.e031()
+                + self.e031() * operand.e01() * self.e031()
+                + self.e012() * operand.e02() * self.e0()
+                + self.e012() * operand.e01() * self.e012()
+                - self.e0() * operand.e0123() * self.e023(),
+            self.e031() * operand.e01() * self.e023()
+                + self.e0() * operand.e0123() * self.e031()
+                + self.e023() * operand.e02() * self.e023()
+                - self.e031() * operand.e02() * self.e031()
+                + self.e012() * operand.e03() * self.e031()
+                - self.e012() * operand.e01() * self.e0()
+                - self.e0() * operand.e01() * self.e012()
+                + self.e023() * operand.e0123() * self.e012()
+                + self.e023() * operand.e03() * self.e0()
+                - self.e031() * operand.e0123() * self.e0()
+                - self.e0() * operand.e02() * self.e0()
+                + self.e0() * operand.e03() * self.e023()
+                + self.e023() * operand.e01() * self.e031()
+                + self.e012() * operand.e02() * self.e012()
+                + self.e031() * operand.e03() * self.e012()
+                - self.e012() * operand.e0123() * self.e023(),
+            self.e023() * operand.e03() * self.e023() + self.e012() * operand.e02() * self.e031()
+                - self.e0() * operand.e01() * self.e031()
+                - self.e023() * operand.e02() * self.e0()
+                - self.e0() * operand.e03() * self.e0()
+                - self.e012() * operand.e03() * self.e012()
+                - self.e012() * operand.e01() * self.e023()
+                - self.e031() * operand.e01() * self.e0()
+                - self.e0() * operand.e0123() * self.e012()
+                + self.e023() * operand.e0123() * self.e031()
+                - self.e023() * operand.e01() * self.e012()
+                + self.e031() * operand.e02() * self.e012()
+                - self.e031() * operand.e0123() * self.e023()
+                + self.e012() * operand.e0123() * self.e0()
+                - self.e0() * operand.e02() * self.e023()
+                + self.e031() * operand.e03() * self.e031(),
+            self.e023() * operand.e03() * self.e031()
+                - self.e012() * operand.e01() * self.e031()
+                - self.e023() * operand.e0123() * self.e023()
+                - self.e0() * operand.e0123() * self.e0()
+                - self.e012() * operand.e02() * self.e023()
+                + self.e031() * operand.e02() * self.e0()
+                - self.e012() * operand.e0123() * self.e012()
+                - self.e031() * operand.e03() * self.e023()
+                + self.e0() * operand.e03() * self.e012()
+                - self.e023() * operand.e01() * self.e0()
+                + self.e023() * operand.e02() * self.e012()
+                + self.e0() * operand.e01() * self.e023()
+                + self.e031() * operand.e01() * self.e012()
+                - self.e031() * operand.e0123() * self.e031()
+                - self.e0() * operand.e02() * self.e031()
+                - self.e012() * operand.e03() * self.e0(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Plane<T>> for Flector<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        Plane::new(
+            self.e031() * operand.e023() * self.e031()
+                - self.e012() * operand.e012() * self.e023()
+                - self.e031() * operand.e031() * self.e023()
+                - self.e023() * operand.e012() * self.e012()
+                + self.e012() * operand.e023() * self.e012()
+                - self.e023() * operand.e023() * self.e023()
+                - self.e023() * operand.e031() * self.e031()
+                + self.e031() * operand.e012() * self.e0()
+                - self.e0() * operand.e023() * self.e0()
+                + self.e0() * operand.e012() * self.e031()
+                - self.e012() * operand.e031() * self.e0()
+                - self.e0() * operand.e031() * self.e012(),
+            -(self.e0() * operand.e031() * self.e0()) + self.e0() * operand.e023() * self.e012()
+                - self.e031() * operand.e012() * self.e012()
+                + self.e012() * operand.e023() * self.e0()
+                - self.e031() * operand.e031() * self.e031()
+                - self.e012() * operand.e012() * self.e031()
+                + self.e012() * operand.e031() * self.e012()
+                - self.e023() * operand.e012() * self.e0()
+                - self.e0() * operand.e012() * self.e023()
+                - self.e023() * operand.e023() * self.e031()
+                + self.e023() * operand.e031() * self.e023()
+                - self.e031() * operand.e023() * self.e023(),
+            self.e0() * operand.e031() * self.e023() + self.e031() * operand.e012() * self.e031()
+                - self.e012() * operand.e031() * self.e031()
+                + self.e023() * operand.e012() * self.e023()
+                - self.e0() * operand.e023() * self.e031()
+                - self.e023() * operand.e023() * self.e012()
+                - self.e0() * operand.e012() * self.e0()
+                - self.e012() * operand.e023() * self.e023()
+                - self.e031() * operand.e023() * self.e0()
+                - self.e012() * operand.e012() * self.e012()
+                - self.e031() * operand.e031() * self.e012()
+                + self.e023() * operand.e031() * self.e0(),
+            -(self.e031() * operand.e023() * self.e3())
+                + self.e031() * operand.e123() * self.e031()
+                - self.e123() * operand.e012() * self.e012()
+                + self.e023() * operand.e123() * self.e023()
+                - self.e3() * operand.e023() * self.e031()
+                - self.e1() * operand.e023() * self.e0()
+                - self.e023() * operand.e023() * self.e123()
+                + self.e3() * operand.e031() * self.e023()
+                + self.e1() * operand.e012() * self.e031()
+                + self.e2() * operand.e031() * self.e0()
+                - self.e012() * operand.e012() * self.e123()
+                + self.e031() * operand.e012() * self.e1()
+                - self.e012() * operand.e023() * self.e2()
+                + self.e0() * operand.e031() * self.e2()
+                - self.e3() * operand.e012() * self.e0()
+                + self.e023() * operand.e012() * self.e2()
+                - self.e123() * operand.e023() * self.e023()
+                - self.e0() * operand.e023() * self.e1()
+                - self.e123() * operand.e031() * self.e031()
+                - self.e031() * operand.e031() * self.e123()
+                + self.e023() * operand.e031() * self.e3()
+                - self.e012() * operand.e031() * self.e1()
+                + self.e012() * operand.e123() * self.e012()
+                - self.e0() * operand.e012() * self.e3()
+                - self.e1() * operand.e031() * self.e012()
+                - self.e2() * operand.e023() * self.e012()
+                + self.e2() * operand.e012() * self.e023()
+                + self.e0() * operand.e123() * self.e0(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
+        Point::new(
+            self.e023() * operand.e3() * self.e012()
+                + self.e031() * operand.e0() * self.e3()
+                + self.e0() * operand.e1() * self.e0()
+                - self.e0() * operand.e0() * self.e1()
+                + self.e2() * operand.e0() * self.e012()
+                - self.e031() * operand.e1() * self.e031()
+                - self.e023() * operand.e2() * self.e031()
+                + self.e012() * operand.e3() * self.e023()
+                + self.e3() * operand.e0() * self.e031()
+                + self.e023() * operand.e1() * self.e023()
+                - self.e031() * operand.e3() * self.e0()
+                - self.e012() * operand.e2() * self.e0()
+                + self.e012() * operand.e0() * self.e2()
+                - self.e023() * operand.e0() * self.e123()
+                - self.e0() * operand.e2() * self.e012()
+                - self.e1() * operand.e0() * self.e0()
+                - self.e031() * operand.e2() * self.e023()
+                - self.e0() * operand.e3() * self.e031()
+                - self.e012() * operand.e1() * self.e012()
+                - self.e123() * operand.e0() * self.e023(),
+            -(self.e023() * operand.e1() * self.e031())
+                + self.e3() * operand.e0() * self.e023()
+                + self.e031() * operand.e2() * self.e031()
+                - self.e1() * operand.e0() * self.e012()
+                - self.e0() * operand.e3() * self.e023()
+                - self.e031() * operand.e3() * self.e012()
+                - self.e012() * operand.e3() * self.e031()
+                - self.e0() * operand.e0() * self.e2()
+                + self.e0() * operand.e1() * self.e012()
+                - self.e012() * operand.e0() * self.e1()
+                - self.e031() * operand.e1() * self.e023()
+                - self.e2() * operand.e0() * self.e0()
+                - self.e023() * operand.e3() * self.e0()
+                + self.e012() * operand.e1() * self.e0()
+                - self.e012() * operand.e2() * self.e012()
+                + self.e023() * operand.e0() * self.e3()
+                - self.e023() * operand.e2() * self.e023()
+                + self.e031() * operand.e0() * self.e123()
+                + self.e123() * operand.e0() * self.e031()
+                + self.e0() * operand.e2() * self.e0(),
+            self.e012() * operand.e3() * self.e012() + self.e012() * operand.e1() * self.e023()
+                - self.e031() * operand.e0() * self.e1()
+                - self.e0() * operand.e0() * self.e3()
+                + self.e031() * operand.e1() * self.e0()
+                - self.e1() * operand.e0() * self.e031()
+                + self.e0() * operand.e1() * self.e031()
+                - self.e3() * operand.e0() * self.e0()
+                - self.e012() * operand.e0() * self.e123()
+                - self.e2() * operand.e0() * self.e023()
+                + self.e023() * operand.e2() * self.e0()
+                + self.e023() * operand.e1() * self.e012()
+                - self.e023() * operand.e3() * self.e023()
+                - self.e031() * operand.e2() * self.e012()
+                - self.e031() * operand.e3() * self.e031()
+                - self.e012() * operand.e2() * self.e031()
+                - self.e123() * operand.e0() * self.e012()
+                - self.e023() * operand.e0() * self.e2()
+                + self.e0() * operand.e3() * self.e0()
+                + self.e0() * operand.e2() * self.e023(),
+            -(self.e031() * operand.e0() * self.e031())
+                - self.e0() * operand.e0() * self.e0()
+                - self.e023() * operand.e0() * self.e023()
+                - self.e012() * operand.e0() * self.e012(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Quadvector<T>> for Flector<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Quadvector<T>) -> Quadvector<T> {
+        Quadvector::new(
+            -(self.e012() * operand.e0123() * self.e012())
+                - self.e023() * operand.e0123() * self.e023()
+                - self.e0() * operand.e0123() * self.e0()
+                - self.e031() * operand.e0123() * self.e031(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Scalar<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new(
+            self.e023() * operand.s() * self.e023()
+                + self.e012() * operand.s() * self.e012()
+                + self.e0() * operand.s() * self.e0()
+                + self.e031() * operand.s() * self.e031(),
         )
     }
 }
@@ -4973,260 +4497,833 @@ impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.e02() * operand.e2() * self.e01()
-                + self.e01() * operand.e123() * self.e0123()
-                + self.e0123() * operand.e012() * self.e31()
-                - self.e31() * operand.e023() * self.e02()
-                + self.e02() * operand.e012() * self.s()
-                + self.e03() * operand.e012() * self.e23()
+            self.e03() * operand.e2() * self.e0123() - self.e23() * operand.e012() * self.e03()
                 + self.e03() * operand.e3() * self.e01()
-                + self.e0123() * operand.e1() * self.e0123()
-                - self.e0123() * operand.e123() * self.e01()
-                + self.e23() * operand.e0() * self.e0123()
-                - self.e31() * operand.e012() * self.e0123()
-                - self.e23() * operand.e023() * self.e01()
-                - self.e31() * operand.e0() * self.e03()
-                - self.e02() * operand.e1() * self.e02()
-                + self.e01() * operand.e0() * self.s()
-                + self.e02() * operand.e023() * self.e31()
-                - self.e03() * operand.e0() * self.e31()
-                - self.e02() * operand.e3() * self.e0123()
-                - self.e0123() * operand.e023() * self.s()
-                + self.e01() * operand.e023() * self.e23()
-                - self.e12() * operand.e0() * self.e02()
-                - self.s() * operand.e031() * self.e03()
-                + self.e0123() * operand.e0() * self.e23()
-                + self.e12() * operand.e023() * self.e03()
-                - self.e12() * operand.e012() * self.e01()
-                + self.e12() * operand.e031() * self.e0123()
-                + self.s() * operand.e0() * self.e01()
-                + self.s() * operand.e023() * self.e0123()
-                - self.e23() * operand.e012() * self.e03()
-                + self.e03() * operand.e031() * self.s()
-                - self.e03() * operand.e023() * self.e12()
-                - self.e03() * operand.e1() * self.e03()
-                + self.e01() * operand.e3() * self.e03()
                 - self.s() * operand.e012() * self.e02()
-                + self.e02() * operand.e123() * self.e03()
-                + self.e01() * operand.e031() * self.e31()
-                + self.e01() * operand.e012() * self.e12()
-                - self.e02() * operand.e0() * self.e12()
-                - self.e03() * operand.e123() * self.e02()
-                - self.e0123() * operand.e031() * self.e12()
-                + self.e03() * operand.e2() * self.e0123()
-                + self.e01() * operand.e2() * self.e02()
-                + self.e01() * operand.e1() * self.e01()
+                + self.e01() * operand.e023() * self.e23()
+                + self.e03() * operand.e012() * self.e23()
                 + self.e0123() * operand.e2() * self.e03()
-                + self.e23() * operand.e031() * self.e02()
-                - self.e02() * operand.e031() * self.e23()
                 - self.e31() * operand.e031() * self.e01()
-                - self.e0123() * operand.e3() * self.e02(),
-            self.e01() * operand.e1() * self.e02()
-                - self.e01() * operand.e123() * self.e03()
+                - self.e31() * operand.e0() * self.e03()
+                + self.s() * operand.e023() * self.e0123()
+                + self.e23() * operand.e031() * self.e02()
+                - self.s() * operand.e031() * self.e03()
+                - self.e12() * operand.e0() * self.e02()
+                + self.s() * operand.e0() * self.e01()
+                - self.e12() * operand.e012() * self.e01()
+                - self.e0123() * operand.e3() * self.e02()
+                - self.e03() * operand.e1() * self.e03()
+                - self.e0123() * operand.e023() * self.s()
+                - self.e02() * operand.e0() * self.e12()
+                - self.e0123() * operand.e031() * self.e12()
+                - self.e0123() * operand.e123() * self.e01()
+                + self.e12() * operand.e023() * self.e03()
+                + self.e12() * operand.e031() * self.e0123()
+                + self.e01() * operand.e012() * self.e12()
+                + self.e01() * operand.e2() * self.e02()
+                + self.e01() * operand.e123() * self.e0123()
+                + self.e01() * operand.e0() * self.s()
+                + self.e23() * operand.e0() * self.e0123()
+                + self.e01() * operand.e1() * self.e01()
+                - self.e02() * operand.e031() * self.e23()
+                - self.e03() * operand.e023() * self.e12()
+                + self.e03() * operand.e031() * self.s()
+                + self.e0123() * operand.e1() * self.e0123()
+                - self.e03() * operand.e0() * self.e31()
+                + self.e01() * operand.e031() * self.e31()
+                + self.e02() * operand.e023() * self.e31()
+                + self.e0123() * operand.e012() * self.e31()
+                + self.e02() * operand.e012() * self.s()
+                + self.e02() * operand.e123() * self.e03()
+                + self.e02() * operand.e2() * self.e01()
+                - self.e31() * operand.e012() * self.e0123()
+                + self.e01() * operand.e3() * self.e03()
+                - self.e02() * operand.e3() * self.e0123()
+                - self.e03() * operand.e123() * self.e02()
+                - self.e23() * operand.e023() * self.e01()
+                - self.e31() * operand.e023() * self.e02()
+                - self.e02() * operand.e1() * self.e02()
+                + self.e0123() * operand.e0() * self.e23(),
+            -(self.e23() * operand.e0() * self.e03()) + self.e02() * operand.e031() * self.e31()
                 - self.e23() * operand.e012() * self.e0123()
-                + self.e31() * operand.e023() * self.e01()
-                + self.e0123() * operand.e012() * self.e23()
-                + self.e02() * operand.e012() * self.e12()
-                + self.e12() * operand.e023() * self.e0123()
-                + self.e02() * operand.e1() * self.e01()
-                - self.e03() * operand.e1() * self.e0123()
-                - self.e0123() * operand.e1() * self.e03()
-                - self.e23() * operand.e031() * self.e01()
-                + self.s() * operand.e012() * self.e01()
-                - self.s() * operand.e023() * self.e03()
-                + self.e02() * operand.e031() * self.e31()
-                - self.e23() * operand.e0() * self.e03()
-                + self.e02() * operand.e123() * self.e0123()
-                + self.e0123() * operand.e031() * self.s()
-                - self.s() * operand.e031() * self.e0123()
-                - self.e01() * operand.e023() * self.e31()
-                + self.e31() * operand.e012() * self.e03()
-                + self.e01() * operand.e031() * self.e23()
-                + self.e02() * operand.e3() * self.e03()
-                - self.e31() * operand.e031() * self.e02()
-                - self.e01() * operand.e2() * self.e01()
-                + self.e01() * operand.e3() * self.e0123()
-                - self.e12() * operand.e031() * self.e03()
-                - self.e31() * operand.e0() * self.e0123()
-                + self.e03() * operand.e123() * self.e01()
                 + self.e0123() * operand.e3() * self.e01()
-                - self.e03() * operand.e0() * self.e23()
-                - self.e0123() * operand.e023() * self.e12()
-                - self.e03() * operand.e2() * self.e03()
-                - self.e01() * operand.e012() * self.s()
                 - self.e0123() * operand.e0() * self.e31()
-                + self.e02() * operand.e0() * self.s()
-                - self.e03() * operand.e012() * self.e31()
-                - self.e12() * operand.e012() * self.e02()
-                + self.e03() * operand.e3() * self.e02()
-                + self.e01() * operand.e0() * self.e12()
-                + self.s() * operand.e0() * self.e02()
-                + self.e03() * operand.e023() * self.s()
-                + self.e03() * operand.e031() * self.e12()
+                + self.e02() * operand.e1() * self.e01()
+                - self.s() * operand.e023() * self.e03()
                 + self.e0123() * operand.e2() * self.e0123()
+                - self.e01() * operand.e123() * self.e03()
+                - self.e03() * operand.e2() * self.e03()
+                + self.e31() * operand.e012() * self.e03()
+                - self.e0123() * operand.e1() * self.e03()
+                + self.e01() * operand.e031() * self.e23()
+                - self.e0123() * operand.e023() * self.e12()
+                + self.e0123() * operand.e031() * self.s()
+                - self.e01() * operand.e023() * self.e31()
+                + self.s() * operand.e0() * self.e02()
+                - self.e03() * operand.e012() * self.e31()
+                + self.s() * operand.e012() * self.e01()
+                - self.e23() * operand.e031() * self.e01()
+                + self.e02() * operand.e0() * self.s()
+                - self.e01() * operand.e2() * self.e01()
                 + self.e02() * operand.e2() * self.e02()
-                - self.e23() * operand.e023() * self.e02()
-                + self.e02() * operand.e023() * self.e23()
+                - self.e12() * operand.e012() * self.e02()
                 - self.e0123() * operand.e123() * self.e02()
-                + self.e12() * operand.e0() * self.e01(),
-            self.e0123() * operand.e3() * self.e0123()
-                - self.e12() * operand.e023() * self.e01()
-                - self.e02() * operand.e031() * self.e12()
-                + self.s() * operand.e023() * self.e02()
-                + self.e03() * operand.e3() * self.e03()
-                + self.e03() * operand.e012() * self.e12()
-                - self.e01() * operand.e031() * self.s()
-                - self.e0123() * operand.e012() * self.s()
-                + self.e31() * operand.e0() * self.e01()
-                - self.e12() * operand.e012() * self.e03()
-                + self.s() * operand.e031() * self.e01()
-                + self.e01() * operand.e023() * self.e12()
-                - self.e02() * operand.e023() * self.s()
-                + self.e03() * operand.e2() * self.e02()
-                - self.e23() * operand.e031() * self.e0123()
-                + self.e0123() * operand.e031() * self.e23()
+                + self.e01() * operand.e0() * self.e12()
+                - self.e01() * operand.e012() * self.s()
+                + self.e02() * operand.e3() * self.e03()
+                + self.e02() * operand.e023() * self.e23()
+                + self.e03() * operand.e3() * self.e02()
+                + self.e31() * operand.e023() * self.e01()
+                + self.e03() * operand.e023() * self.s()
+                - self.e31() * operand.e0() * self.e0123()
+                + self.e03() * operand.e031() * self.e12()
+                - self.e03() * operand.e0() * self.e23()
+                + self.e02() * operand.e012() * self.e12()
+                - self.e31() * operand.e031() * self.e02()
+                + self.e0123() * operand.e012() * self.e23()
+                + self.e02() * operand.e123() * self.e0123()
+                - self.e03() * operand.e1() * self.e0123()
+                + self.e03() * operand.e123() * self.e01()
+                + self.e12() * operand.e023() * self.e0123()
+                - self.e23() * operand.e023() * self.e02()
+                - self.s() * operand.e031() * self.e0123()
+                - self.e12() * operand.e031() * self.e03()
+                + self.e12() * operand.e0() * self.e01()
+                + self.e01() * operand.e3() * self.e0123()
+                + self.e01() * operand.e1() * self.e02(),
+            -(self.e23() * operand.e023() * self.e03())
                 + self.s() * operand.e0() * self.e03()
-                + self.e03() * operand.e123() * self.e0123()
-                - self.e31() * operand.e012() * self.e02()
-                - self.e31() * operand.e031() * self.e03()
-                + self.e01() * operand.e1() * self.e03()
-                + self.e03() * operand.e1() * self.e01()
-                + self.e02() * operand.e012() * self.e31()
-                + self.e03() * operand.e0() * self.s()
-                - self.e0123() * operand.e123() * self.e03()
-                + self.e0123() * operand.e0() * self.e12()
-                + self.s() * operand.e012() * self.e0123()
-                + self.e03() * operand.e031() * self.e31()
-                + self.e02() * operand.e0() * self.e23()
-                + self.e01() * operand.e123() * self.e02()
-                - self.e0123() * operand.e2() * self.e01()
-                + self.e0123() * operand.e1() * self.e02()
-                + self.e12() * operand.e0() * self.e0123()
-                - self.e23() * operand.e023() * self.e03()
-                + self.e23() * operand.e0() * self.e02()
-                - self.e01() * operand.e3() * self.e01()
-                - self.e02() * operand.e3() * self.e02()
                 + self.e31() * operand.e023() * self.e0123()
-                + self.e02() * operand.e1() * self.e0123()
-                + self.e03() * operand.e023() * self.e23()
-                - self.e0123() * operand.e023() * self.e31()
-                + self.e12() * operand.e031() * self.e02()
+                - self.e12() * operand.e023() * self.e01()
+                + self.e0123() * operand.e1() * self.e02()
                 + self.e23() * operand.e012() * self.e01()
-                - self.e01() * operand.e2() * self.e0123()
-                + self.e01() * operand.e0() * self.e31()
+                - self.e12() * operand.e012() * self.e03()
+                + self.e01() * operand.e1() * self.e03()
+                - self.e01() * operand.e031() * self.s()
                 - self.e02() * operand.e123() * self.e01()
+                + self.e03() * operand.e023() * self.e23()
+                + self.e02() * operand.e1() * self.e0123()
+                - self.e01() * operand.e012() * self.e23()
+                - self.e02() * operand.e023() * self.s()
+                - self.e0123() * operand.e012() * self.s()
+                + self.e0123() * operand.e3() * self.e0123()
+                + self.e01() * operand.e0() * self.e31()
+                + self.e01() * operand.e023() * self.e12()
+                - self.e01() * operand.e3() * self.e01()
+                + self.e03() * operand.e123() * self.e0123()
+                + self.s() * operand.e023() * self.e02()
+                - self.e31() * operand.e031() * self.e03()
+                + self.e03() * operand.e031() * self.e31()
                 + self.e02() * operand.e2() * self.e03()
-                - self.e01() * operand.e012() * self.e23(),
-            self.e03() * operand.e0() * self.e03() - self.e0123() * operand.e023() * self.e01()
-                + self.e0123() * operand.e031() * self.e02()
+                - self.e31() * operand.e012() * self.e02()
+                + self.e0123() * operand.e0() * self.e12()
+                + self.e0123() * operand.e031() * self.e23()
+                + self.e02() * operand.e0() * self.e23()
+                - self.e02() * operand.e3() * self.e02()
+                - self.e23() * operand.e031() * self.e0123()
+                + self.e03() * operand.e012() * self.e12()
+                + self.e03() * operand.e0() * self.s()
+                + self.s() * operand.e031() * self.e01()
+                + self.e01() * operand.e123() * self.e02()
+                + self.e12() * operand.e0() * self.e0123()
+                - self.e0123() * operand.e023() * self.e31()
+                - self.e02() * operand.e031() * self.e12()
+                + self.e03() * operand.e3() * self.e03()
+                - self.e0123() * operand.e123() * self.e03()
+                + self.e12() * operand.e031() * self.e02()
+                + self.e02() * operand.e012() * self.e31()
+                - self.e0123() * operand.e2() * self.e01()
+                - self.e01() * operand.e2() * self.e0123()
+                + self.e03() * operand.e1() * self.e01()
+                + self.e03() * operand.e2() * self.e02()
+                + self.s() * operand.e012() * self.e0123()
+                + self.e31() * operand.e0() * self.e01()
+                + self.e23() * operand.e0() * self.e02(),
+            self.e03() * operand.e031() * self.e01() + self.e0123() * operand.e031() * self.e02()
+                - self.e0123() * operand.e023() * self.e01()
+                - self.e0123() * operand.e012() * self.e03()
+                - self.e02() * operand.e031() * self.e0123()
+                - self.e02() * operand.e023() * self.e03()
                 - self.e01() * operand.e012() * self.e02()
+                + self.e02() * operand.e0() * self.e02()
+                + self.e03() * operand.e0() * self.e03()
+                - self.e01() * operand.e031() * self.e03()
+                + self.e0123() * operand.e0() * self.e0123()
                 + self.e02() * operand.e012() * self.e01()
                 + self.e03() * operand.e023() * self.e02()
-                + self.e01() * operand.e0() * self.e01()
-                - self.e02() * operand.e031() * self.e0123()
-                + self.e01() * operand.e023() * self.e0123()
-                + self.e03() * operand.e031() * self.e01()
-                - self.e0123() * operand.e012() * self.e03()
-                - self.e02() * operand.e023() * self.e03()
-                + self.e02() * operand.e0() * self.e02()
                 + self.e03() * operand.e012() * self.e0123()
-                + self.e0123() * operand.e0() * self.e0123()
-                - self.e01() * operand.e031() * self.e03(),
-            self.e0123() * operand.e023() * self.e0123()
+                + self.e01() * operand.e023() * self.e0123()
+                + self.e01() * operand.e0() * self.e01(),
+            -(self.e02() * operand.e031() * self.e01())
+                + self.e03() * operand.e012() * self.e01()
+                + self.e01() * operand.e023() * self.e01()
+                + self.e0123() * operand.e0() * self.e01()
+                - self.e02() * operand.e023() * self.e02()
+                - self.e01() * operand.e031() * self.e02()
+                - self.e03() * operand.e023() * self.e03()
                 - self.e01() * operand.e0() * self.e0123()
                 - self.e02() * operand.e0() * self.e03()
-                + self.e0123() * operand.e0() * self.e01()
                 - self.e02() * operand.e012() * self.e0123()
-                + self.e03() * operand.e0() * self.e02()
-                + self.e03() * operand.e012() * self.e01()
                 - self.e0123() * operand.e031() * self.e03()
-                - self.e03() * operand.e023() * self.e03()
-                + self.e01() * operand.e012() * self.e03()
-                - self.e03() * operand.e031() * self.e0123()
-                - self.e01() * operand.e031() * self.e02()
                 - self.e0123() * operand.e012() * self.e02()
-                - self.e02() * operand.e031() * self.e01()
-                + self.e01() * operand.e023() * self.e01()
-                - self.e02() * operand.e023() * self.e02(),
-            -(self.e01() * operand.e031() * self.e01())
-                - self.e0123() * operand.e012() * self.e01()
-                - self.e02() * operand.e012() * self.e03()
-                - self.e03() * operand.e012() * self.e02()
-                + self.e03() * operand.e0() * self.e01()
-                - self.e0123() * operand.e0() * self.e02()
-                - self.e01() * operand.e023() * self.e02()
-                - self.e01() * operand.e012() * self.e0123()
-                + self.e0123() * operand.e031() * self.e0123()
-                + self.e02() * operand.e0() * self.e0123()
+                + self.e01() * operand.e012() * self.e03()
+                + self.e0123() * operand.e023() * self.e0123()
+                - self.e03() * operand.e031() * self.e0123()
+                + self.e03() * operand.e0() * self.e02(),
+            -(self.e03() * operand.e031() * self.e03())
                 + self.e0123() * operand.e023() * self.e03()
                 + self.e02() * operand.e031() * self.e02()
-                - self.e02() * operand.e023() * self.e01()
-                - self.e01() * operand.e0() * self.e03()
+                - self.e03() * operand.e012() * self.e02()
+                - self.e01() * operand.e012() * self.e0123()
                 + self.e03() * operand.e023() * self.e0123()
-                - self.e03() * operand.e031() * self.e03(),
-            self.e02() * operand.e023() * self.e0123() + self.e03() * operand.e012() * self.e03()
-                - self.e02() * operand.e031() * self.e03()
-                + self.e01() * operand.e023() * self.e03()
+                - self.e02() * operand.e023() * self.e01()
+                - self.e02() * operand.e012() * self.e03()
+                + self.e02() * operand.e0() * self.e0123()
+                - self.e01() * operand.e031() * self.e01()
+                - self.e0123() * operand.e0() * self.e02()
+                - self.e0123() * operand.e012() * self.e01()
+                - self.e01() * operand.e023() * self.e02()
+                - self.e01() * operand.e0() * self.e03()
+                + self.e03() * operand.e0() * self.e01()
+                + self.e0123() * operand.e031() * self.e0123(),
+            -(self.e01() * operand.e0() * self.e02())
                 - self.e02() * operand.e012() * self.e02()
-                + self.e0123() * operand.e012() * self.e0123()
-                + self.e0123() * operand.e0() * self.e03()
-                + self.e01() * operand.e031() * self.e0123()
-                + self.e03() * operand.e023() * self.e01()
                 - self.e03() * operand.e031() * self.e02()
+                + self.e03() * operand.e023() * self.e01()
+                + self.e02() * operand.e0() * self.e01()
+                + self.e0123() * operand.e012() * self.e0123()
+                + self.e01() * operand.e023() * self.e03()
+                + self.e01() * operand.e031() * self.e0123()
+                - self.e03() * operand.e0() * self.e0123()
+                + self.e0123() * operand.e023() * self.e02()
+                + self.e03() * operand.e012() * self.e03()
+                + self.e02() * operand.e023() * self.e0123()
+                - self.e02() * operand.e031() * self.e03()
+                + self.e0123() * operand.e0() * self.e03()
+                - self.e01() * operand.e012() * self.e01()
+                + self.e0123() * operand.e031() * self.e01(),
+            self.s() * operand.e023() * self.e01() + self.e03() * operand.e123() * self.e03()
+                - self.s() * operand.e031() * self.e02()
+                - self.e31() * operand.e0() * self.e02()
+                + self.e31() * operand.e031() * self.e0123()
+                + self.e12() * operand.e023() * self.e02()
+                + self.e01() * operand.e123() * self.e01()
+                - self.e03() * operand.e031() * self.e23()
+                + self.e12() * operand.e031() * self.e01()
+                + self.e01() * operand.e3() * self.e02()
+                + self.e03() * operand.e2() * self.e01()
+                - self.e23() * operand.e031() * self.e03()
+                - self.e02() * operand.e3() * self.e01()
+                - self.e03() * operand.e1() * self.e02()
+                + self.e0123() * operand.e1() * self.e01()
+                - self.e31() * operand.e012() * self.e01()
+                - self.e03() * operand.e0() * self.e12()
+                + self.e12() * operand.e0() * self.e03()
+                - self.e02() * operand.e2() * self.e0123()
+                + self.e02() * operand.e0() * self.e31()
+                - self.e01() * operand.e2() * self.e03()
+                - self.e01() * operand.e0() * self.e23()
+                + self.e01() * operand.e023() * self.s()
+                + self.e03() * operand.e023() * self.e31()
+                - self.e03() * operand.e3() * self.e0123()
+                + self.e0123() * operand.e023() * self.e23()
+                + self.e01() * operand.e031() * self.e12()
+                + self.e02() * operand.e023() * self.e12()
+                - self.e01() * operand.e012() * self.e31()
+                + self.e23() * operand.e023() * self.e0123()
+                - self.e01() * operand.e1() * self.e0123()
+                + self.e0123() * operand.e0() * self.s()
+                + self.e0123() * operand.e031() * self.e31()
+                - self.e02() * operand.e031() * self.s()
+                + self.e02() * operand.e123() * self.e02()
+                + self.e0123() * operand.e3() * self.e03()
+                + self.e12() * operand.e012() * self.e0123()
+                - self.s() * operand.e0() * self.e0123()
+                + self.e31() * operand.e023() * self.e03()
+                + self.e0123() * operand.e012() * self.e12()
+                + self.s() * operand.e012() * self.e03()
+                + self.e02() * operand.e1() * self.e03()
+                + self.e0123() * operand.e123() * self.e0123()
+                + self.e03() * operand.e012() * self.s()
+                + self.e23() * operand.e0() * self.e01()
+                - self.e23() * operand.e012() * self.e02()
+                - self.e02() * operand.e012() * self.e23()
+                + self.e0123() * operand.e2() * self.e02(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
+        Line::new(
+            -(self.e02() * operand.e01() * self.e02()) - self.e02() * operand.e03() * self.e0123()
+                + self.e02() * operand.e02() * self.e01()
+                - self.e03() * operand.e01() * self.e03()
+                + self.e03() * operand.e03() * self.e01()
+                + self.e01() * operand.e03() * self.e03()
+                + self.e03() * operand.e02() * self.e0123()
+                + self.e0123() * operand.e01() * self.e0123()
+                + self.e01() * operand.e01() * self.e01()
+                + self.e0123() * operand.e02() * self.e03()
+                + self.e01() * operand.e02() * self.e02()
+                - self.e0123() * operand.e03() * self.e02(),
+            self.e01() * operand.e01() * self.e02() + self.e02() * operand.e02() * self.e02()
+                - self.e0123() * operand.e01() * self.e03()
+                + self.e0123() * operand.e03() * self.e01()
+                + self.e02() * operand.e03() * self.e03()
+                - self.e01() * operand.e02() * self.e01()
+                + self.e0123() * operand.e02() * self.e0123()
+                + self.e01() * operand.e03() * self.e0123()
+                - self.e03() * operand.e01() * self.e0123()
+                + self.e03() * operand.e03() * self.e02()
+                + self.e02() * operand.e01() * self.e01()
+                - self.e03() * operand.e02() * self.e03(),
+            self.e02() * operand.e02() * self.e03()
+                - self.e01() * operand.e03() * self.e01()
+                - self.e02() * operand.e03() * self.e02()
+                + self.e03() * operand.e01() * self.e01()
+                + self.e01() * operand.e01() * self.e03()
+                + self.e03() * operand.e03() * self.e03()
+                + self.e0123() * operand.e01() * self.e02()
+                - self.e0123() * operand.e02() * self.e01()
+                + self.e0123() * operand.e03() * self.e0123()
+                - self.e01() * operand.e02() * self.e0123()
+                + self.e02() * operand.e01() * self.e0123()
+                + self.e03() * operand.e02() * self.e02(),
+            -(self.e02() * operand.e12() * self.e0123()) - self.e03() * operand.e02() * self.s()
+                + self.e03() * operand.e03() * self.e23()
+                - self.e03() * operand.e23() * self.e03()
+                + self.e12() * operand.e02() * self.e0123()
+                - self.e01() * operand.e31() * self.e02()
+                + self.e02() * operand.e02() * self.e23()
+                - self.e0123() * operand.e12() * self.e02()
+                - self.e02() * operand.e23() * self.e02()
+                - self.e03() * operand.e01() * self.e12()
+                - self.s() * operand.e01() * self.e0123()
+                + self.e23() * operand.e03() * self.e03()
+                + self.e01() * operand.e01() * self.e23()
+                + self.e0123() * operand.e02() * self.e12()
+                + self.e12() * operand.e03() * self.e01()
+                + self.e23() * operand.e02() * self.e02()
+                - self.s() * operand.e02() * self.e03()
+                + self.e01() * operand.e23() * self.e01()
+                + self.e0123() * operand.e03() * self.e31()
+                - self.e12() * operand.e01() * self.e03()
+                - self.e02() * operand.e31() * self.e01()
+                + self.e02() * operand.e01() * self.e31()
+                + self.e31() * operand.e01() * self.e02()
+                - self.e03() * operand.e31() * self.e0123()
+                + self.e01() * operand.e03() * self.e12()
+                - self.e0123() * operand.e01() * self.s()
+                - self.e01() * operand.e02() * self.e31()
+                + self.e31() * operand.e03() * self.e0123()
+                + self.e01() * operand.e12() * self.e03()
+                + self.s() * operand.e03() * self.e02()
+                + self.e23() * operand.e01() * self.e01()
+                - self.e31() * operand.e02() * self.e01()
+                + self.e02() * operand.e03() * self.s()
+                + self.e03() * operand.e12() * self.e01()
+                + self.e0123() * operand.e23() * self.e0123()
+                - self.e0123() * operand.e31() * self.e03(),
+            self.e31() * operand.e03() * self.e03() + self.e12() * operand.e01() * self.e0123()
+                - self.e02() * operand.e01() * self.e23()
+                + self.e23() * operand.e02() * self.e01()
+                + self.e03() * operand.e02() * self.e12()
+                + self.e03() * operand.e03() * self.e31()
+                + self.s() * operand.e02() * self.e0123()
+                - self.e03() * operand.e31() * self.e03()
+                - self.e03() * operand.e12() * self.e02()
+                + self.e31() * operand.e01() * self.e01()
+                - self.e01() * operand.e31() * self.e01()
+                + self.e0123() * operand.e31() * self.e0123()
+                + self.e02() * operand.e02() * self.e31()
+                - self.e02() * operand.e23() * self.e01()
+                - self.e0123() * operand.e03() * self.e23()
+                - self.e02() * operand.e12() * self.e03()
+                + self.e0123() * operand.e02() * self.s()
+                + self.e31() * operand.e02() * self.e02()
+                - self.e01() * operand.e23() * self.e02()
+                + self.e02() * operand.e31() * self.e02()
+                + self.e01() * operand.e01() * self.e31()
+                + self.e01() * operand.e03() * self.s()
+                - self.e02() * operand.e03() * self.e12()
+                - self.e03() * operand.e01() * self.s()
+                + self.e03() * operand.e23() * self.e0123()
+                - self.e23() * operand.e03() * self.e0123()
+                + self.e0123() * operand.e01() * self.e12()
+                - self.e12() * operand.e03() * self.e02()
+                + self.e12() * operand.e02() * self.e03()
+                - self.s() * operand.e01() * self.e03()
+                - self.e0123() * operand.e12() * self.e01()
+                - self.e01() * operand.e12() * self.e0123()
+                + self.e01() * operand.e02() * self.e23()
+                + self.s() * operand.e03() * self.e01()
+                - self.e23() * operand.e01() * self.e02()
+                + self.e0123() * operand.e23() * self.e03(),
+            -(self.e02() * operand.e12() * self.e02()) + self.e12() * operand.e03() * self.e03()
+                - self.s() * operand.e03() * self.e0123()
+                + self.e12() * operand.e02() * self.e02()
+                + self.e12() * operand.e01() * self.e01()
+                + self.e03() * operand.e23() * self.e01()
+                - self.e02() * operand.e31() * self.e03()
+                - self.e23() * operand.e02() * self.e0123()
+                + self.e01() * operand.e02() * self.s()
+                + self.e01() * operand.e31() * self.e0123()
+                + self.e02() * operand.e02() * self.e12()
+                + self.e03() * operand.e01() * self.e23()
+                + self.e01() * operand.e01() * self.e12()
+                - self.e0123() * operand.e03() * self.s()
+                + self.e03() * operand.e03() * self.e12()
+                + self.e31() * operand.e03() * self.e02()
+                + self.e01() * operand.e23() * self.e03()
+                + self.e02() * operand.e23() * self.e0123()
+                - self.e31() * operand.e02() * self.e03()
+                + self.e0123() * operand.e23() * self.e02()
+                + self.e02() * operand.e03() * self.e31()
+                - self.e01() * operand.e03() * self.e23()
+                + self.e0123() * operand.e31() * self.e01()
+                - self.e03() * operand.e31() * self.e02()
+                + self.e03() * operand.e12() * self.e03()
+                - self.e23() * operand.e03() * self.e01()
+                - self.e31() * operand.e01() * self.e0123()
+                - self.e03() * operand.e02() * self.e31()
+                + self.s() * operand.e02() * self.e01()
+                - self.s() * operand.e01() * self.e02()
+                - self.e0123() * operand.e01() * self.e31()
+                - self.e0123() * operand.e02() * self.e23()
+                - self.e01() * operand.e12() * self.e01()
+                + self.e0123() * operand.e12() * self.e0123()
+                - self.e02() * operand.e01() * self.s()
+                + self.e23() * operand.e01() * self.e03(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
+        Motor::new_unchecked(
+            self.e23() * operand.e01() * self.e0123()
+                - self.e01() * operand.e01() * self.s()
+                - self.e02() * operand.e01() * self.e12()
+                + self.e12() * operand.e03() * self.e0123()
+                + self.e02() * operand.e03() * self.e23()
+                + self.s() * operand.e01() * self.e01()
+                + self.e03() * operand.e31() * self.e01()
+                - self.e03() * operand.e01() * self.e31()
+                + self.e31() * operand.e0123() * self.e02()
+                + self.e12() * operand.e01() * self.e02()
+                + self.e01() * operand.e23() * self.e0123()
+                - self.e31() * operand.e03() * self.e01()
+                - self.e01() * operand.e0123() * self.e23()
+                - self.e03() * operand.e03() * self.s()
+                + self.s() * operand.e02() * self.e02()
+                + self.s() * operand.e03() * self.e03()
+                - self.e01() * operand.e31() * self.e03()
+                + self.e01() * operand.e03() * self.e31()
+                + self.e02() * operand.s() * self.e02()
+                - self.e02() * operand.e02() * self.s()
+                + self.e0123() * operand.e31() * self.e02()
+                + self.e01() * operand.e02() * self.e12()
+                - self.e0123() * operand.e23() * self.e01()
+                + self.e02() * operand.e12() * self.e01()
+                - self.e23() * operand.e0123() * self.e01()
+                - self.e23() * operand.e03() * self.e02()
+                - self.e12() * operand.e0123() * self.e03()
+                + self.e01() * operand.s() * self.e01()
+                - self.e12() * operand.e02() * self.e01()
+                + self.e31() * operand.e01() * self.e03()
+                + self.e03() * operand.e23() * self.e02()
+                + self.e02() * operand.e0123() * self.e31()
+                + self.s() * operand.e0123() * self.e0123()
+                - self.e02() * operand.e31() * self.e0123()
+                + self.e03() * operand.e12() * self.e0123()
+                + self.e03() * operand.s() * self.e03()
+                - self.e03() * operand.e02() * self.e23()
+                - self.e03() * operand.e0123() * self.e12()
+                - self.e31() * operand.e02() * self.e0123()
+                + self.e0123() * operand.s() * self.e0123()
+                - self.e0123() * operand.e12() * self.e03()
+                - self.e0123() * operand.e01() * self.e23()
+                + self.e0123() * operand.e02() * self.e31()
+                - self.e0123() * operand.e03() * self.e12()
+                + self.e0123() * operand.e0123() * self.s()
+                + self.e23() * operand.e02() * self.e03()
+                - self.e01() * operand.e12() * self.e02()
+                - self.e02() * operand.e23() * self.e03(),
+            self.e02() * operand.e03() * self.s() - self.e31() * operand.e0123() * self.e03()
+                + self.e12() * operand.e02() * self.e0123()
+                - self.e02() * operand.e23() * self.e02()
+                + self.e01() * operand.e03() * self.e12()
+                - self.e01() * operand.e0123() * self.s()
+                + self.s() * operand.e0123() * self.e01()
+                + self.e02() * operand.e0123() * self.e12()
+                - self.e12() * operand.e0123() * self.e02()
+                + self.e0123() * operand.s() * self.e01()
+                - self.e31() * operand.e02() * self.e01()
+                + self.e31() * operand.e03() * self.e0123()
+                + self.e01() * operand.e01() * self.e23()
+                - self.e03() * operand.e02() * self.s()
+                + self.e02() * operand.e02() * self.e23()
+                - self.e0123() * operand.e0123() * self.e23()
+                - self.e03() * operand.e01() * self.e12()
+                - self.e0123() * operand.e01() * self.s()
+                - self.e0123() * operand.e12() * self.e02()
+                - self.e03() * operand.e23() * self.e03()
+                + self.e31() * operand.e01() * self.e02()
+                + self.e23() * operand.e03() * self.e03()
+                - self.s() * operand.e02() * self.e03()
+                + self.e23() * operand.e01() * self.e01()
+                - self.s() * operand.e01() * self.e0123()
+                - self.e12() * operand.e01() * self.e03()
+                + self.s() * operand.e03() * self.e02()
+                + self.e12() * operand.e03() * self.e01()
+                + self.e01() * operand.e23() * self.e01()
+                - self.e01() * operand.s() * self.e0123()
+                - self.e02() * operand.s() * self.e03()
+                - self.e03() * operand.e31() * self.e0123()
+                + self.e23() * operand.e02() * self.e02()
+                + self.e03() * operand.e03() * self.e23()
+                + self.e03() * operand.e12() * self.e01()
+                + self.e0123() * operand.e23() * self.e0123()
+                + self.e0123() * operand.e02() * self.e12()
+                + self.e02() * operand.e01() * self.e31()
+                + self.e03() * operand.s() * self.e02()
+                + self.e03() * operand.e0123() * self.e31()
+                + self.e0123() * operand.e03() * self.e31()
+                + self.e01() * operand.e12() * self.e03()
+                - self.e02() * operand.e12() * self.e0123()
+                - self.e01() * operand.e02() * self.e31()
+                + self.e23() * operand.e0123() * self.e0123()
+                - self.e01() * operand.e31() * self.e02()
+                - self.e02() * operand.e31() * self.e01()
+                - self.e0123() * operand.e31() * self.e03(),
+            -(self.e03() * operand.e01() * self.s())
+                + self.e31() * operand.e0123() * self.e0123()
+                + self.e23() * operand.e02() * self.e01()
+                + self.e02() * operand.e02() * self.e31()
+                - self.e02() * operand.e03() * self.e12()
+                + self.e03() * operand.s() * self.e01()
+                + self.e0123() * operand.e31() * self.e0123()
+                + self.e0123() * operand.e01() * self.e12()
+                + self.e12() * operand.e01() * self.e0123()
+                + self.e03() * operand.e23() * self.e0123()
+                - self.e0123() * operand.e12() * self.e01()
+                + self.e01() * operand.e03() * self.s()
+                - self.e12() * operand.e03() * self.e02()
+                + self.e03() * operand.e02() * self.e12()
+                - self.e03() * operand.e31() * self.e03()
+                - self.e01() * operand.s() * self.e03()
+                - self.e0123() * operand.e03() * self.e23()
+                + self.s() * operand.e03() * self.e01()
+                - self.e0123() * operand.s() * self.e02()
+                - self.e02() * operand.e01() * self.e23()
+                + self.e31() * operand.e01() * self.e01()
+                - self.e01() * operand.e23() * self.e02()
+                + self.e23() * operand.e0123() * self.e03()
+                - self.e03() * operand.e12() * self.e02()
+                - self.e0123() * operand.e0123() * self.e31()
+                - self.e02() * operand.e12() * self.e03()
+                + self.e01() * operand.e02() * self.e23()
+                + self.e0123() * operand.e02() * self.s()
+                + self.e0123() * operand.e23() * self.e03()
+                + self.e01() * operand.e0123() * self.e12()
+                - self.e02() * operand.e23() * self.e01()
+                + self.e02() * operand.e31() * self.e02()
+                + self.e01() * operand.e01() * self.e31()
+                - self.s() * operand.e01() * self.e03()
+                - self.e03() * operand.e0123() * self.e23()
+                + self.e02() * operand.e0123() * self.s()
+                + self.s() * operand.e02() * self.e0123()
+                - self.s() * operand.e0123() * self.e02()
+                + self.e31() * operand.e02() * self.e02()
+                - self.e12() * operand.e0123() * self.e01()
+                - self.e23() * operand.e03() * self.e0123()
+                - self.e01() * operand.e31() * self.e01()
+                - self.e01() * operand.e12() * self.e0123()
+                + self.e02() * operand.s() * self.e0123()
+                - self.e23() * operand.e01() * self.e02()
+                + self.e31() * operand.e03() * self.e03()
+                + self.e12() * operand.e02() * self.e03()
+                + self.e03() * operand.e03() * self.e31(),
+            -(self.e02() * operand.e01() * self.s())
+                + self.e12() * operand.e01() * self.e01()
+                + self.e03() * operand.e23() * self.e01()
+                - self.e03() * operand.e0123() * self.s()
+                + self.e0123() * operand.e23() * self.e02()
+                + self.s() * operand.e0123() * self.e03()
+                + self.e23() * operand.e01() * self.e03()
+                - self.e31() * operand.e01() * self.e0123()
+                + self.e12() * operand.e0123() * self.e0123()
+                + self.e02() * operand.s() * self.e01()
+                + self.e31() * operand.e03() * self.e02()
+                - self.e03() * operand.e02() * self.e31()
+                + self.e0123() * operand.s() * self.e03()
+                + self.e01() * operand.e31() * self.e0123()
+                + self.e0123() * operand.e31() * self.e01()
+                - self.e0123() * operand.e02() * self.e23()
+                - self.e01() * operand.e03() * self.e23()
+                - self.e01() * operand.s() * self.e02()
+                + self.e01() * operand.e02() * self.s()
+                - self.e23() * operand.e03() * self.e01()
+                - self.e01() * operand.e12() * self.e01()
+                + self.e12() * operand.e03() * self.e03()
+                - self.e01() * operand.e0123() * self.e31()
+                - self.s() * operand.e01() * self.e02()
+                + self.e23() * operand.e0123() * self.e02()
+                + self.e02() * operand.e02() * self.e12()
+                - self.s() * operand.e03() * self.e0123()
+                + self.e01() * operand.e01() * self.e12()
+                + self.e02() * operand.e03() * self.e31()
+                + self.e03() * operand.e01() * self.e23()
+                + self.e02() * operand.e23() * self.e0123()
+                + self.e03() * operand.e12() * self.e03()
+                + self.e01() * operand.e23() * self.e03()
+                + self.e12() * operand.e02() * self.e02()
+                + self.e03() * operand.e03() * self.e12()
+                - self.e02() * operand.e12() * self.e02()
+                - self.e03() * operand.s() * self.e0123()
+                + self.e0123() * operand.e12() * self.e0123()
+                - self.e02() * operand.e0123() * self.e23()
+                - self.e31() * operand.e02() * self.e03()
+                + self.e31() * operand.e0123() * self.e01()
+                + self.s() * operand.e02() * self.e01()
+                - self.e0123() * operand.e01() * self.e31()
+                - self.e0123() * operand.e03() * self.s()
+                - self.e03() * operand.e31() * self.e02()
+                - self.e23() * operand.e02() * self.e0123()
+                - self.e0123() * operand.e0123() * self.e12()
+                - self.e02() * operand.e31() * self.e03(),
+            -(self.e0123() * operand.e03() * self.e02())
+                - self.e0123() * operand.e0123() * self.e01()
+                + self.e01() * operand.e03() * self.e03()
+                + self.e01() * operand.e02() * self.e02()
+                - self.e03() * operand.e01() * self.e03()
+                + self.e02() * operand.e0123() * self.e03()
+                + self.e03() * operand.e03() * self.e01()
+                + self.e01() * operand.e01() * self.e01()
+                + self.e03() * operand.e02() * self.e0123()
+                - self.e02() * operand.e01() * self.e02()
+                - self.e02() * operand.e03() * self.e0123()
+                + self.e01() * operand.e0123() * self.e0123()
+                + self.e0123() * operand.e02() * self.e03()
+                + self.e0123() * operand.e01() * self.e0123()
+                + self.e02() * operand.e02() * self.e01()
+                - self.e03() * operand.e0123() * self.e02(),
+            -(self.e01() * operand.e02() * self.e01())
+                + self.e02() * operand.e02() * self.e02()
+                + self.e03() * operand.e03() * self.e02()
+                - self.e03() * operand.e02() * self.e03()
+                + self.e03() * operand.e0123() * self.e01()
+                - self.e0123() * operand.e01() * self.e03()
+                + self.e02() * operand.e0123() * self.e0123()
+                - self.e01() * operand.e0123() * self.e03()
+                + self.e02() * operand.e03() * self.e03()
+                + self.e01() * operand.e03() * self.e0123()
+                + self.e0123() * operand.e02() * self.e0123()
+                - self.e03() * operand.e01() * self.e0123()
+                + self.e02() * operand.e01() * self.e01()
+                + self.e0123() * operand.e03() * self.e01()
+                - self.e0123() * operand.e0123() * self.e02()
+                + self.e01() * operand.e01() * self.e02(),
+            self.e02() * operand.e01() * self.e0123() - self.e02() * operand.e03() * self.e02()
+                + self.e03() * operand.e0123() * self.e0123()
+                + self.e02() * operand.e02() * self.e03()
+                + self.e03() * operand.e03() * self.e03()
+                + self.e01() * operand.e01() * self.e03()
+                + self.e0123() * operand.e03() * self.e0123()
+                - self.e0123() * operand.e0123() * self.e03()
+                - self.e0123() * operand.e02() * self.e01()
+                + self.e03() * operand.e02() * self.e02()
+                - self.e01() * operand.e03() * self.e01()
+                + self.e03() * operand.e01() * self.e01()
+                - self.e01() * operand.e02() * self.e0123()
+                + self.e01() * operand.e0123() * self.e02()
+                + self.e0123() * operand.e01() * self.e02()
+                - self.e02() * operand.e0123() * self.e01(),
+            -(self.e02() * operand.e03() * self.e01())
+                + self.e0123() * operand.e01() * self.e01()
+                + self.e01() * operand.e03() * self.e02()
+                - self.e03() * operand.e03() * self.e0123()
+                - self.e01() * operand.e01() * self.e0123()
+                + self.e02() * operand.e01() * self.e03()
+                + self.e03() * operand.e02() * self.e01()
+                + self.e01() * operand.e0123() * self.e01()
+                + self.e0123() * operand.e03() * self.e03()
+                - self.e03() * operand.e01() * self.e02()
+                + self.e0123() * operand.e0123() * self.e0123()
+                + self.e02() * operand.e0123() * self.e02()
+                + self.e03() * operand.e0123() * self.e03()
+                + self.e0123() * operand.e02() * self.e02()
+                - self.e02() * operand.e02() * self.e0123()
+                - self.e01() * operand.e02() * self.e03(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Plane<T>> for Motor<T> {
+    type Output = Plane<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Plane<T>) -> Plane<T> {
+        Plane::new(
+            self.e0123() * operand.e023() * self.e0123()
+                - self.e0123() * operand.e012() * self.e02()
+                - self.e03() * operand.e031() * self.e0123()
+                + self.e03() * operand.e012() * self.e01()
+                + self.e01() * operand.e012() * self.e03()
+                - self.e0123() * operand.e031() * self.e03()
+                - self.e02() * operand.e031() * self.e01()
+                - self.e02() * operand.e012() * self.e0123()
+                - self.e03() * operand.e023() * self.e03()
+                - self.e02() * operand.e023() * self.e02()
+                + self.e01() * operand.e023() * self.e01()
+                - self.e01() * operand.e031() * self.e02(),
+            -(self.e01() * operand.e012() * self.e0123())
+                - self.e01() * operand.e031() * self.e01()
+                - self.e01() * operand.e023() * self.e02()
+                - self.e02() * operand.e023() * self.e01()
+                - self.e03() * operand.e031() * self.e03()
+                - self.e03() * operand.e012() * self.e02()
+                + self.e02() * operand.e031() * self.e02()
+                + self.e03() * operand.e023() * self.e0123()
+                - self.e02() * operand.e012() * self.e03()
+                - self.e0123() * operand.e012() * self.e01()
+                + self.e0123() * operand.e023() * self.e03()
+                + self.e0123() * operand.e031() * self.e0123(),
+            -(self.e02() * operand.e031() * self.e03())
                 + self.e0123() * operand.e031() * self.e01()
                 + self.e0123() * operand.e023() * self.e02()
+                + self.e02() * operand.e023() * self.e0123()
+                + self.e0123() * operand.e012() * self.e0123()
+                - self.e03() * operand.e031() * self.e02()
+                + self.e03() * operand.e012() * self.e03()
+                + self.e01() * operand.e023() * self.e03()
+                + self.e01() * operand.e031() * self.e0123()
                 - self.e01() * operand.e012() * self.e01()
-                + self.e02() * operand.e0() * self.e01()
-                - self.e03() * operand.e0() * self.e0123()
-                - self.e01() * operand.e0() * self.e02(),
-            self.e0123() * operand.e0() * self.s()
-                - self.e23() * operand.e031() * self.e03()
+                - self.e02() * operand.e012() * self.e02()
+                + self.e03() * operand.e023() * self.e01(),
+            self.s() * operand.e012() * self.e03() + self.e23() * operand.e023() * self.e0123()
                 - self.e23() * operand.e012() * self.e02()
-                + self.e03() * operand.e123() * self.e03()
-                + self.e12() * operand.e012() * self.e0123()
-                + self.e03() * operand.e023() * self.e31()
-                + self.e03() * operand.e012() * self.s()
-                - self.e03() * operand.e3() * self.e0123()
-                - self.e02() * operand.e012() * self.e23()
-                + self.e02() * operand.e0() * self.e31()
-                + self.e0123() * operand.e3() * self.e03()
-                + self.s() * operand.e023() * self.e01()
-                + self.s() * operand.e012() * self.e03()
-                + self.e23() * operand.e023() * self.e0123()
                 + self.e31() * operand.e023() * self.e03()
-                - self.e03() * operand.e1() * self.e02()
-                - self.e01() * operand.e012() * self.e31()
-                - self.e03() * operand.e031() * self.e23()
-                - self.e01() * operand.e1() * self.e0123()
-                + self.e12() * operand.e031() * self.e01()
-                + self.e0123() * operand.e1() * self.e01()
-                - self.s() * operand.e0() * self.e0123()
-                - self.e31() * operand.e012() * self.e01()
-                + self.e01() * operand.e3() * self.e02()
-                + self.e0123() * operand.e012() * self.e12()
-                - self.e01() * operand.e2() * self.e03()
-                + self.e23() * operand.e0() * self.e01()
-                + self.e02() * operand.e1() * self.e03()
-                - self.s() * operand.e031() * self.e02()
+                + self.e12() * operand.e012() * self.e0123()
                 + self.e12() * operand.e023() * self.e02()
-                - self.e01() * operand.e0() * self.e23()
-                + self.e0123() * operand.e123() * self.e0123()
-                + self.e01() * operand.e031() * self.e12()
-                + self.e31() * operand.e031() * self.e0123()
-                - self.e02() * operand.e2() * self.e0123()
-                - self.e02() * operand.e3() * self.e01()
-                - self.e02() * operand.e031() * self.s()
-                + self.e0123() * operand.e2() * self.e02()
-                + self.e0123() * operand.e023() * self.e23()
-                - self.e03() * operand.e0() * self.e12()
-                - self.e31() * operand.e0() * self.e02()
-                + self.e12() * operand.e0() * self.e03()
-                + self.e03() * operand.e2() * self.e01()
-                + self.e01() * operand.e023() * self.s()
+                - self.e02() * operand.e012() * self.e23()
                 + self.e0123() * operand.e031() * self.e31()
-                + self.e02() * operand.e123() * self.e02()
                 + self.e01() * operand.e123() * self.e01()
-                + self.e02() * operand.e023() * self.e12(),
+                + self.e02() * operand.e023() * self.e12()
+                + self.e0123() * operand.e012() * self.e12()
+                + self.e02() * operand.e123() * self.e02()
+                + self.e0123() * operand.e123() * self.e0123()
+                - self.e01() * operand.e012() * self.e31()
+                - self.s() * operand.e031() * self.e02()
+                - self.e02() * operand.e031() * self.s()
+                - self.e23() * operand.e031() * self.e03()
+                + self.e03() * operand.e023() * self.e31()
+                - self.e03() * operand.e031() * self.e23()
+                + self.e12() * operand.e031() * self.e01()
+                + self.e03() * operand.e012() * self.s()
+                + self.e03() * operand.e123() * self.e03()
+                + self.e0123() * operand.e023() * self.e23()
+                + self.e01() * operand.e023() * self.s()
+                - self.e31() * operand.e012() * self.e01()
+                + self.e01() * operand.e031() * self.e12()
+                + self.s() * operand.e023() * self.e01()
+                + self.e31() * operand.e031() * self.e0123(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
+        Point::new(
+            self.e03() * operand.e3() * self.e01() + self.e02() * operand.e2() * self.e01()
+                - self.e03() * operand.e0() * self.e31()
+                - self.e02() * operand.e1() * self.e02()
+                + self.e03() * operand.e2() * self.e0123()
+                - self.e02() * operand.e3() * self.e0123()
+                + self.e0123() * operand.e1() * self.e0123()
+                + self.e01() * operand.e1() * self.e01()
+                + self.e0123() * operand.e2() * self.e03()
+                + self.e01() * operand.e3() * self.e03()
+                + self.e01() * operand.e2() * self.e02()
+                - self.e02() * operand.e0() * self.e12()
+                + self.s() * operand.e0() * self.e01()
+                - self.e12() * operand.e0() * self.e02()
+                - self.e0123() * operand.e3() * self.e02()
+                + self.e23() * operand.e0() * self.e0123()
+                + self.e01() * operand.e0() * self.s()
+                - self.e03() * operand.e1() * self.e03()
+                + self.e0123() * operand.e0() * self.e23()
+                - self.e31() * operand.e0() * self.e03(),
+            -(self.e01() * operand.e2() * self.e01())
+                + self.e02() * operand.e2() * self.e02()
+                + self.e02() * operand.e0() * self.s()
+                - self.e03() * operand.e2() * self.e03()
+                + self.e02() * operand.e1() * self.e01()
+                - self.e23() * operand.e0() * self.e03()
+                - self.e03() * operand.e1() * self.e0123()
+                + self.e0123() * operand.e3() * self.e01()
+                - self.e03() * operand.e0() * self.e23()
+                + self.e12() * operand.e0() * self.e01()
+                + self.e01() * operand.e1() * self.e02()
+                + self.s() * operand.e0() * self.e02()
+                - self.e0123() * operand.e1() * self.e03()
+                + self.e0123() * operand.e2() * self.e0123()
+                - self.e0123() * operand.e0() * self.e31()
+                + self.e01() * operand.e3() * self.e0123()
+                + self.e03() * operand.e3() * self.e02()
+                + self.e01() * operand.e0() * self.e12()
+                + self.e02() * operand.e3() * self.e03()
+                - self.e31() * operand.e0() * self.e0123(),
+            self.e0123() * operand.e3() * self.e0123()
+                + self.e03() * operand.e2() * self.e02()
+                + self.e31() * operand.e0() * self.e01()
+                - self.e01() * operand.e2() * self.e0123()
+                + self.e03() * operand.e1() * self.e01()
+                + self.e03() * operand.e3() * self.e03()
+                - self.e0123() * operand.e2() * self.e01()
+                + self.e01() * operand.e0() * self.e31()
+                + self.e0123() * operand.e0() * self.e12()
+                - self.e02() * operand.e3() * self.e02()
+                + self.e02() * operand.e0() * self.e23()
+                + self.e02() * operand.e2() * self.e03()
+                + self.e23() * operand.e0() * self.e02()
+                + self.e03() * operand.e0() * self.s()
+                + self.s() * operand.e0() * self.e03()
+                - self.e01() * operand.e3() * self.e01()
+                + self.e12() * operand.e0() * self.e0123()
+                + self.e01() * operand.e1() * self.e03()
+                + self.e0123() * operand.e1() * self.e02()
+                + self.e02() * operand.e1() * self.e0123(),
+            self.e01() * operand.e0() * self.e01()
+                + self.e02() * operand.e0() * self.e02()
+                + self.e03() * operand.e0() * self.e03()
+                + self.e0123() * operand.e0() * self.e0123(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Quadvector<T>> for Motor<T> {
+    type Output = Quadvector<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Quadvector<T>) -> Quadvector<T> {
+        Quadvector::new(
+            self.e01() * operand.e0123() * self.e01()
+                + self.e03() * operand.e0123() * self.e03()
+                + self.e0123() * operand.e0123() * self.e0123()
+                + self.e02() * operand.e0123() * self.e02(),
+        )
+    }
+}
+impl<T: Float> Antisandwich<Scalar<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
+        Scalar::new(
+            self.e01() * operand.s() * self.e01()
+                + self.e03() * operand.s() * self.e03()
+                + self.e02() * operand.s() * self.e02()
+                + self.e0123() * operand.s() * self.e0123(),
         )
     }
 }
@@ -5290,7 +5387,7 @@ impl<T: Float> BulkContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Line<T>) -> Scalar<T> {
-        Scalar::new(rhs.e23() * self.e23() + rhs.e31() * self.e31() + rhs.e12() * self.e12())
+        Scalar::new(self.e23() * rhs.e23() + self.e31() * rhs.e31() + self.e12() * rhs.e12())
     }
 }
 impl<T: Float> BulkContract<Point<T>> for Line<T> {
@@ -5298,10 +5395,10 @@ impl<T: Float> BulkContract<Point<T>> for Line<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            rhs.e2() * self.e12() + rhs.e3() * self.e31(),
-            -(rhs.e1() * self.e12()) + rhs.e3() * self.e23(),
-            -(rhs.e1() * self.e31()) + -(rhs.e2() * self.e23()),
-            -(rhs.e1() * self.e01()) + -(rhs.e2() * self.e02()) + -(rhs.e3() * self.e03()),
+            self.e31() * rhs.e3() + self.e12() * rhs.e2(),
+            self.e23() * rhs.e3() + -(self.e12() * rhs.e1()),
+            -(self.e23() * rhs.e2()) + -(self.e31() * rhs.e1()),
+            -(self.e01() * rhs.e1()) + -(self.e02() * rhs.e2()) + -(self.e03() * rhs.e3()),
         )
     }
 }
@@ -5310,12 +5407,12 @@ impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new(
-            rhs.s() * self.e01(),
-            rhs.s() * self.e02(),
-            rhs.s() * self.e03(),
-            rhs.s() * self.e23(),
-            rhs.s() * self.e31(),
-            rhs.s() * self.e12(),
+            self.e01() * rhs.s(),
+            self.e02() * rhs.s(),
+            self.e03() * rhs.s(),
+            self.e23() * rhs.s(),
+            self.e31() * rhs.s(),
+            self.e12() * rhs.s(),
         )
     }
 }
@@ -5388,9 +5485,9 @@ impl<T: Float> BulkContract<Line<T>> for Quadvector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            rhs.e23() * self.e0123(),
-            -(rhs.e31() * self.e0123()),
-            rhs.e12() * self.e0123(),
+            self.e0123() * rhs.e23(),
+            -(self.e0123() * rhs.e31()),
+            self.e0123() * rhs.e12(),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -5405,7 +5502,7 @@ impl<T: Float> BulkContract<Plane<T>> for Quadvector<T> {
             T::zero(),
             T::zero(),
             T::zero(),
-            -(rhs.e123() * self.e0123()),
+            -(self.e0123() * rhs.e123()),
         )
     }
 }
@@ -5414,9 +5511,9 @@ impl<T: Float> BulkContract<Point<T>> for Quadvector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Point<T>) -> Plane<T> {
         Plane::new(
-            -(rhs.e1() * self.e0123()),
-            rhs.e2() * self.e0123(),
-            -(rhs.e3() * self.e0123()),
+            -(self.e0123() * rhs.e1()),
+            self.e0123() * rhs.e2(),
+            -(self.e0123() * rhs.e3()),
             T::zero(),
         )
     }
@@ -5425,21 +5522,21 @@ impl<T: Float> BulkContract<Scalar<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.s() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.s())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
+        Scalar::new(self.s() * rhs.s())
     }
 }
 impl<T: Float> WeightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Line<T>) -> Scalar<T> {
-        Scalar::new(rhs.e01() * self.e01() + rhs.e02() * self.e02() + rhs.e03() * self.e03())
+        Scalar::new(self.e01() * rhs.e01() + self.e02() * rhs.e02() + self.e03() * rhs.e03())
     }
 }
 impl<T: Float> WeightContract<Point<T>> for Line<T> {
@@ -5447,9 +5544,9 @@ impl<T: Float> WeightContract<Point<T>> for Line<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Point<T>) -> Point<T> {
         Point::new(
-            rhs.e0() * self.e01(),
-            rhs.e0() * self.e02(),
-            rhs.e0() * self.e03(),
+            self.e01() * rhs.e0(),
+            self.e02() * rhs.e0(),
+            self.e03() * rhs.e0(),
             T::zero(),
         )
     }
@@ -5502,9 +5599,9 @@ impl<T: Float> WeightContract<Line<T>> for Quadvector<T> {
             T::zero(),
             T::zero(),
             T::zero(),
-            rhs.e01() * self.e0123(),
-            -(rhs.e02() * self.e0123()),
-            rhs.e03() * self.e0123(),
+            self.e0123() * rhs.e01(),
+            -(self.e0123() * rhs.e02()),
+            self.e0123() * rhs.e03(),
         )
     }
 }
@@ -5513,9 +5610,9 @@ impl<T: Float> WeightContract<Plane<T>> for Quadvector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Plane<T>) -> Point<T> {
         Point::new(
-            rhs.e023() * self.e0123(),
-            -(rhs.e031() * self.e0123()),
-            rhs.e012() * self.e0123(),
+            self.e0123() * rhs.e023(),
+            -(self.e0123() * rhs.e031()),
+            self.e0123() * rhs.e012(),
             T::zero(),
         )
     }
@@ -5524,21 +5621,21 @@ impl<T: Float> WeightContract<Point<T>> for Quadvector<T> {
     type Output = Plane<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Point<T>) -> Plane<T> {
-        Plane::new(T::zero(), T::zero(), T::zero(), rhs.e0() * self.e0123())
+        Plane::new(T::zero(), T::zero(), T::zero(), self.e0123() * rhs.e0())
     }
 }
 impl<T: Float> WeightContract<Quadvector<T>> for Quadvector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Quadvector<T>) -> Scalar<T> {
-        Scalar::new(rhs.e0123() * self.e0123())
+        Scalar::new(self.e0123() * rhs.e0123())
     }
 }
 impl<T: Float> BulkExpand<Line<T>> for Line<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Line<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e23() * self.e23() + rhs.e31() * self.e31() + rhs.e12() * self.e12())
+        Quadvector::new(self.e23() * rhs.e23() + self.e31() * rhs.e31() + self.e12() * rhs.e12())
     }
 }
 impl<T: Float> BulkExpand<Plane<T>> for Line<T> {
@@ -5546,9 +5643,9 @@ impl<T: Float> BulkExpand<Plane<T>> for Line<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Plane<T>) -> Plane<T> {
         Plane::new(
-            rhs.e123() * self.e23(),
-            rhs.e123() * self.e31(),
-            rhs.e123() * self.e12(),
+            self.e23() * rhs.e123(),
+            self.e31() * rhs.e123(),
+            self.e12() * rhs.e123(),
             T::zero(),
         )
     }
@@ -5598,9 +5695,9 @@ impl<T: Float> BulkExpand<Line<T>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Line<T>) -> Line<T> {
         Line::new(
-            rhs.e23() * self.s(),
-            -(rhs.e31() * self.s()),
-            rhs.e12() * self.s(),
+            self.s() * rhs.e23(),
+            -(self.s() * rhs.e31()),
+            self.s() * rhs.e12(),
             T::zero(),
             T::zero(),
             T::zero(),
@@ -5611,7 +5708,7 @@ impl<T: Float> BulkExpand<Plane<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Plane<T>) -> Point<T> {
-        Point::new(T::zero(), T::zero(), T::zero(), rhs.e123() * self.s())
+        Point::new(T::zero(), T::zero(), T::zero(), self.s() * rhs.e123())
     }
 }
 impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
@@ -5619,9 +5716,9 @@ impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Point<T>) -> Plane<T> {
         Plane::new(
-            rhs.e1() * self.s(),
-            -(rhs.e2() * self.s()),
-            rhs.e3() * self.s(),
+            self.s() * rhs.e1(),
+            -(self.s() * rhs.e2()),
+            self.s() * rhs.e3(),
             T::zero(),
         )
     }
@@ -5630,14 +5727,14 @@ impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.s() * self.s())
+        Quadvector::new(self.s() * rhs.s())
     }
 }
 impl<T: Float> WeightExpand<Line<T>> for Line<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Line<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e01() * self.e01() + rhs.e02() * self.e02() + rhs.e03() * self.e03())
+        Quadvector::new(self.e01() * rhs.e01() + self.e02() * rhs.e02() + self.e03() * rhs.e03())
     }
 }
 impl<T: Float> WeightExpand<Plane<T>> for Line<T> {
@@ -5645,10 +5742,10 @@ impl<T: Float> WeightExpand<Plane<T>> for Line<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Plane<T>) -> Plane<T> {
         Plane::new(
-            rhs.e031() * self.e03() + rhs.e012() * self.e02(),
-            -(rhs.e023() * self.e03()) + rhs.e012() * self.e01(),
-            -(rhs.e023() * self.e02()) + -(rhs.e031() * self.e01()),
-            -(rhs.e023() * self.e23()) + -(rhs.e031() * self.e31()) + -(rhs.e012() * self.e12()),
+            self.e02() * rhs.e012() + self.e03() * rhs.e031(),
+            self.e01() * rhs.e012() + -(self.e03() * rhs.e023()),
+            -(self.e01() * rhs.e031()) + -(self.e02() * rhs.e023()),
+            -(self.e23() * rhs.e023()) + -(self.e31() * rhs.e031()) + -(self.e12() * rhs.e012()),
         )
     }
 }
@@ -5657,12 +5754,12 @@ impl<T: Float> WeightExpand<Quadvector<T>> for Line<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Quadvector<T>) -> Line<T> {
         Line::new(
-            rhs.e0123() * self.e01(),
-            rhs.e0123() * self.e02(),
-            rhs.e0123() * self.e03(),
-            rhs.e0123() * self.e23(),
-            rhs.e0123() * self.e31(),
-            rhs.e0123() * self.e12(),
+            self.e01() * rhs.e0123(),
+            self.e02() * rhs.e0123(),
+            self.e03() * rhs.e0123(),
+            self.e23() * rhs.e0123(),
+            self.e31() * rhs.e0123(),
+            self.e12() * rhs.e0123(),
         )
     }
 }
@@ -5736,7 +5833,7 @@ impl<T: Float> WeightExpand<Quadvector<T>> for Quadvector<T> {
     type Output = Quadvector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Quadvector<T>) -> Quadvector<T> {
-        Quadvector::new(rhs.e0123() * self.e0123())
+        Quadvector::new(self.e0123() * rhs.e0123())
     }
 }
 impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
@@ -5747,9 +5844,9 @@ impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
             T::zero(),
             T::zero(),
             T::zero(),
-            rhs.e01() * self.s(),
-            -(rhs.e02() * self.s()),
-            rhs.e03() * self.s(),
+            self.s() * rhs.e01(),
+            -(self.s() * rhs.e02()),
+            self.s() * rhs.e03(),
         )
     }
 }
@@ -5758,9 +5855,9 @@ impl<T: Float> WeightExpand<Plane<T>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Plane<T>) -> Point<T> {
         Point::new(
-            -(rhs.e023() * self.s()),
-            rhs.e031() * self.s(),
-            -(rhs.e012() * self.s()),
+            -(self.s() * rhs.e023()),
+            self.s() * rhs.e031(),
+            -(self.s() * rhs.e012()),
             T::zero(),
         )
     }
@@ -5769,14 +5866,14 @@ impl<T: Float> WeightExpand<Point<T>> for Scalar<T> {
     type Output = Plane<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Point<T>) -> Plane<T> {
-        Plane::new(T::zero(), T::zero(), T::zero(), -(rhs.e0() * self.s()))
+        Plane::new(T::zero(), T::zero(), T::zero(), -(self.s() * rhs.e0()))
     }
 }
 impl<T: Float> WeightExpand<Quadvector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Quadvector<T>) -> Scalar<T> {
-        Scalar::new(rhs.e0123() * self.s())
+        Scalar::new(self.s() * rhs.e0123())
     }
 }
 impl<T: Float> Dot<Flector<T>> for Flector<T> {

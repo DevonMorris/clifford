@@ -374,7 +374,11 @@ impl<'a> TypeGenerator<'a> {
     }
 
     /// Generates the `new_checked()` constructor that validates the constraint.
-    fn generate_new_checked(&self, ty: &TypeSpec, solution: &crate::symbolic::SolveResult) -> TokenStream {
+    fn generate_new_checked(
+        &self,
+        ty: &TypeSpec,
+        solution: &crate::symbolic::SolveResult,
+    ) -> TokenStream {
         // Get all field params
         let params: Vec<TokenStream> = ty
             .fields
@@ -425,7 +429,11 @@ impl<'a> TypeGenerator<'a> {
     }
 
     /// Generates the `from_components()` constructor that computes the constrained field.
-    fn generate_from_components(&self, ty: &TypeSpec, solution: &crate::symbolic::SolveResult) -> TokenStream {
+    fn generate_from_components(
+        &self,
+        ty: &TypeSpec,
+        solution: &crate::symbolic::SolveResult,
+    ) -> TokenStream {
         // Find the solve_for field
         let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
 

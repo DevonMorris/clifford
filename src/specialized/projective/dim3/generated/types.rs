@@ -54,6 +54,45 @@ impl<T: Float> Flector<T> {
     pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
         Self::new(e1, e2, e3, e0, e023, e031, e012, e123)
     }
+    #[doc = r" Creates a new element, validating the geometric constraint."]
+    #[doc = r""]
+    #[doc = r" Returns `Err` if the constraint is violated beyond the given tolerance."]
+    #[inline]
+    pub fn new_checked(
+        e1: T,
+        e2: T,
+        e3: T,
+        e0: T,
+        e023: T,
+        e031: T,
+        e012: T,
+        e123: T,
+        tolerance: T,
+    ) -> Result<Self, &'static str> {
+        let expected = (e1 * e023 - e2 * e031 + e3 * e012) / (e0);
+        let actual = e123;
+        if (actual - expected).abs() > tolerance {
+            return Err("Flector constraint");
+        }
+        Ok(Self::new(e1, e2, e3, e0, e023, e031, e012, e123))
+    }
+    #[doc = "Creates a Flector from 7 independent components, computing `e123`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
+    #[inline]
+    pub fn from_components(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T) -> Option<Self> {
+        if (e0).abs() < T::epsilon() {
+            return None;
+        }
+        Some(Self::new(
+            e1,
+            e2,
+            e3,
+            e0,
+            e023,
+            e031,
+            e012,
+            (e1 * e023 - e2 * e031 + e3 * e012) / (e0),
+        ))
+    }
     #[doc = "Returns the `e1` coefficient."]
     #[inline]
     pub fn e1(&self) -> T {
@@ -239,6 +278,41 @@ impl<T: Float> Line<T> {
     #[inline]
     pub fn new_unchecked(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
         Self::new(e01, e02, e03, e23, e31, e12)
+    }
+    #[doc = r" Creates a new element, validating the geometric constraint."]
+    #[doc = r""]
+    #[doc = r" Returns `Err` if the constraint is violated beyond the given tolerance."]
+    #[inline]
+    pub fn new_checked(
+        e01: T,
+        e02: T,
+        e03: T,
+        e23: T,
+        e31: T,
+        e12: T,
+        tolerance: T,
+    ) -> Result<Self, &'static str> {
+        let expected = (-e01 * e23 + e02 * e31) / (e03);
+        let actual = e12;
+        if (actual - expected).abs() > tolerance {
+            return Err("Line constraint");
+        }
+        Ok(Self::new(e01, e02, e03, e23, e31, e12))
+    }
+    #[doc = "Creates a Line from 5 independent components, computing `e12`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
+    #[inline]
+    pub fn from_components(e01: T, e02: T, e03: T, e23: T, e31: T) -> Option<Self> {
+        if (e03).abs() < T::epsilon() {
+            return None;
+        }
+        Some(Self::new(
+            e01,
+            e02,
+            e03,
+            e23,
+            e31,
+            (-e01 * e23 + e02 * e31) / (e03),
+        ))
     }
     #[doc = "Returns the `e01` coefficient."]
     #[inline]
@@ -487,6 +561,45 @@ impl<T: Float> Motor<T> {
     #[inline]
     pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
         Self::new(s, e23, e31, e12, e01, e02, e03, e0123)
+    }
+    #[doc = r" Creates a new element, validating the geometric constraint."]
+    #[doc = r""]
+    #[doc = r" Returns `Err` if the constraint is violated beyond the given tolerance."]
+    #[inline]
+    pub fn new_checked(
+        s: T,
+        e23: T,
+        e31: T,
+        e12: T,
+        e01: T,
+        e02: T,
+        e03: T,
+        e0123: T,
+        tolerance: T,
+    ) -> Result<Self, &'static str> {
+        let expected = (e01 * e23 - e02 * e31 + e03 * e12) / (s);
+        let actual = e0123;
+        if (actual - expected).abs() > tolerance {
+            return Err("Motor constraint");
+        }
+        Ok(Self::new(s, e23, e31, e12, e01, e02, e03, e0123))
+    }
+    #[doc = "Creates a Motor from 7 independent components, computing `e0123`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
+    #[inline]
+    pub fn from_components(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T) -> Option<Self> {
+        if (s).abs() < T::epsilon() {
+            return None;
+        }
+        Some(Self::new(
+            s,
+            e23,
+            e31,
+            e12,
+            e01,
+            e02,
+            e03,
+            (e01 * e23 - e02 * e31 + e03 * e12) / (s),
+        ))
     }
     #[doc = "Returns the `s` coefficient."]
     #[inline]
