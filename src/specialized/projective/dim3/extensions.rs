@@ -259,12 +259,12 @@ impl<T: Float> Line<T> {
         // Position 2: e14=e01 = dir_x, Position 3: e23 = moment_x
         // Position 4: e24=e02 = dir_y, Position 5: e34=e03 = dir_z
         Self::new_unchecked(
-            moment.z(),     // position 0: moment_z (e12)
-            -moment.y(),    // position 1: moment_y (e13=e31, negated for sign)
-            direction.x(),  // position 2: dir_x (e14=e01)
-            moment.x(),     // position 3: moment_x (e23)
-            direction.y(),  // position 4: dir_y (e24=e02)
-            direction.z(),  // position 5: dir_z (e34=e03)
+            moment.z(),    // position 0: moment_z (e12)
+            -moment.y(),   // position 1: moment_y (e13=e31, negated for sign)
+            direction.x(), // position 2: dir_x (e14=e01)
+            moment.x(),    // position 3: moment_x (e23)
+            direction.y(), // position 4: dir_y (e24=e02)
+            direction.z(), // position 5: dir_z (e34=e03)
         )
     }
 
@@ -274,12 +274,12 @@ impl<T: Float> Line<T> {
         // Direction = (1, 0, 0), Moment = (0, 0, 0)
         // Field order: [moment_z, moment_y, dir_x, moment_x, dir_y, dir_z]
         Self::new_unchecked(
-            T::zero(),  // moment_z
-            T::zero(),  // moment_y
-            T::one(),   // dir_x = 1
-            T::zero(),  // moment_x
-            T::zero(),  // dir_y
-            T::zero(),  // dir_z
+            T::zero(), // moment_z
+            T::zero(), // moment_y
+            T::one(),  // dir_x = 1
+            T::zero(), // moment_x
+            T::zero(), // dir_y
+            T::zero(), // dir_z
         )
     }
 
@@ -288,12 +288,12 @@ impl<T: Float> Line<T> {
     pub fn y_axis() -> Self {
         // Direction = (0, 1, 0), Moment = (0, 0, 0)
         Self::new_unchecked(
-            T::zero(),  // moment_z
-            T::zero(),  // moment_y
-            T::zero(),  // dir_x
-            T::zero(),  // moment_x
-            T::one(),   // dir_y = 1
-            T::zero(),  // dir_z
+            T::zero(), // moment_z
+            T::zero(), // moment_y
+            T::zero(), // dir_x
+            T::zero(), // moment_x
+            T::one(),  // dir_y = 1
+            T::zero(), // dir_z
         )
     }
 
@@ -302,12 +302,12 @@ impl<T: Float> Line<T> {
     pub fn z_axis() -> Self {
         // Direction = (0, 0, 1), Moment = (0, 0, 0)
         Self::new_unchecked(
-            T::zero(),  // moment_z
-            T::zero(),  // moment_y
-            T::zero(),  // dir_x
-            T::zero(),  // moment_x
-            T::zero(),  // dir_y
-            T::one(),   // dir_z = 1
+            T::zero(), // moment_z
+            T::zero(), // moment_y
+            T::zero(), // dir_x
+            T::zero(), // moment_x
+            T::zero(), // dir_y
+            T::one(),  // dir_z = 1
         )
     }
 
