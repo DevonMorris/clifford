@@ -27,7 +27,24 @@ allow = [
     "Unicode-3.0",  # Required by unicode-ident
     "BSL-1.0",      # Boost Software License (used by rerun dependencies)
     "CDLA-Permissive-2.0",  # Community Data License Agreement (used by rerun dependencies)
+    "LicenseRef-Symbolica", # Proprietary, build-time only (see clarify below)
 ]
+
+# Exceptions for build-time only dependencies (not linked into final binary)
+# These dependencies are only used by clifford-codegen to generate source code.
+# The generated code is not a derivative work of these libraries.
+exceptions = [
+    # symbolica's dependencies use LGPL, but only run at build time
+    { crate = "gmp-mpfr-sys", allow = ["LGPL-3.0-or-later"] },
+    { crate = "rug", allow = ["LGPL-3.0-or-later"] },
+]
+
+# symbolica has a proprietary license but is only used at build time for symbolic
+# computation to generate source code - the output is independent of symbolica
+[[licenses.clarify]]
+crate = "symbolica"
+expression = "LicenseRef-Symbolica"
+license-files = []
 
 [bans]
 # Warn on multiple versions of same crate
