@@ -117,7 +117,23 @@ For each algebra, generates:
 - Added `generate_mod_file()` helper for module declarations
 - Configured all four algebras: euclidean2, euclidean3, projective2, projective3
 
+### Code Formatting
+- Added `rustfmt` call after writing each generated file
+- Uses `--edition 2024` flag for consistent formatting
+- Gracefully handles rustfmt failures (logs warning, doesn't fail build)
+
+### License Exceptions (deny.toml)
+- Added `LicenseRef-Symbolica` to allowed licenses with clarification
+- Added LGPL-3.0 exceptions for `gmp-mpfr-sys` and `rug`
+- These are build-time only dependencies; generated code is not a derivative work
+
+### Git Configuration
+- Generated directories added to `.gitignore`
+- Generated files removed from git tracking
+- Users must build to generate code (enforces regeneration)
+
 ### Verification
 - Clean build succeeds (~32s including codegen compilation)
 - Incremental builds succeed (~2s)
 - All tests pass with regenerated code
+- `cargo deny check` passes with license exceptions

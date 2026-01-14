@@ -6,7 +6,9 @@
 use std::path::Path;
 
 use clifford_codegen::algebra::{Algebra, ProductTable};
-use clifford_codegen::codegen::{ConversionsGenerator, TraitsGenerator, TypeGenerator, format_tokens};
+use clifford_codegen::codegen::{
+    ConversionsGenerator, TraitsGenerator, TypeGenerator, format_tokens,
+};
 use clifford_codegen::spec::parse_spec;
 
 /// Algebra configurations: (name, toml_path, output_dir)
@@ -44,9 +46,10 @@ fn generate_algebra(name: &str, toml_path: &str, output_dir: &str) {
     eprintln!("Regenerating {}...", name);
 
     // Parse specification
-    let spec_content =
-        std::fs::read_to_string(toml_path).unwrap_or_else(|e| panic!("Failed to read {}: {}", toml_path, e));
-    let spec = parse_spec(&spec_content).unwrap_or_else(|e| panic!("Failed to parse {}: {}", toml_path, e));
+    let spec_content = std::fs::read_to_string(toml_path)
+        .unwrap_or_else(|e| panic!("Failed to read {}: {}", toml_path, e));
+    let spec = parse_spec(&spec_content)
+        .unwrap_or_else(|e| panic!("Failed to parse {}: {}", toml_path, e));
 
     // Build algebra and product table
     let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
@@ -59,7 +62,8 @@ fn generate_algebra(name: &str, toml_path: &str, output_dir: &str) {
 
     // Create output directory
     let output_path = Path::new(output_dir);
-    std::fs::create_dir_all(output_path).unwrap_or_else(|e| panic!("Failed to create {}: {}", output_dir, e));
+    std::fs::create_dir_all(output_path)
+        .unwrap_or_else(|e| panic!("Failed to create {}: {}", output_dir, e));
 
     // Generate and write mod.rs
     let mod_content = generate_mod_file(&spec.name);
@@ -67,7 +71,10 @@ fn generate_algebra(name: &str, toml_path: &str, output_dir: &str) {
 
     // Generate and write types.rs
     let types_content = type_gen.generate_types_file();
-    write_file(&output_path.join("types.rs"), &format_tokens(&types_content));
+    write_file(
+        &output_path.join("types.rs"),
+        &format_tokens(&types_content),
+    );
 
     // Generate and write conversions.rs
     let conversions_content = conversions_gen.generate_conversions_file();
@@ -97,7 +104,25 @@ fn generate_mod_file(name: &str) -> proc_macro2::TokenStream {
     }
 }
 
-/// Writes content to a file.
+/// Writes content to a file and formats it with rustfmt.
 fn write_file(path: &Path, content: &str) {
-    std::fs::write(path, content).unwrap_or_else(|e| panic!("Failed to write {}: {}", path.display(), e));
+    std::fs::write(path, content)
+        .unwrap_or_else(|e| panic!("Failed to write {}: {}", path.display(), e));
+
+    // Format the generated file with rustfmt
+    let status = std::process::Command::new("rustfmt")
+        .arg("--edition")
+        .arg("2024")
+        .arg(path)
+        .status();
+
+    match status {
+        Ok(s) if s.success() => {}
+        Ok(s) => eprintln!(
+            "rustfmt failed for {}: exit code {:?}",
+            path.display(),
+            s.code()
+        ),
+        Err(e) => eprintln!("Failed to run rustfmt for {}: {}", path.display(), e),
+    }
 }
