@@ -773,58 +773,51 @@ impl<T: Float> Motor<T> {
     /// so they compose correctly under antiproduct.
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
-        // Translation mapping (determined empirically from antisandwich behavior):
-        // - Position 1 (bz = e12) controls z-translation
-        // - Position 2 (by = e13) controls y-translation (negated)
-        // - Position 3 (tx = e14) controls x-translation
-        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
+        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
+        // Translation uses tz, ty, tx (positions 1-3)
         Self::new_unchecked(
             T::zero(),  // s
-            dz * half,  // bz (e12) → z-translation
-            -dy * half, // by (e13) → y-translation (negated)
-            dx * half,  // tx (e14) → x-translation
-            T::zero(),  // bx (e23)
-            T::zero(),  // ty (e24)
-            T::zero(),  // tz (e34)
-            T::one(),   // ps (e0123 identity)
+            dz * half,  // tz - z-translation
+            -dy * half, // ty - y-translation (negated due to e13 sign)
+            dx * half,  // tx - x-translation
+            T::zero(),  // rx
+            T::zero(),  // ry
+            T::zero(),  // rz
+            T::one(),   // ps (identity)
         )
     }
 
     /// Pure rotation around x-axis through origin.
-    ///
-    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
-        // Rotation around x uses position 4 (bx = e23)
+        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
+        // Rotation around x uses rx (position 4)
         Self::new_unchecked(
             T::zero(),   // s
-            T::zero(),   // bz (e12)
-            T::zero(),   // by (e13)
-            T::zero(),   // tx (e14)
-            -half.sin(), // bx (e23) - rotation around x-axis
-            T::zero(),   // ty (e24)
-            T::zero(),   // tz (e34)
-            half.cos(),  // ps (e0123) = cos(θ/2)
+            T::zero(),   // tz
+            T::zero(),   // ty
+            T::zero(),   // tx
+            -half.sin(), // rx - rotation around x-axis
+            T::zero(),   // ry
+            T::zero(),   // rz
+            half.cos(),  // ps = cos(θ/2)
         )
     }
 
     /// Pure rotation around y-axis through origin.
-    ///
-    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
-        // Rotation around y uses position 5 (ty = e24)
+        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
+        // Rotation around y uses ry (position 5)
         Self::new_unchecked(
             T::zero(),   // s
-            T::zero(),   // bz (e12)
-            T::zero(),   // by (e13)
-            T::zero(),   // tx (e14)
-            T::zero(),   // bx (e23)
-            -half.sin(), // ty (e24) - rotation around y-axis
-            T::zero(),   // tz (e34)
-            half.cos(),  // ps (e0123) = cos(θ/2)
+            T::zero(),   // tz
+            T::zero(),   // ty
+            T::zero(),   // tx
+            T::zero(),   // rx
+            -half.sin(), // ry - rotation around y-axis
+            T::zero(),   // rz
+            half.cos(),  // ps = cos(θ/2)
         )
     }
 
@@ -905,12 +898,12 @@ impl<T: Float> Motor<T> {
         // new_unchecked signature: (s, bz, by, tx, bx, ty, tz, ps)
         Self::new_unchecked(
             rev.s() / wn_sq,
-            rev.bz() / wn_sq,
-            rev.by() / wn_sq,
-            rev.tx() / wn_sq,
-            rev.bx() / wn_sq,
-            rev.ty() / wn_sq,
             rev.tz() / wn_sq,
+            rev.ty() / wn_sq,
+            rev.tx() / wn_sq,
+            rev.rx() / wn_sq,
+            rev.ry() / wn_sq,
+            rev.rz() / wn_sq,
             rev.ps() / wn_sq,
         )
     }
@@ -928,12 +921,12 @@ impl<T: Float> Motor<T> {
         // new_unchecked signature: (s, bz, by, tx, bx, ty, tz, ps)
         Self::new_unchecked(
             self.s() / bn,
-            self.bz() / bn,
-            self.by() / bn,
-            self.tx() / bn,
-            self.bx() / bn,
-            self.ty() / bn,
             self.tz() / bn,
+            self.ty() / bn,
+            self.tx() / bn,
+            self.rx() / bn,
+            self.ry() / bn,
+            self.rz() / bn,
             self.ps() / bn,
         )
     }
@@ -955,7 +948,7 @@ impl<T: Float> Motor<T> {
     /// See: <https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_constraint>
     #[inline]
     pub fn geometric_constraint_residual(&self) -> T {
-        self.s() * self.ps() + self.bx() * self.tx() + self.by() * self.ty() + self.bz() * self.tz()
+        self.s() * self.ps() + self.rx() * self.tx() + self.ty() * self.ry() + self.tz() * self.rz()
     }
 
     /// Check if motor satisfies the geometric constraint.
@@ -985,7 +978,7 @@ impl<T: Float> Motor<T> {
         // Inverse of from_translation encoding:
         // from_translation sets: bx = dz/2, by = -dy/2, bz = dx/2
         // So: dx = 2*bz, dy = -2*by, dz = 2*bx
-        EuclideanVector::new(T::TWO * self.bz(), -T::TWO * self.by(), T::TWO * self.bx())
+        EuclideanVector::new(T::TWO * self.tz(), -T::TWO * self.ty(), T::TWO * self.rx())
     }
 }
 
@@ -1104,12 +1097,12 @@ mod tests {
         eprintln!(
             "Identity motor: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             m.s(),
-            m.bx(),
-            m.by(),
-            m.bz(),
-            m.tx(),
+            m.rx(),
             m.ty(),
             m.tz(),
+            m.tx(),
+            m.ry(),
+            m.rz(),
             m.ps()
         );
         eprintln!("Input point: ({}, {}, {}, {})", p.x(), p.y(), p.z(), p.w());
@@ -1158,12 +1151,12 @@ mod tests {
         eprintln!(
             "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.bx(),
-            t.by(),
-            t.bz(),
-            t.tx(),
+            t.rx(),
             t.ty(),
             t.tz(),
+            t.tx(),
+            t.ry(),
+            t.rz(),
             t.ps()
         );
         eprintln!(
@@ -1219,12 +1212,12 @@ mod tests {
         eprintln!(
             "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.bx(),
-            t.by(),
-            t.bz(),
-            t.tx(),
+            t.rx(),
             t.ty(),
             t.tz(),
+            t.tx(),
+            t.ry(),
+            t.rz(),
             t.ps()
         );
         eprintln!(
@@ -1274,12 +1267,12 @@ mod tests {
         eprintln!(
             "Motor T: s={}, bx={}, by={}, bz={}, tx={}, ty={}, tz={}, ps={}",
             t.s(),
-            t.bx(),
-            t.by(),
-            t.bz(),
-            t.tx(),
+            t.rx(),
             t.ty(),
             t.tz(),
+            t.tx(),
+            t.ry(),
+            t.rz(),
             t.ps()
         );
 

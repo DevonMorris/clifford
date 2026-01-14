@@ -179,9 +179,9 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
         // Normalize rotation quaternion to ensure valid unit quaternion
         // Rotation uses (bx, ty, tz, ps) which are positions 4, 5, 6, 7
         // (originally named e01, e02, e03, e0123 in the old TOML)
-        let rot_norm_sq = motor.bx() * motor.bx()
-            + motor.ty() * motor.ty()
-            + motor.tz() * motor.tz()
+        let rot_norm_sq = motor.rx() * motor.rx()
+            + motor.ry() * motor.ry()
+            + motor.rz() * motor.rz()
             + motor.ps() * motor.ps();
         let rot_norm = num_traits::Float::sqrt(rot_norm_sq);
 
@@ -192,9 +192,9 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
         let rotation = if rot_norm > T::epsilon() {
             na::UnitQuaternion::from_quaternion(na::Quaternion::new(
                 motor.ps() / rot_norm,
-                -motor.bx() / rot_norm,
-                -motor.ty() / rot_norm,
-                -motor.tz() / rot_norm,
+                -motor.rx() / rot_norm,
+                -motor.ry() / rot_norm,
+                -motor.rz() / rot_norm,
             ))
         } else {
             na::UnitQuaternion::identity()
@@ -267,23 +267,23 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
             eprintln!(
                 "  Rotor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
                 rotor.s(),
-                rotor.bx(),
-                rotor.by(),
-                rotor.bz(),
-                rotor.tx(),
+                rotor.rx(),
                 rotor.ty(),
                 rotor.tz(),
+                rotor.tx(),
+                rotor.ry(),
+                rotor.rz(),
                 rotor.ps()
             );
             eprintln!(
                 "  Translator: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
                 translator.s(),
-                translator.bx(),
-                translator.by(),
-                translator.bz(),
-                translator.tx(),
+                translator.rx(),
                 translator.ty(),
                 translator.tz(),
+                translator.tx(),
+                translator.ry(),
+                translator.rz(),
                 translator.ps()
             );
         }
@@ -359,11 +359,11 @@ mod tests {
 
             // Debug output
             eprintln!("Original motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-                m.s(), m.bx(), m.by(), m.bz(), m.tx(), m.ty(), m.tz(), m.ps());
+                m.s(), m.rx(), m.ty(), m.tz(), m.tx(), m.ry(), m.rz(), m.ps());
             eprintln!("Isometry: rotation={:?}, translation={:?}",
                 iso.rotation.quaternion(), iso.translation.vector);
             eprintln!("Back motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-                back.s(), back.bx(), back.by(), back.bz(), back.tx(), back.ty(), back.tz(), back.ps());
+                back.s(), back.rx(), back.ty(), back.tz(), back.tx(), back.ry(), back.rz(), back.ps());
 
             // Test with several points to ensure transformation equivalence
             let test_points = [
@@ -725,12 +725,12 @@ mod tests {
         println!(
             "Converted motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             motor.s(),
-            motor.bx(),
-            motor.by(),
-            motor.bz(),
-            motor.tx(),
+            motor.rx(),
             motor.ty(),
             motor.tz(),
+            motor.tx(),
+            motor.ry(),
+            motor.rz(),
             motor.ps()
         );
 

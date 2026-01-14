@@ -84,10 +84,13 @@ fields = ["ps"]
 [types.Motor]
 grades = [0, 2, 4]
 description = "3D rigid transformation (rotation + translation)"
-# Grade 0: scalar
-# Grade 2 lexicographic: e12 (bz), e13=e31 (by), e14=e01 (tx), e23 (bx), e24=e02 (ty), e34=e03 (tz)
-# Grade 4: pseudoscalar
-fields = ["s", "bz", "by", "tx", "bx", "ty", "tz", "ps"]
+# Field names reflect what each component DOES, not which blade it is:
+# - s: scalar coupling term
+# - tz, ty, tx: translation components (e12 controls z, e13 controls y, e14 controls x)
+# - rx, ry, rz: rotation components (e23 controls x-rot, e24 controls y-rot, e34 controls z-rot)
+# - ps: pseudoscalar (identity for composition)
+# Lexicographic order: [s, e12, e13, e14, e23, e24, e34, e0123]
+fields = ["s", "tz", "ty", "tx", "rx", "ry", "rz", "ps"]
 
 [types.Flector]
 grades = [1, 3]
