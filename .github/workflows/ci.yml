@@ -63,6 +63,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      # Build first to generate algebra code (gitignored, created by build.rs)
+      - run: cargo build
       - run: cargo fmt --all -- --check
 
   clippy:
