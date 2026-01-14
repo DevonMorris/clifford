@@ -860,13 +860,16 @@ name = "clifford"
 version = "0.1.0"
 dependencies = [
  "approx",
+ "clifford-codegen",
  "criterion",
  "generic-array 1.3.5",
  "nalgebra 0.32.6",
  "nalgebra 0.33.2",
  "nalgebra 0.34.1",
  "num-traits",
+ "proc-macro2",
  "proptest",
+ "quote",
  "rerun",
  "serde",
  "serde_json",
