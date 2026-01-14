@@ -72,11 +72,6 @@ grades = [0, 2]
 
 [types.Entity_1_3]
 grades = [1, 3]
-
-[options]
-generate_serde = true
-generate_arbitrary = true
-generate_nalgebra = true
 ```
 
 ### Discovered Entities
@@ -207,16 +202,6 @@ Vector_Bivector = "Trivector"
 Vector_Vector = "T"  # Returns the scalar type parameter
 ```
 
-### 6. Configure Options
-
-```toml
-[options]
-generate_serde = true      # Add serde derives
-generate_arbitrary = true  # Add proptest Arbitrary impls
-generate_nalgebra = true   # Add nalgebra conversions
-generate_tests = true      # Generate property-based tests
-```
-
 ## Step 3: Generate Rust Code
 
 Use the `generate` command to produce Rust code from your specification:
@@ -337,11 +322,6 @@ Vector_Vector = "Bivector"
 
 [products.scalar]
 Vector_Vector = "T"
-
-[options]
-generate_serde = true
-generate_arbitrary = true
-generate_nalgebra = true
 ```
 
 ## Other Commands

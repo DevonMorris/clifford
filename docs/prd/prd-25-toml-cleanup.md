@@ -1,6 +1,6 @@
 # PRD-25: Clean Up TOML Codegen Options
 
-**Status**: Draft
+**Status**: Done
 **Goal**: Remove unused options from algebra TOML specs and simplify defaults
 
 ## Background

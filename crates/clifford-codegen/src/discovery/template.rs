@@ -82,12 +82,6 @@ pub fn generate_toml_template(
         write_entity_section(entity, output)?;
     }
 
-    // Options section
-    writeln!(output, "[options]")?;
-    writeln!(output, "generate_serde = true")?;
-    writeln!(output, "generate_arbitrary = true")?;
-    writeln!(output, "generate_nalgebra = true")?;
-
     Ok(())
 }
 
@@ -250,6 +244,6 @@ mod tests {
         assert!(toml_str.contains("[algebra]"));
         assert!(toml_str.contains("[signature]"));
         assert!(toml_str.contains("[types."));
-        assert!(toml_str.contains("[options]"));
+        // Options section is omitted since defaults are correct
     }
 }
