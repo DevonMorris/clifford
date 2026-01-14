@@ -39,9 +39,6 @@
 //!
 //! // Translation
 //! let translation = Motor::from_translation(1.0, 2.0);
-//!
-//! // Compose motors
-//! let combined = rotor.compose(&translation);
 //! ```
 
 // Generated code (do not edit manually)

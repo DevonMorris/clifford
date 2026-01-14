@@ -70,25 +70,6 @@ impl<T: Float> Vector<T> {
         self.wedge(other).dual()
     }
 
-    /// Geometric product of two vectors: `ab = a·b + a∧b`.
-    ///
-    /// Returns a rotor (scalar + bivector).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim3::Vector;
-    ///
-    /// let a = Vector::new(1.0, 0.0, 0.0);
-    /// let b = Vector::new(0.0, 1.0, 0.0);
-    /// let ab = a.geometric(b);
-    /// assert_eq!(ab.s(), 0.0);  // perpendicular, no dot product
-    /// ```
-    #[inline]
-    pub fn geometric(self, other: Self) -> Rotor<T> {
-        products::geometric_vector_vector(&self, &other)
-    }
-
     /// Returns a normalized (unit length) version of this vector.
     ///
     /// This method divides by the norm without checking for zero.
@@ -292,7 +273,7 @@ impl<T: Float> Rotor<T> {
     /// The result applies `self` first, then `other`.
     #[inline]
     pub fn compose(&self, other: Self) -> Self {
-        products::geometric_rotor_rotor(&other, self)
+        other * *self
     }
 
     /// Spherical linear interpolation between two rotors.

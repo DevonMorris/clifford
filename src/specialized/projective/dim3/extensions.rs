@@ -856,15 +856,6 @@ impl<T: Float> Motor<T> {
         )
     }
 
-    /// Compose motors: self then other.
-    ///
-    /// The result applies `self` first, then `other`.
-    /// In PGA with the antisandwich transformation, motor composition uses
-    /// the geometric antiproduct (∨) to properly combine transformations.
-    pub fn compose(&self, other: &Motor<T>) -> Motor<T> {
-        products::antigeometric_motor_motor(self, other)
-    }
-
     /// Inverse motor.
     ///
     /// Uses the weight norm squared (rotation part: e01² + e02² + e03² + e0123²)
@@ -961,40 +952,6 @@ impl<T: Float> Motor<T> {
             T::TWO * self.e23(),
             -T::TWO * self.e31(),
             T::TWO * self.e12(),
-        )
-    }
-
-    /// Commutator: [A, B] = AB - BA.
-    #[inline]
-    pub fn commutator(&self, other: &Motor<T>) -> Motor<T> {
-        let ab = products::geometric_motor_motor(self, other);
-        let ba = products::geometric_motor_motor(other, self);
-        Motor::new_unchecked(
-            ab.s() - ba.s(),
-            ab.e23() - ba.e23(),
-            ab.e31() - ba.e31(),
-            ab.e12() - ba.e12(),
-            ab.e01() - ba.e01(),
-            ab.e02() - ba.e02(),
-            ab.e03() - ba.e03(),
-            ab.e0123() - ba.e0123(),
-        )
-    }
-
-    /// Anticommutator: {A, B} = AB + BA.
-    #[inline]
-    pub fn anticommutator(&self, other: &Motor<T>) -> Motor<T> {
-        let ab = products::geometric_motor_motor(self, other);
-        let ba = products::geometric_motor_motor(other, self);
-        Motor::new_unchecked(
-            ab.s() + ba.s(),
-            ab.e23() + ba.e23(),
-            ab.e31() + ba.e31(),
-            ab.e12() + ba.e12(),
-            ab.e01() + ba.e01(),
-            ab.e02() + ba.e02(),
-            ab.e03() + ba.e03(),
-            ab.e0123() + ba.e0123(),
         )
     }
 
@@ -1130,16 +1087,6 @@ impl<T: Float> Flector<T> {
             self.e012() / bn,
             self.e123() / bn,
         )
-    }
-
-    /// Compose two flectors (result is a motor).
-    ///
-    /// Since flector transformations use the antisandwich product, composition
-    /// uses the geometric antiproduct to properly combine transformations.
-    /// Two reflections compose to give a rotation around their intersection axis.
-    #[inline]
-    pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
-        products::antigeometric_flector_flector(self, other)
     }
 
     /// Transform a point using the antisandwich product.
@@ -1505,61 +1452,6 @@ mod tests {
         assert!(relative_eq!(
             result.z(),
             3.0,
-            epsilon = RELATIVE_EQ_EPS,
-            max_relative = RELATIVE_EQ_EPS
-        ));
-    }
-
-    #[test]
-    fn flector_compose_two_reflections_gives_rotation() {
-        // Composing two reflections through planes that meet at an angle gives a rotation
-        // by twice that angle around their intersection axis
-
-        let f1 = Flector::<f64>::reflect_xz(); // YZ normal, reflects y
-        let f2 = Flector::<f64>::reflect_yz(); // XZ normal, reflects x
-
-        // F1 * F2 should give a motor (rotation)
-        let m = f1.compose(&f2);
-
-        // Apply the motor to a point
-        let p = Point::<f64>::from_cartesian(1.0, 0.0, 0.0);
-        let result = m.transform_point(&p);
-
-        eprintln!(
-            "Composed motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-            m.s(),
-            m.e23(),
-            m.e31(),
-            m.e12(),
-            m.e01(),
-            m.e02(),
-            m.e03(),
-            m.e0123()
-        );
-        eprintln!(
-            "Transformed point: ({}, {}, {})",
-            result.x(),
-            result.y(),
-            result.z()
-        );
-
-        // This should be a 180-degree rotation around the z-axis
-        // (1, 0, 0) -> (-1, 0, 0)
-        assert!(relative_eq!(
-            result.x(),
-            -1.0,
-            epsilon = RELATIVE_EQ_EPS,
-            max_relative = RELATIVE_EQ_EPS
-        ));
-        assert!(relative_eq!(
-            result.y(),
-            0.0,
-            epsilon = RELATIVE_EQ_EPS,
-            max_relative = RELATIVE_EQ_EPS
-        ));
-        assert!(relative_eq!(
-            result.z(),
-            0.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));

@@ -43,6 +43,10 @@ pub enum ProductType {
     BulkExpansion,
     /// Weight expansion: `a ∧ b☆` (wedge with weight dual)
     WeightExpansion,
+    /// Dot product: `a • b` (metric inner, same-grade only, returns scalar)
+    Dot,
+    /// Antidot product: `a ⊚ b` (metric antiproduct inner, same-antigrade only, returns scalar)
+    Antidot,
 }
 
 impl ProductType {
@@ -62,6 +66,8 @@ impl ProductType {
             ProductType::WeightContraction,
             ProductType::BulkExpansion,
             ProductType::WeightExpansion,
+            ProductType::Dot,
+            ProductType::Antidot,
         ]
     }
 
@@ -81,6 +87,8 @@ impl ProductType {
             ProductType::WeightContraction => "weight_contraction",
             ProductType::BulkExpansion => "bulk_expansion",
             ProductType::WeightExpansion => "weight_expansion",
+            ProductType::Dot => "dot",
+            ProductType::Antidot => "antidot",
         }
     }
 }
@@ -207,6 +215,21 @@ pub fn infer_output_grades(
                         output_set.insert(result);
                     }
                 }
+                ProductType::Dot => {
+                    // Dot product: only same-grade elements produce non-zero
+                    // Returns scalar (grade 0)
+                    if ga == gb {
+                        output_set.insert(0);
+                    }
+                }
+                ProductType::Antidot => {
+                    // Antidot product: only same-antigrade elements produce non-zero
+                    // Since antigrade = dim - grade, same-antigrade means same-grade
+                    // Returns scalar (grade 0)
+                    if ga == gb {
+                        output_set.insert(0);
+                    }
+                }
             }
         }
     }
@@ -277,6 +300,14 @@ pub fn infer_output_grades_precise(
                     let (sign, result) = table.weight_expansion(a, b);
                     (sign, grade(result))
                 }
+                ProductType::Dot => {
+                    let (sign, result) = table.dot(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Antidot => {
+                    let (sign, result) = table.antidot(a, b);
+                    (sign, grade(result))
+                }
                 _ => {
                     // All other products derive from the geometric product
                     let (sign, result) = table.geometric(a, b);
@@ -332,6 +363,14 @@ pub fn infer_output_grades_precise(
                 | ProductType::WeightExpansion => {
                     // Already computed correctly by specialized table methods
                     true
+                }
+                ProductType::Dot => {
+                    // Dot product: only same-grade, only scalar output
+                    ga == gb && result_grade == 0
+                }
+                ProductType::Antidot => {
+                    // Antidot product: only same-antigrade (same-grade), only scalar output
+                    ga == gb && result_grade == 0
                 }
             };
 

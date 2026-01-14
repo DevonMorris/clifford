@@ -8,7 +8,10 @@ use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, ProductTable};
 use crate::spec::{AlgebraSpec, TypeSpec};
-use crate::symbolic::{ConstraintDeriver, ConstraintSolver, SolutionType};
+use crate::symbolic::{
+    AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
+    ProductKind as SymbolicProductKind, SolutionType, SymbolicProduct,
+};
 
 /// Generates trait implementations for algebra types.
 ///
@@ -141,9 +144,9 @@ impl<'a> TraitsGenerator<'a> {
         quote! {
             use crate::scalar::Float;
             use crate::ops::{
-                Wedge, Antiwedge, GeometricProduct, Inner, LeftContract, RightContract,
+                Wedge, Antiwedge, Inner, LeftContract, RightContract,
                 Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
-                BulkExpand, WeightExpand, Antigeometric,
+                BulkExpand, WeightExpand, Dot, Antidot,
                 Reverse, Antireverse, RightComplement,
             };
             use super::types::{#(#type_names),*};
@@ -359,21 +362,31 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates geometric product (Type * Other -> Output) from a product entry.
+    ///
+    /// The formula is computed inline using symbolic simplification, rather than
+    /// calling a separate function. This avoids generating geometric_* functions
+    /// which are not type-safe in general.
     fn generate_geometric_mul_from_entry(
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
         output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
+        _entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "geometric_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
+
+        // Compute the formula using symbolic machinery
+        let field_exprs =
+            self.compute_product_expressions(a, b, output, SymbolicProductKind::Geometric);
+
+        // Generate constructor call with the computed expressions
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new(#(#field_exprs),*) }
+        };
 
         quote! {
             impl<T: Float> Mul<#b_name<T>> for #a_name<T> {
@@ -381,10 +394,51 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn mul(self, rhs: #b_name<T>) -> #out_name<T> {
-                    #fn_name(&self, &rhs)
+                    #constructor_call
                 }
             }
         }
+    }
+
+    /// Computes product expressions using symbolic simplification.
+    ///
+    /// This is used by Mul operators to inline the formula instead of calling
+    /// a separate function.
+    fn compute_product_expressions(
+        &self,
+        type_a: &TypeSpec,
+        type_b: &TypeSpec,
+        output_type: &TypeSpec,
+        kind: SymbolicProductKind,
+    ) -> Vec<TokenStream> {
+        let symbolic_product = SymbolicProduct::new(self.algebra);
+        let expr_simplifier = ExpressionSimplifier::new();
+
+        // Create constraint simplifier for input type constraints
+        let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["self", "rhs"]);
+
+        // Create symbolic field variables
+        let a_symbols = symbolic_product.create_field_symbols(type_a, "self");
+        let b_symbols = symbolic_product.create_field_symbols(type_b, "rhs");
+
+        // Compute symbolic product
+        let symbolic_fields =
+            symbolic_product.compute(type_a, type_b, output_type, kind, &a_symbols, &b_symbols);
+
+        // Create converter for Rust code generation
+        let converter = AtomToRust::new(&[type_a, type_b], &["self", "rhs"]);
+
+        // Apply constraint substitution, simplify, and convert each field expression
+        symbolic_fields
+            .iter()
+            .map(|field| {
+                // First apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
+                let with_constraints = constraint_simplifier.apply(&field.expression);
+                // Then simplify (expand and collect like terms)
+                let simplified = expr_simplifier.simplify(&with_constraints);
+                converter.convert(&simplified)
+            })
+            .collect()
     }
 
     /// Generates exterior product (Type ^ Other -> Output) from a product entry.
@@ -424,16 +478,9 @@ impl<'a> TraitsGenerator<'a> {
     fn generate_all_product_traits(&self) -> TokenStream {
         let mut impls = Vec::new();
 
-        // GeometricProduct trait
-        for entry in &self.spec.products.geometric {
-            if let (Some(a), Some(b), Some(out)) = (
-                self.find_type(&entry.lhs),
-                self.find_type(&entry.rhs),
-                self.find_type(&entry.output),
-            ) {
-                impls.push(self.generate_geometric_product_trait(a, b, out, entry));
-            }
-        }
+        // Note: GeometricProduct trait has been removed (PRD-24)
+        // The geometric product cannot be type-safe for single-grade elements.
+        // Use Dot for same-grade scalar products, or Mul operator for versors.
 
         // Wedge trait
         for entry in &self.spec.products.wedge {
@@ -591,14 +638,21 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
-        // Antigeometric trait
-        for entry in &self.spec.products.antigeometric {
-            if let (Some(a), Some(b), Some(out)) = (
-                self.find_type(&entry.lhs),
-                self.find_type(&entry.rhs),
-                self.find_type(&entry.output),
-            ) {
-                impls.push(self.generate_antigeometric_trait(a, b, out, entry));
+        // Note: Antigeometric trait has been removed (PRD-24)
+        // The antigeometric product cannot be type-safe for single-grade elements.
+        // Use Antidot for same-antigrade scalar products.
+
+        // Dot trait (same-grade metric inner product, returns scalar)
+        for entry in &self.spec.products.dot {
+            if let (Some(a), Some(b)) = (self.find_type(&entry.lhs), self.find_type(&entry.rhs)) {
+                impls.push(self.generate_dot_trait(a, b, entry));
+            }
+        }
+
+        // Antidot trait (same-antigrade metric inner product, returns scalar)
+        for entry in &self.spec.products.antidot {
+            if let (Some(a), Some(b)) = (self.find_type(&entry.lhs), self.find_type(&entry.rhs)) {
+                impls.push(self.generate_antidot_trait(a, b, entry));
             }
         }
 
@@ -635,29 +689,57 @@ impl<'a> TraitsGenerator<'a> {
         quote! { #(#impls)* }
     }
 
-    /// Generates GeometricProduct trait impl.
-    fn generate_geometric_product_trait(
+    // Note: generate_geometric_product_trait has been removed (PRD-24)
+    // The GeometricProduct trait cannot be type-safe for single-grade elements.
+
+    /// Generates Dot trait impl (same-grade metric inner product, returns scalar).
+    fn generate_dot_trait(
         &self,
         a: &TypeSpec,
         b: &TypeSpec,
-        output: &TypeSpec,
         entry: &crate::spec::ProductEntry,
     ) -> TokenStream {
         let a_name = format_ident!("{}", a.name);
         let b_name = format_ident!("{}", b.name);
-        let out_name = format_ident!("{}", output.name);
         let fn_name = format_ident!(
-            "geometric_{}_{}",
+            "dot_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
 
         quote! {
-            impl<T: Float> GeometricProduct<#b_name<T>> for #a_name<T> {
-                type Output = #out_name<T>;
+            impl<T: Float> Dot<#b_name<T>> for #a_name<T> {
+                type Scalar = T;
 
                 #[inline]
-                fn geometric(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                fn dot(&self, rhs: &#b_name<T>) -> T {
+                    #fn_name(self, rhs)
+                }
+            }
+        }
+    }
+
+    /// Generates Antidot trait impl (same-antigrade metric inner product, returns scalar).
+    fn generate_antidot_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        entry: &crate::spec::ProductEntry,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let fn_name = format_ident!(
+            "antidot_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        quote! {
+            impl<T: Float> Antidot<#b_name<T>> for #a_name<T> {
+                type Scalar = T;
+
+                #[inline]
+                fn antidot(&self, rhs: &#b_name<T>) -> T {
                     #fn_name(self, rhs)
                 }
             }
@@ -1009,34 +1091,8 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates Antigeometric trait impl.
-    fn generate_antigeometric_trait(
-        &self,
-        a: &TypeSpec,
-        b: &TypeSpec,
-        output: &TypeSpec,
-        entry: &crate::spec::ProductEntry,
-    ) -> TokenStream {
-        let a_name = format_ident!("{}", a.name);
-        let b_name = format_ident!("{}", b.name);
-        let out_name = format_ident!("{}", output.name);
-        let fn_name = format_ident!(
-            "antigeometric_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
-
-        quote! {
-            impl<T: Float> Antigeometric<#b_name<T>> for #a_name<T> {
-                type Output = #out_name<T>;
-
-                #[inline]
-                fn antigeometric(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #fn_name(self, rhs)
-                }
-            }
-        }
-    }
+    // Note: generate_antigeometric_trait has been removed (PRD-24)
+    // The Antigeometric trait cannot be type-safe for single-grade elements.
 
     // ========================================================================
     // Sandwich Target Inference
@@ -1828,7 +1884,6 @@ impl<'a> TraitsGenerator<'a> {
     fn generate_verification_tests_raw(&self) -> String {
         let signature_name = self.generate_signature_name();
         let add_sub_tests = self.generate_add_sub_verification_tests_raw();
-        let geometric_tests = self.generate_geometric_verification_tests_raw();
         let exterior_tests = self.generate_exterior_verification_tests_raw();
         let bulk_contraction_tests = self.generate_bulk_contraction_verification_tests_raw();
         let weight_contraction_tests = self.generate_weight_contraction_verification_tests_raw();
@@ -1854,11 +1909,10 @@ mod verification_tests {{
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{geometric}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}}}
+{add_sub}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}}}
 "#,
             sig = signature_name,
             add_sub = add_sub_tests,
-            geometric = geometric_tests,
             exterior = exterior_tests,
             bulk_contraction = bulk_contraction_tests,
             weight_contraction = weight_contraction_tests,
@@ -1966,55 +2020,6 @@ mod verification_tests {{
 "#,
                     name_lower = name_lower,
                     name = name,
-                    sig = signature_name,
-                )
-            })
-            .collect()
-    }
-
-    /// Generates geometric product verification tests as a formatted string.
-    fn generate_geometric_verification_tests_raw(&self) -> String {
-        // Only generate tests for products explicitly listed in the TOML
-        if self.spec.products.geometric.is_empty() {
-            return String::new();
-        }
-
-        let signature_name = self.generate_signature_name();
-        self.spec
-            .products
-            .geometric
-            .iter()
-            .map(|entry| {
-                let lhs_lower = entry.lhs.to_lowercase();
-                let rhs_lower = entry.rhs.to_lowercase();
-                let out_lower = entry.output.to_lowercase();
-
-                format!(
-                    r#"
-    proptest! {{
-        #[test]
-        fn geometric_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
-            let mv_a: Multivector<f64, {sig}> = a.into();
-            let mv_b: Multivector<f64, {sig}> = b.into();
-
-            let specialized_result: {out}<f64> = geometric_{lhs_lower}_{rhs_lower}(&a, &b);
-            let generic_result = mv_a * mv_b;
-
-            let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
-            prop_assert!(
-                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
-                "Geometric product mismatch: specialized={{:?}}, generic={{:?}}",
-                specialized_mv, generic_result
-            );
-        }}
-    }}
-"#,
-                    lhs_lower = lhs_lower,
-                    rhs_lower = rhs_lower,
-                    out_lower = out_lower,
-                    lhs = entry.lhs,
-                    rhs = entry.rhs,
-                    out = entry.output,
                     sig = signature_name,
                 )
             })

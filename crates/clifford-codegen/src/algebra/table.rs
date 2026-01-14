@@ -720,6 +720,58 @@ impl ProductTable {
         }
     }
 
+    /// Computes the antidot product of two basis blades.
+    ///
+    /// The antidot product `a ⊚ b` is the De Morgan dual of the dot product:
+    /// `a ⊚ b = ∁a • ∁b` (complement dot complement).
+    ///
+    /// Like the dot product, it is non-zero only when blades have the same
+    /// antigrade (which is equivalent to same grade). Returns a scalar.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is always 0 (scalar) when non-zero
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::{Algebra, ProductTable};
+    ///
+    /// let algebra = Algebra::euclidean(3);
+    /// let table = ProductTable::new(&algebra);
+    ///
+    /// // e1 ⊚ e1 (same grade/antigrade)
+    /// let (sign, result) = table.antidot(1, 1);
+    /// assert_eq!(result, 0); // scalar
+    /// ```
+    pub fn antidot(&self, a: usize, b: usize) -> (i8, usize) {
+        let grade_a = a.count_ones() as usize;
+        let grade_b = b.count_ones() as usize;
+
+        // Antidot product is zero if grades don't match
+        // (same antigrade means same grade since antigrade = dim - grade)
+        if grade_a != grade_b {
+            return (0, 0);
+        }
+
+        // Get complements
+        let (sign_ca, comp_a) = self.complement(a);
+        let (sign_cb, comp_b) = self.complement(b);
+
+        // Dot product of complements
+        let (sign_dot, result) = self.dot(comp_a, comp_b);
+        if sign_dot == 0 {
+            return (0, 0);
+        }
+
+        // Total sign
+        let total_sign = sign_ca * sign_cb * sign_dot;
+
+        (total_sign, result)
+    }
+
     /// Computes the left anti-contraction of two basis blades.
     ///
     /// The left anti-contraction is the dual of the left contraction:

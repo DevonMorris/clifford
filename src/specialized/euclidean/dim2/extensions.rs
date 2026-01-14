@@ -50,26 +50,6 @@ impl<T: Float> Vector<T> {
         products::exterior_vector_vector(&self, &other)
     }
 
-    /// Geometric product of two vectors: `ab = a·b + a∧b`.
-    ///
-    /// Returns a rotor (scalar + bivector).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim2::Vector;
-    ///
-    /// let a = Vector::new(1.0, 0.0);
-    /// let b = Vector::new(0.0, 1.0);
-    /// let ab = a.geometric(b);
-    /// assert_eq!(ab.s(), 0.0);  // perpendicular, no dot product
-    /// assert_eq!(ab.xy(), 1.0); // wedge product
-    /// ```
-    #[inline]
-    pub fn geometric(self, other: Self) -> Rotor<T> {
-        products::geometric_vector_vector(&self, &other)
-    }
-
     /// Perpendicular vector (90° counterclockwise rotation).
     ///
     /// # Example
@@ -205,7 +185,7 @@ impl<T: Float> Rotor<T> {
     /// The result applies `self` first, then `other`.
     #[inline]
     pub fn compose(&self, other: Self) -> Self {
-        products::geometric_rotor_rotor(&other, self)
+        other * *self
     }
 
     /// Linear interpolation (normalized).

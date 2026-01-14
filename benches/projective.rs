@@ -41,8 +41,7 @@ fn bench_pga2_line_meet(c: &mut Criterion) {
 }
 
 fn bench_pga2_motor_transform_point(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
+    let motor = dim2::Motor::from_rotation(FRAC_PI_4);
     let p = dim2::Point::from_cartesian(3.0, 4.0);
 
     c.bench_function("projective/dim2/motor_transform_point", |bencher| {
@@ -51,8 +50,7 @@ fn bench_pga2_motor_transform_point(c: &mut Criterion) {
 }
 
 fn bench_pga2_motor_transform_line(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
+    let motor = dim2::Motor::from_rotation(FRAC_PI_4);
     let line: dim2::Line<f64> = dim2::Line::from_implicit(1.0, 1.0, 0.0);
 
     c.bench_function("projective/dim2/motor_transform_line", |bencher| {
@@ -60,18 +58,8 @@ fn bench_pga2_motor_transform_line(c: &mut Criterion) {
     });
 }
 
-fn bench_pga2_motor_compose(c: &mut Criterion) {
-    let m1 = dim2::Motor::from_rotation(FRAC_PI_4);
-    let m2 = dim2::Motor::from_translation(1.0, 2.0);
-
-    c.bench_function("projective/dim2/motor_compose", |bencher| {
-        bencher.iter(|| black_box(m1).compose(&black_box(m2)))
-    });
-}
-
 fn bench_pga2_motor_inverse(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
+    let motor = dim2::Motor::from_rotation(FRAC_PI_4);
 
     c.bench_function("projective/dim2/motor_inverse", |bencher| {
         bencher.iter(|| black_box(motor).inverse())
@@ -101,8 +89,7 @@ fn bench_pga2_line_distance_to_point(c: &mut Criterion) {
 // ============================================================================
 
 fn bench_pga3_motor_transform_point(c: &mut Criterion) {
-    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
-        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4);
     let p = dim3::Point::from_cartesian(1.0, 0.0, 0.0);
 
     c.bench_function("projective/dim3/motor_transform_point", |bencher| {
@@ -111,8 +98,7 @@ fn bench_pga3_motor_transform_point(c: &mut Criterion) {
 }
 
 fn bench_pga3_motor_transform_line(c: &mut Criterion) {
-    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
-        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4);
     let line: dim3::Line<f64> = dim3::Line::x_axis();
 
     c.bench_function("projective/dim3/motor_transform_line", |bencher| {
@@ -120,30 +106,11 @@ fn bench_pga3_motor_transform_line(c: &mut Criterion) {
     });
 }
 
-fn bench_pga3_motor_compose(c: &mut Criterion) {
-    let m1 = dim3::Motor::from_rotation_z(FRAC_PI_4);
-    let m2 = dim3::Motor::from_translation(1.0, 2.0, 3.0);
-
-    c.bench_function("projective/dim3/motor_compose", |bencher| {
-        bencher.iter(|| black_box(m1).compose(&black_box(m2)))
-    });
-}
-
 fn bench_pga3_motor_inverse(c: &mut Criterion) {
-    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
-        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4);
 
     c.bench_function("projective/dim3/motor_inverse", |bencher| {
         bencher.iter(|| black_box(motor).inverse())
-    });
-}
-
-fn bench_pga3_motor_commutator(c: &mut Criterion) {
-    let m1 = dim3::Motor::from_rotation_x(0.1);
-    let m2 = dim3::Motor::from_rotation_z(0.2);
-
-    c.bench_function("projective/dim3/motor_commutator", |bencher| {
-        bencher.iter(|| black_box(m1).commutator(&black_box(m2)))
     });
 }
 
@@ -232,8 +199,7 @@ fn bench_pga3_point_left_contract_line(c: &mut Criterion) {
 }
 
 fn bench_pga3_motor_transform_plane(c: &mut Criterion) {
-    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
-        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4);
     let plane: dim3::Plane<f64> = dim3::Plane::from_normal_and_distance(1.0, 0.0, 0.0, 5.0);
 
     c.bench_function("projective/dim3/motor_transform_plane", |bencher| {
@@ -246,8 +212,7 @@ fn bench_pga3_motor_transform_plane(c: &mut Criterion) {
 // ============================================================================
 
 fn bench_pga3_batch_transform_points(c: &mut Criterion) {
-    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4)
-        .compose(&dim3::Motor::from_translation(1.0, 2.0, 3.0));
+    let motor = dim3::Motor::from_rotation_z(FRAC_PI_4);
     let points: Vec<dim3::Point<f64>> = (0..100)
         .map(|i| dim3::Point::from_cartesian(i as f64, 0.0, 0.0))
         .collect();
@@ -263,8 +228,7 @@ fn bench_pga3_batch_transform_points(c: &mut Criterion) {
 }
 
 fn bench_pga2_batch_transform_points(c: &mut Criterion) {
-    let motor =
-        dim2::Motor::from_rotation(FRAC_PI_4).compose(&dim2::Motor::from_translation(1.0, 2.0));
+    let motor = dim2::Motor::from_rotation(FRAC_PI_4);
     let points: Vec<dim2::Point<f64>> = (0..100)
         .map(|i| dim2::Point::from_cartesian(i as f64, 0.0))
         .collect();
@@ -289,7 +253,6 @@ criterion_group!(
     bench_pga2_line_meet,
     bench_pga2_motor_transform_point,
     bench_pga2_motor_transform_line,
-    bench_pga2_motor_compose,
     bench_pga2_motor_inverse,
     bench_pga2_point_distance,
     bench_pga2_line_distance_to_point,
@@ -301,9 +264,7 @@ criterion_group!(
     bench_pga3_motor_transform_point,
     bench_pga3_motor_transform_line,
     bench_pga3_motor_transform_plane,
-    bench_pga3_motor_compose,
     bench_pga3_motor_inverse,
-    bench_pga3_motor_commutator,
     bench_pga3_line_meet_plane,
     bench_pga3_line_join_point,
     bench_pga3_line_distance_to_point,

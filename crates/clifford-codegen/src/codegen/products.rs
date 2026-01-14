@@ -42,8 +42,6 @@ pub enum ProductKind {
     RightContraction,
     /// Antiwedge product (∨, regressive/meet, grade ga + gb - dim).
     Antiwedge,
-    /// Geometric antiproduct (complement(complement(a) * complement(b))).
-    Antigeometric,
     /// Bulk contraction (a ∨ b★, antiwedge with bulk dual).
     BulkContraction,
     /// Weight contraction (a ∨ b☆, antiwedge with weight dual).
@@ -52,6 +50,10 @@ pub enum ProductKind {
     BulkExpansion,
     /// Weight expansion (a ∧ b☆, wedge with weight dual).
     WeightExpansion,
+    /// Dot product (• metric inner, same-grade only, returns scalar).
+    Dot,
+    /// Antidot product (⊚ metric antiproduct inner, same-antigrade only, returns scalar).
+    Antidot,
 }
 
 /// A term in a product expression.
@@ -163,14 +165,15 @@ impl<'a> ProductGenerator<'a> {
     pub fn generate_products_file(&self) -> TokenStream {
         let header = self.generate_header();
         let imports = self.generate_imports();
-        let geometric = self.generate_all_geometric();
+        // Note: Geometric and antigeometric products are NOT generated as separate functions.
+        // They are not type-safe in general. Sandwich products have their formulas expanded
+        // directly. Versor Mul operators also expand the formulas inline.
         let exterior = self.generate_all_exterior();
         let interior = self.generate_all_interior();
         let left_contraction = self.generate_all_inner(); // Left contraction (inner)
         let right_contraction = self.generate_all_right_contraction();
         let regressive = self.generate_all_regressive();
         let scalar = self.generate_all_scalar();
-        let antigeometric = self.generate_all_antigeometric();
         let sandwich = self.generate_all_sandwich();
         let antisandwich = self.generate_all_antisandwich();
 
@@ -180,6 +183,10 @@ impl<'a> ProductGenerator<'a> {
         let bulk_expansion = self.generate_all_bulk_expansion();
         let weight_expansion = self.generate_all_weight_expansion();
 
+        // Dot products (RGA-style metric products)
+        let dot = self.generate_all_dot();
+        let antidot = self.generate_all_antidot();
+
         // Generate unary operations
         let unary_gen = UnaryGenerator::new(self.spec);
         let unary = unary_gen.generate_all();
@@ -187,11 +194,6 @@ impl<'a> ProductGenerator<'a> {
         quote! {
             #header
             #imports
-
-            // ============================================================
-            // Geometric Products
-            // ============================================================
-            #geometric
 
             // ============================================================
             // Exterior Products (Wedge)
@@ -224,9 +226,14 @@ impl<'a> ProductGenerator<'a> {
             #scalar
 
             // ============================================================
-            // Antigeometric Products
+            // Dot Products (• metric inner, same-grade only)
             // ============================================================
-            #antigeometric
+            #dot
+
+            // ============================================================
+            // Antidot Products (⊚ metric anti-inner, same-antigrade only)
+            // ============================================================
+            #antidot
 
             // ============================================================
             // Interior Products: Bulk Contraction (a ∨ b★)
@@ -249,7 +256,7 @@ impl<'a> ProductGenerator<'a> {
             #weight_expansion
 
             // ============================================================
-            // Sandwich Products (Geometric)
+            // Sandwich Products (Versor Actions)
             // ============================================================
             #sandwich
 
@@ -344,64 +351,6 @@ impl<'a> ProductGenerator<'a> {
         } else {
             quote! { #type_name::new(#(#field_exprs),*) }
         }
-    }
-
-    // ========================================================================
-    // Geometric Products
-    // ========================================================================
-
-    /// Generates all geometric product functions.
-    fn generate_all_geometric(&self) -> TokenStream {
-        // If no explicit products defined, generate nothing
-        if self.spec.products.geometric.is_empty() {
-            return quote! {};
-        }
-
-        let products: Vec<TokenStream> = self
-            .spec
-            .products
-            .geometric
-            .iter()
-            .filter_map(|entry| self.generate_geometric_from_entry(entry))
-            .collect();
-
-        quote! { #(#products)* }
-    }
-
-    /// Generates a geometric product from a product entry.
-    fn generate_geometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
-        let type_a = self.find_type(&entry.lhs)?;
-        let type_b = self.find_type(&entry.rhs)?;
-        let output_type = self.find_type(&entry.output)?;
-
-        let a_name = format_ident!("{}", entry.lhs);
-        let b_name = format_ident!("{}", entry.rhs);
-        let c_name = format_ident!("{}", entry.output);
-
-        let fn_name = format_ident!(
-            "geometric_{}_{}",
-            entry.lhs.to_lowercase(),
-            entry.rhs.to_lowercase()
-        );
-
-        // Use symbolic simplification for expression generation
-        let field_exprs =
-            self.generate_expression_symbolic(type_a, type_b, output_type, ProductKind::Geometric);
-
-        let doc = format!(
-            "Geometric product: {} * {} -> {}",
-            entry.lhs, entry.rhs, entry.output
-        );
-
-        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
-
-        Some(quote! {
-            #[doc = #doc]
-            #[inline]
-            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> #c_name<T> {
-                #constructor_call
-            }
-        })
     }
 
     // ========================================================================
@@ -901,95 +850,120 @@ impl<'a> ProductGenerator<'a> {
     }
 
     // ========================================================================
-    // Antigeometric Products
+    // Dot Products (RGA metric inner product)
     // ========================================================================
 
-    /// Generates all antigeometric product functions.
+    /// Generates all dot product functions.
     ///
-    /// The antigeometric product is defined as: a ⊛ b = complement(complement(a) * complement(b))
-    fn generate_all_antigeometric(&self) -> TokenStream {
-        // If no explicit products defined, generate nothing
-        if self.spec.products.antigeometric.is_empty() {
+    /// The dot product `a • b` is non-zero only when `grade(a) = grade(b)`.
+    /// It returns a scalar (grade 0).
+    fn generate_all_dot(&self) -> TokenStream {
+        if self.spec.products.dot.is_empty() {
             return quote! {};
         }
 
         let products: Vec<TokenStream> = self
             .spec
             .products
-            .antigeometric
+            .dot
             .iter()
-            .filter_map(|entry| self.generate_antigeometric_from_entry(entry))
+            .filter_map(|entry| self.generate_dot_from_entry(entry))
             .collect();
 
         quote! { #(#products)* }
     }
 
-    /// Generates an antigeometric product from a product entry.
-    ///
-    /// Uses term-based generation with the `antiproduct` table method to correctly
-    /// compute `∁(∁a × ∁b)` using the regular geometric product.
-    fn generate_antigeometric_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+    /// Generates a dot product from a product entry.
+    fn generate_dot_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
         let type_a = self.find_type(&entry.lhs)?;
         let type_b = self.find_type(&entry.rhs)?;
-        let output_type = self.find_type(&entry.output)?;
 
         let a_name = format_ident!("{}", entry.lhs);
         let b_name = format_ident!("{}", entry.rhs);
-        let c_name = format_ident!("{}", entry.output);
 
         let fn_name = format_ident!(
-            "antigeometric_{}_{}",
+            "dot_{}_{}",
             entry.lhs.to_lowercase(),
             entry.rhs.to_lowercase()
         );
 
-        // Use term-based generation with table.antiproduct() for correct formula
-        let field_exprs: Vec<TokenStream> = output_type
-            .fields
-            .iter()
-            .map(|field| {
-                let terms = self.compute_terms(
-                    type_a,
-                    type_b,
-                    field.blade_index,
-                    ProductKind::Antigeometric,
-                );
-                self.generate_expression(&terms)
-            })
-            .collect();
+        // Compute terms that produce grade 0 (scalar blade index = 0)
+        // Only include terms where both blades have the same grade
+        let terms = self.compute_terms(type_a, type_b, 0, ProductKind::Dot);
+        if terms.is_empty() {
+            return None;
+        }
+        let expr = self.generate_expression(&terms);
 
         let doc = format!(
-            "Antigeometric product: {} ⊛ {} -> {}\n\nDefined as complement(complement(a) * complement(b)).",
-            entry.lhs, entry.rhs, entry.output
+            "Dot product: {} • {} -> T (same-grade metric inner)",
+            entry.lhs, entry.rhs
         );
-
-        let constructor_call = self.generate_constructor_call(output_type, &c_name, &field_exprs);
-
-        // Check if parameters are used in expressions
-        let exprs_str = field_exprs
-            .iter()
-            .map(|e| e.to_string())
-            .collect::<Vec<_>>()
-            .join(" ");
-        let a_used = exprs_str.contains("a .");
-        let b_used = exprs_str.contains("b .");
-
-        let param_a = if a_used {
-            quote! { a: &#a_name<T> }
-        } else {
-            quote! { _a: &#a_name<T> }
-        };
-        let param_b = if b_used {
-            quote! { b: &#b_name<T> }
-        } else {
-            quote! { _b: &#b_name<T> }
-        };
 
         Some(quote! {
             #[doc = #doc]
             #[inline]
-            pub fn #fn_name<T: Float>(#param_a, #param_b) -> #c_name<T> {
-                #constructor_call
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> T {
+                #expr
+            }
+        })
+    }
+
+    // ========================================================================
+    // Antidot Products (RGA metric antiproduct inner)
+    // ========================================================================
+
+    /// Generates all antidot product functions.
+    ///
+    /// The antidot product `a ⊚ b` is the De Morgan dual of the dot product.
+    /// It returns a scalar (grade 0).
+    fn generate_all_antidot(&self) -> TokenStream {
+        if self.spec.products.antidot.is_empty() {
+            return quote! {};
+        }
+
+        let products: Vec<TokenStream> = self
+            .spec
+            .products
+            .antidot
+            .iter()
+            .filter_map(|entry| self.generate_antidot_from_entry(entry))
+            .collect();
+
+        quote! { #(#products)* }
+    }
+
+    /// Generates an antidot product from a product entry.
+    fn generate_antidot_from_entry(&self, entry: &ProductEntry) -> Option<TokenStream> {
+        let type_a = self.find_type(&entry.lhs)?;
+        let type_b = self.find_type(&entry.rhs)?;
+
+        let a_name = format_ident!("{}", entry.lhs);
+        let b_name = format_ident!("{}", entry.rhs);
+
+        let fn_name = format_ident!(
+            "antidot_{}_{}",
+            entry.lhs.to_lowercase(),
+            entry.rhs.to_lowercase()
+        );
+
+        // Compute terms that produce grade 0 (scalar)
+        let terms = self.compute_terms(type_a, type_b, 0, ProductKind::Antidot);
+        if terms.is_empty() {
+            return None;
+        }
+        let expr = self.generate_expression(&terms);
+
+        let doc = format!(
+            "Antidot product: {} ⊚ {} -> T (same-antigrade metric anti-inner)",
+            entry.lhs, entry.rhs
+        );
+
+        Some(quote! {
+            #[doc = #doc]
+            #[inline]
+            pub fn #fn_name<T: Float>(a: &#a_name<T>, b: &#b_name<T>) -> T {
+                #expr
             }
         })
     }
@@ -1292,10 +1266,6 @@ impl<'a> ProductGenerator<'a> {
                             vec![]
                         }
                     }
-                    ProductKind::Antigeometric => {
-                        // Antigeometric: same grade rules as geometric but with antigrades
-                        geometric_grades(ga, gb, dim)
-                    }
                     // Interior products - these involve duals
                     ProductKind::BulkContraction | ProductKind::WeightContraction => {
                         // Contractions reduce grade: |ga - (dim - gb)|
@@ -1313,6 +1283,11 @@ impl<'a> ProductGenerator<'a> {
                         let b_antigrade = dim - gb;
                         let sum = ga + b_antigrade;
                         if sum <= dim { vec![sum] } else { vec![] }
+                    }
+                    ProductKind::Dot | ProductKind::Antidot => {
+                        // Dot and antidot: only same-grade elements produce non-zero
+                        // Output is always grade 0 (scalar)
+                        if ga == gb { vec![0] } else { vec![] }
                     }
                 };
 
@@ -1351,13 +1326,14 @@ impl<'a> ProductGenerator<'a> {
                     ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
                     ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
                     ProductKind::Antiwedge => self.table.regressive(a_blade, b_blade),
-                    ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
                     ProductKind::BulkContraction => self.table.bulk_contraction(a_blade, b_blade),
                     ProductKind::WeightContraction => {
                         self.table.weight_contraction(a_blade, b_blade)
                     }
                     ProductKind::BulkExpansion => self.table.bulk_expansion(a_blade, b_blade),
                     ProductKind::WeightExpansion => self.table.weight_expansion(a_blade, b_blade),
+                    ProductKind::Dot => self.table.dot(a_blade, b_blade),
+                    ProductKind::Antidot => self.table.antidot(a_blade, b_blade),
                 };
 
                 if result == result_blade && sign != 0 {

@@ -99,31 +99,37 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry2<T> {
     ///
     /// # Mathematical Correspondence
     ///
-    /// In dual form, the motor components are:
-    /// - `e0 = -sin(θ/2)`, `e012 = cos(θ/2)` (rotation)
-    /// - `e1 = dy/2`, `e2 = -dx/2` (translation in dual form)
+    /// The motor's internal representation is "translate then rotate" (translation
+    /// applied first, then rotation). nalgebra's Isometry2 uses "rotate then translate".
     ///
-    /// For a composed motor `trans.compose(&rot)`, the translation components
-    /// mix with rotation. We decompose to recover the original values.
+    /// For these to produce the same transformation:
+    /// - Motor effect: Rot(θ) × (p + t') = Rot(θ)×p + Rot(θ)×t'
+    /// - nalgebra effect: Rot(θ)×p + t
+    ///
+    /// So: t = Rot(θ) × t' (we post-rotate the decoded translation)
     fn from(motor: Motor<T>) -> Self {
         // Extract rotation from (e0, e012) = (-sin(θ/2), cos(θ/2))
-        // rotation_angle() computes atan2(-e0, e012) * 2 = θ
         let rotation = na::UnitComplex::new(motor.rotation_angle());
 
-        // Decompose translation from composed motor in dual form:
-        // For pure translation: e1 = dy/2, e2 = -dx/2
-        // For composed motor, translation components mix with rotation:
-        // e1_composed = e1_t*e012 + e2_t*e0
-        // e2_composed = e2_t*e012 - e1_t*e0
-        // Inverting: e1_t = e1*e012 - e2*e0, e2_t = e2*e012 + e1*e0
+        // Decode motor's internal translation (t')
         let cos_half = motor.e012();
-        let sin_half = -motor.e0(); // e0 = -sin(θ/2), so sin_half = -e0
+        let sin_half = -motor.e0();
         let e1_t = motor.e1() * cos_half + motor.e2() * sin_half;
         let e2_t = motor.e2() * cos_half - motor.e1() * sin_half;
 
-        // In dual form: e1 = dy/2, e2 = -dx/2
-        // So: dx = -2*e2_t, dy = 2*e1_t
-        let translation = na::Translation2::new(-e2_t * T::TWO, e1_t * T::TWO);
+        // Internal translation t' = (-2*e2_t, 2*e1_t)
+        let t_prime_x = -e2_t * T::TWO;
+        let t_prime_y = e1_t * T::TWO;
+
+        // Post-rotate by θ to get nalgebra translation: t = Rot(θ) × t'
+        // cos(θ) = cos²(θ/2) - sin²(θ/2), sin(θ) = 2*sin(θ/2)*cos(θ/2)
+        let cos_theta = cos_half * cos_half - sin_half * sin_half;
+        let sin_theta = T::TWO * sin_half * cos_half;
+
+        let tx = t_prime_x * cos_theta - t_prime_y * sin_theta;
+        let ty = t_prime_x * sin_theta + t_prime_y * cos_theta;
+
+        let translation = na::Translation2::new(tx, ty);
 
         na::Isometry2::from_parts(translation, rotation)
     }
@@ -134,19 +140,36 @@ impl<T: Float + na::RealField> From<na::Isometry2<T>> for Motor<T> {
     ///
     /// # Mathematical Correspondence
     ///
-    /// Nalgebra's `Isometry2::new(translation, angle)` applies rotation first (around origin),
-    /// then translation. To match this, we compose the motors:
-    /// `translation.compose(&rotation)` applies rotation first, then translation.
+    /// nalgebra's Isometry2 uses "rotate then translate": Rot(θ)×p + t
+    /// The motor's internal representation is "translate then rotate": Rot(θ)×(p + t')
+    ///
+    /// For these to produce the same transformation:
+    /// - t = Rot(θ) × t'
+    /// - So: t' = Rot(-θ) × t (we pre-rotate the translation)
     fn from(iso: na::Isometry2<T>) -> Self {
         let angle = iso.rotation.angle();
         let t = iso.translation.vector;
+        let half = angle / T::TWO;
+        let cos_half = num_traits::Float::cos(half);
+        let sin_half = num_traits::Float::sin(half);
 
-        // Build rotation and translation motors
-        let rotation = Motor::from_rotation(angle);
-        let translation = Motor::from_translation(t.x, t.y);
+        // Pre-rotate translation by -θ to get internal translation t'
+        // Rot(-θ) = [[cos, sin], [-sin, cos]]
+        let cos_theta = cos_half * cos_half - sin_half * sin_half;
+        let sin_theta = T::TWO * sin_half * cos_half;
 
-        // Compose: translation.compose(&rotation) applies rotation first
-        translation.compose(&rotation)
+        let t_prime_x = t.x * cos_theta + t.y * sin_theta;
+        let t_prime_y = -t.x * sin_theta + t.y * cos_theta;
+
+        // Encode t' using standard motor encoding
+        // e1 = t'_y/2 * cos(θ/2) + t'_x/2 * sin(θ/2)
+        // e2 = -t'_x/2 * cos(θ/2) + t'_y/2 * sin(θ/2)
+        Motor::new(
+            t_prime_y / T::TWO * cos_half + t_prime_x / T::TWO * sin_half,
+            -t_prime_x / T::TWO * cos_half + t_prime_y / T::TWO * sin_half,
+            -sin_half,
+            cos_half,
+        )
     }
 }
 
@@ -374,45 +397,6 @@ mod tests {
             prop_assert!(
                 relative_eq!(result_cliff.y(), result_na.y, epsilon = EPS, max_relative = EPS),
                 "y mismatch: clifford {} vs nalgebra {}", result_cliff.y(), result_na.y
-            );
-        }
-
-        /// Test that motor composition matches isometry composition.
-        #[test]
-        fn composition_equivalence(
-            tx1 in -50.0f64..50.0,
-            ty1 in -50.0f64..50.0,
-            angle1 in -std::f64::consts::PI..std::f64::consts::PI,
-            tx2 in -50.0f64..50.0,
-            ty2 in -50.0f64..50.0,
-            angle2 in -std::f64::consts::PI..std::f64::consts::PI,
-        ) {
-            let iso1 = na::Isometry2::new(na::Vector2::new(tx1, ty1), angle1);
-            let iso2 = na::Isometry2::new(na::Vector2::new(tx2, ty2), angle2);
-
-            let motor1: Motor<f64> = iso1.into();
-            let motor2: Motor<f64> = iso2.into();
-
-            // nalgebra composition: iso1 * iso2 applies iso2 first, then iso1
-            let composed_na = iso1 * iso2;
-
-            // clifford composition: motor1.compose(&motor2) applies motor2 first, then motor1
-            let composed_cliff = motor1.compose(&motor2);
-
-            // Compare by transforming a test point
-            let test_pt = na::Point2::new(1.0, 2.0);
-            let test_cliff = Point::from_cartesian(1.0, 2.0);
-
-            let result_na = composed_na.transform_point(&test_pt);
-            let result_cliff = composed_cliff.transform_point(&test_cliff);
-
-            prop_assert!(
-                relative_eq!(result_cliff.x(), result_na.x, epsilon = EPS, max_relative = EPS),
-                "composed x mismatch: clifford {} vs nalgebra {}", result_cliff.x(), result_na.x
-            );
-            prop_assert!(
-                relative_eq!(result_cliff.y(), result_na.y, epsilon = EPS, max_relative = EPS),
-                "composed y mismatch: clifford {} vs nalgebra {}", result_cliff.y(), result_na.y
             );
         }
 

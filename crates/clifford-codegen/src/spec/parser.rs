@@ -547,6 +547,12 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     // Note: Interior product is the symmetric inner product.
     // Left contraction is more commonly used in GA, but we provide both.
 
+    // Infer dot products (same-grade elements only, returns scalar)
+    let dot_table = infer_all_products(&entities, ProductType::Dot, &algebra);
+
+    // Infer antidot products (same-antigrade elements only, returns scalar)
+    let antidot_table = infer_all_products(&entities, ProductType::Antidot, &algebra);
+
     ProductsSpec {
         geometric: convert_entries(geometric_table),
         wedge: convert_entries(exterior_table),
@@ -562,6 +568,9 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         weight_contraction: convert_entries(weight_contraction_table),
         bulk_expansion: convert_entries(bulk_expansion_table),
         weight_expansion: convert_entries(weight_expansion_table),
+        // Metric products (PRD-24)
+        dot: convert_entries(dot_table),
+        antidot: convert_entries(antidot_table),
     }
 }
 

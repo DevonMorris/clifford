@@ -8,20 +8,34 @@
 //!
 //! | Trait | Symbol | Description |
 //! |-------|--------|-------------|
-//! | [`GeometricProduct`] | `×` | Full geometric product |
 //! | [`Wedge`] | `∧` | Exterior/wedge product (grade-raising) |
 //! | [`Antiwedge`] | `∨` | Regressive product (antigrade-raising) |
 //! | [`Inner`] | `·` | Symmetric inner product |
+//! | [`Dot`] | `•` | Metric dot product (same-grade only) |
+//! | [`Antidot`] | `⊚` | Metric antidot product |
 //! | [`LeftContract`] | `⌋` | Left contraction |
 //! | [`RightContract`] | `⌊` | Right contraction |
 //! | [`BulkContract`] | `a ∨ b★` | Bulk contraction |
 //! | [`WeightContract`] | `a ∨ b☆` | Weight contraction |
 //! | [`Sandwich`] | `v × x × ṽ` | Sandwich product |
 //!
+//! # Type Safety
+//!
+//! All product traits in this module are **type-safe**: the output type is
+//! determined by the input types and the product kind. This is achieved by:
+//!
+//! - **Grade-preserving products** (Sandwich, Antisandwich) return the same type
+//! - **Grade-changing products** (Wedge, Antiwedge) have deterministic output grades
+//! - **Scalar products** (Dot, Antidot) always return the scalar type
+//!
+//! The geometric product is **not** provided as a trait because it produces
+//! mixed-grade outputs that cannot be represented by a single specialized type.
+//! Use the grade-specific products instead.
+//!
 //! # Example
 //!
 //! ```ignore
-//! use clifford::ops::{Wedge, Sandwich};
+//! use clifford::ops::{Wedge, Sandwich, Dot};
 //! use clifford::specialized::projective::dim3::{Point, Motor};
 //!
 //! // Create a line through two points using wedge product
@@ -29,32 +43,15 @@
 //!
 //! // Transform a point using sandwich product
 //! let transformed = motor.sandwich(&point);
+//!
+//! // Compute dot product for angles/magnitudes
+//! let cos_angle = v1.dot(&v2);
 //! ```
 //!
 //! # Implementation
 //!
 //! These traits are implemented by the code generator for specialized types.
 //! The implementations delegate to optimized free functions.
-
-/// Geometric product.
-///
-/// The geometric product is the fundamental product in Geometric Algebra,
-/// combining the inner and outer products: `ab = a·b + a∧b` for vectors.
-///
-/// # Example
-///
-/// ```ignore
-/// use clifford::ops::GeometricProduct;
-///
-/// let result = a.geometric(&b);
-/// ```
-pub trait GeometricProduct<Rhs = Self> {
-    /// The output type of the geometric product.
-    type Output;
-
-    /// Computes the geometric product `self * rhs`.
-    fn geometric(&self, rhs: &Rhs) -> Self::Output;
-}
 
 /// Wedge (exterior) product.
 ///
@@ -312,24 +309,69 @@ pub trait Antisandwich<Operand> {
     fn antisandwich(&self, operand: &Operand) -> Self::Output;
 }
 
-/// Antigeometric product.
+/// Dot product (metric inner product).
 ///
-/// The geometric antiproduct is the complement of the geometric product:
-/// `a ⟇ b = complement(complement(a) × complement(b))`.
+/// The dot product `a • b` is non-zero only when `grade(a) = grade(b)`.
+/// It measures the "alignment" between same-grade elements using the metric.
+///
+/// Defined as: `a • b = aᵀ G b` where G is the metric exomorphism matrix.
+///
+/// # Properties
+///
+/// - Only same-grade elements produce non-zero results
+/// - Symmetric: `a • b = b • a`
+/// - Returns a scalar
 ///
 /// # Example
 ///
 /// ```ignore
-/// use clifford::ops::Antigeometric;
+/// use clifford::ops::Dot;
 ///
-/// let result = a.antigeometric(&b);
+/// let cos_angle: f64 = vector1.dot(&vector2);
+/// let bivector_magnitude_sq: f64 = bivector.dot(&bivector);
 /// ```
-pub trait Antigeometric<Rhs = Self> {
-    /// The output type of the antigeometric product.
-    type Output;
+///
+/// # Reference
+///
+/// [RGA Dot Products](https://rigidgeometricalgebra.org/wiki/index.php?title=Dot_products)
+pub trait Dot<Rhs = Self> {
+    /// The scalar type.
+    type Scalar;
 
-    /// Computes the antigeometric product.
-    fn antigeometric(&self, rhs: &Rhs) -> Self::Output;
+    /// Computes the dot product `self • rhs`.
+    fn dot(&self, rhs: &Rhs) -> Self::Scalar;
+}
+
+/// Antidot product (metric antiproduct inner product).
+///
+/// The antidot product `a ⊚ b` is the De Morgan dual of the dot product:
+/// `a ⊚ b = ā • b̄` (complement dot complement).
+///
+/// Defined as: `a ⊚ b = aᵀ 𝔾 b` where 𝔾 is the metric antiexomorphism matrix.
+///
+/// # Properties
+///
+/// - Only same-antigrade elements produce non-zero results
+/// - Symmetric
+/// - Returns a scalar
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Antidot;
+///
+/// let result: f64 = plane1.antidot(&plane2);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Dot Products](https://rigidgeometricalgebra.org/wiki/index.php?title=Dot_products)
+pub trait Antidot<Rhs = Self> {
+    /// The scalar type.
+    type Scalar;
+
+    /// Computes the antidot product `self ⊚ rhs`.
+    fn antidot(&self, rhs: &Rhs) -> Self::Scalar;
 }
 
 // ============================================================================

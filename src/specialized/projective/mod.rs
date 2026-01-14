@@ -102,9 +102,8 @@
 //! let y_axis: Line<f64> = Line::y_axis();
 //! let intersection = x_axis.meet(&y_axis);
 //!
-//! // Motor: 90° rotation then translate by (1, 2)
-//! let motor = Motor::from_translation(1.0, 2.0)
-//!     .compose(&Motor::from_rotation(FRAC_PI_2));
+//! // Motor: 90° rotation
+//! let motor = Motor::from_rotation(FRAC_PI_2);
 //! ```
 
 pub mod dim2;

@@ -492,20 +492,6 @@ impl<T: Float> Motor<T> {
         Self::new(dy / T::TWO, -dx / T::TWO, T::zero(), T::one())
     }
 
-    /// Creates a motor for rotation around an arbitrary point.
-    ///
-    /// # Arguments
-    ///
-    /// * `angle` - Rotation angle in radians
-    /// * `center` - Center of rotation
-    #[inline]
-    pub fn from_rotation_around(angle: T, center: Point<T>) -> Self {
-        let to_origin = Self::from_translation(-center.x(), -center.y());
-        let rotation = Self::from_rotation(angle);
-        let from_origin = Self::from_translation(center.x(), center.y());
-        from_origin.compose(&rotation).compose(&to_origin)
-    }
-
     /// Returns the inverse motor: `M⁻¹`.
     ///
     /// For a unit motor, this equals the reverse.
@@ -523,15 +509,6 @@ impl<T: Float> Motor<T> {
             rev.e0() / norm_sq,
             rev.e012() / norm_sq,
         )
-    }
-
-    /// Composes two motors via antigeometric product.
-    ///
-    /// In dual form, motor composition uses the antigeometric product.
-    /// The resulting motor applies `other` first, then `self`.
-    #[inline]
-    pub fn compose(&self, other: &Self) -> Self {
-        products::antigeometric_motor_motor(self, other)
     }
 
     /// Linear interpolation between motors (normalized).
@@ -703,18 +680,6 @@ impl<T: Float> Flector<T> {
         self.weight_norm_squared().sqrt()
     }
 
-    /// Compose two flectors (result is a motor).
-    ///
-    /// Two reflections compose to give a rotation around their intersection axis
-    /// (or a translation if the lines are parallel).
-    ///
-    /// In the swapped representation, flector (grades 0+2) composition uses the
-    /// antigeometric product to produce a motor in dual form (grades 1+3).
-    #[inline]
-    pub fn compose(&self, other: &Flector<T>) -> Motor<T> {
-        products::antigeometric_flector_flector(self, other)
-    }
-
     /// Transform a point by reflecting it across the flector's line.
     ///
     /// For a pure reflection flector (scalar part = 0), this reflects the
@@ -809,27 +774,9 @@ mod tests {
     }
 
     #[test]
-    fn motor_composition() {
-        let p = Point::from_cartesian(1.0, 0.0);
-
-        let rotation = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
-        let translation = Motor::from_translation(1.0, 2.0);
-
-        // compose applies the second argument first, so:
-        // translation.compose(&rotation) means: rotate first, then translate
-        let composed = translation.compose(&rotation);
-
-        // (1, 0) -> rotate 90° -> (0, 1) -> translate (1, 2) -> (1, 3)
-        let result = composed.transform_point(&p);
-
-        assert!(abs_diff_eq!(result.x(), 1.0, epsilon = RELATIVE_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 3.0, epsilon = RELATIVE_EQ_EPS));
-    }
-
-    #[test]
     fn motor_inverse() {
         let p = Point::from_cartesian(3.0, 4.0);
-        let m = Motor::from_rotation(0.5).compose(&Motor::from_translation(1.0, 2.0));
+        let m = Motor::from_rotation(0.5);
 
         let transformed = m.transform_point(&p);
         let back = m.inverse().transform_point(&transformed);
@@ -916,21 +863,5 @@ mod tests {
 
         assert!(abs_diff_eq!(twice.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(twice.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
-    }
-
-    #[test]
-    fn flector_compose_two_reflections_gives_rotation() {
-        // Composing reflections through X and Y axes should give 180° rotation
-        let f_x = Flector::<f64>::reflect_x();
-        let f_y = Flector::<f64>::reflect_y();
-
-        let m = f_x.compose(&f_y);
-        let p = Point::from_cartesian(1.0, 0.0);
-        let result = m.transform_point(&p);
-
-        // Two perpendicular reflections = 180° rotation
-        // (1, 0) -> (-1, 0)
-        assert!(abs_diff_eq!(result.x(), -1.0, epsilon = RELATIVE_EQ_EPS));
-        assert!(abs_diff_eq!(result.y(), 0.0, epsilon = RELATIVE_EQ_EPS));
     }
 }
