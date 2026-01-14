@@ -33,7 +33,7 @@
 //! rec.log("arrow", &rerun::Arrows3D::from_vectors([direction]))?;
 //!
 //! // Log a rotation
-//! let rotor = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());
+//! let rotor = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_rz());
 //! rec.log("rotation", &rerun::Transform3D::from(rotor))?;
 //! ```
 
@@ -115,14 +115,14 @@ impl From<Bivector<f32>> for rerun::Vec3D {
     /// use clifford::specialized::euclidean::dim3::Bivector;
     ///
     /// // The xy-plane bivector becomes the z-axis
-    /// let b = Bivector::unit_xy();
+    /// let b = Bivector::unit_rz();
     /// let axis: rerun::Vec3D = b.into();
     /// // axis ≈ (0, 0, 1)
     /// ```
     #[inline]
     fn from(b: Bivector<f32>) -> Self {
         // dual: Bivector(xy, xz, yz) -> Vector(yz, -xz, xy)
-        rerun::Vec3D::new(b.yz(), -b.xz(), b.xy())
+        rerun::Vec3D::new(b.rx(), -b.ry(), b.rz())
     }
 }
 
@@ -155,14 +155,15 @@ impl From<Rotor<f32>> for rerun::components::RotationQuat {
     /// use clifford::specialized::euclidean::dim3::{Rotor, Bivector};
     /// use std::f32::consts::FRAC_PI_2;
     ///
-    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let quat: rerun::components::RotationQuat = rotor.into();
     /// ```
     #[inline]
     fn from(rotor: Rotor<f32>) -> Self {
         let r = rotor.normalize();
-        // Mapping: (x, y, z, w) = (yz, -xz, xy, s)
-        let quat = rerun::Quaternion::from_xyzw([r.b().yz(), -r.b().xz(), r.b().xy(), r.s()]);
+        // Mapping: (x, y, z, w) = (rx, -ry, rz, s)
+        // rx = e23 (rotation around x), ry = e13 (rotation around y), rz = e12 (rotation around z)
+        let quat = rerun::Quaternion::from_xyzw([r.rx(), -r.ry(), r.rz(), r.s()]);
         rerun::components::RotationQuat(quat)
     }
 }
@@ -183,7 +184,7 @@ impl From<Rotor<f32>> for rerun::Transform3D {
     /// use clifford::specialized::euclidean::dim3::{Rotor, Bivector};
     /// use std::f32::consts::FRAC_PI_4;
     ///
-    /// let rotor = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_xy());
+    /// let rotor = Rotor::from_angle_plane(FRAC_PI_4, Bivector::unit_rz());
     /// rec.log("rotation", &rerun::Transform3D::from(rotor))?;
     /// ```
     #[inline]
@@ -243,7 +244,7 @@ mod tests {
     #[test]
     fn rotor_z_rotation_converts() {
         // 90° rotation around z-axis (in xy-plane)
-        let rotor = Rotor::from_angle_plane(std::f32::consts::FRAC_PI_2, Bivector::unit_xy());
+        let rotor = Rotor::from_angle_plane(std::f32::consts::FRAC_PI_2, Bivector::unit_rz());
         // Just verify conversion works - Quaternion internals are opaque in SDK mode
         let _quat: rerun::components::RotationQuat = rotor.into();
     }
