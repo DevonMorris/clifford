@@ -368,7 +368,6 @@ mod tests {
                 })
                 .collect(),
             alias_of: None,
-            constraints: vec![],
             versor: None,
         }
     }

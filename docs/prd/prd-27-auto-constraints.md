@@ -148,7 +148,7 @@ pub fn new_checked(
     if (actual - expected).abs() > tolerance {
         return Err("Motor constraint");
     }
-    Ok(Self::new(s, e23, e31, e12, e01, e02, e03, e0123))
+    Ok(Self::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123))
 }
 ```
 
@@ -167,12 +167,25 @@ pub fn from_components(
     if (s).abs() < T::epsilon() {
         return None;
     }
-    Some(Self::new(
+    Some(Self::new_unchecked(
         s, e23, e31, e12, e01, e02, e03,
         (e01 * e23 - e02 * e31 + e03 * e12) / (s),
     ))
 }
 ```
+
+### Part 4: Remove `new()` for Constrained Types
+
+Constrained types should only have `new_unchecked()`, `new_checked()`, and `from_components()`:
+
+**types.rs**:
+- Modified `generate_constructor()` to check if type has constraint
+- Constrained types: only generate `new_unchecked()`
+- Unconstrained types: generate both `new()` and `new_unchecked()` (alias)
+
+**All codegen files** (`types.rs`, `traits.rs`, `projections.rs`, `unary.rs`, `conversions.rs`):
+- Updated all generated code to use `new_unchecked()` instead of `new()`
+- This ensures generated operations work for both constrained and unconstrained types
 
 ### Bug Fixes During Implementation
 

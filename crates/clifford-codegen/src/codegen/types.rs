@@ -214,7 +214,7 @@ impl<'a> TypeGenerator<'a> {
         let module_path = self.spec.module_path.as_deref().unwrap_or("generated");
 
         format!(
-            "use clifford::specialized::{}::{};\n\nlet v = {}::new({});",
+            "use clifford::specialized::{}::{};\n\nlet v = {}::new_unchecked({});",
             module_path,
             ty.name,
             ty.name,
@@ -278,10 +278,12 @@ impl<'a> TypeGenerator<'a> {
 
     /// Generates constructors.
     ///
-    /// All types get:
-    /// - `new()` - the primary constructor that takes all fields
-    /// - `new_unchecked()` - alias for `new()` for backward compatibility with
-    ///   code that uses unchecked constructors for constrained types
+    /// For types WITHOUT constraints:
+    /// - `new()` - the primary constructor
+    /// - `new_unchecked()` - alias for `new()`
+    ///
+    /// For types WITH constraints:
+    /// - `new_unchecked()` only - no `new()` to prevent accidental invalid construction
     fn generate_constructor(&self, ty: &TypeSpec) -> TokenStream {
         let params: Vec<TokenStream> = ty
             .fields
@@ -301,25 +303,64 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let params2 = params.clone();
+        // Check if this type has a constraint
+        let has_constraint = self.type_has_constraint(ty);
 
-        quote! {
-            /// Creates a new element from components.
-            #[inline]
-            pub fn new(#(#params),*) -> Self {
-                Self { #(#field_inits),* }
+        if has_constraint {
+            // Constrained types: only new_unchecked(), no new()
+            quote! {
+                /// Creates a new element from components without validation.
+                ///
+                /// **Warning:** This does not validate the geometric constraint.
+                /// Use `new_checked()` to validate, or `from_components()` to
+                /// construct from independent parameters.
+                #[inline]
+                pub fn new_unchecked(#(#params),*) -> Self {
+                    Self { #(#field_inits),* }
+                }
             }
+        } else {
+            // Unconstrained types: both new() and new_unchecked()
+            let params2 = params.clone();
+            quote! {
+                /// Creates a new element from components.
+                #[inline]
+                pub fn new(#(#params),*) -> Self {
+                    Self { #(#field_inits),* }
+                }
 
-            /// Creates a new element from components without validation.
-            ///
-            /// This is an alias for `new()`. It exists for consistency with types
-            /// that have geometric constraints, where unchecked construction is
-            /// used in performance-critical code or trusted contexts.
-            #[inline]
-            pub fn new_unchecked(#(#params2),*) -> Self {
-                Self::new(#(#field_inits),*)
+                /// Creates a new element from components without validation.
+                ///
+                /// This is an alias for `new()`. It exists for consistency with types
+                /// that have geometric constraints, where unchecked construction is
+                /// used in performance-critical code or trusted contexts.
+                #[inline]
+                pub fn new_unchecked(#(#params2),*) -> Self {
+                    Self::new(#(#field_inits),*)
+                }
             }
         }
+    }
+
+    /// Checks if a type has a geometric constraint.
+    fn type_has_constraint(&self, ty: &TypeSpec) -> bool {
+        let deriver = ConstraintDeriver::new(self.algebra);
+        if let Some(constraint) = deriver.derive_geometric_constraint(ty, "x") {
+            // Only consider single-constraint linear cases (which we can solve)
+            if constraint.zero_expressions.len() == 1 {
+                let expr = &constraint.zero_expressions[0];
+                let expr_str = format!("{} = 0", expr);
+                let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade);
+                if let Some(field) = solve_for_field {
+                    let solver = ConstraintSolver::new();
+                    let symbol_name = format!("x_{}", field.name);
+                    if let Ok(solution) = solver.solve(&expr_str, &symbol_name) {
+                        return solution.solution_type == SolutionType::Linear;
+                    }
+                }
+            }
+        }
+        false
     }
 
     /// Generates constraint-checking constructors for types with geometric constraints.
@@ -423,7 +464,7 @@ impl<'a> TypeGenerator<'a> {
                 if (actual - expected).abs() > tolerance {
                     return Err(#constraint_name);
                 }
-                Ok(Self::new(#(#field_inits),*))
+                Ok(Self::new_unchecked(#(#field_inits),*))
             }
         }
     }
@@ -489,7 +530,7 @@ impl<'a> TypeGenerator<'a> {
                     if (#divisor_check).abs() < T::epsilon() {
                         return None;
                     }
-                    Some(Self::new(#(#field_inits),*))
+                    Some(Self::new_unchecked(#(#field_inits),*))
                 }
             }
         } else {
@@ -503,7 +544,7 @@ impl<'a> TypeGenerator<'a> {
                 #[doc = #doc_no_div]
                 #[inline]
                 pub fn from_components(#(#free_params),*) -> Self {
-                    Self::new(#(#field_inits),*)
+                    Self::new_unchecked(#(#field_inits),*)
                 }
             }
         }
@@ -555,7 +596,7 @@ impl<'a> TypeGenerator<'a> {
     /// Generates the zero() method for a type.
     fn generate_zero(&self, ty: &TypeSpec) -> TokenStream {
         let zeros: Vec<TokenStream> = ty.fields.iter().map(|_| quote! { T::zero() }).collect();
-        let constructor = quote! { new };
+        let constructor = quote! { new_unchecked };
 
         quote! {
             /// Creates the zero element.
@@ -573,7 +614,7 @@ impl<'a> TypeGenerator<'a> {
             return quote! {};
         }
 
-        let constructor = quote! { new };
+        let constructor = quote! { new_unchecked };
 
         let units: Vec<TokenStream> = ty
             .fields
@@ -619,7 +660,7 @@ impl<'a> TypeGenerator<'a> {
             .map(|f| format_ident!("{}", f.name))
             .collect();
 
-        let constructor = quote! { new };
+        let constructor = quote! { new_unchecked };
 
         // Compute norm squared based on metric signature.
         // For each blade, we need to consider the metric.
@@ -726,7 +767,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { new };
+        let constructor = quote! { new_unchecked };
 
         quote! {
             /// Returns the reverse (reversion).
@@ -769,7 +810,7 @@ impl<'a> TypeGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { new };
+        let constructor = quote! { new_unchecked };
 
         quote! {
             /// Returns the antireverse.

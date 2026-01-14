@@ -97,7 +97,7 @@ impl<T: Float> From<Multivector<T, Projective2>> for Flector<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(0usize)),
             mv.get(Blade::from_index(5usize)),
             mv.get(Blade::from_index(6usize)),
@@ -111,7 +111,7 @@ impl<T: Float> From<Multivector<T, Projective2>> for Line<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(5usize)),
             mv.get(Blade::from_index(6usize)),
             mv.get(Blade::from_index(3usize)),
@@ -124,7 +124,7 @@ impl<T: Float> From<Multivector<T, Projective2>> for Motor<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(1usize)),
             mv.get(Blade::from_index(2usize)),
             mv.get(Blade::from_index(4usize)),
@@ -138,7 +138,7 @@ impl<T: Float> From<Multivector<T, Projective2>> for Point<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(
+        Self::new_unchecked(
             mv.get(Blade::from_index(1usize)),
             mv.get(Blade::from_index(2usize)),
             mv.get(Blade::from_index(4usize)),
@@ -151,7 +151,7 @@ impl<T: Float> From<Multivector<T, Projective2>> for Scalar<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(mv.get(Blade::from_index(0usize)))
+        Self::new_unchecked(mv.get(Blade::from_index(0usize)))
     }
 }
 impl<T: Float> From<Multivector<T, Projective2>> for Trivector<T> {
@@ -160,6 +160,6 @@ impl<T: Float> From<Multivector<T, Projective2>> for Trivector<T> {
     #[doc = r" Note: This is a lossy projection that only extracts the relevant"]
     #[doc = r" grades. Other components of the multivector are discarded."]
     fn from(mv: Multivector<T, Projective2>) -> Self {
-        Self::new(mv.get(Blade::from_index(7usize)))
+        Self::new_unchecked(mv.get(Blade::from_index(7usize)))
     }
 }

@@ -210,7 +210,7 @@ impl<'a> ConversionsGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { Self::new(#(#field_extracts),*) };
+        let constructor = quote! { Self::new_unchecked(#(#field_extracts),*) };
 
         let doc = quote! {
             /// Extracts this type from a multivector.

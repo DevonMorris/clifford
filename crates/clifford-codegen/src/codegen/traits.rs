@@ -220,7 +220,7 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Generates a constructor call.
     fn generate_constructor_call(_ty: &TypeSpec, field_exprs: &[TokenStream]) -> TokenStream {
-        quote! { Self::new(#(#field_exprs),*) }
+        quote! { Self::new_unchecked(#(#field_exprs),*) }
     }
 
     /// Generates Add implementation.
@@ -373,7 +373,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1022,7 +1022,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1057,7 +1057,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1092,7 +1092,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1127,7 +1127,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1158,7 +1158,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if operand.versor.is_some() {
             quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #operand_name::new(#(#field_exprs),*) }
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         };
 
         // For sandwich, output is typically same type as operand
@@ -1190,7 +1190,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if operand.versor.is_some() {
             quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #operand_name::new(#(#field_exprs),*) }
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
         };
 
         // For antisandwich, output is typically same type as operand
@@ -1338,7 +1338,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1373,7 +1373,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1408,7 +1408,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1443,7 +1443,7 @@ impl<'a> TraitsGenerator<'a> {
         let constructor_call = if output.versor.is_some() {
             quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
         };
 
         quote! {
@@ -1509,7 +1509,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { Self::new(#(#field_exprs),*) };
+        let constructor = quote! { Self::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Reverse for #type_name<T> {
@@ -1543,7 +1543,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { Self::new(#(#field_exprs),*) };
+        let constructor = quote! { Self::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Antireverse for #type_name<T> {
@@ -1594,7 +1594,7 @@ impl<'a> TraitsGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { #out_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             impl<T: Float> RightComplement for #type_name<T> {
@@ -1721,7 +1721,7 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn scale(&self, factor: T) -> Self {
-                    Self::new(#(#scale_fields),*)
+                    Self::new_unchecked(#(#scale_fields),*)
                 }
             }
         }
@@ -1815,7 +1815,7 @@ impl<'a> TraitsGenerator<'a> {
                         None
                     } else {
                         let inv_w = T::one() / w;
-                        Some(Self::new(#(#scale_fields),*))
+                        Some(Self::new_unchecked(#(#scale_fields),*))
                     }
                 }
             }
@@ -2091,7 +2091,7 @@ impl<'a> TraitsGenerator<'a> {
                         (-100.0f64..100.0)
                             #filter_chain
                             .prop_map(|#var| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2107,7 +2107,7 @@ impl<'a> TraitsGenerator<'a> {
                         (#(#range_tuple),*)
                             #filter_chain
                             .prop_map(|(#(#prop_map_args),*)| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2204,7 +2204,7 @@ impl<'a> TraitsGenerator<'a> {
                 fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                     (#(#range_tuple),*)
                         .prop_map(|(#(#prop_map_args),*)| {
-                            #name::new(#(#field_inits),*)
+                            #name::new_unchecked(#(#field_inits),*)
                         })
                         .boxed()
                 }
@@ -2238,7 +2238,7 @@ impl<'a> TraitsGenerator<'a> {
                     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                         (-100.0f64..100.0)
                             .prop_map(|x0| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }
@@ -2260,7 +2260,7 @@ impl<'a> TraitsGenerator<'a> {
                     fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
                         (#(#range_tuple),*)
                             .prop_map(|(#(#prop_map_args),*)| {
-                                #name::new(#(#field_inits),*)
+                                #name::new_unchecked(#(#field_inits),*)
                             })
                             .boxed()
                     }

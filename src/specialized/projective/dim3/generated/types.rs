@@ -8,7 +8,7 @@
 use crate::scalar::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Flector;\n\nlet v = Flector::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D reflection/glide transformation\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Flector;\n\nlet v = Flector::new_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -31,9 +31,13 @@ pub struct Flector<T: Float> {
     e123: T,
 }
 impl<T: Float> Flector<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" **Warning:** This does not validate the geometric constraint."]
+    #[doc = r" Use `new_checked()` to validate, or `from_components()` to"]
+    #[doc = r" construct from independent parameters."]
     #[inline]
-    pub fn new(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
+    pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
         Self {
             e1,
             e2,
@@ -44,15 +48,6 @@ impl<T: Float> Flector<T> {
             e012,
             e123,
         }
-    }
-    #[doc = r" Creates a new element from components without validation."]
-    #[doc = r""]
-    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
-    #[doc = r" that have geometric constraints, where unchecked construction is"]
-    #[doc = r" used in performance-critical code or trusted contexts."]
-    #[inline]
-    pub fn new_unchecked(e1: T, e2: T, e3: T, e0: T, e023: T, e031: T, e012: T, e123: T) -> Self {
-        Self::new(e1, e2, e3, e0, e023, e031, e012, e123)
     }
     #[doc = r" Creates a new element, validating the geometric constraint."]
     #[doc = r""]
@@ -74,7 +69,7 @@ impl<T: Float> Flector<T> {
         if (actual - expected).abs() > tolerance {
             return Err("Flector constraint");
         }
-        Ok(Self::new(e1, e2, e3, e0, e023, e031, e012, e123))
+        Ok(Self::new_unchecked(e1, e2, e3, e0, e023, e031, e012, e123))
     }
     #[doc = "Creates a Flector from 7 independent components, computing `e123`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
     #[inline]
@@ -82,7 +77,7 @@ impl<T: Float> Flector<T> {
         if (e0).abs() < T::epsilon() {
             return None;
         }
-        Some(Self::new(
+        Some(Self::new_unchecked(
             e1,
             e2,
             e3,
@@ -136,7 +131,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -190,7 +185,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e1 * s,
             self.e2 * s,
             self.e3 * s,
@@ -212,7 +207,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e1, self.e2, self.e3, self.e0, -self.e023, -self.e031, -self.e012, -self.e123,
         )
     }
@@ -229,7 +224,7 @@ impl<T: Float> Flector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             -self.e1, -self.e2, -self.e3, -self.e0, self.e023, self.e031, self.e012, self.e123,
         )
     }
@@ -239,7 +234,7 @@ impl<T: Float> Default for Flector<T> {
         Self::zero()
     }
 }
-#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Line;\n\nlet v = Line::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
+#[doc = "3D line in Plücker coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Line;\n\nlet v = Line::new_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -258,9 +253,13 @@ pub struct Line<T: Float> {
     e12: T,
 }
 impl<T: Float> Line<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" **Warning:** This does not validate the geometric constraint."]
+    #[doc = r" Use `new_checked()` to validate, or `from_components()` to"]
+    #[doc = r" construct from independent parameters."]
     #[inline]
-    pub fn new(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
+    pub fn new_unchecked(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
         Self {
             e01,
             e02,
@@ -269,15 +268,6 @@ impl<T: Float> Line<T> {
             e31,
             e12,
         }
-    }
-    #[doc = r" Creates a new element from components without validation."]
-    #[doc = r""]
-    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
-    #[doc = r" that have geometric constraints, where unchecked construction is"]
-    #[doc = r" used in performance-critical code or trusted contexts."]
-    #[inline]
-    pub fn new_unchecked(e01: T, e02: T, e03: T, e23: T, e31: T, e12: T) -> Self {
-        Self::new(e01, e02, e03, e23, e31, e12)
     }
     #[doc = r" Creates a new element, validating the geometric constraint."]
     #[doc = r""]
@@ -297,7 +287,7 @@ impl<T: Float> Line<T> {
         if (actual - expected).abs() > tolerance {
             return Err("Line constraint");
         }
-        Ok(Self::new(e01, e02, e03, e23, e31, e12))
+        Ok(Self::new_unchecked(e01, e02, e03, e23, e31, e12))
     }
     #[doc = "Creates a Line from 5 independent components, computing `e12`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
     #[inline]
@@ -305,7 +295,7 @@ impl<T: Float> Line<T> {
         if (e03).abs() < T::epsilon() {
             return None;
         }
-        Some(Self::new(
+        Some(Self::new_unchecked(
             e01,
             e02,
             e03,
@@ -347,7 +337,7 @@ impl<T: Float> Line<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -359,7 +349,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e1e4 element."]
     #[inline]
     pub fn unit_e01() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::one(),
             T::zero(),
             T::zero(),
@@ -371,7 +361,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e2e4 element."]
     #[inline]
     pub fn unit_e02() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::one(),
             T::zero(),
@@ -383,7 +373,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e3e4 element."]
     #[inline]
     pub fn unit_e03() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::one(),
@@ -395,7 +385,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e2e3 element."]
     #[inline]
     pub fn unit_e23() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -407,7 +397,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e1e3 element."]
     #[inline]
     pub fn unit_e31() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -419,7 +409,7 @@ impl<T: Float> Line<T> {
     #[doc = "Creates the unit e1e2 element."]
     #[inline]
     pub fn unit_e12() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -469,7 +459,7 @@ impl<T: Float> Line<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.e01 * s,
             self.e02 * s,
             self.e03 * s,
@@ -489,7 +479,7 @@ impl<T: Float> Line<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
         )
     }
@@ -506,7 +496,7 @@ impl<T: Float> Line<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             -self.e01, -self.e02, -self.e03, -self.e23, -self.e31, -self.e12,
         )
     }
@@ -516,7 +506,7 @@ impl<T: Float> Default for Line<T> {
         Self::zero()
     }
 }
-#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Motor;\n\nlet v = Motor::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
+#[doc = "3D rigid transformation (rotation + translation)\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n| 6 | e2e3 | `e23` |\n| 5 | e1e3 | `e31` |\n| 3 | e1e2 | `e12` |\n| 9 | e1e4 | `e01` |\n| 10 | e2e4 | `e02` |\n| 12 | e3e4 | `e03` |\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Motor;\n\nlet v = Motor::new_unchecked(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -539,9 +529,13 @@ pub struct Motor<T: Float> {
     e0123: T,
 }
 impl<T: Float> Motor<T> {
-    #[doc = r" Creates a new element from components."]
+    #[doc = r" Creates a new element from components without validation."]
+    #[doc = r""]
+    #[doc = r" **Warning:** This does not validate the geometric constraint."]
+    #[doc = r" Use `new_checked()` to validate, or `from_components()` to"]
+    #[doc = r" construct from independent parameters."]
     #[inline]
-    pub fn new(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
+    pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
         Self {
             s,
             e23,
@@ -552,15 +546,6 @@ impl<T: Float> Motor<T> {
             e03,
             e0123,
         }
-    }
-    #[doc = r" Creates a new element from components without validation."]
-    #[doc = r""]
-    #[doc = r" This is an alias for `new()`. It exists for consistency with types"]
-    #[doc = r" that have geometric constraints, where unchecked construction is"]
-    #[doc = r" used in performance-critical code or trusted contexts."]
-    #[inline]
-    pub fn new_unchecked(s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T) -> Self {
-        Self::new(s, e23, e31, e12, e01, e02, e03, e0123)
     }
     #[doc = r" Creates a new element, validating the geometric constraint."]
     #[doc = r""]
@@ -582,7 +567,7 @@ impl<T: Float> Motor<T> {
         if (actual - expected).abs() > tolerance {
             return Err("Motor constraint");
         }
-        Ok(Self::new(s, e23, e31, e12, e01, e02, e03, e0123))
+        Ok(Self::new_unchecked(s, e23, e31, e12, e01, e02, e03, e0123))
     }
     #[doc = "Creates a Motor from 7 independent components, computing `e0123`.\n\nReturns `None` if the divisor would be zero (unstable computation)."]
     #[inline]
@@ -590,7 +575,7 @@ impl<T: Float> Motor<T> {
         if (s).abs() < T::epsilon() {
             return None;
         }
-        Some(Self::new(
+        Some(Self::new_unchecked(
             s,
             e23,
             e31,
@@ -644,7 +629,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(
+        Self::new_unchecked(
             T::zero(),
             T::zero(),
             T::zero(),
@@ -698,7 +683,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s * s,
             self.e23 * s,
             self.e31 * s,
@@ -720,7 +705,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }
@@ -737,7 +722,7 @@ impl<T: Float> Motor<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(
+        Self::new_unchecked(
             self.s, -self.e23, -self.e31, -self.e12, -self.e01, -self.e02, -self.e03, self.e0123,
         )
     }
@@ -747,7 +732,7 @@ impl<T: Float> Default for Motor<T> {
         Self::zero()
     }
 }
-#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D plane\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 14 | e2e3e4 | `e023` |\n| 13 | e1e3e4 | `e031` |\n| 11 | e1e2e4 | `e012` |\n| 7 | e1e2e3 | `e123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Plane;\n\nlet v = Plane::new_unchecked(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -804,27 +789,27 @@ impl<T: Float> Plane<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e2e3e4 element."]
     #[inline]
     pub fn unit_e023() -> Self {
-        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::one(), T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1e3e4 element."]
     #[inline]
     pub fn unit_e031() -> Self {
-        Self::new(T::zero(), T::one(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::one(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1e2e4 element."]
     #[inline]
     pub fn unit_e012() -> Self {
-        Self::new(T::zero(), T::zero(), T::one(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::one(), T::zero())
     }
     #[doc = "Creates the unit e1e2e3 element."]
     #[inline]
     pub fn unit_e123() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::one())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -865,7 +850,7 @@ impl<T: Float> Plane<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.e023 * s, self.e031 * s, self.e012 * s, self.e123 * s)
+        Self::new_unchecked(self.e023 * s, self.e031 * s, self.e012 * s, self.e123 * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -878,7 +863,7 @@ impl<T: Float> Plane<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(-self.e023, -self.e031, -self.e012, -self.e123)
+        Self::new_unchecked(-self.e023, -self.e031, -self.e012, -self.e123)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -893,7 +878,7 @@ impl<T: Float> Plane<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(self.e023, self.e031, self.e012, self.e123)
+        Self::new_unchecked(self.e023, self.e031, self.e012, self.e123)
     }
 }
 impl<T: Float> Default for Plane<T> {
@@ -901,7 +886,7 @@ impl<T: Float> Default for Plane<T> {
         Self::zero()
     }
 }
-#[doc = "3D point in homogeneous coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Point;\n\nlet v = Point::new(1.0, 2.0, 3.0, 4.0);\n```"]
+#[doc = "3D point in homogeneous coordinates\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 1 | e1 | `e1` |\n| 2 | e2 | `e2` |\n| 4 | e3 | `e3` |\n| 8 | e4 | `e0` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Point;\n\nlet v = Point::new_unchecked(1.0, 2.0, 3.0, 4.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -953,27 +938,27 @@ impl<T: Float> Point<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e1 element."]
     #[inline]
     pub fn unit_e1() -> Self {
-        Self::new(T::one(), T::zero(), T::zero(), T::zero())
+        Self::new_unchecked(T::one(), T::zero(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e2 element."]
     #[inline]
     pub fn unit_e2() -> Self {
-        Self::new(T::zero(), T::one(), T::zero(), T::zero())
+        Self::new_unchecked(T::zero(), T::one(), T::zero(), T::zero())
     }
     #[doc = "Creates the unit e3 element."]
     #[inline]
     pub fn unit_e3() -> Self {
-        Self::new(T::zero(), T::zero(), T::one(), T::zero())
+        Self::new_unchecked(T::zero(), T::zero(), T::one(), T::zero())
     }
     #[doc = "Creates the unit e4 element."]
     #[inline]
     pub fn unit_e0() -> Self {
-        Self::new(T::zero(), T::zero(), T::zero(), T::one())
+        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -1011,7 +996,7 @@ impl<T: Float> Point<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.e1 * s, self.e2 * s, self.e3 * s, self.e0 * s)
+        Self::new_unchecked(self.e1 * s, self.e2 * s, self.e3 * s, self.e0 * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -1024,7 +1009,7 @@ impl<T: Float> Point<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.e1, self.e2, self.e3, self.e0)
+        Self::new_unchecked(self.e1, self.e2, self.e3, self.e0)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -1039,7 +1024,7 @@ impl<T: Float> Point<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(-self.e1, -self.e2, -self.e3, -self.e0)
+        Self::new_unchecked(-self.e1, -self.e2, -self.e3, -self.e0)
     }
 }
 impl<T: Float> Default for Point<T> {
@@ -1047,7 +1032,7 @@ impl<T: Float> Default for Point<T> {
         Self::zero()
     }
 }
-#[doc = "Quadvector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Quadvector;\n\nlet v = Quadvector::new(1.0);\n```"]
+#[doc = "Quadvector\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 15 | e1e2e3e4 | `e0123` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Quadvector;\n\nlet v = Quadvector::new_unchecked(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -1078,12 +1063,12 @@ impl<T: Float> Quadvector<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero())
+        Self::new_unchecked(T::zero())
     }
     #[doc = "Creates the unit e1e2e3e4 element."]
     #[inline]
     pub fn unit_e0123() -> Self {
-        Self::new(T::one())
+        Self::new_unchecked(T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -1121,7 +1106,7 @@ impl<T: Float> Quadvector<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.e0123 * s)
+        Self::new_unchecked(self.e0123 * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -1134,7 +1119,7 @@ impl<T: Float> Quadvector<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.e0123)
+        Self::new_unchecked(self.e0123)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -1149,7 +1134,7 @@ impl<T: Float> Quadvector<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(self.e0123)
+        Self::new_unchecked(self.e0123)
     }
 }
 impl<T: Float> Default for Quadvector<T> {
@@ -1157,7 +1142,7 @@ impl<T: Float> Default for Quadvector<T> {
         Self::zero()
     }
 }
-#[doc = "Scalar\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Scalar;\n\nlet v = Scalar::new(1.0);\n```"]
+#[doc = "Scalar\n\n# Basis Ordering\n\n| Index | Blade | Field |\n|-------|-------|-------|\n| 0 | s | `s` |\n\n\n# Example\n\n```\nuse clifford::specialized::projective::dim3::Scalar;\n\nlet v = Scalar::new_unchecked(1.0);\n```"]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
@@ -1188,12 +1173,12 @@ impl<T: Float> Scalar<T> {
     #[doc = r" Creates the zero element."]
     #[inline]
     pub fn zero() -> Self {
-        Self::new(T::zero())
+        Self::new_unchecked(T::zero())
     }
     #[doc = "Creates the unit s element."]
     #[inline]
     pub fn unit_s() -> Self {
-        Self::new(T::one())
+        Self::new_unchecked(T::one())
     }
     #[doc = r" Returns the squared Euclidean norm."]
     #[doc = r""]
@@ -1231,7 +1216,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" Scales all components by a scalar."]
     #[inline]
     pub fn scale(&self, s: T) -> Self {
-        Self::new(self.s * s)
+        Self::new_unchecked(self.s * s)
     }
     #[doc = r" Returns the reverse (reversion)."]
     #[doc = r""]
@@ -1244,7 +1229,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" - ..."]
     #[inline]
     pub fn reverse(&self) -> Self {
-        Self::new(self.s)
+        Self::new_unchecked(self.s)
     }
     #[doc = r" Returns the antireverse."]
     #[doc = r""]
@@ -1259,7 +1244,7 @@ impl<T: Float> Scalar<T> {
     #[doc = r" - Grade 4 (antigrade 0): (-1)^(0*0/2) = (-1)^0 = +1"]
     #[inline]
     pub fn antireverse(&self) -> Self {
-        Self::new(self.s)
+        Self::new_unchecked(self.s)
     }
 }
 impl<T: Float> Default for Scalar<T> {

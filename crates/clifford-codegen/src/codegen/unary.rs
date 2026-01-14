@@ -82,7 +82,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { #type_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #type_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Reverses the {} (negates grades where k(k-1)/2 is odd).",
@@ -134,7 +134,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { #type_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #type_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Antireverses the {} (negates grades where (n-k)(n-k-1)/2 is odd).",
@@ -213,7 +213,7 @@ impl<'a> UnaryGenerator<'a> {
             })
             .collect();
 
-        let constructor = quote! { #output_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #output_name::new_unchecked(#(#field_exprs),*) };
 
         let doc = format!(
             "Computes the right complement of {} -> {}.",

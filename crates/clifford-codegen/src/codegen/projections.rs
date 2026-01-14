@@ -183,7 +183,7 @@ impl<'a> ProjectionGenerator<'a> {
             type_a.name, type_b.name, output_type.name
         );
 
-        let constructor = quote! { #out_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             #[doc = #doc]
@@ -257,7 +257,7 @@ impl<'a> ProjectionGenerator<'a> {
             type_a.name, type_b.name, output_type.name
         );
 
-        let constructor = quote! { #out_name::new(#(#field_exprs),*) };
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         Some(quote! {
             #[doc = #doc]
