@@ -5,7 +5,7 @@
 use super::types::{Bivector, Rotor, Scalar, Vector};
 use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, LeftContract,
-    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
+    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Transform, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -485,13 +485,12 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.s() * self.s() + self.xy() * operand.s() * self.xy()
-                - self.xy() * operand.xy() * self.s()
-                + self.s() * operand.xy() * self.xy(),
-            -(self.s() * operand.s() * self.xy())
-                + self.xy() * operand.s() * self.s()
-                + self.s() * operand.xy() * self.s()
-                + self.xy() * operand.xy() * self.xy(),
+            self.s() * operand.s() * self.s() - self.xy() * operand.xy() * self.s()
+                + self.s() * operand.xy() * self.xy()
+                + self.xy() * operand.s() * self.xy(),
+            self.xy() * operand.xy() * self.xy() + self.s() * operand.xy() * self.s()
+                - self.s() * operand.s() * self.xy()
+                + self.xy() * operand.s() * self.s(),
         )
     }
 }
@@ -500,7 +499,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.xy() * operand.s() * self.xy() + self.s() * operand.s() * self.s(),
+            self.s() * operand.s() * self.s() + self.xy() * operand.s() * self.xy(),
         )
     }
 }
@@ -509,12 +508,14 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.xy() * operand.y() * self.s() - self.xy() * operand.x() * self.xy()
+            -(self.xy() * operand.x() * self.xy())
+                + self.s() * operand.y() * self.xy()
                 + self.s() * operand.x() * self.s()
-                + self.s() * operand.y() * self.xy(),
-            -(self.s() * operand.x() * self.xy()) + self.s() * operand.y() * self.s()
-                - self.xy() * operand.x() * self.s()
-                - self.xy() * operand.y() * self.xy(),
+                + self.xy() * operand.y() * self.s(),
+            -(self.xy() * operand.x() * self.s())
+                - self.s() * operand.x() * self.xy()
+                - self.xy() * operand.y() * self.xy()
+                + self.s() * operand.y() * self.s(),
         )
     }
 }
@@ -533,12 +534,13 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             -(self.xy() * operand.xy() * self.s())
+                + self.xy() * operand.s() * self.xy()
                 + self.s() * operand.xy() * self.xy()
-                + self.s() * operand.s() * self.s()
-                + self.xy() * operand.s() * self.xy(),
-            self.s() * operand.xy() * self.s() + self.xy() * operand.s() * self.s()
-                - self.s() * operand.s() * self.xy()
-                + self.xy() * operand.xy() * self.xy(),
+                + self.s() * operand.s() * self.s(),
+            -(self.s() * operand.s() * self.xy())
+                + self.s() * operand.xy() * self.s()
+                + self.xy() * operand.xy() * self.xy()
+                + self.xy() * operand.s() * self.s(),
         )
     }
 }
@@ -547,7 +549,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.xy() * operand.s() * self.xy() + self.s() * operand.s() * self.s(),
+            self.s() * operand.s() * self.s() + self.xy() * operand.s() * self.xy(),
         )
     }
 }
@@ -556,15 +558,41 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.s() * operand.x() * self.s())
-                + self.s() * operand.y() * self.xy()
+            self.s() * operand.y() * self.xy() - self.s() * operand.x() * self.s()
                 + self.xy() * operand.x() * self.xy()
                 + self.xy() * operand.y() * self.s(),
-            -(self.xy() * operand.x() * self.s())
-                - self.s() * operand.x() * self.xy()
-                - self.s() * operand.y() * self.s()
-                + self.xy() * operand.y() * self.xy(),
+            -(self.s() * operand.x() * self.xy()) + self.xy() * operand.y() * self.xy()
+                - self.xy() * operand.x() * self.s()
+                - self.s() * operand.y() * self.s(),
         )
+    }
+}
+impl<T: Float> Transform<Bivector<T>> for Rotor<T> {
+    type Output = Bivector<T>;
+    #[inline]
+    fn transform(&self, operand: &Bivector<T>) -> Bivector<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Rotor<T>> for Rotor<T> {
+    type Output = Rotor<T>;
+    #[inline]
+    fn transform(&self, operand: &Rotor<T>) -> Rotor<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Scalar<T>> for Rotor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn transform(&self, operand: &Scalar<T>) -> Scalar<T> {
+        self.sandwich(operand)
+    }
+}
+impl<T: Float> Transform<Vector<T>> for Rotor<T> {
+    type Output = Vector<T>;
+    #[inline]
+    fn transform(&self, operand: &Vector<T>) -> Vector<T> {
+        self.sandwich(operand)
     }
 }
 impl<T: Float> Versor<Rotor<T>> for Rotor<T> {

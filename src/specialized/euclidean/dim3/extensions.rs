@@ -117,14 +117,78 @@ impl<T: Float> Trivector<T> {
 }
 
 // ============================================================================
-// Rotor extensions (grades [1, 3]: vector + trivector)
+// Rotor extensions (grades [0, 2]: scalar + bivector)
 // ============================================================================
 
 impl<T: Float> Rotor<T> {
-    /// Returns the vector part as a Vector.
+    /// Returns the bivector part as a Bivector.
     #[inline]
-    pub fn v(&self) -> Vector<T> {
-        Vector::new(self.x(), self.y(), self.z())
+    pub fn b(&self) -> Bivector<T> {
+        Bivector::new(self.xy(), self.xz(), self.yz())
+    }
+
+    /// Creates a rotor from a rotation angle and plane (bivector).
+    ///
+    /// The rotor `R = cos(θ/2) + sin(θ/2)B̂` rotates by angle `θ` in the plane `B`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// // 90° rotation in the xy-plane (around z-axis)
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let v = Vector::unit_x();
+    /// let rotated = r.rotate(v);
+    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self {
+        let half = angle / T::TWO;
+        let (sin_half, cos_half) = (half.sin(), half.cos());
+        let b = plane.normalized();
+        Self::new_unchecked(
+            cos_half,
+            sin_half * b.xy(),
+            sin_half * b.xz(),
+            sin_half * b.yz(),
+        )
+    }
+
+    /// Creates a rotor that rotates vector `a` to vector `b`.
+    ///
+    /// Both vectors should be non-zero. The rotation is the shortest
+    /// arc from `a` to `b`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
+    /// use approx::abs_diff_eq;
+    ///
+    /// let a = Vector::<f64>::unit_x();
+    /// let b = Vector::<f64>::unit_y();
+    /// let r = Rotor::from_vectors(a, b);
+    /// let rotated = r.rotate(a);
+    /// assert!(abs_diff_eq!(rotated.x(), b.x(), epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.y(), b.y(), epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(rotated.z(), b.z(), epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn from_vectors(a: Vector<T>, b: Vector<T>) -> Self {
+        // R = (1 + b*a) / |1 + b*a|
+        // This gives the rotor for the shortest rotation from a to b
+        let a_norm = a.normalized();
+        let b_norm = b.normalized();
+
+        // Compute 1 + b*a = 1 + b·a + b∧a
+        let dot = b_norm.dot(a_norm);
+        let wedge = b_norm.wedge(&a_norm);
+
+        let r = Self::new_unchecked(T::one() + dot, wedge.xy(), wedge.xz(), wedge.yz());
+        r.normalize()
     }
 
     /// Returns the inverse rotor: `R⁻¹ = R̃ / |R|²`.
@@ -135,19 +199,41 @@ impl<T: Float> Rotor<T> {
         let norm_sq = self.norm_squared();
         let rev = self.reverse();
         Self::new_unchecked(
-            rev.x() / norm_sq,
-            rev.y() / norm_sq,
-            rev.z() / norm_sq,
-            rev.xyz() / norm_sq,
+            rev.s() / norm_sq,
+            rev.xy() / norm_sq,
+            rev.xz() / norm_sq,
+            rev.yz() / norm_sq,
         )
     }
 
-    /// Applies this transformation to a vector via the antisandwich product.
+    /// Applies this rotation to a vector via the sandwich product.
+    ///
+    /// For Euclidean GA (non-degenerate), the Transform trait uses sandwich.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
+    /// use std::f64::consts::FRAC_PI_2;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let v = Vector::unit_x();
+    /// let rotated = r.rotate(v);
+    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// ```
     #[inline]
     pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
         self.transform(&v)
     }
 
+    /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.
+    ///
+    /// The result applies `self` first, then `other`.
+    #[inline]
+    pub fn compose(&self, other: Self) -> Self {
+        other * *self
+    }
 
     /// Spherical linear interpolation between two rotors.
     ///
@@ -160,10 +246,10 @@ impl<T: Float> Rotor<T> {
     /// * `t` - Interpolation parameter in [0, 1]
     #[inline]
     pub fn slerp(&self, other: Self, t: T) -> Self {
-        let dot = self.x() * other.x()
-            + self.y() * other.y()
-            + self.z() * other.z()
-            + self.xyz() * other.xyz();
+        let dot = self.s() * other.s()
+            + self.xy() * other.xy()
+            + self.xz() * other.xz()
+            + self.yz() * other.yz();
 
         let dot = if dot > T::one() {
             T::one()
@@ -178,10 +264,10 @@ impl<T: Float> Rotor<T> {
         if theta.abs() < T::epsilon() {
             // Linear interpolation for small angles, then normalize
             return Self::new_unchecked(
-                self.x() * (T::one() - t) + other.x() * t,
-                self.y() * (T::one() - t) + other.y() * t,
-                self.z() * (T::one() - t) + other.z() * t,
-                self.xyz() * (T::one() - t) + other.xyz() * t,
+                self.s() * (T::one() - t) + other.s() * t,
+                self.xy() * (T::one() - t) + other.xy() * t,
+                self.xz() * (T::one() - t) + other.xz() * t,
+                self.yz() * (T::one() - t) + other.yz() * t,
             )
             .normalize();
         }
@@ -192,11 +278,10 @@ impl<T: Float> Rotor<T> {
 
         // Spherical interpolation preserves unit norm
         Self::new_unchecked(
-            self.x() * s1 + other.x() * s2,
-            self.y() * s1 + other.y() * s2,
-            self.z() * s1 + other.z() * s2,
-            self.xyz() * s1 + other.xyz() * s2,
+            self.s() * s1 + other.s() * s2,
+            self.xy() * s1 + other.xy() * s2,
+            self.xz() * s1 + other.xz() * s2,
+            self.yz() * s1 + other.yz() * s2,
         )
     }
 }
-

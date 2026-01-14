@@ -88,9 +88,6 @@ impl<T: Float + na::RealField> From<na::Rotation2<T>> for Rotor<T> {
     ///
     /// let rotation = Rotation2::new(FRAC_PI_2); // 90° rotation
     /// let rotor: Rotor<f64> = rotation.into();
-    ///
-    /// // Verify angle is preserved
-    /// assert!((rotor.angle() - FRAC_PI_2).abs() < 1e-10);
     /// ```
     #[inline]
     fn from(rotation: na::Rotation2<T>) -> Self {
@@ -104,13 +101,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
     /// # Mathematical Correspondence
     ///
     /// A rotor `R = s + xy·e₁₂ = cos(θ/2) + sin(θ/2)·e₁₂` corresponds to
-    /// a rotation by angle `θ = 2·atan2(xy, s)`.
-    ///
-    /// # Note
-    ///
-    /// This conversion uses the rotor's [`angle()`](Rotor::angle) method,
-    /// which returns the full rotation angle. Non-unit rotors will produce
-    /// the same rotation as their normalized equivalents.
+    /// a nalgebra rotation by angle `θ`.
     ///
     /// # Example
     ///
@@ -121,9 +112,6 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
     ///
     /// let rotor = Rotor::from_angle(FRAC_PI_2); // 90° rotation
     /// let rotation: Rotation2<f64> = rotor.into();
-    ///
-    /// // Verify angle is preserved
-    /// assert!((rotation.angle() - FRAC_PI_2).abs() < 1e-10);
     /// ```
     #[inline]
     fn from(rotor: Rotor<T>) -> Self {

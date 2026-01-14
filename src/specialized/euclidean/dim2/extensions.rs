@@ -77,7 +77,10 @@ impl<T: Float> Bivector<T> {
 impl<T: Float> Rotor<T> {
     /// Creates a rotor from a rotation angle.
     ///
-    /// The rotor `R = cos(θ/2) + sin(θ/2)e₁₂` rotates by angle `θ`.
+    /// The rotor `R = cos(θ/2) - sin(θ/2)e₁₂` rotates counterclockwise by angle `θ`.
+    ///
+    /// Note: The bivector component is negated because the sandwich product
+    /// `R v R̃` rotates in the opposite direction of the bivector angle.
     ///
     /// # Example
     ///
@@ -86,7 +89,7 @@ impl<T: Float> Rotor<T> {
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
-    /// // 90° rotation
+    /// // 90° counterclockwise rotation
     /// let r = Rotor::from_angle(FRAC_PI_2);
     /// let v = Vector::unit_x();
     /// let rotated = r.rotate(v);
@@ -95,8 +98,8 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn from_angle(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Use new_unchecked since angle construction guarantees unit norm
-        Self::new_unchecked(half.cos(), half.sin())
+        // Negate bivector: sandwich R v R̃ rotates opposite to the bivector angle
+        Self::new_unchecked(half.cos(), -half.sin())
     }
 
     /// Creates a rotor that rotates vector `a` to vector `b`.
@@ -226,18 +229,12 @@ impl<T: Float> Rotor<T> {
     }
 
     /// Returns the rotation angle in radians.
+    ///
+    /// Returns the counterclockwise rotation angle θ where the rotor
+    /// was created via `from_angle(θ)`.
     #[inline]
     pub fn angle(&self) -> T {
-        self.xy().atan2(self.s()) * T::TWO
+        // Negate xy because from_angle stores -sin(θ/2) in the bivector component
+        T::atan2(-self.xy(), self.s()) * T::TWO
     }
 }
-
-// ============================================================================
-// Even type (alias for Rotor)
-// ============================================================================
-
-/// Even subalgebra element (scalar + bivector).
-///
-/// This is a type alias for [`Rotor`], since in 2D Euclidean GA
-/// the even subalgebra elements and rotors have the same structure.
-pub type Even<T> = Rotor<T>;

@@ -239,8 +239,16 @@ mod dim3_tests {
         // w = cos(45°), k = sin(45°), i = j = 0
         let expected_w = (std::f64::consts::FRAC_PI_4).cos();
         let expected_k = (std::f64::consts::FRAC_PI_4).sin();
-        assert!(abs_diff_eq!(q_inner.w, expected_w, epsilon = ABS_DIFF_EQ_EPS));
-        assert!(abs_diff_eq!(q_inner.k, expected_k, epsilon = ABS_DIFF_EQ_EPS));
+        assert!(abs_diff_eq!(
+            q_inner.w,
+            expected_w,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
+        assert!(abs_diff_eq!(
+            q_inner.k,
+            expected_k,
+            epsilon = ABS_DIFF_EQ_EPS
+        ));
         assert!(abs_diff_eq!(q_inner.i, 0.0, epsilon = ABS_DIFF_EQ_EPS));
         assert!(abs_diff_eq!(q_inner.j, 0.0, epsilon = ABS_DIFF_EQ_EPS));
     }

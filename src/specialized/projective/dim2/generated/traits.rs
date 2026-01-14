@@ -5,7 +5,7 @@
 use super::types::{Flector, Line, Motor, Point, Scalar, Trivector};
 use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, LeftContract,
-    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
+    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Transform, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -70,14 +70,14 @@ impl<T: Float> Mul<Flector<T>> for Flector<T> {
         Flector::new_unchecked(
             self.s() * rhs.s() + -(self.e12() * rhs.e12()),
             self.s() * rhs.e01()
-                + self.e01() * rhs.s()
+                + rhs.s() * self.e01()
                 + -(self.e02() * rhs.e12())
                 + self.e12() * rhs.e02(),
             self.s() * rhs.e02()
+                + rhs.s() * self.e02()
                 + self.e01() * rhs.e12()
-                + self.e02() * rhs.s()
                 + -(self.e12() * rhs.e01()),
-            self.s() * rhs.e12() + self.e12() * rhs.s(),
+            self.s() * rhs.e12() + rhs.s() * self.e12(),
         )
     }
 }
@@ -129,9 +129,9 @@ impl<T: Float> Mul<Scalar<T>> for Flector<T> {
     fn mul(self, rhs: Scalar<T>) -> Flector<T> {
         Flector::new_unchecked(
             self.s() * rhs.s(),
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01(),
+            rhs.s() * self.e02(),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -203,9 +203,9 @@ impl<T: Float> Mul<Flector<T>> for Line<T> {
     fn mul(self, rhs: Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
             -(self.e12() * rhs.e12()),
-            self.e01() * rhs.s() + -(self.e02() * rhs.e12()) + self.e12() * rhs.e02(),
-            self.e01() * rhs.e12() + self.e02() * rhs.s() + -(self.e12() * rhs.e01()),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01() + -(self.e02() * rhs.e12()) + self.e12() * rhs.e02(),
+            rhs.s() * self.e02() + self.e01() * rhs.e12() + -(self.e12() * rhs.e01()),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -250,9 +250,9 @@ impl<T: Float> Mul<Scalar<T>> for Line<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01(),
+            rhs.s() * self.e02(),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -320,16 +320,16 @@ impl<T: Float> Mul<Flector<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Flector<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e1() * rhs.s() + -(self.e2() * rhs.e12()),
-            self.e1() * rhs.e12() + self.e2() * rhs.s(),
-            self.e1() * rhs.e01()
+            rhs.s() * self.e1() + -(self.e2() * rhs.e12()),
+            rhs.s() * self.e2() + self.e1() * rhs.e12(),
+            rhs.s() * self.e0()
+                + self.e1() * rhs.e01()
                 + self.e2() * rhs.e02()
-                + self.e0() * rhs.s()
                 + -(self.e012() * rhs.e12()),
-            self.e1() * rhs.e02()
+            rhs.s() * self.e012()
+                + self.e1() * rhs.e02()
                 + -(self.e2() * rhs.e01())
-                + self.e0() * rhs.e12()
-                + self.e012() * rhs.s(),
+                + self.e0() * rhs.e12(),
         )
     }
 }
@@ -380,10 +380,10 @@ impl<T: Float> Mul<Scalar<T>> for Motor<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e1() * rhs.s(),
-            self.e2() * rhs.s(),
-            self.e0() * rhs.s(),
-            self.e012() * rhs.s(),
+            rhs.s() * self.e1(),
+            rhs.s() * self.e2(),
+            rhs.s() * self.e0(),
+            rhs.s() * self.e012(),
         )
     }
 }
@@ -449,9 +449,9 @@ impl<T: Float> Mul<Flector<T>> for Point<T> {
     #[inline]
     fn mul(self, rhs: Flector<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e1() * rhs.s() + -(self.e2() * rhs.e12()),
-            self.e1() * rhs.e12() + self.e2() * rhs.s(),
-            self.e1() * rhs.e01() + self.e2() * rhs.e02() + self.e0() * rhs.s(),
+            rhs.s() * self.e1() + -(self.e2() * rhs.e12()),
+            rhs.s() * self.e2() + self.e1() * rhs.e12(),
+            rhs.s() * self.e0() + self.e1() * rhs.e01() + self.e2() * rhs.e02(),
             self.e1() * rhs.e02() + -(self.e2() * rhs.e01()) + self.e0() * rhs.e12(),
         )
     }
@@ -497,9 +497,9 @@ impl<T: Float> Mul<Scalar<T>> for Point<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Point<T> {
         Point::new_unchecked(
-            self.e1() * rhs.s(),
-            self.e2() * rhs.s(),
-            self.e0() * rhs.s(),
+            rhs.s() * self.e1(),
+            rhs.s() * self.e2(),
+            rhs.s() * self.e0(),
         )
     }
 }
@@ -662,7 +662,7 @@ impl<T: Float> Mul<Flector<T>> for Trivector<T> {
             T::zero(),
             T::zero(),
             -(self.e012() * rhs.e12()),
-            self.e012() * rhs.s(),
+            rhs.s() * self.e012(),
         )
     }
 }
@@ -691,7 +691,7 @@ impl<T: Float> Mul<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.e012() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.e012())
     }
 }
 impl<T: Float> Wedge<Point<T>> for Line<T> {
@@ -708,9 +708,9 @@ impl<T: Float> Wedge<Scalar<T>> for Line<T> {
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01(),
+            rhs.s() * self.e02(),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -739,9 +739,9 @@ impl<T: Float> Wedge<Scalar<T>> for Point<T> {
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Point<T> {
         Point::new_unchecked(
-            self.e1() * rhs.s(),
-            self.e2() * rhs.s(),
-            self.e0() * rhs.s(),
+            rhs.s() * self.e1(),
+            rhs.s() * self.e2(),
+            rhs.s() * self.e0(),
         )
     }
 }
@@ -785,7 +785,7 @@ impl<T: Float> Wedge<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.e012() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.e012())
     }
 }
 impl<T: Float> Antiwedge<Line<T>> for Line<T> {
@@ -872,7 +872,7 @@ impl<T: Float> Antiwedge<Scalar<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.e012() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.e012())
     }
 }
 impl<T: Float> Antiwedge<Trivector<T>> for Trivector<T> {
@@ -980,9 +980,9 @@ impl<T: Float> RightContract<Scalar<T>> for Line<T> {
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01(),
+            rhs.s() * self.e02(),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -998,9 +998,9 @@ impl<T: Float> RightContract<Scalar<T>> for Point<T> {
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Point<T> {
         Point::new_unchecked(
-            self.e1() * rhs.s(),
-            self.e2() * rhs.s(),
-            self.e0() * rhs.s(),
+            rhs.s() * self.e1(),
+            rhs.s() * self.e2(),
+            rhs.s() * self.e0(),
         )
     }
 }
@@ -1029,7 +1029,7 @@ impl<T: Float> RightContract<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.e012() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.e012())
     }
 }
 impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
@@ -1041,31 +1041,32 @@ impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
                 + self.s() * operand.e12() * self.e12()
                 + self.e12() * operand.s() * self.e12()
                 + self.s() * operand.s() * self.s(),
-            self.s() * operand.e01() * self.s() + self.e02() * operand.s() * self.e12()
+            -(self.s() * operand.s() * self.e01()) + self.e02() * operand.s() * self.e12()
+                - self.e02() * operand.e12() * self.s()
+                + self.e12() * operand.e02() * self.s()
                 - self.e12() * operand.s() * self.e02()
                 + self.s() * operand.e02() * self.e12()
+                - self.s() * operand.e12() * self.e02()
                 + self.e01() * operand.s() * self.s()
                 + self.e01() * operand.e12() * self.e12()
-                - self.s() * operand.s() * self.e01()
-                - self.e02() * operand.e12() * self.s()
-                - self.s() * operand.e12() * self.e02()
                 - self.e12() * operand.e01() * self.e12()
-                + self.e12() * operand.e02() * self.s()
-                + self.e12() * operand.e12() * self.e01(),
-            self.e12() * operand.s() * self.e01() + self.s() * operand.e12() * self.e01()
+                + self.e12() * operand.e12() * self.e01()
+                + self.s() * operand.e01() * self.s(),
+            -(self.s() * operand.e01() * self.e12()) + self.s() * operand.e12() * self.e01()
                 - self.e01() * operand.s() * self.e12()
-                - self.e12() * operand.e01() * self.s()
-                - self.e12() * operand.e02() * self.e12()
                 + self.e02() * operand.s() * self.s()
                 + self.e01() * operand.e12() * self.s()
                 - self.s() * operand.s() * self.e02()
-                - self.s() * operand.e01() * self.e12()
-                + self.s() * operand.e02() * self.s()
                 + self.e02() * operand.e12() * self.e12()
+                + self.s() * operand.e02() * self.s()
+                + self.e12() * operand.s() * self.e01()
+                - self.e12() * operand.e01() * self.s()
+                - self.e12() * operand.e02() * self.e12()
                 + self.e12() * operand.e12() * self.e02(),
-            self.s() * operand.e12() * self.s() + self.e12() * operand.s() * self.s()
-                - self.s() * operand.s() * self.e12()
-                + self.e12() * operand.e12() * self.e12(),
+            self.e12() * operand.e12() * self.e12()
+                + self.e12() * operand.s() * self.s()
+                + self.s() * operand.e12() * self.s()
+                - self.s() * operand.s() * self.e12(),
         )
     }
 }
@@ -1074,22 +1075,23 @@ impl<T: Float> Sandwich<Line<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            -(self.s() * operand.e12() * self.e02())
-                + self.e12() * operand.e02() * self.s()
-                + self.s() * operand.e01() * self.s()
-                - self.e02() * operand.e12() * self.s()
-                + self.e01() * operand.e12() * self.e12()
-                - self.e12() * operand.e01() * self.e12()
+            -(self.e02() * operand.e12() * self.s())
                 + self.e12() * operand.e12() * self.e01()
-                + self.s() * operand.e02() * self.e12(),
-            self.s() * operand.e02() * self.s() + self.s() * operand.e12() * self.e01()
-                - self.e12() * operand.e02() * self.e12()
-                - self.s() * operand.e01() * self.e12()
-                + self.e01() * operand.e12() * self.s()
+                + self.s() * operand.e02() * self.e12()
+                + self.e01() * operand.e12() * self.e12()
+                - self.s() * operand.e12() * self.e02()
+                + self.s() * operand.e01() * self.s()
+                - self.e12() * operand.e01() * self.e12()
+                + self.e12() * operand.e02() * self.s(),
+            self.s() * operand.e12() * self.e01()
+                + self.e12() * operand.e12() * self.e02()
+                + self.s() * operand.e02() * self.s()
                 - self.e12() * operand.e01() * self.s()
+                - self.s() * operand.e01() * self.e12()
                 + self.e02() * operand.e12() * self.e12()
-                + self.e12() * operand.e12() * self.e02(),
-            self.s() * operand.e12() * self.s() + self.e12() * operand.e12() * self.e12(),
+                + self.e01() * operand.e12() * self.s()
+                - self.e12() * operand.e02() * self.e12(),
+            self.e12() * operand.e12() * self.e12() + self.s() * operand.e12() * self.s(),
         )
     }
 }
@@ -1098,34 +1100,36 @@ impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e12() * operand.e2() * self.s()
-                + self.s() * operand.e1() * self.s()
+            -(self.e12() * operand.e1() * self.e12())
+                + self.e12() * operand.e2() * self.s()
                 + self.s() * operand.e2() * self.e12()
-                - self.e12() * operand.e1() * self.e12(),
-            -(self.e12() * operand.e1() * self.s()) + self.s() * operand.e2() * self.s()
+                + self.s() * operand.e1() * self.s(),
+            self.s() * operand.e2() * self.s()
                 - self.s() * operand.e1() * self.e12()
-                - self.e12() * operand.e2() * self.e12(),
-            -(self.s() * operand.e1() * self.e01()) - self.e02() * operand.e2() * self.s()
+                - self.e12() * operand.e2() * self.e12()
+                - self.e12() * operand.e1() * self.s(),
+            -(self.e01() * operand.e1() * self.s())
+                + self.s() * operand.e012() * self.e12()
                 + self.e02() * operand.e1() * self.e12()
-                - self.e01() * operand.e2() * self.e12()
+                - self.s() * operand.e1() * self.e01()
                 - self.s() * operand.e2() * self.e02()
-                - self.e01() * operand.e1() * self.s()
+                - self.e01() * operand.e2() * self.e12()
+                + self.e12() * operand.e0() * self.e12()
                 + self.e12() * operand.e1() * self.e02()
                 + self.s() * operand.e0() * self.s()
-                + self.s() * operand.e012() * self.e12()
                 - self.e12() * operand.e2() * self.e01()
-                + self.e12() * operand.e0() * self.e12()
-                - self.e12() * operand.e012() * self.s(),
-            self.e12() * operand.e012() * self.e12() - self.e12() * operand.e2() * self.e02()
-                + self.s() * operand.e2() * self.e01()
-                + self.e02() * operand.e1() * self.s()
-                - self.e12() * operand.e1() * self.e01()
+                - self.e12() * operand.e012() * self.s()
+                - self.e02() * operand.e2() * self.s(),
+            -(self.s() * operand.e0() * self.e12()) - self.e12() * operand.e1() * self.e01()
                 + self.e12() * operand.e0() * self.s()
-                + self.s() * operand.e012() * self.s()
                 - self.s() * operand.e1() * self.e02()
-                - self.e01() * operand.e2() * self.s()
-                - self.s() * operand.e0() * self.e12()
+                + self.e12() * operand.e012() * self.e12()
                 + self.e01() * operand.e1() * self.e12()
+                + self.s() * operand.e2() * self.e01()
+                + self.s() * operand.e012() * self.s()
+                + self.e02() * operand.e1() * self.s()
+                - self.e01() * operand.e2() * self.s()
+                - self.e12() * operand.e2() * self.e02()
                 + self.e02() * operand.e2() * self.e12(),
         )
     }
@@ -1135,22 +1139,21 @@ impl<T: Float> Sandwich<Point<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            self.s() * operand.e1() * self.s() + self.e12() * operand.e2() * self.s()
-                - self.e12() * operand.e1() * self.e12()
-                + self.s() * operand.e2() * self.e12(),
-            self.s() * operand.e2() * self.s()
-                - self.s() * operand.e1() * self.e12()
+            self.s() * operand.e2() * self.e12() - self.e12() * operand.e1() * self.e12()
+                + self.s() * operand.e1() * self.s()
+                + self.e12() * operand.e2() * self.s(),
+            -(self.s() * operand.e1() * self.e12()) + self.s() * operand.e2() * self.s()
                 - self.e12() * operand.e2() * self.e12()
                 - self.e12() * operand.e1() * self.s(),
-            -(self.e02() * operand.e2() * self.s()) + self.e12() * operand.e0() * self.e12()
-                - self.s() * operand.e1() * self.e01()
-                + self.e12() * operand.e1() * self.e02()
-                - self.e12() * operand.e2() * self.e01()
-                + self.s() * operand.e0() * self.s()
-                - self.e01() * operand.e1() * self.s()
+            -(self.s() * operand.e1() * self.e01()) - self.e01() * operand.e2() * self.e12()
                 + self.e02() * operand.e1() * self.e12()
                 - self.s() * operand.e2() * self.e02()
-                - self.e01() * operand.e2() * self.e12(),
+                + self.e12() * operand.e1() * self.e02()
+                - self.e02() * operand.e2() * self.s()
+                - self.e12() * operand.e2() * self.e01()
+                + self.e12() * operand.e0() * self.e12()
+                + self.s() * operand.e0() * self.s()
+                - self.e01() * operand.e1() * self.s(),
         )
     }
 }
@@ -1168,7 +1171,7 @@ impl<T: Float> Sandwich<Trivector<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.s() * operand.e012() * self.s() + self.e12() * operand.e012() * self.e12(),
+            self.e12() * operand.e012() * self.e12() + self.s() * operand.e012() * self.s(),
         )
     }
 }
@@ -1177,37 +1180,34 @@ impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.e1() * operand.e12() * self.e2()
-                + self.e1() * operand.s() * self.e1()
-                + self.e2() * operand.s() * self.e2()
-                - self.e2() * operand.e12() * self.e1(),
-            -(self.e012() * operand.s() * self.e2())
-                - self.e2() * operand.e12() * self.e0()
+            self.e2() * operand.s() * self.e2() - self.e2() * operand.e12() * self.e1()
+                + self.e1() * operand.e12() * self.e2()
+                + self.e1() * operand.s() * self.e1(),
+            self.e1() * operand.e12() * self.e012()
+                - self.e012() * operand.s() * self.e2()
                 - self.e0() * operand.e12() * self.e2()
-                - self.e1() * operand.e01() * self.e1()
-                + self.e012() * operand.e12() * self.e1()
-                + self.e1() * operand.e12() * self.e012()
-                + self.e1() * operand.s() * self.e0()
                 - self.e1() * operand.e02() * self.e2()
+                - self.e1() * operand.e01() * self.e1()
                 + self.e2() * operand.s() * self.e012()
+                + self.e012() * operand.e12() * self.e1()
+                - self.e0() * operand.s() * self.e1()
                 + self.e2() * operand.e01() * self.e2()
                 - self.e2() * operand.e02() * self.e1()
-                - self.e0() * operand.s() * self.e1(),
-            -(self.e0() * operand.s() * self.e2())
-                + self.e012() * operand.e12() * self.e2()
-                + self.e2() * operand.e12() * self.e012()
-                - self.e1() * operand.s() * self.e012()
-                - self.e2() * operand.e02() * self.e2()
+                + self.e1() * operand.s() * self.e0()
+                - self.e2() * operand.e12() * self.e0(),
+            -(self.e0() * operand.s() * self.e2()) + self.e012() * operand.e12() * self.e2()
+                - self.e2() * operand.e01() * self.e1()
                 + self.e012() * operand.s() * self.e1()
+                - self.e2() * operand.e02() * self.e2()
+                + self.e0() * operand.e12() * self.e1()
                 + self.e1() * operand.e02() * self.e1()
-                - self.e1() * operand.e01() * self.e2()
+                - self.e1() * operand.s() * self.e012()
                 + self.e2() * operand.s() * self.e0()
                 + self.e1() * operand.e12() * self.e0()
-                - self.e2() * operand.e01() * self.e1()
-                + self.e0() * operand.e12() * self.e1(),
-            self.e1() * operand.s() * self.e2()
-                - self.e2() * operand.e12() * self.e2()
-                - self.e1() * operand.e12() * self.e1()
+                - self.e1() * operand.e01() * self.e2()
+                + self.e2() * operand.e12() * self.e012(),
+            -(self.e2() * operand.e12() * self.e2()) - self.e1() * operand.e12() * self.e1()
+                + self.e1() * operand.s() * self.e2()
                 - self.e2() * operand.s() * self.e1(),
         )
     }
@@ -1217,22 +1217,21 @@ impl<T: Float> Sandwich<Line<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e2() * operand.e01() * self.e2()
-                - self.e1() * operand.e01() * self.e1()
-                - self.e0() * operand.e12() * self.e2()
-                + self.e1() * operand.e12() * self.e012()
-                - self.e1() * operand.e02() * self.e2()
-                - self.e2() * operand.e12() * self.e0()
+            -(self.e0() * operand.e12() * self.e2()) - self.e2() * operand.e12() * self.e0()
                 + self.e012() * operand.e12() * self.e1()
-                - self.e2() * operand.e02() * self.e1(),
-            -(self.e2() * operand.e02() * self.e2()) + self.e0() * operand.e12() * self.e1()
+                + self.e2() * operand.e01() * self.e2()
+                - self.e1() * operand.e01() * self.e1()
+                - self.e2() * operand.e02() * self.e1()
+                - self.e1() * operand.e02() * self.e2()
+                + self.e1() * operand.e12() * self.e012(),
+            -(self.e1() * operand.e01() * self.e2()) + self.e2() * operand.e12() * self.e012()
                 - self.e2() * operand.e01() * self.e1()
-                + self.e1() * operand.e02() * self.e1()
                 + self.e1() * operand.e12() * self.e0()
-                + self.e2() * operand.e12() * self.e012()
-                - self.e1() * operand.e01() * self.e2()
-                + self.e012() * operand.e12() * self.e2(),
-            -(self.e1() * operand.e12() * self.e1()) - self.e2() * operand.e12() * self.e2(),
+                + self.e1() * operand.e02() * self.e1()
+                + self.e012() * operand.e12() * self.e2()
+                + self.e0() * operand.e12() * self.e1()
+                - self.e2() * operand.e02() * self.e2(),
+            -(self.e2() * operand.e12() * self.e2()) - self.e1() * operand.e12() * self.e1(),
         )
     }
 }
@@ -1241,36 +1240,37 @@ impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e1() * operand.e1() * self.e1() + self.e1() * operand.e2() * self.e2()
-                - self.e2() * operand.e1() * self.e2()
-                + self.e2() * operand.e2() * self.e1(),
-            self.e1() * operand.e1() * self.e2() + self.e2() * operand.e1() * self.e1()
-                - self.e1() * operand.e2() * self.e1()
-                + self.e2() * operand.e2() * self.e2(),
-            -(self.e2() * operand.e0() * self.e2())
-                - self.e2() * operand.e1() * self.e012()
-                - self.e1() * operand.e0() * self.e1()
-                + self.e1() * operand.e1() * self.e0()
-                + self.e1() * operand.e2() * self.e012()
+            self.e2() * operand.e2() * self.e1()
+                + self.e1() * operand.e1() * self.e1()
+                + self.e1() * operand.e2() * self.e2()
+                - self.e2() * operand.e1() * self.e2(),
+            -(self.e1() * operand.e2() * self.e1())
+                + self.e2() * operand.e2() * self.e2()
+                + self.e1() * operand.e1() * self.e2()
+                + self.e2() * operand.e1() * self.e1(),
+            self.e2() * operand.e012() * self.e1()
                 + self.e0() * operand.e1() * self.e1()
-                - self.e012() * operand.e1() * self.e2()
-                + self.e2() * operand.e2() * self.e0()
-                + self.e2() * operand.e012() * self.e1()
                 + self.e0() * operand.e2() * self.e2()
+                - self.e012() * operand.e1() * self.e2()
+                + self.e1() * operand.e2() * self.e012()
                 + self.e012() * operand.e2() * self.e1()
-                - self.e1() * operand.e012() * self.e2(),
-            self.e2() * operand.e012() * self.e2()
-                + self.e1() * operand.e012() * self.e1()
-                + self.e0() * operand.e1() * self.e2()
-                - self.e0() * operand.e2() * self.e1()
-                + self.e012() * operand.e1() * self.e1()
+                - self.e1() * operand.e0() * self.e1()
+                - self.e2() * operand.e1() * self.e012()
+                - self.e2() * operand.e0() * self.e2()
+                - self.e1() * operand.e012() * self.e2()
+                + self.e2() * operand.e2() * self.e0()
+                + self.e1() * operand.e1() * self.e0(),
+            self.e1() * operand.e2() * self.e0() - self.e2() * operand.e2() * self.e012()
                 + self.e012() * operand.e2() * self.e2()
                 + self.e2() * operand.e0() * self.e1()
-                + self.e1() * operand.e2() * self.e0()
+                - self.e1() * operand.e1() * self.e012()
                 - self.e2() * operand.e1() * self.e0()
-                - self.e2() * operand.e2() * self.e012()
+                + self.e2() * operand.e012() * self.e2()
+                + self.e0() * operand.e1() * self.e2()
+                - self.e0() * operand.e2() * self.e1()
+                + self.e1() * operand.e012() * self.e1()
                 - self.e1() * operand.e0() * self.e2()
-                - self.e1() * operand.e1() * self.e012(),
+                + self.e012() * operand.e1() * self.e1(),
         )
     }
 }
@@ -1279,24 +1279,22 @@ impl<T: Float> Sandwich<Point<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            self.e1() * operand.e2() * self.e2()
-                + self.e1() * operand.e1() * self.e1()
-                + self.e2() * operand.e2() * self.e1()
-                - self.e2() * operand.e1() * self.e2(),
-            -(self.e1() * operand.e2() * self.e1())
+            self.e1() * operand.e2() * self.e2() + self.e1() * operand.e1() * self.e1()
+                - self.e2() * operand.e1() * self.e2()
+                + self.e2() * operand.e2() * self.e1(),
+            self.e1() * operand.e1() * self.e2() - self.e1() * operand.e2() * self.e1()
                 + self.e2() * operand.e1() * self.e1()
-                + self.e2() * operand.e2() * self.e2()
-                + self.e1() * operand.e1() * self.e2(),
-            self.e2() * operand.e2() * self.e0()
-                + self.e012() * operand.e2() * self.e1()
-                + self.e1() * operand.e1() * self.e0()
-                - self.e2() * operand.e0() * self.e2()
-                - self.e2() * operand.e1() * self.e012()
-                - self.e012() * operand.e1() * self.e2()
+                + self.e2() * operand.e2() * self.e2(),
+            -(self.e2() * operand.e1() * self.e012())
                 + self.e1() * operand.e2() * self.e012()
+                + self.e2() * operand.e2() * self.e0()
+                + self.e0() * operand.e1() * self.e1()
                 - self.e1() * operand.e0() * self.e1()
                 + self.e0() * operand.e2() * self.e2()
-                + self.e0() * operand.e1() * self.e1(),
+                - self.e012() * operand.e1() * self.e2()
+                + self.e012() * operand.e2() * self.e1()
+                - self.e2() * operand.e0() * self.e2()
+                + self.e1() * operand.e1() * self.e0(),
         )
     }
 }
@@ -1323,35 +1321,36 @@ impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.s() * operand.e02() * self.e02() + self.e01() * operand.s() * self.e01()
-                - self.e01() * operand.e12() * self.e02()
-                + self.e02() * operand.s() * self.e02()
-                - self.e02() * operand.e01() * self.e12()
-                + self.e01() * operand.e02() * self.e12()
-                - self.e02() * operand.e02() * self.s()
-                + self.e02() * operand.e12() * self.e01()
-                + self.e12() * operand.e01() * self.e02()
+            -(self.e02() * operand.e02() * self.s()) + self.e01() * operand.s() * self.e01()
                 - self.e12() * operand.e02() * self.e01()
                 + self.s() * operand.e01() * self.e01()
-                - self.e01() * operand.e01() * self.s(),
-            self.e01() * operand.e01() * self.e01() + self.e01() * operand.e02() * self.e02()
-                - self.e02() * operand.e01() * self.e02()
-                + self.e02() * operand.e02() * self.e01(),
-            self.e02() * operand.e01() * self.e01() - self.e01() * operand.e02() * self.e01()
-                + self.e02() * operand.e02() * self.e02()
-                + self.e01() * operand.e01() * self.e02(),
-            -(self.e02() * operand.e01() * self.s())
-                + self.e02() * operand.e02() * self.e12()
-                + self.e12() * operand.e02() * self.e02()
-                + self.e01() * operand.e01() * self.e12()
-                + self.e01() * operand.e02() * self.s()
-                - self.s() * operand.e01() * self.e02()
+                - self.e01() * operand.e01() * self.s()
+                + self.e02() * operand.s() * self.e02()
+                - self.e02() * operand.e01() * self.e12()
+                - self.e01() * operand.e12() * self.e02()
+                + self.e02() * operand.e12() * self.e01()
+                + self.e01() * operand.e02() * self.e12()
+                + self.e12() * operand.e01() * self.e02()
+                + self.s() * operand.e02() * self.e02(),
+            self.e01() * operand.e02() * self.e02()
+                + self.e01() * operand.e01() * self.e01()
+                + self.e02() * operand.e02() * self.e01()
+                - self.e02() * operand.e01() * self.e02(),
+            self.e02() * operand.e02() * self.e02()
+                + self.e01() * operand.e01() * self.e02()
+                + self.e02() * operand.e01() * self.e01()
+                - self.e01() * operand.e02() * self.e01(),
+            self.e12() * operand.e02() * self.e02() + self.e01() * operand.e01() * self.e12()
                 - self.e01() * operand.e12() * self.e01()
+                + self.e01() * operand.e02() * self.s()
                 + self.s() * operand.e02() * self.e01()
-                - self.e02() * operand.e12() * self.e02()
                 - self.e01() * operand.s() * self.e02()
+                - self.s() * operand.e01() * self.e02()
+                - self.e02() * operand.e12() * self.e02()
+                - self.e02() * operand.e01() * self.s()
+                + self.e02() * operand.s() * self.e01()
                 + self.e12() * operand.e01() * self.e01()
-                + self.e02() * operand.s() * self.e01(),
+                + self.e02() * operand.e02() * self.e12(),
         )
     }
 }
@@ -1360,21 +1359,23 @@ impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e01() * operand.e01() * self.e01() - self.e02() * operand.e01() * self.e02()
-                + self.e01() * operand.e02() * self.e02()
-                + self.e02() * operand.e02() * self.e01(),
-            self.e01() * operand.e01() * self.e02() + self.e02() * operand.e01() * self.e01()
-                - self.e01() * operand.e02() * self.e01()
+            -(self.e02() * operand.e01() * self.e02())
+                + self.e01() * operand.e01() * self.e01()
+                + self.e02() * operand.e02() * self.e01()
+                + self.e01() * operand.e02() * self.e02(),
+            -(self.e01() * operand.e02() * self.e01())
+                + self.e02() * operand.e01() * self.e01()
+                + self.e01() * operand.e01() * self.e02()
                 + self.e02() * operand.e02() * self.e02(),
-            self.e12() * operand.e01() * self.e01() - self.e01() * operand.e12() * self.e01()
+            -(self.e02() * operand.e01() * self.s()) - self.e01() * operand.e12() * self.e01()
+                + self.s() * operand.e02() * self.e01()
+                + self.e01() * operand.e01() * self.e12()
+                + self.e12() * operand.e01() * self.e01()
+                - self.s() * operand.e01() * self.e02()
+                + self.e02() * operand.e02() * self.e12()
                 + self.e01() * operand.e02() * self.s()
                 - self.e02() * operand.e12() * self.e02()
-                - self.s() * operand.e01() * self.e02()
-                - self.e02() * operand.e01() * self.s()
-                + self.e12() * operand.e02() * self.e02()
-                + self.e02() * operand.e02() * self.e12()
-                + self.s() * operand.e02() * self.e01()
-                + self.e01() * operand.e01() * self.e12(),
+                + self.e12() * operand.e02() * self.e02(),
         )
     }
 }
@@ -1383,37 +1384,34 @@ impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.e12() * operand.e0() * self.e02()
-                - self.e01() * operand.e0() * self.s()
-                - self.e02() * operand.e012() * self.s()
-                + self.s() * operand.e012() * self.e02()
-                - self.e02() * operand.e2() * self.e01()
-                - self.e01() * operand.e012() * self.e12()
-                - self.e01() * operand.e1() * self.e01()
-                + self.e02() * operand.e1() * self.e02()
-                + self.e02() * operand.e0() * self.e12()
+            -(self.e02() * operand.e2() * self.e01()) - self.e02() * operand.e012() * self.s()
                 + self.e12() * operand.e012() * self.e01()
                 - self.s() * operand.e0() * self.e01()
-                - self.e01() * operand.e2() * self.e02(),
-            -(self.e01() * operand.e0() * self.e12())
-                - self.e01() * operand.e1() * self.e02()
-                - self.e02() * operand.e2() * self.e02()
-                + self.e01() * operand.e012() * self.s()
-                - self.e02() * operand.e0() * self.s()
-                - self.e12() * operand.e0() * self.e01()
-                - self.e02() * operand.e012() * self.e12()
-                - self.e02() * operand.e1() * self.e01()
-                + self.e12() * operand.e012() * self.e02()
+                - self.e01() * operand.e012() * self.e12()
+                + self.e02() * operand.e1() * self.e02()
+                + self.s() * operand.e012() * self.e02()
+                - self.e01() * operand.e1() * self.e01()
+                - self.e01() * operand.e2() * self.e02()
+                - self.e01() * operand.e0() * self.s()
+                + self.e02() * operand.e0() * self.e12()
+                + self.e12() * operand.e0() * self.e02(),
+            -(self.e12() * operand.e0() * self.e01()) - self.e02() * operand.e0() * self.s()
+                + self.e01() * operand.e2() * self.e01()
+                - self.e01() * operand.e0() * self.e12()
                 - self.s() * operand.e012() * self.e01()
-                - self.s() * operand.e0() * self.e02()
-                + self.e01() * operand.e2() * self.e01(),
-            -(self.e01() * operand.e0() * self.e01()) - self.e02() * operand.e012() * self.e01()
-                + self.e01() * operand.e012() * self.e02()
-                - self.e02() * operand.e0() * self.e02(),
-            -(self.e02() * operand.e0() * self.e01())
-                + self.e01() * operand.e012() * self.e01()
-                + self.e01() * operand.e0() * self.e02()
-                + self.e02() * operand.e012() * self.e02(),
+                - self.e02() * operand.e1() * self.e01()
+                - self.e02() * operand.e012() * self.e12()
+                - self.e02() * operand.e2() * self.e02()
+                + self.e12() * operand.e012() * self.e02()
+                + self.e01() * operand.e012() * self.s()
+                - self.e01() * operand.e1() * self.e02()
+                - self.s() * operand.e0() * self.e02(),
+            -(self.e02() * operand.e012() * self.e01()) + self.e01() * operand.e012() * self.e02()
+                - self.e02() * operand.e0() * self.e02()
+                - self.e01() * operand.e0() * self.e01(),
+            self.e01() * operand.e0() * self.e02() + self.e02() * operand.e012() * self.e02()
+                - self.e02() * operand.e0() * self.e01()
+                + self.e01() * operand.e012() * self.e01(),
         )
     }
 }
@@ -1422,22 +1420,21 @@ impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.e01() * operand.e0() * self.s())
-                - self.e02() * operand.e2() * self.e01()
-                - self.s() * operand.e0() * self.e01()
-                + self.e02() * operand.e0() * self.e12()
-                - self.e01() * operand.e2() * self.e02()
-                + self.e12() * operand.e0() * self.e02()
+            -(self.e01() * operand.e2() * self.e02()) - self.e02() * operand.e2() * self.e01()
+                + self.e02() * operand.e1() * self.e02()
+                - self.e01() * operand.e0() * self.s()
                 - self.e01() * operand.e1() * self.e01()
-                + self.e02() * operand.e1() * self.e02(),
+                + self.e02() * operand.e0() * self.e12()
+                + self.e12() * operand.e0() * self.e02()
+                - self.s() * operand.e0() * self.e01(),
             -(self.e01() * operand.e1() * self.e02()) + self.e01() * operand.e2() * self.e01()
-                - self.s() * operand.e0() * self.e02()
                 - self.e01() * operand.e0() * self.e12()
-                - self.e12() * operand.e0() * self.e01()
-                - self.e02() * operand.e2() * self.e02()
                 - self.e02() * operand.e1() * self.e01()
-                - self.e02() * operand.e0() * self.s(),
-            -(self.e01() * operand.e0() * self.e01()) - self.e02() * operand.e0() * self.e02(),
+                - self.e02() * operand.e2() * self.e02()
+                - self.e02() * operand.e0() * self.s()
+                - self.s() * operand.e0() * self.e02()
+                - self.e12() * operand.e0() * self.e01(),
+            -(self.e02() * operand.e0() * self.e02()) - self.e01() * operand.e0() * self.e01(),
         )
     }
 }
@@ -1455,7 +1452,7 @@ impl<T: Float> Antisandwich<Trivector<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.e02() * operand.e012() * self.e02() + self.e01() * operand.e012() * self.e01(),
+            self.e01() * operand.e012() * self.e01() + self.e02() * operand.e012() * self.e02(),
         )
     }
 }
@@ -1464,37 +1461,37 @@ impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.e0() * operand.e02() * self.e2() - self.e1() * operand.e01() * self.e0()
-                + self.e1() * operand.e02() * self.e012()
-                - self.e012() * operand.e12() * self.e0()
-                - self.e012() * operand.e02() * self.e1()
-                + self.e0() * operand.e01() * self.e1()
-                - self.e2() * operand.e02() * self.e0()
-                + self.e0() * operand.s() * self.e0()
-                - self.e2() * operand.e01() * self.e012()
-                + self.e0() * operand.e12() * self.e012()
+            -(self.e1() * operand.e01() * self.e0())
                 + self.e012() * operand.s() * self.e012()
-                + self.e012() * operand.e01() * self.e2(),
+                + self.e012() * operand.e01() * self.e2()
+                - self.e012() * operand.e02() * self.e1()
+                - self.e2() * operand.e01() * self.e012()
+                - self.e012() * operand.e12() * self.e0()
+                + self.e0() * operand.e01() * self.e1()
+                + self.e0() * operand.e12() * self.e012()
+                + self.e0() * operand.s() * self.e0()
+                - self.e2() * operand.e02() * self.e0()
+                + self.e0() * operand.e02() * self.e2()
+                + self.e1() * operand.e02() * self.e012(),
             -(self.e0() * operand.e01() * self.e0())
-                + self.e012() * operand.e01() * self.e012()
+                + self.e0() * operand.e02() * self.e012()
                 + self.e012() * operand.e02() * self.e0()
-                + self.e0() * operand.e02() * self.e012(),
+                + self.e012() * operand.e01() * self.e012(),
             self.e012() * operand.e02() * self.e012()
                 - self.e0() * operand.e01() * self.e012()
                 - self.e0() * operand.e02() * self.e0()
                 - self.e012() * operand.e01() * self.e0(),
-            self.e1() * operand.e01() * self.e012()
+            self.e1() * operand.e02() * self.e0() - self.e0() * operand.s() * self.e012()
+                + self.e0() * operand.e02() * self.e1()
                 + self.e012() * operand.s() * self.e0()
                 + self.e012() * operand.e01() * self.e1()
-                + self.e012() * operand.e02() * self.e2()
                 + self.e012() * operand.e12() * self.e012()
-                + self.e2() * operand.e02() * self.e012()
-                - self.e0() * operand.e01() * self.e2()
-                - self.e2() * operand.e01() * self.e0()
-                - self.e0() * operand.s() * self.e012()
                 + self.e0() * operand.e12() * self.e0()
-                + self.e1() * operand.e02() * self.e0()
-                + self.e0() * operand.e02() * self.e1(),
+                + self.e1() * operand.e01() * self.e012()
+                - self.e0() * operand.e01() * self.e2()
+                + self.e012() * operand.e02() * self.e2()
+                - self.e2() * operand.e01() * self.e0()
+                + self.e2() * operand.e02() * self.e012(),
         )
     }
 }
@@ -1504,23 +1501,21 @@ impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             -(self.e0() * operand.e01() * self.e0())
-                + self.e012() * operand.e02() * self.e0()
                 + self.e0() * operand.e02() * self.e012()
-                + self.e012() * operand.e01() * self.e012(),
-            self.e012() * operand.e02() * self.e012()
+                + self.e012() * operand.e01() * self.e012()
+                + self.e012() * operand.e02() * self.e0(),
+            -(self.e0() * operand.e02() * self.e0()) + self.e012() * operand.e02() * self.e012()
                 - self.e0() * operand.e01() * self.e012()
-                - self.e0() * operand.e02() * self.e0()
                 - self.e012() * operand.e01() * self.e0(),
-            self.e1() * operand.e02() * self.e0()
-                + self.e012() * operand.e12() * self.e012()
-                + self.e1() * operand.e01() * self.e012()
+            self.e012() * operand.e12() * self.e012() + self.e1() * operand.e01() * self.e012()
                 - self.e2() * operand.e01() * self.e0()
-                + self.e0() * operand.e12() * self.e0()
-                + self.e2() * operand.e02() * self.e012()
-                - self.e0() * operand.e01() * self.e2()
-                + self.e012() * operand.e01() * self.e1()
                 + self.e0() * operand.e02() * self.e1()
-                + self.e012() * operand.e02() * self.e2(),
+                - self.e0() * operand.e01() * self.e2()
+                + self.e1() * operand.e02() * self.e0()
+                + self.e012() * operand.e01() * self.e1()
+                + self.e012() * operand.e02() * self.e2()
+                + self.e0() * operand.e12() * self.e0()
+                + self.e2() * operand.e02() * self.e012(),
         )
     }
 }
@@ -1529,38 +1524,38 @@ impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(self.e0() * operand.e1() * self.e0())
-                + self.e1() * operand.e0() * self.e0()
-                + self.e1() * operand.e012() * self.e012()
-                + self.e0() * operand.e0() * self.e1()
-                - self.e0() * operand.e012() * self.e2()
-                + self.e0() * operand.e2() * self.e012()
+            self.e2() * operand.e012() * self.e0()
+                - self.e2() * operand.e0() * self.e012()
+                - self.e0() * operand.e1() * self.e0()
                 + self.e012() * operand.e2() * self.e0()
                 - self.e012() * operand.e0() * self.e2()
-                + self.e2() * operand.e012() * self.e0()
-                - self.e2() * operand.e0() * self.e012()
+                + self.e0() * operand.e0() * self.e1()
                 - self.e012() * operand.e012() * self.e1()
-                + self.e012() * operand.e1() * self.e012(),
-            -(self.e0() * operand.e2() * self.e0())
-                + self.e012() * operand.e0() * self.e1()
-                + self.e2() * operand.e012() * self.e012()
-                + self.e0() * operand.e0() * self.e2()
+                + self.e012() * operand.e1() * self.e012()
+                + self.e1() * operand.e012() * self.e012()
+                + self.e1() * operand.e0() * self.e0()
+                + self.e0() * operand.e2() * self.e012()
+                - self.e0() * operand.e012() * self.e2(),
+            self.e2() * operand.e012() * self.e012()
                 - self.e0() * operand.e1() * self.e012()
-                + self.e1() * operand.e0() * self.e012()
-                + self.e2() * operand.e0() * self.e0()
-                + self.e0() * operand.e012() * self.e1()
-                + self.e012() * operand.e2() * self.e012()
                 - self.e012() * operand.e012() * self.e2()
-                - self.e1() * operand.e012() * self.e0()
-                - self.e012() * operand.e1() * self.e0(),
-            -(self.e012() * operand.e012() * self.e0())
+                + self.e2() * operand.e0() * self.e0()
+                + self.e1() * operand.e0() * self.e012()
+                - self.e0() * operand.e2() * self.e0()
+                + self.e012() * operand.e2() * self.e012()
+                - self.e012() * operand.e1() * self.e0()
+                + self.e0() * operand.e012() * self.e1()
+                + self.e0() * operand.e0() * self.e2()
+                + self.e012() * operand.e0() * self.e1()
+                - self.e1() * operand.e012() * self.e0(),
+            self.e0() * operand.e012() * self.e012()
                 + self.e012() * operand.e0() * self.e012()
                 + self.e0() * operand.e0() * self.e0()
-                + self.e0() * operand.e012() * self.e012(),
-            self.e0() * operand.e012() * self.e0()
+                - self.e012() * operand.e012() * self.e0(),
+            -(self.e0() * operand.e0() * self.e012())
                 + self.e012() * operand.e0() * self.e0()
                 + self.e012() * operand.e012() * self.e012()
-                - self.e0() * operand.e0() * self.e012(),
+                + self.e0() * operand.e012() * self.e0(),
         )
     }
 }
@@ -1569,22 +1564,23 @@ impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.e2() * operand.e0() * self.e012())
+            self.e012() * operand.e2() * self.e0()
+                - self.e0() * operand.e1() * self.e0()
+                - self.e012() * operand.e0() * self.e2()
                 + self.e012() * operand.e1() * self.e012()
                 + self.e0() * operand.e2() * self.e012()
-                + self.e0() * operand.e0() * self.e1()
-                + self.e012() * operand.e2() * self.e0()
-                - self.e012() * operand.e0() * self.e2()
                 + self.e1() * operand.e0() * self.e0()
-                - self.e0() * operand.e1() * self.e0(),
-            -(self.e0() * operand.e1() * self.e012()) + self.e012() * operand.e0() * self.e1()
-                - self.e012() * operand.e1() * self.e0()
+                + self.e0() * operand.e0() * self.e1()
+                - self.e2() * operand.e0() * self.e012(),
+            self.e2() * operand.e0() * self.e0()
                 + self.e0() * operand.e0() * self.e2()
-                + self.e012() * operand.e2() * self.e012()
                 + self.e1() * operand.e0() * self.e012()
-                + self.e2() * operand.e0() * self.e0()
+                - self.e0() * operand.e1() * self.e012()
+                + self.e012() * operand.e0() * self.e1()
+                - self.e012() * operand.e1() * self.e0()
+                + self.e012() * operand.e2() * self.e012()
                 - self.e0() * operand.e2() * self.e0(),
-            self.e0() * operand.e0() * self.e0() + self.e012() * operand.e0() * self.e012(),
+            self.e012() * operand.e0() * self.e012() + self.e0() * operand.e0() * self.e0(),
         )
     }
 }
@@ -1602,8 +1598,92 @@ impl<T: Float> Antisandwich<Trivector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.e012() * operand.e012() * self.e012() + self.e0() * operand.e012() * self.e0(),
+            self.e0() * operand.e012() * self.e0() + self.e012() * operand.e012() * self.e012(),
         )
+    }
+}
+impl<T: Float> Transform<Flector<T>> for Flector<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn transform(&self, operand: &Flector<T>) -> Flector<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Line<T>> for Flector<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn transform(&self, operand: &Line<T>) -> Line<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Motor<T>> for Flector<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn transform(&self, operand: &Motor<T>) -> Motor<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Point<T>> for Flector<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn transform(&self, operand: &Point<T>) -> Point<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Scalar<T>> for Flector<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn transform(&self, operand: &Scalar<T>) -> Scalar<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Trivector<T>> for Flector<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn transform(&self, operand: &Trivector<T>) -> Trivector<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Flector<T>> for Motor<T> {
+    type Output = Flector<T>;
+    #[inline]
+    fn transform(&self, operand: &Flector<T>) -> Flector<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Line<T>> for Motor<T> {
+    type Output = Line<T>;
+    #[inline]
+    fn transform(&self, operand: &Line<T>) -> Line<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Motor<T>> for Motor<T> {
+    type Output = Motor<T>;
+    #[inline]
+    fn transform(&self, operand: &Motor<T>) -> Motor<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Point<T>> for Motor<T> {
+    type Output = Point<T>;
+    #[inline]
+    fn transform(&self, operand: &Point<T>) -> Point<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Scalar<T>> for Motor<T> {
+    type Output = Scalar<T>;
+    #[inline]
+    fn transform(&self, operand: &Scalar<T>) -> Scalar<T> {
+        self.antisandwich(operand)
+    }
+}
+impl<T: Float> Transform<Trivector<T>> for Motor<T> {
+    type Output = Trivector<T>;
+    #[inline]
+    fn transform(&self, operand: &Trivector<T>) -> Trivector<T> {
+        self.antisandwich(operand)
     }
 }
 impl<T: Float> Versor<Flector<T>> for Flector<T> {
@@ -1678,9 +1758,9 @@ impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Line<T> {
         Line::new_unchecked(
-            self.e01() * rhs.s(),
-            self.e02() * rhs.s(),
-            self.e12() * rhs.s(),
+            rhs.s() * self.e01(),
+            rhs.s() * self.e02(),
+            rhs.s() * self.e12(),
         )
     }
 }
@@ -1696,9 +1776,9 @@ impl<T: Float> BulkContract<Scalar<T>> for Point<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Point<T> {
         Point::new_unchecked(
-            self.e1() * rhs.s(),
-            self.e2() * rhs.s(),
-            self.e0() * rhs.s(),
+            rhs.s() * self.e1(),
+            rhs.s() * self.e2(),
+            rhs.s() * self.e0(),
         )
     }
 }
@@ -1727,7 +1807,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.e012() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.e012())
     }
 }
 impl<T: Float> WeightContract<Line<T>> for Line<T> {

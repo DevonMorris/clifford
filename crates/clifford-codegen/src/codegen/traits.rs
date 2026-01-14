@@ -161,7 +161,7 @@ impl<'a> TraitsGenerator<'a> {
             use crate::scalar::Float;
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
-                Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
+                Sandwich, Antisandwich, Transform, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot,
                 Reverse, Antireverse, RightComplement, #versor_import
             };
@@ -839,6 +839,29 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // Transform trait - delegates to Sandwich (non-degenerate) or Antisandwich (degenerate)
+        // based on whether the algebra has zero elements in its signature
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(
+                            self.generate_transform_trait_from_versor(versor_type, target_type),
+                        );
+                    }
+                }
+            }
+        }
+
         // Versor trait - generated for versor types (Rotor, Motor, Flector)
         // Provides compose() method for versor composition
         impls.extend(self.generate_versor_traits());
@@ -1211,6 +1234,41 @@ impl<'a> TraitsGenerator<'a> {
                 #[inline]
                 fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
                     #constructor_call
+                }
+            }
+        }
+    }
+
+    /// Generates Transform trait impl from versor type.
+    ///
+    /// The Transform trait delegates to either Sandwich or Antisandwich based on
+    /// whether the algebra has degenerate elements (zero basis vectors):
+    /// - Non-degenerate (r = 0): uses Sandwich
+    /// - Degenerate (r > 0): uses Antisandwich
+    fn generate_transform_trait_from_versor(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+
+        // Check if algebra is degenerate (has zero elements in signature)
+        let is_degenerate = self.spec.signature.r > 0;
+
+        let method_call = if is_degenerate {
+            quote! { self.antisandwich(operand) }
+        } else {
+            quote! { self.sandwich(operand) }
+        };
+
+        quote! {
+            impl<T: Float> Transform<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn transform(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                    #method_call
                 }
             }
         }

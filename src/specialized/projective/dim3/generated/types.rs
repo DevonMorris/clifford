@@ -64,7 +64,7 @@ impl<T: Float> Flector<T> {
         e123: T,
         tolerance: T,
     ) -> Result<Self, &'static str> {
-        let expected = (e1 * e023 - e2 * e031 + e3 * e012) / (e0);
+        let expected = (e1 * e023 - e2 * e031 + e012 * e3) / (e0);
         let actual = e123;
         if (actual - expected).abs() > tolerance {
             return Err("Flector constraint");
@@ -85,7 +85,7 @@ impl<T: Float> Flector<T> {
             e023,
             e031,
             e012,
-            (e1 * e023 - e2 * e031 + e3 * e012) / (e0),
+            (e1 * e023 - e2 * e031 + e012 * e3) / (e0),
         ))
     }
     #[doc = "Returns the `e1` coefficient."]
@@ -562,7 +562,7 @@ impl<T: Float> Motor<T> {
         e0123: T,
         tolerance: T,
     ) -> Result<Self, &'static str> {
-        let expected = (e01 * e23 - e02 * e31 + e03 * e12) / (s);
+        let expected = (e01 * e23 - e02 * e31 + e12 * e03) / (s);
         let actual = e0123;
         if (actual - expected).abs() > tolerance {
             return Err("Motor constraint");
@@ -583,7 +583,7 @@ impl<T: Float> Motor<T> {
             e01,
             e02,
             e03,
-            (e01 * e23 - e02 * e31 + e03 * e12) / (s),
+            (e01 * e23 - e02 * e31 + e12 * e03) / (s),
         ))
     }
     #[doc = "Returns the `s` coefficient."]

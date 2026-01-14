@@ -30,9 +30,9 @@ description = "3D bivector"
 fields = ["xy", "xz", "yz"]
 
 [types.Rotor]
-grades = [1, 3]
+grades = [0, 2]
 description = "3D rotor (unit versor for rotations)"
-fields = ["x", "y", "z", "xyz"]
+fields = ["s", "xy", "xz", "yz"]
 
 [types.Trivector]
 grades = [3]

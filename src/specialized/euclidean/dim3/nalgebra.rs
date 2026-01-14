@@ -258,20 +258,21 @@ impl<T: Float + na::Scalar> TryFrom<na::Matrix3<T>> for Bivector<T> {
 // ============================================================================
 
 impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
-    /// Converts a 3D rotor (grades [1, 3]) to a nalgebra unit quaternion.
+    /// Converts a 3D rotor (grades [0, 2]) to a nalgebra unit quaternion.
     ///
     /// # Mathematical Correspondence
     ///
-    /// A rotor `R = x·e₁ + y·e₂ + z·e₃ + xyz·e₁₂₃` maps to quaternion
+    /// A rotor `R = s + xy·e₁₂ + xz·e₁₃ + yz·e₂₃` maps to quaternion
     /// `q = w + i·i + j·j + k·k` where:
     ///
-    /// - `w = xyz` (pseudoscalar maps to quaternion scalar)
-    /// - `i = -x` (negated e₁ component)
-    /// - `j = -y` (negated e₂ component)
-    /// - `k = -z` (negated e₃ component)
+    /// - `w = s` (scalar part)
+    /// - `i = -yz` (e₂₃ rotation = around x-axis, negated for sandwich direction)
+    /// - `j = xz` (e₁₃ rotation = around y-axis)
+    /// - `k = -xy` (e₁₂ rotation = around z-axis, negated for sandwich direction)
     ///
-    /// The vector parts are negated to account for the antisandwich product
-    /// used by the Transform trait matching quaternion rotation `q v q*`.
+    /// Note: The bivector components are negated because the sandwich product
+    /// `R v R̃` rotates in the opposite direction from what the rotor components
+    /// suggest. This negation ensures the quaternion produces the same rotation.
     ///
     /// # Normalization
     ///
@@ -280,33 +281,36 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::UnitQuaternion<T> {
     #[inline]
     fn from(rotor: Rotor<T>) -> Self {
         let r = rotor.normalize();
-        // Mapping: (w, i, j, k) = (xyz, -x, -y, -z)
-        let q = na::Quaternion::new(r.xyz(), -r.x(), -r.y(), -r.z());
+        // Negate bivector components: sandwich R v R̃ rotates opposite to rotor angle
+        // Mapping: (w, i, j, k) = (s, -yz, xz, -xy)
+        let q = na::Quaternion::new(r.s(), -r.yz(), r.xz(), -r.xy());
         na::UnitQuaternion::new_normalize(q)
     }
 }
 
 impl<T: Float + na::RealField> From<na::UnitQuaternion<T>> for Rotor<T> {
-    /// Converts a nalgebra unit quaternion to a 3D rotor (grades [1, 3]).
+    /// Converts a nalgebra unit quaternion to a 3D rotor (grades [0, 2]).
     ///
     /// # Mathematical Correspondence
     ///
     /// A quaternion `q = w + i·i + j·j + k·k` maps to rotor
-    /// `R = x·e₁ + y·e₂ + z·e₃ + xyz·e₁₂₃` where:
+    /// `R = s + xy·e₁₂ + xz·e₁₃ + yz·e₂₃` where:
     ///
-    /// - `x = -i` (negated from quaternion i)
-    /// - `y = -j` (negated from quaternion j)
-    /// - `z = -k` (negated from quaternion k)
-    /// - `xyz = w` (pseudoscalar from quaternion scalar)
+    /// - `s = w` (scalar from quaternion scalar)
+    /// - `xy = -k` (e₁₂ from negated quaternion k, for sandwich direction)
+    /// - `xz = j` (e₁₃ from quaternion j)
+    /// - `yz = -i` (e₂₃ from negated quaternion i, for sandwich direction)
     ///
-    /// The vector parts are negated to match the inverse of the Rotor→Quaternion
-    /// mapping, ensuring the antisandwich product matches quaternion rotation.
+    /// Note: The bivector components are negated because the sandwich product
+    /// `R v R̃` rotates in the opposite direction from what the rotor components
+    /// suggest. This negation ensures the rotor produces the same rotation as
+    /// the input quaternion.
     #[inline]
     fn from(q: na::UnitQuaternion<T>) -> Self {
         let q = q.quaternion();
-        // Inverse mapping: (x, y, z, xyz) = (-i, -j, -k, w)
+        // Inverse mapping with negation: (s, xy, xz, yz) = (w, -k, j, -i)
         // Use new_unchecked since unit quaternion guarantees unit rotor
-        Rotor::new_unchecked(-q.i, -q.j, -q.k, q.w)
+        Rotor::new_unchecked(q.w, -q.k, q.j, -q.i)
     }
 }
 
