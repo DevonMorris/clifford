@@ -3,7 +3,6 @@
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to 2D projective geometry.
 
-use super::generated::products;
 use super::generated::types::{Flector, Line, Motor, Point};
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim2::Vector as EuclideanVector;
@@ -162,25 +161,6 @@ impl<T: Float> Point<T> {
         }
     }
 
-    /// Join of two points: the line through them.
-    ///
-    /// In point-based PGA, the join is the exterior product P₁ ∧ P₂,
-    /// which gives a line (bivector) passing through both points.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim2::Point;
-    ///
-    /// let p1 = Point::from_cartesian(0.0, 0.0);
-    /// let p2 = Point::from_cartesian(1.0, 1.0);
-    /// let line = p1.join(&p2);
-    /// ```
-    #[inline]
-    pub fn join(&self, other: &Point<T>) -> Line<T> {
-        products::exterior_point_point(self, other)
-    }
-
     /// Euclidean distance to another point.
     ///
     /// Both points must be finite (non-ideal).
@@ -327,31 +307,6 @@ impl<T: Float> Line<T> {
         } else {
             self.e12().abs() / weight
         }
-    }
-
-    /// Meet of two lines: their intersection point.
-    ///
-    /// In point-based PGA, this is computed via the regressive product.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim2::Line;
-    /// use approx::abs_diff_eq;
-    ///
-    /// let l1: Line<f64> = Line::y_axis(); // x = 0
-    /// let l2: Line<f64> = Line::x_axis(); // y = 0
-    ///
-    /// // Intersection is the origin
-    /// let p = l1.meet(&l2);
-    /// if let Some((x, y)) = p.to_cartesian() {
-    ///     assert!(abs_diff_eq!(x, 0.0, epsilon = 1e-10));
-    ///     assert!(abs_diff_eq!(y, 0.0, epsilon = 1e-10));
-    /// }
-    /// ```
-    #[inline]
-    pub fn meet(&self, other: &Line<T>) -> Point<T> {
-        products::regressive_line_line(self, other)
     }
 
     /// Signed distance from a point to this line.
@@ -545,29 +500,15 @@ impl<T: Float> Motor<T> {
         EuclideanVector::new(-self.e2() * T::TWO, self.e1() * T::TWO)
     }
 
-    /// Transforms a point using the antisandwich product.
-    ///
-    /// In 2D PGA with dual motor representation, the antisandwich product
-    /// works directly for point transformationirtual. This matches the 3D PGA pattern.
-    #[inline]
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        products::antisandwich_motor_point(self, p)
-    }
-
-    /// Transforms a line using the antisandwich product.
-    #[inline]
-    pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
-        products::antisandwich_motor_line(self, l)
-    }
-
     /// Transforms a Euclidean 2D vector using this motor.
     ///
     /// This embeds the vector as a projective point, transforms it,
     /// and extracts the Euclidean coordinates.
     #[inline]
     pub fn transform_euclidean(&self, v: &EuclideanVector<T>) -> EuclideanVector<T> {
+        use crate::ops::Transform;
         let p = Point::from_cartesian(v.x(), v.y());
-        let transformed = self.transform_point(&p);
+        let transformed: Point<T> = self.transform(&p);
         EuclideanVector::new(
             transformed.e1() / transformed.e0(),
             transformed.e2() / transformed.e0(),
@@ -597,7 +538,7 @@ impl<T: Float> Flector<T> {
     /// let x_axis: Line<f64> = Line::x_axis();
     /// let f = Flector::from_line(&x_axis);
     /// let p = Point::from_cartesian(1.0, 2.0);
-    /// let reflected = f.transform_point(&p);
+    /// let reflected = f.transform(&p);
     /// assert!(abs_diff_eq!(reflected.x(), 1.0, epsilon = 1e-10));
     /// assert!(abs_diff_eq!(reflected.y(), -2.0, epsilon = 1e-10));
     /// ```
@@ -679,43 +620,12 @@ impl<T: Float> Flector<T> {
     pub fn weight_norm(&self) -> T {
         self.weight_norm_squared().sqrt()
     }
-
-    /// Transform a point by reflecting it across the flector's line.
-    ///
-    /// For a pure reflection flector (scalar part = 0), this reflects the
-    /// point across the line represented by the grade-2 components.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim2::{Flector, Point};
-    /// use approx::abs_diff_eq;
-    ///
-    /// // Reflect through Y-axis (x = 0)
-    /// let f = Flector::<f64>::reflect_y();
-    /// let p = Point::from_cartesian(2.0, 3.0);
-    /// let reflected = f.transform_point(&p);
-    /// assert!(abs_diff_eq!(reflected.x(), -2.0, epsilon = 1e-10));
-    /// assert!(abs_diff_eq!(reflected.y(), 3.0, epsilon = 1e-10));
-    /// ```
-    #[inline]
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        // Use the line part for reflection
-        self.line_part().reflect(p)
-    }
-
-    /// Transform a line by reflecting it across the flector's line.
-    #[inline]
-    pub fn transform_line(&self, l: &Line<T>) -> Line<T> {
-        // Reflect a line by reflecting two points on it and joining them
-        // For now, use the sandwich product which should work for line-line
-        products::sandwich_flector_line(self, l)
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::{Join, Meet, Transform};
     use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::abs_diff_eq;
 
@@ -747,7 +657,7 @@ mod tests {
     fn motor_identity_preserves_point() {
         let p: Point<f64> = Point::from_cartesian(3.0, 4.0);
         let m: Motor<f64> = Motor::identity();
-        let result = m.transform_point(&p);
+        let result: Point<f64> = m.transform(&p);
 
         assert!(abs_diff_eq!(result.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(result.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
@@ -757,7 +667,7 @@ mod tests {
     fn motor_rotation_90_degrees() {
         let p = Point::from_cartesian(1.0, 0.0);
         let m = Motor::from_rotation(std::f64::consts::FRAC_PI_2);
-        let result = m.transform_point(&p);
+        let result: Point<f64> = m.transform(&p);
 
         assert!(abs_diff_eq!(result.x(), 0.0, epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(result.y(), 1.0, epsilon = RELATIVE_EQ_EPS));
@@ -767,7 +677,7 @@ mod tests {
     fn motor_translation() {
         let p = Point::from_cartesian(1.0, 2.0);
         let m = Motor::from_translation(3.0, 4.0);
-        let result = m.transform_point(&p);
+        let result: Point<f64> = m.transform(&p);
 
         assert!(abs_diff_eq!(result.x(), 4.0, epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(result.y(), 6.0, epsilon = RELATIVE_EQ_EPS));
@@ -778,8 +688,8 @@ mod tests {
         let p = Point::from_cartesian(3.0, 4.0);
         let m = Motor::from_rotation(0.5);
 
-        let transformed = m.transform_point(&p);
-        let back = m.inverse().transform_point(&transformed);
+        let transformed: Point<f64> = m.transform(&p);
+        let back: Point<f64> = m.inverse().transform(&transformed);
 
         assert!(abs_diff_eq!(back.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(back.y(), p.y(), epsilon = RELATIVE_EQ_EPS));
@@ -845,7 +755,7 @@ mod tests {
         let f = Flector::<f64>::reflect_x();
         let p = Point::from_cartesian(2.0, 3.0);
 
-        let reflected = f.transform_point(&p);
+        let reflected = f.transform(&p);
 
         // Reflecting (2, 3) through X-axis (y = 0) should give (2, -3)
         assert!(abs_diff_eq!(reflected.x(), 2.0, epsilon = RELATIVE_EQ_EPS));
@@ -858,8 +768,8 @@ mod tests {
         let p = Point::from_cartesian(2.0, 3.0);
 
         // Reflecting twice should return to original
-        let once = f.transform_point(&p);
-        let twice = f.transform_point(&once);
+        let once = f.transform(&p);
+        let twice = f.transform(&once);
 
         assert!(abs_diff_eq!(twice.x(), p.x(), epsilon = RELATIVE_EQ_EPS));
         assert!(abs_diff_eq!(twice.y(), p.y(), epsilon = RELATIVE_EQ_EPS));

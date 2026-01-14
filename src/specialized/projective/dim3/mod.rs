@@ -142,15 +142,9 @@ mod nalgebra;
 #[cfg(feature = "rerun-0_28")]
 mod rerun;
 
-// Re-export generated types and products
+// Re-export generated types and wrapper aliases
 pub use generated::products;
-pub use generated::types::{Flector, Line, Motor, Plane, Point, Quadvector, Scalar};
-
-// Re-export wrapper type aliases
-pub use generated::types::{
-    BulkFlector, BulkMotor, IdealLine, IdealPlane, IdealPoint, UnitizedLine, UnitizedPlane,
-    UnitizedPoint,
-};
+pub use generated::types::*;
 
 #[cfg(any(
     feature = "nalgebra-0_32",

@@ -506,7 +506,6 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     // Infer all standard product types
     let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
     let exterior_table = infer_all_products(&entities, ProductType::Exterior, &algebra);
-    let inner_table = infer_all_products(&entities, ProductType::Inner, &algebra);
     let left_contraction_table =
         infer_all_products(&entities, ProductType::LeftContraction, &algebra);
     let right_contraction_table =
@@ -556,7 +555,6 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     ProductsSpec {
         geometric: convert_entries(geometric_table),
         wedge: convert_entries(exterior_table),
-        inner: convert_entries(inner_table), // Symmetric inner product (Hestenes)
         left_contraction: convert_entries(left_contraction_table),
         right_contraction: convert_entries(right_contraction_table),
         antiwedge: convert_entries(regressive_table),
@@ -878,10 +876,6 @@ mod tests {
         assert!(
             !spec.products.left_contraction.is_empty(),
             "Left contraction products should be inferred"
-        );
-        assert!(
-            !spec.products.inner.is_empty(),
-            "Inner products should be inferred"
         );
     }
 

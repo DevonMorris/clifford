@@ -748,15 +748,23 @@ impl<T: Float> Default for Trivector<T> {
         Self::zero()
     }
 }
-#[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nFor a Flector to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Flector has been bulk-normalized."]
+#[doc = "A bulk-normalized Flector (bulk norm = 1).\n\nThis type alias wraps Flector in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
 pub type BulkFlector<T> = crate::wrappers::Bulk<Flector<T>>;
-#[doc = "A unitized line (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized line has been weight-normalized to standard form, representing a finite (non-ideal) line."]
+#[doc = "A unitized Flector (weight norm = 1).\n\nThis type alias wraps Flector in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedFlector<T> = crate::wrappers::Unitized<Flector<T>>;
+#[doc = "A bulk-normalized Line (bulk norm = 1).\n\nThis type alias wraps Line in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkLine<T> = crate::wrappers::Bulk<Line<T>>;
+#[doc = "A unitized Line (weight norm = 1).\n\nThis type alias wraps Line in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
 pub type UnitizedLine<T> = crate::wrappers::Unitized<Line<T>>;
-#[doc = "An ideal line (weight ≈ 0).\n\nAn ideal line lies at infinity (has zero weight component). This is a constraint wrapper that verifies the line is ideal, not a normalization wrapper."]
-pub type IdealLine<T> = crate::wrappers::Ideal<Line<T>>;
-#[doc = "A bulk-normalized Motor (bulk norm = 1).\n\nFor a Motor to represent a proper rigid transformation, the bulk norm (non-degenerate part) should be 1. This type alias provides compile-time documentation that the Motor has been bulk-normalized."]
+#[doc = "A bulk-normalized Motor (bulk norm = 1).\n\nThis type alias wraps Motor in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
 pub type BulkMotor<T> = crate::wrappers::Bulk<Motor<T>>;
-#[doc = "A unitized point (weight norm = 1).\n\nIn PGA, geometric entities are represented in homogeneous coordinates. A unitized point has been weight-normalized to standard form, representing a finite (non-ideal) point."]
+#[doc = "A unitized Motor (weight norm = 1).\n\nThis type alias wraps Motor in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedMotor<T> = crate::wrappers::Unitized<Motor<T>>;
+#[doc = "A bulk-normalized Point (bulk norm = 1).\n\nThis type alias wraps Point in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkPoint<T> = crate::wrappers::Bulk<Point<T>>;
+#[doc = "A unitized Point (weight norm = 1).\n\nThis type alias wraps Point in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
 pub type UnitizedPoint<T> = crate::wrappers::Unitized<Point<T>>;
-#[doc = "An ideal point (weight ≈ 0).\n\nAn ideal point lies at infinity (has zero weight component). This is a constraint wrapper that verifies the point is ideal, not a normalization wrapper."]
-pub type IdealPoint<T> = crate::wrappers::Ideal<Point<T>>;
+#[doc = "A bulk-normalized Trivector (bulk norm = 1).\n\nThis type alias wraps Trivector in `Bulk<T>`, which normalizes by the bulk (non-degenerate) part of the norm."]
+pub type BulkTrivector<T> = crate::wrappers::Bulk<Trivector<T>>;
+#[doc = "A unitized Trivector (weight norm = 1).\n\nThis type alias wraps Trivector in `Unitized<T>`, which normalizes by the weight (degenerate) part of the norm."]
+pub type UnitizedTrivector<T> = crate::wrappers::Unitized<Trivector<T>>;

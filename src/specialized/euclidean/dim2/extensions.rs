@@ -3,7 +3,6 @@
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to Euclidean 2D geometry.
 
-use super::generated::products;
 use super::generated::types::{Bivector, Rotor, Vector};
 use crate::scalar::Float;
 
@@ -28,26 +27,6 @@ impl<T: Float> Vector<T> {
     #[inline]
     pub fn dot(self, other: Self) -> T {
         self.x() * other.x() + self.y() * other.y()
-    }
-
-    /// Wedge product (outer product): `a ∧ b`.
-    ///
-    /// Returns the bivector (pseudoscalar in 2D) representing the
-    /// signed area of the parallelogram spanned by the vectors.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim2::{Vector, Bivector};
-    ///
-    /// let a = Vector::<f64>::unit_x();
-    /// let b = Vector::<f64>::unit_y();
-    /// let ab = a.wedge(b);
-    /// assert_eq!(ab.xy(), 1.0);
-    /// ```
-    #[inline]
-    pub fn wedge(self, other: Self) -> Bivector<T> {
-        products::exterior_vector_vector(&self, &other)
     }
 
     /// Perpendicular vector (90° counterclockwise rotation).

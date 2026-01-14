@@ -4,8 +4,8 @@
 #![doc = " Do not edit manually."]
 use super::types::{Bivector, Rotor, Scalar, Vector};
 use crate::ops::{
-    Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, Inner,
-    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
+    Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, LeftContract,
+    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -481,69 +481,6 @@ impl<T: Float> Antiwedge<Vector<T>> for Vector<T> {
         Scalar::new(-(rhs.x() * self.y()) + rhs.y() * self.x())
     }
 }
-impl<T: Float> Inner<Bivector<T>> for Bivector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()))
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Bivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(self.xy() * rhs.s())
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Bivector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(self.xy() * rhs.y(), -(self.xy() * rhs.x()))
-    }
-}
-impl<T: Float> Inner<Bivector<T>> for Scalar<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(rhs.xy() * self.s())
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Scalar<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s())
-    }
-}
-impl<T: Float> Inner<Bivector<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(-(rhs.xy() * self.y()), rhs.xy() * self.x())
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y())
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Vector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(rhs.x() * self.x() + rhs.y() * self.y())
-    }
-}
 impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -633,14 +570,13 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.xy() * operand.s() * self.xy()
-                + self.s() * operand.xy() * self.xy()
-                + self.s() * operand.s() * self.s()
-                - self.xy() * operand.xy() * self.s(),
-            self.xy() * operand.s() * self.s()
+            self.s() * operand.xy() * self.xy() - self.xy() * operand.xy() * self.s()
+                + self.xy() * operand.s() * self.xy()
+                + self.s() * operand.s() * self.s(),
+            -(self.s() * operand.s() * self.xy())
+                + self.xy() * operand.s() * self.s()
                 + self.s() * operand.xy() * self.s()
-                + self.xy() * operand.xy() * self.xy()
-                - self.s() * operand.s() * self.xy(),
+                + self.xy() * operand.xy() * self.xy(),
         )
     }
 }
@@ -649,13 +585,13 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            self.xy() * operand.y() * self.s() + self.s() * operand.x() * self.s()
-                - self.xy() * operand.x() * self.xy()
-                + self.s() * operand.y() * self.xy(),
-            self.s() * operand.y() * self.s()
-                - self.s() * operand.x() * self.xy()
-                - self.xy() * operand.x() * self.s()
-                - self.xy() * operand.y() * self.xy(),
+            self.s() * operand.y() * self.xy()
+                + self.xy() * operand.y() * self.s()
+                + self.s() * operand.x() * self.s()
+                - self.xy() * operand.x() * self.xy(),
+            -(self.s() * operand.x() * self.xy()) - self.xy() * operand.y() * self.xy()
+                + self.s() * operand.y() * self.s()
+                - self.xy() * operand.x() * self.s(),
         )
     }
 }
@@ -664,13 +600,13 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.xy() * operand.xy() * self.s())
+            self.xy() * operand.s() * self.xy()
                 + self.s() * operand.xy() * self.xy()
                 + self.s() * operand.s() * self.s()
-                + self.xy() * operand.s() * self.xy(),
-            self.s() * operand.xy() * self.s() + self.xy() * operand.s() * self.s()
+                - self.xy() * operand.xy() * self.s(),
+            self.xy() * operand.xy() * self.xy() + self.s() * operand.xy() * self.s()
                 - self.s() * operand.s() * self.xy()
-                + self.xy() * operand.xy() * self.xy(),
+                + self.xy() * operand.s() * self.s(),
         )
     }
 }
@@ -679,14 +615,12 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            -(self.s() * operand.x() * self.s())
-                + self.s() * operand.y() * self.xy()
-                + self.xy() * operand.y() * self.s()
+            self.xy() * operand.y() * self.s() + self.s() * operand.y() * self.xy()
+                - self.s() * operand.x() * self.s()
                 + self.xy() * operand.x() * self.xy(),
-            -(self.s() * operand.x() * self.xy())
-                - self.s() * operand.y() * self.s()
-                - self.xy() * operand.x() * self.s()
-                + self.xy() * operand.y() * self.xy(),
+            -(self.s() * operand.x() * self.xy()) - self.s() * operand.y() * self.s()
+                + self.xy() * operand.y() * self.xy()
+                - self.xy() * operand.x() * self.s(),
         )
     }
 }

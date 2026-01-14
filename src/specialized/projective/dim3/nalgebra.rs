@@ -49,8 +49,8 @@
 //! let p = Point::from_cartesian(0.0, 0.0, 0.0);
 //! let na_p = na::Point3::new(0.0, 0.0, 0.0);
 //!
-//! let result_ga = motor.transform_point(&p);
-//! let result_na = iso.transform_point(&na_p);
+//! let result_ga = motor.transform(&p);
+//! let result_na = iso.transform(&na_p);
 //!
 //! // Results should match
 //! assert!((result_ga.x() - result_na.x).abs() < 1e-10);
@@ -65,6 +65,7 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
+use crate::ops::Transform;
 use crate::scalar::Float;
 
 use super::{Motor, Point};
@@ -198,7 +199,7 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
         // Extract translation by applying motor to origin and reading result
         // This handles the complex interaction between rotation and translation
         let origin = Point::origin();
-        let transformed = motor.transform_point(&origin);
+        let transformed = motor.transform(&origin);
         let translation = na::Translation3::new(transformed.x(), transformed.y(), transformed.z());
 
         na::Isometry3::from_parts(translation, rotation)
@@ -363,8 +364,8 @@ mod tests {
             ];
 
             for test_p in test_points {
-                let result1 = m.transform_point(&test_p);
-                let result2 = back.transform_point(&test_p);
+                let result1 = m.transform(&test_p);
+                let result2 = back.transform(&test_p);
 
                 prop_assert!(
                     relative_eq!(result1.x(), result2.x(), epsilon = EPS, max_relative = EPS),
@@ -394,7 +395,7 @@ mod tests {
             p in any::<UnitizedPoint<f64>>(),
         ) {
             // Transform with clifford motor
-            let result_ga = m.transform_point(&*p);
+            let result_ga = m.transform(&*p);
 
             // Transform with nalgebra isometry
             let iso: na::Isometry3<f64> = (*m).into();
@@ -424,7 +425,7 @@ mod tests {
         ) {
             // Inverse with clifford
             let inv_ga = m.inverse();
-            let result_ga = inv_ga.transform_point(&*p);
+            let result_ga = inv_ga.transform(&*p);
 
             // Inverse with nalgebra
             let iso: na::Isometry3<f64> = (*m).into();
@@ -467,7 +468,7 @@ mod tests {
                 na::UnitQuaternion::identity(),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -492,7 +493,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -517,7 +518,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -542,7 +543,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -577,7 +578,7 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na_axis, -angle),
             );
 
-            let result_ga = motor.transform_point(&*p);
+            let result_ga = motor.transform(&*p);
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
@@ -665,7 +666,7 @@ mod tests {
             let flector = Flector::from_plane_through_origin(nx, ny, nz);
 
             // Reflect with flector
-            let result_ga = flector.transform_point(&*p);
+            let result_ga = flector.transform(&*p);
 
             // Reflect manually
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
@@ -704,8 +705,8 @@ mod tests {
             let flector = Flector::from_plane(&plane);
 
             // Reflect twice
-            let once = flector.transform_point(&*p);
-            let twice = flector.transform_point(&once);
+            let once = flector.transform(&*p);
+            let twice = flector.transform(&once);
 
             // Should be back at original point
             prop_assert!(
@@ -741,7 +742,7 @@ mod tests {
         );
 
         let p = Point::from_cartesian(1.0, 2.0, 3.0);
-        let result = motor.transform_point(&p);
+        let result = motor.transform(&p);
 
         println!(
             "Point ({}, {}, {}) -> ({}, {}, {})",

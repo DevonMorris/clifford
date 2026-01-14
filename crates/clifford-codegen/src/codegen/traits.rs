@@ -150,14 +150,14 @@ impl<'a> TraitsGenerator<'a> {
         quote! {
             use crate::scalar::Float;
             use crate::ops::{
-                Wedge, Antiwedge, Inner, LeftContract, RightContract,
+                Wedge, Antiwedge, LeftContract, RightContract,
                 Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot,
                 Reverse, Antireverse, RightComplement, Versor,
             };
             use super::types::{#(#type_names),*};
 
-            use std::ops::{Add, Sub, Neg, Mul, BitXor};
+            use std::ops::{Add, Sub, Neg, Mul};
 
             use approx::{AbsDiffEq, RelativeEq, UlpsEq};
         }
@@ -200,23 +200,6 @@ impl<'a> TraitsGenerator<'a> {
                 if let Some(other) = self.find_type(&entry.rhs) {
                     if let Some(output_type) = self.find_type(&entry.output) {
                         impls.push(self.generate_geometric_mul_from_entry(
-                            ty,
-                            other,
-                            output_type,
-                            entry,
-                        ));
-                    }
-                }
-            }
-        }
-
-        // Exterior product (using BitXor) - only for explicit products
-        for entry in &self.spec.products.wedge {
-            // Only generate if lhs matches this type
-            if entry.lhs == ty.name {
-                if let Some(other) = self.find_type(&entry.rhs) {
-                    if let Some(output_type) = self.find_type(&entry.output) {
-                        impls.push(self.generate_exterior_from_entry(
                             ty,
                             other,
                             output_type,
@@ -724,41 +707,6 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
-    /// Generates exterior product (Type ^ Other -> Output) from a product entry.
-    fn generate_exterior_from_entry(
-        &self,
-        a: &TypeSpec,
-        b: &TypeSpec,
-        output: &TypeSpec,
-        _entry: &crate::spec::ProductEntry,
-    ) -> TokenStream {
-        let a_name = format_ident!("{}", a.name);
-        let b_name = format_ident!("{}", b.name);
-        let out_name = format_ident!("{}", output.name);
-
-        // Compute the formula using symbolic machinery
-        let field_exprs =
-            self.compute_product_expressions(a, b, output, SymbolicProductKind::Wedge);
-
-        // Generate constructor call with the computed expressions
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
-
-        quote! {
-            impl<T: Float> BitXor<#b_name<T>> for #a_name<T> {
-                type Output = #out_name<T>;
-
-                #[inline]
-                fn bitxor(self, rhs: #b_name<T>) -> #out_name<T> {
-                    #constructor_call
-                }
-            }
-        }
-    }
-
     // ========================================================================
     // Product Trait Implementations (clifford::ops)
     // ========================================================================
@@ -805,19 +753,6 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_antiwedge_trait(a, b, out, entry));
-                }
-            }
-        }
-
-        // Inner trait - single-grade types only
-        for entry in &self.spec.products.inner {
-            if let (Some(a), Some(b), Some(out)) = (
-                self.find_type(&entry.lhs),
-                self.find_type(&entry.rhs),
-                self.find_type(&entry.output),
-            ) {
-                if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
-                    impls.push(self.generate_inner_trait(a, b, out, entry));
                 }
             }
         }
@@ -1131,41 +1066,6 @@ impl<'a> TraitsGenerator<'a> {
 
                 #[inline]
                 fn antiwedge(&self, rhs: &#b_name<T>) -> #out_name<T> {
-                    #constructor_call
-                }
-            }
-        }
-    }
-
-    /// Generates Inner trait impl.
-    fn generate_inner_trait(
-        &self,
-        a: &TypeSpec,
-        b: &TypeSpec,
-        output: &TypeSpec,
-        _entry: &crate::spec::ProductEntry,
-    ) -> TokenStream {
-        let a_name = format_ident!("{}", a.name);
-        let b_name = format_ident!("{}", b.name);
-        let out_name = format_ident!("{}", output.name);
-
-        // Compute the formula using symbolic machinery
-        let field_exprs =
-            self.compute_product_expressions(a, b, output, SymbolicProductKind::Inner);
-
-        // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new(#(#field_exprs),*) }
-        };
-
-        quote! {
-            impl<T: Float> Inner<#b_name<T>> for #a_name<T> {
-                type Output = #out_name<T>;
-
-                #[inline]
-                fn inner(&self, rhs: &#b_name<T>) -> #out_name<T> {
                     #constructor_call
                 }
             }
@@ -2588,6 +2488,14 @@ mod verification_tests {{
             .products
             .wedge
             .iter()
+            // Only generate tests for single-grade types (where Wedge is implemented)
+            .filter(|entry| {
+                self.find_type(&entry.lhs)
+                    .is_some_and(|t| self.is_single_grade_blade(t))
+                    && self
+                        .find_type(&entry.rhs)
+                        .is_some_and(|t| self.is_single_grade_blade(t))
+            })
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
                 let rhs_lower = entry.rhs.to_lowercase();
@@ -2597,17 +2505,18 @@ mod verification_tests {{
                     r#"
     proptest! {{
         #[test]
-        fn exterior_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+        fn wedge_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            use crate::ops::Wedge;
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = exterior_{lhs_lower}_{rhs_lower}(&a, &b);
+            let specialized_result: {out}<f64> = a.wedge(&b);
             let generic_result = mv_a.exterior(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
             prop_assert!(
                 relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
-                "Exterior product mismatch: specialized={{:?}}, generic={{:?}}",
+                "Wedge product mismatch: specialized={{:?}}, generic={{:?}}",
                 specialized_mv, generic_result
             );
         }}
@@ -2636,6 +2545,14 @@ mod verification_tests {{
             .products
             .bulk_contraction
             .iter()
+            // Only generate tests for single-grade types (where BulkContract is implemented)
+            .filter(|entry| {
+                self.find_type(&entry.lhs)
+                    .is_some_and(|t| self.is_single_grade_blade(t))
+                    && self
+                        .find_type(&entry.rhs)
+                        .is_some_and(|t| self.is_single_grade_blade(t))
+            })
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
                 let rhs_lower = entry.rhs.to_lowercase();
@@ -2646,10 +2563,11 @@ mod verification_tests {{
     proptest! {{
         #[test]
         fn bulk_contraction_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            use crate::ops::BulkContract;
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = bulk_contraction_{lhs_lower}_{rhs_lower}(&a, &b);
+            let specialized_result: {out}<f64> = a.bulk_contract(&b);
             let generic_result = mv_a.bulk_contraction(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
@@ -2684,6 +2602,14 @@ mod verification_tests {{
             .products
             .weight_contraction
             .iter()
+            // Only generate tests for single-grade types (where WeightContract is implemented)
+            .filter(|entry| {
+                self.find_type(&entry.lhs)
+                    .is_some_and(|t| self.is_single_grade_blade(t))
+                    && self
+                        .find_type(&entry.rhs)
+                        .is_some_and(|t| self.is_single_grade_blade(t))
+            })
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
                 let rhs_lower = entry.rhs.to_lowercase();
@@ -2694,10 +2620,11 @@ mod verification_tests {{
     proptest! {{
         #[test]
         fn weight_contraction_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            use crate::ops::WeightContract;
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = weight_contraction_{lhs_lower}_{rhs_lower}(&a, &b);
+            let specialized_result: {out}<f64> = a.weight_contract(&b);
             let generic_result = mv_a.weight_contraction(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
@@ -2732,6 +2659,14 @@ mod verification_tests {{
             .products
             .bulk_expansion
             .iter()
+            // Only generate tests for single-grade types (where BulkExpand is implemented)
+            .filter(|entry| {
+                self.find_type(&entry.lhs)
+                    .is_some_and(|t| self.is_single_grade_blade(t))
+                    && self
+                        .find_type(&entry.rhs)
+                        .is_some_and(|t| self.is_single_grade_blade(t))
+            })
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
                 let rhs_lower = entry.rhs.to_lowercase();
@@ -2742,10 +2677,11 @@ mod verification_tests {{
     proptest! {{
         #[test]
         fn bulk_expansion_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            use crate::ops::BulkExpand;
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = bulk_expansion_{lhs_lower}_{rhs_lower}(&a, &b);
+            let specialized_result: {out}<f64> = a.bulk_expand(&b);
             let generic_result = mv_a.bulk_expansion(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();
@@ -2780,6 +2716,14 @@ mod verification_tests {{
             .products
             .weight_expansion
             .iter()
+            // Only generate tests for single-grade types (where WeightExpand is implemented)
+            .filter(|entry| {
+                self.find_type(&entry.lhs)
+                    .is_some_and(|t| self.is_single_grade_blade(t))
+                    && self
+                        .find_type(&entry.rhs)
+                        .is_some_and(|t| self.is_single_grade_blade(t))
+            })
             .map(|entry| {
                 let lhs_lower = entry.lhs.to_lowercase();
                 let rhs_lower = entry.rhs.to_lowercase();
@@ -2790,10 +2734,11 @@ mod verification_tests {{
     proptest! {{
         #[test]
         fn weight_expansion_{lhs_lower}_{rhs_lower}_{out_lower}_matches_multivector(a in any::<{lhs}<f64>>(), b in any::<{rhs}<f64>>()) {{
+            use crate::ops::WeightExpand;
             let mv_a: Multivector<f64, {sig}> = a.into();
             let mv_b: Multivector<f64, {sig}> = b.into();
 
-            let specialized_result: {out}<f64> = weight_expansion_{lhs_lower}_{rhs_lower}(&a, &b);
+            let specialized_result: {out}<f64> = a.weight_expand(&b);
             let generic_result = mv_a.weight_expansion(&mv_b);
 
             let specialized_mv: Multivector<f64, {sig}> = specialized_result.into();

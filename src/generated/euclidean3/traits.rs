@@ -4,8 +4,8 @@
 #![doc = " Do not edit manually."]
 use super::types::{Bivector, Rotor, Scalar, Trivector, Vector};
 use crate::ops::{
-    Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, Inner,
-    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
+    Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, LeftContract,
+    Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -769,150 +769,6 @@ impl<T: Float> Antiwedge<Trivector<T>> for Vector<T> {
         )
     }
 }
-impl<T: Float> Inner<Bivector<T>> for Bivector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new(-(self.xy() * rhs.xy()) + -(self.xz() * rhs.xz()) + -(self.yz() * rhs.yz()))
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Bivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new(
-            self.xy() * rhs.s(),
-            self.xz() * rhs.s(),
-            self.yz() * rhs.s(),
-        )
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Bivector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Vector<T> {
-        Vector::new(
-            -(self.yz() * rhs.xyz()),
-            self.xz() * rhs.xyz(),
-            -(self.xy() * rhs.xyz()),
-        )
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Bivector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(
-            self.xy() * rhs.y() + self.xz() * rhs.z(),
-            -(self.xy() * rhs.x()) + self.yz() * rhs.z(),
-            -(self.xz() * rhs.x()) + -(self.yz() * rhs.y()),
-        )
-    }
-}
-impl<T: Float> Inner<Bivector<T>> for Scalar<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new(
-            rhs.xy() * self.s(),
-            rhs.xz() * self.s(),
-            rhs.yz() * self.s(),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Scalar<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new(rhs.s() * self.s())
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Scalar<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new(rhs.xyz() * self.s())
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Scalar<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new(rhs.x() * self.s(), rhs.y() * self.s(), rhs.z() * self.s())
-    }
-}
-impl<T: Float> Inner<Bivector<T>> for Trivector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(
-            -(rhs.yz() * self.xyz()),
-            rhs.xz() * self.xyz(),
-            -(rhs.xy() * self.xyz()),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Trivector<T> {
-    type Output = Trivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new(rhs.s() * self.xyz())
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Trivector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new(-(rhs.xyz() * self.xyz()))
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Trivector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new(
-            rhs.z() * self.xyz(),
-            -(rhs.y() * self.xyz()),
-            rhs.x() * self.xyz(),
-        )
-    }
-}
-impl<T: Float> Inner<Bivector<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new(
-            -(rhs.xy() * self.y()) + -(rhs.xz() * self.z()),
-            rhs.xy() * self.x() + -(rhs.yz() * self.z()),
-            rhs.xz() * self.x() + rhs.yz() * self.y(),
-        )
-    }
-}
-impl<T: Float> Inner<Scalar<T>> for Vector<T> {
-    type Output = Vector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new(rhs.s() * self.x(), rhs.s() * self.y(), rhs.s() * self.z())
-    }
-}
-impl<T: Float> Inner<Trivector<T>> for Vector<T> {
-    type Output = Bivector<T>;
-    #[inline]
-    fn inner(&self, rhs: &Trivector<T>) -> Bivector<T> {
-        Bivector::new(
-            rhs.xyz() * self.z(),
-            -(rhs.xyz() * self.y()),
-            rhs.xyz() * self.x(),
-        )
-    }
-}
-impl<T: Float> Inner<Vector<T>> for Vector<T> {
-    type Output = Scalar<T>;
-    #[inline]
-    fn inner(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new(rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z())
-    }
-}
 impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1090,41 +946,39 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            self.s() * operand.y() * self.xy()
+            self.s() * operand.y() * self.xy() + self.s() * operand.x() * self.s()
                 - self.xy() * operand.x() * self.xy()
-                - self.xz() * operand.x() * self.xz()
-                + self.s() * operand.x() * self.s()
-                + self.xy() * operand.y() * self.s()
-                + self.s() * operand.z() * self.xz()
                 - self.xz() * operand.y() * self.yz()
                 + self.xz() * operand.z() * self.s()
-                + self.xy() * operand.z() * self.yz()
-                - self.yz() * operand.y() * self.xz()
                 + self.yz() * operand.x() * self.yz()
-                + self.yz() * operand.z() * self.xy(),
-            self.s() * operand.y() * self.s()
-                - self.xz() * operand.z() * self.xy()
-                - self.xy() * operand.x() * self.s()
-                - self.yz() * operand.x() * self.xz()
-                - self.xz() * operand.x() * self.yz()
-                - self.yz() * operand.y() * self.yz()
-                + self.s() * operand.z() * self.yz()
-                - self.xy() * operand.z() * self.xz()
-                - self.xy() * operand.y() * self.xy()
-                - self.s() * operand.x() * self.xy()
+                + self.yz() * operand.z() * self.xy()
+                - self.yz() * operand.y() * self.xz()
+                + self.s() * operand.z() * self.xz()
+                + self.xy() * operand.y() * self.s()
+                + self.xy() * operand.z() * self.yz()
+                - self.xz() * operand.x() * self.xz(),
+            -(self.xz() * operand.z() * self.xy()) - self.yz() * operand.x() * self.xz()
                 + self.yz() * operand.z() * self.s()
-                + self.xz() * operand.y() * self.xz(),
-            -(self.yz() * operand.y() * self.s()) - self.yz() * operand.z() * self.yz()
-                + self.xy() * operand.z() * self.xy()
-                - self.xy() * operand.y() * self.xz()
-                + self.xy() * operand.x() * self.yz()
-                - self.s() * operand.x() * self.xz()
-                + self.s() * operand.z() * self.s()
+                - self.xy() * operand.y() * self.xy()
+                + self.s() * operand.y() * self.s()
+                + self.xz() * operand.y() * self.xz()
+                - self.xy() * operand.z() * self.xz()
+                - self.xy() * operand.x() * self.s()
+                + self.s() * operand.z() * self.yz()
+                - self.s() * operand.x() * self.xy()
+                - self.xz() * operand.x() * self.yz()
+                - self.yz() * operand.y() * self.yz(),
+            self.xy() * operand.x() * self.yz() + self.xy() * operand.z() * self.xy()
                 - self.xz() * operand.y() * self.xy()
                 - self.xz() * operand.z() * self.xz()
+                - self.xz() * operand.x() * self.s()
+                - self.yz() * operand.y() * self.s()
+                - self.xy() * operand.y() * self.xz()
                 + self.yz() * operand.x() * self.xy()
-                - self.s() * operand.y() * self.yz()
-                - self.xz() * operand.x() * self.s(),
+                + self.s() * operand.z() * self.s()
+                - self.yz() * operand.z() * self.yz()
+                - self.s() * operand.x() * self.xz()
+                - self.s() * operand.y() * self.yz(),
         )
     }
 }
@@ -1133,39 +987,42 @@ impl<T: Float> Sandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new(
-            self.s() * operand.xz() * self.yz() - self.xz() * operand.xy() * self.xz()
-                + self.s() * operand.xy() * self.s()
-                + self.yz() * operand.xz() * self.s()
+            -(self.xz() * operand.xy() * self.xz())
                 - self.yz() * operand.xy() * self.yz()
-                + self.xy() * operand.xy() * self.xy()
-                + self.xz() * operand.xz() * self.xy()
                 - self.s() * operand.yz() * self.xz()
-                + self.yz() * operand.yz() * self.xy()
-                + self.xy() * operand.xz() * self.xz()
+                + self.s() * operand.xy() * self.s()
+                - self.xz() * operand.yz() * self.s()
+                + self.s() * operand.xz() * self.yz()
+                + self.yz() * operand.xz() * self.s()
                 + self.xy() * operand.yz() * self.yz()
-                - self.xz() * operand.yz() * self.s(),
-            self.xy() * operand.xy() * self.xz() + self.xz() * operand.xy() * self.xy()
-                - self.s() * operand.xy() * self.yz()
-                - self.yz() * operand.xy() * self.s()
+                + self.xy() * operand.xy() * self.xy()
+                + self.yz() * operand.yz() * self.xy()
+                + self.xz() * operand.xz() * self.xy()
+                + self.xy() * operand.xz() * self.xz(),
+            self.xz() * operand.xy() * self.xy()
                 + self.s() * operand.xz() * self.s()
-                + self.s() * operand.yz() * self.xy()
-                - self.xy() * operand.xz() * self.xy()
-                + self.xz() * operand.xz() * self.xz()
-                + self.xz() * operand.yz() * self.yz()
+                + self.xy() * operand.yz() * self.s()
                 - self.yz() * operand.xz() * self.yz()
+                + self.s() * operand.yz() * self.xy()
+                + self.xz() * operand.yz() * self.yz()
+                + self.xy() * operand.xy() * self.xz()
+                - self.yz() * operand.xy() * self.s()
+                - self.s() * operand.xy() * self.yz()
+                - self.xy() * operand.xz() * self.xy()
                 + self.yz() * operand.yz() * self.xz()
-                + self.xy() * operand.yz() * self.s(),
-            self.s() * operand.yz() * self.s() - self.xy() * operand.xz() * self.s()
+                + self.xz() * operand.xz() * self.xz(),
+            self.yz() * operand.yz() * self.yz()
                 + self.xz() * operand.xy() * self.s()
-                + self.yz() * operand.yz() * self.yz()
                 + self.s() * operand.xy() * self.xz()
                 + self.yz() * operand.xz() * self.xz()
-                + self.xy() * operand.xy() * self.yz()
-                - self.xy() * operand.yz() * self.xy()
-                + self.yz() * operand.xy() * self.xy()
+                - self.xy() * operand.xz() * self.s()
                 - self.xz() * operand.yz() * self.xz()
-                + self.xz() * operand.xz() * self.yz()
-                - self.s() * operand.xz() * self.xy(),
+                + self.xy() * operand.xy() * self.yz()
+                + self.s() * operand.yz() * self.s()
+                + self.yz() * operand.xy() * self.xy()
+                - self.s() * operand.xz() * self.xy()
+                - self.xy() * operand.yz() * self.xy()
+                + self.xz() * operand.xz() * self.yz(),
         )
     }
 }
@@ -1174,68 +1031,68 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.xz() * operand.xy() * self.yz() - self.xz() * operand.xz() * self.s()
-                + self.s() * operand.yz() * self.yz()
-                + self.s() * operand.xz() * self.xz()
-                + self.xy() * operand.yz() * self.xz()
-                - self.xy() * operand.xz() * self.yz()
+            self.s() * operand.s() * self.s()
+                - self.xz() * operand.xz() * self.s()
+                - self.xz() * operand.yz() * self.xy()
+                + self.s() * operand.xy() * self.xy()
+                + self.yz() * operand.xz() * self.xy()
                 - self.xy() * operand.xy() * self.s()
                 - self.yz() * operand.xy() * self.xz()
-                + self.s() * operand.xy() * self.xy()
-                + self.xz() * operand.s() * self.xz()
+                + self.s() * operand.xz() * self.xz()
+                + self.xz() * operand.xy() * self.yz()
                 + self.yz() * operand.s() * self.yz()
+                + self.xz() * operand.s() * self.xz()
+                - self.xy() * operand.xz() * self.yz()
+                + self.s() * operand.yz() * self.yz()
+                - self.yz() * operand.yz() * self.s()
                 + self.xy() * operand.s() * self.xy()
-                + self.s() * operand.s() * self.s()
-                - self.xz() * operand.yz() * self.xy()
-                + self.yz() * operand.xz() * self.xy()
-                - self.yz() * operand.yz() * self.s(),
+                + self.xy() * operand.yz() * self.xz(),
             -(self.xz() * operand.yz() * self.s())
-                + self.xy() * operand.s() * self.s()
-                + self.xz() * operand.xz() * self.xy()
-                - self.xz() * operand.xy() * self.xz()
-                + self.xy() * operand.xy() * self.xy()
-                - self.s() * operand.yz() * self.xz()
-                + self.s() * operand.xz() * self.yz()
-                + self.yz() * operand.yz() * self.xy()
                 + self.yz() * operand.xz() * self.s()
+                + self.xy() * operand.xz() * self.xz()
+                + self.xy() * operand.yz() * self.yz()
+                - self.xz() * operand.xy() * self.xz()
+                - self.s() * operand.s() * self.xy()
                 - self.yz() * operand.s() * self.xz()
                 - self.yz() * operand.xy() * self.yz()
+                + self.yz() * operand.yz() * self.xy()
                 + self.s() * operand.xy() * self.s()
-                + self.xy() * operand.xz() * self.xz()
+                + self.s() * operand.xz() * self.yz()
+                + self.xy() * operand.s() * self.s()
+                + self.xz() * operand.xz() * self.xy()
                 + self.xz() * operand.s() * self.yz()
-                + self.xy() * operand.yz() * self.yz()
-                - self.s() * operand.s() * self.xy(),
-            self.s() * operand.yz() * self.xy() + self.xz() * operand.s() * self.s()
-                - self.xy() * operand.s() * self.yz()
-                - self.xy() * operand.xz() * self.xy()
-                + self.yz() * operand.yz() * self.xz()
-                - self.s() * operand.s() * self.xz()
-                + self.xy() * operand.xy() * self.xz()
-                + self.xy() * operand.yz() * self.s()
+                + self.xy() * operand.xy() * self.xy()
+                - self.s() * operand.yz() * self.xz(),
+            self.xy() * operand.xy() * self.xz() - self.s() * operand.xy() * self.yz()
                 + self.xz() * operand.xz() * self.xz()
-                - self.s() * operand.xy() * self.yz()
-                - self.yz() * operand.xz() * self.yz()
                 + self.xz() * operand.yz() * self.yz()
+                - self.xy() * operand.s() * self.yz()
+                - self.s() * operand.s() * self.xz()
+                + self.s() * operand.xz() * self.s()
+                + self.s() * operand.yz() * self.xy()
+                + self.xy() * operand.yz() * self.s()
+                - self.yz() * operand.xz() * self.yz()
+                + self.xz() * operand.s() * self.s()
+                - self.xy() * operand.xz() * self.xy()
                 + self.yz() * operand.s() * self.xy()
-                + self.xz() * operand.xy() * self.xy()
                 - self.yz() * operand.xy() * self.s()
-                + self.s() * operand.xz() * self.s(),
-            self.xz() * operand.xz() * self.yz()
-                + self.xy() * operand.xy() * self.yz()
-                + self.yz() * operand.yz() * self.yz()
-                - self.s() * operand.xz() * self.xy()
-                + self.yz() * operand.s() * self.s()
-                + self.xz() * operand.xy() * self.s()
-                + self.yz() * operand.xy() * self.xy()
+                + self.xz() * operand.xy() * self.xy()
+                + self.yz() * operand.yz() * self.xz(),
+            self.xz() * operand.xy() * self.s() + self.xz() * operand.xz() * self.yz()
                 - self.xy() * operand.xz() * self.s()
                 + self.xy() * operand.s() * self.xz()
-                - self.xy() * operand.yz() * self.xy()
-                + self.yz() * operand.xz() * self.xz()
-                - self.xz() * operand.yz() * self.xz()
-                + self.s() * operand.yz() * self.s()
                 - self.s() * operand.s() * self.yz()
                 + self.s() * operand.xy() * self.xz()
-                - self.xz() * operand.s() * self.xy(),
+                - self.xy() * operand.yz() * self.xy()
+                - self.xz() * operand.s() * self.xy()
+                + self.yz() * operand.xy() * self.xy()
+                - self.s() * operand.xz() * self.xy()
+                + self.yz() * operand.xz() * self.xz()
+                + self.yz() * operand.s() * self.s()
+                + self.s() * operand.yz() * self.s()
+                + self.yz() * operand.yz() * self.yz()
+                - self.xz() * operand.yz() * self.xz()
+                + self.xy() * operand.xy() * self.yz(),
         )
     }
 }
@@ -1244,41 +1101,40 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new(
-            -(self.xy() * operand.y() * self.s()) - self.xz() * operand.z() * self.s()
+            -(self.xz() * operand.y() * self.yz())
+                + self.xy() * operand.z() * self.yz()
                 + self.yz() * operand.z() * self.xy()
-                + self.s() * operand.x() * self.s()
                 - self.yz() * operand.y() * self.xz()
-                - self.xz() * operand.y() * self.yz()
-                - self.xy() * operand.x() * self.xy()
-                - self.xz() * operand.x() * self.xz()
-                + self.yz() * operand.x() * self.yz()
+                - self.xz() * operand.z() * self.s()
                 - self.s() * operand.y() * self.xy()
+                - self.xz() * operand.x() * self.xz()
                 - self.s() * operand.z() * self.xz()
-                + self.xy() * operand.z() * self.yz(),
-            -(self.xy() * operand.z() * self.xz())
-                - self.yz() * operand.x() * self.xz()
+                + self.yz() * operand.x() * self.yz()
+                + self.s() * operand.x() * self.s()
+                - self.xy() * operand.x() * self.xy()
+                - self.xy() * operand.y() * self.s(),
+            self.xy() * operand.x() * self.s() + self.xz() * operand.y() * self.xz()
                 - self.s() * operand.z() * self.yz()
-                + self.s() * operand.y() * self.s()
-                + self.xz() * operand.y() * self.xz()
-                + self.xy() * operand.x() * self.s()
-                - self.yz() * operand.z() * self.s()
                 - self.xy() * operand.y() * self.xy()
-                - self.yz() * operand.y() * self.yz()
-                + self.s() * operand.x() * self.xy()
+                - self.xz() * operand.x() * self.yz()
+                - self.yz() * operand.x() * self.xz()
                 - self.xz() * operand.z() * self.xy()
-                - self.xz() * operand.x() * self.yz(),
-            self.yz() * operand.y() * self.s()
-                + self.xy() * operand.x() * self.yz()
+                + self.s() * operand.x() * self.xy()
+                - self.yz() * operand.y() * self.yz()
+                - self.yz() * operand.z() * self.s()
+                + self.s() * operand.y() * self.s()
+                - self.xy() * operand.z() * self.xz(),
+            self.yz() * operand.y() * self.s() - self.yz() * operand.z() * self.yz()
                 + self.s() * operand.y() * self.yz()
                 + self.xy() * operand.z() * self.xy()
-                - self.xz() * operand.y() * self.xy()
-                + self.yz() * operand.x() * self.xy()
-                - self.xy() * operand.y() * self.xz()
-                + self.s() * operand.z() * self.s()
-                + self.s() * operand.x() * self.xz()
                 + self.xz() * operand.x() * self.s()
-                - self.yz() * operand.z() * self.yz()
-                - self.xz() * operand.z() * self.xz(),
+                - self.xy() * operand.y() * self.xz()
+                + self.yz() * operand.x() * self.xy()
+                + self.s() * operand.x() * self.xz()
+                + self.s() * operand.z() * self.s()
+                - self.xz() * operand.y() * self.xy()
+                - self.xz() * operand.z() * self.xz()
+                + self.xy() * operand.x() * self.yz(),
         )
     }
 }
@@ -1287,42 +1143,40 @@ impl<T: Float> Antisandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new(
-            -(self.s() * operand.xz() * self.yz())
-                + self.s() * operand.yz() * self.xz()
-                + self.xy() * operand.xz() * self.xz()
-                + self.xy() * operand.xy() * self.xy()
+            self.s() * operand.yz() * self.xz() + self.xy() * operand.xz() * self.xz()
                 - self.xz() * operand.xy() * self.xz()
-                + self.xy() * operand.yz() * self.yz()
+                + self.xz() * operand.xz() * self.xy()
                 + self.xz() * operand.yz() * self.s()
-                - self.yz() * operand.xy() * self.yz()
                 - self.yz() * operand.xz() * self.s()
-                + self.s() * operand.xy() * self.s()
                 + self.yz() * operand.yz() * self.xy()
-                + self.xz() * operand.xz() * self.xy(),
-            self.xz() * operand.yz() * self.yz()
-                + self.xz() * operand.xz() * self.xz()
+                + self.s() * operand.xy() * self.s()
+                - self.yz() * operand.xy() * self.yz()
+                + self.xy() * operand.xy() * self.xy()
+                + self.xy() * operand.yz() * self.yz()
+                - self.s() * operand.xz() * self.yz(),
+            -(self.xy() * operand.xz() * self.xy())
                 + self.s() * operand.xy() * self.yz()
-                - self.s() * operand.yz() * self.xy()
-                + self.s() * operand.xz() * self.s()
-                - self.xy() * operand.xz() * self.xy()
+                + self.xz() * operand.yz() * self.yz()
                 + self.xz() * operand.xy() * self.xy()
-                + self.yz() * operand.yz() * self.xz()
+                + self.s() * operand.xz() * self.s()
                 + self.yz() * operand.xy() * self.s()
-                - self.xy() * operand.yz() * self.s()
+                + self.xz() * operand.xz() * self.xz()
                 - self.yz() * operand.xz() * self.yz()
+                - self.xy() * operand.yz() * self.s()
+                + self.yz() * operand.yz() * self.xz()
+                - self.s() * operand.yz() * self.xy()
                 + self.xy() * operand.xy() * self.xz(),
-            self.s() * operand.yz() * self.s()
-                + self.xy() * operand.xz() * self.s()
+            self.s() * operand.xz() * self.xy() + self.xz() * operand.xz() * self.yz()
+                - self.xz() * operand.yz() * self.xz()
+                + self.yz() * operand.xz() * self.xz()
+                + self.yz() * operand.xy() * self.xy()
                 + self.yz() * operand.yz() * self.yz()
+                + self.s() * operand.yz() * self.s()
+                + self.xy() * operand.xy() * self.yz()
                 - self.xz() * operand.xy() * self.s()
                 - self.s() * operand.xy() * self.xz()
-                + self.s() * operand.xz() * self.xy()
-                + self.yz() * operand.xy() * self.xy()
-                - self.xy() * operand.yz() * self.xy()
-                + self.xy() * operand.xy() * self.yz()
-                + self.yz() * operand.xz() * self.xz()
-                - self.xz() * operand.yz() * self.xz()
-                + self.xz() * operand.xz() * self.yz(),
+                + self.xy() * operand.xz() * self.s()
+                - self.xy() * operand.yz() * self.xy(),
         )
     }
 }
@@ -1331,68 +1185,70 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.xz() * operand.s() * self.xz()
-                - self.xz() * operand.xz() * self.s()
-                - self.xy() * operand.yz() * self.xz()
-                + self.s() * operand.xy() * self.xy()
-                + self.s() * operand.xz() * self.xz()
-                + self.yz() * operand.xy() * self.xz()
-                + self.xy() * operand.xz() * self.yz()
-                + self.xz() * operand.yz() * self.xy()
-                - self.xz() * operand.xy() * self.yz()
+            -(self.xz() * operand.xz() * self.s())
                 + self.s() * operand.yz() * self.yz()
                 + self.xy() * operand.s() * self.xy()
-                - self.xy() * operand.xy() * self.s()
-                - self.yz() * operand.xz() * self.xy()
+                + self.yz() * operand.xy() * self.xz()
                 + self.yz() * operand.s() * self.yz()
+                + self.s() * operand.xy() * self.xy()
+                - self.yz() * operand.xz() * self.xy()
                 + self.s() * operand.s() * self.s()
+                - self.xy() * operand.xy() * self.s()
+                - self.xy() * operand.yz() * self.xz()
+                + self.xz() * operand.s() * self.xz()
+                + self.s() * operand.xz() * self.xz()
+                - self.xz() * operand.xy() * self.yz()
+                + self.xy() * operand.xz() * self.yz()
+                + self.xz() * operand.yz() * self.xy()
                 - self.yz() * operand.yz() * self.s(),
-            self.xy() * operand.xz() * self.xz() - self.yz() * operand.xz() * self.s()
-                + self.xz() * operand.xz() * self.xy()
-                - self.xz() * operand.xy() * self.xz()
-                + self.xy() * operand.yz() * self.yz()
+            self.xz() * operand.xz() * self.xy()
+                + self.xz() * operand.yz() * self.s()
+                + self.s() * operand.xy() * self.s()
+                + self.xy() * operand.xz() * self.xz()
                 - self.s() * operand.xz() * self.yz()
+                + self.yz() * operand.yz() * self.xy()
+                + self.xy() * operand.yz() * self.yz()
+                - self.xz() * operand.xy() * self.xz()
+                - self.s() * operand.s() * self.xy()
+                - self.yz() * operand.xy() * self.yz()
+                + self.yz() * operand.s() * self.xz()
+                + self.xy() * operand.xy() * self.xy()
                 + self.s() * operand.yz() * self.xz()
                 + self.xy() * operand.s() * self.s()
-                + self.xz() * operand.yz() * self.s()
-                + self.xy() * operand.xy() * self.xy()
                 - self.xz() * operand.s() * self.yz()
-                + self.yz() * operand.s() * self.xz()
-                + self.yz() * operand.yz() * self.xy()
-                + self.s() * operand.xy() * self.s()
-                - self.s() * operand.s() * self.xy()
-                - self.yz() * operand.xy() * self.yz(),
-            self.s() * operand.xz() * self.s() - self.yz() * operand.s() * self.xy()
-                + self.xz() * operand.xz() * self.xz()
-                - self.s() * operand.yz() * self.xy()
-                - self.xy() * operand.xz() * self.xy()
-                - self.xy() * operand.yz() * self.s()
+                - self.yz() * operand.xz() * self.s(),
+            -(self.yz() * operand.xz() * self.yz())
                 + self.s() * operand.xy() * self.yz()
-                + self.xz() * operand.s() * self.s()
-                - self.yz() * operand.xz() * self.yz()
-                - self.s() * operand.s() * self.xz()
                 + self.xz() * operand.yz() * self.yz()
-                + self.xy() * operand.s() * self.yz()
+                - self.xy() * operand.yz() * self.s()
+                + self.xz() * operand.s() * self.s()
+                - self.s() * operand.yz() * self.xy()
                 + self.xy() * operand.xy() * self.xz()
                 + self.yz() * operand.yz() * self.xz()
+                - self.s() * operand.s() * self.xz()
+                + self.s() * operand.xz() * self.s()
+                - self.xy() * operand.xz() * self.xy()
+                - self.yz() * operand.s() * self.xy()
+                + self.xz() * operand.xz() * self.xz()
                 + self.yz() * operand.xy() * self.s()
+                + self.xy() * operand.s() * self.yz()
                 + self.xz() * operand.xy() * self.xy(),
-            self.xy() * operand.xy() * self.yz()
-                + self.yz() * operand.xy() * self.xy()
-                + self.yz() * operand.xz() * self.xz()
-                - self.xz() * operand.yz() * self.xz()
-                + self.s() * operand.yz() * self.s()
-                + self.s() * operand.xz() * self.xy()
-                + self.xz() * operand.xz() * self.yz()
-                - self.s() * operand.s() * self.yz()
+            self.xz() * operand.s() * self.xy()
                 + self.xy() * operand.xz() * self.s()
                 + self.yz() * operand.s() * self.s()
-                - self.xz() * operand.xy() * self.s()
                 + self.yz() * operand.yz() * self.yz()
-                - self.s() * operand.xy() * self.xz()
-                + self.xz() * operand.s() * self.xy()
+                - self.s() * operand.s() * self.yz()
                 - self.xy() * operand.s() * self.xz()
-                - self.xy() * operand.yz() * self.xy(),
+                - self.xz() * operand.xy() * self.s()
+                - self.xz() * operand.yz() * self.xz()
+                + self.yz() * operand.xy() * self.xy()
+                + self.xy() * operand.xy() * self.yz()
+                + self.s() * operand.yz() * self.s()
+                + self.yz() * operand.xz() * self.xz()
+                + self.xz() * operand.xz() * self.yz()
+                - self.s() * operand.xy() * self.xz()
+                - self.xy() * operand.yz() * self.xy()
+                + self.s() * operand.xz() * self.xy(),
         )
     }
 }

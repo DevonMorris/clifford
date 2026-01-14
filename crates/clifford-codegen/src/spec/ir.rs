@@ -248,8 +248,6 @@ pub struct ProductsSpec {
     pub geometric: Vec<ProductEntry>,
     /// Wedge product entries (∧, exterior, grade-raising).
     pub wedge: Vec<ProductEntry>,
-    /// Inner product entries (symmetric, Hestenes inner, grade |ga - gb|).
-    pub inner: Vec<ProductEntry>,
     /// Left contraction entries.
     pub left_contraction: Vec<ProductEntry>,
     /// Right contraction entries.

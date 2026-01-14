@@ -66,11 +66,6 @@ pub use self::nalgebra::NalgebraConversionError;
 // #[cfg(feature = "rerun-0_28")]
 // mod rerun;
 
-// Re-export generated types and products
+// Re-export generated types and wrapper aliases
 pub use generated::products;
-pub use generated::types::{Flector, Line, Motor, Point, Scalar, Trivector};
-
-// Re-export wrapper type aliases
-pub use generated::types::{
-    BulkFlector, BulkMotor, IdealLine, IdealPoint, UnitizedLine, UnitizedPoint,
-};
+pub use generated::types::*;

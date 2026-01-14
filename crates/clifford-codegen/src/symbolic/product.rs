@@ -24,8 +24,6 @@ pub enum ProductKind {
     Antigeometric,
     /// Wedge product (∧, exterior, grade-raising).
     Wedge,
-    /// Inner product (symmetric, Hestenes inner).
-    Inner,
     /// Left contraction (a ⌋ b, grade gb - ga when ga <= gb).
     LeftContraction,
     /// Right contraction (a ⌊ b, grade ga - gb when gb <= ga).
@@ -161,7 +159,6 @@ impl SymbolicProduct {
                     ProductKind::Geometric => self.table.geometric(a_blade, b_blade),
                     ProductKind::Antigeometric => self.table.antiproduct(a_blade, b_blade),
                     ProductKind::Wedge => self.table.exterior(a_blade, b_blade),
-                    ProductKind::Inner => self.table.interior(a_blade, b_blade),
                     ProductKind::LeftContraction => self.table.left_contraction(a_blade, b_blade),
                     ProductKind::RightContraction => self.table.right_contraction(a_blade, b_blade),
                     ProductKind::Antiwedge => self.table.regressive(a_blade, b_blade),

@@ -15,6 +15,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
+use clifford::ops::{Join, Meet, Transform};
 use clifford::specialized::projective::{dim2, dim3};
 use criterion::{Criterion, criterion_group, criterion_main};
 
@@ -45,7 +46,7 @@ fn bench_pga2_motor_transform_point(c: &mut Criterion) {
     let p = dim2::Point::from_cartesian(3.0, 4.0);
 
     c.bench_function("projective/dim2/motor_transform_point", |bencher| {
-        bencher.iter(|| black_box(motor).transform_point(&black_box(p)))
+        bencher.iter(|| black_box(motor).transform(&black_box(p)))
     });
 }
 
@@ -54,7 +55,7 @@ fn bench_pga2_motor_transform_line(c: &mut Criterion) {
     let line: dim2::Line<f64> = dim2::Line::from_implicit(1.0, 1.0, 0.0);
 
     c.bench_function("projective/dim2/motor_transform_line", |bencher| {
-        bencher.iter(|| black_box(motor).transform_line(&black_box(line)))
+        bencher.iter(|| black_box(motor).transform(&black_box(line)))
     });
 }
 
@@ -93,7 +94,7 @@ fn bench_pga3_motor_transform_point(c: &mut Criterion) {
     let p = dim3::Point::from_cartesian(1.0, 0.0, 0.0);
 
     c.bench_function("projective/dim3/motor_transform_point", |bencher| {
-        bencher.iter(|| black_box(motor).transform_point(&black_box(p)))
+        bencher.iter(|| black_box(motor).transform(&black_box(p)))
     });
 }
 
@@ -102,7 +103,7 @@ fn bench_pga3_motor_transform_line(c: &mut Criterion) {
     let line: dim3::Line<f64> = dim3::Line::x_axis();
 
     c.bench_function("projective/dim3/motor_transform_line", |bencher| {
-        bencher.iter(|| black_box(motor).transform_line(&black_box(line)))
+        bencher.iter(|| black_box(motor).transform(&black_box(line)))
     });
 }
 
@@ -203,7 +204,7 @@ fn bench_pga3_motor_transform_plane(c: &mut Criterion) {
     let plane: dim3::Plane<f64> = dim3::Plane::from_normal_and_distance(1.0, 0.0, 0.0, 5.0);
 
     c.bench_function("projective/dim3/motor_transform_plane", |bencher| {
-        bencher.iter(|| black_box(motor).transform_plane(&black_box(plane)))
+        bencher.iter(|| black_box(motor).transform(&black_box(plane)))
     });
 }
 
@@ -221,7 +222,7 @@ fn bench_pga3_batch_transform_points(c: &mut Criterion) {
         bencher.iter(|| {
             points
                 .iter()
-                .map(|p| black_box(motor).transform_point(p))
+                .map(|p| black_box(motor).transform(p))
                 .collect::<Vec<_>>()
         })
     });
@@ -237,7 +238,7 @@ fn bench_pga2_batch_transform_points(c: &mut Criterion) {
         bencher.iter(|| {
             points
                 .iter()
-                .map(|p| black_box(motor).transform_point(p))
+                .map(|p| black_box(motor).transform(p))
                 .collect::<Vec<_>>()
         })
     });

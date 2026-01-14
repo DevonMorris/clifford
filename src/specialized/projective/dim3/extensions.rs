@@ -3,7 +3,6 @@
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to 3D projective geometry.
 
-use super::generated::products;
 use super::generated::types::{Flector, Line, Motor, Plane, Point};
 use crate::scalar::Float;
 use crate::specialized::euclidean::dim3::Vector as EuclideanVector;
@@ -191,7 +190,7 @@ impl<T: Float> Point<T> {
     /// ```
     #[inline]
     pub fn join(&self, other: &Point<T>) -> Line<T> {
-        products::exterior_point_point(self, other)
+        crate::ops::Wedge::wedge(self, other)
     }
 
     /// Euclidean distance to another finite point.
@@ -229,7 +228,7 @@ impl<T: Float> Point<T> {
     pub fn left_contract_line(&self, line: &Line<T>) -> Plane<T> {
         // P ⌋ L = P · L + P ∧ L (for grade-1 contracted with grade-2)
         // Result is grade 3 (plane)
-        products::exterior_point_line(self, line)
+        crate::ops::Wedge::wedge(self, line)
     }
 }
 
@@ -389,7 +388,7 @@ impl<T: Float> Line<T> {
     /// Join with a point to create a plane.
     #[inline]
     pub fn join_point(&self, point: &Point<T>) -> Plane<T> {
-        products::exterior_line_point(self, point)
+        crate::ops::Wedge::wedge(self, point)
     }
 
     /// Meet with a plane to find intersection point (regressive product).
@@ -398,7 +397,7 @@ impl<T: Float> Line<T> {
     /// is parallel to the plane (no intersection), returns an ideal point.
     #[inline]
     pub fn meet_plane(&self, plane: &Plane<T>) -> Point<T> {
-        products::regressive_line_plane(self, plane)
+        crate::ops::Antiwedge::antiwedge(self, plane)
     }
 
     /// Angle between two lines (in radians).
@@ -632,7 +631,7 @@ impl<T: Float> Plane<T> {
     /// parallel (no intersection), returns a line at infinity.
     #[inline]
     pub fn meet(&self, other: &Plane<T>) -> Line<T> {
-        products::regressive_plane_plane(self, other)
+        crate::ops::Antiwedge::antiwedge(self, other)
     }
 
     /// Angle between two planes (in radians).
@@ -728,7 +727,7 @@ impl<T: Float> Motor<T> {
     ///
     /// let m = Motor::<f64>::identity();
     /// let p = Point::from_cartesian(1.0, 2.0, 3.0);
-    /// let p2 = m.transform_point(&p);
+    /// let p2 = m.transform(&p);
     /// assert!((p2.x() - p.x()).abs() < 1e-10);
     /// ```
     #[inline]
@@ -954,45 +953,6 @@ impl<T: Float> Motor<T> {
             T::TWO * self.e12(),
         )
     }
-
-    /// Transform a point using the antisandwich product.
-    ///
-    /// In PGA, transformations use the geometric antiproduct: P' = M ⊛ P ⊛ M̃
-    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim3::{Motor, Point};
-    ///
-    /// // Translate a point
-    /// let t = Motor::<f64>::from_translation(1.0, 0.0, 0.0);
-    /// let p = Point::origin();
-    /// let p2 = t.transform_point(&p);
-    /// assert!((p2.x() - 1.0).abs() < 1e-10);
-    /// ```
-    #[inline]
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        products::antisandwich_motor_point(self, p)
-    }
-
-    /// Transform a line using the antisandwich product.
-    ///
-    /// In PGA, transformations use the geometric antiproduct: L' = M ⊛ L ⊛ M̃
-    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
-    #[inline]
-    pub fn transform_line(&self, line: &Line<T>) -> Line<T> {
-        products::antisandwich_motor_line(self, line)
-    }
-
-    /// Transform a plane using the antisandwich product.
-    ///
-    /// In PGA, transformations use the geometric antiproduct: Π' = M ⊛ Π ⊛ M̃
-    /// where ⊛ is the geometric antiproduct and M̃ is the antireverse.
-    #[inline]
-    pub fn transform_plane(&self, plane: &Plane<T>) -> Plane<T> {
-        products::antisandwich_motor_plane(self, plane)
-    }
 }
 
 // ============================================================================
@@ -1088,37 +1048,12 @@ impl<T: Float> Flector<T> {
             self.e123() / bn,
         )
     }
-
-    /// Transform a point using the antisandwich product.
-    ///
-    /// In PGA with our convention, flector transformations use the geometric antiproduct:
-    /// `P' = F ⊛ P ⊛ F̃` where ⊛ is the geometric antiproduct and F̃ is the antireverse.
-    ///
-    /// For a pure reflection through a plane, this reflects the point across the plane.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim3::{Flector, Point};
-    ///
-    /// // Reflect through XY plane (z = 0)
-    /// let f = Flector::<f64>::reflect_xy();
-    /// let p = Point::from_cartesian(1.0, 2.0, 3.0);
-    /// let p2 = f.transform_point(&p);
-    /// // Point should be reflected in z
-    /// assert!((p2.x() - 1.0).abs() < 1e-10);
-    /// assert!((p2.y() - 2.0).abs() < 1e-10);
-    /// assert!((p2.z() + 3.0).abs() < 1e-10); // z is negated
-    /// ```
-    #[inline]
-    pub fn transform_point(&self, p: &Point<T>) -> Point<T> {
-        products::antisandwich_flector_point(self, p)
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::Transform;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::relative_eq;
 
@@ -1146,7 +1081,7 @@ mod tests {
             p.e0()
         );
 
-        let result = m.transform_point(&p);
+        let result = m.transform(&p);
 
         eprintln!(
             "Output point: ({}, {}, {}, {})",
@@ -1206,7 +1141,7 @@ mod tests {
             origin.e0()
         );
 
-        let result = t.transform_point(&origin);
+        let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
@@ -1267,7 +1202,7 @@ mod tests {
             origin.e0()
         );
 
-        let result = t.transform_point(&origin);
+        let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
@@ -1315,7 +1250,7 @@ mod tests {
             t.e0123()
         );
 
-        let result = t.transform_point(&origin);
+        let result = t.transform(&origin);
 
         eprintln!(
             "Translated: ({}, {}, {}, {})",
@@ -1370,7 +1305,7 @@ mod tests {
             p.e0()
         );
 
-        let result = f.transform_point(&p);
+        let result = f.transform(&p);
 
         eprintln!(
             "Output point: ({}, {}, {}, {})",
@@ -1406,7 +1341,7 @@ mod tests {
         let f = Flector::<f64>::reflect_yz();
         let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
 
-        let result = f.transform_point(&p);
+        let result = f.transform(&p);
 
         // Reflecting (1, 2, 3) through YZ plane should give (-1, 2, 3)
         assert!(relative_eq!(
@@ -1434,7 +1369,7 @@ mod tests {
         let f = Flector::<f64>::reflect_xz();
         let p = Point::<f64>::from_cartesian(1.0, 2.0, 3.0);
 
-        let result = f.transform_point(&p);
+        let result = f.transform(&p);
 
         // Reflecting (1, 2, 3) through XZ plane should give (1, -2, 3)
         assert!(relative_eq!(

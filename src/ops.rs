@@ -12,7 +12,6 @@
 //! | [`Antiwedge`] | `∨` | Regressive product (antigrade-raising) |
 //! | [`Join`] | `∨` | Alias for Wedge (PGA terminology) |
 //! | [`Meet`] | `∧` | Alias for Antiwedge (PGA terminology) |
-//! | [`Inner`] | `·` | Symmetric inner product |
 //! | [`Dot`] | `•` | Metric dot product (same-grade only) |
 //! | [`Antidot`] | `⊚` | Metric antidot product |
 //! | [`LeftContract`] | `⌋` | Left contraction |
@@ -108,25 +107,6 @@ pub trait Antiwedge<Rhs = Self> {
 
     /// Computes the antiwedge product `self ∨ rhs`.
     fn antiwedge(&self, rhs: &Rhs) -> Self::Output;
-}
-
-/// Symmetric inner product (Hestenes inner product).
-///
-/// The inner product reduces grade: `grade(a · b) = |grade(a) - grade(b)|`.
-///
-/// # Example
-///
-/// ```ignore
-/// use clifford::ops::Inner;
-///
-/// let scalar = vector1.inner(&vector2);
-/// ```
-pub trait Inner<Rhs = Self> {
-    /// The output type of the inner product.
-    type Output;
-
-    /// Computes the inner product `self · rhs`.
-    fn inner(&self, rhs: &Rhs) -> Self::Output;
 }
 
 /// Left contraction.
@@ -656,5 +636,58 @@ where
     #[inline]
     fn meet(&self, rhs: &Rhs) -> Self::Output {
         self.antiwedge(rhs)
+    }
+}
+
+/// Transform operation (alias for antisandwich product).
+///
+/// The transform `versor.transform(element)` is the antisandwich product
+/// `versor ⊛ element ⊛ rev(versor)` where ⊛ is the geometric antiproduct.
+///
+/// In PGA, transformations (rotations, translations, reflections) are applied
+/// via the antisandwich product. This trait provides a more intuitive name
+/// for this operation.
+///
+/// # Relationship to Antisandwich
+///
+/// This trait is automatically implemented for any type implementing [`Antisandwich`].
+/// It provides a domain-appropriate name for applying geometric transformations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Transform;
+///
+/// // Apply motor (rotation + translation) to a point
+/// let transformed_point = motor.transform(&point);
+///
+/// // Apply motor to a line
+/// let transformed_line = motor.transform(&line);
+///
+/// // Apply motor to a plane
+/// let transformed_plane = motor.transform(&plane);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Transformations](https://rigidgeometricalgebra.org/wiki/index.php?title=Transformations)
+pub trait Transform<Operand> {
+    /// The output type (same as operand for grade-preserving transforms).
+    type Output;
+
+    /// Transforms the operand using `self ⊛ operand ⊛ rev(self)`.
+    fn transform(&self, operand: &Operand) -> Self::Output;
+}
+
+/// Blanket implementation of Transform for any type implementing Antisandwich.
+impl<T, Operand> Transform<Operand> for T
+where
+    T: Antisandwich<Operand>,
+{
+    type Output = <T as Antisandwich<Operand>>::Output;
+
+    #[inline]
+    fn transform(&self, operand: &Operand) -> Self::Output {
+        self.antisandwich(operand)
     }
 }

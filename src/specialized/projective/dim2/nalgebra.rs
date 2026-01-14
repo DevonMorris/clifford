@@ -176,6 +176,7 @@ impl<T: Float + na::RealField> From<na::Isometry2<T>> for Motor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::Transform;
     use crate::specialized::projective::dim2::UnitizedPoint;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::relative_eq;
@@ -387,7 +388,7 @@ mod tests {
             let p_cliff = Point::from_cartesian(px, py);
             let p_na = na::Point2::new(px, py);
 
-            let result_cliff = motor.transform_point(&p_cliff);
+            let result_cliff = Transform::transform(&motor, &p_cliff);
             let result_na = iso.transform_point(&p_na);
 
             prop_assert!(
@@ -415,11 +416,11 @@ mod tests {
             let test_cliff = Point::from_cartesian(3.0, 4.0);
 
             let transformed_na = iso.transform_point(&test_pt);
-            let transformed_cliff = motor.transform_point(&test_cliff);
+            let transformed_cliff = Transform::transform(&motor, &test_cliff);
 
             // Apply inverse
             let back_na = iso.inverse().transform_point(&transformed_na);
-            let back_cliff = motor.inverse().transform_point(&transformed_cliff);
+            let back_cliff = motor.inverse().transform(&transformed_cliff);
 
             prop_assert!(
                 relative_eq!(back_cliff.x(), back_na.x, epsilon = EPS, max_relative = EPS),
