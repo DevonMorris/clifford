@@ -1,6 +1,6 @@
 # PRD-27: Auto-Identify Constraints and Generate Checked Constructors
 
-**Status**: Partial (Part 1 complete, Parts 2-3 deferred)
+**Status**: Complete
 **Goal**: Remove vestigial constraint infrastructure and generate constraint-checking constructors
 
 ## Background
@@ -101,15 +101,13 @@ pub fn from_components(/* N-1 free params */) -> Option<Self> {
 ## Success Criteria
 
 1. ✅ No `UserConstraint` or `SignConvention` in codebase
-2. ⏳ `Motor::new_checked()` exists and validates Study condition (deferred)
-3. ⏳ `Motor::from_components()` exists and computes e0123 (deferred)
+2. ✅ `Motor::new_checked()` exists and validates Study condition
+3. ✅ `Motor::from_components()` exists and computes e0123
 4. ✅ All existing tests pass
 
 ## Completed Work
 
-### Part 1: Dead Code Removal (Complete)
-
-The following dead code was removed:
+### Part 1: Dead Code Removal
 
 **`ir.rs`**:
 - Removed `UserConstraint` struct
@@ -131,22 +129,57 @@ The following dead code was removed:
 - Simplified constructor selection (removed `solve_for_fields()` checks)
 - All files now use `new()` directly since `new` and `new_unchecked` are identical
 
-## Deferred Work
+### Part 2: new_checked() Generation
 
-### Part 2: new_checked() Generation (Future)
+Added `generate_constraint_constructors()` method to `TypeGenerator` in `types.rs`:
+- Uses `ConstraintDeriver` to detect types with geometric constraints
+- Uses `ConstraintSolver` to solve for the constrained field
+- Generates `new_checked(fields..., tolerance) -> Result<Self, &str>`
+- Validates that the constrained field matches the expected value within tolerance
 
-Generating `new_checked()` constructors requires:
-1. Converting symbolic constraint expressions to Rust code
-2. Implementing expression-to-code conversion in codegen
-3. Handling different constraint forms (Study, Plücker, etc.)
+Example generated code for Motor:
+```rust
+pub fn new_checked(
+    s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T, e0123: T,
+    tolerance: T,
+) -> Result<Self, &'static str> {
+    let expected = (e01 * e23 - e02 * e31 + e03 * e12) / (s);
+    let actual = e0123;
+    if (actual - expected).abs() > tolerance {
+        return Err("Motor constraint");
+    }
+    Ok(Self::new(s, e23, e31, e12, e01, e02, e03, e0123))
+}
+```
 
-This is tracked for future implementation.
+### Part 3: from_components() Generation
 
-### Part 3: from_components() Generation (Future)
+Added `generate_from_components()` method to `TypeGenerator`:
+- Takes N-1 free parameters (all except the constrained field)
+- Computes the constrained field from the solution
+- Returns `Option<Self>` (None if divisor is zero)
 
-Generating `from_components()` constructors requires:
-1. Solving constraints symbolically for the dependent field
-2. Generating code to compute the dependent field
-3. Handling edge cases (division by zero, etc.)
+Example generated code for Motor:
+```rust
+pub fn from_components(
+    s: T, e23: T, e31: T, e12: T, e01: T, e02: T, e03: T,
+) -> Option<Self> {
+    if (s).abs() < T::epsilon() {
+        return None;
+    }
+    Some(Self::new(
+        s, e23, e31, e12, e01, e02, e03,
+        (e01 * e23 - e02 * e31 + e03 * e12) / (s),
+    ))
+}
+```
 
-This is tracked for future implementation.
+### Bug Fixes During Implementation
+
+**Parser auto-versor identification** (`parser.rs`):
+- Fixed: Single-grade types (Point, Line) were incorrectly marked as versors
+- Solution: Only mark types with multiple grades as versors
+
+**Sandwich target inference** (`traits.rs`):
+- Fixed: `infer_sandwich_targets()` was doing worst-case grade analysis
+- Solution: Versors preserve grades, so all types are valid targets
