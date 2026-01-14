@@ -346,11 +346,12 @@ impl<T: Float> Line<T> {
         if wn < T::epsilon() {
             return *self;
         }
+        // Field order: [moment_z, moment_y, dir_x, moment_x, dir_y, dir_z]
         Self::new_unchecked(
-            self.moment_x() / wn,
-            self.moment_y() / wn,
             self.moment_z() / wn,
+            self.moment_y() / wn,
             self.dir_x() / wn,
+            self.moment_x() / wn,
             self.dir_y() / wn,
             self.dir_z() / wn,
         )
@@ -359,9 +360,9 @@ impl<T: Float> Line<T> {
     /// Plücker condition residual: d · m.
     #[inline]
     pub fn plucker_residual(&self) -> T {
-        self.moment_x() * self.dir_x()
-            + self.moment_y() * self.dir_y()
-            + self.moment_z() * self.dir_z()
+        let d = self.direction();
+        let m = self.moment();
+        d.x() * m.x() + d.y() * m.y() + d.z() * m.z()
     }
 
     /// Check if line satisfies Plücker condition.

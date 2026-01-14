@@ -60,7 +60,8 @@ description = "2D line"
 # Line equation: normal_x * x + normal_y * y + dist = 0
 # The normal vector (normal_x, normal_y) is perpendicular to the line.
 # The dist component is the signed distance from the origin (scaled by normal magnitude).
-fields = ["normal_x", "normal_y", "dist"]
+# Lexicographic blade order: e12 (dist), e01 (normal_x), e02 (normal_y)
+fields = ["dist", "normal_x", "normal_y"]
 
 [types.Trivector]
 grades = [3]
@@ -81,5 +82,6 @@ fields = ["ty", "tx", "r", "ps"]
 grades = [0, 2]
 description = "2D reflection/glide transformation via antisandwich"
 # Grade 0: scalar (s)
-# Grade 2: Line components (normal_x, normal_y, dist) representing the reflection line
-fields = ["s", "normal_x", "normal_y", "dist"]
+# Grade 2: Line components representing the reflection line
+# Lexicographic blade order: grade-0 scalar, then e12 (dist), e01 (normal_x), e02 (normal_y)
+fields = ["s", "dist", "normal_x", "normal_y"]
