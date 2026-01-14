@@ -10,6 +10,8 @@
 //! |-------|--------|-------------|
 //! | [`Wedge`] | `∧` | Exterior/wedge product (grade-raising) |
 //! | [`Antiwedge`] | `∨` | Regressive product (antigrade-raising) |
+//! | [`Join`] | `∨` | Alias for Wedge (PGA terminology) |
+//! | [`Meet`] | `∧` | Alias for Antiwedge (PGA terminology) |
 //! | [`Inner`] | `·` | Symmetric inner product |
 //! | [`Dot`] | `•` | Metric dot product (same-grade only) |
 //! | [`Antidot`] | `⊚` | Metric antidot product |
@@ -549,4 +551,110 @@ pub trait Versor<Rhs = Self> {
     /// Composes this versor with another, returning a versor representing
     /// the sequential application of both transformations.
     fn compose(&self, other: &Rhs) -> Self::Output;
+}
+
+// ============================================================================
+// Join and Meet (aliases for Wedge and Antiwedge)
+// ============================================================================
+
+/// Join product (alias for wedge/exterior product).
+///
+/// The join `a ∨ b` is the wedge product `a ∧ b`. It "joins" two geometric
+/// elements to create a higher-dimensional element spanning both.
+///
+/// In PGA terminology:
+/// - Two points joined give the line through them
+/// - A point and line joined give the plane containing both
+/// - A point, line, and plane joined give the volume
+///
+/// # Relationship to Wedge
+///
+/// This trait is automatically implemented for any type implementing [`Wedge`].
+/// It provides a more intuitive name for PGA operations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Join;
+///
+/// // Line through two points
+/// let line = p1.join(&p2);
+///
+/// // Plane through point and line
+/// let plane = point.join(&line);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Wedge Product](https://rigidgeometricalgebra.org/wiki/index.php?title=Wedge_product)
+pub trait Join<Rhs = Self> {
+    /// The output type of the join.
+    type Output;
+
+    /// Computes the join `self ∨ rhs` (wedge product).
+    fn join(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Blanket implementation of Join for any type implementing Wedge.
+impl<T, Rhs> Join<Rhs> for T
+where
+    T: Wedge<Rhs>,
+{
+    type Output = <T as Wedge<Rhs>>::Output;
+
+    #[inline]
+    fn join(&self, rhs: &Rhs) -> Self::Output {
+        self.wedge(rhs)
+    }
+}
+
+/// Meet product (alias for antiwedge/regressive product).
+///
+/// The meet `a ∧ b` is the antiwedge product `a ∨ b`. It finds the
+/// "intersection" of two geometric elements.
+///
+/// In PGA terminology:
+/// - Two planes meet at a line
+/// - A plane and line meet at a point
+/// - Two lines meet at a point (if they intersect)
+///
+/// # Relationship to Antiwedge
+///
+/// This trait is automatically implemented for any type implementing [`Antiwedge`].
+/// It provides a more intuitive name for PGA operations.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Meet;
+///
+/// // Line where two planes intersect
+/// let line = plane1.meet(&plane2);
+///
+/// // Point where plane and line intersect
+/// let point = plane.meet(&line);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Antiwedge Product](https://rigidgeometricalgebra.org/wiki/index.php?title=Antiwedge_product)
+pub trait Meet<Rhs = Self> {
+    /// The output type of the meet.
+    type Output;
+
+    /// Computes the meet `self ∧ rhs` (antiwedge product).
+    fn meet(&self, rhs: &Rhs) -> Self::Output;
+}
+
+/// Blanket implementation of Meet for any type implementing Antiwedge.
+impl<T, Rhs> Meet<Rhs> for T
+where
+    T: Antiwedge<Rhs>,
+{
+    type Output = <T as Antiwedge<Rhs>>::Output;
+
+    #[inline]
+    fn meet(&self, rhs: &Rhs) -> Self::Output {
+        self.antiwedge(rhs)
+    }
 }

@@ -20,8 +20,8 @@ pub use crate::norm::{
 };
 pub use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkDual, BulkExpand, Dot, Inner,
-    LeftComplement, LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct,
-    Wedge, WeightContract, WeightDual, WeightExpand,
+    Join, LeftComplement, LeftContract, Meet, Reverse, RightComplement, RightContract, Sandwich,
+    ScalarProduct, Versor, Wedge, WeightContract, WeightDual, WeightExpand,
 };
 pub use crate::scalar::Float;
 pub use crate::signature::{
