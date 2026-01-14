@@ -174,8 +174,10 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
     fn from(motor: Motor<T>) -> Self {
         // Normalize rotation quaternion to ensure valid unit quaternion
         // The motor's rotation part is (e01, e02, e03, e0123)
-        let rot_norm_sq =
-            motor.e01() * motor.e01() + motor.e02() * motor.e02() + motor.e03() * motor.e03() + motor.e0123() * motor.e0123();
+        let rot_norm_sq = motor.e01() * motor.e01()
+            + motor.e02() * motor.e02()
+            + motor.e03() * motor.e03()
+            + motor.e0123() * motor.e0123();
         let rot_norm = num_traits::Float::sqrt(rot_norm_sq);
 
         // Extract rotation quaternion from (e01, e02, e03, e0123)
@@ -208,11 +210,11 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
     ///
     /// # Mathematical Correspondence
     ///
-    /// nalgebra's Isometry3 uses "rotate then translate": R×p + t
-    /// The motor's internal representation stores translation in a "rotated" frame.
+    /// nalgebra's Isometry3 applies "rotate then translate": `R(p) + t`
     ///
-    /// To match the transformation semantics, we pre-rotate the translation
-    /// by the inverse rotation: t' = R^(-1) × t
+    /// We construct the motor by composing a pure rotation motor with a pure
+    /// translation motor. The composition order matters: in PGA, composing
+    /// `translator.compose(rotor)` gives a motor that first rotates, then translates.
     ///
     /// # Example
     ///
@@ -229,32 +231,56 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
     /// // Both represent the same transformation
     /// ```
     fn from(iso: na::Isometry3<T>) -> Self {
+        use crate::ops::Versor;
+
         let q = iso.rotation.quaternion();
         let t = iso.translation.vector;
 
-        // Motor bivector components from rotation quaternion
-        // PGA antisandwich uses antireverse which differs from quaternion conjugate.
-        // Negate the bivector components to match nalgebra's rotation direction.
-        let e01 = -q.i;
-        let e02 = -q.j;
-        let e03 = -q.k;
-        let e0123 = q.w;
+        // Create a pure rotation motor from the quaternion
+        // PGA convention uses opposite signs for bivector components
+        let rotor = Motor::new_unchecked(
+            T::zero(), // s
+            T::zero(), // e23
+            T::zero(), // e31
+            T::zero(), // e12
+            -q.i,      // e01
+            -q.j,      // e02
+            -q.k,      // e03
+            q.w,       // e0123
+        );
 
-        // For a composed motor representing "rotation then translation":
-        // The translation components encode the translation directly
-        // The s component is zero for simple rotation + translation motors
-        let s = T::zero();
+        // Create a pure translation motor
+        let translator = Motor::from_translation(t.x, t.y, t.z);
 
-        Motor::new_unchecked(
-            s,              // s (coupling term)
-            t.x / T::TWO,   // e23
-            -t.y / T::TWO,  // e31 (negated due to basis ordering)
-            t.z / T::TWO,   // e12
-            e01,            // e01
-            e02,            // e02
-            e03,            // e03
-            e0123,          // e0123
-        )
+        #[cfg(test)]
+        {
+            eprintln!(
+                "  Rotor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                rotor.s(),
+                rotor.e23(),
+                rotor.e31(),
+                rotor.e12(),
+                rotor.e01(),
+                rotor.e02(),
+                rotor.e03(),
+                rotor.e0123()
+            );
+            eprintln!(
+                "  Translator: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                translator.s(),
+                translator.e23(),
+                translator.e31(),
+                translator.e12(),
+                translator.e01(),
+                translator.e02(),
+                translator.e03(),
+                translator.e0123()
+            );
+        }
+
+        // Compose: translator ∘ rotor gives "rotate then translate"
+        // This correctly handles all motor components including the coupling term `s`
+        translator.compose(&rotor)
     }
 }
 
@@ -319,6 +345,14 @@ mod tests {
             // Round-trip through Isometry
             let iso: na::Isometry3<f64> = (*m).into();
             let back: Motor<f64> = iso.into();
+
+            // Debug output
+            eprintln!("Original motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                m.s(), m.e23(), m.e31(), m.e12(), m.e01(), m.e02(), m.e03(), m.e0123());
+            eprintln!("Isometry: rotation={:?}, translation={:?}",
+                iso.rotation.quaternion(), iso.translation.vector);
+            eprintln!("Back motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
+                back.s(), back.e23(), back.e31(), back.e12(), back.e01(), back.e02(), back.e03(), back.e0123());
 
             // Test with several points to ensure transformation equivalence
             let test_points = [

@@ -772,10 +772,11 @@ pub fn weight_expansion_vector_vector<T: Float>(a: &Vector<T>, b: &Vector<T>) ->
 pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
         v.xy() * x.s() * v.xy() - v.xy() * x.xy() * v.s()
-            + v.s() * x.xy() * v.xy()
-            + v.s() * x.s() * v.s(),
-        v.xy() * x.s() * v.s() - v.s() * x.s() * v.xy()
+            + v.s() * x.s() * v.s()
+            + v.s() * x.xy() * v.xy(),
+        -(v.s() * x.s() * v.xy())
             + v.xy() * x.xy() * v.xy()
+            + v.xy() * x.s() * v.s()
             + v.s() * x.xy() * v.s(),
     )
 }
@@ -783,10 +784,9 @@ pub fn sandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
 #[inline]
 pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        v.s() * x.y() * v.xy() + v.xy() * x.y() * v.s() + v.s() * x.x() * v.s()
+        v.xy() * x.y() * v.s() + v.s() * x.x() * v.s() + v.s() * x.y() * v.xy()
             - v.xy() * x.x() * v.xy(),
-        v.s() * x.y() * v.s()
-            - v.xy() * x.x() * v.s()
+        -(v.xy() * x.x() * v.s()) + v.s() * x.y() * v.s()
             - v.s() * x.x() * v.xy()
             - v.xy() * x.y() * v.xy(),
     )
@@ -795,10 +795,9 @@ pub fn sandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T>
 #[inline]
 pub fn antisandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T> {
     Rotor::new(
-        v.s() * x.s() * v.s() - v.xy() * x.xy() * v.s()
-            + v.s() * x.xy() * v.xy()
+        v.s() * x.s() * v.s() + v.s() * x.xy() * v.xy() - v.xy() * x.xy() * v.s()
             + v.xy() * x.s() * v.xy(),
-        v.s() * x.xy() * v.s() + v.xy() * x.s() * v.s() + v.xy() * x.xy() * v.xy()
+        v.xy() * x.xy() * v.xy() + v.s() * x.xy() * v.s() + v.xy() * x.s() * v.s()
             - v.s() * x.s() * v.xy(),
     )
 }
@@ -806,13 +805,10 @@ pub fn antisandwich_rotor_rotor<T: Float>(v: &Rotor<T>, x: &Rotor<T>) -> Rotor<T
 #[inline]
 pub fn antisandwich_rotor_vector<T: Float>(v: &Rotor<T>, x: &Vector<T>) -> Vector<T> {
     Vector::new(
-        -(v.s() * x.x() * v.s())
-            + v.xy() * x.x() * v.xy()
-            + v.xy() * x.y() * v.s()
-            + v.s() * x.y() * v.xy(),
-        -(v.s() * x.y() * v.s()) + v.xy() * x.y() * v.xy()
-            - v.xy() * x.x() * v.s()
-            - v.s() * x.x() * v.xy(),
+        v.xy() * x.x() * v.xy() + v.s() * x.y() * v.xy() - v.s() * x.x() * v.s()
+            + v.xy() * x.y() * v.s(),
+        -(v.s() * x.x() * v.xy()) - v.xy() * x.x() * v.s() - v.s() * x.y() * v.s()
+            + v.xy() * x.y() * v.xy(),
     )
 }
 #[doc = "Reverses the Bivector (negates grades where k(k-1)/2 is odd)."]

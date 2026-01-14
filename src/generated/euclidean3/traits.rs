@@ -6,7 +6,7 @@ use super::products::*;
 use super::types::{Bivector, Rotor, Scalar, Trivector, Vector};
 use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, Inner,
-    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Wedge,
+    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -1240,6 +1240,12 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         antisandwich_rotor_rotor(self, operand)
+    }
+}
+impl<T: Float> Versor for Rotor<T> {
+    #[inline]
+    fn compose(&self, other: &Self) -> Self {
+        self.clone() * other.clone()
     }
 }
 impl<T: Float> ScalarProduct<Bivector<T>> for Bivector<T> {

@@ -19,6 +19,9 @@ use crate::spec::TypeSpec;
 pub enum ProductKind {
     /// Geometric product (full product).
     Geometric,
+    /// Geometric antiproduct (complement(complement(a) × complement(b))).
+    /// Used for versor composition with antisandwich-based transformations.
+    Antigeometric,
     /// Wedge product (∧, exterior, grade-raising).
     Wedge,
     /// Inner product (symmetric, Hestenes inner).
@@ -146,37 +149,45 @@ impl SymbolicProduct {
                 let a_blade = field_a.blade_index;
                 let b_blade = field_b.blade_index;
 
-                let (sign, result) = self.table.geometric(a_blade, b_blade);
-
-                if result != result_blade || sign == 0 {
-                    continue;
-                }
-
-                // Filter based on product kind
-                let include = match kind {
-                    ProductKind::Geometric => true,
+                // Compute the product based on kind
+                let (sign, result, include) = match kind {
+                    ProductKind::Geometric => {
+                        let (s, r) = self.table.geometric(a_blade, b_blade);
+                        (s, r, true)
+                    }
+                    ProductKind::Antigeometric => {
+                        // Antiproduct: complement(complement(a) × complement(b))
+                        let (s, r) = self.table.antiproduct(a_blade, b_blade);
+                        (s, r, true)
+                    }
                     ProductKind::Wedge => {
+                        let (s, r) = self.table.geometric(a_blade, b_blade);
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        outer_grade(a_grade, b_grade, dim)
+                        let result_grade = Blade::from_index(r).grade();
+                        let inc = outer_grade(a_grade, b_grade, dim)
                             .map(|g| g == result_grade)
-                            .unwrap_or(false)
+                            .unwrap_or(false);
+                        (s, r, inc)
                     }
                     ProductKind::Inner => {
+                        let (s, r) = self.table.geometric(a_blade, b_blade);
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
+                        let result_grade = Blade::from_index(r).grade();
                         // Inner product: |ga - gb|
-                        result_grade == a_grade.abs_diff(b_grade)
+                        let inc = result_grade == a_grade.abs_diff(b_grade);
+                        (s, r, inc)
                     }
                     ProductKind::LeftContraction => {
+                        let (s, r) = self.table.geometric(a_blade, b_blade);
                         let a_grade = Blade::from_index(a_blade).grade();
                         let b_grade = Blade::from_index(b_blade).grade();
-                        let result_grade = Blade::from_index(result_blade).grade();
-                        left_contraction_grade(a_grade, b_grade)
+                        let result_grade = Blade::from_index(r).grade();
+                        let inc = left_contraction_grade(a_grade, b_grade)
                             .map(|g| g == result_grade)
-                            .unwrap_or(false)
+                            .unwrap_or(false);
+                        (s, r, inc)
                     }
                     // These products are computed via table methods in ProductTable
                     // and handled in codegen/products.rs directly
@@ -187,19 +198,21 @@ impl SymbolicProduct {
                     | ProductKind::WeightExpansion => {
                         // These are composite products that use dual operations
                         // They are handled specially in the codegen layer
-                        false
+                        (0, 0, false)
                     }
                 };
 
-                if include {
-                    let a_sym = a_symbols.get(&field_a.name).unwrap();
-                    let b_sym = b_symbols.get(&field_b.name).unwrap();
-
-                    // Create term: sign * a_field * b_field
-                    let product = a_sym * b_sym;
-                    let term = if sign > 0 { product } else { -product };
-                    terms.push(term);
+                if result != result_blade || sign == 0 || !include {
+                    continue;
                 }
+
+                let a_sym = a_symbols.get(&field_a.name).unwrap();
+                let b_sym = b_symbols.get(&field_b.name).unwrap();
+
+                // Create term: sign * a_field * b_field
+                let product = a_sym * b_sym;
+                let term = if sign > 0 { product } else { -product };
+                terms.push(term);
             }
         }
 

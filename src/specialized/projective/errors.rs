@@ -10,6 +10,11 @@ use thiserror::Error;
 ///
 /// This error occurs when trying to convert a PGA point to a nalgebra point,
 /// but the conversion cannot succeed because the PGA point is at infinity.
+#[cfg(any(
+    feature = "nalgebra-0_32",
+    feature = "nalgebra-0_33",
+    feature = "nalgebra-0_34"
+))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Error)]
 pub enum PointConversionError {
     /// The point is at infinity (homogeneous weight ≈ 0).

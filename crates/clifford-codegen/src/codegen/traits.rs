@@ -147,7 +147,7 @@ impl<'a> TraitsGenerator<'a> {
                 Wedge, Antiwedge, Inner, LeftContract, RightContract,
                 Sandwich, Antisandwich, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot,
-                Reverse, Antireverse, RightComplement,
+                Reverse, Antireverse, RightComplement, Versor,
             };
             use super::types::{#(#type_names),*};
             use super::products::*;
@@ -583,6 +583,10 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // Versor trait - generated for versor types (Rotor, Motor, Flector)
+        // Provides compose() method for versor composition
+        impls.extend(self.generate_versor_traits());
+
         // ScalarProduct trait
         for entry in &self.spec.products.scalar {
             if let (Some(a), Some(b), Some(out)) = (
@@ -945,6 +949,92 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    /// Generates Versor trait impls for all versor×versor combinations.
+    ///
+    /// The Versor trait provides `compose()` for versor composition.
+    /// This delegates to the Mul operator which already implements the
+    /// correct product formula (geometric for Euclidean, antigeometric for PGA).
+    ///
+    /// Output types follow the algebraic rules:
+    /// - Even × Even → Even (Motor × Motor → Motor)
+    /// - Odd × Odd → Even (Flector × Flector → Motor)
+    /// - Even × Odd → Odd (Motor × Flector → Flector)
+    /// - Odd × Even → Odd (Flector × Motor → Flector)
+    fn generate_versor_traits(&self) -> Vec<TokenStream> {
+        let mut impls = Vec::new();
+
+        // Find all versor types
+        let versor_types: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none() && t.versor.is_some())
+            .collect();
+
+        // Generate impl for each pair of versors
+        for lhs in &versor_types {
+            for rhs in &versor_types {
+                // Look up the output type from the geometric products
+                // (the Mul operator output type)
+                if let Some(output_type) = self.find_mul_output_type(&lhs.name, &rhs.name) {
+                    let lhs_name = format_ident!("{}", lhs.name);
+                    let rhs_name = format_ident!("{}", rhs.name);
+                    let out_name = format_ident!("{}", output_type);
+
+                    // Check if both types are self-complementary (complement returns same type)
+                    let lhs_self_complement = self
+                        .find_complement_output_type(lhs)
+                        .map(|t| t == lhs.name)
+                        .unwrap_or(false);
+                    let rhs_self_complement = self
+                        .find_complement_output_type(rhs)
+                        .map(|t| t == rhs.name)
+                        .unwrap_or(false);
+
+                    // For self-complementary versors (like Motor in 3D PGA),
+                    // use the antiproduct formula: complement(complement(a) × complement(b))
+                    // This is required for correct composition with antisandwich-based transformations.
+                    let compose_body = if lhs_self_complement && rhs_self_complement {
+                        quote! {
+                            // Antiproduct: complement(complement(a) × complement(b))
+                            (self.right_complement() * other.right_complement()).right_complement()
+                        }
+                    } else {
+                        // Fall back to geometric product for non-self-complementary types
+                        // Use dereference (*) to avoid clone() on Copy types
+                        quote! {
+                            *self * *other
+                        }
+                    };
+
+                    impls.push(quote! {
+                        impl<T: Float> Versor<#rhs_name<T>> for #lhs_name<T> {
+                            type Output = #out_name<T>;
+
+                            #[inline]
+                            fn compose(&self, other: &#rhs_name<T>) -> #out_name<T> {
+                                #compose_body
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        impls
+    }
+
+    /// Finds the output type for a Mul<Rhs> for Lhs operation.
+    fn find_mul_output_type(&self, lhs: &str, rhs: &str) -> Option<String> {
+        // Check geometric products for the output type
+        for entry in &self.spec.products.geometric {
+            if entry.lhs == lhs && entry.rhs == rhs {
+                return Some(entry.output.clone());
+            }
+        }
+        None
     }
 
     /// Generates ScalarProduct trait impl.

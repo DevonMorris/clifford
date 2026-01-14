@@ -756,7 +756,7 @@ impl<T: Float> Motor<T> {
         Self::new_unchecked(
             T::zero(),  // s
             dx * half,  // e23
-            -dy * half, // e31 (negated due to basis ordering)
+            -dy * half, // e31 (negated due to antisymmetric basis ordering: e31 = -e13)
             dz * half,  // e12
             T::zero(),  // e01
             T::zero(),  // e02

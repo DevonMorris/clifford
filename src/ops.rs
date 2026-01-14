@@ -18,6 +18,7 @@
 //! | [`BulkContract`] | `a ∨ b★` | Bulk contraction |
 //! | [`WeightContract`] | `a ∨ b☆` | Weight contraction |
 //! | [`Sandwich`] | `v × x × ṽ` | Sandwich product |
+//! | [`Versor`] | `a ⟇ b` | Versor composition |
 //!
 //! # Type Safety
 //!
@@ -487,4 +488,65 @@ pub trait WeightDual {
 
     /// Computes the weight dual (antidual).
     fn weight_dual(&self) -> Self::Output;
+}
+
+// ============================================================================
+// Versor Operations
+// ============================================================================
+
+/// Versor composition.
+///
+/// Versors are elements that represent transformations. This trait enables
+/// composing versors where the result type may differ from the input types.
+///
+/// In Geometric Algebra, versors include:
+///
+/// - **Rotors**: Represent rotations (Euclidean and PGA)
+/// - **Motors**: Represent rigid motions (rotation + translation) in PGA
+/// - **Flectors**: Represent reflections and glide reflections in PGA
+///
+/// The `compose` method combines two versors into a single versor representing
+/// the sequential application of both transformations: `(a.compose(b)).sandwich(x)`
+/// is equivalent to `a.sandwich(b.sandwich(x))`.
+///
+/// # Mathematical Definition
+///
+/// For PGA versors, composition is the geometric product (which uses the
+/// antigeometric structure internally). The output type depends on the inputs:
+///
+/// - Motor × Motor → Motor (even × even = even)
+/// - Flector × Flector → Motor (odd × odd = even)
+/// - Motor × Flector → Flector (even × odd = odd)
+/// - Flector × Motor → Flector (odd × even = odd)
+///
+/// # Properties
+///
+/// - Associative: `a.compose(b).compose(c) = a.compose(b.compose(c))`
+/// - Identity: The scalar `1` acts as identity
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Versor;
+///
+/// // Compose two motors (returns Motor)
+/// let combined_motion: Motor<f64> = motor1.compose(&motor2);
+///
+/// // Compose two flectors (returns Motor)
+/// let motor: Motor<f64> = flector1.compose(&flector2);
+///
+/// // Compose motor with flector (returns Flector)
+/// let flector: Flector<f64> = motor.compose(&flector);
+/// ```
+///
+/// # Reference
+///
+/// [RGA Motors](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor)
+pub trait Versor<Rhs = Self> {
+    /// The output type of the composition.
+    type Output;
+
+    /// Composes this versor with another, returning a versor representing
+    /// the sequential application of both transformations.
+    fn compose(&self, other: &Rhs) -> Self::Output;
 }

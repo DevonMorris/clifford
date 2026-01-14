@@ -6,7 +6,7 @@ use super::products::*;
 use super::types::{Flector, Line, Motor, Point, Scalar, Trivector};
 use crate::ops::{
     Antidot, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkExpand, Dot, Inner,
-    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Wedge,
+    LeftContract, Reverse, RightComplement, RightContract, Sandwich, ScalarProduct, Versor, Wedge,
     WeightContract, WeightExpand,
 };
 use crate::scalar::Float;
@@ -2002,6 +2002,18 @@ impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         antisandwich_motor_flector(self, operand)
+    }
+}
+impl<T: Float> Versor for Flector<T> {
+    #[inline]
+    fn compose(&self, other: &Self) -> Self {
+        self.clone() * other.clone()
+    }
+}
+impl<T: Float> Versor for Motor<T> {
+    #[inline]
+    fn compose(&self, other: &Self) -> Self {
+        self.clone() * other.clone()
     }
 }
 impl<T: Float> ScalarProduct<Flector<T>> for Flector<T> {
