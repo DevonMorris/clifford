@@ -275,6 +275,55 @@ impl Signature for Cl0_1_0 {
 /// Type alias for the complex numbers signature.
 pub type Complex1 = Cl0_1_0;
 
+/// 1D Degenerate signature: `Cl(0,0,1)`.
+///
+/// This is used for dual numbers (automatic differentiation).
+/// With one null basis vector `e₁` where `e₁² = 0`, this
+/// algebra produces dual numbers `a + bε` where `ε² = 0`.
+///
+/// # Basis Blades (2 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar (real part) |
+/// | 1 | `e₁` | 1 | Dual unit (ε, nilpotent) |
+///
+/// # Properties
+///
+/// - `e₁² = 0` (nilpotent)
+/// - Dual numbers have zero divisors: all `bε` have zero norm
+/// - The norm is degenerate: `z * involute(z) = a²`
+/// - Foundation for forward-mode automatic differentiation
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl0_0_1::DIM, 1);
+/// assert_eq!(Cl0_0_1::num_blades(), 2);
+/// assert_eq!(Cl0_0_1::metric(0), 0);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl0_0_1;
+
+impl Signature for Cl0_0_1 {
+    type NumBlades = typenum::U2; // 2^1 = 2
+
+    const P: usize = 0;
+    const Q: usize = 0;
+    const R: usize = 1;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl0_0_1");
+        0
+    }
+}
+
+/// Type alias for the dual numbers signature.
+pub type Dual1 = Cl0_0_1;
+
 #[cfg(test)]
 mod tests {
     use super::*;

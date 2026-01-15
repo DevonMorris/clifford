@@ -43,6 +43,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/complex.toml",
         "src/specialized/complex/generated",
     ),
+    (
+        "dual",
+        "algebras/dual.toml",
+        "src/specialized/dual/generated",
+    ),
 ];
 
 fn main() {

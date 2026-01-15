@@ -2266,10 +2266,11 @@ impl<'a> TraitsGenerator<'a> {
         let involution_kind = self.spec.norm.primary_involution;
 
         // Generate norm_squared: sum of (sign * field²) for all fields
+        // Fields with zero metric (degenerate basis vectors) contribute nothing
         let norm_squared_terms: Vec<TokenStream> = ty
             .fields
             .iter()
-            .map(|f| {
+            .filter_map(|f| {
                 let fname = format_ident!("{}", f.name);
 
                 // Compute involution sign for this field's grade
@@ -2302,10 +2303,13 @@ impl<'a> TraitsGenerator<'a> {
                 // Combined sign for this term
                 let total_sign = inv_sign * metric_sign;
 
-                if total_sign >= 0 {
-                    quote! { self.#fname() * self.#fname() }
+                // Skip terms with zero metric (degenerate basis vectors contribute nothing)
+                if total_sign == 0 {
+                    None
+                } else if total_sign > 0 {
+                    Some(quote! { self.#fname() * self.#fname() })
                 } else {
-                    quote! { -self.#fname() * self.#fname() }
+                    Some(quote! { -self.#fname() * self.#fname() })
                 }
             })
             .collect();
