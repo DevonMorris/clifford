@@ -58,6 +58,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/minkowski2.toml",
         "src/specialized/minkowski/dim2/generated",
     ),
+    (
+        "dualquat",
+        "algebras/dualquat.toml",
+        "src/specialized/dualquat/generated",
+    ),
 ];
 
 fn main() {

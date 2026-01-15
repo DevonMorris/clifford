@@ -433,6 +433,68 @@ impl Signature for Cl0_0_1 {
 /// Type alias for the dual numbers signature.
 pub type Dual1 = Cl0_0_1;
 
+/// 3D Mixed degenerate signature: `Cl(0,2,1)`.
+///
+/// This is the dual quaternion algebra. With two basis vectors `e₁, e₂`
+/// squaring to -1 (quaternion part) and one null basis vector `e₃`
+/// (dual part), this gives dual quaternions for rigid transformations.
+///
+/// # Basis Blades (8 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar |
+/// | 1 | `e₁` | 1 | Quaternion i |
+/// | 2 | `e₂` | 1 | Quaternion j |
+/// | 3 | `e₃` | 1 | Dual unit ε |
+/// | 4 | `e₁₂` | 2 | Quaternion k |
+/// | 5 | `e₁₃` | 2 | Dual of i |
+/// | 6 | `e₂₃` | 2 | Dual of j |
+/// | 7 | `e₁₂₃` | 3 | Dual of k (pseudoscalar) |
+///
+/// # Properties
+///
+/// - `e₁² = e₂² = -1` (quaternion basis)
+/// - `e₃² = 0` (dual/nilpotent)
+/// - Dual quaternions represent rigid transformations (rotation + translation)
+/// - Unit dual quaternions: `q * conjugate(q) = 1`
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl0_2_1::DIM, 3);
+/// assert_eq!(Cl0_2_1::num_blades(), 8);
+/// assert_eq!(Cl0_2_1::metric(0), -1);  // e1² = -1
+/// assert_eq!(Cl0_2_1::metric(1), -1);  // e2² = -1
+/// assert_eq!(Cl0_2_1::metric(2), 0);   // e3² = 0
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl0_2_1;
+
+impl Signature for Cl0_2_1 {
+    type NumBlades = typenum::U8; // 2^3 = 8
+
+    const P: usize = 0;
+    const Q: usize = 2;
+    const R: usize = 1;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl0_2_1");
+        match i {
+            0 => -1, // e1² = -1 (quaternion i)
+            1 => -1, // e2² = -1 (quaternion j)
+            2 => 0,  // e3² = 0 (dual unit)
+            _ => unreachable!(),
+        }
+    }
+}
+
+/// Type alias for the dual quaternion signature.
+pub type DualQuaternion3 = Cl0_2_1;
+
 #[cfg(test)]
 mod tests {
     use super::*;
