@@ -26,7 +26,7 @@ primary_involution = "reverse"
 # Types
 # ============================================================
 # In 2D hyperbolic geometry:
-# - Grade 1: Points (ordinary points are spacelike, ideal points are null)
+# - Grade 1: Points (ordinary points are timelike, ideal points are null)
 # - Grade 2: Lines (geodesics in the hyperbolic plane)
 # - Rotors: Hyperbolic rotations and boosts
 

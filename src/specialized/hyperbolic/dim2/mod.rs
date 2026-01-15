@@ -18,9 +18,9 @@
 //! Unlike Euclidean geometry, the hyperbolic plane has an **indefinite metric**.
 //! The norm of elements can be:
 //!
-//! - **Spacelike** (norm² > 0): Ordinary geometric elements
-//! - **Timelike** (norm² < 0): Ultra-ideal points beyond infinity
+//! - **Timelike** (norm² < 0): Ordinary points in the hyperbolic plane
 //! - **Null/Lightlike** (norm² = 0): Ideal points on the "absolute"
+//! - **Spacelike** (norm² > 0): Ultra-ideal points beyond infinity
 //!
 //! # Point Classification
 //!
