@@ -1,5 +1,7 @@
 # PRD-41: 3D Minkowski Spacetime Cl(3,1,0)
 
+**Status**: Complete
+
 ## Summary
 
 Implement 3+1 Minkowski spacetime algebra Cl(3,1,0) via code generation. This is the geometric algebra of special relativity with 3 spatial dimensions and 1 temporal dimension.

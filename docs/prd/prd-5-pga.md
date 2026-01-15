@@ -1,7 +1,12 @@
 # PRD-5: Projective Geometric Algebra (PGA)
 
-**Status**: In Progress (Phases 1-3 Complete)
+**Status**: Complete
 **Goal**: Point-based PGA for representing points, lines, planes, and rigid transformations
+
+> **Implementation Note**: This PRD was implemented via code generation (PRD-14) rather than
+> the manual implementation described below. The types are auto-generated from TOML specifications
+> in `algebras/projective2.toml` and `algebras/projective3.toml`. The mathematical background
+> and API design in this document remain accurate.
 
 ## Background
 

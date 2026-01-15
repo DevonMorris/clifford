@@ -1,5 +1,7 @@
 # PRD-40: 2D Hyperbolic Projective Geometry via Code Generation
 
+**Status**: Complete
+
 ## Overview
 
 Implement 2D hyperbolic projective geometry as Cl(2,1,0) via the code generation pipeline.
