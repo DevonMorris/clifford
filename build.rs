@@ -33,6 +33,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/projective3.toml",
         "src/specialized/projective/dim3/generated",
     ),
+    (
+        "hyperbolic",
+        "algebras/hyperbolic.toml",
+        "src/specialized/hyperbolic/generated",
+    ),
 ];
 
 fn main() {

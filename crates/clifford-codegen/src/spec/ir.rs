@@ -5,6 +5,39 @@
 
 use std::collections::HashMap;
 
+/// Involution kind for norm computation.
+///
+/// Specifies which involution the algebra uses for its canonical norm.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum InvolutionKind {
+    /// Reverse: (-1)^(k(k-1)/2) for grade k.
+    ///
+    /// Default for most algebras (Euclidean, PGA, Minkowski).
+    /// Used for versor operations regardless of norm involution.
+    #[default]
+    Reverse,
+    /// Grade involution: (-1)^k for grade k.
+    ///
+    /// Used for split-complex/hyperbolic numbers.
+    GradeInvolution,
+    /// Clifford conjugate: composition of reverse and grade involution.
+    ///
+    /// Sign = (-1)^(k(k+1)/2) for grade k.
+    CliffordConjugate,
+}
+
+/// Norm configuration for an algebra.
+///
+/// Specifies which involution produces the "primary" norm for the algebra.
+/// The codegen generates `Involute` based on this setting.
+#[derive(Debug, Clone, Default)]
+pub struct NormSpec {
+    /// Which involution to use for primary norm computation.
+    ///
+    /// This determines what `involute()` returns for types in this algebra.
+    pub primary_involution: InvolutionKind,
+}
+
 /// Parsed algebra specification.
 ///
 /// This is the main output of the parser, containing all information
@@ -19,6 +52,8 @@ pub struct AlgebraSpec {
     pub description: Option<String>,
     /// Metric signature.
     pub signature: SignatureSpec,
+    /// Norm configuration.
+    pub norm: NormSpec,
     /// Custom blade name mappings (blade index -> name).
     pub blade_names: HashMap<usize, String>,
     /// Type definitions.

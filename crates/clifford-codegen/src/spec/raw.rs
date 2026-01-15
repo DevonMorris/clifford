@@ -15,12 +15,24 @@ pub struct RawAlgebraSpec {
     pub algebra: RawAlgebraInfo,
     /// Metric signature.
     pub signature: RawSignature,
+    /// Norm configuration.
+    #[serde(default)]
+    pub norm: RawNormSpec,
     /// Custom blade names.
     #[serde(default)]
     pub blades: HashMap<String, String>,
     /// Type definitions.
     #[serde(default)]
     pub types: HashMap<String, RawTypeSpec>,
+}
+
+/// Raw norm configuration section.
+#[derive(Debug, Deserialize, Default)]
+pub struct RawNormSpec {
+    /// Which involution produces the primary norm.
+    ///
+    /// Options: "reverse" (default), "grade_involution", "clifford_conjugate"
+    pub primary_involution: Option<String>,
 }
 
 /// Raw algebra info section.

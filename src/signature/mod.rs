@@ -56,6 +56,6 @@ mod metric;
 mod projective;
 
 pub use conformal::{Conformal2, Conformal3};
-pub use euclidean::{Euclidean2, Euclidean3, Euclidean4};
+pub use euclidean::{Cl1_0_0, Euclidean2, Euclidean3, Euclidean4, Hyperbolic1};
 pub use metric::Signature;
 pub use projective::{Projective2, Projective3};

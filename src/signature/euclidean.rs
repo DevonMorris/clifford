@@ -179,6 +179,54 @@ impl Signature for Euclidean4 {
     }
 }
 
+/// 1D Hyperbolic signature: `Cl(1,0,0)`.
+///
+/// This is used for hyperbolic numbers (split-complex numbers).
+/// With one positive basis vector `e₁` where `e₁² = +1`, this
+/// algebra produces hyperbolic numbers `a + bj` where `j² = +1`.
+///
+/// # Basis Blades (2 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar (real part) |
+/// | 1 | `e₁` | 1 | Hyperbolic unit (j) |
+///
+/// # Properties
+///
+/// - `e₁² = +1` (unlike complex numbers where `i² = -1`)
+/// - Hyperbolic numbers have zero divisors: `(1+j)(1-j) = 0`
+/// - The norm uses grade involution: `z * involute(z) = a² - b²`
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl1_0_0::DIM, 1);
+/// assert_eq!(Cl1_0_0::num_blades(), 2);
+/// assert_eq!(Cl1_0_0::metric(0), 1);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl1_0_0;
+
+impl Signature for Cl1_0_0 {
+    type NumBlades = typenum::U2; // 2^1 = 2
+
+    const P: usize = 1;
+    const Q: usize = 0;
+    const R: usize = 0;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl1_0_0");
+        1
+    }
+}
+
+/// Type alias for the hyperbolic numbers signature.
+pub type Hyperbolic1 = Cl1_0_0;
+
 #[cfg(test)]
 mod tests {
     use super::*;
