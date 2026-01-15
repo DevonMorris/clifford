@@ -95,18 +95,39 @@ done
 cargo run --package clifford-codegen -- discover 3 0 1
 ```
 
-### Using Generated Products
+### Extension Methods - What Belongs and What Doesn't
 
-Always use generated products in extension files:
+**CRITICAL: Prefer generated traits over extension methods.**
+
+Extension files (`extensions.rs`) should be minimal. Do NOT add methods that just call traits.
+
+**What belongs in extensions.rs:**
+- Constructors: `from_cartesian()`, `from_angle_plane()`, `origin()`, `identity()`
+- Coordinate extraction: `cartesian_x()`, `to_cartesian()`
+- Multi-step queries: `is_parallel()`, `distance()`, `angle()`
+- Validation/normalization wrappers
+
+**What does NOT belong - these shadow traits:**
 ```rust
-use super::generated::products;
-
-impl<T: Float> Point<T> {
+// WRONG - these just call traits, add no value
+impl Point<T> {
     pub fn join(&self, other: &Point<T>) -> Line<T> {
-        products::exterior_point_point(self, other)  // Correct
+        Wedge::wedge(self, other)  // Users should call wedge() directly!
+    }
+    pub fn meet(&self, line: &Line<T>) -> Point<T> {
+        Antiwedge::antiwedge(self, line)  // Users should call antiwedge() directly!
     }
 }
 ```
+
+**Right approach - let users use traits:**
+```rust
+use clifford::ops::{Wedge, Antiwedge};
+let line = point1.wedge(&point2);  // Join via Wedge trait
+let intersection = line1.antiwedge(&line2);  // Meet via Antiwedge trait
+```
+
+### Never Write Manual Algebraic Formulas
 
 Never write manual formulas like:
 ```rust
@@ -115,6 +136,8 @@ Line::new_unchecked(
     ...
 )
 ```
+
+The generated traits handle all algebraic operations correctly.
 
 ### Constraints vs Product Outputs
 
