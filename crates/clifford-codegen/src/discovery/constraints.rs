@@ -837,10 +837,11 @@ mod tests {
 
         // Circle is a trivector (grade 3), so k ∧ k produces grade 6
         // In 5D, grade 6 = 0 (doesn't exist), so no blade constraints!
-        // The wiki constraints come from the representation, not from k ∧ k
+        // But the wiki constraints DO come from the VERSOR constraint (k * k̃ = scalar)
         eprintln!("Note: In 5D CGA, grade 3 ∧ grade 3 = grade 6, which is empty.");
-        eprintln!("Circle validity constraints come from representation theory,");
-        eprintln!("not from the simple blade condition k ∧ k = 0.\n");
+        eprintln!("However, the wiki constraints come from the VERSOR constraint:");
+        eprintln!("k * k̃ for a trivector gives grade 0, 2, 4 components.");
+        eprintln!("The grade 4 components must vanish → gives 5 constraints!\n");
 
         // Grade 3 in 5D: there are C(5,3) = 10 blades
         // Grade 6 in 5D: there are C(5,6) = 0 blades (doesn't exist)
@@ -848,6 +849,122 @@ mod tests {
         assert!(
             constraints.is_empty(),
             "CGA Circle (grade 3) should have no blade constraints (grade 6 doesn't exist in 5D)"
+        );
+    }
+}
+
+/// Tests verifying Circle constraints match CGA wiki
+#[cfg(test)]
+mod circle_constraint_tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn circle_5_constraints_match_wiki() {
+        // Show the 5 constraints correspond to CGA wiki constraints
+        let algebra = Algebra::new(4, 1, 0);
+        let table = ProductTable::new(&algebra);
+        let blades = blades_of_grades(5, &[3]);
+
+        eprintln!("\n=== Circle: 5 Versor Constraints Match Wiki ===\n");
+        eprintln!("Field mapping:");
+        eprintln!("  g: gw=e123, gz=e124, gy=e134, gx=e234");
+        eprintln!("  m: mz=e125, my=e135, mx=e235");
+        eprintln!("  v: vx=e145, vy=e245, vz=e345\n");
+
+        // Group terms by output blade
+        let mut by_blade: HashMap<usize, Vec<(String, String, i32)>> = HashMap::new();
+
+        for (i, &a) in blades.iter().enumerate() {
+            for &b in &blades[i..] {
+                let rev_b = reverse_sign(3);
+                let rev_a = reverse_sign(3);
+
+                let (sign_ab, result) = table.geometric(a, b);
+                if sign_ab == 0 || grade(result) == 0 {
+                    continue;
+                }
+
+                let name_a = algebra.blade_index_name(Blade::from_index(a));
+                let name_b = algebra.blade_index_name(Blade::from_index(b));
+
+                let coef = if a == b {
+                    i32::from(sign_ab) * i32::from(rev_a)
+                } else {
+                    let (sign_ba, _) = table.geometric(b, a);
+                    i32::from(sign_ab) * i32::from(rev_b) + i32::from(sign_ba) * i32::from(rev_a)
+                };
+
+                if coef != 0 {
+                    by_blade.entry(result).or_default().push((
+                        name_a.to_string(),
+                        name_b.to_string(),
+                        coef,
+                    ));
+                }
+            }
+        }
+
+        // Map blade to field name
+        let blade_to_field: HashMap<&str, &str> = [
+            ("e123", "gw"),
+            ("e124", "gz"),
+            ("e134", "gy"),
+            ("e234", "gx"),
+            ("e125", "mz"),
+            ("e135", "my"),
+            ("e235", "mx"),
+            ("e145", "vx"),
+            ("e245", "vy"),
+            ("e345", "vz"),
+        ]
+        .into_iter()
+        .collect();
+
+        // Print each constraint with wiki interpretation
+        let wiki_labels: HashMap<&str, &str> = [
+            ("e1234", "v · m = 0"),
+            ("e1235", "g · v = 0"),
+            ("e1245", "(g × m)_z - gw*vz = 0"),
+            ("e1345", "(g × m)_y - gw*vy = 0"),
+            ("e2345", "(g × m)_x - gw*vx = 0"),
+        ]
+        .into_iter()
+        .collect();
+
+        for (&result, terms) in &by_blade {
+            let result_name = algebra.blade_index_name(Blade::from_index(result));
+            let wiki_label = wiki_labels.get(result_name.as_str()).unwrap_or(&"unknown");
+
+            eprintln!("{} constraint (wiki: {}):", result_name, wiki_label);
+
+            let mut field_terms: Vec<String> = Vec::new();
+            for (a, b, coef) in terms {
+                let fa = blade_to_field
+                    .get(a.as_str())
+                    .copied()
+                    .unwrap_or(a.as_str());
+                let fb = blade_to_field
+                    .get(b.as_str())
+                    .copied()
+                    .unwrap_or(b.as_str());
+                if *coef > 0 {
+                    field_terms.push(format!("+{}*{}*{}", coef, fa, fb));
+                } else {
+                    field_terms.push(format!("{}*{}*{}", coef, fa, fb));
+                }
+            }
+            eprintln!("  {}", field_terms.join(" "));
+            eprintln!();
+        }
+
+        eprintln!("==========================================\n");
+
+        // Verify we have exactly 5 constraints
+        assert_eq!(
+            by_blade.len(),
+            5,
+            "Should have exactly 5 grade-4 output blades"
         );
     }
 }
