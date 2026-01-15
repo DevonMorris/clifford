@@ -1,0 +1,34 @@
+# Hyperbolic Numbers (Split-Complex Numbers)
+# Cl(1,0,0) with grade involution for norm
+
+[algebra]
+name = "hyperbolic"
+module_path = "hyperbolic"
+description = "Hyperbolic numbers (split-complex) Cl(1,0,0)"
+
+[signature]
+positive = ["e1"]
+negative = []
+zero = []
+
+[norm]
+# Hyperbolic numbers use grade involution for their norm: z * involute(z) = a² - b²
+primary_involution = "grade_involution"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.HypUnit]
+grades = [1]
+description = "Pure hyperbolic unit (j where j² = +1)"
+fields = ["j"]
+
+[types.Hyperbolic]
+grades = [0, 1]
+description = "Hyperbolic number: a + bj where j² = +1"
+fields = ["real", "hyp"]

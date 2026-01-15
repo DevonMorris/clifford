@@ -9,10 +9,10 @@ use crate::discovery::{ProductType, infer_all_products};
 
 use super::error::ParseError;
 use super::ir::{
-    AlgebraSpec, BasisVector, FieldSpec, ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
-    VersorSpec,
+    AlgebraSpec, BasisVector, FieldSpec, InvolutionKind, NormSpec, ProductEntry, ProductsSpec,
+    SignatureSpec, TypeSpec, VersorSpec,
 };
-use super::raw::{RawAlgebraSpec, RawSignature, RawTypeSpec};
+use super::raw::{RawAlgebraSpec, RawNormSpec, RawSignature, RawTypeSpec};
 
 /// Maximum supported dimension.
 const MAX_DIM: usize = 6;
@@ -52,6 +52,9 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
     // Build signature
     let signature = parse_signature(&raw.signature)?;
 
+    // Build norm configuration
+    let norm = parse_norm(&raw.norm)?;
+
     // Build blade name map
     let blade_names = parse_blade_names(&raw.blades, &signature)?;
 
@@ -69,6 +72,7 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
         module_path: raw.algebra.module_path,
         description: raw.algebra.description,
         signature,
+        norm,
         blade_names,
         types,
         products,
@@ -132,6 +136,32 @@ fn parse_signature(raw: &RawSignature) -> Result<SignatureSpec, ParseError> {
     }
 
     Ok(SignatureSpec { basis, p, q, r })
+}
+
+/// Parses the norm configuration section.
+///
+/// The `[norm]` section specifies which involution the algebra uses for its
+/// canonical norm computation. This affects how `Involute` is generated.
+///
+/// Options for `primary_involution`:
+/// - `"reverse"` (default): Uses reverse involution, `(-1)^(k(k-1)/2)` for grade k
+/// - `"grade_involution"`: Uses grade involution, `(-1)^k` for grade k
+/// - `"clifford_conjugate"`: Uses Clifford conjugate, `(-1)^(k(k+1)/2)` for grade k
+fn parse_norm(raw: &RawNormSpec) -> Result<NormSpec, ParseError> {
+    let primary_involution = match raw.primary_involution.as_deref() {
+        None | Some("reverse") => InvolutionKind::Reverse,
+        Some("grade_involution") => InvolutionKind::GradeInvolution,
+        Some("clifford_conjugate") => InvolutionKind::CliffordConjugate,
+        Some(other) => {
+            return Err(ParseError::InvalidValue {
+                field: "norm.primary_involution".to_string(),
+                value: other.to_string(),
+                expected: "\"reverse\", \"grade_involution\", or \"clifford_conjugate\"".to_string(),
+            });
+        }
+    };
+
+    Ok(NormSpec { primary_involution })
 }
 
 /// Parses the blade names section.
@@ -993,5 +1023,108 @@ mod tests {
             versor: None,
         };
         assert!(super::validate_canonical_field_order(&valid_rotor));
+    }
+
+    #[test]
+    fn parse_norm_default() {
+        use super::super::ir::InvolutionKind;
+
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+            "#,
+        )
+        .unwrap();
+
+        // Default should be Reverse
+        assert_eq!(spec.norm.primary_involution, InvolutionKind::Reverse);
+    }
+
+    #[test]
+    fn parse_norm_reverse_explicit() {
+        use super::super::ir::InvolutionKind;
+
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [norm]
+            primary_involution = "reverse"
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(spec.norm.primary_involution, InvolutionKind::Reverse);
+    }
+
+    #[test]
+    fn parse_norm_grade_involution() {
+        use super::super::ir::InvolutionKind;
+
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "hyperbolic"
+
+            [signature]
+            positive = ["e1"]
+
+            [norm]
+            primary_involution = "grade_involution"
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(spec.norm.primary_involution, InvolutionKind::GradeInvolution);
+    }
+
+    #[test]
+    fn parse_norm_clifford_conjugate() {
+        use super::super::ir::InvolutionKind;
+
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1"]
+
+            [norm]
+            primary_involution = "clifford_conjugate"
+            "#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            spec.norm.primary_involution,
+            InvolutionKind::CliffordConjugate
+        );
+    }
+
+    #[test]
+    fn reject_invalid_norm_involution() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1"]
+
+            [norm]
+            primary_involution = "invalid_involution"
+            "#,
+        );
+
+        assert!(matches!(result, Err(ParseError::InvalidValue { .. })));
     }
 }

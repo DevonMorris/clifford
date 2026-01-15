@@ -7,7 +7,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade, ProductTable};
-use crate::spec::{AlgebraSpec, TypeSpec};
+use crate::spec::{AlgebraSpec, InvolutionKind, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
     ProductKind as SymbolicProductKind, SolutionType, SymbolicProduct,
@@ -166,11 +166,12 @@ impl<'a> TraitsGenerator<'a> {
 
         quote! {
             use crate::scalar::Float;
+            #[allow(unused_imports)]
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
                 Sandwich, Antisandwich, Transform, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot, WeightDual,
-                Reverse, Antireverse, RightComplement, #projection_import #versor_import
+                Reverse, Antireverse, Involute, RightComplement, #projection_import #versor_import
             };
             use super::types::{#(#type_names),*};
 
@@ -1219,6 +1220,13 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // Involute trait - for all types (algebra-specific involution for norm)
+        for ty in &self.spec.types {
+            if ty.alias_of.is_none() {
+                impls.push(self.generate_involute_trait(ty));
+            }
+        }
+
         // RightComplement trait - only for types that have a complement function
         // (i.e., where the complement grades map to an existing type)
         for ty in &self.spec.types {
@@ -1969,6 +1977,60 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
+    /// Generates Involute trait impl (algebra-specific norm involution).
+    ///
+    /// The involution used depends on the algebra's `norm.primary_involution` setting:
+    /// - Reverse: `(-1)^(k(k-1)/2)` for grade k
+    /// - GradeInvolution: `(-1)^k` for grade k
+    /// - CliffordConjugate: `(-1)^(k(k+1)/2)` for grade k
+    fn generate_involute_trait(&self, ty: &TypeSpec) -> TokenStream {
+        let type_name = format_ident!("{}", ty.name);
+        let involution_kind = self.spec.norm.primary_involution;
+
+        // Compute field expressions with appropriate involution signs
+        let field_exprs: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .map(|field| {
+                let field_name = format_ident!("{}", field.name);
+                let grade = field.grade;
+
+                // Compute sign based on involution kind
+                let is_positive = match involution_kind {
+                    InvolutionKind::Reverse => {
+                        // Reverse sign: (-1)^(k(k-1)/2)
+                        (grade * grade.saturating_sub(1) / 2).is_multiple_of(2)
+                    }
+                    InvolutionKind::GradeInvolution => {
+                        // Grade involution sign: (-1)^k
+                        grade.is_multiple_of(2)
+                    }
+                    InvolutionKind::CliffordConjugate => {
+                        // Clifford conjugate sign: (-1)^(k(k+1)/2)
+                        (grade * (grade + 1) / 2).is_multiple_of(2)
+                    }
+                };
+
+                if is_positive {
+                    quote! { self.#field_name() }
+                } else {
+                    quote! { -self.#field_name() }
+                }
+            })
+            .collect();
+
+        let constructor = quote! { Self::new_unchecked(#(#field_exprs),*) };
+
+        quote! {
+            impl<T: Float> Involute for #type_name<T> {
+                #[inline]
+                fn involute(&self) -> Self {
+                    #constructor
+                }
+            }
+        }
+    }
+
     /// Generates RightComplement trait impl.
     ///
     /// Returns None if the complement grades don't map to an existing type.
@@ -2135,6 +2197,33 @@ impl<'a> TraitsGenerator<'a> {
     // Normed Trait Implementations
     // ========================================================================
 
+    /// Computes the metric sign for a blade squared: `blade * blade`.
+    ///
+    /// For a blade `eᵢeⱼ...` with grade k, the square involves:
+    /// 1. Reordering sign: `(-1)^(k(k-1)/2)` (to bring pairs together)
+    /// 2. Product of individual basis vector metrics: `Π(eᵢ²)`
+    ///
+    /// Returns the combined sign (-1, 0, or +1).
+    fn compute_blade_metric_sign(&self, blade_index: usize, grade: usize) -> i8 {
+        // Reordering sign: (-1)^(k(k-1)/2)
+        let reorder_sign: i8 = if (grade * grade.saturating_sub(1) / 2).is_multiple_of(2) {
+            1
+        } else {
+            -1
+        };
+
+        // Product of individual basis vector metrics
+        let mut metric_product: i8 = 1;
+        for basis in &self.spec.signature.basis {
+            if (blade_index >> basis.index) & 1 == 1 {
+                // This basis vector is in the blade
+                metric_product *= basis.metric;
+            }
+        }
+
+        reorder_sign * metric_product
+    }
+
     /// Generates all Normed trait implementations.
     fn generate_all_normed(&self) -> TokenStream {
         let impls: Vec<TokenStream> = self
@@ -2164,16 +2253,68 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates `impl Normed for Type<T>`.
+    ///
+    /// The norm is computed as `scalar_part(A * involute(A))` where
+    /// `involute` uses the algebra's canonical involution.
+    ///
+    /// Each field contributes `sign * field²` where:
+    /// - `sign = inv_sign * metric_sign`
+    /// - `inv_sign` depends on the involution kind and grade
+    /// - `metric_sign` is the blade's metric signature (product of basis metrics)
     fn generate_normed_impl(&self, ty: &TypeSpec) -> TokenStream {
         let name = format_ident!("{}", ty.name);
+        let involution_kind = self.spec.norm.primary_involution;
 
-        // Generate norm_squared: sum of squares of all fields
+        // Generate norm_squared: sum of (sign * field²) for all fields
         let norm_squared_terms: Vec<TokenStream> = ty
             .fields
             .iter()
             .map(|f| {
                 let fname = format_ident!("{}", f.name);
-                quote! { self.#fname() * self.#fname() }
+
+                // Compute involution sign for this field's grade
+                let inv_sign: i8 = match involution_kind {
+                    InvolutionKind::Reverse => {
+                        // Reverse sign: (-1)^(k(k-1)/2)
+                        let k = f.grade;
+                        if (k * k.saturating_sub(1) / 2) % 2 == 0 {
+                            1
+                        } else {
+                            -1
+                        }
+                    }
+                    InvolutionKind::GradeInvolution => {
+                        // Grade involution sign: (-1)^k
+                        if f.grade % 2 == 0 {
+                            1
+                        } else {
+                            -1
+                        }
+                    }
+                    InvolutionKind::CliffordConjugate => {
+                        // Clifford conjugate sign: (-1)^(k(k+1)/2)
+                        let k = f.grade;
+                        if (k * (k + 1) / 2) % 2 == 0 {
+                            1
+                        } else {
+                            -1
+                        }
+                    }
+                };
+
+                // Compute metric sign: the sign of blade² under geometric product
+                // For blade with index b, this is the product of (eᵢ)² for all basis vectors
+                // times the sign from reordering (which depends on grade)
+                let metric_sign = self.compute_blade_metric_sign(f.blade_index, f.grade);
+
+                // Combined sign for this term
+                let total_sign = inv_sign * metric_sign;
+
+                if total_sign >= 0 {
+                    quote! { self.#fname() * self.#fname() }
+                } else {
+                    quote! { -self.#fname() * self.#fname() }
+                }
             })
             .collect();
 
@@ -2451,6 +2592,12 @@ impl<'a> TraitsGenerator<'a> {
     /// Returns `Some(TokenStream)` if the type has a derived constraint that can be solved,
     /// `None` otherwise.
     fn try_generate_constrained_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        // Skip constraint derivation for small algebras (dim <= 1)
+        // These don't have meaningful geometric constraints
+        if self.algebra.dim() <= 1 {
+            return None;
+        }
+
         // Derive constraints from algebra structure
         let deriver = ConstraintDeriver::new(self.algebra);
         let constraint = deriver.derive_geometric_constraint(ty, "x")?;
@@ -2800,6 +2947,7 @@ mod verification_tests {{
     use super::*;
     use crate::algebra::Multivector;
     use crate::signature::{sig};
+    #[allow(unused_imports)]
     use crate::wrappers::{wrapper_import};
     use approx::relative_eq;
     use proptest::prelude::*;

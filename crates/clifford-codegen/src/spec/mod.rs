@@ -62,6 +62,7 @@ mod raw;
 pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
-    AlgebraSpec, BasisVector, FieldSpec, ProductEntry, ProductsSpec, SignatureSpec, TypeSpec,
+    AlgebraSpec, BasisVector, FieldSpec, InvolutionKind, NormSpec, ProductEntry, ProductsSpec,
+    SignatureSpec, TypeSpec,
 };
 pub use parser::parse_spec;

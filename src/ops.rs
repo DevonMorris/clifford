@@ -396,6 +396,39 @@ pub trait Antireverse {
     fn antireverse(&self) -> Self;
 }
 
+/// Involute (algebra-specific norm involution).
+///
+/// The involute operation is used for computing norms in the algebra.
+/// Different algebras use different involutions for their canonical norm:
+///
+/// | Algebra | Involution | Sign for grade k |
+/// |---------|------------|------------------|
+/// | Euclidean | Reverse | `(-1)^(k(k-1)/2)` |
+/// | PGA | Reverse | `(-1)^(k(k-1)/2)` |
+/// | Hyperbolic | Grade involution | `(-1)^k` |
+///
+/// The norm squared is computed as `x * involute(x)`.
+///
+/// # Note
+///
+/// This is separate from [`Reverse`] because versors always use the reverse
+/// for transformation (since `reverse(AB) = reverse(B) × reverse(A)`), but
+/// the norm uses the algebra's canonical involution.
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::Involute;
+///
+/// let z = Hyperbolic::new(3.0, 4.0);
+/// let inv = z.involute();
+/// let norm_sq = z * inv;  // norm_squared for hyperbolic numbers
+/// ```
+pub trait Involute {
+    /// Computes the involute (algebra-specific involution for norm).
+    fn involute(&self) -> Self;
+}
+
 /// Right complement operation.
 ///
 /// The right complement `ā` (bar above) satisfies: `a ∧ ā = 𝟙` (pseudoscalar).

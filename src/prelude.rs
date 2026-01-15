@@ -20,7 +20,7 @@ pub use crate::norm::{
 };
 pub use crate::ops::{
     Antidot, Antiproject, Antireverse, Antisandwich, Antiwedge, BulkContract, BulkDual, BulkExpand,
-    Dot, Join, LeftComplement, LeftContract, Meet, Project, Reverse, RightComplement,
+    Dot, Involute, Join, LeftComplement, LeftContract, Meet, Project, Reverse, RightComplement,
     RightContract, Sandwich, ScalarProduct, Transform, Versor, Wedge, WeightContract, WeightDual,
     WeightExpand,
 };

@@ -103,4 +103,15 @@ pub enum ParseError {
         /// The unknown field name.
         field: String,
     },
+
+    /// Invalid value for a configuration field.
+    #[error("invalid value '{value}' for field '{field}', expected {expected}")]
+    InvalidValue {
+        /// The field name.
+        field: String,
+        /// The invalid value.
+        value: String,
+        /// Description of expected values.
+        expected: String,
+    },
 }
