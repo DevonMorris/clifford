@@ -658,7 +658,8 @@ impl<'a> TraitsGenerator<'a> {
 
                     // Compute b_k ∨ (a_i ∧ b_j☆)
                     let (sign, result) =
-                        self.table.project_triple(a_blade, b_dual_blade, b_anti_blade);
+                        self.table
+                            .project_triple(a_blade, b_dual_blade, b_anti_blade);
                     if sign == 0 {
                         continue;
                     }
@@ -700,9 +701,9 @@ impl<'a> TraitsGenerator<'a> {
                     let b_wedge_blade = field_b_wedge.blade_index;
 
                     // Compute b_k ∧ (a_i ∨ b_j☆)
-                    let (sign, result) = self
-                        .table
-                        .antiproject_triple(a_blade, b_dual_blade, b_wedge_blade);
+                    let (sign, result) =
+                        self.table
+                            .antiproject_triple(a_blade, b_dual_blade, b_wedge_blade);
                     if sign == 0 {
                         continue;
                     }
@@ -1156,9 +1157,7 @@ impl<'a> TraitsGenerator<'a> {
                 .types
                 .iter()
                 .filter(|t| {
-                    t.alias_of.is_none()
-                        && self.is_single_grade_blade(t)
-                        && !t.grades.contains(&0) // Exclude Scalar
+                    t.alias_of.is_none() && self.is_single_grade_blade(t) && !t.grades.contains(&0) // Exclude Scalar
                 })
                 .collect();
 
