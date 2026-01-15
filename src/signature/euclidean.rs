@@ -327,6 +327,63 @@ impl Signature for Cl0_2_0 {
 /// Type alias for the quaternion signature.
 pub type Quaternion2 = Cl0_2_0;
 
+/// 2D Indefinite signature: `Cl(1,1,0)`.
+///
+/// This is the Minkowski plane (2D spacetime algebra). With one
+/// spacelike basis vector `e₁` (e₁² = +1) and one timelike basis
+/// vector `e₂` (e₂² = -1), this gives a 2D relativistic algebra.
+///
+/// # Basis Blades (4 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar |
+/// | 1 | `e₁` | 1 | Spacelike vector |
+/// | 2 | `e₂` | 1 | Timelike vector |
+/// | 3 | `e₁₂` | 2 | Bivector (pseudoscalar) |
+///
+/// # Properties
+///
+/// - `e₁² = +1` (spacelike)
+/// - `e₂² = -1` (timelike)
+/// - Indefinite norm: v² can be positive, negative, or zero
+/// - Null vectors exist: e.g., `e₁ + e₂` has v² = 0
+/// - Even subalgebra is isomorphic to hyperbolic numbers
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl1_1_0::DIM, 2);
+/// assert_eq!(Cl1_1_0::num_blades(), 4);
+/// assert_eq!(Cl1_1_0::metric(0), 1);   // e1² = +1
+/// assert_eq!(Cl1_1_0::metric(1), -1);  // e2² = -1
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl1_1_0;
+
+impl Signature for Cl1_1_0 {
+    type NumBlades = typenum::U4; // 2^2 = 4
+
+    const P: usize = 1;
+    const Q: usize = 1;
+    const R: usize = 0;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl1_1_0");
+        match i {
+            0 => 1,  // e1² = +1 (spacelike)
+            1 => -1, // e2² = -1 (timelike)
+            _ => unreachable!(),
+        }
+    }
+}
+
+/// Type alias for the Minkowski plane signature.
+pub type Minkowski2 = Cl1_1_0;
+
 /// 1D Degenerate signature: `Cl(0,0,1)`.
 ///
 /// This is used for dual numbers (automatic differentiation).
