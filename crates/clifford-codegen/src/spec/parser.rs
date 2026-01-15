@@ -156,7 +156,8 @@ fn parse_norm(raw: &RawNormSpec) -> Result<NormSpec, ParseError> {
             return Err(ParseError::InvalidValue {
                 field: "norm.primary_involution".to_string(),
                 value: other.to_string(),
-                expected: "\"reverse\", \"grade_involution\", or \"clifford_conjugate\"".to_string(),
+                expected: "\"reverse\", \"grade_involution\", or \"clifford_conjugate\""
+                    .to_string(),
             });
         }
     };
@@ -1083,7 +1084,10 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(spec.norm.primary_involution, InvolutionKind::GradeInvolution);
+        assert_eq!(
+            spec.norm.primary_involution,
+            InvolutionKind::GradeInvolution
+        );
     }
 
     #[test]

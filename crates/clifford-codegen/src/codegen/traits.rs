@@ -2285,20 +2285,12 @@ impl<'a> TraitsGenerator<'a> {
                     }
                     InvolutionKind::GradeInvolution => {
                         // Grade involution sign: (-1)^k
-                        if f.grade % 2 == 0 {
-                            1
-                        } else {
-                            -1
-                        }
+                        if f.grade % 2 == 0 { 1 } else { -1 }
                     }
                     InvolutionKind::CliffordConjugate => {
                         // Clifford conjugate sign: (-1)^(k(k+1)/2)
                         let k = f.grade;
-                        if (k * (k + 1) / 2) % 2 == 0 {
-                            1
-                        } else {
-                            -1
-                        }
+                        if (k * (k + 1) / 2) % 2 == 0 { 1 } else { -1 }
                     }
                 };
 
