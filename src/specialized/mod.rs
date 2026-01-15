@@ -6,6 +6,7 @@
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
+//! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
 //! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
 //!
 //! # Type Organization
@@ -19,6 +20,7 @@
 //!     dim2/   - 2D PGA: Point, Line, Motor
 //!     dim3/   - 3D PGA: Point, Line, Plane, Motor
 //!   complex/    - Complex numbers: Scalar, ImagUnit, Complex
+//!   dual/       - Dual numbers: Scalar, DualUnit, Dual
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
 //! ```
 //!
@@ -62,6 +64,7 @@
 //! ```
 
 pub mod complex;
+pub mod dual;
 pub mod euclidean;
 pub mod hyperbolic;
 pub mod projective;

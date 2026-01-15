@@ -1,0 +1,35 @@
+# Dual Numbers
+# Cl(0,0,1) - foundation for automatic differentiation
+
+[algebra]
+name = "dual"
+module_path = "dual"
+description = "Dual numbers Cl(0,0,1)"
+
+[signature]
+positive = []
+negative = []
+zero = ["e1"]
+
+[norm]
+# Dual numbers use grade involution for norm: z * involute(z) = a²
+# (the ε² = 0 term vanishes)
+primary_involution = "grade_involution"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.DualUnit]
+grades = [1]
+description = "Pure dual unit (ε where ε² = 0)"
+fields = ["eps"]
+
+[types.Dual]
+grades = [0, 1]
+description = "Dual number: a + bε where ε² = 0"
+fields = ["real", "dual"]
