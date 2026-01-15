@@ -8,6 +8,14 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+/// Default value for the `complete` flag (true).
+///
+/// Algebras are expected to be complete by default (all products have output types).
+/// Set `complete = false` explicitly for intentionally incomplete algebras.
+fn default_complete() -> bool {
+    true
+}
+
 /// Raw algebra specification (matches TOML structure).
 #[derive(Debug, Deserialize)]
 pub struct RawAlgebraSpec {
@@ -44,6 +52,13 @@ pub struct RawAlgebraInfo {
     pub module_path: Option<String>,
     /// Documentation.
     pub description: Option<String>,
+    /// Whether to enforce algebra completeness.
+    ///
+    /// When `true` (default), codegen will error if any product between defined types
+    /// produces grades that don't match a defined output type.
+    /// Set to `false` to allow partial algebras.
+    #[serde(default = "default_complete")]
+    pub complete: bool,
 }
 
 /// Raw signature section.

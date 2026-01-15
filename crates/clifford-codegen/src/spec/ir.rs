@@ -60,6 +60,11 @@ pub struct AlgebraSpec {
     pub types: Vec<TypeSpec>,
     /// Product specifications.
     pub products: ProductsSpec,
+    /// Whether completeness checking is enabled.
+    ///
+    /// When `true`, the parser verified that all products between defined types
+    /// have matching output types.
+    pub complete: bool,
 }
 
 /// Metric signature specification.

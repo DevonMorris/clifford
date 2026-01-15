@@ -13,6 +13,7 @@
 # antisandwich-based transforms.
 
 [algebra]
+complete = false
 name = "projective2"
 module_path = "projective::dim2"
 description = "2D Projective Geometric Algebra"

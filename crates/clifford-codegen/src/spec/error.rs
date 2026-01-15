@@ -140,4 +140,30 @@ pub enum ParseError {
         /// The expected grades.
         grades: Vec<usize>,
     },
+
+    /// Algebra is incomplete: some products don't have matching output types.
+    #[error(
+        "algebra '{name}' is incomplete: {count} products have no output type.\n{details}\nAdd missing types or set `complete = false` in [algebra] section."
+    )]
+    IncompleteAlgebra {
+        /// Algebra name.
+        name: String,
+        /// Number of missing products.
+        count: usize,
+        /// Human-readable details of missing products.
+        details: String,
+    },
+}
+
+/// Describes a product that has no matching output type.
+#[derive(Debug, Clone)]
+pub struct MissingProduct {
+    /// Left operand type name.
+    pub lhs: String,
+    /// Right operand type name.
+    pub rhs: String,
+    /// Product type name (e.g., "geometric", "exterior").
+    pub product_type: String,
+    /// Output grades produced by this product.
+    pub output_grades: Vec<usize>,
 }

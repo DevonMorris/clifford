@@ -52,8 +52,9 @@ pub use constraints::{
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;
 pub use products::{
-    ProductResult, ProductTable2D, ProductType, infer_all_products, infer_output_grades,
-    infer_product,
+    BladeProductResult, EntityBladeSet, ProductResult, ProductTable2D, ProductType,
+    infer_all_products, infer_all_products_blades, infer_output_blades, infer_output_grades,
+    infer_product, infer_product_blades,
 };
 pub use template::generate_toml_template;
 

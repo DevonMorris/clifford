@@ -2,6 +2,7 @@
 # Cl(0,2,0) - 4D hypercomplex numbers for rotations
 
 [algebra]
+complete = false
 name = "quaternion"
 module_path = "quaternion"
 description = "Quaternions Cl(0,2,0)"

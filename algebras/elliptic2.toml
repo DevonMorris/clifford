@@ -2,6 +2,7 @@
 # Cl(3,0,0) with projective interpretation
 
 [algebra]
+complete = false
 name = "elliptic2"
 module_path = "elliptic::dim2"
 description = "2D Elliptic Projective Geometry Cl(3,0,0)"

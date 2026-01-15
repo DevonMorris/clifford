@@ -3,6 +3,7 @@
 # Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page
 
 [algebra]
+complete = false
 name = "conformal3"
 module_path = "conformal/dim3"
 description = "3D Conformal Geometric Algebra Cl(4,1,0)"
