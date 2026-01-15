@@ -809,4 +809,82 @@ mod tests {
         assert_eq!(result.output_grades, vec![0, 2]);
         assert_eq!(result.matching_entity, Some("Entity_0_2".to_string()));
     }
+
+    /// Diagnostic test that reports missing product matches for all algebras.
+    ///
+    /// This test doesn't fail - it just prints which products are inferred but
+    /// don't have matching entities in each algebra.
+    #[test]
+    fn report_missing_product_matches() {
+        use crate::spec::parse_spec;
+
+        let algebras = [
+            ("euclidean2", include_str!("../../../../algebras/euclidean2.toml")),
+            ("euclidean3", include_str!("../../../../algebras/euclidean3.toml")),
+            ("projective2", include_str!("../../../../algebras/projective2.toml")),
+            ("projective3", include_str!("../../../../algebras/projective3.toml")),
+            ("conformal3", include_str!("../../../../algebras/conformal3.toml")),
+            ("quaternion", include_str!("../../../../algebras/quaternion.toml")),
+            ("dualquat", include_str!("../../../../algebras/dualquat.toml")),
+            ("complex", include_str!("../../../../algebras/complex.toml")),
+            ("dual", include_str!("../../../../algebras/dual.toml")),
+            ("hyperbolic", include_str!("../../../../algebras/hyperbolic.toml")),
+            ("minkowski2", include_str!("../../../../algebras/minkowski2.toml")),
+            ("minkowski3", include_str!("../../../../algebras/minkowski3.toml")),
+            ("elliptic2", include_str!("../../../../algebras/elliptic2.toml")),
+            ("hyperbolic2", include_str!("../../../../algebras/hyperbolic2.toml")),
+        ];
+
+        let product_types = [
+            ProductType::Geometric,
+            ProductType::Exterior,
+            ProductType::LeftContraction,
+            ProductType::Regressive,
+        ];
+
+        let mut total_missing = 0;
+
+        for (name, toml) in &algebras {
+            let spec = parse_spec(toml).unwrap();
+            let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+
+            // Build entity list (exclude sparse and alias types)
+            let entities: Vec<(String, Vec<usize>)> = spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none() && !t.is_sparse)
+                .map(|t| (t.name.clone(), t.grades.clone()))
+                .collect();
+
+            let mut algebra_missing = 0;
+
+            for product_type in &product_types {
+                let table = infer_all_products(&entities, *product_type, &algebra);
+
+                for (lhs, rhs, result) in &table.entries {
+                    if !result.is_zero && result.matching_entity.is_none() {
+                        algebra_missing += 1;
+                        eprintln!(
+                            "  {}: {} {:?} {} -> grades {:?} (no match)",
+                            name,
+                            lhs,
+                            product_type.toml_name(),
+                            rhs,
+                            result.output_grades
+                        );
+                    }
+                }
+            }
+
+            if algebra_missing > 0 {
+                eprintln!("{}: {} missing product matches", name, algebra_missing);
+            }
+            total_missing += algebra_missing;
+        }
+
+        eprintln!("\nTotal missing product matches: {}", total_missing);
+        // This test is informational - it always passes
+        // If you want to enforce complete coverage, change this to:
+        // assert_eq!(total_missing, 0, "Some products don't have matching entities");
+    }
 }
