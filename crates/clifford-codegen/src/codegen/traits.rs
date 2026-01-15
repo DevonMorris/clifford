@@ -157,13 +157,20 @@ impl<'a> TraitsGenerator<'a> {
             quote! {}
         };
 
+        // Project/Antiproject are only generated for degenerate algebras (PGA)
+        let projection_import = if self.spec.signature.r > 0 {
+            quote! { Project, Antiproject, }
+        } else {
+            quote! {}
+        };
+
         quote! {
             use crate::scalar::Float;
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
                 Sandwich, Antisandwich, Transform, ScalarProduct, BulkContract, WeightContract,
                 BulkExpand, WeightExpand, Dot, Antidot, WeightDual,
-                Reverse, Antireverse, RightComplement, #versor_import
+                Reverse, Antireverse, RightComplement, #projection_import #versor_import
             };
             use super::types::{#(#type_names),*};
 
@@ -594,18 +601,195 @@ impl<'a> TraitsGenerator<'a> {
         quote! { #(#expr_parts)* }
     }
 
-    // NOTE: Project/Antiproject trait generation methods have been removed.
-    // The blade-triple formula `b ∨ (a ∧ b☆)` produces all zeros because the
-    // weight_dual computation involving degenerate basis vectors (e₀² = 0)
-    // causes the antiproduct to vanish.
-    //
-    // Projections are still available via Multivector::project() and antiproject().
-    // A future implementation could:
-    // 1. Use a different formula that doesn't rely on weight_dual for Euclidean algebras
-    // 2. Fix the blade-based weight_dual computation for PGA algebras
-    //
-    // See ProductTable::project_triple() and antiproject_triple() in table.rs
-    // which are still available if a working formula is found.
+    /// Computes projection expressions: target ∨ (self ∧ target☆).
+    ///
+    /// Returns TokenStream expressions for each field of the output type.
+    /// Only meaningful for degenerate algebras (PGA) where weight_dual is non-trivial.
+    fn compute_project_expressions(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+    ) -> Vec<TokenStream> {
+        output
+            .fields
+            .iter()
+            .map(|field| self.compute_project_field(source, target, field.blade_index))
+            .collect()
+    }
+
+    /// Computes antiprojection expressions: target ∧ (self ∨ target☆).
+    ///
+    /// Returns TokenStream expressions for each field of the output type.
+    /// Only meaningful for degenerate algebras (PGA) where weight_dual is non-trivial.
+    fn compute_antiproject_expressions(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+    ) -> Vec<TokenStream> {
+        output
+            .fields
+            .iter()
+            .map(|field| self.compute_antiproject_field(source, target, field.blade_index))
+            .collect()
+    }
+
+    /// Computes a single projection field expression.
+    ///
+    /// For multi-blade types, the projection `B ∨ (A ∧ B☆)` expands to:
+    /// `Σ_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k ∨ (a_i ∧ b_j☆))`
+    fn compute_project_field(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        result_blade: usize,
+    ) -> TokenStream {
+        // Collect terms: for each combination a_i, b_j (dual), b_k (antiwedge)
+        let mut term_map: std::collections::HashMap<(String, String, String), i8> =
+            std::collections::HashMap::new();
+
+        for field_a in &source.fields {
+            for field_b_dual in &target.fields {
+                for field_b_anti in &target.fields {
+                    let a_blade = field_a.blade_index;
+                    let b_dual_blade = field_b_dual.blade_index;
+                    let b_anti_blade = field_b_anti.blade_index;
+
+                    // Compute b_k ∨ (a_i ∧ b_j☆)
+                    let (sign, result) =
+                        self.table.project_triple(a_blade, b_dual_blade, b_anti_blade);
+                    if sign == 0 {
+                        continue;
+                    }
+
+                    if result == result_blade {
+                        let key = (
+                            field_a.name.clone(),
+                            field_b_dual.name.clone(),
+                            field_b_anti.name.clone(),
+                        );
+                        *term_map.entry(key).or_insert(0) += sign;
+                    }
+                }
+            }
+        }
+
+        self.triple_term_map_to_tokens(term_map, "target")
+    }
+
+    /// Computes a single antiprojection field expression.
+    ///
+    /// For multi-blade types, the antiprojection `B ∧ (A ∨ B☆)` expands to:
+    /// `Σ_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k ∧ (a_i ∨ b_j☆))`
+    fn compute_antiproject_field(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        result_blade: usize,
+    ) -> TokenStream {
+        // Collect terms: for each combination a_i, b_j (dual), b_k (wedge)
+        let mut term_map: std::collections::HashMap<(String, String, String), i8> =
+            std::collections::HashMap::new();
+
+        for field_a in &source.fields {
+            for field_b_dual in &target.fields {
+                for field_b_wedge in &target.fields {
+                    let a_blade = field_a.blade_index;
+                    let b_dual_blade = field_b_dual.blade_index;
+                    let b_wedge_blade = field_b_wedge.blade_index;
+
+                    // Compute b_k ∧ (a_i ∨ b_j☆)
+                    let (sign, result) = self
+                        .table
+                        .antiproject_triple(a_blade, b_dual_blade, b_wedge_blade);
+                    if sign == 0 {
+                        continue;
+                    }
+
+                    if result == result_blade {
+                        let key = (
+                            field_a.name.clone(),
+                            field_b_dual.name.clone(),
+                            field_b_wedge.name.clone(),
+                        );
+                        *term_map.entry(key).or_insert(0) += sign;
+                    }
+                }
+            }
+        }
+
+        self.triple_term_map_to_tokens(term_map, "target")
+    }
+
+    /// Converts a triple term map to TokenStream.
+    ///
+    /// Used by project/antiproject field computations.
+    fn triple_term_map_to_tokens(
+        &self,
+        term_map: std::collections::HashMap<(String, String, String), i8>,
+        rhs_name: &str,
+    ) -> TokenStream {
+        if term_map.is_empty() {
+            return quote! { T::zero() };
+        }
+
+        // Filter out zero coefficients and collect non-zero terms
+        let terms: Vec<_> = term_map
+            .into_iter()
+            .filter(|(_, coeff)| *coeff != 0)
+            .collect();
+
+        if terms.is_empty() {
+            return quote! { T::zero() };
+        }
+
+        let rhs_ident = format_ident!("{}", rhs_name);
+        let mut expr_parts: Vec<TokenStream> = Vec::new();
+
+        for (i, ((a, b1, b2), coeff)) in terms.iter().enumerate() {
+            let a_ident = format_ident!("{}", a);
+            let b1_ident = format_ident!("{}", b1);
+            let b2_ident = format_ident!("{}", b2);
+
+            let abs_coeff = coeff.abs();
+            let is_negative = *coeff < 0;
+
+            // Build the base product expression: self.a * target.b1 * target.b2
+            let base_expr =
+                quote! { self.#a_ident() * #rhs_ident.#b1_ident() * #rhs_ident.#b2_ident() };
+
+            // Apply coefficient if not 1
+            let coeff_expr = match abs_coeff {
+                1 => base_expr,
+                2 => quote! { T::TWO * #base_expr },
+                n => {
+                    quote! { T::from_i8(#n) * #base_expr }
+                }
+            };
+
+            // Apply sign and position-based formatting
+            let term_expr = match (i, is_negative) {
+                (0, false) => coeff_expr,
+                (0, true) => quote! { -(#coeff_expr) },
+                (_, false) => quote! { + #coeff_expr },
+                (_, true) => quote! { - #coeff_expr },
+            };
+
+            expr_parts.push(term_expr);
+        }
+
+        quote! { #(#expr_parts)* }
+    }
+
+    /// Checks if all expressions in a list are `T::zero()`.
+    fn all_expressions_are_zero(exprs: &[TokenStream]) -> bool {
+        exprs.iter().all(|e| {
+            let s = e.to_string();
+            // TokenStream string may have various spacing patterns
+            s.contains("T :: zero ()") || s.contains("T::zero()") || s == "T :: zero ()"
+        })
+    }
 
     /// Computes scalar product expression (grade-0 projection of geometric product).
     ///
@@ -964,25 +1148,61 @@ impl<'a> TraitsGenerator<'a> {
 
         // Project and Antiproject traits - only for degenerate algebras (PGA)
         // The weight dual formula used in these projections requires a degenerate metric.
-        // In Euclidean algebras without a degenerate direction, these operations are not defined.
-        //
-        // NOTE: Currently disabled as the blade-triple formula produces all zeros.
-        // The weight_dual computation involving degenerate basis vectors (e₀² = 0)
-        // causes the antiproduct to vanish. A different approach may be needed.
-        //
-        // TODO: Investigate alternative formulas for projections that work with the
-        // blade-based approach, or implement projections at the Multivector level only.
-        //
-        // if self.spec.signature.r > 0 {
-        //     // Only generate for degenerate algebras (PGA)
-        //     let single_grade_types: Vec<_> = self
-        //         .spec
-        //         .types
-        //         .iter()
-        //         .filter(|t| t.alias_of.is_none() && self.is_single_grade_blade(t))
-        //         .collect();
-        //     ... implementation ...
-        // }
+        // In Euclidean algebras without a degenerate direction, weight_dual is trivially zero.
+        if self.spec.signature.r > 0 {
+            // Collect single-grade types (excluding Scalar which has grade 0)
+            let single_grade_types: Vec<_> = self
+                .spec
+                .types
+                .iter()
+                .filter(|t| {
+                    t.alias_of.is_none()
+                        && self.is_single_grade_blade(t)
+                        && !t.grades.contains(&0) // Exclude Scalar
+                })
+                .collect();
+
+            // Project trait: target ∨ (self ∧ target☆)
+            // Output has same grade as source
+            for source in &single_grade_types {
+                for target in &single_grade_types {
+                    let source_grade = source.grades.first().copied().unwrap_or(0);
+
+                    // Find output type with same grade as source
+                    if let Some(output) = single_grade_types
+                        .iter()
+                        .find(|t| t.grades.contains(&source_grade))
+                    {
+                        // Compute expressions and check if any are non-zero
+                        let field_exprs = self.compute_project_expressions(source, target, output);
+                        if !Self::all_expressions_are_zero(&field_exprs) {
+                            impls.push(self.generate_project_trait(source, target, output));
+                        }
+                    }
+                }
+            }
+
+            // Antiproject trait: target ∧ (self ∨ target☆)
+            // Output has same grade as source
+            for source in &single_grade_types {
+                for target in &single_grade_types {
+                    let source_grade = source.grades.first().copied().unwrap_or(0);
+
+                    // Find output type with same grade as source
+                    if let Some(output) = single_grade_types
+                        .iter()
+                        .find(|t| t.grades.contains(&source_grade))
+                    {
+                        // Compute expressions and check if any are non-zero
+                        let field_exprs =
+                            self.compute_antiproject_expressions(source, target, output);
+                        if !Self::all_expressions_are_zero(&field_exprs) {
+                            impls.push(self.generate_antiproject_trait(source, target, output));
+                        }
+                    }
+                }
+            }
+        }
 
         // ====== Unary Operation Traits ======
 
@@ -1070,6 +1290,66 @@ impl<'a> TraitsGenerator<'a> {
                 #[inline]
                 fn antidot(&self, rhs: &#b_name<T>) -> T {
                     #expr
+                }
+            }
+        }
+    }
+
+    /// Generates Project trait impl: target ∨ (self ∧ target☆).
+    ///
+    /// Only generated for degenerate algebras (PGA) where weight_dual is meaningful.
+    fn generate_project_trait(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+    ) -> TokenStream {
+        let source_name = format_ident!("{}", source.name);
+        let target_name = format_ident!("{}", target.name);
+        let out_name = format_ident!("{}", output.name);
+
+        // Compute the projection expressions using the triple approach
+        let field_exprs = self.compute_project_expressions(source, target, output);
+
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
+
+        quote! {
+            impl<T: Float> Project<#target_name<T>> for #source_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn project(&self, target: &#target_name<T>) -> #out_name<T> {
+                    #constructor_call
+                }
+            }
+        }
+    }
+
+    /// Generates Antiproject trait impl: target ∧ (self ∨ target☆).
+    ///
+    /// Only generated for degenerate algebras (PGA) where weight_dual is meaningful.
+    fn generate_antiproject_trait(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+    ) -> TokenStream {
+        let source_name = format_ident!("{}", source.name);
+        let target_name = format_ident!("{}", target.name);
+        let out_name = format_ident!("{}", output.name);
+
+        // Compute the antiprojection expressions using the triple approach
+        let field_exprs = self.compute_antiproject_expressions(source, target, output);
+
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
+
+        quote! {
+            impl<T: Float> Antiproject<#target_name<T>> for #source_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn antiproject(&self, target: &#target_name<T>) -> #out_name<T> {
+                    #constructor_call
                 }
             }
         }
