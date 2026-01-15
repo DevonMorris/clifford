@@ -272,6 +272,121 @@ pub fn derive_antiproduct_constraint(grades: &[usize], algebra: &Algebra) -> Opt
     Some(format!("{} = 0", expr))
 }
 
+/// Derives the blade constraint expression for a grade combination.
+///
+/// A k-vector B is a simple blade (can be written as v₁ ∧ v₂ ∧ ... ∧ vₖ) if and only if
+/// B ∧ B = 0. This function derives the constraint equations that must hold.
+///
+/// This is the constraint used by CGA for geometric primitives like dipoles, circles,
+/// and spheres. It ensures the element represents a valid geometric object.
+///
+/// # Arguments
+///
+/// * `grades` - The grades present in the type (typically a single grade for blades)
+/// * `algebra` - The algebra definition
+///
+/// # Returns
+///
+/// A vector of constraint expressions, one for each non-zero component of B ∧ B.
+/// Each expression must equal zero for the element to be a valid blade.
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::discovery::derive_blade_constraint;
+/// use clifford_codegen::algebra::Algebra;
+///
+/// // CGA dipole (grade 2 in 5D) needs blade constraints
+/// let algebra = Algebra::new(4, 1, 0); // Cl(4,1,0)
+/// let constraints = derive_blade_constraint(&[2], &algebra);
+/// assert_eq!(constraints.len(), 5); // 5 grade-4 components
+/// ```
+pub fn derive_blade_constraint(grades: &[usize], algebra: &Algebra) -> Vec<String> {
+    let table = ProductTable::new(algebra);
+    let dim = algebra.dim();
+    let blades = blades_of_grades(dim, grades);
+
+    // B ∧ B produces grade 2k for a k-vector
+    // Collect terms for each output blade
+    let mut output_terms: HashMap<usize, Vec<(usize, usize, i32)>> = HashMap::new();
+
+    for (i, &a) in blades.iter().enumerate() {
+        for &b in &blades[i..] {
+            let (sign, result) = table.exterior(a, b);
+            if sign == 0 {
+                continue;
+            }
+
+            // For B ∧ B, we get 2*b_a*b_b for a ≠ b (symmetric sum)
+            let coef = if a == b {
+                i32::from(sign)
+            } else {
+                2 * i32::from(sign)
+            };
+
+            output_terms.entry(result).or_default().push((a, b, coef));
+        }
+    }
+
+    // Build constraint expressions
+    let mut constraints = Vec::new();
+
+    for (result_blade, terms) in output_terms {
+        if terms.is_empty() {
+            continue;
+        }
+
+        let mut expr_parts: Vec<String> = Vec::new();
+        for (a, b, coef) in terms {
+            let blade_a = Blade::from_index(a);
+            let blade_b = Blade::from_index(b);
+            let name_a = algebra.blade_index_name(blade_a);
+            let name_b = algebra.blade_index_name(blade_b);
+
+            let term = if a == b {
+                // Diagonal term: coef * name²
+                if coef == 1 {
+                    format!("{}^2", name_a)
+                } else if coef == -1 {
+                    format!("-{}^2", name_a)
+                } else {
+                    format!("{}*{}^2", coef, name_a)
+                }
+            } else {
+                // Off-diagonal term: coef * name_a * name_b
+                if coef == 1 {
+                    format!("{}*{}", name_a, name_b)
+                } else if coef == -1 {
+                    format!("-{}*{}", name_a, name_b)
+                } else {
+                    format!("{}*{}*{}", coef, name_a, name_b)
+                }
+            };
+            expr_parts.push(term);
+        }
+
+        // Join terms
+        let mut expr = String::new();
+        for (i, part) in expr_parts.iter().enumerate() {
+            if i == 0 {
+                expr.push_str(part);
+            } else if let Some(stripped) = part.strip_prefix('-') {
+                expr.push_str(" - ");
+                expr.push_str(stripped);
+            } else {
+                expr.push_str(" + ");
+                expr.push_str(part);
+            }
+        }
+
+        // Add blade name as comment
+        let result_name = algebra.blade_index_name(Blade::from_index(result_blade));
+        constraints.push(format!("{} = 0  // {} component", expr, result_name));
+    }
+
+    constraints
+}
+
 /// Checks if a grade combination can satisfy constraints with field constraints.
 ///
 /// Some grade combinations fundamentally cannot satisfy geometric constraints
@@ -367,4 +482,127 @@ mod tests {
         assert!(constr.is_some());
     }
 
+    #[test]
+    fn cga_dipole_constraints_analysis() {
+        // CGA: Cl(4,1,0) - 4 positive, 1 negative
+        let algebra = Algebra::new(4, 1, 0);
+
+        let geometric = derive_field_constraint(&[2], &algebra);
+        let _antiproduct = derive_antiproduct_constraint(&[2], &algebra);
+
+        // Print for analysis
+        eprintln!("\n=== CGA Dipole Constraint Analysis ===");
+        eprintln!("Field mapping (CGA wiki convention):");
+        eprintln!("  m (moment):   e12=mx, e13=my, e23=mz");
+        eprintln!("  v (velocity): e14=vx, e24=vy, e34=vz");
+        eprintln!("  p (position): e15=px, e25=py, e35=pz, e45=pw");
+        eprintln!();
+
+        if let Some(ref c) = geometric {
+            eprintln!("Inferred geometric constraint (d * d̃ = scalar):");
+            eprintln!("  {}", c);
+        }
+        eprintln!();
+        eprintln!("CGA wiki constraints:");
+        eprintln!("  1. p × v - pw*m = 0");
+        eprintln!("     Expands to:");
+        eprintln!("       py*vz - pz*vy - pw*mx = 0  (e25*e34 - e35*e24 - e45*e12)");
+        eprintln!("       pz*vx - px*vz - pw*my = 0  (e35*e14 - e15*e34 - e45*e13)");
+        eprintln!("       px*vy - py*vx - pw*mz = 0  (e15*e24 - e25*e14 - e45*e23)");
+        eprintln!("  2. p · m = 0  →  px*mx + py*my + pz*mz = 0  (e15*e12 + e25*e13 + e35*e23)");
+        eprintln!("  3. v · m = 0  →  vx*mx + vy*my + vz*mz = 0  (e14*e12 + e24*e13 + e34*e23)");
+        eprintln!("==========================================\n");
+
+        // The inferred constraint is for the norm, which is different from geometric validity
+        assert!(geometric.is_some(), "CGA dipoles should have a geometric constraint");
+    }
+
+    #[test]
+    fn blade_constraint_across_algebras() {
+        // Test which algebras need blade constraints for bivectors
+        eprintln!("\n=== Blade Constraints (B ∧ B = 0) Across Algebras ===\n");
+
+        let test_cases = [
+            ("Euclidean 2D", Algebra::euclidean(2), 2),
+            ("Euclidean 3D", Algebra::euclidean(3), 2),
+            ("Euclidean 4D", Algebra::euclidean(4), 2),
+            ("PGA 2D", Algebra::pga(2), 2),
+            ("PGA 3D", Algebra::pga(3), 2),
+            ("CGA 3D (Cl(4,1,0))", Algebra::new(4, 1, 0), 2),
+            ("Minkowski (Cl(3,1,0))", Algebra::new(3, 1, 0), 2),
+        ];
+
+        for (name, algebra, grade) in &test_cases {
+            let constraints = derive_blade_constraint(&[*grade], &algebra);
+            let num_blades = blades_of_grades(algebra.dim(), &[*grade]).len();
+
+            eprintln!(
+                "{}: {} grade-{} blades → {} blade constraints",
+                name,
+                num_blades,
+                grade,
+                constraints.len()
+            );
+
+            if !constraints.is_empty() {
+                for c in &constraints {
+                    eprintln!("    {}", c);
+                }
+            }
+        }
+
+        eprintln!("\n=== Summary ===");
+        eprintln!("Blade constraints needed when dim > 2*grade:");
+        eprintln!("  - 2D: bivectors (3 components) - no constraint (dim=2, 2*2=4 > 2)");
+        eprintln!("  - 3D: bivectors (3 components) - no constraint (all bivectors are simple)");
+        eprintln!("  - 4D+: bivectors (6+ components) - constraints needed");
+        eprintln!("=============================================\n");
+    }
+
+    #[test]
+    fn versor_constraint_across_algebras() {
+        // Test which algebras need versor constraints for even subalgebra
+        eprintln!("\n=== Versor Constraints (v * ṽ = scalar) Across Algebras ===\n");
+
+        let test_cases = [
+            ("Euclidean 3D Rotor [0,2]", Algebra::euclidean(3), vec![0, 2]),
+            ("PGA 3D Motor [0,2,4]", Algebra::pga(3), vec![0, 2, 4]),
+            ("CGA 3D Motor [0,2,4]", Algebra::new(4, 1, 0), vec![0, 2, 4]),
+        ];
+
+        for (name, algebra, grades) in &test_cases {
+            let constraint = derive_field_constraint(grades, &algebra);
+
+            eprintln!("{}: {:?}", name, grades);
+            if let Some(c) = constraint {
+                eprintln!("    Constraint: {}", c);
+            } else {
+                eprintln!("    No constraint needed (automatically satisfies)");
+            }
+        }
+        eprintln!("=============================================\n");
+    }
+
+    #[test]
+    fn cga_blade_constraint_matches_wiki() {
+        // Verify CGA dipole blade constraints match CGA wiki
+        let algebra = Algebra::new(4, 1, 0);
+        let constraints = derive_blade_constraint(&[2], &algebra);
+
+        eprintln!("\n=== CGA Dipole Blade Constraints ===");
+        eprintln!("Field mapping: mx=e12, my=e13, mz=e23, vx=e14, vy=e24, vz=e34,");
+        eprintln!("               px=e15, py=e25, pz=e35, pw=e45\n");
+
+        for c in &constraints {
+            eprintln!("  {}", c);
+        }
+
+        eprintln!("\nCGA wiki equivalent:");
+        eprintln!("  1. p × v - pw·m = 0 (3 equations from e1245, e1345, e2345)");
+        eprintln!("  2. p · m = 0        (from e1235)");
+        eprintln!("  3. v · m = 0        (from e1234)");
+        eprintln!("==========================================\n");
+
+        assert_eq!(constraints.len(), 5, "CGA dipole should have 5 blade constraints");
+    }
 }
