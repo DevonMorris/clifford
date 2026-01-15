@@ -2,6 +2,7 @@
 # Cl(2,1,0) - The hyperbolic plane (Lobachevsky plane)
 
 [algebra]
+complete = false
 name = "hyperbolic2"
 module_path = "hyperbolic::dim2"
 description = "2D Hyperbolic Projective Geometry Cl(2,1,0)"

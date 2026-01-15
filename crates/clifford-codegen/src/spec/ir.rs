@@ -60,6 +60,11 @@ pub struct AlgebraSpec {
     pub types: Vec<TypeSpec>,
     /// Product specifications.
     pub products: ProductsSpec,
+    /// Whether completeness checking is enabled.
+    ///
+    /// When `true`, the parser verified that all products between defined types
+    /// have matching output types.
+    pub complete: bool,
 }
 
 /// Metric signature specification.
@@ -166,6 +171,11 @@ pub struct TypeSpec {
     /// If present, this type can transform other elements via the sandwich
     /// product: `X' = V * X * rev(V)`.
     pub versor: Option<VersorSpec>,
+    /// Whether this type is sparse (uses only a subset of blades within its grades).
+    ///
+    /// Sparse types have explicit blade mappings and don't use all blades of their grades.
+    /// For example, a Line in CGA uses only 6 of the 10 grade-3 blades.
+    pub is_sparse: bool,
 }
 
 /// Versor specification for a type.

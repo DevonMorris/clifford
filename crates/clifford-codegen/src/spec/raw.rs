@@ -8,6 +8,14 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
+/// Default value for the `complete` flag (true).
+///
+/// Algebras are expected to be complete by default (all products have output types).
+/// Set `complete = false` explicitly for intentionally incomplete algebras.
+fn default_complete() -> bool {
+    true
+}
+
 /// Raw algebra specification (matches TOML structure).
 #[derive(Debug, Deserialize)]
 pub struct RawAlgebraSpec {
@@ -44,6 +52,13 @@ pub struct RawAlgebraInfo {
     pub module_path: Option<String>,
     /// Documentation.
     pub description: Option<String>,
+    /// Whether to enforce algebra completeness.
+    ///
+    /// When `true` (default), codegen will error if any product between defined types
+    /// produces grades that don't match a defined output type.
+    /// Set to `false` to allow partial algebras.
+    #[serde(default = "default_complete")]
+    pub complete: bool,
 }
 
 /// Raw signature section.
@@ -70,6 +85,16 @@ pub struct RawTypeSpec {
     /// Custom field names.
     #[serde(default)]
     pub fields: Vec<String>,
+    /// Explicit blade mappings for sparse types.
+    ///
+    /// When provided, fields are mapped to specific blades instead of
+    /// assuming all blades of the specified grades. Blade names use the
+    /// format "e123" where digits are 1-based basis vector indices.
+    ///
+    /// Example: `blades = ["e415", "e425", "e435"]` for a type using
+    /// only 3 of the 10 grade-3 blades in a 5D algebra.
+    #[serde(default)]
+    pub blades: Vec<String>,
     /// Type this aliases.
     pub alias_of: Option<String>,
 }

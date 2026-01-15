@@ -1,0 +1,96 @@
+# 3D Conformal Geometric Algebra
+# Cl(4,1,0) - Embeds 3D Euclidean space into 5D conformal space
+# Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page
+
+[algebra]
+complete = false
+name = "conformal3"
+module_path = "conformal/dim3"
+description = "3D Conformal Geometric Algebra Cl(4,1,0)"
+
+[signature]
+positive = ["e1", "e2", "e3", "e4"]
+negative = ["e5"]
+zero = []
+
+[norm]
+# Conformal GA uses reverse for norm (non-degenerate algebra)
+# Note: This gives an indefinite norm (can be positive, negative, or zero)
+# Null vectors (norm = 0) represent actual geometric points
+primary_involution = "reverse"
+
+# ============================================================
+# Types (following conformalgeometricalgebra.org conventions)
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.RoundPoint]
+grades = [1]
+description = "Round point (null vectors represent actual points)"
+fields = ["x", "y", "z", "w", "u"]
+
+[types.Dipole]
+grades = [2]
+description = "Dipole (point pair, oriented line segment)"
+# CGA wiki convention: m = moment (spatial bivectors), v = velocity (e4 bivectors), p = position (e5 bivectors)
+# Canonical blade order: e12, e13, e23, e14, e24, e34, e15, e25, e35, e45
+fields = ["mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw"]
+
+[types.Circle]
+grades = [3]
+description = "Circle in 3D space"
+# CGA wiki convention: g = plane normal, m = center, v = moment
+# Canonical blade order: e123, e124, e134, e234, e125, e135, e235, e145, e245, e345
+# Maps to: gw (e321), gz (e412), gy (e431), gx (e423), mz (e125), my (e315), mx (e235), vx (e415), vy (e425), vz (e435)
+fields = ["gw", "gz", "gy", "gx", "mz", "my", "mx", "vx", "vy", "vz"]
+
+[types.Sphere]
+grades = [4]
+description = "Sphere in 3D space"
+fields = ["u", "x", "y", "z", "w"]
+
+[types.Pseudoscalar]
+grades = [5]
+description = "Pseudoscalar (oriented 5-volume)"
+fields = ["xyzwu"]
+
+[types.Motor]
+grades = [0, 2, 4]
+description = "Motor (even subalgebra for conformal transformations)"
+# Grade 0: s (scalar)
+# Grade 2: same as Dipole - m (moment), v (velocity), p (position)
+# Grade 4: u (pseudoscalar weight), s (sphere components)
+fields = ["s", "mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw", "u", "sx", "sy", "sz", "sw"]
+
+# ============================================================
+# Sparse Types (subset of blades within a grade)
+# These types are constrained versions of the full types above.
+# Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Primitives
+# ============================================================
+
+# Line = Circle through infinity (g=0)
+# Uses only 6 of the 10 grade-3 blades
+[types.Line]
+grades = [3]
+fields = ["vx", "vy", "vz", "mx", "my", "mz"]
+blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
+description = "Line (circle through infinity, g=0)"
+
+# Plane = Sphere through infinity (u=0)
+# Uses only 4 of the 5 grade-4 blades
+[types.Plane]
+grades = [4]
+fields = ["x", "y", "z", "w"]
+blades = ["e2345", "e1345", "e1245", "e1235"]
+description = "Plane (sphere through infinity, u=0)"
+
+# FlatPoint = Dipole with v=0, m=0
+# Uses only 4 of the 10 grade-2 blades
+[types.FlatPoint]
+grades = [2]
+fields = ["px", "py", "pz", "pw"]
+blades = ["e15", "e25", "e35", "e45"]
+description = "Flat point (v=0, m=0)"

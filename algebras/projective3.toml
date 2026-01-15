@@ -9,6 +9,7 @@
 # - Grade 1+3 = Flectors (reflections)
 
 [algebra]
+complete = false
 name = "projective3"
 module_path = "projective::dim3"
 description = "3D Projective Geometric Algebra"

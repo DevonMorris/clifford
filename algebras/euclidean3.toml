@@ -2,6 +2,7 @@
 # Customized from auto-discovered entities
 
 [algebra]
+complete = false
 name = "euclidean3"
 module_path = "euclidean::dim3"
 description = "3D Euclidean Geometric Algebra Cl(3,0,0)"

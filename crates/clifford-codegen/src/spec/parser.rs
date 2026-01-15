@@ -5,9 +5,11 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::algebra::{Algebra, binomial, versor_parity};
-use crate::discovery::{ProductType, infer_all_products};
+use crate::discovery::{
+    EntityBladeSet, ProductType, infer_all_products, infer_all_products_blades,
+};
 
-use super::error::ParseError;
+use super::error::{MissingProduct, ParseError};
 use super::ir::{
     AlgebraSpec, BasisVector, FieldSpec, InvolutionKind, NormSpec, ProductEntry, ProductsSpec,
     SignatureSpec, TypeSpec, VersorSpec,
@@ -67,6 +69,15 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
     // Validate the complete specification
     validate_spec(&types)?;
 
+    // Check algebra completeness if requested
+    let complete = raw.algebra.complete;
+    if complete {
+        let missing = check_algebra_completeness(&types, &signature);
+        if !missing.is_empty() {
+            return Err(format_completeness_error(&raw.algebra.name, missing));
+        }
+    }
+
     Ok(AlgebraSpec {
         name: raw.algebra.name,
         module_path: raw.algebra.module_path,
@@ -76,6 +87,7 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
         blade_names,
         types,
         products,
+        complete,
     })
 }
 
@@ -270,14 +282,20 @@ fn parse_type(
         }
     }
 
-    // Compute expected field count
-    let expected_fields: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
+    // Check if this is a sparse type (explicit blade mappings)
+    let is_sparse = !raw.blades.is_empty();
 
     // Build fields
-    let fields = if raw.fields.is_empty() {
+    let fields = if is_sparse {
+        // Sparse type: use explicit blade mappings
+        build_sparse_fields(&raw.fields, &raw.blades, &raw.grades, dim, name)?
+    } else if raw.fields.is_empty() {
         // Generate default fields from blade names
         generate_default_fields(&raw.grades, dim, sig, blade_names)
     } else {
+        // Compute expected field count for non-sparse types
+        let expected_fields: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
+
         // Use provided fields
         if raw.fields.len() != expected_fields {
             return Err(ParseError::FieldCountMismatch {
@@ -330,6 +348,7 @@ fn parse_type(
         fields,
         alias_of: raw.alias_of.clone(),
         versor,
+        is_sparse,
     })
 }
 
@@ -471,6 +490,68 @@ fn build_fields_from_names(
     Ok(fields)
 }
 
+/// Builds field specs for sparse types with explicit blade mappings.
+///
+/// Sparse types specify exactly which blades they use via the `blades` field
+/// in TOML. This allows types that use only a subset of blades within a grade
+/// (e.g., Line uses 6 of 10 grade-3 blades in CGA).
+///
+/// # Arguments
+///
+/// * `field_names` - Names for each field
+/// * `blade_names` - Explicit blade names (e.g., "e415", "e235")
+/// * `grades` - Expected grades for validation
+/// * `dim` - Algebra dimension
+/// * `type_name` - Type name for error messages
+///
+/// # Returns
+///
+/// A vector of `FieldSpec` with explicit blade indices, or an error if validation fails.
+fn build_sparse_fields(
+    field_names: &[String],
+    blade_names: &[String],
+    grades: &[usize],
+    dim: usize,
+    type_name: &str,
+) -> Result<Vec<FieldSpec>, ParseError> {
+    // Validate field and blade counts match
+    if field_names.len() != blade_names.len() {
+        return Err(ParseError::SparseBladeCountMismatch {
+            type_name: type_name.to_string(),
+            blades: blade_names.len(),
+            fields: field_names.len(),
+        });
+    }
+
+    let mut fields = Vec::with_capacity(field_names.len());
+
+    for (field_name, blade_name) in field_names.iter().zip(blade_names.iter()) {
+        // Parse blade name to get its index
+        let blade_index = parse_blade_index(blade_name, dim)?;
+
+        // Compute the blade's grade (number of bits set)
+        let blade_grade = blade_index.count_ones() as usize;
+
+        // Validate blade grade matches specified grades
+        if !grades.contains(&blade_grade) {
+            return Err(ParseError::SparseBladeGradeMismatch {
+                type_name: type_name.to_string(),
+                blade: blade_name.clone(),
+                blade_grade,
+                grades: grades.to_vec(),
+            });
+        }
+
+        fields.push(FieldSpec {
+            name: field_name.clone(),
+            blade_index,
+            grade: blade_grade,
+        });
+    }
+
+    Ok(fields)
+}
+
 /// Validates that fields in a TypeSpec have canonical blade ordering.
 ///
 /// Fields must be ordered by grade first (ascending), then by blade index
@@ -512,40 +593,36 @@ pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
 /// Products are always auto-inferred from the defined types.
 /// All standard product types are generated: geometric, exterior, inner, left/right contraction,
 /// regressive, scalar, antigeometric, and antiscalar.
+///
+/// Sparse types are included in product inference using blade-level computation (PRD-45).
+/// This ensures that sparse types like Line and Plane can participate in products.
 fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
     // Build algebra for product computation
     let algebra = Algebra::new(signature.p, signature.q, signature.r);
+    let dim = signature.dim();
 
-    // Build entity list for inference
+    // Check if any types are sparse
+    let has_sparse = types.iter().any(|t| t.is_sparse && t.alias_of.is_none());
+
+    if has_sparse {
+        // Use blade-level inference for sparse type support
+        infer_products_blade_level(types, &algebra, dim)
+    } else {
+        // Use grade-level inference for better performance
+        infer_products_grade_level(types, &algebra)
+    }
+}
+
+/// Grade-level product inference (fast path for non-sparse algebras).
+fn infer_products_grade_level(types: &[TypeSpec], algebra: &Algebra) -> ProductsSpec {
+    // Build entity list for inference (exclude aliases)
     let entities: Vec<(String, Vec<usize>)> = types
         .iter()
         .filter(|t| t.alias_of.is_none())
         .map(|t| (t.name.clone(), t.grades.clone()))
         .collect();
 
-    // Infer all standard product types
-    let geometric_table = infer_all_products(&entities, ProductType::Geometric, &algebra);
-    let exterior_table = infer_all_products(&entities, ProductType::Exterior, &algebra);
-    let left_contraction_table =
-        infer_all_products(&entities, ProductType::LeftContraction, &algebra);
-    let right_contraction_table =
-        infer_all_products(&entities, ProductType::RightContraction, &algebra);
-    let regressive_table = infer_all_products(&entities, ProductType::Regressive, &algebra);
-    let scalar_table = infer_all_products(&entities, ProductType::Scalar, &algebra);
-    let antigeometric_table = infer_all_products(&entities, ProductType::Antigeometric, &algebra);
-    let antiscalar_table = infer_all_products(&entities, ProductType::Antiscalar, &algebra);
-
-    // Interior products (RGA-style contractions and expansions)
-    let bulk_contraction_table =
-        infer_all_products(&entities, ProductType::BulkContraction, &algebra);
-    let weight_contraction_table =
-        infer_all_products(&entities, ProductType::WeightContraction, &algebra);
-    let bulk_expansion_table = infer_all_products(&entities, ProductType::BulkExpansion, &algebra);
-    let weight_expansion_table =
-        infer_all_products(&entities, ProductType::WeightExpansion, &algebra);
-
     // Convert inferred products to ProductEntry format
-    // Skip products that don't have matching entity types
     let convert_entries = |table: crate::discovery::ProductTable2D| -> Vec<ProductEntry> {
         table
             .entries
@@ -557,45 +634,197 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
                     lhs,
                     rhs,
                     output: output.clone(),
-                    output_constrained: false, // No wrapper types
+                    output_constrained: false,
                 }
             })
             .collect()
     };
 
-    // Note: Interior product is the symmetric inner product.
-    // Left contraction is more commonly used in GA, but we provide both.
+    ProductsSpec {
+        geometric: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Geometric,
+            algebra,
+        )),
+        wedge: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Exterior,
+            algebra,
+        )),
+        left_contraction: convert_entries(infer_all_products(
+            &entities,
+            ProductType::LeftContraction,
+            algebra,
+        )),
+        right_contraction: convert_entries(infer_all_products(
+            &entities,
+            ProductType::RightContraction,
+            algebra,
+        )),
+        antiwedge: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Regressive,
+            algebra,
+        )),
+        scalar: convert_entries(infer_all_products(&entities, ProductType::Scalar, algebra)),
+        antigeometric: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Antigeometric,
+            algebra,
+        )),
+        antiscalar: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Antiscalar,
+            algebra,
+        )),
+        bulk_contraction: convert_entries(infer_all_products(
+            &entities,
+            ProductType::BulkContraction,
+            algebra,
+        )),
+        weight_contraction: convert_entries(infer_all_products(
+            &entities,
+            ProductType::WeightContraction,
+            algebra,
+        )),
+        bulk_expansion: convert_entries(infer_all_products(
+            &entities,
+            ProductType::BulkExpansion,
+            algebra,
+        )),
+        weight_expansion: convert_entries(infer_all_products(
+            &entities,
+            ProductType::WeightExpansion,
+            algebra,
+        )),
+        dot: convert_entries(infer_all_products(&entities, ProductType::Dot, algebra)),
+        antidot: convert_entries(infer_all_products(&entities, ProductType::Antidot, algebra)),
+        project: convert_entries(infer_all_products(&entities, ProductType::Project, algebra)),
+        antiproject: convert_entries(infer_all_products(
+            &entities,
+            ProductType::Antiproject,
+            algebra,
+        )),
+    }
+}
 
-    // Infer dot products (same-grade elements only, returns scalar)
-    let dot_table = infer_all_products(&entities, ProductType::Dot, &algebra);
+/// Blade-level product inference (supports sparse types).
+fn infer_products_blade_level(types: &[TypeSpec], algebra: &Algebra, dim: usize) -> ProductsSpec {
+    // Build EntityBladeSet for each type
+    let entities: Vec<EntityBladeSet> = types
+        .iter()
+        .filter(|t| t.alias_of.is_none())
+        .map(|t| {
+            if t.is_sparse {
+                // Use exact blade indices from fields
+                let blades = t.fields.iter().map(|f| f.blade_index);
+                EntityBladeSet::new(t.name.clone(), blades)
+            } else {
+                // Use all blades of the grades
+                EntityBladeSet::from_grades(t.name.clone(), t.grades.clone(), dim)
+            }
+        })
+        .collect();
 
-    // Infer antidot products (same-antigrade elements only, returns scalar)
-    let antidot_table = infer_all_products(&entities, ProductType::Antidot, &algebra);
-
-    // Infer projection and antiprojection products
-    let project_table = infer_all_products(&entities, ProductType::Project, &algebra);
-    let antiproject_table = infer_all_products(&entities, ProductType::Antiproject, &algebra);
+    // Convert blade-level results to ProductEntry format
+    let convert_entries =
+        |results: Vec<(String, String, crate::discovery::BladeProductResult)>| -> Vec<ProductEntry> {
+            results
+                .into_iter()
+                .filter(|(_, _, result)| !result.is_zero && result.matching_entity.is_some())
+                .map(|(lhs, rhs, result)| {
+                    let output = result.matching_entity.unwrap();
+                    ProductEntry {
+                        lhs,
+                        rhs,
+                        output: output.clone(),
+                        output_constrained: false,
+                    }
+                })
+                .collect()
+        };
 
     ProductsSpec {
-        geometric: convert_entries(geometric_table),
-        wedge: convert_entries(exterior_table),
-        left_contraction: convert_entries(left_contraction_table),
-        right_contraction: convert_entries(right_contraction_table),
-        antiwedge: convert_entries(regressive_table),
-        scalar: convert_entries(scalar_table),
-        antigeometric: convert_entries(antigeometric_table),
-        antiscalar: convert_entries(antiscalar_table),
-        // Interior products (RGA-style contractions and expansions)
-        bulk_contraction: convert_entries(bulk_contraction_table),
-        weight_contraction: convert_entries(weight_contraction_table),
-        bulk_expansion: convert_entries(bulk_expansion_table),
-        weight_expansion: convert_entries(weight_expansion_table),
-        // Metric products (PRD-24)
-        dot: convert_entries(dot_table),
-        antidot: convert_entries(antidot_table),
-        // Projection products (PRD-30)
-        project: convert_entries(project_table),
-        antiproject: convert_entries(antiproject_table),
+        geometric: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Geometric,
+            algebra,
+        )),
+        wedge: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Exterior,
+            algebra,
+        )),
+        left_contraction: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::LeftContraction,
+            algebra,
+        )),
+        right_contraction: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::RightContraction,
+            algebra,
+        )),
+        antiwedge: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Regressive,
+            algebra,
+        )),
+        scalar: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Scalar,
+            algebra,
+        )),
+        antigeometric: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Antigeometric,
+            algebra,
+        )),
+        antiscalar: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Antiscalar,
+            algebra,
+        )),
+        bulk_contraction: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::BulkContraction,
+            algebra,
+        )),
+        weight_contraction: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::WeightContraction,
+            algebra,
+        )),
+        bulk_expansion: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::BulkExpansion,
+            algebra,
+        )),
+        weight_expansion: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::WeightExpansion,
+            algebra,
+        )),
+        dot: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Dot,
+            algebra,
+        )),
+        antidot: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Antidot,
+            algebra,
+        )),
+        project: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Project,
+            algebra,
+        )),
+        antiproject: convert_entries(infer_all_products_blades(
+            &entities,
+            ProductType::Antiproject,
+            algebra,
+        )),
     }
 }
 
@@ -627,6 +856,85 @@ fn validate_spec(types: &[TypeSpec]) -> Result<(), ParseError> {
     }
 
     Ok(())
+}
+
+/// Checks if all products between defined types have matching output types.
+///
+/// Returns a list of products that don't have matching output types.
+/// This is used when `complete = true` to enforce algebra completeness.
+fn check_algebra_completeness(
+    types: &[TypeSpec],
+    signature: &SignatureSpec,
+) -> Vec<MissingProduct> {
+    let algebra = Algebra::new(signature.p, signature.q, signature.r);
+
+    // Build entity list (exclude sparse and alias types for now)
+    // TODO: PRD-45 will add blade-level inference for sparse types
+    let entities: Vec<(String, Vec<usize>)> = types
+        .iter()
+        .filter(|t| t.alias_of.is_none() && !t.is_sparse)
+        .map(|t| (t.name.clone(), t.grades.clone()))
+        .collect();
+
+    let mut missing = Vec::new();
+
+    // Check all product types
+    let product_types = [
+        ProductType::Geometric,
+        ProductType::Exterior,
+        ProductType::LeftContraction,
+        ProductType::RightContraction,
+        ProductType::Regressive,
+    ];
+
+    for product_type in &product_types {
+        let table = infer_all_products(&entities, *product_type, &algebra);
+
+        for (lhs, rhs, result) in table.entries {
+            if !result.is_zero && result.matching_entity.is_none() {
+                missing.push(MissingProduct {
+                    lhs,
+                    rhs,
+                    product_type: product_type.toml_name().to_string(),
+                    output_grades: result.output_grades,
+                });
+            }
+        }
+    }
+
+    missing
+}
+
+/// Formats a completeness error with detailed information about missing products.
+fn format_completeness_error(name: &str, missing: Vec<MissingProduct>) -> ParseError {
+    // Group by output grades
+    let mut by_grades: std::collections::HashMap<Vec<usize>, Vec<String>> =
+        std::collections::HashMap::new();
+
+    for m in &missing {
+        let entry = by_grades.entry(m.output_grades.clone()).or_default();
+        entry.push(format!("{} {} {}", m.lhs, m.product_type, m.rhs));
+    }
+
+    // Format details
+    let mut details = String::new();
+    for (grades, products) in &by_grades {
+        details.push_str(&format!("  Missing type for grades {:?}:\n", grades));
+        for (i, product) in products.iter().enumerate() {
+            if i < 3 {
+                details.push_str(&format!("    - {}\n", product));
+            } else if i == 3 {
+                details.push_str(&format!("    ... and {} more\n", products.len() - 3));
+                break;
+            }
+        }
+    }
+
+    ParseError::IncompleteAlgebra {
+        name: name.to_string(),
+        count: missing.len(),
+        details,
+    }
 }
 
 #[cfg(test)]
@@ -963,6 +1271,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(super::validate_canonical_field_order(&valid_type));
 
@@ -990,6 +1299,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(!super::validate_canonical_field_order(&invalid_type));
 
@@ -1022,6 +1332,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(super::validate_canonical_field_order(&valid_rotor));
     }
@@ -1130,5 +1441,224 @@ mod tests {
         );
 
         assert!(matches!(result, Err(ParseError::InvalidValue { .. })));
+    }
+
+    #[test]
+    fn parse_sparse_type() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "conformal3"
+
+            [signature]
+            positive = ["e1", "e2", "e3", "e4"]
+            negative = ["e5"]
+
+            [types.Line]
+            grades = [3]
+            fields = ["vx", "vy", "vz", "mx", "my", "mz"]
+            blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
+            description = "Line (circle through infinity)"
+            "#,
+        )
+        .unwrap();
+
+        let line = spec.types.iter().find(|t| t.name == "Line").unwrap();
+        assert!(line.is_sparse, "Line should be marked as sparse");
+        assert_eq!(line.grades, vec![3]);
+        assert_eq!(line.fields.len(), 6, "Line should have 6 fields");
+
+        // Verify blade indices were parsed correctly
+        // e145 -> bits 0, 3, 4 -> 0b11001 = 25
+        assert_eq!(
+            line.fields[0].blade_index, 25,
+            "e145 should be blade index 25"
+        );
+        // e235 -> bits 1, 2, 4 -> 0b10110 = 22
+        assert_eq!(
+            line.fields[3].blade_index, 22,
+            "e235 should be blade index 22"
+        );
+        // e125 -> bits 0, 1, 4 -> 0b10011 = 19
+        assert_eq!(
+            line.fields[5].blade_index, 19,
+            "e125 should be blade index 19"
+        );
+    }
+
+    #[test]
+    fn reject_sparse_blade_count_mismatch() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+
+            [types.Bad]
+            grades = [2]
+            fields = ["xy", "xz"]
+            blades = ["e12"]
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::SparseBladeCountMismatch {
+                blades: 1,
+                fields: 2,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn reject_sparse_blade_grade_mismatch() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+
+            [types.Bad]
+            grades = [2]
+            fields = ["xyz"]
+            blades = ["e123"]
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::SparseBladeGradeMismatch { blade_grade: 3, .. })
+        ));
+    }
+
+    #[test]
+    fn completeness_check_passes_for_complete_algebra() {
+        // Euclidean 2D has all required types
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "euclidean2"
+            complete = true
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Scalar]
+            grades = [0]
+
+            [types.Vector]
+            grades = [1]
+            fields = ["x", "y"]
+
+            [types.Bivector]
+            grades = [2]
+
+            [types.Rotor]
+            grades = [0, 2]
+            fields = ["s", "xy"]
+            "#,
+        );
+
+        assert!(
+            result.is_ok(),
+            "Complete euclidean2 algebra should pass: {:?}",
+            result
+        );
+    }
+
+    #[test]
+    fn completeness_check_fails_for_incomplete_algebra() {
+        // Missing Rotor type means Vector × Vector has no output
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "incomplete"
+            complete = true
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Scalar]
+            grades = [0]
+
+            [types.Vector]
+            grades = [1]
+            fields = ["x", "y"]
+
+            [types.Bivector]
+            grades = [2]
+            "#,
+        );
+
+        assert!(matches!(result, Err(ParseError::IncompleteAlgebra { .. })));
+        if let Err(ParseError::IncompleteAlgebra { count, details, .. }) = result {
+            assert!(count > 0, "Should have missing products");
+            assert!(details.contains("[0, 2]"), "Should mention grades [0, 2]");
+        }
+    }
+
+    #[test]
+    fn completeness_check_enabled_by_default() {
+        // Same incomplete algebra but without complete = true
+        // Since default is complete = true, this should fail
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "incomplete"
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Scalar]
+            grades = [0]
+
+            [types.Vector]
+            grades = [1]
+            fields = ["x", "y"]
+
+            [types.Bivector]
+            grades = [2]
+            "#,
+        );
+
+        // Should fail because complete defaults to true
+        assert!(matches!(result, Err(ParseError::IncompleteAlgebra { .. })));
+    }
+
+    #[test]
+    fn completeness_check_can_be_disabled() {
+        // Same incomplete algebra with complete = false
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "incomplete"
+            complete = false
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Scalar]
+            grades = [0]
+
+            [types.Vector]
+            grades = [1]
+            fields = ["x", "y"]
+
+            [types.Bivector]
+            grades = [2]
+            "#,
+        );
+
+        // Should succeed because complete = false explicitly disables the check
+        assert!(
+            result.is_ok(),
+            "Incomplete algebra with complete=false should succeed: {:?}",
+            result
+        );
     }
 }

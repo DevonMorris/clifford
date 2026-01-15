@@ -2634,6 +2634,12 @@ impl<'a> TraitsGenerator<'a> {
         let solve_for_idx = ty.fields.iter().position(|f| f.name == solve_for).unwrap();
         let free_indices: Vec<usize> = (0..num_fields).filter(|&i| i != solve_for_idx).collect();
 
+        // Proptest only supports tuples up to 12 elements.
+        // For types with more free variables, use Vec-based approach.
+        if free_indices.len() > 12 {
+            return self.generate_vec_based_solving_arbitrary(ty, solve_for, solution);
+        }
+
         // Generate ranges for free variables
         let range_tuple: Vec<TokenStream> = free_indices
             .iter()
@@ -2747,6 +2753,78 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
+    /// Generates Vec-based Arbitrary for constrained types with more than 12 free variables.
+    fn generate_vec_based_solving_arbitrary(
+        &self,
+        ty: &TypeSpec,
+        solve_for: &str,
+        solution: &crate::symbolic::SolveResult,
+    ) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        // Find indices of free and dependent fields
+        let solve_for_idx = ty.fields.iter().position(|f| f.name == solve_for).unwrap();
+        let free_indices: Vec<usize> = (0..num_fields).filter(|&i| i != solve_for_idx).collect();
+        let num_free = free_indices.len();
+
+        // Build the solution expression using v[i] instead of x{i}
+        let numerator_expr = self.convert_solution_to_vec_tokens(&solution.numerator, ty);
+        let solution_expr = if let Some(ref divisor) = solution.divisor {
+            let divisor_expr = self.convert_solution_to_vec_tokens(divisor, ty);
+            quote! { (#numerator_expr) / (#divisor_expr) }
+        } else {
+            numerator_expr
+        };
+
+        // Build field initialization expressions
+        let mut field_var_map: Vec<Option<usize>> = vec![None; num_fields];
+        for (var_idx, &field_idx) in free_indices.iter().enumerate() {
+            field_var_map[field_idx] = Some(var_idx);
+        }
+
+        let field_inits: Vec<TokenStream> = ty
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(i, _f)| {
+                if i == solve_for_idx {
+                    quote! { T::from_f64(#solution_expr) }
+                } else {
+                    let var_idx = field_var_map[i].unwrap();
+                    quote! { T::from_f64(v[#var_idx]) }
+                }
+            })
+            .collect();
+
+        // Generate filter for divisor non-zero condition
+        let filter_expr = solution.divisor.as_ref().and_then(|divisor| {
+            self.find_divisor_variable(divisor, ty).map(|var_idx| {
+                quote! {
+                    .prop_filter("non-zero divisor", |v| v[#var_idx].abs() > 0.1)
+                }
+            })
+        });
+
+        let filter_chain = filter_expr.unwrap_or_else(|| quote! {});
+
+        quote! {
+            impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                type Parameters = ();
+                type Strategy = BoxedStrategy<Self>;
+
+                fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                    proptest::collection::vec(-100.0f64..100.0, #num_free)
+                        #filter_chain
+                        .prop_map(|v| {
+                            #name::new_unchecked(#(#field_inits),*)
+                        })
+                        .boxed()
+                }
+            }
+        }
+    }
+
     /// Converts a solution expression string to TokenStream.
     ///
     /// The solution from `ConstraintSolver` uses variable names like "x_s", "x_e23", etc.
@@ -2772,6 +2850,37 @@ impl<'a> TraitsGenerator<'a> {
         for (i, field) in sorted_fields {
             let field_pattern = format!("x_{}", field.name);
             let var_name = format!("x{}", i);
+            result = result.replace(&field_pattern, &var_name);
+        }
+
+        // Parse and convert to TokenStream
+        result.parse().unwrap_or_else(|_| quote! { T::zero() })
+    }
+
+    /// Converts a solution expression string to TokenStream using Vec indexing.
+    ///
+    /// Similar to `convert_solution_to_tokens` but uses `v[i]` instead of `x{i}`.
+    /// This is used for types with more than 12 fields where we can't use tuples.
+    fn convert_solution_to_vec_tokens(&self, expr: &str, ty: &TypeSpec) -> TokenStream {
+        let mut result = expr.to_string();
+
+        // Find field indices for free variables (all except the solved-for one)
+        let solve_for_field = ty.fields.iter().max_by_key(|f| f.grade).unwrap();
+
+        let free_fields: Vec<_> = ty
+            .fields
+            .iter()
+            .filter(|f| f.name != solve_for_field.name)
+            .collect();
+
+        // Replace "x_fieldname" with "v[i]" variables
+        // Do longer names first to avoid partial replacements
+        let mut sorted_fields: Vec<_> = free_fields.iter().enumerate().collect();
+        sorted_fields.sort_by(|a, b| b.1.name.len().cmp(&a.1.name.len()));
+
+        for (i, field) in sorted_fields {
+            let field_pattern = format!("x_{}", field.name);
+            let var_name = format!("v[{}]", i);
             result = result.replace(&field_pattern, &var_name);
         }
 
@@ -2848,6 +2957,12 @@ impl<'a> TraitsGenerator<'a> {
         let name = format_ident!("{}", ty.name);
         let num_fields = ty.fields.len();
 
+        // Proptest only supports tuples up to 12 elements.
+        // For types with more fields, use Vec-based approach.
+        if num_fields > 12 {
+            return self.generate_vec_based_arbitrary(ty);
+        }
+
         // Generate tuple of ranges
         let range_tuple: Vec<TokenStream> = (0..num_fields)
             .map(|_| quote! { -100.0f64..100.0 })
@@ -2895,6 +3010,36 @@ impl<'a> TraitsGenerator<'a> {
                             })
                             .boxed()
                     }
+                }
+            }
+        }
+    }
+
+    /// Generates Arbitrary using Vec for types with more than 12 fields.
+    ///
+    /// Proptest only implements Strategy for tuples up to 12 elements,
+    /// so we use `prop::collection::vec` for larger types.
+    fn generate_vec_based_arbitrary(&self, ty: &TypeSpec) -> TokenStream {
+        let name = format_ident!("{}", ty.name);
+        let num_fields = ty.fields.len();
+
+        let field_inits: Vec<TokenStream> = (0..num_fields)
+            .map(|i| {
+                quote! { T::from_f64(v[#i]) }
+            })
+            .collect();
+
+        quote! {
+            impl<T: Float + Debug + 'static> Arbitrary for #name<T> {
+                type Parameters = ();
+                type Strategy = BoxedStrategy<Self>;
+
+                fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
+                    proptest::collection::vec(-100.0f64..100.0, #num_fields)
+                        .prop_map(|v| {
+                            #name::new_unchecked(#(#field_inits),*)
+                        })
+                        .boxed()
                 }
             }
         }

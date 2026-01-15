@@ -2,6 +2,7 @@
 # Cl(3,1,0) - 3+1 spacetime algebra (special relativity)
 
 [algebra]
+complete = false
 name = "minkowski3"
 module_path = "minkowski/dim3"
 description = "3D Minkowski spacetime Cl(3,1,0)"

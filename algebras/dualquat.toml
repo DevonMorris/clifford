@@ -2,6 +2,7 @@
 # Cl(0,2,1) - Quaternions extended with dual numbers for rigid transformations
 
 [algebra]
+complete = false
 name = "dualquat"
 module_path = "dualquat"
 description = "Dual quaternions Cl(0,2,1)"

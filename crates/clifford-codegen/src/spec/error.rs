@@ -114,4 +114,56 @@ pub enum ParseError {
         /// Description of expected values.
         expected: String,
     },
+
+    /// Sparse type blade count doesn't match field count.
+    #[error("type '{type_name}' has {blades} blade mappings but {fields} fields")]
+    SparseBladeCountMismatch {
+        /// The type name.
+        type_name: String,
+        /// Number of blade mappings.
+        blades: usize,
+        /// Number of fields.
+        fields: usize,
+    },
+
+    /// Sparse type blade doesn't match specified grades.
+    #[error(
+        "type '{type_name}' blade '{blade}' has grade {blade_grade} but type only spans grades {grades:?}"
+    )]
+    SparseBladeGradeMismatch {
+        /// The type name.
+        type_name: String,
+        /// The blade name.
+        blade: String,
+        /// The blade's actual grade.
+        blade_grade: usize,
+        /// The expected grades.
+        grades: Vec<usize>,
+    },
+
+    /// Algebra is incomplete: some products don't have matching output types.
+    #[error(
+        "algebra '{name}' is incomplete: {count} products have no output type.\n{details}\nAdd missing types or set `complete = false` in [algebra] section."
+    )]
+    IncompleteAlgebra {
+        /// Algebra name.
+        name: String,
+        /// Number of missing products.
+        count: usize,
+        /// Human-readable details of missing products.
+        details: String,
+    },
+}
+
+/// Describes a product that has no matching output type.
+#[derive(Debug, Clone)]
+pub struct MissingProduct {
+    /// Left operand type name.
+    pub lhs: String,
+    /// Right operand type name.
+    pub rhs: String,
+    /// Product type name (e.g., "geometric", "exterior").
+    pub product_type: String,
+    /// Output grades produced by this product.
+    pub output_grades: Vec<usize>,
 }

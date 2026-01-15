@@ -1022,8 +1022,9 @@ mod tests {
 
         let field_order: Vec<&str> = rotor_type.fields.iter().map(|f| f.name.as_str()).collect();
 
-        // Expected: s (grade 0), xy, xz, yz (grade 2)
-        assert_eq!(field_order, vec!["s", "xy", "xz", "yz"]);
+        // Expected: s (grade 0), then grade-2 blades in canonical order
+        // euclidean3.toml uses semantic names: rz (e12), ry (e13), rx (e23)
+        assert_eq!(field_order, vec!["s", "rz", "ry", "rx"]);
     }
 
     #[test]
@@ -1043,9 +1044,10 @@ mod tests {
         let code = tokens.to_string();
 
         // All bivector components should be negated
-        assert!(code.contains("- self . xy"));
-        assert!(code.contains("- self . xz"));
-        assert!(code.contains("- self . yz"));
+        // euclidean3.toml uses semantic names: rz, ry, rx
+        assert!(code.contains("- self . rz"));
+        assert!(code.contains("- self . ry"));
+        assert!(code.contains("- self . rx"));
     }
 
     #[test]

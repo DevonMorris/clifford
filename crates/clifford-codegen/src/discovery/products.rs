@@ -9,8 +9,8 @@
 //! components.
 
 use crate::algebra::{
-    Algebra, ProductTable, blades_of_grades, geometric_grades, grade, left_contraction_grade,
-    outer_grade,
+    Algebra, ProductTable, binomial, blades_of_grades, geometric_grades, grade,
+    left_contraction_grade, outer_grade,
 };
 use std::collections::BTreeSet;
 
@@ -107,6 +107,257 @@ pub struct ProductResult {
     pub matching_entity: Option<String>,
     /// Whether the output is always zero (after constraint application).
     pub is_zero: bool,
+}
+
+/// Entity representation with exact blade set for blade-level inference.
+///
+/// Used for sparse types that don't span all blades of their grades.
+#[derive(Debug, Clone)]
+pub struct EntityBladeSet {
+    /// Entity name.
+    pub name: String,
+    /// Exact blade indices this entity contains.
+    pub blades: BTreeSet<usize>,
+    /// Grades spanned by this entity.
+    pub grades: Vec<usize>,
+    /// Whether this is a sparse type.
+    pub is_sparse: bool,
+}
+
+impl EntityBladeSet {
+    /// Creates a new EntityBladeSet from a name and blade indices.
+    pub fn new(name: String, blades: impl IntoIterator<Item = usize>) -> Self {
+        let blades: BTreeSet<usize> = blades.into_iter().collect();
+        let grades: Vec<usize> = blades
+            .iter()
+            .map(|b| b.count_ones() as usize)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        let is_sparse = !Self::spans_all_grades(&blades, &grades);
+        Self {
+            name,
+            blades,
+            grades,
+            is_sparse,
+        }
+    }
+
+    /// Creates a non-sparse EntityBladeSet from grades.
+    ///
+    /// This creates an entity that spans all blades of the specified grades.
+    pub fn from_grades(name: String, grades: Vec<usize>, dim: usize) -> Self {
+        let blades = blades_of_grades(dim, &grades).into_iter().collect();
+        Self {
+            name,
+            blades,
+            grades,
+            is_sparse: false,
+        }
+    }
+
+    /// Checks if blades span all blades of the given grades.
+    fn spans_all_grades(blades: &BTreeSet<usize>, grades: &[usize]) -> bool {
+        // Count expected blades for each grade
+        let max_blade = blades.iter().max().copied().unwrap_or(0);
+        let dim = (max_blade as f64).log2().ceil() as usize;
+        if dim == 0 && max_blade > 0 {
+            return false;
+        }
+
+        for &grade in grades {
+            let expected_count = binomial(dim.max(1), grade);
+            let actual_count = blades
+                .iter()
+                .filter(|b| b.count_ones() as usize == grade)
+                .count();
+            if actual_count != expected_count {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+/// Result of blade-level product inference.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BladeProductResult {
+    /// Blade indices present in the output.
+    pub output_blades: BTreeSet<usize>,
+    /// Grades present in the output.
+    pub output_grades: Vec<usize>,
+    /// Name of matching entity, if one exists.
+    pub matching_entity: Option<String>,
+    /// Whether the output is always zero.
+    pub is_zero: bool,
+}
+
+/// Infers the output blades for a product between two blade sets.
+///
+/// This function computes the exact blades that appear in the product output,
+/// which is necessary for sparse types that don't span all blades of their grades.
+///
+/// # Arguments
+///
+/// * `lhs_blades` - Blade indices in the left operand
+/// * `rhs_blades` - Blade indices in the right operand
+/// * `product_type` - The type of product
+/// * `algebra` - The algebra
+/// * `table` - Precomputed product table
+///
+/// # Returns
+///
+/// The set of blade indices that appear in non-zero output.
+pub fn infer_output_blades(
+    lhs_blades: &BTreeSet<usize>,
+    rhs_blades: &BTreeSet<usize>,
+    product_type: ProductType,
+    algebra: &Algebra,
+    table: &ProductTable,
+) -> BTreeSet<usize> {
+    let mut output_set = BTreeSet::new();
+
+    for &a in lhs_blades {
+        for &b in rhs_blades {
+            // Get product result using appropriate method
+            let (sign, result) = match product_type {
+                ProductType::Regressive => table.regressive(a, b),
+                ProductType::Exterior => table.exterior(a, b),
+                ProductType::Antigeometric | ProductType::Antiscalar => table.antiproduct(a, b),
+                ProductType::BulkContraction => table.bulk_contraction(a, b),
+                ProductType::WeightContraction => table.weight_contraction(a, b),
+                ProductType::BulkExpansion => table.bulk_expansion(a, b),
+                ProductType::WeightExpansion => table.weight_expansion(a, b),
+                ProductType::Dot => table.dot(a, b),
+                ProductType::Antidot => table.antidot(a, b),
+                ProductType::Project => table.project(a, b),
+                ProductType::Antiproject => table.antiproject(a, b),
+                _ => table.geometric(a, b),
+            };
+
+            if sign == 0 {
+                continue;
+            }
+
+            let ga = grade(a);
+            let gb = grade(b);
+            let result_grade = grade(result);
+
+            // Check if this product should be included based on product type
+            let include = match product_type {
+                ProductType::Geometric => true,
+                ProductType::Exterior => result_grade == ga + gb,
+                ProductType::LeftContraction => ga <= gb && result_grade == gb - ga,
+                ProductType::RightContraction => gb <= ga && result_grade == ga - gb,
+                ProductType::Regressive => true,
+                ProductType::Scalar => result_grade == 0,
+                ProductType::Antigeometric => true,
+                ProductType::Antiscalar => result_grade == algebra.dim(),
+                ProductType::BulkContraction
+                | ProductType::WeightContraction
+                | ProductType::BulkExpansion
+                | ProductType::WeightExpansion => true,
+                ProductType::Dot => ga == gb && result_grade == 0,
+                ProductType::Antidot => ga == gb && result_grade == 0,
+                ProductType::Project | ProductType::Antiproject => true,
+            };
+
+            if include {
+                output_set.insert(result);
+            }
+        }
+    }
+
+    output_set
+}
+
+/// Infers the product output at blade level and matches to known entities.
+///
+/// This function handles sparse types correctly by computing products at the
+/// blade level instead of the grade level.
+///
+/// # Arguments
+///
+/// * `lhs` - Left operand entity with exact blades
+/// * `rhs` - Right operand entity with exact blades
+/// * `product_type` - The type of product
+/// * `known_entities` - List of entities with their blade sets
+/// * `algebra` - The algebra
+/// * `table` - Precomputed product table
+///
+/// # Returns
+///
+/// The inferred blade product result.
+pub fn infer_product_blades(
+    lhs: &EntityBladeSet,
+    rhs: &EntityBladeSet,
+    product_type: ProductType,
+    known_entities: &[EntityBladeSet],
+    algebra: &Algebra,
+    table: &ProductTable,
+) -> BladeProductResult {
+    let output_blades = infer_output_blades(&lhs.blades, &rhs.blades, product_type, algebra, table);
+
+    if output_blades.is_empty() {
+        return BladeProductResult {
+            output_blades: BTreeSet::new(),
+            output_grades: vec![],
+            matching_entity: None,
+            is_zero: true,
+        };
+    }
+
+    // Compute output grades
+    let output_grades: Vec<usize> = output_blades
+        .iter()
+        .map(|b| b.count_ones() as usize)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+
+    // Match to known entities by exact blade set
+    let matching_entity = known_entities
+        .iter()
+        .find(|e| e.blades == output_blades)
+        .map(|e| e.name.clone());
+
+    BladeProductResult {
+        output_blades,
+        output_grades,
+        matching_entity,
+        is_zero: false,
+    }
+}
+
+/// Infers all products between entities using blade-level inference.
+///
+/// This version handles sparse types correctly by computing at the blade level.
+///
+/// # Arguments
+///
+/// * `entities` - List of entities with their blade sets
+/// * `product_type` - The type of product
+/// * `algebra` - The algebra
+///
+/// # Returns
+///
+/// A list of (lhs_name, rhs_name, result) tuples.
+pub fn infer_all_products_blades(
+    entities: &[EntityBladeSet],
+    product_type: ProductType,
+    algebra: &Algebra,
+) -> Vec<(String, String, BladeProductResult)> {
+    let table = ProductTable::new(algebra);
+    let mut results = Vec::new();
+
+    for lhs in entities {
+        for rhs in entities {
+            let result = infer_product_blades(lhs, rhs, product_type, entities, algebra, &table);
+            results.push((lhs.name.clone(), rhs.name.clone(), result));
+        }
+    }
+
+    results
 }
 
 /// Infers the output grades for a product between two grade sets.
@@ -808,5 +1059,286 @@ mod tests {
         );
         assert_eq!(result.output_grades, vec![0, 2]);
         assert_eq!(result.matching_entity, Some("Entity_0_2".to_string()));
+    }
+
+    /// Diagnostic test that reports missing product matches for all algebras.
+    ///
+    /// This test doesn't fail - it just prints which products are inferred but
+    /// don't have matching entities in each algebra.
+    #[test]
+    fn report_missing_product_matches() {
+        use crate::spec::parse_spec;
+
+        let algebras = [
+            (
+                "euclidean2",
+                include_str!("../../../../algebras/euclidean2.toml"),
+            ),
+            (
+                "euclidean3",
+                include_str!("../../../../algebras/euclidean3.toml"),
+            ),
+            (
+                "projective2",
+                include_str!("../../../../algebras/projective2.toml"),
+            ),
+            (
+                "projective3",
+                include_str!("../../../../algebras/projective3.toml"),
+            ),
+            (
+                "conformal3",
+                include_str!("../../../../algebras/conformal3.toml"),
+            ),
+            (
+                "quaternion",
+                include_str!("../../../../algebras/quaternion.toml"),
+            ),
+            (
+                "dualquat",
+                include_str!("../../../../algebras/dualquat.toml"),
+            ),
+            ("complex", include_str!("../../../../algebras/complex.toml")),
+            ("dual", include_str!("../../../../algebras/dual.toml")),
+            (
+                "hyperbolic",
+                include_str!("../../../../algebras/hyperbolic.toml"),
+            ),
+            (
+                "minkowski2",
+                include_str!("../../../../algebras/minkowski2.toml"),
+            ),
+            (
+                "minkowski3",
+                include_str!("../../../../algebras/minkowski3.toml"),
+            ),
+            (
+                "elliptic2",
+                include_str!("../../../../algebras/elliptic2.toml"),
+            ),
+            (
+                "hyperbolic2",
+                include_str!("../../../../algebras/hyperbolic2.toml"),
+            ),
+        ];
+
+        let product_types = [
+            ProductType::Geometric,
+            ProductType::Exterior,
+            ProductType::LeftContraction,
+            ProductType::Regressive,
+        ];
+
+        let mut total_missing = 0;
+
+        for (name, toml) in &algebras {
+            let spec = parse_spec(toml).unwrap();
+            let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+
+            // Build entity list (exclude sparse and alias types)
+            let entities: Vec<(String, Vec<usize>)> = spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none() && !t.is_sparse)
+                .map(|t| (t.name.clone(), t.grades.clone()))
+                .collect();
+
+            let mut algebra_missing = 0;
+
+            for product_type in &product_types {
+                let table = infer_all_products(&entities, *product_type, &algebra);
+
+                for (lhs, rhs, result) in &table.entries {
+                    if !result.is_zero && result.matching_entity.is_none() {
+                        algebra_missing += 1;
+                        eprintln!(
+                            "  {}: {} {:?} {} -> grades {:?} (no match)",
+                            name,
+                            lhs,
+                            product_type.toml_name(),
+                            rhs,
+                            result.output_grades
+                        );
+                    }
+                }
+            }
+
+            if algebra_missing > 0 {
+                eprintln!("{}: {} missing product matches", name, algebra_missing);
+            }
+            total_missing += algebra_missing;
+        }
+
+        eprintln!("\nTotal missing product matches: {}", total_missing);
+        // This test is informational - it always passes
+        // If you want to enforce complete coverage, change this to:
+        // assert_eq!(total_missing, 0, "Some products don't have matching entities");
+    }
+
+    #[test]
+    fn entity_blade_set_from_grades() {
+        let entity = EntityBladeSet::from_grades("Vector".to_string(), vec![1], 3);
+
+        // Grade 1 in 3D has blades e1=1, e2=2, e3=4
+        assert_eq!(entity.name, "Vector");
+        assert_eq!(entity.grades, vec![1]);
+        assert!(!entity.is_sparse);
+        assert!(entity.blades.contains(&1)); // e1
+        assert!(entity.blades.contains(&2)); // e2
+        assert!(entity.blades.contains(&4)); // e3
+        assert_eq!(entity.blades.len(), 3);
+    }
+
+    #[test]
+    fn entity_blade_set_sparse() {
+        // Create a sparse entity with only 2 of 3 grade-1 blades
+        let entity = EntityBladeSet::new("Partial".to_string(), vec![1, 2]); // e1, e2 only
+
+        assert_eq!(entity.name, "Partial");
+        assert_eq!(entity.grades, vec![1]);
+        assert!(entity.is_sparse, "Entity should be sparse (missing e3)");
+        assert!(entity.blades.contains(&1)); // e1
+        assert!(entity.blades.contains(&2)); // e2
+        assert!(!entity.blades.contains(&4)); // e3 not present
+    }
+
+    #[test]
+    fn infer_output_blades_geometric() {
+        let algebra = Algebra::euclidean(3);
+        let table = ProductTable::new(&algebra);
+
+        // Vector (grade 1) * Vector (grade 1) = Scalar + Bivector
+        let lhs_blades: BTreeSet<usize> = vec![1, 2, 4].into_iter().collect(); // e1, e2, e3
+        let rhs_blades: BTreeSet<usize> = vec![1, 2, 4].into_iter().collect();
+
+        let output = infer_output_blades(
+            &lhs_blades,
+            &rhs_blades,
+            ProductType::Geometric,
+            &algebra,
+            &table,
+        );
+
+        // Should contain scalar (0) and bivectors (3=e12, 5=e13, 6=e23)
+        assert!(output.contains(&0)); // scalar
+        assert!(output.contains(&3)); // e12
+        assert!(output.contains(&5)); // e13
+        assert!(output.contains(&6)); // e23
+    }
+
+    #[test]
+    fn infer_output_blades_sparse_geometric() {
+        let algebra = Algebra::euclidean(3);
+        let table = ProductTable::new(&algebra);
+
+        // Partial vector (just e1, e2) * full vector
+        let lhs_blades: BTreeSet<usize> = vec![1, 2].into_iter().collect(); // e1, e2 only
+        let rhs_blades: BTreeSet<usize> = vec![1, 2, 4].into_iter().collect(); // e1, e2, e3
+
+        let output = infer_output_blades(
+            &lhs_blades,
+            &rhs_blades,
+            ProductType::Geometric,
+            &algebra,
+            &table,
+        );
+
+        // e1*e1 = 1 (scalar), e1*e2 = e12, e1*e3 = e13
+        // e2*e1 = -e12, e2*e2 = 1, e2*e3 = e23
+        assert!(output.contains(&0)); // scalar from e1*e1, e2*e2
+        assert!(output.contains(&3)); // e12 from e1*e2
+        assert!(output.contains(&5)); // e13 from e1*e3
+        assert!(output.contains(&6)); // e23 from e2*e3
+
+        // e3*anything is not in output since e3 not in lhs
+        // e3 (index 4) should not appear in output
+        assert!(!output.contains(&4)); // e3 not in output
+    }
+
+    #[test]
+    fn infer_product_blades_with_matching() {
+        let algebra = Algebra::euclidean(3);
+        let table = ProductTable::new(&algebra);
+
+        let scalar = EntityBladeSet::from_grades("Scalar".to_string(), vec![0], 3);
+        let vector = EntityBladeSet::from_grades("Vector".to_string(), vec![1], 3);
+        let bivector = EntityBladeSet::from_grades("Bivector".to_string(), vec![2], 3);
+        let rotor = EntityBladeSet::from_grades("Rotor".to_string(), vec![0, 2], 3);
+
+        let entities = vec![
+            scalar.clone(),
+            vector.clone(),
+            bivector.clone(),
+            rotor.clone(),
+        ];
+
+        // Vector * Vector should match Rotor
+        let result = infer_product_blades(
+            &vector,
+            &vector,
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
+
+        assert_eq!(result.output_grades, vec![0, 2]);
+        assert_eq!(result.matching_entity, Some("Rotor".to_string()));
+        assert!(!result.is_zero);
+    }
+
+    #[test]
+    fn infer_product_blades_sparse_no_match() {
+        let algebra = Algebra::euclidean(3);
+        let table = ProductTable::new(&algebra);
+
+        // Create a partial vector (sparse) - just e1 and e2
+        let partial_vec = EntityBladeSet::new("PartialVec".to_string(), vec![1, 2]);
+        // Create a full vector
+        let full_vec = EntityBladeSet::from_grades("Vector".to_string(), vec![1], 3);
+        // Create full types
+        let rotor = EntityBladeSet::from_grades("Rotor".to_string(), vec![0, 2], 3);
+
+        let entities = vec![partial_vec.clone(), full_vec.clone(), rotor.clone()];
+
+        // PartialVec * Vector produces a subset of blades
+        // The output won't match Rotor exactly because it's missing some bivector components
+        let result = infer_product_blades(
+            &partial_vec,
+            &full_vec,
+            ProductType::Geometric,
+            &entities,
+            &algebra,
+            &table,
+        );
+
+        // Output should be scalar + 3 bivectors (e12, e13, e23)
+        // But e13 comes from e1*e3, e23 comes from e2*e3
+        // This matches the full Rotor blades, so it should match
+        assert_eq!(result.output_grades, vec![0, 2]);
+        assert_eq!(result.matching_entity, Some("Rotor".to_string()));
+    }
+
+    #[test]
+    fn infer_all_products_blades_basic() {
+        let algebra = Algebra::euclidean(3);
+
+        let scalar = EntityBladeSet::from_grades("Scalar".to_string(), vec![0], 3);
+        let vector = EntityBladeSet::from_grades("Vector".to_string(), vec![1], 3);
+        let rotor = EntityBladeSet::from_grades("Rotor".to_string(), vec![0, 2], 3);
+
+        let entities = vec![scalar, vector, rotor];
+
+        let results = infer_all_products_blades(&entities, ProductType::Geometric, &algebra);
+
+        assert_eq!(results.len(), 9); // 3x3 = 9 combinations
+
+        // Find Vector * Vector
+        let vv = results
+            .iter()
+            .find(|(l, r, _)| l == "Vector" && r == "Vector");
+        assert!(vv.is_some());
+        let (_, _, result) = vv.unwrap();
+        assert_eq!(result.matching_entity, Some("Rotor".to_string()));
     }
 }

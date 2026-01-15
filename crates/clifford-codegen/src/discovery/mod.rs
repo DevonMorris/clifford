@@ -47,13 +47,15 @@ pub mod products;
 mod template;
 
 pub use constraints::{
-    can_satisfy_constraints, derive_antiproduct_constraint, derive_field_constraint,
+    can_satisfy_constraints, derive_antiproduct_constraint, derive_blade_constraint,
+    derive_field_constraint, derive_null_constraint,
 };
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;
 pub use products::{
-    ProductResult, ProductTable2D, ProductType, infer_all_products, infer_output_grades,
-    infer_product,
+    BladeProductResult, EntityBladeSet, ProductResult, ProductTable2D, ProductType,
+    infer_all_products, infer_all_products_blades, infer_output_blades, infer_output_grades,
+    infer_product, infer_product_blades,
 };
 pub use template::generate_toml_template;
 
