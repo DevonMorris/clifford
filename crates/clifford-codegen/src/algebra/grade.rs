@@ -285,6 +285,73 @@ pub const fn antireverse_sign(grade: usize, dim: usize) -> i8 {
     reverse_sign(dim - grade)
 }
 
+/// Sign factor for the grade involution of a k-blade.
+///
+/// The grade involution (also called main involution) negates blades of odd grade.
+/// The sign is `(-1)^k` where k is the grade.
+///
+/// The pattern is: `+-+-+-...` (alternating every grade)
+///
+/// | Grade | Sign |
+/// |-------|------|
+/// | 0     | +1   |
+/// | 1     | -1   |
+/// | 2     | +1   |
+/// | 3     | -1   |
+/// | 4     | +1   |
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::algebra::grade_involution_sign;
+///
+/// assert_eq!(grade_involution_sign(0), 1);  // scalar: +
+/// assert_eq!(grade_involution_sign(1), -1); // vector: -
+/// assert_eq!(grade_involution_sign(2), 1);  // bivector: +
+/// assert_eq!(grade_involution_sign(3), -1); // trivector: -
+/// ```
+#[inline]
+pub const fn grade_involution_sign(grade: usize) -> i8 {
+    // (-1)^k
+    if grade.is_multiple_of(2) { 1 } else { -1 }
+}
+
+/// Sign factor for the Clifford conjugate of a k-blade.
+///
+/// The Clifford conjugate combines reverse and grade involution.
+/// The sign is `(-1)^(k(k+1)/2)` where k is the grade.
+///
+/// The pattern is: `+--++--+...` (repeating every 4 grades)
+///
+/// | Grade | k(k+1)/2 | Sign |
+/// |-------|----------|------|
+/// | 0     | 0        | +1   |
+/// | 1     | 1        | -1   |
+/// | 2     | 3        | -1   |
+/// | 3     | 6        | +1   |
+/// | 4     | 10       | +1   |
+/// | 5     | 15       | -1   |
+/// | 6     | 21       | -1   |
+/// | 7     | 28       | +1   |
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::algebra::clifford_conjugate_sign;
+///
+/// assert_eq!(clifford_conjugate_sign(0), 1);  // scalar: +
+/// assert_eq!(clifford_conjugate_sign(1), -1); // vector: -
+/// assert_eq!(clifford_conjugate_sign(2), -1); // bivector: -
+/// assert_eq!(clifford_conjugate_sign(3), 1);  // trivector: +
+/// assert_eq!(clifford_conjugate_sign(4), 1);  // 4-vector: +
+/// ```
+#[inline]
+pub const fn clifford_conjugate_sign(grade: usize) -> i8 {
+    // (-1)^(k(k+1)/2)
+    let exponent = (grade * (grade + 1)) / 2;
+    if exponent.is_multiple_of(2) { 1 } else { -1 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

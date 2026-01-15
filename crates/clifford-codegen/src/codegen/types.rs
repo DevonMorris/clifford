@@ -344,7 +344,7 @@ impl<'a> TypeGenerator<'a> {
 
     /// Checks if a type has a geometric constraint.
     fn type_has_constraint(&self, ty: &TypeSpec) -> bool {
-        let deriver = ConstraintDeriver::new(self.algebra);
+        let deriver = ConstraintDeriver::new(self.algebra, self.spec.norm.primary_involution);
         if let Some(constraint) = deriver.derive_geometric_constraint(ty, "x") {
             // Only consider single-constraint linear cases (which we can solve)
             if constraint.zero_expressions.len() == 1 {
@@ -372,7 +372,7 @@ impl<'a> TypeGenerator<'a> {
     /// Returns empty TokenStream for types without constraints.
     fn generate_constraint_constructors(&self, ty: &TypeSpec) -> TokenStream {
         // Derive constraint from algebra structure
-        let deriver = ConstraintDeriver::new(self.algebra);
+        let deriver = ConstraintDeriver::new(self.algebra, self.spec.norm.primary_involution);
         let constraint = match deriver.derive_geometric_constraint(ty, "self") {
             Some(c) => c,
             None => return quote! {}, // No constraint for this type

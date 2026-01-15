@@ -2588,14 +2588,9 @@ impl<'a> TraitsGenerator<'a> {
     /// Returns `Some(TokenStream)` if the type has a derived constraint that can be solved,
     /// `None` otherwise.
     fn try_generate_constrained_arbitrary(&self, ty: &TypeSpec) -> Option<TokenStream> {
-        // Skip constraint derivation for small algebras (dim <= 1)
-        // These don't have meaningful geometric constraints
-        if self.algebra.dim() <= 1 {
-            return None;
-        }
-
         // Derive constraints from algebra structure
-        let deriver = ConstraintDeriver::new(self.algebra);
+        // Uses the algebra's configured involution (reverse, grade involution, or Clifford conjugate)
+        let deriver = ConstraintDeriver::new(self.algebra, self.spec.norm.primary_involution);
         let constraint = deriver.derive_geometric_constraint(ty, "x")?;
 
         // Only handle single-constraint cases for now
