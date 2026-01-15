@@ -44,6 +44,10 @@ pub enum ProductKind {
     Antidot,
     /// Scalar product (grade-0 projection of geometric product).
     Scalar,
+    /// Projection: target ∨ (self ∧ target☆).
+    Project,
+    /// Antiprojection: target ∧ (self ∨ target☆).
+    Antiproject,
 }
 
 /// A symbolic field expression.
@@ -177,6 +181,8 @@ impl SymbolicProduct {
                         let result_grade = Blade::from_index(r).grade();
                         if result_grade == 0 { (s, r) } else { (0, 0) }
                     }
+                    ProductKind::Project => self.table.project(a_blade, b_blade),
+                    ProductKind::Antiproject => self.table.antiproject(a_blade, b_blade),
                 };
 
                 if result != result_blade || sign == 0 {

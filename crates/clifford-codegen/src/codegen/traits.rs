@@ -162,7 +162,7 @@ impl<'a> TraitsGenerator<'a> {
             use crate::ops::{
                 Wedge, Antiwedge, LeftContract, RightContract,
                 Sandwich, Antisandwich, Transform, ScalarProduct, BulkContract, WeightContract,
-                BulkExpand, WeightExpand, Dot, Antidot,
+                BulkExpand, WeightExpand, Dot, Antidot, WeightDual,
                 Reverse, Antireverse, RightComplement, #versor_import
             };
             use super::types::{#(#type_names),*};
@@ -949,6 +949,11 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // NOTE: Project and Antiproject traits are NOT generated for specialized types.
+        // The formulas b ∨ (a ∧ b☆) and b ∧ (a ∨ b☆) are NOT bilinear because 'b'
+        // appears twice. The blade-pair product approach doesn't work for these.
+        // Use Multivector::project() and Multivector::antiproject() instead.
+
         // ====== Unary Operation Traits ======
 
         // Reverse trait - for all types
@@ -975,9 +980,14 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
-        // Note: LeftComplement, BulkDual, and WeightDual traits are not yet generated
-        // because the corresponding free functions don't exist in unary.rs.
-        // These can be added in a future PR by extending unary.rs.
+        // WeightDual trait - only for types where the weight dual grades map to an existing type
+        for ty in &self.spec.types {
+            if ty.alias_of.is_none() {
+                if let Some(impl_tokens) = self.generate_weight_dual_trait(ty) {
+                    impls.push(impl_tokens);
+                }
+            }
+        }
 
         quote! { #(#impls)* }
     }
@@ -1551,6 +1561,11 @@ impl<'a> TraitsGenerator<'a> {
     // Note: generate_antigeometric_trait has been removed (PRD-24)
     // The Antigeometric trait cannot be type-safe for single-grade elements.
 
+    // Note: generate_project_trait and generate_antiproject_trait have been removed.
+    // The formulas b ∨ (a ∧ b☆) and b ∧ (a ∨ b☆) are NOT bilinear because 'b' appears
+    // twice. The blade-pair product approach doesn't work for these compound operations.
+    // Use Multivector::project() and Multivector::antiproject() instead.
+
     // ========================================================================
     // Sandwich Target Inference
     // ========================================================================
@@ -1720,6 +1735,85 @@ impl<'a> TraitsGenerator<'a> {
             let mut sorted_complement = complement_grades.clone();
             sorted_complement.sort();
             if candidate_grades == sorted_complement {
+                return Some(candidate.name.clone());
+            }
+        }
+
+        // No matching type found
+        None
+    }
+
+    /// Generates WeightDual trait impl.
+    ///
+    /// Returns None if the weight dual grades don't map to an existing type.
+    fn generate_weight_dual_trait(&self, ty: &TypeSpec) -> Option<TokenStream> {
+        // Check if there's a matching output type for the weight dual
+        let output_type_name = self.find_weight_dual_output_type(ty)?;
+        let output_type = self
+            .spec
+            .types
+            .iter()
+            .find(|t| t.name == output_type_name)?;
+
+        let type_name = format_ident!("{}", ty.name);
+        let out_name = format_ident!("{}", output_type_name);
+
+        // Compute field expressions for weight dual
+        let field_exprs: Vec<TokenStream> = output_type
+            .fields
+            .iter()
+            .map(|out_field| {
+                // Find the input field that weight-duals to this output blade
+                let out_blade = out_field.blade_index;
+
+                for in_field in &ty.fields {
+                    let (sign, dual_blade) = self.table.weight_dual(in_field.blade_index);
+                    if dual_blade == out_blade && sign != 0 {
+                        let in_name = format_ident!("{}", in_field.name);
+                        return if sign > 0 {
+                            quote! { self.#in_name() }
+                        } else {
+                            quote! { -self.#in_name() }
+                        };
+                    }
+                }
+                // No input blade maps to this output blade
+                quote! { T::zero() }
+            })
+            .collect();
+
+        let constructor = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
+
+        Some(quote! {
+            impl<T: Float> WeightDual for #type_name<T> {
+                type Output = #out_name<T>;
+
+                #[inline]
+                fn weight_dual(&self) -> #out_name<T> {
+                    #constructor
+                }
+            }
+        })
+    }
+
+    /// Finds the output type for weight dual operations.
+    ///
+    /// The weight dual of a type with grades [g1, g2, ...] has grades [n-g1, n-g2, ...].
+    /// Returns None if no type with matching grades exists.
+    fn find_weight_dual_output_type(&self, ty: &TypeSpec) -> Option<String> {
+        let dim = self.algebra.dim();
+        let dual_grades: Vec<usize> = ty.grades.iter().map(|g| dim - g).collect();
+
+        // Find a type with matching grades
+        for candidate in &self.spec.types {
+            if candidate.alias_of.is_some() {
+                continue;
+            }
+            let mut candidate_grades = candidate.grades.clone();
+            candidate_grades.sort();
+            let mut sorted_dual = dual_grades.clone();
+            sorted_dual.sort();
+            if candidate_grades == sorted_dual {
                 return Some(candidate.name.clone());
             }
         }
@@ -2377,6 +2471,13 @@ impl<'a> TraitsGenerator<'a> {
         let bulk_expansion_tests = self.generate_bulk_expansion_verification_tests_raw();
         let weight_expansion_tests = self.generate_weight_expansion_verification_tests_raw();
         let de_morgan_tests = self.generate_de_morgan_verification_tests_raw();
+        // Note: Project/Antiproject are only idempotent for unitized blades.
+        // The formula `b ∨ (a ∧ b☆)` scales with |b|² each application.
+        // Tests use Unit<T> for Euclidean or Unitized<T> for projective algebras.
+        let project_idempotency_tests = self.generate_project_idempotency_tests_raw();
+        let antiproject_idempotency_tests = self.generate_antiproject_idempotency_tests_raw();
+        let is_degenerate = self.spec.signature.r > 0;
+        let wrapper_import = if is_degenerate { "Unitized" } else { "Unit" };
 
         format!(
             r#"
@@ -2390,15 +2491,17 @@ mod verification_tests {{
     use super::*;
     use crate::algebra::Multivector;
     use crate::signature::{sig};
+    use crate::wrappers::{wrapper_import};
     use approx::relative_eq;
     use proptest::prelude::*;
 
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}}}
+{add_sub}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}{project_idempotency}{antiproject_idempotency}}}
 "#,
             sig = signature_name,
+            wrapper_import = wrapper_import,
             add_sub = add_sub_tests,
             exterior = exterior_tests,
             bulk_contraction = bulk_contraction_tests,
@@ -2406,6 +2509,8 @@ mod verification_tests {{
             bulk_expansion = bulk_expansion_tests,
             weight_expansion = weight_expansion_tests,
             de_morgan = de_morgan_tests,
+            project_idempotency = project_idempotency_tests,
+            antiproject_idempotency = antiproject_idempotency_tests,
         )
     }
 
@@ -2799,6 +2904,9 @@ mod verification_tests {{
             .collect()
     }
 
+    // Note: Project and Antiproject verification tests are not generated because
+    // the specialized types don't implement these traits (see comment above).
+
     /// Generates de-Morgan's law verification tests as a formatted string.
     ///
     /// Tests the fundamental identities from RGA:
@@ -2867,6 +2975,170 @@ mod verification_tests {{
                 )
             })
             .collect()
+    }
+
+    /// Generates project idempotency tests with normalized targets.
+    ///
+    /// Tests that projection is idempotent when the target is normalized:
+    /// `project(project(a, unit_b), unit_b) == project(a, unit_b)`
+    ///
+    /// Uses `Unit<T>` for Euclidean algebras (Normed) and `Unitized<T>` for
+    /// projective algebras (DegenerateNormed).
+    ///
+    /// Only generates tests where grade(a) > grade(b), as projection is
+    /// geometrically meaningful for projecting higher-grade onto lower-grade.
+    fn generate_project_idempotency_tests_raw(&self) -> String {
+        let sig = self.generate_signature_name().to_string();
+        let is_degenerate = self.spec.signature.r > 0;
+        let wrapper = if is_degenerate { "Unitized" } else { "Unit" };
+
+        // Get all single-grade types (non-alias) with their grades
+        let single_grade_types: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none() && self.is_single_grade_blade(t))
+            .collect();
+
+        // Generate tests only for grade(a) > grade(b)
+        let mut result = String::new();
+        for ty_a in &single_grade_types {
+            for ty_b in &single_grade_types {
+                // Get the grade of each type from its first field
+                let grade_a = ty_a
+                    .fields
+                    .first()
+                    .map(|f| (f.blade_index as u32).count_ones() as usize)
+                    .unwrap_or(0);
+                let grade_b = ty_b
+                    .fields
+                    .first()
+                    .map(|f| (f.blade_index as u32).count_ones() as usize)
+                    .unwrap_or(0);
+
+                // Only test when projecting higher grade onto lower grade
+                // Skip grade-0 (projecting scalar or onto scalar is meaningless)
+                if grade_a <= grade_b || grade_a == 0 || grade_b == 0 {
+                    continue;
+                }
+
+                let a_name = &ty_a.name;
+                let b_name = &ty_b.name;
+                let a_lower = ty_a.name.to_lowercase();
+                let b_lower = ty_b.name.to_lowercase();
+
+                result.push_str(&format!(
+                    r#"
+    proptest! {{
+        /// Project idempotency with normalized target: project(project(a, unit_b), unit_b) == project(a, unit_b)
+        #[test]
+        fn project_idempotent_{a_lower}_{b_lower}(a in any::<{a_name}<f64>>(), unit_b in any::<{wrapper}<{b_name}<f64>>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = unit_b.into_inner().into();
+
+            let first = mv_a.project(&mv_b);
+            let second = first.project(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Project idempotency failed: first={{:?}}, second={{:?}}",
+                first, second
+            );
+        }}
+    }}
+"#,
+                    a_lower = a_lower,
+                    b_lower = b_lower,
+                    a_name = a_name,
+                    b_name = b_name,
+                    wrapper = wrapper,
+                    sig = sig,
+                ));
+            }
+        }
+        result
+    }
+
+    /// Generates antiproject idempotency tests with normalized targets.
+    ///
+    /// Tests that antiprojection is idempotent when the target is normalized:
+    /// `antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)`
+    ///
+    /// Uses `Unit<T>` for Euclidean algebras (Normed) and `Unitized<T>` for
+    /// projective algebras (DegenerateNormed).
+    ///
+    /// Only generates tests where grade(a) < grade(b), as antiprojection is
+    /// geometrically meaningful for projecting lower-grade onto higher-grade.
+    fn generate_antiproject_idempotency_tests_raw(&self) -> String {
+        let sig = self.generate_signature_name().to_string();
+        let is_degenerate = self.spec.signature.r > 0;
+        let wrapper = if is_degenerate { "Unitized" } else { "Unit" };
+
+        // Get all single-grade types (non-alias) with their grades
+        let single_grade_types: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| t.alias_of.is_none() && self.is_single_grade_blade(t))
+            .collect();
+
+        // Generate tests only for grade(a) < grade(b)
+        let mut result = String::new();
+        for ty_a in &single_grade_types {
+            for ty_b in &single_grade_types {
+                // Get the grade of each type from its first field
+                let grade_a = ty_a
+                    .fields
+                    .first()
+                    .map(|f| (f.blade_index as u32).count_ones() as usize)
+                    .unwrap_or(0);
+                let grade_b = ty_b
+                    .fields
+                    .first()
+                    .map(|f| (f.blade_index as u32).count_ones() as usize)
+                    .unwrap_or(0);
+
+                // Only test when projecting lower grade onto higher grade
+                // Skip grade-0 sources (projecting scalar is meaningless)
+                if grade_a >= grade_b || grade_a == 0 {
+                    continue;
+                }
+
+                let a_name = &ty_a.name;
+                let b_name = &ty_b.name;
+                let a_lower = ty_a.name.to_lowercase();
+                let b_lower = ty_b.name.to_lowercase();
+
+                result.push_str(&format!(
+                    r#"
+    proptest! {{
+        /// Antiproject idempotency with normalized target: antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)
+        #[test]
+        fn antiproject_idempotent_{a_lower}_{b_lower}(a in any::<{a_name}<f64>>(), unit_b in any::<{wrapper}<{b_name}<f64>>>()) {{
+            let mv_a: Multivector<f64, {sig}> = a.into();
+            let mv_b: Multivector<f64, {sig}> = unit_b.into_inner().into();
+
+            let first = mv_a.antiproject(&mv_b);
+            let second = first.antiproject(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antiproject idempotency failed: first={{:?}}, second={{:?}}",
+                first, second
+            );
+        }}
+    }}
+"#,
+                    a_lower = a_lower,
+                    b_lower = b_lower,
+                    a_name = a_name,
+                    b_name = b_name,
+                    wrapper = wrapper,
+                    sig = sig,
+                ));
+            }
+        }
+        result
     }
 }
 

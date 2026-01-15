@@ -200,6 +200,10 @@ pub struct ProductsSpec {
     pub dot: Vec<ProductEntry>,
     /// Antidot product entries (⊚, metric antiproduct inner, same-antigrade only, returns scalar).
     pub antidot: Vec<ProductEntry>,
+    /// Projection entries: b ∨ (a ∧ b☆).
+    pub project: Vec<ProductEntry>,
+    /// Antiprojection entries: b ∧ (a ∨ b☆).
+    pub antiproject: Vec<ProductEntry>,
 }
 
 /// A single product entry specifying lhs × rhs → output.

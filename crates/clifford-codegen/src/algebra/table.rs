@@ -1093,6 +1093,62 @@ impl ProductTable {
         let (ext_sign, result) = self.exterior(a, b_dual);
         (dual_sign * ext_sign, result)
     }
+
+    /// Computes the projection of `a` onto `b`.
+    ///
+    /// The projection is defined as: b ∨ (a ∧ b☆)
+    /// where ∨ is the antiwedge, ∧ is the wedge, and ☆ is the weight dual.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the projection
+    pub fn project(&self, a: usize, b: usize) -> (i8, usize) {
+        // Step 1: Compute weight dual of b
+        let (dual_sign, b_dual) = self.weight_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 2: Compute a ∧ b☆
+        let (ext_sign, wedge_result) = self.exterior(a, b_dual);
+        if ext_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 3: Compute b ∨ (a ∧ b☆)
+        let (reg_sign, result) = self.regressive(b, wedge_result);
+        (dual_sign * ext_sign * reg_sign, result)
+    }
+
+    /// Computes the antiprojection of `a` onto `b`.
+    ///
+    /// The antiprojection is defined as: b ∧ (a ∨ b☆)
+    /// where ∧ is the wedge, ∨ is the antiwedge, and ☆ is the weight dual.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(sign, result)` where:
+    /// - `sign` is the sign factor (-1, 0, or +1)
+    /// - `result` is the blade index of the antiprojection
+    pub fn antiproject(&self, a: usize, b: usize) -> (i8, usize) {
+        // Step 1: Compute weight dual of b
+        let (dual_sign, b_dual) = self.weight_dual(b);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 2: Compute a ∨ b☆
+        let (reg_sign, antiwedge_result) = self.regressive(a, b_dual);
+        if reg_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 3: Compute b ∧ (a ∨ b☆)
+        let (ext_sign, result) = self.exterior(b, antiwedge_result);
+        (dual_sign * reg_sign * ext_sign, result)
+    }
 }
 
 #[cfg(test)]

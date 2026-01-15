@@ -541,6 +541,10 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
     // Infer antidot products (same-antigrade elements only, returns scalar)
     let antidot_table = infer_all_products(&entities, ProductType::Antidot, &algebra);
 
+    // Infer projection and antiprojection products
+    let project_table = infer_all_products(&entities, ProductType::Project, &algebra);
+    let antiproject_table = infer_all_products(&entities, ProductType::Antiproject, &algebra);
+
     ProductsSpec {
         geometric: convert_entries(geometric_table),
         wedge: convert_entries(exterior_table),
@@ -558,6 +562,9 @@ fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> P
         // Metric products (PRD-24)
         dot: convert_entries(dot_table),
         antidot: convert_entries(antidot_table),
+        // Projection products (PRD-30)
+        project: convert_entries(project_table),
+        antiproject: convert_entries(antiproject_table),
     }
 }
 
