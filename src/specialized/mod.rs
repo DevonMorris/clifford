@@ -9,7 +9,7 @@
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
 //! - **[`dualquat`]**: Dual quaternions Cl(0,2,1) for rigid transformations
-//! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
+//! - **[`hyperbolic`]**: Hyperbolic algebras: numbers Cl(1,0,0) and plane Cl(2,1,0)
 //! - **[`minkowski`]**: Minkowski spacetime algebras (indefinite signature)
 //! - **[`quaternion`]**: Quaternions Cl(0,2,0)
 //!
@@ -29,6 +29,7 @@
 //!   dual/       - Dual numbers: Scalar, DualUnit, Dual
 //!   dualquat/   - Dual quaternions: Scalar, Vector, Bivector, DualQuaternion
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
+//!     dim2/   - 2D Hyperbolic plane: Point, Line, Rotor
 //!   minkowski/
 //!     dim2/   - 2D Minkowski: Vector, Bivector, Eventor, Multivector
 //!   quaternion/ - Quaternions: Scalar, Imaginary, Bivector, Quaternion

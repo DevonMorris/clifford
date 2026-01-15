@@ -384,6 +384,76 @@ impl Signature for Cl1_1_0 {
 /// Type alias for the Minkowski plane signature.
 pub type Minkowski2 = Cl1_1_0;
 
+/// 3D Indefinite signature: `Cl(2,1,0)`.
+///
+/// This is the hyperbolic plane (Lobachevsky plane) algebra. With two
+/// spacelike basis vectors `e₁, e₂` (e₁² = e₂² = +1) and one timelike
+/// basis vector `e₃` (e₃² = -1), this gives the algebra for 2D hyperbolic
+/// geometry.
+///
+/// # Basis Blades (8 total)
+///
+/// | Index | Blade | Grade | Square | Description |
+/// |-------|-------|-------|--------|-------------|
+/// | 0 | `1` | 0 | +1 | Scalar |
+/// | 1 | `e₁` | 1 | +1 | Spacelike vector |
+/// | 2 | `e₂` | 1 | +1 | Spacelike vector |
+/// | 3 | `e₁₂` | 2 | -1 | Rotation bivector |
+/// | 4 | `e₃` | 1 | -1 | Timelike vector |
+/// | 5 | `e₁₃` | 2 | +1 | Boost bivector |
+/// | 6 | `e₂₃` | 2 | +1 | Boost bivector |
+/// | 7 | `e₁₂₃` | 3 | +1 | Pseudoscalar |
+///
+/// # Properties
+///
+/// - `e₁² = e₂² = +1` (spacelike)
+/// - `e₃² = -1` (timelike)
+/// - Indefinite norm: elements can be spacelike, timelike, or null
+/// - Used for 2D hyperbolic geometry (negative curvature)
+///
+/// # Causal Structure
+///
+/// Points (grade-1) are classified by their norm:
+/// - Ordinary (timelike): x² + y² - t² < 0
+/// - Ideal (null): x² + y² - t² = 0
+/// - Ultra-ideal (spacelike): x² + y² - t² > 0
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl2_1_0::DIM, 3);
+/// assert_eq!(Cl2_1_0::num_blades(), 8);
+/// assert_eq!(Cl2_1_0::metric(0), 1);   // e1² = +1
+/// assert_eq!(Cl2_1_0::metric(1), 1);   // e2² = +1
+/// assert_eq!(Cl2_1_0::metric(2), -1);  // e3² = -1
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl2_1_0;
+
+impl Signature for Cl2_1_0 {
+    type NumBlades = typenum::U8; // 2^3 = 8
+
+    const P: usize = 2;
+    const Q: usize = 1;
+    const R: usize = 0;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl2_1_0");
+        match i {
+            0 => 1,  // e1² = +1 (spacelike)
+            1 => 1,  // e2² = +1 (spacelike)
+            2 => -1, // e3² = -1 (timelike)
+            _ => unreachable!(),
+        }
+    }
+}
+
+/// Type alias for the hyperbolic plane signature.
+pub type Hyperbolic2 = Cl2_1_0;
+
 /// 1D Degenerate signature: `Cl(0,0,1)`.
 ///
 /// This is used for dual numbers (automatic differentiation).

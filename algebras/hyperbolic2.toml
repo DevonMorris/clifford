@@ -1,0 +1,68 @@
+# 2D Hyperbolic Projective Geometry
+# Cl(2,1,0) - The hyperbolic plane (Lobachevsky plane)
+
+[algebra]
+name = "hyperbolic2"
+module_path = "hyperbolic::dim2"
+description = "2D Hyperbolic Projective Geometry Cl(2,1,0)"
+
+[signature]
+positive = ["e1", "e2"]
+negative = ["e3"]
+zero = []
+
+# ============================================================
+# Norm Configuration
+# ============================================================
+# Non-degenerate algebra (r=0) with indefinite signature (p=2, q=1).
+# Uses reverse for the norm: |x|² = x * x̃
+# The norm can be positive (spacelike), negative (timelike), or zero (null).
+# Implements IndefiniteNormed trait.
+
+[norm]
+primary_involution = "reverse"
+
+# ============================================================
+# Types
+# ============================================================
+# In 2D hyperbolic geometry:
+# - Grade 1: Points (ordinary points are spacelike, ideal points are null)
+# - Grade 2: Lines (geodesics in the hyperbolic plane)
+# - Rotors: Hyperbolic rotations and boosts
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+fields = ["s"]
+
+[types.Point]
+grades = [1]
+description = "Point in hyperbolic plane (homogeneous coordinates)"
+# Points in the hyperboloid model:
+# - x, y: spatial components
+# - t: timelike component (e₃² = -1)
+# Ordinary points: x² + y² - t² < 0 (inside light cone)
+# Ideal points: x² + y² - t² = 0 (on the absolute/light cone)
+# Ultra-ideal: x² + y² - t² > 0 (outside light cone)
+fields = ["x", "y", "t"]
+
+[types.Line]
+grades = [2]
+description = "Geodesic line in hyperbolic plane"
+# Lines are bivectors:
+# - xy: rotation in the xy-plane
+# - xt, yt: boost components
+fields = ["xy", "xt", "yt"]
+
+[types.Pseudoscalar]
+grades = [3]
+description = "Pseudoscalar (volume element)"
+fields = ["xyt"]
+
+[types.Rotor]
+grades = [0, 2]
+description = "Rotor for hyperbolic rotations and boosts"
+# Rotors in hyperbolic geometry:
+# - Pure xy rotation: ordinary rotation
+# - xt/yt components: hyperbolic boosts (Lorentz transformations)
+fields = ["s", "xy", "xt", "yt"]
