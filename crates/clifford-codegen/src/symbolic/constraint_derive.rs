@@ -1,9 +1,14 @@
 //! Constraint derivation from algebra structure.
 //!
-//! This module derives constraint expressions by computing `u * reverse(u)`
+//! This module derives constraint expressions by computing `u * involution(u)`
 //! symbolically for a type and extracting the non-scalar terms. The geometric
-//! constraint states that `u * reverse(u)` must produce only a scalar for
+//! constraint states that `u * involution(u)` must produce only a scalar for
 //! valid geometric entities.
+//!
+//! The involution used depends on the algebra's configuration:
+//! - `Reverse`: Most algebras (Euclidean, PGA) - versors satisfy `v * reverse(v) = scalar`
+//! - `GradeInvolution`: Hyperbolic numbers - `z * involute(z) = a² - b²`
+//! - `CliffordConjugate`: Complex numbers - `z * conjugate(z) = a² + b²`
 //!
 //! For example, for a rotor R = s + B (scalar + bivector), computing
 //! `R * reverse(R)` produces scalar terms and potentially non-scalar terms.
@@ -13,8 +18,11 @@ use std::collections::HashMap;
 
 use symbolica::atom::Atom;
 
-use crate::algebra::{Algebra, Blade, ProductTable, antireverse_sign, grade, reverse_sign};
-use crate::spec::TypeSpec;
+use crate::algebra::{
+    Algebra, Blade, ProductTable, antireverse_sign, clifford_conjugate_sign, grade,
+    grade_involution_sign, reverse_sign,
+};
+use crate::spec::{InvolutionKind, TypeSpec};
 
 /// Result of deriving constraints for a type.
 #[derive(Debug, Clone)]
@@ -38,19 +46,26 @@ pub struct ConstraintDeriver<'a> {
     algebra: &'a Algebra,
     /// Product table for efficient computation.
     table: ProductTable,
+    /// Which involution to use for constraint derivation.
+    involution: InvolutionKind,
 }
 
 impl<'a> ConstraintDeriver<'a> {
-    /// Creates a new constraint deriver.
-    pub fn new(algebra: &'a Algebra) -> Self {
+    /// Creates a new constraint deriver with the specified involution.
+    pub fn new(algebra: &'a Algebra, involution: InvolutionKind) -> Self {
         let table = ProductTable::new(algebra);
-        Self { algebra, table }
+        Self {
+            algebra,
+            table,
+            involution,
+        }
     }
 
     /// Derives the geometric constraint for a type.
     ///
-    /// Computes `u * reverse(u)` symbolically and returns the non-scalar
-    /// terms that must equal zero.
+    /// Computes `u * involution(u)` symbolically and returns the non-scalar
+    /// terms that must equal zero. The involution used is determined by
+    /// the algebra's configuration (reverse, grade involution, or Clifford conjugate).
     ///
     /// # Returns
     ///
@@ -66,13 +81,13 @@ impl<'a> ConstraintDeriver<'a> {
         // Create symbolic variables for fields
         let symbols = self.create_symbols(ty, field_prefix);
 
-        // Compute u * reverse(u) for each output grade
+        // Compute u * involution(u) for each output grade
         let mut zero_expressions = Vec::new();
         let mut constraint_grades = Vec::new();
 
         // Check all grades from 1 to dim (skip scalar grade 0)
         for output_grade in 1..=dim {
-            let expr = self.compute_product_reverse_at_grade(ty, output_grade, &symbols);
+            let expr = self.compute_product_involution_at_grade(ty, output_grade, &symbols);
 
             // Check if the expression is non-trivial (not just zero)
             if !self.is_zero(&expr) {
@@ -114,8 +129,8 @@ impl<'a> ConstraintDeriver<'a> {
             .collect()
     }
 
-    /// Computes the expression for `u * reverse(u)` at a specific output grade.
-    fn compute_product_reverse_at_grade(
+    /// Computes the expression for `u * involution(u)` at a specific output grade.
+    fn compute_product_involution_at_grade(
         &self,
         ty: &TypeSpec,
         output_grade: usize,
@@ -123,8 +138,8 @@ impl<'a> ConstraintDeriver<'a> {
     ) -> Atom {
         let mut terms: Vec<Atom> = Vec::new();
 
-        // For each pair of fields (a, b), compute a * reverse(b)
-        // The reverse of a blade B is: reverse_sign(grade(B)) * B
+        // For each pair of fields (a, b), compute a * involution(b)
+        // The involution of a blade B depends on the configured involution kind
         for field_a in &ty.fields {
             for field_b in &ty.fields {
                 let blade_a = field_a.blade_index;
@@ -140,9 +155,13 @@ impl<'a> ConstraintDeriver<'a> {
                     continue;
                 }
 
-                // Apply reverse sign to b
-                let rev_sign = reverse_sign(grade_b);
-                let total_sign = product_sign * rev_sign;
+                // Apply involution sign to b based on configured involution kind
+                let inv_sign = match self.involution {
+                    InvolutionKind::Reverse => reverse_sign(grade_b),
+                    InvolutionKind::GradeInvolution => grade_involution_sign(grade_b),
+                    InvolutionKind::CliffordConjugate => clifford_conjugate_sign(grade_b),
+                };
+                let total_sign = product_sign * inv_sign;
 
                 // Get symbolic values
                 let sym_a = symbols.get(&blade_a).unwrap();
@@ -346,7 +365,7 @@ impl<'a> ConstraintDeriver<'a> {
     /// This is useful for generating `norm_squared()` implementations.
     pub fn derive_norm_squared(&self, ty: &TypeSpec, field_prefix: &str) -> Atom {
         let symbols = self.create_symbols(ty, field_prefix);
-        self.compute_product_reverse_at_grade(ty, 0, &symbols)
+        self.compute_product_involution_at_grade(ty, 0, &symbols)
     }
 
     /// Derives the antiscalar norm expression (pseudoscalar part of `u ⊟ antireverse(u)`).
@@ -384,7 +403,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::euclidean(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
 
         let constraint = deriver.derive_geometric_constraint(rotor, "u");
@@ -415,7 +434,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::euclidean(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
 
         let norm_sq = deriver.derive_norm_squared(vector, "v");
@@ -448,7 +467,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::pga(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
 
         let constraint = deriver.derive_geometric_constraint(motor, "m");
@@ -488,7 +507,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::pga(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let line = spec.types.iter().find(|t| t.name == "Line").unwrap();
 
         let constraint = deriver.derive_geometric_constraint(line, "l");
@@ -521,7 +540,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::euclidean(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let rotor = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
 
         let all_constraints = deriver.derive_all_constraints(rotor, "u");
@@ -554,7 +573,7 @@ mod tests {
         .unwrap();
 
         let algebra = Algebra::pga(3);
-        let deriver = ConstraintDeriver::new(&algebra);
+        let deriver = ConstraintDeriver::new(&algebra, InvolutionKind::Reverse);
         let motor = spec.types.iter().find(|t| t.name == "Motor").unwrap();
 
         let all_constraints = deriver.derive_all_constraints(motor, "m");

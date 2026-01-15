@@ -61,8 +61,9 @@ pub use constraints::{
     satisfies_all_constraints, satisfies_antiproduct_constraint, satisfies_geometric_constraint,
 };
 pub use grade::{
-    antireverse_sign, binomial, blades_of_grade, blades_of_grades, geometric_grades, grade,
-    inner_grade, left_contraction_grade, outer_grade, reverse_sign,
+    antireverse_sign, binomial, blades_of_grade, blades_of_grades, clifford_conjugate_sign,
+    geometric_grades, grade, grade_involution_sign, inner_grade, left_contraction_grade,
+    outer_grade, reverse_sign,
 };
 pub use sign::basis_product;
 pub use signature::Algebra;
