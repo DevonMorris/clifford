@@ -110,7 +110,7 @@ fn bench_vec3_add(c: &mut Criterion) {
 }
 
 fn bench_rotor3_rotation(c: &mut Criterion) {
-    let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
+    let rotor = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_rz());
     let v = dim3::Vector::new(1.0, 0.0, 0.0);
 
     c.bench_function("euclidean/dim3/rotor_rotate", |bencher| {
@@ -119,8 +119,8 @@ fn bench_rotor3_rotation(c: &mut Criterion) {
 }
 
 fn bench_rotor3_compose(c: &mut Criterion) {
-    let r1 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
-    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4 / 2.0, dim3::Bivector::unit_xz());
+    let r1 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_rz());
+    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4 / 2.0, dim3::Bivector::unit_ry());
 
     c.bench_function("euclidean/dim3/rotor_compose", |bencher| {
         bencher.iter(|| black_box(r1).compose(black_box(r2)))
@@ -128,8 +128,8 @@ fn bench_rotor3_compose(c: &mut Criterion) {
 }
 
 fn bench_rotor3_slerp(c: &mut Criterion) {
-    let r1 = dim3::Rotor::from_angle_plane(0.0, dim3::Bivector::unit_xy());
-    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_xy());
+    let r1 = dim3::Rotor::from_angle_plane(0.0, dim3::Bivector::unit_rz());
+    let r2 = dim3::Rotor::from_angle_plane(FRAC_PI_4, dim3::Bivector::unit_rz());
 
     c.bench_function("euclidean/dim3/rotor_slerp", |bencher| {
         bencher.iter(|| black_box(r1).slerp(black_box(r2), black_box(0.5)))

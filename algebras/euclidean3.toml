@@ -27,17 +27,25 @@ fields = ["x", "y", "z"]
 [types.Bivector]
 grades = [2]
 description = "3D bivector"
-fields = ["xy", "xz", "yz"]
+# Field names reflect what each component DOES (controls rotation around an axis):
+# - rz (e12): rotation around the z-axis (in the xy-plane)
+# - ry (e13): rotation around the y-axis (in the xz-plane)
+# - rx (e23): rotation around the x-axis (in the yz-plane)
+# Lexicographic order: [e12, e13, e23] → [rz, ry, rx]
+fields = ["rz", "ry", "rx"]
 
 [types.Rotor]
 grades = [0, 2]
 description = "3D rotor (unit versor for rotations)"
-fields = ["s", "xy", "xz", "yz"]
+# Rotors represent 3D rotations via the sandwich product: R * v * R^-1
+# - s: scalar part (cos(theta/2) for a rotation by angle theta)
+# - rz, ry, rx: rotation components (see Bivector docs)
+fields = ["s", "rz", "ry", "rx"]
 
 [types.Trivector]
 grades = [3]
 description = "3D trivector (pseudoscalar)"
-fields = ["xyz"]
+fields = ["ps"]
 
 # Note: Entity_0_3 (scalar + pseudoscalar) is valid but rarely used
 # Note: Entity_1_3 (vector + trivector) is the odd subalgebra

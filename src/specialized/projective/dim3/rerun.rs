@@ -72,13 +72,13 @@ impl From<Motor<f32>> for rerun::Transform3D {
     ///
     /// # Convention
     ///
-    /// The motor's rotation part `(s, e23, e31, e12)` maps to a quaternion:
-    /// - `w = s` (scalar)
-    /// - `x = e23` (rotation around x)
-    /// - `y = e31` (rotation around y)
-    /// - `z = e12` (rotation around z)
+    /// The motor's rotation part maps to a quaternion:
+    /// - `w = ps` (pseudoscalar)
+    /// - `x = -rx` (rotation around x, negated for quaternion convention)
+    /// - `y = -ry` (rotation around y, negated)
+    /// - `z = -rz` (rotation around z, negated)
     ///
-    /// The translation is extracted from the motor's translation components.
+    /// The translation is extracted by transforming the origin point.
     ///
     /// # Example
     ///
@@ -91,26 +91,27 @@ impl From<Motor<f32>> for rerun::Transform3D {
     /// ```
     #[inline]
     fn from(motor: Motor<f32>) -> Self {
+        use super::Point;
+        use crate::ops::Transform;
+
         let m = motor.unitized();
 
-        // Extract rotation quaternion from the rotor part
-        // Motor components: s, e23, e31, e12
-        // Quaternion: w = s, x = e23, y = e31, z = e12
-        let quat = rerun::Quaternion::from_xyzw([m.e23(), m.e31(), m.e12(), m.s()]);
+        // Extract rotation quaternion
+        // Motor semantic fields: s, tz, ty, tx, rx, ry, rz, ps
+        // Quaternion: (w, x, y, z) = (ps, -rx, -ry, -rz)
+        // Negate bivector components to match quaternion rotation convention
+        let quat = rerun::Quaternion::from_xyzw([-m.rx(), -m.ry(), -m.rz(), m.ps()]);
         let rotation = rerun::components::RotationQuat(quat);
 
-        // Extract translation
-        // For a motor M = R + d, the translation is: t = 2 * (e01, e02, e03)
-        // But for a composed motor, we need to compute the actual translation
-        // using: t = 2 * (s*d - b×d) where s is scalar, b is bivector, d is null bivector
-        //
-        // Simplified for PGA: t = 2 * (s*e01 + e12*e02 - e31*e03, ...)
-        // For a unit motor where the translation was encoded with 1/2 factor:
-        let tx = 2.0 * (m.s() * m.e01() + m.e12() * m.e02() - m.e31() * m.e03());
-        let ty = 2.0 * (m.s() * m.e02() + m.e23() * m.e03() - m.e12() * m.e01());
-        let tz = 2.0 * (m.s() * m.e03() + m.e31() * m.e01() - m.e23() * m.e02());
-
-        let translation = rerun::Vec3D::new(tx, ty, tz);
+        // Extract translation by transforming the origin
+        // This correctly handles the interaction between rotation and translation
+        let origin = Point::origin();
+        let transformed = m.transform(&origin);
+        let translation = rerun::Vec3D::new(
+            transformed.cartesian_x(),
+            transformed.cartesian_y(),
+            transformed.cartesian_z(),
+        );
 
         rerun::Transform3D::from_translation_rotation(translation, rotation)
     }

@@ -52,23 +52,36 @@ fields = ["s"]
 [types.Point]
 grades = [1]
 description = "2D point in homogeneous coordinates"
-fields = ["e1", "e2", "e0"]
+fields = ["x", "y", "w"]
 
 [types.Line]
 grades = [2]
 description = "2D line"
-fields = ["e01", "e02", "e12"]
+# Line equation: normal_x * x + normal_y * y + dist = 0
+# The normal vector (normal_x, normal_y) is perpendicular to the line.
+# The dist component is the signed distance from the origin (scaled by normal magnitude).
+# Lexicographic blade order: e12 (dist), e01 (normal_x), e02 (normal_y)
+fields = ["dist", "normal_x", "normal_y"]
 
 [types.Trivector]
 grades = [3]
-fields = ["e012"]
+fields = ["ps"]
 
 [types.Motor]
 grades = [1, 3]
 description = "2D rigid transformation (rotation + translation) via antisandwich"
-fields = ["e1", "e2", "e0", "e012"]
+# Field names reflect what each component DOES, not which blade it is:
+# - ty (e1): controls y-translation (dy goes here)
+# - tx (e2): controls x-translation (-dx goes here)
+# - r (e0): controls rotation (sin(θ/2) goes here)
+# - ps (e012): pseudoscalar (identity for composition)
+# Lexicographic order: [e1, e2, e0, e012]
+fields = ["ty", "tx", "r", "ps"]
 
 [types.Flector]
 grades = [0, 2]
 description = "2D reflection/glide transformation via antisandwich"
-fields = ["s", "e01", "e02", "e12"]
+# Grade 0: scalar (s)
+# Grade 2: Line components representing the reflection line
+# Lexicographic blade order: grade-0 scalar, then e12 (dist), e01 (normal_x), e02 (normal_y)
+fields = ["s", "dist", "normal_x", "normal_y"]

@@ -93,9 +93,9 @@ mod dim3_tests {
             let na_v: na::Vector3<f64> = b.into();
             let back: dim3::Bivector<f64> = na_v.into();
 
-            prop_assert!(abs_diff_eq!(b.xy(), back.xy(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.xz(), back.xz(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.yz(), back.yz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.rz(), back.rz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.ry(), back.ry(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.rx(), back.rx(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Bivector to nalgebra vector matches Bivector::dual()
@@ -117,9 +117,9 @@ mod dim3_tests {
             let m: na::Matrix3<f64> = b.into();
             let back: dim3::Bivector<f64> = m.try_into().unwrap();
 
-            prop_assert!(abs_diff_eq!(b.xy(), back.xy(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.xz(), back.xz(), epsilon = ABS_DIFF_EQ_EPS));
-            prop_assert!(abs_diff_eq!(b.yz(), back.yz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.rz(), back.rz(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.ry(), back.ry(), epsilon = ABS_DIFF_EQ_EPS));
+            prop_assert!(abs_diff_eq!(b.rx(), back.rx(), epsilon = ABS_DIFF_EQ_EPS));
         }
 
         /// Matrix from bivector is antisymmetric

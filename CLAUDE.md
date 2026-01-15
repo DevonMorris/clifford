@@ -84,6 +84,26 @@ Use the `clifford-codegen` tool for all algebraic operations:
 
 See the **implement agent** for detailed codegen usage.
 
+### 11. Semantic Field Naming
+
+**CRITICAL: Field names must reflect what the field DOES, not which blade it corresponds to.**
+
+When naming fields in algebra TOML files:
+- Name fields based on their **geometric/physical meaning**, not their blade indices
+- Test by reading the code: `from_translation(dx, dy, dz)` should use `tx`, `ty`, `tz` fields
+- If a field controls x-rotation, name it `rx`, not based on which e_ij blade it is
+
+**Example - 3D PGA Motor:**
+The Motor has 8 components. In point-based PGA with antisandwich:
+- Positions 1,2,3 (e12, e13, e14) control **translation** → name as `tz`, `ty`, `tx`
+- Positions 4,5,6 (e23, e24, e34) control **rotation** → name as `rx`, `ry`, `rz`
+- Position 7 (e0123) is the pseudoscalar → name as `ps`
+
+**Wrong:** Naming e12 as `bz` because it's the xy-plane bivector
+**Right:** Naming e12 as `tz` because it controls z-translation in this formulation
+
+Always verify by checking how factory methods use the fields.
+
 ## Development Commands
 
 ```bash

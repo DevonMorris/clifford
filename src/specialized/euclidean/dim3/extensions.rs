@@ -75,7 +75,7 @@ impl<T: Float> Bivector<T> {
     /// ```
     /// use clifford::specialized::euclidean::dim3::{Vector, Bivector};
     ///
-    /// let b = Bivector::<f64>::unit_xy();
+    /// let b = Bivector::<f64>::unit_rz();
     /// assert_eq!(b.dual(), Vector::unit_z());
     /// ```
     #[inline]
@@ -90,7 +90,7 @@ impl<T: Float> Bivector<T> {
     #[inline]
     pub fn normalized(&self) -> Self {
         let n = self.norm();
-        Self::new(self.xy() / n, self.xz() / n, self.yz() / n)
+        Self::new(self.rz() / n, self.ry() / n, self.rx() / n)
     }
 }
 
@@ -100,19 +100,15 @@ impl<T: Float> Bivector<T> {
 
 impl<T: Float> Trivector<T> {
     /// Creates the unit pseudoscalar `e₁₂₃`.
-    ///
-    /// Alias for `unit_xyz()` for backward compatibility.
     #[inline]
     pub fn unit() -> Self {
-        Self::unit_xyz()
+        Self::unit_ps()
     }
 
-    /// Returns the coefficient (alias for `xyz()`).
-    ///
-    /// Provided for backward compatibility.
+    /// Returns the coefficient (alias for `ps()`).
     #[inline]
     pub fn value(&self) -> T {
-        self.xyz()
+        self.ps()
     }
 }
 
@@ -123,8 +119,8 @@ impl<T: Float> Trivector<T> {
 impl<T: Float> Rotor<T> {
     /// Returns the bivector part as a Bivector.
     #[inline]
-    pub fn b(&self) -> Bivector<T> {
-        Bivector::new(self.xy(), self.xz(), self.yz())
+    pub fn bivector(&self) -> Bivector<T> {
+        Bivector::new(self.rz(), self.ry(), self.rx())
     }
 
     /// Creates a rotor from a rotation angle and plane (bivector).
@@ -139,7 +135,7 @@ impl<T: Float> Rotor<T> {
     /// use approx::abs_diff_eq;
     ///
     /// // 90° rotation in the xy-plane (around z-axis)
-    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let v = Vector::unit_x();
     /// let rotated = r.rotate(v);
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
@@ -151,9 +147,9 @@ impl<T: Float> Rotor<T> {
         let b = plane.normalized();
         Self::new_unchecked(
             cos_half,
-            sin_half * b.xy(),
-            sin_half * b.xz(),
-            sin_half * b.yz(),
+            sin_half * b.rz(),
+            sin_half * b.ry(),
+            sin_half * b.rx(),
         )
     }
 
@@ -187,7 +183,7 @@ impl<T: Float> Rotor<T> {
         let dot = b_norm.dot(a_norm);
         let wedge = b_norm.wedge(&a_norm);
 
-        let r = Self::new_unchecked(T::one() + dot, wedge.xy(), wedge.xz(), wedge.yz());
+        let r = Self::new_unchecked(T::one() + dot, wedge.rz(), wedge.ry(), wedge.rx());
         r.normalize()
     }
 
@@ -200,9 +196,9 @@ impl<T: Float> Rotor<T> {
         let rev = self.reverse();
         Self::new_unchecked(
             rev.s() / norm_sq,
-            rev.xy() / norm_sq,
-            rev.xz() / norm_sq,
-            rev.yz() / norm_sq,
+            rev.rz() / norm_sq,
+            rev.ry() / norm_sq,
+            rev.rx() / norm_sq,
         )
     }
 
@@ -217,7 +213,7 @@ impl<T: Float> Rotor<T> {
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
-    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
+    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let v = Vector::unit_x();
     /// let rotated = r.rotate(v);
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
@@ -247,9 +243,9 @@ impl<T: Float> Rotor<T> {
     #[inline]
     pub fn slerp(&self, other: Self, t: T) -> Self {
         let dot = self.s() * other.s()
-            + self.xy() * other.xy()
-            + self.xz() * other.xz()
-            + self.yz() * other.yz();
+            + self.rz() * other.rz()
+            + self.ry() * other.ry()
+            + self.rx() * other.rx();
 
         let dot = if dot > T::one() {
             T::one()
@@ -265,9 +261,9 @@ impl<T: Float> Rotor<T> {
             // Linear interpolation for small angles, then normalize
             return Self::new_unchecked(
                 self.s() * (T::one() - t) + other.s() * t,
-                self.xy() * (T::one() - t) + other.xy() * t,
-                self.xz() * (T::one() - t) + other.xz() * t,
-                self.yz() * (T::one() - t) + other.yz() * t,
+                self.rz() * (T::one() - t) + other.rz() * t,
+                self.ry() * (T::one() - t) + other.ry() * t,
+                self.rx() * (T::one() - t) + other.rx() * t,
             )
             .normalize();
         }
@@ -279,9 +275,9 @@ impl<T: Float> Rotor<T> {
         // Spherical interpolation preserves unit norm
         Self::new_unchecked(
             self.s() * s1 + other.s() * s2,
-            self.xy() * s1 + other.xy() * s2,
-            self.xz() * s1 + other.xz() * s2,
-            self.yz() * s1 + other.yz() * s2,
+            self.rz() * s1 + other.rz() * s2,
+            self.ry() * s1 + other.ry() * s2,
+            self.rx() * s1 + other.rx() * s2,
         )
     }
 }

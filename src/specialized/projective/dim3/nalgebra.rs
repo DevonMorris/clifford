@@ -136,10 +136,15 @@ impl<T: Float + na::Scalar> TryFrom<Point<T>> for na::Point3<T> {
     /// assert!(Point3::<f64>::try_from(ideal).is_err());
     /// ```
     fn try_from(p: Point<T>) -> Result<Self, Self::Error> {
-        if p.e0().abs() < T::epsilon() {
+        if p.w().abs() < T::epsilon() {
             return Err(NalgebraConversionError::IdealPoint);
         }
-        Ok(na::Point3::new(p.x(), p.y(), p.z()))
+        // Return Cartesian coordinates (divide by w)
+        Ok(na::Point3::new(
+            p.cartesian_x(),
+            p.cartesian_y(),
+            p.cartesian_z(),
+        ))
     }
 }
 
@@ -172,33 +177,38 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
     /// ```
     fn from(motor: Motor<T>) -> Self {
         // Normalize rotation quaternion to ensure valid unit quaternion
-        // The motor's rotation part is (e01, e02, e03, e0123)
-        let rot_norm_sq = motor.e01() * motor.e01()
-            + motor.e02() * motor.e02()
-            + motor.e03() * motor.e03()
-            + motor.e0123() * motor.e0123();
+        // Rotation uses (bx, ty, tz, ps) which are positions 4, 5, 6, 7
+        // (originally named e01, e02, e03, e0123 in the old TOML)
+        let rot_norm_sq = motor.rx() * motor.rx()
+            + motor.ry() * motor.ry()
+            + motor.rz() * motor.rz()
+            + motor.ps() * motor.ps();
         let rot_norm = num_traits::Float::sqrt(rot_norm_sq);
 
-        // Extract rotation quaternion from (e01, e02, e03, e0123)
+        // Extract rotation quaternion
         // PGA antisandwich uses antireverse which differs from quaternion conjugate.
         // Negate the bivector components to match nalgebra's rotation direction.
-        // Mapping: (w, i, j, k) = (e0123, -e01, -e02, -e03)
+        // Mapping: (w, i, j, k) = (ps, -bx, -ty, -tz)
         let rotation = if rot_norm > T::epsilon() {
             na::UnitQuaternion::from_quaternion(na::Quaternion::new(
-                motor.e0123() / rot_norm,
-                -motor.e01() / rot_norm,
-                -motor.e02() / rot_norm,
-                -motor.e03() / rot_norm,
+                motor.ps() / rot_norm,
+                -motor.rx() / rot_norm,
+                -motor.ry() / rot_norm,
+                -motor.rz() / rot_norm,
             ))
         } else {
             na::UnitQuaternion::identity()
         };
 
-        // Extract translation by applying motor to origin and reading result
+        // Extract translation by applying motor to origin and reading Cartesian result
         // This handles the complex interaction between rotation and translation
         let origin = Point::origin();
         let transformed = motor.transform(&origin);
-        let translation = na::Translation3::new(transformed.x(), transformed.y(), transformed.z());
+        let translation = na::Translation3::new(
+            transformed.cartesian_x(),
+            transformed.cartesian_y(),
+            transformed.cartesian_z(),
+        );
 
         na::Isometry3::from_parts(translation, rotation)
     }
@@ -236,16 +246,17 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
         let t = iso.translation.vector;
 
         // Create a pure rotation motor from the quaternion
+        // Rotation uses positions bx (e23), ty (e24), tz (e34), ps (e0123)
         // PGA convention uses opposite signs for bivector components
         let rotor = Motor::new_unchecked(
             T::zero(), // s
-            T::zero(), // e23
-            T::zero(), // e31
-            T::zero(), // e12
-            -q.i,      // e01
-            -q.j,      // e02
-            -q.k,      // e03
-            q.w,       // e0123
+            T::zero(), // bz (e12) - unused for rotation
+            T::zero(), // by (e13) - unused for rotation
+            T::zero(), // tx (e14) - unused for rotation
+            -q.i,      // bx (e23) - x-rotation
+            -q.j,      // ty (e24) - y-rotation
+            -q.k,      // tz (e34) - z-rotation
+            q.w,       // ps (e0123) - scalar
         );
 
         // Create a pure translation motor
@@ -256,24 +267,24 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
             eprintln!(
                 "  Rotor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
                 rotor.s(),
-                rotor.e23(),
-                rotor.e31(),
-                rotor.e12(),
-                rotor.e01(),
-                rotor.e02(),
-                rotor.e03(),
-                rotor.e0123()
+                rotor.rx(),
+                rotor.ty(),
+                rotor.tz(),
+                rotor.tx(),
+                rotor.ry(),
+                rotor.rz(),
+                rotor.ps()
             );
             eprintln!(
                 "  Translator: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
                 translator.s(),
-                translator.e23(),
-                translator.e31(),
-                translator.e12(),
-                translator.e01(),
-                translator.e02(),
-                translator.e03(),
-                translator.e0123()
+                translator.rx(),
+                translator.ty(),
+                translator.tz(),
+                translator.tx(),
+                translator.ry(),
+                translator.rz(),
+                translator.ps()
             );
         }
 
@@ -305,10 +316,10 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let back: Point<f64> = na_p.into();
 
-            // Compare Cartesian coordinates
-            prop_assert!(relative_eq!(p.x(), back.x(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.y(), back.y(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.z(), back.z(), epsilon = EPS, max_relative = EPS));
+            // Compare Cartesian coordinates (back has w=1 from from_cartesian)
+            prop_assert!(relative_eq!(p.cartesian_x(), back.x(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.cartesian_y(), back.y(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.cartesian_z(), back.z(), epsilon = EPS, max_relative = EPS));
         }
 
         #[test]
@@ -317,9 +328,10 @@ mod tests {
             prop_assert!(result.is_ok());
 
             let na_p = result.unwrap();
-            prop_assert!(relative_eq!(p.x(), na_p.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.y(), na_p.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.z(), na_p.z, epsilon = EPS, max_relative = EPS));
+            // na_p contains Cartesian coordinates (division by w happened in conversion)
+            prop_assert!(relative_eq!(p.cartesian_x(), na_p.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.cartesian_y(), na_p.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.cartesian_z(), na_p.z, epsilon = EPS, max_relative = EPS));
         }
     }
 
@@ -347,11 +359,11 @@ mod tests {
 
             // Debug output
             eprintln!("Original motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-                m.s(), m.e23(), m.e31(), m.e12(), m.e01(), m.e02(), m.e03(), m.e0123());
+                m.s(), m.rx(), m.ty(), m.tz(), m.tx(), m.ry(), m.rz(), m.ps());
             eprintln!("Isometry: rotation={:?}, translation={:?}",
                 iso.rotation.quaternion(), iso.translation.vector);
             eprintln!("Back motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-                back.s(), back.e23(), back.e31(), back.e12(), back.e01(), back.e02(), back.e03(), back.e0123());
+                back.s(), back.rx(), back.ty(), back.tz(), back.tx(), back.ry(), back.rz(), back.ps());
 
             // Test with several points to ensure transformation equivalence
             let test_points = [
@@ -400,18 +412,18 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            // Compare results
+            // Compare Cartesian results (GA result must be divided by w)
             prop_assert!(
-                relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS),
-                "x mismatch: GA={} vs NA={}", result_ga.x(), na_result.x
+                relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS),
+                "x mismatch: GA={} vs NA={}", result_ga.cartesian_x(), na_result.x
             );
             prop_assert!(
-                relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS),
-                "y mismatch: GA={} vs NA={}", result_ga.y(), na_result.y
+                relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS),
+                "y mismatch: GA={} vs NA={}", result_ga.cartesian_y(), na_result.y
             );
             prop_assert!(
-                relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS),
-                "z mismatch: GA={} vs NA={}", result_ga.z(), na_result.z
+                relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS),
+                "z mismatch: GA={} vs NA={}", result_ga.cartesian_z(), na_result.z
             );
         }
 
@@ -431,18 +443,18 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = inv_na.transform_point(&na_p);
 
-            // Compare results
+            // Compare Cartesian results (GA result must be divided by w)
             prop_assert!(
-                relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS),
-                "x mismatch: GA={} vs NA={}", result_ga.x(), na_result.x
+                relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS),
+                "x mismatch: GA={} vs NA={}", result_ga.cartesian_x(), na_result.x
             );
             prop_assert!(
-                relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS),
-                "y mismatch: GA={} vs NA={}", result_ga.y(), na_result.y
+                relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS),
+                "y mismatch: GA={} vs NA={}", result_ga.cartesian_y(), na_result.y
             );
             prop_assert!(
-                relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS),
-                "z mismatch: GA={} vs NA={}", result_ga.z(), na_result.z
+                relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS),
+                "z mismatch: GA={} vs NA={}", result_ga.cartesian_z(), na_result.z
             );
         }
     }
@@ -470,9 +482,9 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS));
         }
 
         /// Verify from_rotation_x produces equivalent results.
@@ -493,9 +505,9 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS));
         }
 
         /// Verify from_rotation_y produces equivalent results.
@@ -516,9 +528,9 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS));
         }
 
         /// Verify from_rotation_z produces equivalent results.
@@ -539,9 +551,9 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS));
         }
 
         /// Verify from_axis_angle produces equivalent results.
@@ -572,9 +584,9 @@ mod tests {
             let na_p: na::Point3<f64> = (*p).try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
-            prop_assert!(relative_eq!(result_ga.x(), na_result.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.y(), na_result.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(result_ga.z(), na_result.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_y(), na_result.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(result_ga.cartesian_z(), na_result.z, epsilon = EPS, max_relative = EPS));
         }
     }
 
@@ -616,21 +628,12 @@ mod tests {
 
     /// Helper: compute reflection of a point through a plane through the origin.
     ///
-    /// In PGA, the plane representation uses basis elements (e023, e031, e012) which have
-    /// specific sign conventions relative to the standard normal vector (nx, ny, nz).
-    /// The e031 basis element has opposite orientation from the standard e013 = e0∧e1∧e3,
-    /// so the y-component of the reflection must be adjusted to match.
-    ///
-    /// This helper accounts for that convention difference to validate that our GA
-    /// implementation produces geometrically correct reflections.
+    /// Uses standard reflection formula: P' = P - 2(P·n̂)n̂
     fn reflect_point_through_origin_plane(
         point: &na::Point3<f64>,
         normal: &na::Vector3<f64>,
     ) -> na::Point3<f64> {
-        // The GA stores plane normal with y-component sign flipped in e031
-        // So from_plane_through_origin(nx, ny, nz) reflects as if normal is (nx, -ny, nz)
-        let adjusted_normal = na::Vector3::new(normal.x, -normal.y, normal.z);
-        let n_unit = adjusted_normal.normalize();
+        let n_unit = normal.normalize();
         let proj = point.coords.dot(&n_unit);
         na::Point3::from(point.coords - n_unit * (2.0 * proj))
     }
@@ -663,18 +666,18 @@ mod tests {
             let na_normal = na::Vector3::new(nx, ny, nz);
             let result_na = reflect_point_through_origin_plane(&na_p, &na_normal);
 
-            // Compare results
+            // Compare Cartesian results (GA result must be divided by w)
             prop_assert!(
-                relative_eq!(result_ga.x(), result_na.x, epsilon = EPS, max_relative = EPS),
-                "x mismatch: GA={} vs manual={}", result_ga.x(), result_na.x
+                relative_eq!(result_ga.cartesian_x(), result_na.x, epsilon = EPS, max_relative = EPS),
+                "x mismatch: GA={} vs manual={}", result_ga.cartesian_x(), result_na.x
             );
             prop_assert!(
-                relative_eq!(result_ga.y(), result_na.y, epsilon = EPS, max_relative = EPS),
-                "y mismatch: GA={} vs manual={}", result_ga.y(), result_na.y
+                relative_eq!(result_ga.cartesian_y(), result_na.y, epsilon = EPS, max_relative = EPS),
+                "y mismatch: GA={} vs manual={}", result_ga.cartesian_y(), result_na.y
             );
             prop_assert!(
-                relative_eq!(result_ga.z(), result_na.z, epsilon = EPS, max_relative = EPS),
-                "z mismatch: GA={} vs manual={}", result_ga.z(), result_na.z
+                relative_eq!(result_ga.cartesian_z(), result_na.z, epsilon = EPS, max_relative = EPS),
+                "z mismatch: GA={} vs manual={}", result_ga.cartesian_z(), result_na.z
             );
         }
 
@@ -698,18 +701,18 @@ mod tests {
             let once = flector.transform(&*p);
             let twice = flector.transform(&once);
 
-            // Should be back at original point
+            // Should be back at original point (compare Cartesian coordinates)
             prop_assert!(
-                relative_eq!(p.x(), twice.x(), epsilon = EPS, max_relative = EPS),
-                "x mismatch after double reflection: {} vs {}", p.x(), twice.x()
+                relative_eq!(p.cartesian_x(), twice.cartesian_x(), epsilon = EPS, max_relative = EPS),
+                "x mismatch after double reflection: {} vs {}", p.cartesian_x(), twice.cartesian_x()
             );
             prop_assert!(
-                relative_eq!(p.y(), twice.y(), epsilon = EPS, max_relative = EPS),
-                "y mismatch after double reflection: {} vs {}", p.y(), twice.y()
+                relative_eq!(p.cartesian_y(), twice.cartesian_y(), epsilon = EPS, max_relative = EPS),
+                "y mismatch after double reflection: {} vs {}", p.cartesian_y(), twice.cartesian_y()
             );
             prop_assert!(
-                relative_eq!(p.z(), twice.z(), epsilon = EPS, max_relative = EPS),
-                "z mismatch after double reflection: {} vs {}", p.z(), twice.z()
+                relative_eq!(p.cartesian_z(), twice.cartesian_z(), epsilon = EPS, max_relative = EPS),
+                "z mismatch after double reflection: {} vs {}", p.cartesian_z(), twice.cartesian_z()
             );
         }
     }
@@ -722,13 +725,13 @@ mod tests {
         println!(
             "Converted motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
             motor.s(),
-            motor.e23(),
-            motor.e31(),
-            motor.e12(),
-            motor.e01(),
-            motor.e02(),
-            motor.e03(),
-            motor.e0123()
+            motor.rx(),
+            motor.ty(),
+            motor.tz(),
+            motor.tx(),
+            motor.ry(),
+            motor.rz(),
+            motor.ps()
         );
 
         let p = Point::from_cartesian(1.0, 2.0, 3.0);
