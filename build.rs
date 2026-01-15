@@ -63,6 +63,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/dualquat.toml",
         "src/specialized/dualquat/generated",
     ),
+    (
+        "elliptic2",
+        "algebras/elliptic2.toml",
+        "src/specialized/elliptic/dim2/generated",
+    ),
 ];
 
 fn main() {

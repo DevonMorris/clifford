@@ -21,7 +21,7 @@ Implement 2D elliptic projective geometry as Cl(3,0,0) via the code generation p
 | 2 | e₁₂, e₁₃, e₂₃ | 3 | Lines (great circles) |
 | 3 | e₁₂₃ | 1 | Pseudoscalar |
 
-**Norm**: Uses **reversal** involution (non-degenerate with all positive signature).
+**Norm**: Uses **reverse** involution (non-degenerate with all positive signature).
 
 ## Geometric Interpretation
 
@@ -43,7 +43,8 @@ Key properties:
 | Line | [2] | xy, xz, yz | Lines (great circles) |
 | Pseudoscalar | [3] | xyz | Volume element |
 | Rotor | [0, 2] | s, xy, xz, yz | Rotations |
-| Multivector | [0, 1, 2, 3] | all 8 | General multivector |
+
+Note: For a general multivector with all grades, use `crate::algebra::Multivector<T, Euclidean3>`.
 
 ## Applications
 
@@ -75,7 +76,7 @@ negative = []
 zero = []
 
 [norm]
-primary_involution = "reversal"
+primary_involution = "reverse"
 
 [types.Scalar]
 grades = [0]
@@ -96,10 +97,6 @@ fields = ["xyz"]
 [types.Rotor]
 grades = [0, 2]
 fields = ["s", "xy", "xz", "yz"]
-
-[types.Multivector]
-grades = [0, 1, 2, 3]
-fields = ["s", "x", "y", "z", "xy", "xz", "yz", "xyz"]
 ```
 
 ## Relationship to Other Algebras

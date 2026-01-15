@@ -1,0 +1,62 @@
+# 2D Elliptic Projective Geometry
+# Cl(3,0,0) with projective interpretation
+
+[algebra]
+name = "elliptic2"
+module_path = "elliptic::dim2"
+description = "2D Elliptic Projective Geometry Cl(3,0,0)"
+
+[signature]
+positive = ["e1", "e2", "e3"]
+negative = []
+zero = []
+
+# ============================================================
+# Norm Configuration
+# ============================================================
+# Non-degenerate algebra (r=0) with all positive signature.
+# Uses reversal for the norm: |x|² = x * x̃
+
+[norm]
+primary_involution = "reverse"
+
+# ============================================================
+# Types
+# ============================================================
+# In elliptic 2D geometry:
+# - Grade 1: Points (directions on the sphere / homogeneous coords)
+# - Grade 2: Lines (great circles on the sphere)
+# - Rotors: Rotations on the elliptic plane
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+fields = ["s"]
+
+[types.Point]
+grades = [1]
+description = "Point on the elliptic plane (homogeneous coordinates)"
+# Points represented as unit vectors in R³ (or antipodal pairs on S²)
+fields = ["x", "y", "z"]
+
+[types.Line]
+grades = [2]
+description = "Line on the elliptic plane (great circle)"
+# Lines are bivectors representing great circles
+# - xy: component in the e₁e₂ plane
+# - xz: component in the e₁e₃ plane
+# - yz: component in the e₂e₃ plane
+fields = ["xy", "xz", "yz"]
+
+[types.Pseudoscalar]
+grades = [3]
+description = "Pseudoscalar (volume element)"
+fields = ["xyz"]
+
+[types.Rotor]
+grades = [0, 2]
+description = "Rotor for rotations on the elliptic plane"
+# Rotors transform points: R * p * R̃
+# - s: scalar part (cos(θ/2))
+# - xy, xz, yz: bivector part (axis-angle encoding)
+fields = ["s", "xy", "xz", "yz"]
