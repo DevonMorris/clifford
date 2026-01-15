@@ -104,6 +104,47 @@ The Motor has 8 components. In point-based PGA with antisandwich:
 
 Always verify by checking how factory methods use the fields.
 
+### 12. Extension Methods
+
+**CRITICAL: Prefer generated traits over extension methods.**
+
+The `extensions.rs` files in each specialized module should be minimal:
+
+1. **NEVER shadow a trait with an extension method** - If a trait like `Wedge`, `Antiwedge`, `Transform`, or `Sandwich` already provides the operation, do NOT add a method like `meet()` or `join()` that just calls the trait.
+
+2. **Extensions are primarily for constructors** - Factory methods like `from_cartesian()`, `from_angle_plane()`, `from_translation()`, `origin()`, `identity()` belong in extensions.
+
+3. **Do NOT add trivial wrapper methods** - Methods like `meet_plane(&self, plane)` that just call `self.antiwedge(plane)` add no value. Users should use the trait directly.
+
+**What belongs in extensions.rs:**
+- Constructors and factory methods
+- Coordinate extraction (e.g., `cartesian_x()`, `to_cartesian()`)
+- Geometric queries that require multiple operations (e.g., `is_parallel()`, `distance()`)
+- Methods with domain-specific validation or normalization
+
+**What does NOT belong in extensions.rs:**
+- `join()` → use `Wedge::wedge()`
+- `meet()` → use `Antiwedge::antiwedge()`
+- `transform()` → use `Transform::transform()`
+- `meet_plane()`, `meet_line()` → use `Antiwedge::antiwedge()`
+- Any method that is just `self.some_trait_method(other)`
+
+**Example - Wrong:**
+```rust
+impl Line {
+    pub fn meet(&self, other: &Line) -> Point {
+        self.antiwedge(other)  // Just shadows the trait!
+    }
+}
+```
+
+**Example - Right:**
+```rust
+// Let users call the trait directly:
+use clifford::ops::Antiwedge;
+let intersection = line1.antiwedge(&line2);
+```
+
 ## Development Commands
 
 ```bash
