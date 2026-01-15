@@ -847,15 +847,24 @@ impl<'a> TypeGenerator<'a> {
 
     /// Generates wrapper type aliases for all entity types.
     ///
-    /// For every entity type (except Scalar and type aliases), generates:
-    /// - `Bulk<Type>` alias: `BulkVector<T> = Bulk<Vector<T>>`
-    /// - `Unitized<Type>` alias: `UnitizedVector<T> = Unitized<Vector<T>>`
+    /// Generates wrapper type aliases based on the algebra signature:
     ///
-    /// Additionally for Euclidean algebras, generates `Unit<T>` aliases:
-    /// - `UnitVector<T> = Unit<Vector<T>>`
+    /// - **Degenerate algebras** (r > 0, e.g., PGA): `Bulk<T>`, `Unitized<T>`
+    /// - **Non-degenerate algebras** (r = 0): `Unit<T>` for normalizable types
+    /// - **Indefinite algebras** (p > 0 && q > 0 && r = 0): `Proper<T>`, `Spacelike<T>`, `Null<T>`
+    ///
+    /// This ensures aliases are only generated for types that implement the required traits:
+    /// - `Bulk<T>`, `Unitized<T>` require `DegenerateNormed`
+    /// - `Unit<T>` requires `Normed`
+    /// - `Proper<T>`, `Spacelike<T>`, `Null<T>` require `IndefiniteNormed`
     fn generate_wrapper_aliases(&self) -> TokenStream {
         let mut aliases = Vec::new();
-        let is_pga = self.spec.signature.r > 0;
+        let sig = &self.spec.signature;
+
+        // Determine algebra classification
+        let is_degenerate = sig.r > 0; // Has zero-squaring basis vectors (PGA)
+        let is_indefinite = sig.p > 0 && sig.q > 0 && sig.r == 0; // Non-degenerate but mixed signature
+        let is_non_degenerate = sig.r == 0; // No zero-squaring basis vectors
 
         for ty in &self.spec.types {
             // Skip type aliases
@@ -863,43 +872,46 @@ impl<'a> TypeGenerator<'a> {
                 continue;
             }
 
-            // Skip Scalar type - no need for Bulk/Unitized wrappers
+            // Skip Scalar type - no need for wrapper aliases
             if ty.name == "Scalar" {
                 continue;
             }
 
             let type_name = format_ident!("{}", ty.name);
 
-            // Generate Bulk<T> alias for all entity types
-            let bulk_alias = format_ident!("Bulk{}", ty.name);
-            let bulk_doc = format!(
-                "A bulk-normalized {} (bulk norm = 1).\n\n\
-                 This type alias wraps {} in `Bulk<T>`, which normalizes by the bulk \
-                 (non-degenerate) part of the norm.",
-                ty.name, ty.name
-            );
+            // Generate Bulk<T> and Unitized<T> aliases ONLY for degenerate algebras (PGA)
+            // These require the DegenerateNormed trait
+            if is_degenerate {
+                let bulk_alias = format_ident!("Bulk{}", ty.name);
+                let bulk_doc = format!(
+                    "A bulk-normalized {} (bulk norm = 1).\n\n\
+                     This type alias wraps {} in `Bulk<T>`, which normalizes by the bulk \
+                     (non-degenerate) part of the norm.",
+                    ty.name, ty.name
+                );
 
-            aliases.push(quote! {
-                #[doc = #bulk_doc]
-                pub type #bulk_alias<T> = crate::wrappers::Bulk<#type_name<T>>;
-            });
+                aliases.push(quote! {
+                    #[doc = #bulk_doc]
+                    pub type #bulk_alias<T> = crate::wrappers::Bulk<#type_name<T>>;
+                });
 
-            // Generate Unitized<T> alias for all entity types
-            let unitized_alias = format_ident!("Unitized{}", ty.name);
-            let unitized_doc = format!(
-                "A unitized {} (weight norm = 1).\n\n\
-                 This type alias wraps {} in `Unitized<T>`, which normalizes by the weight \
-                 (degenerate) part of the norm.",
-                ty.name, ty.name
-            );
+                let unitized_alias = format_ident!("Unitized{}", ty.name);
+                let unitized_doc = format!(
+                    "A unitized {} (weight norm = 1).\n\n\
+                     This type alias wraps {} in `Unitized<T>`, which normalizes by the weight \
+                     (degenerate) part of the norm.",
+                    ty.name, ty.name
+                );
 
-            aliases.push(quote! {
-                #[doc = #unitized_doc]
-                pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
-            });
+                aliases.push(quote! {
+                    #[doc = #unitized_doc]
+                    pub type #unitized_alias<T> = crate::wrappers::Unitized<#type_name<T>>;
+                });
+            }
 
-            // For Euclidean algebras, also generate Unit<T> aliases for appropriate types
-            if !is_pga {
+            // Generate Unit<T> aliases for non-degenerate algebras
+            // These require the Normed trait
+            if is_non_degenerate {
                 // Generate Unit aliases for types that make sense to normalize:
                 // - Single-grade types (Vector, Bivector, Trivector)
                 // - Rotor types (grades [0, 2])
@@ -909,7 +921,7 @@ impl<'a> TypeGenerator<'a> {
                 if should_generate_unit {
                     let unit_alias = format_ident!("Unit{}", ty.name);
                     let unit_doc = format!(
-                        "A unit {} (Euclidean norm = 1).\n\n\
+                        "A unit {} (norm = 1).\n\n\
                          This type alias provides compile-time documentation that the \
                          {} has been normalized.",
                         ty.name, ty.name
@@ -918,6 +930,49 @@ impl<'a> TypeGenerator<'a> {
                     aliases.push(quote! {
                         #[doc = #unit_doc]
                         pub type #unit_alias<T> = crate::wrappers::Unit<#type_name<T>>;
+                    });
+                }
+            }
+
+            // Generate Proper<T>, Spacelike<T>, Null<T> aliases for indefinite algebras
+            // These require the IndefiniteNormed trait
+            if is_indefinite {
+                // Only generate for single-grade types that can have indefinite norms
+                if ty.grades.len() == 1 {
+                    let proper_alias = format_ident!("Proper{}", ty.name);
+                    let proper_doc = format!(
+                        "A {} with positive norm squared (timelike in Minkowski).\n\n\
+                         This type alias wraps {} in `Proper<T>`, guaranteeing norm² > 0.",
+                        ty.name, ty.name
+                    );
+
+                    aliases.push(quote! {
+                        #[doc = #proper_doc]
+                        pub type #proper_alias<T> = crate::wrappers::Proper<#type_name<T>>;
+                    });
+
+                    let spacelike_alias = format_ident!("Spacelike{}", ty.name);
+                    let spacelike_doc = format!(
+                        "A {} with negative norm squared (spacelike in Minkowski).\n\n\
+                         This type alias wraps {} in `Spacelike<T>`, guaranteeing norm² < 0.",
+                        ty.name, ty.name
+                    );
+
+                    aliases.push(quote! {
+                        #[doc = #spacelike_doc]
+                        pub type #spacelike_alias<T> = crate::wrappers::Spacelike<#type_name<T>>;
+                    });
+
+                    let null_alias = format_ident!("Null{}", ty.name);
+                    let null_doc = format!(
+                        "A {} with zero norm squared (lightlike/null in Minkowski).\n\n\
+                         This type alias wraps {} in `Null<T>`, guaranteeing norm² = 0.",
+                        ty.name, ty.name
+                    );
+
+                    aliases.push(quote! {
+                        #[doc = #null_doc]
+                        pub type #null_alias<T> = crate::wrappers::Null<#type_name<T>>;
                     });
                 }
             }
