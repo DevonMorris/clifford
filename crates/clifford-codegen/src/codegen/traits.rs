@@ -594,6 +594,19 @@ impl<'a> TraitsGenerator<'a> {
         quote! { #(#expr_parts)* }
     }
 
+    // NOTE: Project/Antiproject trait generation methods have been removed.
+    // The blade-triple formula `b ∨ (a ∧ b☆)` produces all zeros because the
+    // weight_dual computation involving degenerate basis vectors (e₀² = 0)
+    // causes the antiproduct to vanish.
+    //
+    // Projections are still available via Multivector::project() and antiproject().
+    // A future implementation could:
+    // 1. Use a different formula that doesn't rely on weight_dual for Euclidean algebras
+    // 2. Fix the blade-based weight_dual computation for PGA algebras
+    //
+    // See ProductTable::project_triple() and antiproject_triple() in table.rs
+    // which are still available if a working formula is found.
+
     /// Computes scalar product expression (grade-0 projection of geometric product).
     ///
     /// Returns TokenStream expression for the scalar result.
@@ -949,10 +962,27 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
-        // NOTE: Project and Antiproject traits are NOT generated for specialized types.
-        // The formulas b ∨ (a ∧ b☆) and b ∧ (a ∨ b☆) are NOT bilinear because 'b'
-        // appears twice. The blade-pair product approach doesn't work for these.
-        // Use Multivector::project() and Multivector::antiproject() instead.
+        // Project and Antiproject traits - only for degenerate algebras (PGA)
+        // The weight dual formula used in these projections requires a degenerate metric.
+        // In Euclidean algebras without a degenerate direction, these operations are not defined.
+        //
+        // NOTE: Currently disabled as the blade-triple formula produces all zeros.
+        // The weight_dual computation involving degenerate basis vectors (e₀² = 0)
+        // causes the antiproduct to vanish. A different approach may be needed.
+        //
+        // TODO: Investigate alternative formulas for projections that work with the
+        // blade-based approach, or implement projections at the Multivector level only.
+        //
+        // if self.spec.signature.r > 0 {
+        //     // Only generate for degenerate algebras (PGA)
+        //     let single_grade_types: Vec<_> = self
+        //         .spec
+        //         .types
+        //         .iter()
+        //         .filter(|t| t.alias_of.is_none() && self.is_single_grade_blade(t))
+        //         .collect();
+        //     ... implementation ...
+        // }
 
         // ====== Unary Operation Traits ======
 

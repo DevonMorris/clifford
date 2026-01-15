@@ -790,47 +790,6 @@ pub trait Antiproject<Target> {
 }
 
 // ============================================================================
-// Blanket Implementations for Project and Antiproject
-// ============================================================================
-
-/// Blanket implementation of Project using component traits.
-///
-/// Any type pair where `B` has a weight dual, `A` can wedge with that dual,
-/// and `B` can antiwedge with the result automatically gets projection.
-impl<A, B> Project<B> for A
-where
-    B: WeightDual,
-    A: Wedge<<B as WeightDual>::Output>,
-    B: Antiwedge<<A as Wedge<<B as WeightDual>::Output>>::Output>,
-{
-    type Output = <B as Antiwedge<<A as Wedge<<B as WeightDual>::Output>>::Output>>::Output;
-
-    #[inline]
-    fn project(&self, target: &B) -> Self::Output {
-        // Formula: b ∨ (a ∧ b☆)
-        let b_dual = target.weight_dual();
-        let wedge_result = self.wedge(&b_dual);
-        target.antiwedge(&wedge_result)
-    }
-}
-
-/// Blanket implementation of Antiproject using component traits.
-///
-/// Any type pair where `B` has a weight dual, `A` can antiwedge with that dual,
-/// and `B` can wedge with the result automatically gets antiprojection.
-impl<A, B> Antiproject<B> for A
-where
-    B: WeightDual,
-    A: Antiwedge<<B as WeightDual>::Output>,
-    B: Wedge<<A as Antiwedge<<B as WeightDual>::Output>>::Output>,
-{
-    type Output = <B as Wedge<<A as Antiwedge<<B as WeightDual>::Output>>::Output>>::Output;
-
-    #[inline]
-    fn antiproject(&self, target: &B) -> Self::Output {
-        // Formula: b ∧ (a ∨ b☆)
-        let b_dual = target.weight_dual();
-        let antiwedge_result = self.antiwedge(&b_dual);
-        target.wedge(&antiwedge_result)
-    }
-}
+// Note: Project and Antiproject implementations are code-generated
+// for specialized single-grade types to ensure only geometrically
+// meaningful operations are allowed. See generated/traits.rs files.

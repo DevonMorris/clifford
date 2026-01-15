@@ -1122,6 +1122,70 @@ impl ProductTable {
         (dual_sign * ext_sign * reg_sign, result)
     }
 
+    /// Computes the projection contribution for a triple of blades.
+    ///
+    /// For multi-blade types, the projection `B ∨ (A ∧ B☆)` expands to:
+    /// `Σ_{i,j,k} b_k ∨ (a_i ∧ b_j☆)`
+    ///
+    /// This method computes one term: `b_antiwedge ∨ (a ∧ b_dual☆)`
+    ///
+    /// # Arguments
+    /// - `a`: The source blade index
+    /// - `b_dual`: The target blade to take weight dual of
+    /// - `b_antiwedge`: The target blade for the final antiwedge
+    ///
+    /// # Returns
+    /// A tuple `(sign, result)` for this contribution.
+    pub fn project_triple(&self, a: usize, b_dual: usize, b_antiwedge: usize) -> (i8, usize) {
+        // Step 1: Compute weight dual of b_dual
+        let (dual_sign, b_dual_result) = self.weight_dual(b_dual);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 2: Compute a ∧ b_dual☆
+        let (ext_sign, wedge_result) = self.exterior(a, b_dual_result);
+        if ext_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 3: Compute b_antiwedge ∨ (a ∧ b_dual☆)
+        let (reg_sign, result) = self.regressive(b_antiwedge, wedge_result);
+        (dual_sign * ext_sign * reg_sign, result)
+    }
+
+    /// Computes the antiprojection contribution for a triple of blades.
+    ///
+    /// For multi-blade types, the antiprojection `B ∧ (A ∨ B☆)` expands to:
+    /// `Σ_{i,j,k} b_k ∧ (a_i ∨ b_j☆)`
+    ///
+    /// This method computes one term: `b_wedge ∧ (a ∨ b_dual☆)`
+    ///
+    /// # Arguments
+    /// - `a`: The source blade index
+    /// - `b_dual`: The target blade to take weight dual of
+    /// - `b_wedge`: The target blade for the final wedge
+    ///
+    /// # Returns
+    /// A tuple `(sign, result)` for this contribution.
+    pub fn antiproject_triple(&self, a: usize, b_dual: usize, b_wedge: usize) -> (i8, usize) {
+        // Step 1: Compute weight dual of b_dual
+        let (dual_sign, b_dual_result) = self.weight_dual(b_dual);
+        if dual_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 2: Compute a ∨ b_dual☆
+        let (reg_sign, antiwedge_result) = self.regressive(a, b_dual_result);
+        if reg_sign == 0 {
+            return (0, 0);
+        }
+
+        // Step 3: Compute b_wedge ∧ (a ∨ b_dual☆)
+        let (ext_sign, result) = self.exterior(b_wedge, antiwedge_result);
+        (dual_sign * reg_sign * ext_sign, result)
+    }
+
     /// Computes the antiprojection of `a` onto `b`.
     ///
     /// The antiprojection is defined as: b ∧ (a ∨ b☆)
