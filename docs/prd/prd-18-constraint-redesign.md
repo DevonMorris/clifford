@@ -1,6 +1,6 @@
 # PRD-18: Constraint System Redesign with Normed Traits
 
-**Status**: Draft
+**Status**: Complete
 **Goal**: Simplify the constraint system by removing user configuration, inferring constraints from algebra structure, and introducing geometry-specific wrapper types for normalized entities.
 
 ## Overview
@@ -298,8 +298,8 @@ This PRD is broken into the following sub-PRDs:
 | [PRD-18.5](prd-18.5-simplify-constructors.md) | Simplify Constructors | Complete | Remove `new()`, keep only `new_unchecked()` and `new_checked()` |
 | [PRD-18.6](prd-18.6-arbitrary.md) | Bespoke Arbitrary | Complete | Generate `Arbitrary` implementations that satisfy constraints |
 | [PRD-18.7](prd-18.7-regenerate.md) | Regenerate Algebras | Complete | Regenerate all algebras with new constraint system |
-| [PRD-18.8](prd-18.8-generate-normed-impls.md) | Generate Normed Impls | Draft | Generate `impl Normed for Type<T>` in codegen |
-| [PRD-18.9](prd-18.9-generate-wrapper-aliases.md) | Generate Wrapper Aliases | Draft | Generate type aliases like `UnitVector<T> = Unit<Vector<T>>` |
+| [PRD-18.8](prd-18.8-generate-normed-impls.md) | Generate Normed Impls | Superseded | Already implemented in codegen |
+| [PRD-18.9](prd-18.9-generate-wrapper-aliases.md) | Generate Wrapper Aliases | Superseded | Already implemented in codegen |
 
 ## Dependencies
 

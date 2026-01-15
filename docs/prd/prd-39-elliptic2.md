@@ -1,5 +1,7 @@
 # PRD-39: 2D Elliptic Projective Geometry via Code Generation
 
+**Status**: Complete
+
 ## Overview
 
 Implement 2D elliptic projective geometry as Cl(3,0,0) via the code generation pipeline.

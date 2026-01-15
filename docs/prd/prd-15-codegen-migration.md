@@ -1,6 +1,6 @@
 # PRD-15: Codegen Migration for Euclidean and Projective Algebras
 
-**Status**: Proposed
+**Status**: Complete
 **Goal**: Replace hand-rolled implementations with generated code while preserving the current public API
 
 ## Sub-PRDs
@@ -9,10 +9,10 @@ This PRD is broken into four sub-PRDs, one per algebra:
 
 | Sub-PRD | Algebra | Types | Status | Notes |
 |---------|---------|-------|--------|-------|
-| [PRD-15.1](prd-15.1-euclidean3-migration.md) | Euclidean 3D | Vector, Bivector, Trivector, Rotor, Even | Proposed | Most complex, validates pattern |
-| [PRD-15.2](prd-15.2-euclidean2-migration.md) | Euclidean 2D | Vector, Bivector, Rotor | Proposed | Simpler, confirms pattern |
-| [PRD-15.3](prd-15.3-projective3-migration.md) | Projective 3D | Point, Line, Plane, Motor, Flector | Proposed | Study + Plücker constraints |
-| [PRD-15.4](prd-15.4-projective2-migration.md) | Projective 2D | Point, Line, Motor | Proposed | Confirms PGA pattern |
+| [PRD-15.1](prd-15.1-euclidean3-migration.md) | Euclidean 3D | Vector, Bivector, Trivector, Rotor, Even | Complete | Most complex, validates pattern |
+| [PRD-15.2](prd-15.2-euclidean2-migration.md) | Euclidean 2D | Vector, Bivector, Rotor | Complete | Simpler, confirms pattern |
+| [PRD-15.3](prd-15.3-projective3-migration.md) | Projective 3D | Point, Line, Plane, Motor, Flector | Complete | Study + Plücker constraints |
+| [PRD-15.4](prd-15.4-projective2-migration.md) | Projective 2D | Point, Line, Motor | Complete | Confirms PGA pattern |
 
 **Recommended order**: 15.1 → 15.2 → 15.3 → 15.4
 
