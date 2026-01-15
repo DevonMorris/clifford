@@ -1,0 +1,50 @@
+# 3D Minkowski Spacetime
+# Cl(3,1,0) - 3+1 spacetime algebra (special relativity)
+
+[algebra]
+name = "minkowski3"
+module_path = "minkowski/dim3"
+description = "3D Minkowski spacetime Cl(3,1,0)"
+
+[signature]
+positive = ["e1", "e2", "e3"]
+negative = ["e4"]
+zero = []
+
+[norm]
+# Minkowski spacetime uses reverse for norm (non-degenerate algebra)
+# Note: This gives an indefinite norm (can be positive, negative, or zero)
+primary_involution = "reverse"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Vector]
+grades = [1]
+description = "Spacetime vector (can be spacelike, timelike, or null)"
+fields = ["x", "y", "z", "t"]
+
+[types.Bivector]
+grades = [2]
+description = "Bivector (spatial rotations + spacetime boosts)"
+fields = ["xy", "xz", "xt", "yz", "yt", "zt"]
+
+[types.Trivector]
+grades = [3]
+description = "Trivector (spacetime volumes)"
+fields = ["xyz", "xyt", "xzt", "yzt"]
+
+[types.Pseudoscalar]
+grades = [4]
+description = "Pseudoscalar (oriented 4-volume)"
+fields = ["xyzt"]
+
+[types.Eventor]
+grades = [0, 2, 4]
+description = "Even-graded element (Lorentz transformations)"
+fields = ["s", "xy", "xz", "xt", "yz", "yt", "zt", "xyzt"]

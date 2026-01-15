@@ -73,6 +73,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/hyperbolic2.toml",
         "src/specialized/hyperbolic/dim2/generated",
     ),
+    (
+        "minkowski3",
+        "algebras/minkowski3.toml",
+        "src/specialized/minkowski/dim3/generated",
+    ),
 ];
 
 fn main() {
