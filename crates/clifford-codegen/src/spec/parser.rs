@@ -1655,6 +1655,10 @@ mod tests {
         );
 
         // Should succeed because complete = false explicitly disables the check
-        assert!(result.is_ok(), "Incomplete algebra with complete=false should succeed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Incomplete algebra with complete=false should succeed: {:?}",
+            result
+        );
     }
 }

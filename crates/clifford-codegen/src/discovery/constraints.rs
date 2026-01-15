@@ -509,7 +509,7 @@ pub fn derive_null_constraint(grades: &[usize], algebra: &Algebra) -> Vec<String
             "scalar (norm)".to_string()
         } else {
             let result_name = algebra.blade_index_name(Blade::from_index(result_blade));
-            format!("{}", result_name)
+            result_name.to_string()
         };
 
         constraints.push(format!("{} = 0  // {} component", expr, grade_name));
@@ -645,7 +645,10 @@ mod tests {
         eprintln!("==========================================\n");
 
         // The inferred constraint is for the norm, which is different from geometric validity
-        assert!(geometric.is_some(), "CGA dipoles should have a geometric constraint");
+        assert!(
+            geometric.is_some(),
+            "CGA dipoles should have a geometric constraint"
+        );
     }
 
     #[test]
@@ -696,7 +699,11 @@ mod tests {
         eprintln!("\n=== Versor Constraints (v * ṽ = scalar) Across Algebras ===\n");
 
         let test_cases = [
-            ("Euclidean 3D Rotor [0,2]", Algebra::euclidean(3), vec![0, 2]),
+            (
+                "Euclidean 3D Rotor [0,2]",
+                Algebra::euclidean(3),
+                vec![0, 2],
+            ),
             ("PGA 3D Motor [0,2,4]", Algebra::pga(3), vec![0, 2, 4]),
             ("CGA 3D Motor [0,2,4]", Algebra::new(4, 1, 0), vec![0, 2, 4]),
         ];
@@ -734,7 +741,11 @@ mod tests {
         eprintln!("  3. v · m = 0        (from e1234)");
         eprintln!("==========================================\n");
 
-        assert_eq!(constraints.len(), 5, "CGA dipole should have 5 blade constraints");
+        assert_eq!(
+            constraints.len(),
+            5,
+            "CGA dipole should have 5 blade constraints"
+        );
     }
 
     #[test]
@@ -756,7 +767,10 @@ mod tests {
         eprintln!("==========================================\n");
 
         // Should have 1 constraint (the scalar/norm part)
-        assert!(!constraints.is_empty(), "CGA point should have null constraint");
+        assert!(
+            !constraints.is_empty(),
+            "CGA point should have null constraint"
+        );
     }
 
     #[test]
@@ -790,5 +804,50 @@ mod tests {
         eprintln!("==========================================\n");
 
         assert!(!constraints.is_empty());
+    }
+
+    #[test]
+    fn cga_circle_blade_constraint_matches_wiki() {
+        // Verify CGA Circle (grade 3) blade constraints match CGA wiki
+        // Wiki: https://conformalgeometricalgebra.org/wiki/index.php?title=Circle
+        let algebra = Algebra::new(4, 1, 0);
+        let constraints = derive_blade_constraint(&[3], &algebra);
+
+        eprintln!("\n=== CGA Circle Blade Constraints ===");
+        eprintln!("Field mapping from conformal3.toml:");
+        eprintln!("  g (plane normal): gw=e123, gz=e124, gy=e134, gx=e234");
+        eprintln!("  m (center):       mz=e125, my=e135, mx=e235");
+        eprintln!("  v (moment):       vx=e145, vy=e245, vz=e345\n");
+
+        eprintln!("Derived blade constraints (k ∧ k = 0):");
+        for c in &constraints {
+            eprintln!("  {}", c);
+        }
+
+        eprintln!("\nCGA wiki Circle constraints:");
+        eprintln!("  1. g × m - gw*v = 0 (3 equations)");
+        eprintln!("     gy*mz - gz*my - gw*vx = 0");
+        eprintln!("     gz*mx - gx*mz - gw*vy = 0");
+        eprintln!("     gx*my - gy*mx - gw*vz = 0");
+        eprintln!("  2. g · v = 0");
+        eprintln!("     gx*vx + gy*vy + gz*vz = 0");
+        eprintln!("  3. v · m = 0");
+        eprintln!("     vx*mx + vy*my + vz*mz = 0");
+        eprintln!("==========================================\n");
+
+        // Circle is a trivector (grade 3), so k ∧ k produces grade 6
+        // In 5D, grade 6 = 0 (doesn't exist), so no blade constraints!
+        // The wiki constraints come from the representation, not from k ∧ k
+        eprintln!("Note: In 5D CGA, grade 3 ∧ grade 3 = grade 6, which is empty.");
+        eprintln!("Circle validity constraints come from representation theory,");
+        eprintln!("not from the simple blade condition k ∧ k = 0.\n");
+
+        // Grade 3 in 5D: there are C(5,3) = 10 blades
+        // Grade 6 in 5D: there are C(5,6) = 0 blades (doesn't exist)
+        // So no blade constraints are needed for grade 3 in 5D
+        assert!(
+            constraints.is_empty(),
+            "CGA Circle (grade 3) should have no blade constraints (grade 6 doesn't exist in 5D)"
+        );
     }
 }
