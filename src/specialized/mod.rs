@@ -5,6 +5,7 @@
 //!
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
+//! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
 //!
 //! # Type Organization
@@ -17,7 +18,8 @@
 //!   projective/
 //!     dim2/   - 2D PGA: Point, Line, Motor
 //!     dim3/   - 3D PGA: Point, Line, Plane, Motor
-//!   hyperbolic/ - Hyperbolic numbers: Scalar, Unit, Hyperbolic
+//!   complex/    - Complex numbers: Scalar, ImagUnit, Complex
+//!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
 //! ```
 //!
 //! # Benefits of Specialized Types
@@ -59,6 +61,7 @@
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
 
+pub mod complex;
 pub mod euclidean;
 pub mod hyperbolic;
 pub mod projective;

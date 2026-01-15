@@ -38,6 +38,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/hyperbolic.toml",
         "src/specialized/hyperbolic/generated",
     ),
+    (
+        "complex",
+        "algebras/complex.toml",
+        "src/specialized/complex/generated",
+    ),
 ];
 
 fn main() {
