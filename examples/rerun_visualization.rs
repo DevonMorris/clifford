@@ -13,6 +13,7 @@
 
 use std::f32::consts::{FRAC_PI_4, PI};
 
+use clifford::ops::Transform;
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
 use clifford::specialized::visualization::{AsPosition, rerun};
@@ -58,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 1..=8 {
         let angle = (i as f32) * FRAC_PI_4;
         let r = Rotor::from_angle_plane(angle, Bivector::unit_xy());
-        let rotated = r.rotate(original);
+        let rotated = r.transform(&original);
         rotated_points.push(AsPosition(rotated));
     }
     rec.log(

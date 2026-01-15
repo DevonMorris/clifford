@@ -23,6 +23,7 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
+use clifford::ops::Meet;
 use clifford::specialized::projective::dim3;
 
 // ============================================================================
@@ -222,11 +223,12 @@ fn bench_pga3_line_meet_plane(c: &mut Criterion) {
 }
 
 fn bench_pga3_line_join_point(c: &mut Criterion) {
+    use clifford::ops::Wedge;
     let line: dim3::Line<f64> = dim3::Line::z_axis();
     let p = dim3::Point::new(1.0, 0.0, 0.0);
 
     c.bench_function("pga_only/3d_line_join_point", |bencher| {
-        bencher.iter(|| black_box(line).join_point(&black_box(p)))
+        bencher.iter(|| black_box(line).wedge(&black_box(p)))
     });
 }
 

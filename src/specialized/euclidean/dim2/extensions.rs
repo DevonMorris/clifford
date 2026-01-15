@@ -4,7 +4,6 @@
 //! to the generated types that are specific to Euclidean 2D geometry.
 
 use super::generated::types::{Bivector, Rotor, Vector};
-use crate::ops::Transform;
 use crate::scalar::Float;
 
 // ============================================================================
@@ -88,7 +87,7 @@ impl<T: Float> Rotor<T> {
     /// // 90° counterclockwise rotation
     /// let r = Rotor::from_angle(FRAC_PI_2);
     /// let v = Vector::unit_x();
-    /// let rotated = r.rotate(v);
+    /// let rotated = r.transform(&v);
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
@@ -106,13 +105,14 @@ impl<T: Float> Rotor<T> {
     /// # Example
     ///
     /// ```
+    /// use clifford::ops::Transform;
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
     /// use approx::abs_diff_eq;
     ///
     /// let a = Vector::<f64>::unit_x();
     /// let b = Vector::<f64>::unit_y();
     /// let r = Rotor::from_vectors(a, b);
-    /// let rotated = r.rotate(a);
+    /// let rotated = r.transform(&a);
     /// assert!(abs_diff_eq!(rotated.x(), b.x(), epsilon = 1e-10));
     /// assert!(abs_diff_eq!(rotated.y(), b.y(), epsilon = 1e-10));
     /// ```
@@ -134,25 +134,6 @@ impl<T: Float> Rotor<T> {
         let rev = self.reverse();
         // Use new_unchecked since inverse preserves unit constraint
         Self::new_unchecked(rev.s() / norm_sq, rev.b() / norm_sq)
-    }
-
-    /// Applies this rotation to a vector using the sandwich product: `v' = R v R̃`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
-    /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
-    ///
-    /// let r = Rotor::from_angle(FRAC_PI_2);
-    /// let v = Vector::unit_x();
-    /// let rotated = r.rotate(v);
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
-    /// ```
-    #[inline]
-    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
-        self.transform(&v)
     }
 
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.

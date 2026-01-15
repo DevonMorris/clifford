@@ -13,6 +13,7 @@ use nalgebra_0_34 as na;
 use approx::abs_diff_eq;
 use proptest::prelude::*;
 
+use clifford::ops::Transform;
 use clifford::specialized::euclidean::{dim2, dim3};
 
 /// Epsilon for approximate equality in tests.
@@ -54,7 +55,7 @@ mod dim2_tests {
             let rotor = dim2::Rotor::from_angle(angle);
 
             // Rotate with clifford
-            let rotated_cliff = rotor.rotate(v);
+            let rotated_cliff = rotor.transform(&v);
 
             // Rotate with nalgebra
             let rotation: na::Rotation2<f64> = rotor.into();
@@ -163,7 +164,7 @@ mod dim3_tests {
             let v = dim3::Vector::new(vx, vy, vz);
 
             // Rotate with clifford rotor
-            let rotated_cliff = rotor.rotate(v);
+            let rotated_cliff = rotor.transform(&v);
 
             // Rotate with nalgebra quaternion
             let q_back: na::UnitQuaternion<f64> = rotor.into();
@@ -202,8 +203,8 @@ mod dim3_tests {
 
             // Test rotation equivalence (rotors have double cover)
             let test_v = dim3::Vector::new(1.0, 2.0, 3.0);
-            let rotated_orig = rotor.rotate(test_v);
-            let rotated_back = back.rotate(test_v);
+            let rotated_orig = rotor.transform(&test_v);
+            let rotated_back = back.transform(&test_v);
 
             prop_assert!(abs_diff_eq!(rotated_orig.x(), rotated_back.x(), epsilon = ABS_DIFF_EQ_EPS));
             prop_assert!(abs_diff_eq!(rotated_orig.y(), rotated_back.y(), epsilon = ABS_DIFF_EQ_EPS));

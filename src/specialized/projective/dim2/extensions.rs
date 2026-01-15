@@ -96,12 +96,6 @@ impl<T: Float> Point<T> {
 // ============================================================================
 
 impl<T: Float> Line<T> {
-    /// Creates a line through two points (their join/wedge product).
-    #[inline]
-    pub fn through_points(p: &Point<T>, q: &Point<T>) -> Self {
-        crate::ops::Wedge::wedge(p, q)
-    }
-
     /// Creates a line through a point in the given direction.
     pub fn from_point_and_direction(point: &Point<T>, direction: &EuclideanVector<T>) -> Self {
         // Ideal point (point at infinity) in the given direction

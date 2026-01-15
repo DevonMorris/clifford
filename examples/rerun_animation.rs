@@ -16,6 +16,7 @@
 
 use std::f32::consts::TAU;
 
+use clifford::ops::Transform;
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::projective::dim3::{Motor, Point};
 use clifford::specialized::visualization::{AsPosition, rerun};
@@ -49,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Original vector along x-axis
             let original = Vector::new(2.0_f32, 0.0, 0.0);
-            let rotated = rotor.rotate(original);
+            let rotated = rotor.transform(&original);
 
             // Log the rotating arrow
             rec.log(

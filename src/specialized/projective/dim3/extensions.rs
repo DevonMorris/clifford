@@ -171,22 +171,6 @@ impl<T: Float> Point<T> {
         }
     }
 
-    /// Join with another point to create a line (regressive product).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::projective::dim3::Point;
-    ///
-    /// let p1 = Point::origin();
-    /// let p2 = Point::from_cartesian(1.0, 0.0, 0.0);
-    /// let line = p1.join(&p2);
-    /// ```
-    #[inline]
-    pub fn join(&self, other: &Point<T>) -> Line<T> {
-        crate::ops::Wedge::wedge(self, other)
-    }
-
     /// Euclidean distance to another finite point.
     pub fn distance(&self, other: &Point<T>) -> T {
         self.distance_squared(other).sqrt()
@@ -231,16 +215,10 @@ impl<T: Float> Point<T> {
 // ============================================================================
 
 impl<T: Float> Line<T> {
-    /// Creates a line through two points (their join/wedge product).
-    #[inline]
-    pub fn join(p: &Point<T>, q: &Point<T>) -> Self {
-        p.join(q)
-    }
-
     /// Creates a line through a point in the given direction.
     pub fn from_point_and_direction(point: &Point<T>, direction: &EuclideanVector<T>) -> Self {
         let ideal = Point::ideal(direction.x(), direction.y(), direction.z());
-        point.join(&ideal)
+        crate::ops::Wedge::wedge(point, &ideal)
     }
 
     /// Creates a line from Plücker coordinates without validation.
@@ -403,21 +381,6 @@ impl<T: Float> Line<T> {
         }
     }
 
-    /// Join with a point to create a plane.
-    #[inline]
-    pub fn join_point(&self, point: &Point<T>) -> Plane<T> {
-        crate::ops::Wedge::wedge(self, point)
-    }
-
-    /// Meet with a plane to find intersection point (regressive product).
-    ///
-    /// Returns the point where this line intersects the plane. If the line
-    /// is parallel to the plane (no intersection), returns an ideal point.
-    #[inline]
-    pub fn meet_plane(&self, plane: &Plane<T>) -> Point<T> {
-        crate::ops::Antiwedge::antiwedge(self, plane)
-    }
-
     /// Angle between two lines (in radians).
     pub fn angle(&self, other: &Line<T>) -> T {
         let d1 = self.direction().normalized();
@@ -513,12 +476,6 @@ impl<T: Float> Line<T> {
         }
 
         (nx * nx + ny * ny + nz * nz).sqrt() / (dir_norm * pw.abs())
-    }
-
-    /// Meet with a plane to find intersection point (alias for meet_plane).
-    #[inline]
-    pub fn meet(&self, plane: &Plane<T>) -> Point<T> {
-        self.meet_plane(plane)
     }
 
     /// Closest point on this line to a given point.
@@ -658,15 +615,6 @@ impl<T: Float> Plane<T> {
         } else {
             self.bulk_norm() / weight
         }
-    }
-
-    /// Meet with another plane to find intersection line (regressive product).
-    ///
-    /// Returns the line where the two planes intersect. If the planes are
-    /// parallel (no intersection), returns a line at infinity.
-    #[inline]
-    pub fn meet(&self, other: &Plane<T>) -> Line<T> {
-        crate::ops::Antiwedge::antiwedge(self, other)
     }
 
     /// Angle between two planes (in radians).

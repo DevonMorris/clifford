@@ -7,7 +7,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
-use clifford::ops::Wedge;
+use clifford::ops::{Transform, Wedge};
 use clifford::specialized::euclidean::{dim2, dim3};
 use criterion::{Criterion, criterion_group, criterion_main};
 
@@ -47,7 +47,7 @@ fn bench_rotor2_rotation(c: &mut Criterion) {
     let v = dim2::Vector::new(1.0, 0.0);
 
     c.bench_function("euclidean/dim2/rotor_rotate", |bencher| {
-        bencher.iter(|| black_box(rotor).rotate(black_box(v)))
+        bencher.iter(|| black_box(rotor).transform(&black_box(v)))
     });
 }
 
@@ -114,7 +114,7 @@ fn bench_rotor3_rotation(c: &mut Criterion) {
     let v = dim3::Vector::new(1.0, 0.0, 0.0);
 
     c.bench_function("euclidean/dim3/rotor_rotate", |bencher| {
-        bencher.iter(|| black_box(rotor).rotate(black_box(v)))
+        bencher.iter(|| black_box(rotor).transform(&black_box(v)))
     });
 }
 

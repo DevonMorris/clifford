@@ -97,13 +97,14 @@
 //! # Example
 //!
 //! ```ignore
+//! use clifford::ops::Transform;
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // Rotate 90° around the z-axis (in the xy-plane)
 //! let rotor = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_xy());
 //! let v = Vector::new(1.0, 0.0, 0.0);
-//! let rotated = rotor.rotate(v);
+//! let rotated = rotor.transform(&v);
 //!
 //! // x-axis rotated 90° becomes y-axis
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);

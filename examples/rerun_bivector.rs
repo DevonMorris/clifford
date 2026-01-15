@@ -24,6 +24,7 @@
 
 use std::f32::consts::TAU;
 
+use clifford::ops::Transform;
 use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
 use clifford::specialized::visualization::rerun;
 use tracing::info;
@@ -53,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rotor = Rotor::from_angle_plane(angle, Bivector::unit_xy());
 
         let base_v = Vector::new(0.0, 1.5_f32, 0.0);
-        let v = rotor.rotate(base_v);
+        let v = rotor.transform(&base_v);
 
         // The bivector is u ∧ v (wedge product)
         let bivector = u.wedge(v);
