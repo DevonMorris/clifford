@@ -53,6 +53,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/quaternion.toml",
         "src/specialized/quaternion/generated",
     ),
+    (
+        "minkowski2",
+        "algebras/minkowski2.toml",
+        "src/specialized/minkowski/dim2/generated",
+    ),
 ];
 
 fn main() {

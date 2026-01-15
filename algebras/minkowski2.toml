@@ -1,0 +1,45 @@
+# Minkowski Plane
+# Cl(1,1,0) - 2D spacetime algebra
+
+[algebra]
+name = "minkowski2"
+module_path = "minkowski/dim2"
+description = "Minkowski plane Cl(1,1,0)"
+
+[signature]
+positive = ["e1"]
+negative = ["e2"]
+zero = []
+
+[norm]
+# Minkowski plane uses Clifford conjugate for norm
+# Note: This gives an indefinite norm (can be positive, negative, or zero)
+primary_involution = "clifford_conjugate"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Vector]
+grades = [1]
+description = "Vector in Minkowski plane (can be spacelike, timelike, or null)"
+fields = ["x", "t"]
+
+[types.Bivector]
+grades = [2]
+description = "Bivector (pseudoscalar, squares to +1)"
+fields = ["xt"]
+
+[types.Eventor]
+grades = [0, 2]
+description = "Even-graded element (scalar + bivector), isomorphic to hyperbolic numbers"
+fields = ["s", "xt"]
+
+[types.Spacetime]
+grades = [0, 1, 2]
+description = "Full element in the Minkowski plane (all grades)"
+fields = ["s", "x", "t", "xt"]

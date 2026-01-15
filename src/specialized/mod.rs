@@ -8,6 +8,7 @@
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
 //! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
+//! - **[`minkowski`]**: Minkowski spacetime algebras (indefinite signature)
 //! - **[`quaternion`]**: Quaternions Cl(0,2,0)
 //!
 //! # Type Organization
@@ -23,6 +24,8 @@
 //!   complex/    - Complex numbers: Scalar, ImagUnit, Complex
 //!   dual/       - Dual numbers: Scalar, DualUnit, Dual
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
+//!   minkowski/
+//!     dim2/   - 2D Minkowski: Vector, Bivector, Eventor, Multivector
 //!   quaternion/ - Quaternions: Scalar, Imaginary, Bivector, Quaternion
 //! ```
 //!
@@ -69,6 +72,7 @@ pub mod complex;
 pub mod dual;
 pub mod euclidean;
 pub mod hyperbolic;
+pub mod minkowski;
 pub mod projective;
 pub mod quaternion;
 

@@ -57,8 +57,8 @@ mod projective;
 
 pub use conformal::{Conformal2, Conformal3};
 pub use euclidean::{
-    Cl0_0_1, Cl0_1_0, Cl0_2_0, Cl1_0_0, Complex1, Dual1, Euclidean2, Euclidean3, Euclidean4,
-    Hyperbolic1, Quaternion2,
+    Cl0_0_1, Cl0_1_0, Cl0_2_0, Cl1_0_0, Cl1_1_0, Complex1, Dual1, Euclidean2, Euclidean3,
+    Euclidean4, Hyperbolic1, Minkowski2, Quaternion2,
 };
 pub use metric::Signature;
 pub use projective::{Projective2, Projective3};
