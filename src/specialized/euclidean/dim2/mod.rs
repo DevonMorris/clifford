@@ -21,13 +21,14 @@
 //! # Example
 //!
 //! ```ignore
+//! use clifford::ops::Transform;
 //! use clifford::specialized::euclidean::dim2::{Vector, Rotor};
 //! use std::f64::consts::FRAC_PI_2;
 //!
 //! // 90° rotation
 //! let rotor = Rotor::from_angle(FRAC_PI_2);
 //! let v = Vector::new(1.0, 0.0);
-//! let rotated = rotor.rotate(v);
+//! let rotated = rotor.transform(&v);
 //!
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```

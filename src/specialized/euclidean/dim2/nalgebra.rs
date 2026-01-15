@@ -122,6 +122,7 @@ impl<T: Float + na::RealField> From<Rotor<T>> for na::Rotation2<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::Transform;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use crate::wrappers::Unit;
     use approx::relative_eq;
@@ -153,7 +154,7 @@ mod tests {
             let na_v: na::Vector2<f64> = v.into();
 
             // Rotate with clifford rotor
-            let rotated_ga = r.rotate(v);
+            let rotated_ga = r.transform(&v);
 
             // Rotate with nalgebra Rotation2
             let rotation: na::Rotation2<f64> = r.into_inner().into();

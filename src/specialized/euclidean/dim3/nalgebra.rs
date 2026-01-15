@@ -363,7 +363,7 @@ impl<T: Float + na::RealField> From<na::Rotation3<T>> for Rotor<T> {
     /// let rotor: Rotor<f64> = rot.into();
     ///
     /// let v = Vector::unit_x();
-    /// let rotated = rotor.rotate(v);
+    /// let rotated = rotor.transform(&v);
     /// assert!((rotated.y - 1.0).abs() < 1e-10);
     /// ```
     #[inline]
@@ -376,6 +376,7 @@ impl<T: Float + na::RealField> From<na::Rotation3<T>> for Rotor<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ops::Transform;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use crate::wrappers::Unit;
     use approx::relative_eq;
@@ -424,8 +425,8 @@ mod tests {
             // Rotors have double cover: r and -r represent the same rotation
             // So we test rotation equivalence instead of component equality
             let test_v = Vector::new(1.0, 2.0, 3.0);
-            let rotated_orig = r.rotate(test_v);
-            let rotated_back = back.rotate(test_v);
+            let rotated_orig = r.transform(&test_v);
+            let rotated_back = back.transform(&test_v);
             prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -435,8 +436,8 @@ mod tests {
             let back: Rotor<f64> = rot.into();
 
             let test_v = Vector::new(1.0, 2.0, 3.0);
-            let rotated_orig = r.rotate(test_v);
-            let rotated_back = back.rotate(test_v);
+            let rotated_orig = r.transform(&test_v);
+            let rotated_back = back.transform(&test_v);
             prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -448,7 +449,7 @@ mod tests {
             let na_v: na::Vector3<f64> = v.into();
 
             // Rotate with clifford rotor
-            let rotated_ga = r.rotate(v);
+            let rotated_ga = r.transform(&v);
 
             // Rotate with nalgebra quaternion
             let q: na::UnitQuaternion<f64> = r.into_inner().into();

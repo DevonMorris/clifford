@@ -21,6 +21,7 @@ use nalgebra_0_33 as na;
 #[cfg(feature = "nalgebra-0_34")]
 use nalgebra_0_34 as na;
 
+use clifford::ops::Transform;
 use clifford::specialized::euclidean::{dim2, dim3};
 
 // ============================================================================
@@ -88,7 +89,7 @@ fn bench_rotate_vec3_clifford(c: &mut Criterion) {
     let v = dim3::Vector::new(1.0, 0.0, 0.0);
 
     c.bench_function("comparison/rotate_vec3/clifford", |bencher| {
-        bencher.iter(|| black_box(rotor).rotate(black_box(v)))
+        bencher.iter(|| black_box(rotor).transform(&black_box(v)))
     });
 }
 
@@ -173,7 +174,7 @@ fn bench_rotate_vec2_clifford(c: &mut Criterion) {
     let v = dim2::Vector::new(1.0, 0.0);
 
     c.bench_function("comparison/rotate_vec2/clifford", |bencher| {
-        bencher.iter(|| black_box(rotor).rotate(black_box(v)))
+        bencher.iter(|| black_box(rotor).transform(&black_box(v)))
     });
 }
 
@@ -248,7 +249,7 @@ fn bench_batch_rotate_clifford(c: &mut Criterion) {
         bencher.iter(|| {
             points
                 .iter()
-                .map(|p| black_box(rotor).rotate(*p))
+                .map(|p| black_box(rotor).transform(p))
                 .collect::<Vec<_>>()
         })
     });
@@ -279,7 +280,7 @@ fn bench_mixed_workflow(c: &mut Criterion) {
                     // Convert from nalgebra
                     let cliff_p: dim3::Vector<f64> = (*p).into();
                     // Process with GA
-                    let rotated = black_box(rotor).rotate(cliff_p);
+                    let rotated = black_box(rotor).transform(&cliff_p);
                     // Convert back to nalgebra
                     let result: na::Vector3<f64> = rotated.into();
                     result

@@ -15,7 +15,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
-use clifford::ops::Transform;
+use clifford::ops::{Meet, Transform, Wedge};
 use clifford::specialized::projective::dim3;
 use criterion::{Criterion, criterion_group, criterion_main};
 
@@ -63,7 +63,7 @@ fn bench_pga3_line_join_point(c: &mut Criterion) {
     let p = dim3::Point::from_cartesian(1.0, 0.0, 0.0);
 
     c.bench_function("projective/dim3/line_join_point", |bencher| {
-        bencher.iter(|| black_box(line).join_point(&black_box(p)))
+        bencher.iter(|| black_box(line).wedge(&black_box(p)))
     });
 }
 

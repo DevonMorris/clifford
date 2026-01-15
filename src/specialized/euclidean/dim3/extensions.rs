@@ -4,7 +4,7 @@
 //! to the generated types that are specific to Euclidean 3D geometry.
 
 use super::generated::types::{Bivector, Rotor, Trivector, Vector};
-use crate::ops::{RightComplement, Transform, Wedge};
+use crate::ops::{RightComplement, Wedge};
 use crate::scalar::Float;
 
 // ============================================================================
@@ -137,7 +137,7 @@ impl<T: Float> Rotor<T> {
     /// // 90° rotation in the xy-plane (around z-axis)
     /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let v = Vector::unit_x();
-    /// let rotated = r.rotate(v);
+    /// let rotated = r.transform(&v);
     /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
     /// ```
     #[inline]
@@ -167,7 +167,7 @@ impl<T: Float> Rotor<T> {
     /// let a = Vector::<f64>::unit_x();
     /// let b = Vector::<f64>::unit_y();
     /// let r = Rotor::from_vectors(a, b);
-    /// let rotated = r.rotate(a);
+    /// let rotated = r.transform(&a);
     /// assert!(abs_diff_eq!(rotated.x(), b.x(), epsilon = 1e-10));
     /// assert!(abs_diff_eq!(rotated.y(), b.y(), epsilon = 1e-10));
     /// assert!(abs_diff_eq!(rotated.z(), b.z(), epsilon = 1e-10));
@@ -200,27 +200,6 @@ impl<T: Float> Rotor<T> {
             rev.ry() / norm_sq,
             rev.rx() / norm_sq,
         )
-    }
-
-    /// Applies this rotation to a vector via the sandwich product.
-    ///
-    /// For Euclidean GA (non-degenerate), the Transform trait uses sandwich.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
-    /// use std::f64::consts::FRAC_PI_2;
-    /// use approx::abs_diff_eq;
-    ///
-    /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
-    /// let v = Vector::unit_x();
-    /// let rotated = r.rotate(v);
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
-    /// ```
-    #[inline]
-    pub fn rotate(&self, v: Vector<T>) -> Vector<T> {
-        self.transform(&v)
     }
 
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.

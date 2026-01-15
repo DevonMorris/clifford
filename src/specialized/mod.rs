@@ -39,6 +39,7 @@
 //! # Example
 //!
 //! ```ignore
+//! use clifford::ops::Transform;
 //! use clifford::specialized::euclidean::dim3::{Vector, Bivector, Rotor};
 //!
 //! // Create a vector
@@ -51,7 +52,7 @@
 //! );
 //!
 //! // Apply rotation
-//! let rotated = rotor.rotate(v);
+//! let rotated = rotor.transform(&v);
 //! assert!((rotated.x()).abs() < 1e-10);
 //! assert!((rotated.y() - 1.0).abs() < 1e-10);
 //! ```
