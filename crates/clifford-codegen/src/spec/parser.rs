@@ -270,14 +270,20 @@ fn parse_type(
         }
     }
 
-    // Compute expected field count
-    let expected_fields: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
+    // Check if this is a sparse type (explicit blade mappings)
+    let is_sparse = !raw.blades.is_empty();
 
     // Build fields
-    let fields = if raw.fields.is_empty() {
+    let fields = if is_sparse {
+        // Sparse type: use explicit blade mappings
+        build_sparse_fields(&raw.fields, &raw.blades, &raw.grades, dim, name)?
+    } else if raw.fields.is_empty() {
         // Generate default fields from blade names
         generate_default_fields(&raw.grades, dim, sig, blade_names)
     } else {
+        // Compute expected field count for non-sparse types
+        let expected_fields: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
+
         // Use provided fields
         if raw.fields.len() != expected_fields {
             return Err(ParseError::FieldCountMismatch {
@@ -330,6 +336,7 @@ fn parse_type(
         fields,
         alias_of: raw.alias_of.clone(),
         versor,
+        is_sparse,
     })
 }
 
@@ -471,6 +478,68 @@ fn build_fields_from_names(
     Ok(fields)
 }
 
+/// Builds field specs for sparse types with explicit blade mappings.
+///
+/// Sparse types specify exactly which blades they use via the `blades` field
+/// in TOML. This allows types that use only a subset of blades within a grade
+/// (e.g., Line uses 6 of 10 grade-3 blades in CGA).
+///
+/// # Arguments
+///
+/// * `field_names` - Names for each field
+/// * `blade_names` - Explicit blade names (e.g., "e415", "e235")
+/// * `grades` - Expected grades for validation
+/// * `dim` - Algebra dimension
+/// * `type_name` - Type name for error messages
+///
+/// # Returns
+///
+/// A vector of `FieldSpec` with explicit blade indices, or an error if validation fails.
+fn build_sparse_fields(
+    field_names: &[String],
+    blade_names: &[String],
+    grades: &[usize],
+    dim: usize,
+    type_name: &str,
+) -> Result<Vec<FieldSpec>, ParseError> {
+    // Validate field and blade counts match
+    if field_names.len() != blade_names.len() {
+        return Err(ParseError::SparseBladeCountMismatch {
+            type_name: type_name.to_string(),
+            blades: blade_names.len(),
+            fields: field_names.len(),
+        });
+    }
+
+    let mut fields = Vec::with_capacity(field_names.len());
+
+    for (field_name, blade_name) in field_names.iter().zip(blade_names.iter()) {
+        // Parse blade name to get its index
+        let blade_index = parse_blade_index(blade_name, dim)?;
+
+        // Compute the blade's grade (number of bits set)
+        let blade_grade = blade_index.count_ones() as usize;
+
+        // Validate blade grade matches specified grades
+        if !grades.contains(&blade_grade) {
+            return Err(ParseError::SparseBladeGradeMismatch {
+                type_name: type_name.to_string(),
+                blade: blade_name.clone(),
+                blade_grade,
+                grades: grades.to_vec(),
+            });
+        }
+
+        fields.push(FieldSpec {
+            name: field_name.clone(),
+            blade_index,
+            grade: blade_grade,
+        });
+    }
+
+    Ok(fields)
+}
+
 /// Validates that fields in a TypeSpec have canonical blade ordering.
 ///
 /// Fields must be ordered by grade first (ascending), then by blade index
@@ -512,14 +581,19 @@ pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
 /// Products are always auto-inferred from the defined types.
 /// All standard product types are generated: geometric, exterior, inner, left/right contraction,
 /// regressive, scalar, antigeometric, and antiscalar.
+///
+/// **Note:** Sparse types are excluded from automatic product inference since they don't span
+/// all blades of their grades. Users should convert sparse types to their full counterparts
+/// (e.g., Line → Circle) before performing products.
 fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
     // Build algebra for product computation
     let algebra = Algebra::new(signature.p, signature.q, signature.r);
 
     // Build entity list for inference
+    // Exclude sparse types since they don't span all blades of their grades
     let entities: Vec<(String, Vec<usize>)> = types
         .iter()
-        .filter(|t| t.alias_of.is_none())
+        .filter(|t| t.alias_of.is_none() && !t.is_sparse)
         .map(|t| (t.name.clone(), t.grades.clone()))
         .collect();
 
@@ -963,6 +1037,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(super::validate_canonical_field_order(&valid_type));
 
@@ -990,6 +1065,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(!super::validate_canonical_field_order(&invalid_type));
 
@@ -1022,6 +1098,7 @@ mod tests {
             ],
             alias_of: None,
             versor: None,
+            is_sparse: false,
         };
         assert!(super::validate_canonical_field_order(&valid_rotor));
     }
@@ -1130,5 +1207,98 @@ mod tests {
         );
 
         assert!(matches!(result, Err(ParseError::InvalidValue { .. })));
+    }
+
+    #[test]
+    fn parse_sparse_type() {
+        let spec = parse_spec(
+            r#"
+            [algebra]
+            name = "conformal3"
+
+            [signature]
+            positive = ["e1", "e2", "e3", "e4"]
+            negative = ["e5"]
+
+            [types.Line]
+            grades = [3]
+            fields = ["vx", "vy", "vz", "mx", "my", "mz"]
+            blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
+            description = "Line (circle through infinity)"
+            "#,
+        )
+        .unwrap();
+
+        let line = spec.types.iter().find(|t| t.name == "Line").unwrap();
+        assert!(line.is_sparse, "Line should be marked as sparse");
+        assert_eq!(line.grades, vec![3]);
+        assert_eq!(line.fields.len(), 6, "Line should have 6 fields");
+
+        // Verify blade indices were parsed correctly
+        // e145 -> bits 0, 3, 4 -> 0b11001 = 25
+        assert_eq!(
+            line.fields[0].blade_index, 25,
+            "e145 should be blade index 25"
+        );
+        // e235 -> bits 1, 2, 4 -> 0b10110 = 22
+        assert_eq!(
+            line.fields[3].blade_index, 22,
+            "e235 should be blade index 22"
+        );
+        // e125 -> bits 0, 1, 4 -> 0b10011 = 19
+        assert_eq!(
+            line.fields[5].blade_index, 19,
+            "e125 should be blade index 19"
+        );
+    }
+
+    #[test]
+    fn reject_sparse_blade_count_mismatch() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+
+            [types.Bad]
+            grades = [2]
+            fields = ["xy", "xz"]
+            blades = ["e12"]
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::SparseBladeCountMismatch {
+                blades: 1,
+                fields: 2,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn reject_sparse_blade_grade_mismatch() {
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+
+            [signature]
+            positive = ["e1", "e2", "e3"]
+
+            [types.Bad]
+            grades = [2]
+            fields = ["xyz"]
+            blades = ["e123"]
+            "#,
+        );
+
+        assert!(matches!(
+            result,
+            Err(ParseError::SparseBladeGradeMismatch { blade_grade: 3, .. })
+        ));
     }
 }

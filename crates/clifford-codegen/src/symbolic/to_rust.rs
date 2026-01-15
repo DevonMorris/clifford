@@ -369,6 +369,7 @@ mod tests {
                 .collect(),
             alias_of: None,
             versor: None,
+            is_sparse: false,
         }
     }
 

@@ -114,4 +114,30 @@ pub enum ParseError {
         /// Description of expected values.
         expected: String,
     },
+
+    /// Sparse type blade count doesn't match field count.
+    #[error("type '{type_name}' has {blades} blade mappings but {fields} fields")]
+    SparseBladeCountMismatch {
+        /// The type name.
+        type_name: String,
+        /// Number of blade mappings.
+        blades: usize,
+        /// Number of fields.
+        fields: usize,
+    },
+
+    /// Sparse type blade doesn't match specified grades.
+    #[error(
+        "type '{type_name}' blade '{blade}' has grade {blade_grade} but type only spans grades {grades:?}"
+    )]
+    SparseBladeGradeMismatch {
+        /// The type name.
+        type_name: String,
+        /// The blade name.
+        blade: String,
+        /// The blade's actual grade.
+        blade_grade: usize,
+        /// The expected grades.
+        grades: Vec<usize>,
+    },
 }

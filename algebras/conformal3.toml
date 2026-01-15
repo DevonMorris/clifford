@@ -55,3 +55,33 @@ fields = ["xyzwu"]
 grades = [0, 2, 4]
 description = "Motor (even subalgebra for conformal transformations)"
 fields = ["s", "vx", "vy", "vz", "mx", "my", "mz", "px", "py", "pz", "pw", "u", "sx", "sy", "sz", "sw"]
+
+# ============================================================
+# Sparse Types (subset of blades within a grade)
+# These types are constrained versions of the full types above.
+# Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Primitives
+# ============================================================
+
+# Line = Circle through infinity (g=0)
+# Uses only 6 of the 10 grade-3 blades
+[types.Line]
+grades = [3]
+fields = ["vx", "vy", "vz", "mx", "my", "mz"]
+blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
+description = "Line (circle through infinity, g=0)"
+
+# Plane = Sphere through infinity (u=0)
+# Uses only 4 of the 5 grade-4 blades
+[types.Plane]
+grades = [4]
+fields = ["x", "y", "z", "w"]
+blades = ["e2345", "e1345", "e1245", "e1235"]
+description = "Plane (sphere through infinity, u=0)"
+
+# FlatPoint = Dipole with v=0, m=0
+# Uses only 4 of the 10 grade-2 blades
+[types.FlatPoint]
+grades = [2]
+fields = ["px", "py", "pz", "pw"]
+blades = ["e15", "e25", "e35", "e45"]
+description = "Flat point (v=0, m=0)"

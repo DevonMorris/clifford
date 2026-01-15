@@ -70,6 +70,16 @@ pub struct RawTypeSpec {
     /// Custom field names.
     #[serde(default)]
     pub fields: Vec<String>,
+    /// Explicit blade mappings for sparse types.
+    ///
+    /// When provided, fields are mapped to specific blades instead of
+    /// assuming all blades of the specified grades. Blade names use the
+    /// format "e123" where digits are 1-based basis vector indices.
+    ///
+    /// Example: `blades = ["e415", "e425", "e435"]` for a type using
+    /// only 3 of the 10 grade-3 blades in a 5D algebra.
+    #[serde(default)]
+    pub blades: Vec<String>,
     /// Type this aliases.
     pub alias_of: Option<String>,
 }
