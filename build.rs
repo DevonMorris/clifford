@@ -48,6 +48,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/dual.toml",
         "src/specialized/dual/generated",
     ),
+    (
+        "quaternion",
+        "algebras/quaternion.toml",
+        "src/specialized/quaternion/generated",
+    ),
 ];
 
 fn main() {

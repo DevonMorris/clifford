@@ -275,6 +275,58 @@ impl Signature for Cl0_1_0 {
 /// Type alias for the complex numbers signature.
 pub type Complex1 = Cl0_1_0;
 
+/// 2D Negative-definite signature: `Cl(0,2,0)`.
+///
+/// This is the quaternion algebra. With two basis vectors `e₁, e₂`
+/// where `e₁² = e₂² = -1`, this gives the standard quaternion algebra
+/// with basis mapping: `i → e₁`, `j → e₂`, `k → e₁e₂`.
+///
+/// # Basis Blades (4 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar (real part, w) |
+/// | 1 | `e₁` | 1 | Imaginary i |
+/// | 2 | `e₂` | 1 | Imaginary j |
+/// | 3 | `e₁₂` | 2 | Imaginary k = ij |
+///
+/// # Properties
+///
+/// - `e₁² = e₂² = -1`
+/// - `e₁e₂ = -e₂e₁` (anti-commutative)
+/// - Quaternions have no zero divisors (division algebra)
+/// - The norm uses Clifford conjugate: `q * conjugate(q) = w² + x² + y² + z²`
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl0_2_0::DIM, 2);
+/// assert_eq!(Cl0_2_0::num_blades(), 4);
+/// assert_eq!(Cl0_2_0::metric(0), -1);
+/// assert_eq!(Cl0_2_0::metric(1), -1);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl0_2_0;
+
+impl Signature for Cl0_2_0 {
+    type NumBlades = typenum::U4; // 2^2 = 4
+
+    const P: usize = 0;
+    const Q: usize = 2;
+    const R: usize = 0;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl0_2_0");
+        -1
+    }
+}
+
+/// Type alias for the quaternion signature.
+pub type Quaternion2 = Cl0_2_0;
+
 /// 1D Degenerate signature: `Cl(0,0,1)`.
 ///
 /// This is used for dual numbers (automatic differentiation).
