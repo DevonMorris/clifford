@@ -48,7 +48,7 @@ mod template;
 
 pub use constraints::{
     can_satisfy_constraints, derive_antiproduct_constraint, derive_blade_constraint,
-    derive_field_constraint,
+    derive_field_constraint, derive_null_constraint,
 };
 pub use entity::DiscoveredEntity;
 pub use naming::suggest_name;

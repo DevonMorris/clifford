@@ -387,6 +387,137 @@ pub fn derive_blade_constraint(grades: &[usize], algebra: &Algebra) -> Vec<Strin
     constraints
 }
 
+/// Derives the null constraint expression for a grade combination.
+///
+/// A null element has zero norm: `v * ṽ = 0`. This function derives the constraint
+/// equations that must hold for an element to be null.
+///
+/// In CGA, points are null vectors (grade 1 with v * ṽ = 0). This constraint is
+/// essential for representing actual geometric points vs general vectors.
+///
+/// # Arguments
+///
+/// * `grades` - The grades present in the type
+/// * `algebra` - The algebra definition
+///
+/// # Returns
+///
+/// A vector of constraint expressions. For the null constraint, this includes:
+/// - The scalar part of v * ṽ must be zero
+/// - Any non-scalar parts must also be zero (same as versor constraint)
+///
+/// # Example
+///
+/// ```
+/// use clifford_codegen::discovery::derive_null_constraint;
+/// use clifford_codegen::algebra::Algebra;
+///
+/// // CGA point (grade 1) needs null constraint
+/// let algebra = Algebra::new(4, 1, 0); // Cl(4,1,0)
+/// let constraints = derive_null_constraint(&[1], &algebra);
+/// // Returns constraint that x² + y² + z² + w² - u² = 0 (null vector)
+/// ```
+pub fn derive_null_constraint(grades: &[usize], algebra: &Algebra) -> Vec<String> {
+    let table = ProductTable::new(algebra);
+    let blades = blades_of_grades(algebra.dim(), grades);
+
+    // Collect ALL contributions from v * reverse(v), including scalar
+    let mut all_terms: HashMap<usize, Vec<(usize, usize, i32)>> = HashMap::new();
+
+    for (i, &a) in blades.iter().enumerate() {
+        for &b in &blades[i..] {
+            let ga = grade(a);
+            let gb = grade(b);
+            let rev_a = reverse_sign(ga);
+            let rev_b = reverse_sign(gb);
+
+            let (sign_ab, result_ab) = table.geometric(a, b);
+
+            if sign_ab == 0 {
+                continue;
+            }
+
+            if a == b {
+                // Diagonal term: a * reverse(a) = sign * |a|²
+                let coef = i32::from(sign_ab) * i32::from(rev_a);
+                all_terms.entry(result_ab).or_default().push((a, a, coef));
+            } else {
+                // Off-diagonal terms
+                let (sign_ba, _) = table.geometric(b, a);
+                let coef =
+                    i32::from(sign_ab) * i32::from(rev_b) + i32::from(sign_ba) * i32::from(rev_a);
+
+                if coef != 0 {
+                    all_terms.entry(result_ab).or_default().push((a, b, coef));
+                }
+            }
+        }
+    }
+
+    // Build constraint expressions for ALL output grades (including scalar = 0)
+    let mut constraints = Vec::new();
+
+    for (result_blade, terms) in all_terms {
+        if terms.is_empty() {
+            continue;
+        }
+
+        let mut expr_parts: Vec<String> = Vec::new();
+        for (a, b, coef) in terms {
+            let blade_a = Blade::from_index(a);
+            let name_a = algebra.blade_index_name(blade_a);
+
+            let term = if a == b {
+                // Squared term
+                if coef == 1 {
+                    format!("{}²", name_a)
+                } else if coef == -1 {
+                    format!("-{}²", name_a)
+                } else {
+                    format!("{}*{}²", coef, name_a)
+                }
+            } else {
+                let blade_b = Blade::from_index(b);
+                let name_b = algebra.blade_index_name(blade_b);
+                if coef == 1 {
+                    format!("{}*{}", name_a, name_b)
+                } else if coef == -1 {
+                    format!("-{}*{}", name_a, name_b)
+                } else {
+                    format!("{}*{}*{}", coef, name_a, name_b)
+                }
+            };
+            expr_parts.push(term);
+        }
+
+        // Join terms
+        let mut expr = String::new();
+        for (i, part) in expr_parts.iter().enumerate() {
+            if i == 0 {
+                expr.push_str(part);
+            } else if let Some(stripped) = part.strip_prefix('-') {
+                expr.push_str(" - ");
+                expr.push_str(stripped);
+            } else {
+                expr.push_str(" + ");
+                expr.push_str(part);
+            }
+        }
+
+        let result_grade = grade(result_blade);
+        let grade_name = if result_grade == 0 {
+            "scalar (norm)".to_string()
+        } else {
+            let result_name = algebra.blade_index_name(Blade::from_index(result_blade));
+            format!("{}", result_name)
+        };
+
+        constraints.push(format!("{} = 0  // {} component", expr, grade_name));
+    }
+
+    constraints
+}
+
 /// Checks if a grade combination can satisfy constraints with field constraints.
 ///
 /// Some grade combinations fundamentally cannot satisfy geometric constraints
@@ -604,5 +735,60 @@ mod tests {
         eprintln!("==========================================\n");
 
         assert_eq!(constraints.len(), 5, "CGA dipole should have 5 blade constraints");
+    }
+
+    #[test]
+    fn null_constraint_cga_point() {
+        // CGA points are null vectors: v * ṽ = 0
+        let algebra = Algebra::new(4, 1, 0);
+        let constraints = derive_null_constraint(&[1], &algebra);
+
+        eprintln!("\n=== CGA Point Null Constraint ===");
+        eprintln!("A point in CGA is a null vector (v * ṽ = 0)");
+        eprintln!("Components: x=e1, y=e2, z=e3, w=e4, u=e5\n");
+
+        for c in &constraints {
+            eprintln!("  {}", c);
+        }
+
+        eprintln!("\nExpected: x² + y² + z² + w² - u² = 0");
+        eprintln!("(indefinite signature: e1²=e2²=e3²=e4²=+1, e5²=-1)");
+        eprintln!("==========================================\n");
+
+        // Should have 1 constraint (the scalar/norm part)
+        assert!(!constraints.is_empty(), "CGA point should have null constraint");
+    }
+
+    #[test]
+    fn null_constraint_euclidean() {
+        // Euclidean vectors: v * ṽ = |v|² (positive definite, no null vectors except 0)
+        let algebra = Algebra::euclidean(3);
+        let constraints = derive_null_constraint(&[1], &algebra);
+
+        eprintln!("\n=== Euclidean 3D Vector Null Constraint ===");
+        for c in &constraints {
+            eprintln!("  {}", c);
+        }
+        eprintln!("Expected: x² + y² + z² = 0 (only zero vector is null)");
+        eprintln!("==========================================\n");
+
+        assert!(!constraints.is_empty());
+    }
+
+    #[test]
+    fn null_constraint_minkowski() {
+        // Minkowski vectors can be null (lightlike)
+        let algebra = Algebra::new(3, 1, 0); // Cl(3,1,0)
+        let constraints = derive_null_constraint(&[1], &algebra);
+
+        eprintln!("\n=== Minkowski Vector Null Constraint ===");
+        eprintln!("Lightlike vectors satisfy: x² + y² + z² - t² = 0\n");
+
+        for c in &constraints {
+            eprintln!("  {}", c);
+        }
+        eprintln!("==========================================\n");
+
+        assert!(!constraints.is_empty());
     }
 }
