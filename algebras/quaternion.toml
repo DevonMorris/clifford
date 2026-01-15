@@ -1,0 +1,39 @@
+# Quaternions
+# Cl(0,2,0) - 4D hypercomplex numbers for rotations
+
+[algebra]
+name = "quaternion"
+module_path = "quaternion"
+description = "Quaternions Cl(0,2,0)"
+
+[signature]
+positive = []
+negative = ["e1", "e2"]
+zero = []
+
+[norm]
+# Quaternions use Clifford conjugate for their norm: q * conjugate(q) = w² + x² + y² + z²
+primary_involution = "clifford_conjugate"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Imaginary]
+grades = [1]
+description = "Pure imaginary quaternion (i and j components)"
+fields = ["i", "j"]
+
+[types.Bivector]
+grades = [2]
+description = "Bivector component (k = ij)"
+fields = ["k"]
+
+[types.Quaternion]
+grades = [0, 1, 2]
+description = "Quaternion: w + xi + yj + zk"
+fields = ["w", "i", "j", "k"]

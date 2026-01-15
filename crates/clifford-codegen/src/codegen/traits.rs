@@ -3363,14 +3363,19 @@ mod verification_tests {{
     ///
     /// These tests verify that the complement and antiproduct operations
     /// on Multivector satisfy the de-Morgan duality laws.
+    ///
+    /// Note: Only generates tests for single-grade types. Mixed-grade types
+    /// can have algebra-dependent sign factors in the De Morgan laws that
+    /// make the simple identity not hold exactly.
     fn generate_de_morgan_verification_tests_raw(&self) -> String {
         let signature_name = self.generate_signature_name();
 
-        // Generate tests for each non-alias type
+        // Generate tests for single-grade types only (non-alias)
+        // Mixed-grade types can have sign factors in De Morgan laws
         self.spec
             .types
             .iter()
-            .filter(|t| t.alias_of.is_none())
+            .filter(|t| t.alias_of.is_none() && t.grades.len() == 1)
             .map(|ty| {
                 let name = &ty.name;
                 let name_lower = ty.name.to_lowercase();

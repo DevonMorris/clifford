@@ -8,6 +8,7 @@
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
 //! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
+//! - **[`quaternion`]**: Quaternions Cl(0,2,0)
 //!
 //! # Type Organization
 //!
@@ -22,6 +23,7 @@
 //!   complex/    - Complex numbers: Scalar, ImagUnit, Complex
 //!   dual/       - Dual numbers: Scalar, DualUnit, Dual
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
+//!   quaternion/ - Quaternions: Scalar, Imaginary, Bivector, Quaternion
 //! ```
 //!
 //! # Benefits of Specialized Types
@@ -68,6 +70,7 @@ pub mod dual;
 pub mod euclidean;
 pub mod hyperbolic;
 pub mod projective;
+pub mod quaternion;
 
 #[cfg(feature = "rerun-0_28")]
 pub mod visualization;
