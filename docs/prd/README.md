@@ -36,6 +36,7 @@ Implementation plan for the Clifford Geometric Algebra library.
 | [PRD-20](prd-20-projective-nalgebra-interop.md) | Draft | Projective-nalgebra Interoperability |
 | [PRD-21](prd-21-2d-pga-dual-motors.md) | Draft | 2D PGA and Dual Motors |
 | [PRD-22](prd-22-interior-products.md) | Draft | Interior Products and Product Naming Corrections |
+| [PRD-30](prd-30-projections.md) | Draft | Projections and Antiprojections |
 
 ## Implementation Order
 

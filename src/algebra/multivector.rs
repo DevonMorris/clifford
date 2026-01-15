@@ -1448,6 +1448,63 @@ impl<T: Float, S: Signature> Multivector<T, S> {
     pub fn sandwich(&self, x: &Self) -> Self {
         &(self * x) * &self.reverse()
     }
+
+    /// Computes the projection of `self` onto `other`: `other ∨ (self ∧ other☆)`.
+    ///
+    /// The projection finds the part of `self` that lies "on" or "inside" `other`.
+    /// Uses the weight dual (☆) of the target geometry.
+    ///
+    /// # Geometric Interpretation
+    ///
+    /// In PGA (Projective Geometric Algebra):
+    /// - Projecting a point onto a line gives the closest point on the line
+    /// - Projecting a point onto a plane gives the closest point on the plane
+    /// - Projecting a line onto a plane gives the line's intersection with the plane
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let a: Multivector<f64, Euclidean3> = Multivector::basis_vector(0); // e₁
+    /// let b: Multivector<f64, Euclidean3> = Multivector::basis_vector(1); // e₂
+    ///
+    /// let _proj = a.project(&b);
+    /// ```
+    pub fn project(&self, other: &Self) -> Self {
+        // Project: other ∨ (self ∧ other☆)
+        other.antiwedge(&self.exterior(&other.weight_dual()))
+    }
+
+    /// Computes the antiprojection of `self` onto `other`: `other ∧ (self ∨ other☆)`.
+    ///
+    /// The antiprojection finds geometry that passes through `self` and is
+    /// perpendicular to `other`. Uses the weight dual (☆) of the target geometry.
+    ///
+    /// # Geometric Interpretation
+    ///
+    /// In PGA (Projective Geometric Algebra):
+    /// - Antiprojecting a point onto a line gives the plane through the point
+    ///   perpendicular to the line
+    /// - Antiprojecting a point onto a plane gives the line through the point
+    ///   perpendicular to the plane
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::algebra::Multivector;
+    /// use clifford::signature::Euclidean3;
+    ///
+    /// let a: Multivector<f64, Euclidean3> = Multivector::basis_vector(0); // e₁
+    /// let b: Multivector<f64, Euclidean3> = Multivector::basis_vector(1); // e₂
+    ///
+    /// let _antiproj = a.antiproject(&b);
+    /// ```
+    pub fn antiproject(&self, other: &Self) -> Self {
+        // Antiproject: other ∧ (self ∨ other☆)
+        other.exterior(&self.antiwedge(&other.weight_dual()))
+    }
 }
 
 // ============================================================================

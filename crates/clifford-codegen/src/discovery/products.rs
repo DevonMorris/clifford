@@ -45,6 +45,10 @@ pub enum ProductType {
     Dot,
     /// Antidot product: `a ⊚ b` (metric antiproduct inner, same-antigrade only, returns scalar)
     Antidot,
+    /// Projection: `b ∨ (a ∧ b☆)` (target antiwedge with wedge of self and weight dual of target)
+    Project,
+    /// Antiprojection: `b ∧ (a ∨ b☆)` (target wedge with antiwedge of self and weight dual of target)
+    Antiproject,
 }
 
 impl ProductType {
@@ -65,6 +69,8 @@ impl ProductType {
             ProductType::WeightExpansion,
             ProductType::Dot,
             ProductType::Antidot,
+            ProductType::Project,
+            ProductType::Antiproject,
         ]
     }
 
@@ -85,6 +91,8 @@ impl ProductType {
             ProductType::WeightExpansion => "weight_expansion",
             ProductType::Dot => "dot",
             ProductType::Antidot => "antidot",
+            ProductType::Project => "project",
+            ProductType::Antiproject => "antiproject",
         }
     }
 }
@@ -223,6 +231,24 @@ pub fn infer_output_grades(
                         output_set.insert(0);
                     }
                 }
+                ProductType::Project => {
+                    // Project: b ∨ (a ∧ b☆)
+                    // b☆ has grade = dim - gb (weight dual)
+                    // a ∧ b☆ has grade = ga + (dim - gb) when <= dim
+                    // b ∨ (a ∧ b☆) has grade = gb + (ga + dim - gb) - dim = ga
+                    // So projection preserves the grade of a
+                    output_set.insert(ga);
+                }
+                ProductType::Antiproject => {
+                    // Antiproject: b ∧ (a ∨ b☆)
+                    // b☆ has grade = dim - gb
+                    // a ∨ b☆ has grade = ga + (dim - gb) - dim = ga - gb when ga >= gb
+                    // b ∧ (a ∨ b☆) has grade = gb + (ga - gb) = ga when ga >= gb
+                    // So antiprojection also produces grade ga when defined
+                    if ga >= gb {
+                        output_set.insert(ga);
+                    }
+                }
             }
         }
     }
@@ -301,6 +327,14 @@ pub fn infer_output_grades_precise(
                     let (sign, result) = table.antidot(a, b);
                     (sign, grade(result))
                 }
+                ProductType::Project => {
+                    let (sign, result) = table.project(a, b);
+                    (sign, grade(result))
+                }
+                ProductType::Antiproject => {
+                    let (sign, result) = table.antiproject(a, b);
+                    (sign, grade(result))
+                }
                 _ => {
                     // All other products derive from the geometric product
                     let (sign, result) = table.geometric(a, b);
@@ -360,6 +394,10 @@ pub fn infer_output_grades_precise(
                 ProductType::Antidot => {
                     // Antidot product: only same-antigrade (same-grade), only scalar output
                     ga == gb && result_grade == 0
+                }
+                ProductType::Project | ProductType::Antiproject => {
+                    // Already computed correctly by specialized table methods
+                    true
                 }
             };
 
