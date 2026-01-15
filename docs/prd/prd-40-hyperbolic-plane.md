@@ -37,16 +37,16 @@ Key properties:
 ### Causal Structure
 
 Elements can have different causal characters based on their norm:
-- **Spacelike**: norm² > 0 (ordinary points/lines)
-- **Timelike**: norm² < 0 (ultra-ideal points beyond infinity)
+- **Timelike**: norm² < 0 (ordinary points inside the hyperboloid)
 - **Null/Lightlike**: norm² = 0 (ideal points on the absolute)
+- **Spacelike**: norm² > 0 (ultra-ideal points beyond infinity)
 
 ## Type Mapping
 
 | Type | Grades | Fields | Description |
 |------|--------|--------|-------------|
 | Scalar | [0] | s | Scalar values |
-| Point | [1] | x, y, t | Points (homogeneous: spacelike=ordinary, null=ideal) |
+| Point | [1] | x, y, t | Points (homogeneous: timelike=ordinary, null=ideal) |
 | Line | [2] | xy, xt, yt | Geodesic lines |
 | Pseudoscalar | [3] | xyt | Volume element |
 | Rotor | [0, 2] | s, xy, xt, yt | Hyperbolic rotations and boosts |
