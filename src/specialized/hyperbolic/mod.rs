@@ -1,15 +1,22 @@
-//! Hyperbolic Numbers (Split-Complex Numbers) - Cl(1,0,0)
+//! Hyperbolic geometric algebras.
+//!
+//! This module provides types for algebras related to hyperbolic structures.
+//!
+//! # Available Algebras
+//!
+//! - **Root module**: Hyperbolic numbers (split-complex) Cl(1,0,0)
+//! - **[`dim2`]**: 2D hyperbolic plane (Lobachevsky plane) Cl(2,1,0)
+//!
+//! # Hyperbolic Numbers - Cl(1,0,0)
 //!
 //! The hyperbolic numbers are a 2-dimensional algebra over the reals
 //! with basis `{1, j}` where `j² = +1` (unlike complex numbers where `i² = -1`).
-//!
-//! # Structure
 //!
 //! A hyperbolic number `z = a + bj` consists of:
 //! - `a`: real part (grade 0)
 //! - `b`: hyperbolic part (grade 1)
 //!
-//! # Norm and Causal Character
+//! ## Norm and Causal Character
 //!
 //! The hyperbolic numbers use **grade involution** for their norm:
 //! ```text
@@ -22,7 +29,7 @@
 //! - **Spacelike** (`a² < b²`): norm_squared < 0
 //! - **Lightlike** (`a² = b²`): norm_squared = 0 (zero divisors!)
 //!
-//! # Zero Divisors
+//! ## Zero Divisors
 //!
 //! Unlike the complex numbers, hyperbolic numbers have **zero divisors**:
 //! ```text
@@ -36,7 +43,10 @@
 //!
 //! - [Split-complex number](https://en.wikipedia.org/wiki/Split-complex_number)
 //! - [Hyperbolic number](https://en.wikipedia.org/wiki/Hyperbolic_number)
+//! - [Hyperbolic geometry](https://en.wikipedia.org/wiki/Hyperbolic_geometry)
 
 mod generated;
+
+pub mod dim2;
 
 pub use generated::types::*;

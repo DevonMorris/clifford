@@ -68,6 +68,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/elliptic2.toml",
         "src/specialized/elliptic/dim2/generated",
     ),
+    (
+        "hyperbolic2",
+        "algebras/hyperbolic2.toml",
+        "src/specialized/hyperbolic/dim2/generated",
+    ),
 ];
 
 fn main() {
