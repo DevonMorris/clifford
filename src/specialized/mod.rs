@@ -4,6 +4,7 @@
 //! and dimension. Currently supported:
 //!
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
+//! - **[`elliptic`]**: Elliptic projective geometry for 2D
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
@@ -19,6 +20,8 @@
 //!   euclidean/
 //!     dim2/   - 2D Euclidean GA: Vector, Bivector, Rotor
 //!     dim3/   - 3D Euclidean GA: Vector, Bivector, Trivector, Rotor
+//!   elliptic/
+//!     dim2/   - 2D Elliptic: Point, Line, Rotor
 //!   projective/
 //!     dim2/   - 2D PGA: Point, Line, Motor
 //!     dim3/   - 3D PGA: Point, Line, Plane, Motor
@@ -73,6 +76,7 @@
 pub mod complex;
 pub mod dual;
 pub mod dualquat;
+pub mod elliptic;
 pub mod euclidean;
 pub mod hyperbolic;
 pub mod minkowski;
