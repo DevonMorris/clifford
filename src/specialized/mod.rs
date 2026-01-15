@@ -7,6 +7,7 @@
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
 //! - **[`complex`]**: Complex numbers Cl(0,1,0)
 //! - **[`dual`]**: Dual numbers Cl(0,0,1) for automatic differentiation
+//! - **[`dualquat`]**: Dual quaternions Cl(0,2,1) for rigid transformations
 //! - **[`hyperbolic`]**: Hyperbolic numbers (split-complex) Cl(1,0,0)
 //! - **[`minkowski`]**: Minkowski spacetime algebras (indefinite signature)
 //! - **[`quaternion`]**: Quaternions Cl(0,2,0)
@@ -23,6 +24,7 @@
 //!     dim3/   - 3D PGA: Point, Line, Plane, Motor
 //!   complex/    - Complex numbers: Scalar, ImagUnit, Complex
 //!   dual/       - Dual numbers: Scalar, DualUnit, Dual
+//!   dualquat/   - Dual quaternions: Scalar, Vector, Bivector, DualQuaternion
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
 //!   minkowski/
 //!     dim2/   - 2D Minkowski: Vector, Bivector, Eventor, Multivector
@@ -70,6 +72,7 @@
 
 pub mod complex;
 pub mod dual;
+pub mod dualquat;
 pub mod euclidean;
 pub mod hyperbolic;
 pub mod minkowski;

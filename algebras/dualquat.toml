@@ -1,0 +1,45 @@
+# Dual Quaternions
+# Cl(0,2,1) - Quaternions extended with dual numbers for rigid transformations
+
+[algebra]
+name = "dualquat"
+module_path = "dualquat"
+description = "Dual quaternions Cl(0,2,1)"
+
+[signature]
+positive = []
+negative = ["e1", "e2"]
+zero = ["e3"]
+
+[norm]
+# Dual quaternions use Clifford conjugate
+# Degenerate norm due to null basis vector e3
+primary_involution = "clifford_conjugate"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.Vector]
+grades = [1]
+description = "Vector with quaternion (i,j) and dual (d) components"
+fields = ["i", "j", "d"]
+
+[types.Bivector]
+grades = [2]
+description = "Bivector: k from quaternion, di/dj from dual part"
+fields = ["k", "di", "dj"]
+
+[types.Trivector]
+grades = [3]
+description = "Trivector (pseudoscalar, dk component)"
+fields = ["dk"]
+
+[types.DualQuaternion]
+grades = [0, 1, 2, 3]
+description = "Full dual quaternion for rigid transformations"
+fields = ["s", "i", "j", "d", "k", "di", "dj", "dk"]
