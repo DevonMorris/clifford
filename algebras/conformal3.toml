@@ -35,12 +35,17 @@ fields = ["x", "y", "z", "w", "u"]
 [types.Dipole]
 grades = [2]
 description = "Dipole (point pair, oriented line segment)"
-fields = ["vx", "vy", "vz", "mx", "my", "mz", "px", "py", "pz", "pw"]
+# CGA wiki convention: m = moment (spatial bivectors), v = velocity (e4 bivectors), p = position (e5 bivectors)
+# Canonical blade order: e12, e13, e23, e14, e24, e34, e15, e25, e35, e45
+fields = ["mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw"]
 
 [types.Circle]
 grades = [3]
 description = "Circle in 3D space"
-fields = ["gx", "gy", "gz", "gw", "vx", "vy", "vz", "mx", "my", "mz"]
+# CGA wiki convention: g = plane normal, m = center, v = moment
+# Canonical blade order: e123, e124, e134, e234, e125, e135, e235, e145, e245, e345
+# Maps to: gw (e321), gz (e412), gy (e431), gx (e423), mz (e125), my (e315), mx (e235), vx (e415), vy (e425), vz (e435)
+fields = ["gw", "gz", "gy", "gx", "mz", "my", "mx", "vx", "vy", "vz"]
 
 [types.Sphere]
 grades = [4]
@@ -55,7 +60,10 @@ fields = ["xyzwu"]
 [types.Motor]
 grades = [0, 2, 4]
 description = "Motor (even subalgebra for conformal transformations)"
-fields = ["s", "vx", "vy", "vz", "mx", "my", "mz", "px", "py", "pz", "pw", "u", "sx", "sy", "sz", "sw"]
+# Grade 0: s (scalar)
+# Grade 2: same as Dipole - m (moment), v (velocity), p (position)
+# Grade 4: u (pseudoscalar weight), s (sphere components)
+fields = ["s", "mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw", "u", "sx", "sy", "sz", "sw"]
 
 # ============================================================
 # Sparse Types (subset of blades within a grade)

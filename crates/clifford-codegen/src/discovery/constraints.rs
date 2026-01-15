@@ -366,4 +366,5 @@ mod tests {
         assert!(sat);
         assert!(constr.is_some());
     }
+
 }
