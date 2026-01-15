@@ -121,12 +121,12 @@ use num_traits::One;
 /// - Any quantity where magnitude should always be 1
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Unit<T> {
+pub struct Unit<T: Normed> {
     /// The wrapped value, guaranteed to satisfy the wrapper's constraint.
     inner: T,
 }
 
-impl<T> Unit<T> {
+impl<T: Normed> Unit<T> {
     /// Creates a `Unit<T>` without checking or enforcing normalization.
     ///
     /// # Safety
@@ -201,7 +201,7 @@ impl<T: Normed> Unit<T> {
     }
 }
 
-impl<T> Deref for Unit<T> {
+impl<T: Normed> Deref for Unit<T> {
     type Target = T;
 
     #[inline]
@@ -210,35 +210,35 @@ impl<T> Deref for Unit<T> {
     }
 }
 
-impl<T> AsRef<T> for Unit<T> {
+impl<T: Normed> AsRef<T> for Unit<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Unit<T> {
+impl<T: Normed + Debug> Debug for Unit<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Unit").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Unit<T> {
+impl<T: Normed + PartialEq> PartialEq for Unit<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Unit<T> {}
+impl<T: Normed + Eq> Eq for Unit<T> {}
 
-impl<T: Hash> Hash for Unit<T> {
+impl<T: Normed + Hash> Hash for Unit<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Unit<T> {
+impl<T: Normed + serde::Serialize> serde::Serialize for Unit<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -248,7 +248,7 @@ impl<T: serde::Serialize> serde::Serialize for Unit<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Unit<T> {
+impl<'de, T: Normed + serde::Deserialize<'de>> serde::Deserialize<'de> for Unit<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -295,7 +295,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Unit<T> {
 /// [Rigid GA Wiki - Geometric norm](https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_norm)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Bulk<T> {
+pub struct Bulk<T: DegenerateNormed> {
     /// The wrapped value, guaranteed to satisfy the wrapper's constraint.
     inner: T,
 }
@@ -342,7 +342,7 @@ where
     }
 }
 
-impl<T> Bulk<T> {
+impl<T: DegenerateNormed> Bulk<T> {
     /// Creates a `Bulk<T>` without checking or enforcing normalization.
     ///
     /// # Safety
@@ -366,7 +366,7 @@ impl<T> Bulk<T> {
     }
 }
 
-impl<T> Deref for Bulk<T> {
+impl<T: DegenerateNormed> Deref for Bulk<T> {
     type Target = T;
 
     #[inline]
@@ -375,35 +375,35 @@ impl<T> Deref for Bulk<T> {
     }
 }
 
-impl<T> AsRef<T> for Bulk<T> {
+impl<T: DegenerateNormed> AsRef<T> for Bulk<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Bulk<T> {
+impl<T: DegenerateNormed + Debug> Debug for Bulk<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Bulk").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Bulk<T> {
+impl<T: DegenerateNormed + PartialEq> PartialEq for Bulk<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Bulk<T> {}
+impl<T: DegenerateNormed + Eq> Eq for Bulk<T> {}
 
-impl<T: Hash> Hash for Bulk<T> {
+impl<T: DegenerateNormed + Hash> Hash for Bulk<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Bulk<T> {
+impl<T: DegenerateNormed + serde::Serialize> serde::Serialize for Bulk<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -413,7 +413,7 @@ impl<T: serde::Serialize> serde::Serialize for Bulk<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
+impl<'de, T: DegenerateNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -470,7 +470,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Bulk<T> {
 /// [Rigid GA Wiki - Unitization](https://rigidgeometricalgebra.org/wiki/index.php?title=Unitization)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Unitized<T> {
+pub struct Unitized<T: DegenerateNormed> {
     /// The wrapped value, guaranteed to satisfy the wrapper's constraint.
     inner: T,
 }
@@ -513,7 +513,7 @@ impl<T: DegenerateNormed> Unitized<T> {
     }
 }
 
-impl<T> Unitized<T> {
+impl<T: DegenerateNormed> Unitized<T> {
     /// Creates a `Unitized<T>` without checking or enforcing normalization.
     ///
     /// # Safety
@@ -537,7 +537,7 @@ impl<T> Unitized<T> {
     }
 }
 
-impl<T> Deref for Unitized<T> {
+impl<T: DegenerateNormed> Deref for Unitized<T> {
     type Target = T;
 
     #[inline]
@@ -546,35 +546,35 @@ impl<T> Deref for Unitized<T> {
     }
 }
 
-impl<T> AsRef<T> for Unitized<T> {
+impl<T: DegenerateNormed> AsRef<T> for Unitized<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Unitized<T> {
+impl<T: DegenerateNormed + Debug> Debug for Unitized<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Unitized").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Unitized<T> {
+impl<T: DegenerateNormed + PartialEq> PartialEq for Unitized<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Unitized<T> {}
+impl<T: DegenerateNormed + Eq> Eq for Unitized<T> {}
 
-impl<T: Hash> Hash for Unitized<T> {
+impl<T: DegenerateNormed + Hash> Hash for Unitized<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Unitized<T> {
+impl<T: DegenerateNormed + serde::Serialize> serde::Serialize for Unitized<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -584,7 +584,7 @@ impl<T: serde::Serialize> serde::Serialize for Unitized<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Unitized<T> {
+impl<'de, T: DegenerateNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Unitized<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -640,7 +640,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Unitized<T> {
 /// [Rigid GA Wiki - Ideal elements](https://rigidgeometricalgebra.org/wiki/index.php?title=Projective_geometric_algebra)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Ideal<T> {
+pub struct Ideal<T: DegenerateNormed> {
     /// The wrapped value, guaranteed to have weight ≈ 0.
     inner: T,
 }
@@ -677,7 +677,7 @@ impl<T: DegenerateNormed> Ideal<T> {
     }
 }
 
-impl<T> Ideal<T> {
+impl<T: DegenerateNormed> Ideal<T> {
     /// Creates an `Ideal<T>` without checking the weight constraint.
     ///
     /// # Safety
@@ -701,7 +701,7 @@ impl<T> Ideal<T> {
     }
 }
 
-impl<T> Deref for Ideal<T> {
+impl<T: DegenerateNormed> Deref for Ideal<T> {
     type Target = T;
 
     #[inline]
@@ -710,35 +710,35 @@ impl<T> Deref for Ideal<T> {
     }
 }
 
-impl<T> AsRef<T> for Ideal<T> {
+impl<T: DegenerateNormed> AsRef<T> for Ideal<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Ideal<T> {
+impl<T: DegenerateNormed + Debug> Debug for Ideal<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Ideal").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Ideal<T> {
+impl<T: DegenerateNormed + PartialEq> PartialEq for Ideal<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Ideal<T> {}
+impl<T: DegenerateNormed + Eq> Eq for Ideal<T> {}
 
-impl<T: Hash> Hash for Ideal<T> {
+impl<T: DegenerateNormed + Hash> Hash for Ideal<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Ideal<T> {
+impl<T: DegenerateNormed + serde::Serialize> serde::Serialize for Ideal<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -748,7 +748,7 @@ impl<T: serde::Serialize> serde::Serialize for Ideal<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Ideal<T> {
+impl<'de, T: DegenerateNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Ideal<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -795,7 +795,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Ideal<T> {
 /// [Spacetime Algebra](https://en.wikipedia.org/wiki/Spacetime_algebra)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Proper<T> {
+pub struct Proper<T: IndefiniteNormed> {
     /// The wrapped value, guaranteed to satisfy the wrapper's constraint.
     inner: T,
 }
@@ -830,7 +830,7 @@ impl<T: IndefiniteNormed> Proper<T> {
     }
 }
 
-impl<T> Proper<T> {
+impl<T: IndefiniteNormed> Proper<T> {
     /// Creates a `Proper<T>` without checking the timelike property.
     ///
     /// # Safety
@@ -854,7 +854,7 @@ impl<T> Proper<T> {
     }
 }
 
-impl<T> Deref for Proper<T> {
+impl<T: IndefiniteNormed> Deref for Proper<T> {
     type Target = T;
 
     #[inline]
@@ -863,35 +863,35 @@ impl<T> Deref for Proper<T> {
     }
 }
 
-impl<T> AsRef<T> for Proper<T> {
+impl<T: IndefiniteNormed> AsRef<T> for Proper<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Proper<T> {
+impl<T: IndefiniteNormed + Debug> Debug for Proper<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Proper").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Proper<T> {
+impl<T: IndefiniteNormed + PartialEq> PartialEq for Proper<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Proper<T> {}
+impl<T: IndefiniteNormed + Eq> Eq for Proper<T> {}
 
-impl<T: Hash> Hash for Proper<T> {
+impl<T: IndefiniteNormed + Hash> Hash for Proper<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Proper<T> {
+impl<T: IndefiniteNormed + serde::Serialize> serde::Serialize for Proper<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -901,7 +901,7 @@ impl<T: serde::Serialize> serde::Serialize for Proper<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Proper<T> {
+impl<'de, T: IndefiniteNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Proper<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -948,7 +948,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Proper<T> {
 /// [Spacetime Algebra](https://en.wikipedia.org/wiki/Spacetime_algebra)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Spacelike<T> {
+pub struct Spacelike<T: IndefiniteNormed> {
     /// The wrapped value, guaranteed to be spacelike and normalized.
     inner: T,
 }
@@ -989,7 +989,7 @@ impl<T: IndefiniteNormed> Spacelike<T> {
     }
 }
 
-impl<T> Spacelike<T> {
+impl<T: IndefiniteNormed> Spacelike<T> {
     /// Creates a `Spacelike<T>` without checking the spacelike property.
     ///
     /// # Safety
@@ -1013,7 +1013,7 @@ impl<T> Spacelike<T> {
     }
 }
 
-impl<T> Deref for Spacelike<T> {
+impl<T: IndefiniteNormed> Deref for Spacelike<T> {
     type Target = T;
 
     #[inline]
@@ -1022,35 +1022,35 @@ impl<T> Deref for Spacelike<T> {
     }
 }
 
-impl<T> AsRef<T> for Spacelike<T> {
+impl<T: IndefiniteNormed> AsRef<T> for Spacelike<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Spacelike<T> {
+impl<T: IndefiniteNormed + Debug> Debug for Spacelike<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Spacelike").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Spacelike<T> {
+impl<T: IndefiniteNormed + PartialEq> PartialEq for Spacelike<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Spacelike<T> {}
+impl<T: IndefiniteNormed + Eq> Eq for Spacelike<T> {}
 
-impl<T: Hash> Hash for Spacelike<T> {
+impl<T: IndefiniteNormed + Hash> Hash for Spacelike<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Spacelike<T> {
+impl<T: IndefiniteNormed + serde::Serialize> serde::Serialize for Spacelike<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -1060,7 +1060,7 @@ impl<T: serde::Serialize> serde::Serialize for Spacelike<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Spacelike<T> {
+impl<'de, T: IndefiniteNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Spacelike<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -1111,7 +1111,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Spacelike<T> {
 /// [Null vector](https://en.wikipedia.org/wiki/Null_vector)
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct Null<T> {
+pub struct Null<T: IndefiniteNormed> {
     /// The wrapped value, guaranteed to have norm ≈ 0.
     inner: T,
 }
@@ -1146,7 +1146,7 @@ impl<T: IndefiniteNormed> Null<T> {
     }
 }
 
-impl<T> Null<T> {
+impl<T: IndefiniteNormed> Null<T> {
     /// Creates a `Null<T>` without checking the lightlike constraint.
     ///
     /// # Safety
@@ -1170,7 +1170,7 @@ impl<T> Null<T> {
     }
 }
 
-impl<T> Deref for Null<T> {
+impl<T: IndefiniteNormed> Deref for Null<T> {
     type Target = T;
 
     #[inline]
@@ -1179,35 +1179,35 @@ impl<T> Deref for Null<T> {
     }
 }
 
-impl<T> AsRef<T> for Null<T> {
+impl<T: IndefiniteNormed> AsRef<T> for Null<T> {
     #[inline]
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
-impl<T: Debug> Debug for Null<T> {
+impl<T: IndefiniteNormed + Debug> Debug for Null<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_tuple("Null").field(&self.inner).finish()
     }
 }
 
-impl<T: PartialEq> PartialEq for Null<T> {
+impl<T: IndefiniteNormed + PartialEq> PartialEq for Null<T> {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
 }
 
-impl<T: Eq> Eq for Null<T> {}
+impl<T: IndefiniteNormed + Eq> Eq for Null<T> {}
 
-impl<T: Hash> Hash for Null<T> {
+impl<T: IndefiniteNormed + Hash> Hash for Null<T> {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.inner.hash(state);
     }
 }
 
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for Null<T> {
+impl<T: IndefiniteNormed + serde::Serialize> serde::Serialize for Null<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -1217,7 +1217,7 @@ impl<T: serde::Serialize> serde::Serialize for Null<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for Null<T> {
+impl<'de, T: IndefiniteNormed + serde::Deserialize<'de>> serde::Deserialize<'de> for Null<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -1353,153 +1353,6 @@ mod arbitrary_impl {
 // Tests
 // ============================================================================
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Basic structural tests for wrappers
-    // Full integration tests require types implementing the norm traits
-
-    #[test]
-    fn unit_debug_format() {
-        let unit = Unit { inner: 42i32 };
-        assert_eq!(format!("{:?}", unit), "Unit(42)");
-    }
-
-    #[test]
-    fn bulk_debug_format() {
-        let bulk = Bulk { inner: 42i32 };
-        assert_eq!(format!("{:?}", bulk), "Bulk(42)");
-    }
-
-    #[test]
-    fn ideal_debug_format() {
-        let ideal = Ideal { inner: 42i32 };
-        assert_eq!(format!("{:?}", ideal), "Ideal(42)");
-    }
-
-    #[test]
-    fn proper_debug_format() {
-        let proper = Proper { inner: 42i32 };
-        assert_eq!(format!("{:?}", proper), "Proper(42)");
-    }
-
-    #[test]
-    fn unit_deref() {
-        let unit = Unit { inner: 42i32 };
-        assert_eq!(*unit, 42);
-    }
-
-    #[test]
-    fn unit_as_ref() {
-        let unit = Unit { inner: 42i32 };
-        assert_eq!(unit.as_ref(), &42);
-    }
-
-    #[test]
-    fn unit_into_inner() {
-        let unit = Unit { inner: 42i32 };
-        assert_eq!(unit.into_inner(), 42);
-    }
-
-    #[test]
-    fn unit_equality() {
-        let a = Unit { inner: 42i32 };
-        let b = Unit { inner: 42i32 };
-        let c = Unit { inner: 43i32 };
-        assert_eq!(a, b);
-        assert_ne!(a, c);
-    }
-
-    #[test]
-    fn unit_clone() {
-        let a = Unit { inner: 42i32 };
-        let b = a.clone();
-        assert_eq!(a, b);
-    }
-
-    #[test]
-    fn unit_copy() {
-        let a = Unit { inner: 42i32 };
-        let b = a;
-        assert_eq!(a, b);
-    }
-
-    #[test]
-    fn unitized_debug_format() {
-        let unitized = Unitized { inner: 42i32 };
-        assert_eq!(format!("{:?}", unitized), "Unitized(42)");
-    }
-
-    #[test]
-    fn unitized_deref() {
-        let unitized = Unitized { inner: 42i32 };
-        assert_eq!(*unitized, 42);
-    }
-
-    #[test]
-    fn unitized_as_ref() {
-        let unitized = Unitized { inner: 42i32 };
-        assert_eq!(unitized.as_ref(), &42);
-    }
-
-    #[test]
-    fn unitized_into_inner() {
-        let unitized = Unitized { inner: 42i32 };
-        assert_eq!(unitized.into_inner(), 42);
-    }
-
-    #[test]
-    fn unitized_equality() {
-        let a = Unitized { inner: 42i32 };
-        let b = Unitized { inner: 42i32 };
-        let c = Unitized { inner: 43i32 };
-        assert_eq!(a, b);
-        assert_ne!(a, c);
-    }
-
-    #[test]
-    fn spacelike_debug_format() {
-        let spacelike = Spacelike { inner: 42i32 };
-        assert_eq!(format!("{:?}", spacelike), "Spacelike(42)");
-    }
-
-    #[test]
-    fn spacelike_deref() {
-        let spacelike = Spacelike { inner: 42i32 };
-        assert_eq!(*spacelike, 42);
-    }
-
-    #[test]
-    fn spacelike_into_inner() {
-        let spacelike = Spacelike { inner: 42i32 };
-        assert_eq!(spacelike.into_inner(), 42);
-    }
-
-    #[test]
-    fn null_debug_format() {
-        let null = Null { inner: 42i32 };
-        assert_eq!(format!("{:?}", null), "Null(42)");
-    }
-
-    #[test]
-    fn null_deref() {
-        let null = Null { inner: 42i32 };
-        assert_eq!(*null, 42);
-    }
-
-    #[test]
-    fn null_into_inner() {
-        let null = Null { inner: 42i32 };
-        assert_eq!(null.into_inner(), 42);
-    }
-
-    #[test]
-    fn null_equality() {
-        let a = Null { inner: 42i32 };
-        let b = Null { inner: 42i32 };
-        let c = Null { inner: 43i32 };
-        assert_eq!(a, b);
-        assert_ne!(a, c);
-    }
-}
+// Unit tests for wrapper types are in the specialized algebra modules,
+// since wrapper types now require their inner types to implement norm traits
+// (Normed, DegenerateNormed, or IndefiniteNormed).
