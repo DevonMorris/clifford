@@ -1,0 +1,34 @@
+# Complex Numbers
+# Cl(0,1,0) with Clifford conjugate for norm
+
+[algebra]
+name = "complex"
+module_path = "complex"
+description = "Complex numbers Cl(0,1,0)"
+
+[signature]
+positive = []
+negative = ["e1"]
+zero = []
+
+[norm]
+# Complex numbers use Clifford conjugate for their norm: z * conjugate(z) = a² + b²
+primary_involution = "clifford_conjugate"
+
+# ============================================================
+# Types
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.ImagUnit]
+grades = [1]
+description = "Pure imaginary unit (i where i² = -1)"
+fields = ["i"]
+
+[types.Complex]
+grades = [0, 1]
+description = "Complex number: a + bi where i² = -1"
+fields = ["real", "imag"]

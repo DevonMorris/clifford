@@ -227,6 +227,54 @@ impl Signature for Cl1_0_0 {
 /// Type alias for the hyperbolic numbers signature.
 pub type Hyperbolic1 = Cl1_0_0;
 
+/// 1D Anti-Euclidean signature: `Cl(0,1,0)`.
+///
+/// This is used for complex numbers.
+/// With one negative basis vector `e₁` where `e₁² = -1`, this
+/// algebra produces complex numbers `a + bi` where `i² = -1`.
+///
+/// # Basis Blades (2 total)
+///
+/// | Index | Blade | Grade | Description |
+/// |-------|-------|-------|-------------|
+/// | 0 | `1` | 0 | Scalar (real part) |
+/// | 1 | `e₁` | 1 | Imaginary unit (i) |
+///
+/// # Properties
+///
+/// - `e₁² = -1` (like complex numbers)
+/// - Complex numbers have no zero divisors
+/// - The norm uses Clifford conjugate: `z * conjugate(z) = a² + b²`
+///
+/// # Example
+///
+/// ```
+/// use clifford::prelude::*;
+///
+/// assert_eq!(Cl0_1_0::DIM, 1);
+/// assert_eq!(Cl0_1_0::num_blades(), 2);
+/// assert_eq!(Cl0_1_0::metric(0), -1);
+/// ```
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct Cl0_1_0;
+
+impl Signature for Cl0_1_0 {
+    type NumBlades = typenum::U2; // 2^1 = 2
+
+    const P: usize = 0;
+    const Q: usize = 1;
+    const R: usize = 0;
+
+    #[inline]
+    fn metric(i: usize) -> i8 {
+        debug_assert!(i < Self::DIM, "basis index {i} out of range for Cl0_1_0");
+        -1
+    }
+}
+
+/// Type alias for the complex numbers signature.
+pub type Complex1 = Cl0_1_0;
+
 #[cfg(test)]
 mod tests {
     use super::*;
