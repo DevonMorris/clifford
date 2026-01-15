@@ -3,6 +3,7 @@
 //! This module provides optimized, ergonomic types organized by algebra type
 //! and dimension. Currently supported:
 //!
+//! - **[`conformal`]**: Conformal geometric algebra (CGA) for 3D
 //! - **[`euclidean`]**: Euclidean geometric algebra (EGA) for 2D and 3D
 //! - **[`elliptic`]**: Elliptic projective geometry for 2D
 //! - **[`projective`]**: Projective geometric algebra (PGA) for 2D and 3D
@@ -17,6 +18,8 @@
 //!
 //! ```text
 //! specialized/
+//!   conformal/
+//!     dim3/   - 3D Conformal GA: RoundPoint, Dipole, Circle, Sphere, Motor
 //!   euclidean/
 //!     dim2/   - 2D Euclidean GA: Vector, Bivector, Rotor
 //!     dim3/   - 3D Euclidean GA: Vector, Bivector, Trivector, Rotor
@@ -76,6 +79,7 @@
 //! ```
 
 pub mod complex;
+pub mod conformal;
 pub mod dual;
 pub mod dualquat;
 pub mod elliptic;

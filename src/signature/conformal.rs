@@ -292,6 +292,12 @@ impl Signature for Conformal3 {
     }
 }
 
+/// Type alias for the 3D Conformal GA signature.
+///
+/// `Cl4_1_0` follows the naming convention `Cl{P}_{Q}_{R}` for the signature `(P, Q, R)`.
+/// This is an alias for [`Conformal3`].
+pub type Cl4_1_0 = Conformal3;
+
 impl Conformal3 {
     /// Index of the positive conformal basis vector `e₊`.
     pub const E_PLUS: usize = 3;

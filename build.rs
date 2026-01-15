@@ -78,6 +78,11 @@ const ALGEBRAS: &[(&str, &str, &str)] = &[
         "algebras/minkowski3.toml",
         "src/specialized/minkowski/dim3/generated",
     ),
+    (
+        "conformal3",
+        "algebras/conformal3.toml",
+        "src/specialized/conformal/dim3/generated",
+    ),
 ];
 
 fn main() {
