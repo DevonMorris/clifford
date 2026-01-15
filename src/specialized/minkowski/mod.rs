@@ -6,6 +6,7 @@
 //! # Available Algebras
 //!
 //! - **[`dim2`]**: Minkowski plane Cl(1,1,0) - 2D spacetime
+//! - **[`dim3`]**: Minkowski spacetime Cl(3,1,0) - 3+1 spacetime (special relativity)
 //!
 //! # Indefinite Metric
 //!
@@ -15,3 +16,4 @@
 //! - Null vectors form the "light cone" separating spacelike and timelike regions
 
 pub mod dim2;
+pub mod dim3;

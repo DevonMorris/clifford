@@ -31,7 +31,8 @@
 //!   hyperbolic/ - Hyperbolic numbers: Scalar, HypUnit, Hyperbolic
 //!     dim2/   - 2D Hyperbolic plane: Point, Line, Rotor
 //!   minkowski/
-//!     dim2/   - 2D Minkowski: Vector, Bivector, Eventor, Multivector
+//!     dim2/   - 2D Minkowski: Vector, Bivector, Eventor, Spacetime
+//!     dim3/   - 3D Minkowski: Vector, Bivector, Trivector, Eventor
 //!   quaternion/ - Quaternions: Scalar, Imaginary, Bivector, Quaternion
 //! ```
 //!
