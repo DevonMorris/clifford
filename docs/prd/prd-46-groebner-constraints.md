@@ -837,11 +837,11 @@ Point::new(
 - [x] GrevLex ordering for faster Groebner computation
 - [x] Max constraints safeguard (`MAX_CONSTRAINT_POLYNOMIALS = 20`)
 
-### Phase 5: Benchmarking
-- [ ] Set up dual codegen (naive + optimized) for A/B comparison
-- [x] Static term count reduction tests
-- [ ] Create Criterion benchmarks for key operations
-- [ ] Add CI workflow for benchmark comparison
+### Phase 5: Benchmarking ✅
+- [x] Static term count reduction tests (verify optimization in codegen)
+- [x] Runtime benchmarks via existing infrastructure (`benches/projective.rs`, etc.)
+- [-] A/B dual codegen: Not needed - use git baseline comparison instead
+- [-] CI benchmark workflow: Skipped - benchmarks too slow for CI
 
 ### Phase 6: Correctness Testing ✅
 - [x] Property tests: reduction idempotence, semantic preservation
@@ -858,13 +858,13 @@ Point::new(
 | `crates/clifford-codegen/src/codegen/traits.rs` | Updated | Integrate Groebner in `compute_product_expressions`, add `with_options` constructor |
 | `crates/clifford-codegen/src/main.rs` | Updated | Add `--no-groebner` CLI flag |
 
-### Deferred Files (not needed for initial implementation)
+### Deferred/Skipped Files
 | File | Status | Reason |
 |------|--------|--------|
-| `src/symbolic/precision.rs` | Deferred | Coefficient validation integrated directly in `GroebnerSimplifier::validate_coefficients` |
-| `src/codegen/debug_verify.rs` | Deferred | Debug assertions not yet needed |
-| `benches/groebner_comparison.rs` | Deferred | Runtime benchmarks pending |
-| `.github/workflows/benchmark.yml` | Deferred | CI benchmarks pending |
+| `src/symbolic/precision.rs` | Integrated | Coefficient validation in `GroebnerSimplifier::validate_coefficients` |
+| `src/codegen/debug_verify.rs` | Skipped | Debug assertions not needed |
+| `benches/groebner_comparison.rs` | Skipped | Use existing benchmarks with git baselines instead |
+| `.github/workflows/benchmark.yml` | Skipped | Benchmarks too slow for CI |
 
 ## Dependencies
 
