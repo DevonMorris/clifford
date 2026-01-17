@@ -91,6 +91,13 @@ required-features = ["rerun-0_28"]
 name = "rerun_bivector"
 required-features = ["rerun-0_28"]
 
-# Optimize codegen tool even in dev mode (symbolic computation is slow unoptimized)
+# Optimize codegen tool and its heavy dependencies even in dev mode
+# (symbolic computation is slow unoptimized)
 [profile.dev.package.clifford-codegen]
 opt-level = 3
+
+[profile.dev.package.symbolica]
+opt-level = 2
+
+[profile.dev.package.rug]
+opt-level = 2

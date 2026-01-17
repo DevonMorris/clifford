@@ -141,6 +141,137 @@ impl SymbolicProduct {
             .collect()
     }
 
+    /// Computes the symbolic output of a sandwich product: v × x × rev(v).
+    ///
+    /// # Arguments
+    ///
+    /// * `versor_type` - Versor type (Motor, Rotor, Flector)
+    /// * `operand_type` - Operand type being transformed
+    /// * `versor_symbols` - Symbolic values for versor fields
+    /// * `operand_symbols` - Symbolic values for operand fields
+    /// * `use_antiproduct` - If true, uses antiproduct and antireverse (for antisandwich)
+    ///
+    /// # Returns
+    ///
+    /// Symbolic expressions for each output field (output has same type as operand).
+    pub fn compute_sandwich(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+        versor_symbols: &HashMap<String, Atom>,
+        operand_symbols: &HashMap<String, Atom>,
+        use_antiproduct: bool,
+    ) -> Vec<SymbolicField> {
+        operand_type
+            .fields
+            .iter()
+            .map(|output_field| {
+                let expr = self.compute_sandwich_field(
+                    versor_type,
+                    operand_type,
+                    output_field.blade_index,
+                    versor_symbols,
+                    operand_symbols,
+                    use_antiproduct,
+                );
+                SymbolicField {
+                    name: output_field.name.clone(),
+                    blade_index: output_field.blade_index,
+                    expression: expr,
+                }
+            })
+            .collect()
+    }
+
+    /// Computes the symbolic expression for a single sandwich output field.
+    ///
+    /// Computes: Σ_{i,j,k} v_i × x_j × rev(v_k) for the target blade.
+    fn compute_sandwich_field(
+        &self,
+        versor_type: &TypeSpec,
+        operand_type: &TypeSpec,
+        result_blade: usize,
+        versor_symbols: &HashMap<String, Atom>,
+        operand_symbols: &HashMap<String, Atom>,
+        use_antiproduct: bool,
+    ) -> Atom {
+        let dim = self.table.dim();
+        let mut terms: Vec<Atom> = Vec::new();
+
+        for field_v1 in &versor_type.fields {
+            for field_x in &operand_type.fields {
+                for field_v2 in &versor_type.fields {
+                    let v1_blade = field_v1.blade_index;
+                    let x_blade = field_x.blade_index;
+                    let v2_blade = field_v2.blade_index;
+
+                    // Compute v_i × x_j (or v_i ⊛ x_j)
+                    let (sign_vx, vx) = if use_antiproduct {
+                        self.table.antiproduct(v1_blade, x_blade)
+                    } else {
+                        self.table.geometric(v1_blade, x_blade)
+                    };
+                    if sign_vx == 0 {
+                        continue;
+                    }
+
+                    // Compute the reverse/antireverse sign for v2
+                    let v2_grade = Blade::from_index(v2_blade).grade();
+                    let rev_sign: i8 = if use_antiproduct {
+                        // Antireverse sign: (-1)^((n-k)(n-k-1)/2)
+                        let antigrade = dim - v2_grade;
+                        if (antigrade * antigrade.saturating_sub(1) / 2).is_multiple_of(2) {
+                            1
+                        } else {
+                            -1
+                        }
+                    } else {
+                        // Reverse sign: (-1)^(k(k-1)/2)
+                        if (v2_grade * v2_grade.saturating_sub(1) / 2).is_multiple_of(2) {
+                            1
+                        } else {
+                            -1
+                        }
+                    };
+
+                    // Compute (v_i × x_j) × rev(v_k) (or (v_i ⊛ x_j) ⊛ antirev(v_k))
+                    let (sign_vxr, result) = if use_antiproduct {
+                        self.table.antiproduct(vx, v2_blade)
+                    } else {
+                        self.table.geometric(vx, v2_blade)
+                    };
+                    if sign_vxr == 0 {
+                        continue;
+                    }
+
+                    if result != result_blade {
+                        continue;
+                    }
+
+                    let final_sign = sign_vx * sign_vxr * rev_sign;
+                    if final_sign == 0 {
+                        continue;
+                    }
+
+                    let v1_sym = versor_symbols.get(&field_v1.name).unwrap();
+                    let x_sym = operand_symbols.get(&field_x.name).unwrap();
+                    let v2_sym = versor_symbols.get(&field_v2.name).unwrap();
+
+                    // Create term: sign * v1 * x * v2
+                    let product = v1_sym * x_sym * v2_sym;
+                    let term = if final_sign > 0 { product } else { -product };
+                    terms.push(term);
+                }
+            }
+        }
+
+        if terms.is_empty() {
+            Atom::num(0)
+        } else {
+            terms.into_iter().reduce(|acc, t| acc + t).unwrap()
+        }
+    }
+
     /// Computes the symbolic expression for a single output field.
     fn compute_field(
         &self,

@@ -573,6 +573,116 @@ impl<'a> TraitsGenerator<'a> {
         GroebnerSimplifier::new(constraints, true)
     }
 
+    /// Creates a Groebner simplifier for sandwich products with wrapper constraints.
+    ///
+    /// For sandwich products, the versor appears twice (v × x × rev(v)), so its
+    /// constraint is added once. The operand's constraint is also added if wrapped.
+    fn create_groebner_simplifier_for_sandwich(
+        &self,
+        versor_type: &TypeSpec,
+        wrapper_versor: Option<WrapperKind>,
+        operand_type: &TypeSpec,
+        wrapper_operand: Option<WrapperKind>,
+    ) -> GroebnerSimplifier {
+        // If Groebner is disabled, return a disabled simplifier
+        if !self.enable_groebner {
+            return GroebnerSimplifier::new(vec![], true);
+        }
+
+        let collector =
+            ProductConstraintCollector::new(self.algebra, self.spec.norm.primary_involution);
+
+        // Collect constraints
+        let mut constraints = Vec::new();
+        if let Some(wrapper) = wrapper_versor {
+            constraints.extend(collector.collect_wrapper_constraints(versor_type, wrapper, "self"));
+        } else {
+            constraints.extend(collector.collect_constraints(versor_type, "self"));
+        }
+        if let Some(wrapper) = wrapper_operand {
+            constraints.extend(collector.collect_wrapper_constraints(
+                operand_type,
+                wrapper,
+                "operand",
+            ));
+        } else {
+            constraints.extend(collector.collect_constraints(operand_type, "operand"));
+        }
+
+        GroebnerSimplifier::new(constraints, true)
+    }
+
+    /// Computes sandwich product expressions with wrapper constraint optimization.
+    ///
+    /// Uses symbolic computation and Groebner basis reduction to simplify
+    /// the sandwich product when wrapper constraints are present.
+    fn compute_sandwich_expressions_with_wrappers(
+        &self,
+        versor: &TypeSpec,
+        wrapper_versor: Option<WrapperKind>,
+        operand: &TypeSpec,
+        wrapper_operand: Option<WrapperKind>,
+        use_antiproduct: bool,
+    ) -> Vec<TokenStream> {
+        let symbolic_product = SymbolicProduct::new(self.algebra);
+        let expr_simplifier = ExpressionSimplifier::new();
+
+        // Create constraint simplifier for input type constraints
+        let constraint_simplifier =
+            ConstraintSimplifier::new(&[versor, operand], &["self", "operand"]);
+
+        // Create Groebner simplifier with wrapper constraints
+        let groebner_simplifier = self.create_groebner_simplifier_for_sandwich(
+            versor,
+            wrapper_versor,
+            operand,
+            wrapper_operand,
+        );
+
+        // Create symbolic field variables
+        let versor_symbols = symbolic_product.create_field_symbols(versor, "self");
+        let operand_symbols = symbolic_product.create_field_symbols(operand, "operand");
+
+        // Compute symbolic sandwich product
+        let symbolic_fields = symbolic_product.compute_sandwich(
+            versor,
+            operand,
+            &versor_symbols,
+            &operand_symbols,
+            use_antiproduct,
+        );
+
+        // Determine which prefixes need .as_inner() access
+        let mut wrapped_prefixes = Vec::new();
+        if wrapper_versor.is_some() {
+            wrapped_prefixes.push("self");
+        }
+        if wrapper_operand.is_some() {
+            wrapped_prefixes.push("operand");
+        }
+
+        // Create converter for Rust code generation
+        let converter = AtomToRust::new_with_wrappers(
+            &[versor, operand],
+            &["self", "operand"],
+            &wrapped_prefixes,
+        );
+
+        // Apply simplification and convert each field expression
+        symbolic_fields
+            .iter()
+            .map(|field| {
+                // Apply constraint substitutions
+                let with_constraints = constraint_simplifier.apply(&field.expression);
+                // Simplify (expand and collect)
+                let simplified = expr_simplifier.simplify(&with_constraints);
+                // Apply Groebner reduction
+                let reduced = groebner_simplifier.reduce_atom(&simplified);
+                converter.convert(&reduced)
+            })
+            .collect()
+    }
+
     /// Computes sandwich product expressions: v × x × rev(v).
     ///
     /// Returns TokenStream expressions for each field of the output type.
@@ -1161,6 +1271,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_left_contract_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::LeftContraction,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::LeftContraction,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::LeftContraction,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1174,6 +1310,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_right_contract_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::RightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::RightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::RightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1196,6 +1358,26 @@ impl<'a> TraitsGenerator<'a> {
                         impls.push(
                             self.generate_sandwich_trait_from_versor(versor_type, target_type),
                         );
+
+                        // Generate wrapper variants with Groebner optimization
+                        impls.push(self.generate_wrapper_sandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Lhs,
+                        ));
+                        impls.push(self.generate_wrapper_sandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Rhs,
+                        ));
+                        impls.push(self.generate_wrapper_sandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Both,
+                        ));
                     }
                 }
             }
@@ -1219,6 +1401,26 @@ impl<'a> TraitsGenerator<'a> {
                         impls.push(
                             self.generate_antisandwich_trait_from_versor(versor_type, target_type),
                         );
+
+                        // Generate wrapper variants with Groebner optimization
+                        impls.push(self.generate_wrapper_antisandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Lhs,
+                        ));
+                        impls.push(self.generate_wrapper_antisandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Rhs,
+                        ));
+                        impls.push(self.generate_wrapper_antisandwich_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Both,
+                        ));
                     }
                 }
             }
@@ -1242,6 +1444,26 @@ impl<'a> TraitsGenerator<'a> {
                         impls.push(
                             self.generate_transform_trait_from_versor(versor_type, target_type),
                         );
+
+                        // Generate wrapper variants
+                        impls.push(self.generate_wrapper_transform_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Lhs,
+                        ));
+                        impls.push(self.generate_wrapper_transform_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Rhs,
+                        ));
+                        impls.push(self.generate_wrapper_transform_trait(
+                            versor_type,
+                            target_type,
+                            wrapper_kind,
+                            WrapperPosition::Both,
+                        ));
                     }
                 }
             }
@@ -1260,6 +1482,29 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_scalar_product_trait(a, b, out, entry));
+
+                    // Generate wrapper variants (scalar-returning)
+                    impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                        a,
+                        b,
+                        SymbolicProductKind::Scalar,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                        a,
+                        b,
+                        SymbolicProductKind::Scalar,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                        a,
+                        b,
+                        SymbolicProductKind::Scalar,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1273,6 +1518,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_bulk_contract_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkContraction,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkContraction,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkContraction,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1286,6 +1557,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_weight_contract_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightContraction,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1299,6 +1596,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_bulk_expand_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::BulkExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1312,6 +1635,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_weight_expand_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::WeightExpansion,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1324,6 +1673,29 @@ impl<'a> TraitsGenerator<'a> {
         for entry in &self.spec.products.dot {
             if let (Some(a), Some(b)) = (self.find_type(&entry.lhs), self.find_type(&entry.rhs)) {
                 impls.push(self.generate_dot_trait(a, b, entry));
+
+                // Generate wrapper variants (scalar-returning)
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Dot,
+                    wrapper_kind,
+                    WrapperPosition::Lhs,
+                ));
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Dot,
+                    wrapper_kind,
+                    WrapperPosition::Rhs,
+                ));
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Dot,
+                    wrapper_kind,
+                    WrapperPosition::Both,
+                ));
             }
         }
 
@@ -1331,6 +1703,29 @@ impl<'a> TraitsGenerator<'a> {
         for entry in &self.spec.products.antidot {
             if let (Some(a), Some(b)) = (self.find_type(&entry.lhs), self.find_type(&entry.rhs)) {
                 impls.push(self.generate_antidot_trait(a, b, entry));
+
+                // Generate wrapper variants (scalar-returning)
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Antidot,
+                    wrapper_kind,
+                    WrapperPosition::Lhs,
+                ));
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Antidot,
+                    wrapper_kind,
+                    WrapperPosition::Rhs,
+                ));
+                impls.push(self.generate_wrapper_scalar_returning_product_trait(
+                    a,
+                    b,
+                    SymbolicProductKind::Antidot,
+                    wrapper_kind,
+                    WrapperPosition::Both,
+                ));
             }
         }
 
@@ -1363,6 +1758,29 @@ impl<'a> TraitsGenerator<'a> {
                         let field_exprs = self.compute_project_expressions(source, target, output);
                         if !Self::all_expressions_are_zero(&field_exprs) {
                             impls.push(self.generate_project_trait(source, target, output));
+
+                            // Generate wrapper variants
+                            impls.push(self.generate_wrapper_project_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Lhs,
+                            ));
+                            impls.push(self.generate_wrapper_project_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Rhs,
+                            ));
+                            impls.push(self.generate_wrapper_project_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Both,
+                            ));
                         }
                     }
                 }
@@ -1384,6 +1802,29 @@ impl<'a> TraitsGenerator<'a> {
                             self.compute_antiproject_expressions(source, target, output);
                         if !Self::all_expressions_are_zero(&field_exprs) {
                             impls.push(self.generate_antiproject_trait(source, target, output));
+
+                            // Generate wrapper variants
+                            impls.push(self.generate_wrapper_antiproject_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Lhs,
+                            ));
+                            impls.push(self.generate_wrapper_antiproject_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Rhs,
+                            ));
+                            impls.push(self.generate_wrapper_antiproject_trait(
+                                source,
+                                target,
+                                output,
+                                wrapper_kind,
+                                WrapperPosition::Both,
+                            ));
                         }
                     }
                 }
@@ -1548,6 +1989,118 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
+    /// Generates wrapper Project trait impl (e.g., `Project<Target> for Unit<Source>`).
+    ///
+    /// Project delegates via `.as_inner()` since it's a composite operation.
+    fn generate_wrapper_project_trait(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let source_name = format_ident!("{}", source.name);
+        let target_name = format_ident!("{}", target.name);
+        let out_name = format_ident!("{}", output.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    impl<T: Float> Project<#target_name<T>> for #wrapper_name<#source_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn project(&self, target: &#target_name<T>) -> #out_name<T> {
+                            self.as_inner().project(target)
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    impl<T: Float> Project<#wrapper_name<#target_name<T>>> for #source_name<T> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn project(&self, target: &#wrapper_name<#target_name<T>>) -> #out_name<T> {
+                            self.project(target.as_inner())
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    impl<T: Float> Project<#wrapper_name<#target_name<T>>> for #wrapper_name<#source_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn project(&self, target: &#wrapper_name<#target_name<T>>) -> #out_name<T> {
+                            self.as_inner().project(target.as_inner())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Generates wrapper Antiproject trait impl (e.g., `Antiproject<Target> for Unit<Source>`).
+    ///
+    /// Antiproject delegates via `.as_inner()` since it's a composite operation.
+    fn generate_wrapper_antiproject_trait(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        output: &TypeSpec,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let source_name = format_ident!("{}", source.name);
+        let target_name = format_ident!("{}", target.name);
+        let out_name = format_ident!("{}", output.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    impl<T: Float> Antiproject<#target_name<T>> for #wrapper_name<#source_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn antiproject(&self, target: &#target_name<T>) -> #out_name<T> {
+                            self.as_inner().antiproject(target)
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    impl<T: Float> Antiproject<#wrapper_name<#target_name<T>>> for #source_name<T> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn antiproject(&self, target: &#wrapper_name<#target_name<T>>) -> #out_name<T> {
+                            self.antiproject(target.as_inner())
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    impl<T: Float> Antiproject<#wrapper_name<#target_name<T>>> for #wrapper_name<#source_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn antiproject(&self, target: &#wrapper_name<#target_name<T>>) -> #out_name<T> {
+                            self.as_inner().antiproject(target.as_inner())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// Generates Wedge trait impl.
     fn generate_wedge_trait(
         &self,
@@ -1695,6 +2248,100 @@ impl<'a> TraitsGenerator<'a> {
                         #[inline]
                         fn #trait_method(&self, rhs: &#wrapper_name<#b_name<T>>) -> #out_name<T> {
                             #constructor_call
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Generates a wrapper product trait impl for scalar-returning products.
+    ///
+    /// This is used for ScalarProduct, Dot, and Antidot which return `T` directly
+    /// with `type Scalar = T` instead of `type Output`.
+    fn generate_wrapper_scalar_returning_product_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        kind: SymbolicProductKind,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        // Determine wrapper constraints for each operand
+        let (wrapper_a, wrapper_b) = match wrapper_pos {
+            WrapperPosition::Lhs => (Some(wrapper_kind), None),
+            WrapperPosition::Rhs => (None, Some(wrapper_kind)),
+            WrapperPosition::Both => (Some(wrapper_kind), Some(wrapper_kind)),
+        };
+
+        // For scalar-returning products, we need to get the Scalar type
+        let scalar_type = self
+            .spec
+            .types
+            .iter()
+            .find(|t| t.grades == vec![0] && t.alias_of.is_none())
+            .expect("Scalar type must exist");
+
+        // Compute the formula with wrapper constraints
+        let field_exprs = self.compute_product_expressions_with_wrappers(
+            a,
+            wrapper_a,
+            b,
+            wrapper_b,
+            scalar_type,
+            kind,
+        );
+
+        // Scalar product returns the scalar directly, not a Scalar type
+        let expr = if field_exprs.is_empty() {
+            quote! { T::zero() }
+        } else {
+            field_exprs[0].clone()
+        };
+
+        // Generate the appropriate trait impl based on wrapper position
+        let trait_type = Self::product_trait_type_name(kind);
+        let trait_method = Self::product_trait_method_name(kind);
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#b_name<T>> for #wrapper_name<#a_name<T>> {
+                        type Scalar = T;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#b_name<T>) -> T {
+                            #expr
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#wrapper_name<#b_name<T>>> for #a_name<T> {
+                        type Scalar = T;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#wrapper_name<#b_name<T>>) -> T {
+                            #expr
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#wrapper_name<#b_name<T>>> for #wrapper_name<#a_name<T>> {
+                        type Scalar = T;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#wrapper_name<#b_name<T>>) -> T {
+                            #expr
                         }
                     }
                 }
@@ -1883,6 +2530,227 @@ impl<'a> TraitsGenerator<'a> {
                 #[inline]
                 fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
                     #constructor_call
+                }
+            }
+        }
+    }
+
+    /// Generates wrapper Sandwich trait impl with optimized computation.
+    ///
+    /// Uses Groebner basis reduction to simplify sandwich products when
+    /// wrapper constraints are present (e.g., Unit<Motor> with |motor|² = 1).
+    fn generate_wrapper_sandwich_trait(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        // Determine wrapper constraints
+        let (wrapper_versor, wrapper_operand) = match wrapper_pos {
+            WrapperPosition::Lhs => (Some(wrapper_kind), None),
+            WrapperPosition::Rhs => (None, Some(wrapper_kind)),
+            WrapperPosition::Both => (Some(wrapper_kind), Some(wrapper_kind)),
+        };
+
+        // Compute optimized expressions
+        let field_exprs = self.compute_sandwich_expressions_with_wrappers(
+            versor,
+            wrapper_versor,
+            operand,
+            wrapper_operand,
+            false, // sandwich uses geometric product
+        );
+
+        let constructor_call = if operand.versor.is_some() {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        };
+
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Sandwich<#operand_name<T>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn sandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Sandwich<#wrapper_name<#operand_name<T>>> for #versor_name<T> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn sandwich(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Sandwich<#wrapper_name<#operand_name<T>>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn sandwich(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Generates wrapper Antisandwich trait impl with optimized computation.
+    ///
+    /// Uses Groebner basis reduction to simplify antisandwich products when
+    /// wrapper constraints are present.
+    fn generate_wrapper_antisandwich_trait(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        // Determine wrapper constraints
+        let (wrapper_versor, wrapper_operand) = match wrapper_pos {
+            WrapperPosition::Lhs => (Some(wrapper_kind), None),
+            WrapperPosition::Rhs => (None, Some(wrapper_kind)),
+            WrapperPosition::Both => (Some(wrapper_kind), Some(wrapper_kind)),
+        };
+
+        // Compute optimized expressions
+        let field_exprs = self.compute_sandwich_expressions_with_wrappers(
+            versor,
+            wrapper_versor,
+            operand,
+            wrapper_operand,
+            true, // antisandwich uses antiproduct
+        );
+
+        let constructor_call = if operand.versor.is_some() {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
+        };
+
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Antisandwich<#operand_name<T>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn antisandwich(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Antisandwich<#wrapper_name<#operand_name<T>>> for #versor_name<T> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn antisandwich(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> Antisandwich<#wrapper_name<#operand_name<T>>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn antisandwich(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Generates wrapper Transform trait impl.
+    ///
+    /// Transform delegates to Sandwich (non-degenerate) or Antisandwich (degenerate).
+    fn generate_wrapper_transform_trait(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        let is_degenerate = self.spec.signature.r > 0;
+        let method_name = if is_degenerate {
+            quote! { antisandwich }
+        } else {
+            quote! { sandwich }
+        };
+
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    impl<T: Float> Transform<#operand_name<T>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn transform(&self, operand: &#operand_name<T>) -> #operand_name<T> {
+                            self.#method_name(operand)
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    impl<T: Float> Transform<#wrapper_name<#operand_name<T>>> for #versor_name<T> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn transform(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            self.#method_name(operand)
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    impl<T: Float> Transform<#wrapper_name<#operand_name<T>>> for #wrapper_name<#versor_name<T>> {
+                        type Output = #operand_name<T>;
+
+                        #[inline]
+                        fn transform(&self, operand: &#wrapper_name<#operand_name<T>>) -> #operand_name<T> {
+                            self.#method_name(operand)
+                        }
+                    }
                 }
             }
         }
