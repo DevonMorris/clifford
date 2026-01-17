@@ -251,7 +251,7 @@ mod tests {
     fn pga2_null_vector_squares_to_zero() {
         // e₀ is at index 2 (basis vector index), blade index is 1 << 2 = 4
         let e0: Multivector<f64, Projective2> = Multivector::basis_vector(2);
-        let e0_sq = &e0 * &e0;
+        let e0_sq = e0 * e0;
         assert!(e0_sq.is_zero(RELATIVE_EQ_EPS));
     }
 
@@ -259,7 +259,7 @@ mod tests {
     fn pga3_null_vector_squares_to_zero() {
         // e₀ is at index 3 (basis vector index), blade index is 1 << 3 = 8
         let e0: Multivector<f64, Projective3> = Multivector::basis_vector(3);
-        let e0_sq = &e0 * &e0;
+        let e0_sq = e0 * e0;
         assert!(e0_sq.is_zero(RELATIVE_EQ_EPS));
     }
 
@@ -270,17 +270,17 @@ mod tests {
         let e3: Multivector<f64, Projective3> = Multivector::basis_vector(2);
 
         assert!(relative_eq!(
-            (&e1 * &e1).scalar_part(),
+            (e1 * e1).scalar_part(),
             1.0,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            (&e2 * &e2).scalar_part(),
+            (e2 * e2).scalar_part(),
             1.0,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            (&e3 * &e3).scalar_part(),
+            (e3 * e3).scalar_part(),
             1.0,
             max_relative = RELATIVE_EQ_EPS
         ));
@@ -291,8 +291,8 @@ mod tests {
         // e₁₂ should square to -1
         let e1: Multivector<f64, Projective3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Projective3> = Multivector::basis_vector(1);
-        let e12 = &e1 * &e2;
-        let e12_sq = &e12 * &e12;
+        let e12 = e1 * e2;
+        let e12_sq = e12 * e12;
 
         assert!(relative_eq!(
             e12_sq.scalar_part(),
@@ -306,8 +306,8 @@ mod tests {
         // e₀₁ should square to 0 (contains null vector)
         let e0: Multivector<f64, Projective3> = Multivector::basis_vector(3);
         let e1: Multivector<f64, Projective3> = Multivector::basis_vector(0);
-        let e01 = &e0 * &e1;
-        let e01_sq = &e01 * &e01;
+        let e01 = e0 * e1;
+        let e01_sq = e01 * e01;
 
         assert!(e01_sq.is_zero(RELATIVE_EQ_EPS));
     }
@@ -366,8 +366,8 @@ mod tests {
             b in any::<Multivector<f64, Projective2>>(),
             c in any::<Multivector<f64, Projective2>>(),
         ) {
-            let lhs = &(&a * &b) * &c;
-            let rhs = &a * &(&b * &c);
+            let lhs = (a * b) * c;
+            let rhs = a * (b * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -377,8 +377,8 @@ mod tests {
             b in any::<Multivector<f64, Projective2>>(),
             c in any::<Multivector<f64, Projective2>>(),
         ) {
-            let lhs = &a * &(&b + &c);
-            let rhs = &(&a * &b) + &(&a * &c);
+            let lhs = a * (b + c);
+            let rhs = (a * b) + (a * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -386,8 +386,8 @@ mod tests {
         fn pga2_scaled_null_vector_squares_to_zero(s in -100.0f64..100.0) {
             // Any scalar multiple of e₀ should square to zero
             let e0: Multivector<f64, Projective2> = Multivector::basis_vector(2);
-            let scaled = &e0 * s;
-            let sq = &scaled * &scaled;
+            let scaled = e0 * s;
+            let sq = scaled * scaled;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -401,8 +401,8 @@ mod tests {
             a in any::<Multivector<f64, Projective2>>(),
             b in any::<Multivector<f64, Projective2>>(),
         ) {
-            let lhs = (&a * &b).reverse();
-            let rhs = &b.reverse() * &a.reverse();
+            let lhs = (a * b).reverse();
+            let rhs = b.reverse() * a.reverse();
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -425,14 +425,14 @@ mod tests {
         #[test]
         fn pga2_one_is_multiplicative_identity(a in any::<Multivector<f64, Projective2>>()) {
             let one = Multivector::<f64, Projective2>::one();
-            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
-            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a * one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(one * a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga2_zero_is_additive_identity(a in any::<Multivector<f64, Projective2>>()) {
             let zero = Multivector::<f64, Projective2>::zero();
-            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -440,7 +440,7 @@ mod tests {
             a in any::<Multivector<f64, Projective2>>(),
             b in any::<Multivector<f64, Projective2>>()
         ) {
-            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + b, b + a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -448,7 +448,7 @@ mod tests {
             // Sum of all grade projections equals original (grades 0, 1, 2, 3)
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
-                .fold(Multivector::<f64, Projective2>::zero(), |acc, x| &acc + &x);
+                .fold(Multivector::<f64, Projective2>::zero(), |acc, x| acc + x);
             prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
@@ -464,8 +464,8 @@ mod tests {
             b in any::<Multivector<f64, Projective3>>(),
             c in any::<Multivector<f64, Projective3>>(),
         ) {
-            let lhs = &(&a * &b) * &c;
-            let rhs = &a * &(&b * &c);
+            let lhs = (a * b) * c;
+            let rhs = a * (b * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -475,8 +475,8 @@ mod tests {
             b in any::<Multivector<f64, Projective3>>(),
             c in any::<Multivector<f64, Projective3>>(),
         ) {
-            let lhs = &a * &(&b + &c);
-            let rhs = &(&a * &b) + &(&a * &c);
+            let lhs = a * (b + c);
+            let rhs = (a * b) + (a * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -484,8 +484,8 @@ mod tests {
         fn pga3_scaled_null_vector_squares_to_zero(s in -100.0f64..100.0) {
             // Any scalar multiple of e₀ should square to zero
             let e0: Multivector<f64, Projective3> = Multivector::basis_vector(3);
-            let scaled = &e0 * s;
-            let sq = &scaled * &scaled;
+            let scaled = e0 * s;
+            let sq = scaled * scaled;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -499,8 +499,8 @@ mod tests {
             a in any::<Multivector<f64, Projective3>>(),
             b in any::<Multivector<f64, Projective3>>(),
         ) {
-            let lhs = (&a * &b).reverse();
-            let rhs = &b.reverse() * &a.reverse();
+            let lhs = (a * b).reverse();
+            let rhs = b.reverse() * a.reverse();
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -523,14 +523,14 @@ mod tests {
         #[test]
         fn pga3_one_is_multiplicative_identity(a in any::<Multivector<f64, Projective3>>()) {
             let one = Multivector::<f64, Projective3>::one();
-            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
-            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a * one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(one * a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_zero_is_additive_identity(a in any::<Multivector<f64, Projective3>>()) {
             let zero = Multivector::<f64, Projective3>::zero();
-            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -538,7 +538,7 @@ mod tests {
             a in any::<Multivector<f64, Projective3>>(),
             b in any::<Multivector<f64, Projective3>>()
         ) {
-            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + b, b + a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -546,13 +546,13 @@ mod tests {
             // Sum of all grade projections equals original (grades 0, 1, 2, 3, 4)
             let sum = (0..=4)
                 .map(|k| a.grade_select(k))
-                .fold(Multivector::<f64, Projective3>::zero(), |acc, x| &acc + &x);
+                .fold(Multivector::<f64, Projective3>::zero(), |acc, x| acc + x);
             prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn pga3_even_plus_odd_equals_original(a in any::<Multivector<f64, Projective3>>()) {
-            let reconstructed = &a.even() + &a.odd();
+            let reconstructed = a.even() + a.odd();
             prop_assert!(relative_eq!(reconstructed, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -607,7 +607,7 @@ mod tests {
                 let na_b = na::Vector3::new(bx, by, bz);
 
                 // Geometric product of vectors: ab = a·b + a∧b
-                let product = &pga_a * &pga_b;
+                let product = pga_a * pga_b;
 
                 // Scalar part should be dot product
                 let expected_scalar = na_a.dot(&na_b);

@@ -3,7 +3,8 @@
 //! Provides a common structure for all visualization examples with:
 //! - A main visualization panel
 //! - A controls sidebar
-//! - Optional info panel
+//! - Optional info panel (status bar)
+//! - Educational popup window with math explanations
 //! - Consistent layout and styling
 
 use eframe::egui;
@@ -64,6 +65,46 @@ pub trait VisualizationApp {
     fn show_info_panel(&self) -> bool {
         true
     }
+
+    /// Educational content for the "Learn" popup window.
+    ///
+    /// This should provide a comprehensive explanation of the mathematical
+    /// concepts being visualized. Return `None` to disable the Learn button.
+    ///
+    /// # Sections
+    ///
+    /// The content is organized into sections:
+    /// - **Overview**: What this visualization demonstrates
+    /// - **Mathematical Background**: The underlying math (formulas, definitions)
+    /// - **How to Use**: Instructions for interacting with the demo
+    /// - **Key Concepts**: Important takeaways
+    ///
+    /// Use markdown-like formatting (will be rendered as rich text):
+    /// - `**bold**` for emphasis
+    /// - Formulas in plain text with Unicode subscripts (e₁₂, θ/2, etc.)
+    fn educational_content(&self) -> Option<EducationalContent> {
+        None
+    }
+}
+
+/// Structured educational content for visualization demos.
+///
+/// This content appears in the "Learn" popup window to help users
+/// understand the mathematical concepts being visualized.
+#[derive(Debug, Clone, Default)]
+pub struct EducationalContent {
+    /// Brief title for the educational content.
+    pub title: &'static str,
+    /// Overview of what the visualization demonstrates.
+    pub overview: &'static str,
+    /// Mathematical background and formulas.
+    pub math_background: &'static str,
+    /// Instructions for using the visualization.
+    pub how_to_use: &'static str,
+    /// Key concepts to understand.
+    pub key_concepts: &'static str,
+    /// Optional: links to external resources.
+    pub resources: &'static [(&'static str, &'static str)],
 }
 
 /// Internal wrapper that adapts a [`VisualizationApp`] to eframe's [`eframe::App`].
@@ -72,6 +113,8 @@ struct AppWrapper<T: VisualizationApp> {
     app: T,
     /// Timestamp of the last frame, used to compute delta time.
     last_time: Option<std::time::Instant>,
+    /// Whether the educational window is open.
+    learn_window_open: bool,
 }
 
 impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
@@ -79,6 +122,7 @@ impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
         Self {
             app: T::default(),
             last_time: None,
+            learn_window_open: false,
         }
     }
 }
@@ -107,7 +151,35 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 ui.heading("Controls");
                 ui.separator();
                 self.app.controls(ui);
+
+                // Learn button at bottom of controls (if educational content exists)
+                if self.app.educational_content().is_some() {
+                    ui.add_space(16.0);
+                    ui.separator();
+                    if ui
+                        .button("\u{1f4d6} Learn About This")
+                        .on_hover_text("Open educational explanation")
+                        .clicked()
+                    {
+                        self.learn_window_open = true;
+                    }
+                }
             });
+
+        // Educational window (popup)
+        if let Some(content) = self.app.educational_content() {
+            egui::Window::new(format!("\u{1f4d6} {}", content.title))
+                .open(&mut self.learn_window_open)
+                .default_width(500.0)
+                .default_height(400.0)
+                .resizable(true)
+                .collapsible(true)
+                .show(ctx, |ui| {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        render_educational_content(ui, &content);
+                    });
+                });
+        }
 
         // Optional bottom panel: info
         if self.app.show_info_panel() {
@@ -123,6 +195,45 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.app.render(ui);
         });
+    }
+}
+
+/// Render educational content with nice formatting.
+fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
+    // Overview section
+    ui.heading("Overview");
+    ui.label(content.overview);
+    ui.add_space(12.0);
+
+    // Mathematical Background section
+    ui.heading("Mathematical Background");
+    // Render with monospace for formulas
+    egui::Frame::none()
+        .fill(egui::Color32::from_rgba_unmultiplied(40, 40, 50, 255))
+        .inner_margin(12.0)
+        .outer_margin(4.0)
+        .rounding(4.0)
+        .show(ui, |ui| {
+            ui.monospace(content.math_background);
+        });
+    ui.add_space(12.0);
+
+    // How to Use section
+    ui.heading("How to Use");
+    ui.label(content.how_to_use);
+    ui.add_space(12.0);
+
+    // Key Concepts section
+    ui.heading("Key Concepts");
+    ui.label(content.key_concepts);
+
+    // Resources section (if any)
+    if !content.resources.is_empty() {
+        ui.add_space(12.0);
+        ui.heading("Resources");
+        for (name, url) in content.resources {
+            ui.hyperlink_to(*name, *url);
+        }
     }
 }
 

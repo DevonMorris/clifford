@@ -2022,7 +2022,7 @@ mod tests {
     #[test]
     fn test_vector_squares_to_scalar() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
-        let e1_sq = &e1 * &e1;
+        let e1_sq = e1 * e1;
         assert!(relative_eq!(
             e1_sq.scalar_part(),
             1.0,
@@ -2039,8 +2039,8 @@ mod tests {
     fn test_bivector_squares_to_minus_one() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-        let e12 = &e1 * &e2;
-        let e12_sq = &e12 * &e12;
+        let e12 = e1 * e2;
+        let e12_sq = e12 * e12;
         assert!(relative_eq!(
             e12_sq.scalar_part(),
             -1.0,
@@ -2053,13 +2053,13 @@ mod tests {
         let one: Multivector<f64, Euclidean3> = Multivector::one();
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 2.0, 3.0]);
         assert!(relative_eq!(
-            &one * &v,
+            one * v,
             v,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            &v * &one,
+            v * one,
             v,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -2085,10 +2085,10 @@ mod tests {
     fn test_reverse_bivector() {
         let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-        let e12 = &e1 * &e2;
+        let e12 = e1 * e2;
         assert!(relative_eq!(
             e12.reverse(),
-            -&e12,
+            -e12,
             max_relative = RELATIVE_EQ_EPS
         )); // Bivectors negate
     }
@@ -2098,7 +2098,7 @@ mod tests {
         let v: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
         assert!(relative_eq!(
             v.involute(),
-            -&v,
+            -v,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         )); // Vectors negate
@@ -2133,7 +2133,7 @@ mod tests {
     fn test_inverse_vector() {
         let v: Multivector<f64, Euclidean3> = Multivector::vector(&[2.0, 0.0, 0.0]);
         let v_inv = v.inverse().unwrap();
-        let product = &v * &v_inv;
+        let product = v * v_inv;
         assert!(relative_eq!(
             product,
             Multivector::one(),
@@ -2152,8 +2152,8 @@ mod tests {
             b in any::<Multivector<f64, Euclidean3>>(),
             c in any::<Multivector<f64, Euclidean3>>(),
         ) {
-            let lhs = &(&a * &b) * &c;
-            let rhs = &a * &(&b * &c);
+            let lhs = (a * b) * c;
+            let rhs = a * (b * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2163,8 +2163,8 @@ mod tests {
             b in any::<Multivector<f64, Euclidean3>>(),
             c in any::<Multivector<f64, Euclidean3>>(),
         ) {
-            let lhs = &a * &(&b + &c);
-            let rhs = &(&a * &b) + &(&a * &c);
+            let lhs = a * (b + c);
+            let rhs = (a * b) + (a * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2178,8 +2178,8 @@ mod tests {
             a in any::<Multivector<f64, Euclidean3>>(),
             b in any::<Multivector<f64, Euclidean3>>(),
         ) {
-            let lhs = (&a * &b).reverse();
-            let rhs = &b.reverse() * &a.reverse();
+            let lhs = (a * b).reverse();
+            let rhs = b.reverse() * a.reverse();
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2192,7 +2192,7 @@ mod tests {
         fn inverse_property(a in any::<NonZeroVectorE3>()) {
             // Vectors are always invertible in Euclidean space
             let inv = a.inverse().expect("non-zero vector should be invertible");
-            let product = &*a * &inv;
+            let product = *a * inv;
             prop_assert!(relative_eq!(product, Multivector::one(), epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2201,7 +2201,7 @@ mod tests {
             a in any::<Multivector<f64, Euclidean3>>(),
             b in any::<Multivector<f64, Euclidean3>>()
         ) {
-            prop_assert!(relative_eq!(&a + &b, &b + &a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + b, b + a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
@@ -2210,22 +2210,22 @@ mod tests {
             b in any::<Multivector<f64, Euclidean3>>(),
             c in any::<Multivector<f64, Euclidean3>>(),
         ) {
-            let lhs = &(&a + &b) + &c;
-            let rhs = &a + &(&b + &c);
+            let lhs = (a + b) + c;
+            let rhs = a + (b + c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn zero_is_additive_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let zero = Multivector::<f64, Euclidean3>::zero();
-            prop_assert!(relative_eq!(&a + &zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a + zero, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn one_is_multiplicative_identity(a in any::<Multivector<f64, Euclidean3>>()) {
             let one = Multivector::<f64, Euclidean3>::one();
-            prop_assert!(relative_eq!(&a * &one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
-            prop_assert!(relative_eq!(&one * &a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(a * one, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
+            prop_assert!(relative_eq!(one * a, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         // ====================================================================
@@ -2237,13 +2237,13 @@ mod tests {
             // Sum of all grade projections equals original
             let sum = (0..=3)
                 .map(|k| a.grade_select(k))
-                .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| &acc + &x);
+                .fold(Multivector::<f64, Euclidean3>::zero(), |acc, x| acc + x);
             prop_assert!(relative_eq!(sum, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
         #[test]
         fn even_plus_odd_equals_original(a in any::<Multivector<f64, Euclidean3>>()) {
-            let reconstructed = &a.even() + &a.odd();
+            let reconstructed = a.even() + a.odd();
             prop_assert!(relative_eq!(reconstructed, a, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2373,7 +2373,7 @@ mod tests {
             b in any::<Multivector<f64, Euclidean3>>(),
         ) {
             // complement(a * b) = complement(a) ⋇ complement(b)
-            let lhs = (&a * &b).complement();
+            let lhs = (a * b).complement();
             let rhs = a.complement().antiproduct(&b.complement());
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
@@ -2386,7 +2386,7 @@ mod tests {
             // complement(a ⋇ b) = complement(a) * complement(b)
             // This is actually how we define antiproduct, so this tests consistency
             let lhs = a.antiproduct(&b).complement();
-            let rhs = &a.complement() * &b.complement();
+            let rhs = a.complement() * b.complement();
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -2399,8 +2399,8 @@ mod tests {
             let double_comp = a.complement().complement();
             // In 3D, double complement is ±1 times original depending on grade
             // For a general multivector, we check that double complement squared equals a squared
-            let lhs_norm_sq = (&double_comp * &double_comp.reverse()).scalar_part();
-            let rhs_norm_sq = (&a * &a.reverse()).scalar_part();
+            let lhs_norm_sq = (double_comp * double_comp.reverse()).scalar_part();
+            let rhs_norm_sq = (a * a.reverse()).scalar_part();
             prop_assert!(relative_eq!(lhs_norm_sq, rhs_norm_sq, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
     }
@@ -2414,10 +2414,10 @@ mod tests {
         // In 2D Euclidean GA, the bivector e₁₂ behaves like the imaginary unit i
         let e1: Multivector<f64, Euclidean2> = Multivector::basis_vector(0);
         let e2: Multivector<f64, Euclidean2> = Multivector::basis_vector(1);
-        let i = &e1 * &e2; // e₁₂ = "i"
+        let i = e1 * e2; // e₁₂ = "i"
 
         // i² = -1
-        let i_sq = &i * &i;
+        let i_sq = i * i;
         assert!(relative_eq!(
             i_sq.scalar_part(),
             -1.0,
@@ -2425,8 +2425,8 @@ mod tests {
         ));
 
         // We can represent complex numbers as a + b*e₁₂
-        let z = &Multivector::scalar(3.0) + &(&i * 4.0); // 3 + 4i
-        let norm_sq = (&z * &z.reverse()).scalar_part();
+        let z = Multivector::scalar(3.0) + i * 4.0; // 3 + 4i
+        let norm_sq = (z * z.reverse()).scalar_part();
         assert!(relative_eq!(
             norm_sq,
             25.0,

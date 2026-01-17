@@ -684,6 +684,34 @@ Host on GitHub Pages for easy sharing.
 
 ---
 
+## API Extraction from Visualizations
+
+**IMPORTANT**: Visualization development often reveals useful API methods that should be promoted to the main algebra.
+
+### Process
+
+After completing each visualization:
+
+1. **Identify helper functions** written in visualization code
+2. **Evaluate general utility** - Would this benefit non-visualization users?
+3. **Add to `extensions.rs`** for the corresponding algebra if useful
+4. **Follow CLAUDE.md guidelines** (no shadowing traits, semantic naming)
+5. **Add tests and documentation**
+
+### Examples
+
+From euclidean2 visualization:
+- `Rotor::with_dilation(angle, dilation)` - create rotor that rotates AND scales
+- `Rotor::dilation_factor(&self)` - extract scaling factor from rotor magnitude
+
+From projective3 visualization (potential):
+- `Motor::lerp()` / `Motor::slerp()` - interpolation for animation
+- Conversion helpers between screen/world coordinates
+
+Each sub-PRD should maintain a "Candidates for API" section listing methods discovered during development.
+
+---
+
 ## Success Criteria
 
 - [ ] All 14 algebras have at least one visualization
@@ -692,6 +720,7 @@ Host on GitHub Pages for easy sharing.
 - [ ] Each demo has explanatory text for educational value
 - [ ] Interactive controls are intuitive
 - [ ] Visual output matches mathematical expectations
+- [ ] Useful helper methods extracted to algebra extensions.rs
 
 ---
 

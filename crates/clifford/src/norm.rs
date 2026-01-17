@@ -520,6 +520,7 @@ mod tests {
     #[test]
     fn causal_character_clone() {
         let c = CausalCharacter::Timelike;
+        #[allow(clippy::clone_on_copy)] // Testing Clone trait explicitly
         let cloned = c.clone();
         assert_eq!(c, cloned);
     }

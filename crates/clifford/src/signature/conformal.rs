@@ -419,7 +419,7 @@ mod tests {
         fn conformal2_e_infinity_squares_to_zero(s in -100.0f64..100.0) {
             // e∞ = e₋ + e₊ should square to zero
             let e_inf = Conformal2::e_infinity::<f64>() * s;
-            let sq = &e_inf * &e_inf;
+            let sq = e_inf * e_inf;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -427,7 +427,7 @@ mod tests {
         fn conformal2_e_origin_squares_to_zero(s in -100.0f64..100.0) {
             // e₀ = (e₋ - e₊) / 2 should square to zero
             let e_o = Conformal2::e_origin::<f64>() * s;
-            let sq = &e_o * &e_o;
+            let sq = e_o * e_o;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -448,7 +448,7 @@ mod tests {
         fn conformal3_e_infinity_squares_to_zero(s in -100.0f64..100.0) {
             // e∞ = e₋ + e₊ should square to zero
             let e_inf = Conformal3::e_infinity::<f64>() * s;
-            let sq = &e_inf * &e_inf;
+            let sq = e_inf * e_inf;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -456,7 +456,7 @@ mod tests {
         fn conformal3_e_origin_squares_to_zero(s in -100.0f64..100.0) {
             // e₀ = (e₋ - e₊) / 2 should square to zero
             let e_o = Conformal3::e_origin::<f64>() * s;
-            let sq = &e_o * &e_o;
+            let sq = e_o * e_o;
             prop_assert!(sq.is_zero(RELATIVE_EQ_EPS));
         }
 
@@ -479,8 +479,8 @@ mod tests {
             b in any::<Multivector<f64, Conformal3>>(),
             c in any::<Multivector<f64, Conformal3>>(),
         ) {
-            let lhs = &(&a * &b) * &c;
-            let rhs = &a * &(&b * &c);
+            let lhs = (a * b) * c;
+            let rhs = a * (b * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -490,8 +490,8 @@ mod tests {
             b in any::<Multivector<f64, Conformal3>>(),
             c in any::<Multivector<f64, Conformal3>>(),
         ) {
-            let lhs = &a * &(&b + &c);
-            let rhs = &(&a * &b) + &(&a * &c);
+            let lhs = a * (b + c);
+            let rhs = (a * b) + (a * c);
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 
@@ -509,8 +509,8 @@ mod tests {
             a in any::<Multivector<f64, Conformal3>>(),
             b in any::<Multivector<f64, Conformal3>>(),
         ) {
-            let lhs = (&a * &b).reverse();
-            let rhs = &b.reverse() * &a.reverse();
+            let lhs = (a * b).reverse();
+            let rhs = b.reverse() * a.reverse();
             prop_assert!(relative_eq!(lhs, rhs, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
 

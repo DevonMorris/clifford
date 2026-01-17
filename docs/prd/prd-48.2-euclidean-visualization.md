@@ -260,13 +260,18 @@ Show that `R_total = R_2 * R_1` (right-to-left application):
 ## Implementation Tasks
 
 ### euclidean2.rs
-1. [ ] Basic app structure with `VisualizationApp` trait
-2. [ ] Vector field rendering (grid of arrows)
-3. [ ] Rotor application to all vectors
-4. [ ] Angle slider with degree display
-5. [ ] Bivector arc visualization
-6. [ ] Animation support
-7. [ ] Component display panel
+1. [x] Basic app structure with `VisualizationApp` trait
+2. [x] Vector field rendering (grid of arrows)
+3. [x] Rotor application to all vectors
+4. [x] Angle slider with degree display
+5. [x] Bivector arc visualization (half-angle)
+6. [x] Animation support (play/pause, speed, progress)
+7. [x] Component display panel (rotor components with formulas)
+8. [x] **Educational content** - "Learn About This" popup with:
+   - Mathematical background (rotor formula, sandwich product)
+   - How to use the visualization
+   - Key concepts (half-angles, composition, unit magnitude)
+   - Links to external resources
 
 ### euclidean3.rs
 1. [ ] 3D rendering setup (camera, projection)
@@ -276,19 +281,21 @@ Show that `R_total = R_2 * R_1` (right-to-left application):
 5. [ ] Side-by-side comparison view
 6. [ ] Rotation composition demo
 7. [ ] Animation support
+8. [ ] **Educational content** - gimbal lock explanation, rotor advantages
 
 ## Verification
 
 ```bash
-cargo run --example euclidean2 --release
-cargo run --example euclidean3 --release
+cargo run -p clifford-viz --example euclidean2 --release
+cargo run -p clifford-viz --example euclidean3 --release
 ```
 
 ### euclidean2 Checklist
-- [ ] Vectors rotate smoothly with angle slider
-- [ ] Animation loops continuously
-- [ ] Bivector arc shows half-angle correctly
-- [ ] Component display updates in real-time
+- [x] Vectors rotate smoothly with angle slider
+- [x] Animation loops continuously
+- [x] Bivector arc shows half-angle correctly
+- [x] Component display updates in real-time
+- [x] Educational popup explains the math
 
 ### euclidean3 Checklist
 - [ ] 3D cube renders correctly
@@ -296,3 +303,24 @@ cargo run --example euclidean3 --release
 - [ ] Euler mode shows gimbal lock at pitch=90°
 - [ ] Rotor composition demo shows non-commutativity
 - [ ] Camera controls work (drag to orbit)
+- [ ] Educational popup explains gimbal lock vs rotors
+
+## API Extraction
+
+**IMPORTANT**: While developing visualizations, identify useful methods that should be promoted to the main algebra API.
+
+After completing each visualization, review for methods that would benefit users:
+
+### Candidates from euclidean2
+- [ ] `Rotor::with_scale(angle, scale)` - create dilating rotor
+- [ ] `Rotor::scale(&self)` / `Rotor::dilation_factor(&self)` - extract scale from rotor
+
+### Candidates from euclidean3
+- [ ] TBD after implementation
+
+### Process
+1. Identify helper functions written in visualization code
+2. Evaluate if they have general utility beyond visualization
+3. If useful, add to `extensions.rs` for the corresponding algebra
+4. Follow CLAUDE.md guidelines (no shadowing traits, semantic naming)
+5. Add tests and documentation

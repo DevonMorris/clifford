@@ -66,7 +66,9 @@ pub mod widgets;
 /// Imports the most commonly used types and functions.
 pub mod prelude {
     pub use super::animation::{Animation, animation_controls, easing, progress_slider};
-    pub use super::app::{VisualizationApp, WindowConfig, run_app, run_app_with_options};
+    pub use super::app::{
+        EducationalContent, VisualizationApp, WindowConfig, run_app, run_app_with_options,
+    };
     pub use super::colors::{hsl_to_color, lerp_color, palette, rainbow, with_alpha};
     pub use super::grid::{axes_2d, grid_2d, grid_2d_with_minor, polar_grid};
     pub use super::shapes::{

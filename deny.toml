@@ -11,6 +11,8 @@ ignore = [
 [licenses]
 # Confidence threshold for license detection
 confidence-threshold = 0.8
+# Don't fail on unused license allowances (different features may need different licenses)
+unused-allowed-license = "allow"
 
 # List of allowed licenses (non-copyleft)
 # Any license not in this list will be denied, including GPL/LGPL/AGPL
@@ -28,6 +30,11 @@ allow = [
     "BSL-1.0",      # Boost Software License (used by rerun dependencies)
     "CDLA-Permissive-2.0",  # Community Data License Agreement (used by rerun dependencies)
     "LicenseRef-Symbolica", # Proprietary, build-time only (see clarify below)
+    # Font licenses used by egui's epaint_default_fonts
+    "OFL-1.1",              # SIL Open Font License (OSI approved)
+    "LicenseRef-UFL-1.0",   # Ubuntu Font License (permissive font license)
+    # Used by image processing dependencies (via rav1e -> ravif -> image)
+    "NCSA",                 # University of Illinois/NCSA Open Source License (OSI approved)
 ]
 
 # Exceptions for build-time only dependencies (not linked into final binary)
