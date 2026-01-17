@@ -1,0 +1,91 @@
+# 2D Conformal Geometric Algebra
+# Cl(3,1,0) - Embeds 2D Euclidean space into 4D conformal space
+# Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page
+
+[algebra]
+complete = false
+name = "conformal2"
+module_path = "conformal/dim2"
+description = "2D Conformal Geometric Algebra Cl(3,1,0)"
+
+[signature]
+positive = ["e1", "e2", "e3"]
+negative = ["e4"]
+zero = []
+
+[norm]
+# Conformal GA uses reverse for norm (non-degenerate algebra)
+# Note: This gives an indefinite norm (can be positive, negative, or zero)
+# Null vectors (norm = 0) represent actual geometric points
+primary_involution = "reverse"
+
+# ============================================================
+# Types (following conformalgeometricalgebra.org conventions)
+# ============================================================
+
+[types.Scalar]
+grades = [0]
+description = "Scalar (grade-0 element)"
+
+[types.RoundPoint]
+grades = [1]
+description = "Round point (null vectors represent actual 2D points)"
+# Semantic field names:
+# x, y: Euclidean coordinates
+# o: origin weight (e3 coefficient)
+# i: infinity weight (e4 coefficient)
+# Canonical blade order: e1, e2, e3, e4
+fields = ["x", "y", "o", "i"]
+
+[types.PointPair]
+grades = [2]
+description = "Point pair / dipole (two points or oriented line segment)"
+# Canonical blade order: e12, e13, e14, e23, e24, e34
+# m: moment (spatial bivector e12)
+# ox, oy: origin bivectors (e13, e23 -> e3 wedge ei)
+# ix, iy: infinity bivectors (e14, e24 -> e4 wedge ei)
+# oi: origin-infinity bivector (e34)
+fields = ["m", "ox", "ix", "oy", "iy", "oi"]
+
+[types.Circle]
+grades = [3]
+description = "Circle in 2D space (or line as circle through infinity)"
+# Canonical blade order: e123, e124, e134, e234
+# w: weight (e123 coefficient - Euclidean trivector)
+# cx, cy: center encoding (e124, e134 - with e4)
+# r: radius encoding (e234 - all with e4)
+fields = ["w", "cx", "cy", "r"]
+
+[types.Pseudoscalar]
+grades = [4]
+description = "Pseudoscalar (oriented 4-volume)"
+fields = ["xyoi"]
+
+[types.Motor]
+grades = [0, 2, 4]
+description = "Motor (even subalgebra for conformal transformations)"
+# Grade 0: s (scalar)
+# Grade 2: same as PointPair - m, ox, ix, oy, iy, oi
+# Grade 4: ps (pseudoscalar)
+fields = ["s", "m", "ox", "ix", "oy", "iy", "oi", "ps"]
+
+# ============================================================
+# Sparse Types (subset of blades within a grade)
+# These types are constrained versions of the full types above.
+# ============================================================
+
+# Line = Circle through infinity (w=0)
+# Uses only 3 of the 4 grade-3 blades (excluding e123)
+[types.Line]
+grades = [3]
+fields = ["nx", "ny", "d"]
+blades = ["e124", "e134", "e234"]
+description = "Line (circle through infinity, w=0)"
+
+# FlatPoint = PointPair with only e4 components
+# Uses only 3 of the 6 grade-2 blades
+[types.FlatPoint]
+grades = [2]
+fields = ["ix", "iy", "oi"]
+blades = ["e14", "e24", "e34"]
+description = "Flat point (point pair with only infinity components)"

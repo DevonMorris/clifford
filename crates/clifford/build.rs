@@ -145,6 +145,12 @@ const ALGEBRAS: &[AlgebraConfig] = &[
         "src/specialized/conformal/dim3/generated",
     )
     .with_no_groebner(),
+    AlgebraConfig::new(
+        "conformal2",
+        "../../algebras/conformal2.toml",
+        "src/specialized/conformal/dim2/generated",
+    )
+    .with_no_groebner(),
 ];
 
 fn main() {
