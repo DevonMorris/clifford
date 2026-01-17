@@ -35,21 +35,21 @@ fn unit_wrapper_works_with_vector() {
         max_relative = EPS
     ));
 
-    // Verify components
+    // Verify components (use as_inner() for inherent Vector methods)
     assert!(relative_eq!(
-        unit.x(),
+        unit.as_inner().x(),
         0.6,
         epsilon = EPS,
         max_relative = EPS
     ));
     assert!(relative_eq!(
-        unit.y(),
+        unit.as_inner().y(),
         0.8,
         epsilon = EPS,
         max_relative = EPS
     ));
     assert!(relative_eq!(
-        unit.z(),
+        unit.as_inner().z(),
         0.0,
         epsilon = EPS,
         max_relative = EPS

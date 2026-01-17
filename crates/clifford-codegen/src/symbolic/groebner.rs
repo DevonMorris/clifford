@@ -31,7 +31,7 @@ use symbolica::poly::groebner::GroebnerBasis;
 use symbolica::poly::polynomial::MultivariatePolynomial;
 
 use crate::algebra::Algebra;
-use crate::spec::{InvolutionKind, TypeSpec};
+use crate::spec::{InvolutionKind, TypeSpec, WrapperKind};
 
 use super::ConstraintDeriver;
 
@@ -89,6 +89,74 @@ impl<'a> ProductConstraintCollector<'a> {
         // 2. Antiproduct constraint: u ⊟ ũ̃ = antiscalar
         if let Some(anti) = self.deriver.derive_antiproduct_constraint(ty, prefix) {
             constraints.extend(anti.zero_expressions);
+        }
+
+        constraints
+    }
+
+    /// Collects constraints for a type with a wrapper constraint.
+    ///
+    /// This combines the algebraic constraints (geometric, antiproduct) with
+    /// wrapper-specific constraints based on the `WrapperKind`.
+    ///
+    /// # Arguments
+    ///
+    /// * `ty` - The type specification
+    /// * `wrapper` - The kind of wrapper constraint to apply
+    /// * `prefix` - Variable prefix (e.g., "self", "rhs")
+    ///
+    /// # Wrapper Constraint Mapping
+    ///
+    /// | Wrapper | Constraint |
+    /// |---------|------------|
+    /// | `Unit` | `norm_squared - 1 = 0` |
+    /// | `Bulk` | `bulk_norm_squared - 1 = 0` |
+    /// | `Unitized` | `weight_norm_squared - 1 = 0` |
+    /// | `Ideal` | each weight component = 0 |
+    /// | `Proper` | `norm_squared - 1 = 0` |
+    /// | `Spacelike` | `norm_squared + 1 = 0` |
+    /// | `Null` | `norm_squared = 0` |
+    pub fn collect_wrapper_constraints(
+        &self,
+        ty: &TypeSpec,
+        wrapper: WrapperKind,
+        prefix: &str,
+    ) -> Vec<Atom> {
+        // Start with the algebraic constraints
+        let mut constraints = self.collect_constraints(ty, prefix);
+
+        // Add wrapper-specific constraints
+        match wrapper {
+            WrapperKind::Unit | WrapperKind::Proper => {
+                // norm_squared - 1 = 0
+                let norm_sq = self.deriver.derive_norm_squared(ty, prefix);
+                constraints.push(norm_sq - Atom::num(1));
+            }
+            WrapperKind::Bulk => {
+                // bulk_norm_squared - 1 = 0
+                let bulk_sq = self.deriver.derive_bulk_norm_squared(ty, prefix);
+                constraints.push(bulk_sq - Atom::num(1));
+            }
+            WrapperKind::Unitized => {
+                // weight_norm_squared - 1 = 0
+                let weight_sq = self.deriver.derive_weight_norm_squared(ty, prefix);
+                constraints.push(weight_sq - Atom::num(1));
+            }
+            WrapperKind::Ideal => {
+                // Each weight component = 0
+                let weight_components = self.deriver.derive_weight_components(ty, prefix);
+                constraints.extend(weight_components);
+            }
+            WrapperKind::Spacelike => {
+                // norm_squared + 1 = 0 (spacelike has norm² = -1 in signature (1,-1,-1,-1))
+                let norm_sq = self.deriver.derive_norm_squared(ty, prefix);
+                constraints.push(norm_sq + Atom::num(1));
+            }
+            WrapperKind::Null => {
+                // norm_squared = 0
+                let norm_sq = self.deriver.derive_norm_squared(ty, prefix);
+                constraints.push(norm_sq);
+            }
         }
 
         constraints

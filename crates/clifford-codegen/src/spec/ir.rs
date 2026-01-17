@@ -263,3 +263,40 @@ pub struct ProductEntry {
     /// Whether the output is a constrained type (uses new_unchecked).
     pub output_constrained: bool,
 }
+
+/// Wrapper constraint kinds for constraint simplification.
+///
+/// These represent the different normalization and constraint wrappers
+/// that can be applied to geometric types. Each wrapper has specific
+/// algebraic constraints that can be used during Groebner basis simplification.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum WrapperKind {
+    /// Unit wrapper: `norm() == 1` (Euclidean norm).
+    ///
+    /// Constraint: `norm_squared - 1 = 0`
+    Unit,
+    /// Bulk wrapper: `bulk_norm() == 1` (PGA versors).
+    ///
+    /// Constraint: `bulk_norm_squared - 1 = 0`
+    Bulk,
+    /// Unitized wrapper: `weight_norm() == 1` (PGA standard form).
+    ///
+    /// Constraint: `weight_norm_squared - 1 = 0`
+    Unitized,
+    /// Ideal wrapper: `weight_norm() ≈ 0` (PGA elements at infinity).
+    ///
+    /// Constraint: each weight component = 0
+    Ideal,
+    /// Proper wrapper: timelike, `|norm²| == 1` (Minkowski 4-velocities).
+    ///
+    /// Constraint: `norm_squared - 1 = 0`
+    Proper,
+    /// Spacelike wrapper: spacelike, `|norm²| == 1` (Minkowski spatial).
+    ///
+    /// Constraint: `norm_squared + 1 = 0`
+    Spacelike,
+    /// Null wrapper: `norm_squared ≈ 0` (Minkowski lightlike).
+    ///
+    /// Constraint: `norm_squared = 0`
+    Null,
+}
