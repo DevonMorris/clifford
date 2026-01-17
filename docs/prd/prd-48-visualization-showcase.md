@@ -5,17 +5,20 @@
 
 ## Sub-PRDs
 
-| PRD | Title | Algebras |
-|-----|-------|----------|
-| [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework | (infrastructure) |
-| [PRD-48.2](prd-48.2-euclidean-visualization.md) | Euclidean Visualization | euclidean2, euclidean3 |
-| [PRD-48.3](prd-48.3-projective2-visualization.md) | Projective 2D Visualization | projective2 |
-| [PRD-48.4](prd-48.4-projective3-visualization.md) | Projective 3D Visualization | projective3 |
-| [PRD-48.5](prd-48.5-conformal3-visualization.md) | Conformal 3D Visualization | conformal3 |
-| [PRD-48.6](prd-48.6-quaternion-dualquat-visualization.md) | Quaternion & Dual Quaternion | quaternion, dualquat |
-| [PRD-48.7](prd-48.7-complex-dual-visualization.md) | Complex & Dual Numbers | complex, dual |
-| [PRD-48.8](prd-48.8-non-euclidean-visualization.md) | Non-Euclidean Geometry | hyperbolic2, elliptic2 |
-| [PRD-48.9](prd-48.9-minkowski-visualization.md) | Minkowski Spacetime | minkowski2, minkowski3 |
+| PRD | Title | Algebras | Phase |
+|-----|-------|----------|-------|
+| [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework | (infrastructure) | 1 |
+| [PRD-48.10](prd-48.10-visual-testing.md) | Visual Regression Testing | (infrastructure) | 1 |
+| [PRD-48.2](prd-48.2-euclidean-visualization.md) | Euclidean Visualization | euclidean2, euclidean3 | 2 |
+| [PRD-48.3](prd-48.3-projective2-visualization.md) | Projective 2D Visualization | projective2 | 3 |
+| [PRD-48.4](prd-48.4-projective3-visualization.md) | Projective 3D Visualization | projective3 | 3 |
+| [PRD-48.5](prd-48.5-conformal3-visualization.md) | Conformal 3D Visualization | conformal3 | 4 |
+| [PRD-48.6](prd-48.6-quaternion-dualquat-visualization.md) | Quaternion & Dual Quaternion | quaternion, dualquat | 5 |
+| [PRD-48.7](prd-48.7-complex-dual-visualization.md) | Complex & Dual Numbers | complex, dual | 5 |
+| [PRD-48.8](prd-48.8-non-euclidean-visualization.md) | Non-Euclidean Geometry | hyperbolic2, elliptic2 | 6 |
+| [PRD-48.9](prd-48.9-minkowski-visualization.md) | Minkowski Spacetime | minkowski2, minkowski3 | 6 |
+
+**Implementation Order**: PRD-48.1 and PRD-48.10 are foundational and should be implemented first. Visual testing infrastructure (48.10) enables regression testing for all subsequent demos.
 
 ## Motivation
 
