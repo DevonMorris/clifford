@@ -207,22 +207,104 @@ println!("cargo::rerun-if-changed=../clifford-codegen/src");
 | `.github/workflows/*.yml` | Verify/update paths |
 | `.gitignore` | Verify patterns still match (e.g., `/target/`) |
 
+## CI Configuration Updates
+
+After restructuring, update CI workflows to handle the new workspace layout.
+
+### Update Existing Workflows
+
+`.github/workflows/ci.yml`:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build all crates
+        run: cargo build --workspace
+
+      - name: Test all crates
+        run: cargo nextest run --workspace
+
+      - name: Clippy all crates
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Build docs
+        run: cargo doc --workspace --no-deps
+```
+
+### Add clifford-viz to CI (Future)
+
+When PRD-48 is implemented, add:
+
+```yaml
+  build-viz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true  # For golden images
+
+      - name: Install dependencies
+        run: sudo apt-get install -y libxkbcommon-x11-0 libgl1-mesa-dri
+
+      - name: Build clifford-viz
+        run: cargo build -p clifford-viz
+
+      - name: Run visual tests
+        run: |
+          xvfb-run --auto-servernum cargo test -p clifford-viz --test visual_tests
+
+  build-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install Trunk
+        run: cargo install trunk
+
+      - name: Build WASM
+        run: |
+          cd crates/clifford-viz
+          trunk build --release
+```
+
+### Workspace-Aware Commands
+
+Key CI commands after restructure:
+
+| Command | Purpose |
+|---------|---------|
+| `cargo build --workspace` | Build all crates |
+| `cargo test --workspace` | Test all crates |
+| `cargo build -p clifford` | Build only main crate |
+| `cargo test -p clifford-viz` | Test only viz crate |
+| `cargo doc --workspace` | Docs for all crates |
+
 ## Verification Checklist
 
 ```bash
 # From workspace root
-cargo build                    # Builds all crates
-cargo build -p clifford        # Builds main crate
+cargo build --workspace         # Builds all crates
+cargo build -p clifford         # Builds main crate
 cargo build -p clifford-codegen # Builds codegen
-cargo test -p clifford         # Tests main crate
-cargo doc --workspace          # Docs for all crates
-cargo clippy --workspace       # Lint all crates
-cargo fmt --all                # Format all crates
+cargo test --workspace          # Tests all crates
+cargo doc --workspace           # Docs for all crates
+cargo clippy --workspace        # Lint all crates
+cargo fmt --all                 # Format all crates
 ```
 
-- [ ] `cargo build` succeeds
-- [ ] `cargo test` passes
-- [ ] `cargo doc` generates docs
+- [ ] `cargo build --workspace` succeeds
+- [ ] `cargo test --workspace` passes
+- [ ] `cargo doc --workspace` generates docs
 - [ ] Generated code paths are correct
 - [ ] CI workflows pass
 - [ ] `algebras/*.toml` files are found by build.rs

@@ -8,8 +8,9 @@
 
 | PRD | Title | Algebras | Phase |
 |-----|-------|----------|-------|
-| [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework | (infrastructure) | 1 |
+| [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework (2D + 3D) | (infrastructure) | 1 |
 | [PRD-48.10](prd-48.10-visual-testing.md) | Visual Regression Testing | (infrastructure) | 1 |
+| [PRD-48.11](prd-48.11-wasm-deployment.md) | WASM Web Deployment | (infrastructure) | 7 |
 | [PRD-48.2](prd-48.2-euclidean-visualization.md) | Euclidean Visualization | euclidean2, euclidean3 | 2 |
 | [PRD-48.3](prd-48.3-projective2-visualization.md) | Projective 2D Visualization | projective2 | 3 |
 | [PRD-48.4](prd-48.4-projective3-visualization.md) | Projective 3D Visualization | projective3 | 3 |
@@ -19,7 +20,10 @@
 | [PRD-48.8](prd-48.8-non-euclidean-visualization.md) | Non-Euclidean Geometry | hyperbolic2, elliptic2 | 6 |
 | [PRD-48.9](prd-48.9-minkowski-visualization.md) | Minkowski Spacetime | minkowski2, minkowski3 | 6 |
 
-**Implementation Order**: PRD-48.1 and PRD-48.10 are foundational and should be implemented first. Visual testing infrastructure (48.10) enables regression testing for all subsequent demos.
+**Implementation Order**:
+- **Phase 1**: PRD-48.1 (framework with 2D + 3D) and PRD-48.10 (visual testing) are foundational
+- **Phases 2-6**: Individual algebra demos
+- **Phase 7**: PRD-48.11 (WASM deployment) - after demos are working natively
 
 ## Motivation
 

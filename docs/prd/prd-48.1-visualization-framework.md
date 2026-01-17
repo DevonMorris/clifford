@@ -397,16 +397,229 @@ pub fn animation_controls(ui: &mut egui::Ui, anim: &mut Animation) {
 }
 ```
 
+## 3D Rendering Infrastructure
+
+Many demos (euclidean3, projective3, conformal3, elliptic2, minkowski3) require 3D visualization. We use `three-d` crate integrated with egui.
+
+### Dependencies
+
+```toml
+[dependencies]
+three-d = "0.18"
+three-d-asset = "0.18"
+```
+
+### 3D Viewport Component
+
+```rust
+// crates/clifford-viz/src/common/viewport3d.rs
+
+use three_d::*;
+
+/// 3D viewport that integrates with egui
+pub struct Viewport3D {
+    context: Context,
+    camera: Camera,
+    orbit_control: OrbitControl,
+}
+
+impl Viewport3D {
+    pub fn new(width: u32, height: u32) -> Self {
+        let context = Context::new().unwrap();
+        let camera = Camera::new_perspective(
+            Viewport::new_at_origo(width, height),
+            vec3(3.0, 3.0, 3.0),  // position
+            vec3(0.0, 0.0, 0.0),  // target
+            vec3(0.0, 1.0, 0.0),  // up
+            degrees(45.0),        // fov
+            0.1,                  // near
+            100.0,                // far
+        );
+        let orbit_control = OrbitControl::new(camera.target(), 1.0, 10.0);
+
+        Self { context, camera, orbit_control }
+    }
+
+    pub fn handle_events(&mut self, events: &[egui::Event]) {
+        // Convert egui events to three-d events
+        // Update orbit control
+    }
+
+    pub fn render(&mut self, objects: &[&dyn Object]) -> egui::TextureId {
+        // Render to texture, return for egui display
+        todo!()
+    }
+}
+```
+
+### 3D Shape Primitives
+
+```rust
+// crates/clifford-viz/src/common/shapes3d.rs
+
+use three_d::*;
+
+/// Create a coordinate frame (RGB axes)
+pub fn coordinate_frame(context: &Context, size: f32) -> Gm<Mesh, ColorMaterial> {
+    // X axis (red), Y axis (green), Z axis (blue)
+    todo!()
+}
+
+/// Create a wireframe box
+pub fn wireframe_box(context: &Context, size: Vec3) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create a line segment in 3D
+pub fn line_3d(context: &Context, start: Vec3, end: Vec3, color: Color) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create a point marker (small sphere)
+pub fn point_3d(context: &Context, position: Vec3, radius: f32, color: Color) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create a plane (bounded quad)
+pub fn plane_3d(context: &Context, center: Vec3, normal: Vec3, size: f32, color: Color) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create a sphere (wireframe or solid)
+pub fn sphere_3d(context: &Context, center: Vec3, radius: f32, color: Color, wireframe: bool) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create a circle in 3D (ring)
+pub fn circle_3d(context: &Context, center: Vec3, normal: Vec3, radius: f32, color: Color) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+
+/// Create an arrow in 3D
+pub fn arrow_3d(context: &Context, origin: Vec3, direction: Vec3, color: Color) -> Gm<Mesh, ColorMaterial> {
+    todo!()
+}
+```
+
+### Camera Controls
+
+```rust
+// crates/clifford-viz/src/common/camera.rs
+
+/// Camera state for 3D demos
+pub struct Camera3D {
+    pub position: [f32; 3],
+    pub target: [f32; 3],
+    pub up: [f32; 3],
+    pub fov: f32,
+
+    // Orbit control state
+    orbit_radius: f32,
+    orbit_theta: f32,  // Horizontal angle
+    orbit_phi: f32,    // Vertical angle
+}
+
+impl Camera3D {
+    pub fn orbit(&mut self, delta_theta: f32, delta_phi: f32) {
+        self.orbit_theta += delta_theta;
+        self.orbit_phi = (self.orbit_phi + delta_phi).clamp(-89.0_f32.to_radians(), 89.0_f32.to_radians());
+        self.update_position();
+    }
+
+    pub fn zoom(&mut self, delta: f32) {
+        self.orbit_radius = (self.orbit_radius - delta).clamp(1.0, 20.0);
+        self.update_position();
+    }
+
+    pub fn pan(&mut self, delta_x: f32, delta_y: f32) {
+        // Move target in camera-relative directions
+        todo!()
+    }
+
+    fn update_position(&mut self) {
+        self.position = [
+            self.target[0] + self.orbit_radius * self.orbit_phi.cos() * self.orbit_theta.sin(),
+            self.target[1] + self.orbit_radius * self.orbit_phi.sin(),
+            self.target[2] + self.orbit_radius * self.orbit_phi.cos() * self.orbit_theta.cos(),
+        ];
+    }
+}
+
+/// Camera controls widget
+pub fn camera_controls(ui: &mut egui::Ui, camera: &mut Camera3D) {
+    ui.collapsing("Camera", |ui| {
+        ui.horizontal(|ui| {
+            ui.label("Distance:");
+            ui.add(egui::DragValue::new(&mut camera.orbit_radius).speed(0.1).range(1.0..=20.0));
+        });
+        if ui.button("Reset View").clicked() {
+            *camera = Camera3D::default();
+        }
+    });
+}
+```
+
+### Integration with egui
+
+```rust
+// Render 3D content to a texture, display in egui panel
+
+pub fn show_3d_viewport(ui: &mut egui::Ui, viewport: &mut Viewport3D, objects: &[&dyn Object]) {
+    let available_size = ui.available_size();
+    let (rect, response) = ui.allocate_exact_size(available_size, egui::Sense::drag());
+
+    // Handle mouse input for camera control
+    if response.dragged() {
+        let delta = response.drag_delta();
+        viewport.orbit_control.handle_events(/* convert delta */);
+    }
+
+    // Render 3D scene to texture
+    let texture_id = viewport.render(objects);
+
+    // Display texture in egui
+    ui.painter().image(
+        texture_id,
+        rect,
+        egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+        egui::Color32::WHITE,
+    );
+}
+```
+
+### Directory Structure Update
+
+```
+crates/clifford-viz/
+  src/
+    lib.rs
+    common/
+      mod.rs
+      app.rs          # Base app trait
+      colors.rs       # Color palette
+      grid.rs         # 2D grid rendering
+      shapes.rs       # 2D shape primitives
+      shapes3d.rs     # 3D shape primitives (NEW)
+      viewport3d.rs   # 3D viewport component (NEW)
+      camera.rs       # 3D camera controls (NEW)
+      widgets.rs      # UI components
+      animation.rs    # Animation utilities
+```
+
 ## Implementation Tasks
 
-1. [ ] Create `examples/visualization/common/mod.rs` with re-exports
+1. [ ] Create `crates/clifford-viz/src/common/mod.rs` with re-exports
 2. [ ] Implement `app.rs` with base trait and runner
 3. [ ] Implement `colors.rs` color palette
 4. [ ] Implement `grid.rs` for 2D grids and axes
-5. [ ] Implement `shapes.rs` primitives (point, arrow, circle, line, arc)
-6. [ ] Implement `widgets.rs` reusable UI components
-7. [ ] Implement `animation.rs` timing utilities
-8. [ ] Create minimal test app to verify framework works
+5. [ ] Implement `shapes.rs` 2D primitives (point, arrow, circle, line, arc)
+6. [ ] Implement `shapes3d.rs` 3D primitives (box, sphere, plane, line, arrow)
+7. [ ] Implement `viewport3d.rs` 3D viewport with three-d
+8. [ ] Implement `camera.rs` 3D camera with orbit controls
+9. [ ] Implement `widgets.rs` reusable UI components
+10. [ ] Implement `animation.rs` timing utilities
+11. [ ] Create minimal 2D test app
+12. [ ] Create minimal 3D test app
 
 ## Verification
 
