@@ -1,6 +1,7 @@
 # PRD-48: Visualization Showcase
 
 **Status**: Draft
+**Depends on**: [PRD-49](prd-49-workspace-restructure.md) (workspace restructure)
 **Goal**: Create interactive visualizations demonstrating each algebra's unique geometric capabilities
 
 ## Sub-PRDs
@@ -49,32 +50,69 @@ three-d = "0.18"    # 3D rendering (optional, for complex scenes)
 - Immediate mode pairs well with real-time animation
 - Strong ecosystem (egui_plot for 2D, three-d for 3D)
 
-### Example Binary Structure
+### Crate Structure: `clifford-viz`
+
+A separate crate for visualization, keeping the main `clifford` crate dependency-free:
 
 ```
-examples/
-  visualization/
-    common/             # Shared rendering utilities
-      mod.rs
-      camera.rs         # 3D camera controls
-      colors.rs         # Consistent color scheme
-      grid.rs           # Background grids
-    euclidean2.rs       # 2D Euclidean demo
-    euclidean3.rs       # 3D Euclidean demo
-    projective2.rs      # 2D PGA demo
-    projective3.rs      # 3D PGA demo
-    conformal3.rs       # 3D CGA demo
-    quaternion.rs       # Quaternion rotation demo
-    dualquat.rs         # Dual quaternion demo
-    complex.rs          # Complex number demo
-    dual.rs             # Dual number (autodiff) demo
-    hyperbolic2.rs      # Hyperbolic plane demo
-    elliptic2.rs        # Spherical geometry demo
-    minkowski2.rs       # 2D spacetime demo
-    minkowski3.rs       # 3D+1 spacetime demo
+crates/
+  clifford-viz/
+    Cargo.toml          # Depends on clifford, egui, eframe
+    src/
+      lib.rs            # Public API for reusable widgets
+      common/           # Shared rendering utilities
+        mod.rs
+        app.rs          # Base app trait and runner
+        camera.rs       # 3D camera controls
+        colors.rs       # Consistent color scheme
+        grid.rs         # Background grids
+        shapes.rs       # Primitive shape drawing
+        widgets.rs      # Reusable UI components
+        animation.rs    # Animation utilities
+      euclidean.rs      # Euclidean viz widgets (RotorWidget, etc.)
+      projective.rs     # PGA viz widgets (MotorWidget, etc.)
+      conformal.rs      # CGA viz widgets
+      quaternion.rs     # Quaternion viz widgets
+      spacetime.rs      # Minkowski viz widgets
+    examples/           # Interactive demos
+      euclidean2.rs
+      euclidean3.rs
+      projective2.rs
+      projective3.rs
+      conformal3.rs
+      quaternion.rs
+      dualquat.rs
+      complex.rs
+      dual.rs
+      hyperbolic2.rs
+      elliptic2.rs
+      minkowski2.rs
+      minkowski3.rs
+    tests/
+      visual/           # Visual regression tests
+        mod.rs
+        golden/         # Baseline images
 ```
 
-Run with: `cargo run --example projective3 --release`
+Run with: `cargo run -p clifford-viz --example projective3 --release`
+
+### Cargo.toml
+
+```toml
+[package]
+name = "clifford-viz"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clifford = { path = "../clifford" }
+eframe = "0.30"
+egui = "0.30"
+egui_plot = "0.30"
+
+[dev-dependencies]
+image = "0.25"
+```
 
 ---
 

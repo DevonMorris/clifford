@@ -2,26 +2,52 @@
 
 **Status**: Draft
 **Parent**: PRD-48
+**Depends on**: PRD-49 (workspace restructure)
 **Goal**: Establish common infrastructure for all visualization demos
 
 ## Overview
 
 Create the shared utilities, rendering primitives, and egui boilerplate that all visualization demos will use.
 
-## Dependencies
+## Crate Setup
+
+Create a new crate `clifford-viz` in the workspace:
 
 ```toml
-[dev-dependencies]
+# crates/clifford-viz/Cargo.toml
+[package]
+name = "clifford-viz"
+version = "0.1.0"
+edition = "2024"
+description = "Interactive visualizations for clifford geometric algebra"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+clifford = { path = "../clifford" }
 eframe = "0.30"
 egui = "0.30"
 egui_plot = "0.30"
+
+[dev-dependencies]
+image = "0.25"  # For visual testing
+```
+
+Add to workspace in root `Cargo.toml`:
+```toml
+[workspace]
+members = [
+    ".",
+    "crates/clifford-codegen",
+    "crates/clifford-viz",  # Add this
+]
 ```
 
 ## Directory Structure
 
 ```
-examples/
-  visualization/
+crates/clifford-viz/
+  src/
+    lib.rs            # Public API, re-exports
     common/
       mod.rs          # Re-exports
       app.rs          # Base app trait and runner
@@ -30,6 +56,13 @@ examples/
       shapes.rs       # Primitive shape drawing
       widgets.rs      # Reusable UI components
       animation.rs    # Animation timing utilities
+    euclidean.rs      # Reusable Euclidean widgets
+    projective.rs     # Reusable PGA widgets
+    conformal.rs      # Reusable CGA widgets
+    quaternion.rs     # Reusable quaternion widgets
+    spacetime.rs      # Reusable Minkowski widgets
+  examples/           # Interactive demos
+  tests/visual/       # Visual regression tests
 ```
 
 ## Components
