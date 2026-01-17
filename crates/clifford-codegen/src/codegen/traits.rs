@@ -3870,12 +3870,15 @@ mod tests {
         let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
-        // Vector * Vector should produce a product type
-        assert!(code.contains("geometric_vector_vector"));
+        // Vector * Vector should produce a geometric product via Mul trait
+        assert!(
+            code.contains("Mul") && code.contains("for Vector"),
+            "Expected Mul trait impl for Vector"
+        );
     }
 
     #[test]
-    fn symbolica_generates_exterior() {
+    fn symbolica_generates_wedge() {
         let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
@@ -3884,9 +3887,12 @@ mod tests {
         let (tokens, _tests) = generator.generate_traits_file();
         let code = tokens.to_string();
 
-        // Vector ^ Vector should produce Bivector
-        assert!(code.contains("BitXor"));
-        assert!(code.contains("exterior_vector_vector"));
+        // Vector wedge Vector should produce Bivector via Wedge trait
+        assert!(
+            code.contains("Wedge") && code.contains("for Vector"),
+            "Expected Wedge trait impl for Vector, got:\n{}",
+            &code[..2000.min(code.len())]
+        );
     }
 
     #[test]

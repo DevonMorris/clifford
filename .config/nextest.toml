@@ -17,10 +17,12 @@ symbolica = { max-threads = 1 }
 [profile.default]
 # Use all available CPU cores for non-Symbolica tests
 test-threads = "num-cpus"
+# Only show status for failing tests (reduces output noise)
+status-level = "fail"
 
-# Symbolica tests are identified by the `symbolica_` prefix in their name
+# All clifford-codegen tests use Symbolica (directly or via parse_spec/codegen)
 [[profile.default.overrides]]
-filter = "test(symbolica_)"
+filter = "package(clifford-codegen)"
 test-group = "symbolica"
 
 [profile.ci]
@@ -28,7 +30,9 @@ test-group = "symbolica"
 test-threads = "num-cpus"
 # Fail fast in CI
 fail-fast = true
+# Only show status for failing tests
+status-level = "fail"
 
 [[profile.ci.overrides]]
-filter = "test(symbolica_)"
+filter = "package(clifford-codegen)"
 test-group = "symbolica"

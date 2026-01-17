@@ -227,6 +227,7 @@ mod tests {
             r#"
             [algebra]
             name = "test"
+            complete = false
 
             [signature]
             positive = ["e1", "e2", "e3"]

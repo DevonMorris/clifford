@@ -50,7 +50,6 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Use `prop_assert!` inside `proptest!` blocks
 - Use `relative_eq!` with both `epsilon` AND `max_relative` parameters
 - Use `RELATIVE_EQ_EPS` constant from `crate::test_utils`
-- **Symbolica tests** in `clifford-codegen` must be prefixed with `symbolica_`
 - See the **test agent** for detailed testing patterns
 
 ### 8. Code Review
@@ -73,7 +72,14 @@ Specialized agents in `.claude/agents/` handle different tasks:
 | **devops** | CI/CD and infrastructure |
 | **release** | Version bumps, publishing |
 
-### 10. Code Generation
+### 10. Code Navigation with ctags
+
+Use the ctags index (`.claude/tags`) for efficient code navigation:
+- When looking up definitions (classes, functions, traits), use `/ctags-usage` skill
+- Prefer ctags lookups over broad grep searches for specific symbol definitions
+- Run `/refresh` to regenerate the index after major code changes
+
+### 11. Code Generation
 
 **CRITICAL: Do NOT manually derive algebraic formulas.**
 
@@ -84,7 +90,7 @@ Use the `clifford-codegen` tool for all algebraic operations:
 
 See the **implement agent** for detailed codegen usage.
 
-### 11. Semantic Field Naming
+### 12. Semantic Field Naming
 
 **CRITICAL: Field names must reflect what the field DOES, not which blade it corresponds to.**
 
@@ -104,7 +110,7 @@ The Motor has 8 components. In point-based PGA with antisandwich:
 
 Always verify by checking how factory methods use the fields.
 
-### 12. Extension Methods
+### 13. Extension Methods
 
 **CRITICAL: Prefer generated traits over extension methods.**
 

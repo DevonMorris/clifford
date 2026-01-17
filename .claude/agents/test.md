@@ -124,18 +124,6 @@ prop_assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));
 
 For integration tests (`tests/`), define the constant locally since `test_utils` is `pub(crate)`.
 
-## Symbolica Test Naming
-
-Tests in `clifford-codegen` using Symbolica **must** be prefixed with `symbolica_`:
-
-```rust
-#[test]
-fn symbolica_generates_geometric_product() { ... }  // Uses Symbolica
-
-#[test]
-fn parse_spec_handles_empty_types() { ... }  // No Symbolica - no prefix
-```
-
 ## Documentation
 
 All test functions need doc comments explaining:
