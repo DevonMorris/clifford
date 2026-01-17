@@ -34,4 +34,4 @@ path = "src/main.rs"
 
 [dev-dependencies]
 proptest = "1"
-clifford = { path = "../.." }
+clifford = { path = "../clifford" }

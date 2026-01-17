@@ -1,0 +1,82 @@
+[package]
+name = "clifford"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87.0"
+license = "MIT"
+description = "Geometric Algebra (Clifford Algebra) for Rust: rotors, motors, PGA for 3D rotations and rigid transforms"
+keywords = ["geometric-algebra", "clifford-algebra", "quaternion", "rotation", "pga"]
+categories = ["mathematics", "science"]
+repository = "https://github.com/DevonMorris/clifford"
+readme = "../../README.md"
+
+[lints]
+workspace = true
+
+[features]
+default = ["serde", "proptest-support", "nalgebra-0_33"]
+serde = ["dep:serde", "generic-array/serde"]
+proptest-support = ["dep:proptest"]
+nalgebra-0_32 = ["dep:nalgebra-0-32"]
+nalgebra-0_33 = ["dep:nalgebra-0-33"]
+nalgebra-0_34 = ["dep:nalgebra-0-34"]
+rerun-0_28 = ["dep:rerun-0-28"]
+
+[dependencies]
+approx = "0.5"
+generic-array = "1"
+num-traits = "0.2"
+thiserror = "2"
+typenum = "1"
+serde = { version = "1", features = ["derive"], optional = true }
+proptest = { version = "1", optional = true }
+nalgebra-0-32 = { package = "nalgebra", version = "0.32", optional = true }
+nalgebra-0-33 = { package = "nalgebra", version = "0.33", optional = true }
+nalgebra-0-34 = { package = "nalgebra", version = "0.34", optional = true }
+rerun-0-28 = { package = "rerun", version = "0.28", optional = true, default-features = false, features = ["sdk"] }
+
+[build-dependencies]
+clifford-codegen = { path = "../clifford-codegen" }
+proc-macro2 = "1"
+quote = "1"
+
+[dev-dependencies]
+criterion = { version = "0.8", features = ["html_reports"] }
+proptest = "1"
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[[bench]]
+name = "generic"
+harness = false
+
+[[bench]]
+name = "specialized"
+harness = false
+
+[[bench]]
+name = "nalgebra_comparison"
+harness = false
+required-features = ["nalgebra-0_34"]
+
+[[bench]]
+name = "projective"
+harness = false
+
+[[bench]]
+name = "pga_nalgebra_comparison"
+harness = false
+required-features = ["nalgebra-0_34"]
+
+[[example]]
+name = "rerun_visualization"
+required-features = ["rerun-0_28"]
+
+[[example]]
+name = "rerun_animation"
+required-features = ["rerun-0_28"]
+
+[[example]]
+name = "rerun_bivector"
+required-features = ["rerun-0_28"]

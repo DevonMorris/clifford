@@ -210,12 +210,16 @@ cargo fmt && cargo clippy && cargo doc --no-deps && cargo nextest run && cargo d
 ## Module Structure
 
 ```
-specialized/
-  euclidean/
-    dim2/             # 2D: Vector, Bivector, Rotor
-    dim3/             # 3D: Vector, Bivector, Trivector, Rotor
-  projective/
-    dim3/             # 3D PGA: Point, Line, Plane, Motor, Flector
+crates/
+  clifford/           # Main library crate
+    src/
+      specialized/
+        euclidean/
+          dim2/       # 2D: Vector, Bivector, Rotor
+          dim3/       # 3D: Vector, Bivector, Trivector, Rotor
+        projective/
+          dim3/       # 3D PGA: Point, Line, Plane, Motor, Flector
+  clifford-codegen/   # Code generation tool
 ```
 
 Naming: Use full words (`Vector` not `Vec`), don't include dimension in type names.
