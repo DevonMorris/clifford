@@ -7,7 +7,19 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::algebra::{Algebra, Blade, ProductTable};
-use crate::spec::{AlgebraSpec, InvolutionKind, TypeSpec};
+use crate::spec::{AlgebraSpec, InvolutionKind, TypeSpec, WrapperKind};
+
+/// Position of wrapper in a binary product.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WrapperPosition {
+    /// LHS is wrapped: `Trait<B> for Unit<A>`
+    Lhs,
+    /// RHS is wrapped: `Trait<Unit<B>> for A`
+    Rhs,
+    /// Both are wrapped: `Trait<Unit<B>> for Unit<A>`
+    Both,
+}
+
 use crate::symbolic::{
     AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
     GroebnerSimplifier, ProductConstraintCollector, ProductKind as SymbolicProductKind,
@@ -187,6 +199,14 @@ impl<'a> TraitsGenerator<'a> {
             quote! {}
         };
 
+        // Import wrapper types based on algebra kind
+        let is_degenerate = self.spec.signature.r > 0;
+        let wrapper_import = if is_degenerate {
+            quote! { use crate::wrappers::Unitized; }
+        } else {
+            quote! { use crate::wrappers::Unit; }
+        };
+
         quote! {
             use crate::scalar::Float;
             #[allow(unused_imports)]
@@ -197,6 +217,8 @@ impl<'a> TraitsGenerator<'a> {
                 Reverse, Antireverse, Involute, RightComplement, #projection_import #versor_import
             };
             use super::types::{#(#type_names),*};
+            #[allow(unused_imports)]
+            #wrapper_import
 
             use std::ops::{Add, Sub, Neg, Mul};
 
@@ -445,14 +467,38 @@ impl<'a> TraitsGenerator<'a> {
         output_type: &TypeSpec,
         kind: SymbolicProductKind,
     ) -> Vec<TokenStream> {
+        self.compute_product_expressions_with_wrappers(
+            type_a,
+            None,
+            type_b,
+            None,
+            output_type,
+            kind,
+        )
+    }
+
+    /// Computes product expressions with optional wrapper constraints.
+    ///
+    /// Like `compute_product_expressions`, but accepts optional wrapper kinds that
+    /// add additional constraints to the Groebner basis (e.g., norm_squared = 1 for Unit).
+    fn compute_product_expressions_with_wrappers(
+        &self,
+        type_a: &TypeSpec,
+        wrapper_a: Option<WrapperKind>,
+        type_b: &TypeSpec,
+        wrapper_b: Option<WrapperKind>,
+        output_type: &TypeSpec,
+        kind: SymbolicProductKind,
+    ) -> Vec<TokenStream> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
         let expr_simplifier = ExpressionSimplifier::new();
 
         // Create constraint simplifier for input type constraints
         let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["self", "rhs"]);
 
-        // Create Groebner simplifier for constraint-based reduction
-        let groebner_simplifier = self.create_groebner_simplifier(type_a, type_b);
+        // Create Groebner simplifier for constraint-based reduction (with wrapper constraints)
+        let groebner_simplifier =
+            self.create_groebner_simplifier_with_wrappers(type_a, wrapper_a, type_b, wrapper_b);
 
         // Create symbolic field variables
         let a_symbols = symbolic_product.create_field_symbols(type_a, "self");
@@ -462,8 +508,18 @@ impl<'a> TraitsGenerator<'a> {
         let symbolic_fields =
             symbolic_product.compute(type_a, type_b, output_type, kind, &a_symbols, &b_symbols);
 
-        // Create converter for Rust code generation
-        let converter = AtomToRust::new(&[type_a, type_b], &["self", "rhs"]);
+        // Determine which prefixes need .as_inner() access
+        let mut wrapped_prefixes = Vec::new();
+        if wrapper_a.is_some() {
+            wrapped_prefixes.push("self");
+        }
+        if wrapper_b.is_some() {
+            wrapped_prefixes.push("rhs");
+        }
+
+        // Create converter for Rust code generation (with wrapper access info)
+        let converter =
+            AtomToRust::new_with_wrappers(&[type_a, type_b], &["self", "rhs"], &wrapped_prefixes);
 
         // Apply constraint substitution, simplify, and convert each field expression
         symbolic_fields
@@ -480,15 +536,17 @@ impl<'a> TraitsGenerator<'a> {
             .collect()
     }
 
-    /// Creates a Groebner simplifier for the given input types.
+    /// Creates a Groebner simplifier with optional wrapper constraints.
     ///
-    /// Collects constraint polynomials from both input types and computes
-    /// the Groebner basis. If there are no constraints or Groebner is disabled,
-    /// returns a disabled simplifier that passes expressions through unchanged.
-    fn create_groebner_simplifier(
+    /// When a wrapper kind is specified for an input type, the corresponding
+    /// wrapper constraint is added to the Groebner basis (e.g., norm_squared = 1
+    /// for Unit).
+    fn create_groebner_simplifier_with_wrappers(
         &self,
         type_a: &TypeSpec,
+        wrapper_a: Option<WrapperKind>,
         type_b: &TypeSpec,
+        wrapper_b: Option<WrapperKind>,
     ) -> GroebnerSimplifier {
         // If Groebner is disabled, return a disabled simplifier
         if !self.enable_groebner {
@@ -498,10 +556,18 @@ impl<'a> TraitsGenerator<'a> {
         let collector =
             ProductConstraintCollector::new(self.algebra, self.spec.norm.primary_involution);
 
-        // Collect constraints from both input types
+        // Collect constraints from both input types, with optional wrapper constraints
         let mut constraints = Vec::new();
-        constraints.extend(collector.collect_constraints(type_a, "self"));
-        constraints.extend(collector.collect_constraints(type_b, "rhs"));
+        if let Some(wrapper) = wrapper_a {
+            constraints.extend(collector.collect_wrapper_constraints(type_a, wrapper, "self"));
+        } else {
+            constraints.extend(collector.collect_constraints(type_a, "self"));
+        }
+        if let Some(wrapper) = wrapper_b {
+            constraints.extend(collector.collect_wrapper_constraints(type_b, wrapper, "rhs"));
+        } else {
+            constraints.extend(collector.collect_constraints(type_b, "rhs"));
+        }
 
         // Create Groebner simplifier (uses grevlex ordering for faster computation)
         GroebnerSimplifier::new(constraints, true)
@@ -1000,6 +1066,14 @@ impl<'a> TraitsGenerator<'a> {
         // Product traits are only implemented for single-grade blade types.
         // Versors (Motor, Flector, Rotor) use Sandwich/Antisandwich instead.
 
+        // Determine the appropriate wrapper kind for this algebra
+        let is_degenerate = self.spec.signature.r > 0;
+        let wrapper_kind = if is_degenerate {
+            WrapperKind::Unitized // PGA uses unitized blades
+        } else {
+            WrapperKind::Unit // Euclidean uses unit normalization
+        };
+
         // Wedge trait - single-grade types only
         for entry in &self.spec.products.wedge {
             if let (Some(a), Some(b), Some(out)) = (
@@ -1009,6 +1083,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_wedge_trait(a, b, out, entry));
+
+                    // Generate wrapper variants: Unit<A> ∧ B, A ∧ Unit<B>, Unit<A> ∧ Unit<B>
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Wedge,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Wedge,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Wedge,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1022,6 +1122,32 @@ impl<'a> TraitsGenerator<'a> {
             ) {
                 if self.is_single_grade_blade(a) && self.is_single_grade_blade(b) {
                     impls.push(self.generate_antiwedge_trait(a, b, out, entry));
+
+                    // Generate wrapper variants
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Antiwedge,
+                        wrapper_kind,
+                        WrapperPosition::Lhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Antiwedge,
+                        wrapper_kind,
+                        WrapperPosition::Rhs,
+                    ));
+                    impls.push(self.generate_wrapper_product_trait(
+                        a,
+                        b,
+                        out,
+                        SymbolicProductKind::Antiwedge,
+                        wrapper_kind,
+                        WrapperPosition::Both,
+                    ));
                 }
             }
         }
@@ -1490,6 +1616,142 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+    }
+
+    /// Generates a wrapper product trait impl (e.g., `Wedge<B> for Unit<A>`).
+    ///
+    /// This generates product implementations for wrapper types with
+    /// constraint-based simplification via Groebner basis.
+    fn generate_wrapper_product_trait(
+        &self,
+        a: &TypeSpec,
+        b: &TypeSpec,
+        output: &TypeSpec,
+        kind: SymbolicProductKind,
+        wrapper_kind: WrapperKind,
+        wrapper_pos: WrapperPosition,
+    ) -> TokenStream {
+        let a_name = format_ident!("{}", a.name);
+        let b_name = format_ident!("{}", b.name);
+        let out_name = format_ident!("{}", output.name);
+        let wrapper_name = Self::wrapper_type_name(wrapper_kind);
+
+        // Determine wrapper constraints for each operand
+        let (wrapper_a, wrapper_b) = match wrapper_pos {
+            WrapperPosition::Lhs => (Some(wrapper_kind), None),
+            WrapperPosition::Rhs => (None, Some(wrapper_kind)),
+            WrapperPosition::Both => (Some(wrapper_kind), Some(wrapper_kind)),
+        };
+
+        // Compute the formula with wrapper constraints
+        let field_exprs = self
+            .compute_product_expressions_with_wrappers(a, wrapper_a, b, wrapper_b, output, kind);
+
+        // Generate constructor call
+        let constructor_call = if output.versor.is_some() {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        } else {
+            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        };
+
+        // Generate the appropriate trait impl based on wrapper position
+        // Note: #[allow(unused_variables)] is needed because wrapper constraints can
+        // simplify products to constants, making some parameters unused.
+        let trait_type = Self::product_trait_type_name(kind);
+        let trait_method = Self::product_trait_method_name(kind);
+        match wrapper_pos {
+            WrapperPosition::Lhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#b_name<T>> for #wrapper_name<#a_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#b_name<T>) -> #out_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Rhs => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#wrapper_name<#b_name<T>>> for #a_name<T> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#wrapper_name<#b_name<T>>) -> #out_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+            WrapperPosition::Both => {
+                quote! {
+                    #[allow(unused_variables)]
+                    impl<T: Float> #trait_type<#wrapper_name<#b_name<T>>> for #wrapper_name<#a_name<T>> {
+                        type Output = #out_name<T>;
+
+                        #[inline]
+                        fn #trait_method(&self, rhs: &#wrapper_name<#b_name<T>>) -> #out_name<T> {
+                            #constructor_call
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Returns the Rust identifier for a wrapper type.
+    fn wrapper_type_name(wrapper: WrapperKind) -> proc_macro2::Ident {
+        let name = match wrapper {
+            WrapperKind::Unit => "Unit",
+            WrapperKind::Bulk => "Bulk",
+            WrapperKind::Unitized => "Unitized",
+            WrapperKind::Ideal => "Ideal",
+            WrapperKind::Proper => "Proper",
+            WrapperKind::Spacelike => "Spacelike",
+            WrapperKind::Null => "Null",
+        };
+        format_ident!("{}", name)
+    }
+
+    /// Returns the Rust identifier for a product trait type (capitalized).
+    fn product_trait_type_name(kind: SymbolicProductKind) -> proc_macro2::Ident {
+        let name = match kind {
+            SymbolicProductKind::Wedge => "Wedge",
+            SymbolicProductKind::Antiwedge => "Antiwedge",
+            SymbolicProductKind::LeftContraction => "LeftContract",
+            SymbolicProductKind::RightContraction => "RightContract",
+            SymbolicProductKind::Dot => "Dot",
+            SymbolicProductKind::Antidot => "Antidot",
+            SymbolicProductKind::Scalar => "ScalarProduct",
+            SymbolicProductKind::BulkContraction => "BulkContract",
+            SymbolicProductKind::WeightContraction => "WeightContract",
+            SymbolicProductKind::BulkExpansion => "BulkExpand",
+            SymbolicProductKind::WeightExpansion => "WeightExpand",
+            _ => "UnknownProduct",
+        };
+        format_ident!("{}", name)
+    }
+
+    /// Returns the Rust identifier for a product trait method (lowercase).
+    fn product_trait_method_name(kind: SymbolicProductKind) -> proc_macro2::Ident {
+        let name = match kind {
+            SymbolicProductKind::Wedge => "wedge",
+            SymbolicProductKind::Antiwedge => "antiwedge",
+            SymbolicProductKind::LeftContraction => "left_contract",
+            SymbolicProductKind::RightContraction => "right_contract",
+            SymbolicProductKind::Dot => "dot",
+            SymbolicProductKind::Antidot => "antidot",
+            SymbolicProductKind::Scalar => "scalar_product",
+            SymbolicProductKind::BulkContraction => "bulk_contract",
+            SymbolicProductKind::WeightContraction => "weight_contract",
+            SymbolicProductKind::BulkExpansion => "bulk_expand",
+            SymbolicProductKind::WeightExpansion => "weight_expand",
+            _ => "unknown_product",
+        };
+        format_ident!("{}", name)
     }
 
     /// Generates LeftContract trait impl.
@@ -3128,8 +3390,16 @@ impl<'a> TraitsGenerator<'a> {
         // Tests use Unit<T> for Euclidean or Unitized<T> for projective algebras.
         let project_idempotency_tests = self.generate_project_idempotency_tests_raw();
         let antiproject_idempotency_tests = self.generate_antiproject_idempotency_tests_raw();
+        let wrapper_equivalence_tests = self.generate_wrapper_equivalence_tests_raw();
         let is_degenerate = self.spec.signature.r > 0;
-        let wrapper_import = if is_degenerate { "Unitized" } else { "Unit" };
+
+        // For PGA, we need both Unitized (for blades), Bulk (for versors), and Unit (for tests)
+        // All algebras need Unit for wrapper equivalence tests
+        let wrapper_imports = if is_degenerate {
+            "Unit, Unitized, Bulk"
+        } else {
+            "Unit"
+        };
 
         format!(
             r#"
@@ -3144,17 +3414,19 @@ mod verification_tests {{
     use crate::algebra::Multivector;
     use crate::signature::{sig};
     #[allow(unused_imports)]
-    use crate::wrappers::{wrapper_import};
+    use crate::wrappers::{{{wrapper_imports}}};
+    #[allow(unused_imports)]
+    use crate::norm::{{Normed, DegenerateNormed}};
     use approx::relative_eq;
     use proptest::prelude::*;
 
     /// Relative epsilon for floating-point comparisons in verification tests.
     /// Using relative comparison handles varying magnitudes better than absolute.
     const REL_EPSILON: f64 = 1e-10;
-{add_sub}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}{project_idempotency}{antiproject_idempotency}}}
+{add_sub}{exterior}{bulk_contraction}{weight_contraction}{bulk_expansion}{weight_expansion}{de_morgan}{project_idempotency}{antiproject_idempotency}{wrapper_equivalence}}}
 "#,
             sig = signature_name,
-            wrapper_import = wrapper_import,
+            wrapper_imports = wrapper_imports,
             add_sub = add_sub_tests,
             exterior = exterior_tests,
             bulk_contraction = bulk_contraction_tests,
@@ -3164,6 +3436,7 @@ mod verification_tests {{
             de_morgan = de_morgan_tests,
             project_idempotency = project_idempotency_tests,
             antiproject_idempotency = antiproject_idempotency_tests,
+            wrapper_equivalence = wrapper_equivalence_tests,
         )
     }
 
@@ -3797,6 +4070,148 @@ mod verification_tests {{
             }
         }
         result
+    }
+
+    /// Generates wrapper equivalence tests for Normed trait.
+    ///
+    /// For types that have `Normed` implementations, this generates tests verifying
+    /// that `Unit<T>.method()` equals `T.method()` for all Normed methods.
+    /// The wrapper implementations are optimized (e.g., `Unit<T>.norm() == 1`),
+    /// but must produce semantically equivalent results.
+    fn generate_wrapper_equivalence_tests_raw(&self) -> String {
+        use crate::spec::InvolutionKind;
+
+        let is_degenerate = self.spec.signature.r > 0;
+        // Unit<T> only works for algebras with positive-definite norm:
+        // - q == 0 (no negative squares in metric)
+        // - r == 0 (no degenerate dimensions)
+        // - primary_involution == Reverse (not GradeInvolution which is indefinite)
+        let has_positive_definite_norm = self.spec.signature.q == 0
+            && self.spec.signature.r == 0
+            && self.spec.norm.primary_involution == InvolutionKind::Reverse;
+
+        // Only generate Unit<T> tests for algebras with positive-definite norm
+        let unit_tests: String = if has_positive_definite_norm {
+            self.spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none())
+                // Filter to types that are normalizable (have norm methods)
+                .filter(|t| {
+                    // All types with grades implement Normed
+                    !t.grades.is_empty()
+                })
+            .map(|ty| {
+                let name = &ty.name;
+                let name_lower = ty.name.to_lowercase();
+
+                format!(
+                    r#"
+    proptest! {{
+        /// Unit<{name}>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_{name_lower}_norm_matches_inner(u in any::<Unit<{name}<f64>>>()) {{
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <{name}<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<{name}<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {{}}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {{}}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {{}} vs {{}}", inner_norm, wrapper_norm
+            );
+        }}
+
+        /// Unit<{name}>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_{name_lower}_norm_squared_matches_inner(u in any::<Unit<{name}<f64>>>()) {{
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <{name}<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<{name}<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {{}}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {{}}", wrapper_ns
+            );
+        }}
+    }}
+"#,
+                    name = name,
+                    name_lower = name_lower,
+                )
+            })
+            .collect()
+        } else {
+            String::new()
+        };
+
+        // For degenerate algebras, also generate Bulk<T> tests for DegenerateNormed
+        let bulk_tests: String = if is_degenerate {
+            self.spec
+                .types
+                .iter()
+                .filter(|t| t.alias_of.is_none())
+                // Filter to types that are versors (have bulk_norm)
+                .filter(|t| t.versor.is_some())
+                .map(|ty| {
+                    let name = &ty.name;
+                    let name_lower = ty.name.to_lowercase();
+
+                    format!(
+                        r#"
+    proptest! {{
+        /// Bulk<{name}>.bulk_norm() should equal 1.0 (by definition of Bulk wrapper).
+        #[test]
+        fn bulk_{name_lower}_bulk_norm_matches_inner(b in any::<Bulk<{name}<f64>>>()) {{
+            // Use explicit trait syntax to specify the type
+            let inner_bulk = <{name}<f64> as DegenerateNormed>::bulk_norm(b.as_inner());
+            let wrapper_bulk = <Bulk<{name}<f64>> as DegenerateNormed>::bulk_norm(&b);
+
+            prop_assert!(
+                relative_eq!(inner_bulk, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner bulk_norm should be 1.0, got {{}}", inner_bulk
+            );
+            prop_assert!(
+                relative_eq!(wrapper_bulk, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper bulk_norm should be 1.0, got {{}}", wrapper_bulk
+            );
+        }}
+
+        /// Bulk<{name}>.weight_norm() should match inner's weight_norm (delegation).
+        #[test]
+        fn bulk_{name_lower}_weight_norm_delegates(b in any::<Bulk<{name}<f64>>>()) {{
+            // Use explicit trait syntax to specify the type
+            let inner_weight = <{name}<f64> as DegenerateNormed>::weight_norm(b.as_inner());
+            let wrapper_weight = <Bulk<{name}<f64>> as DegenerateNormed>::weight_norm(&b);
+
+            prop_assert!(
+                relative_eq!(inner_weight, wrapper_weight, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight norms should match: {{}} vs {{}}", inner_weight, wrapper_weight
+            );
+        }}
+    }}
+"#,
+                        name = name,
+                        name_lower = name_lower,
+                    )
+                })
+                .collect()
+        } else {
+            String::new()
+        };
+
+        format!("{}{}", unit_tests, bulk_tests)
     }
 }
 

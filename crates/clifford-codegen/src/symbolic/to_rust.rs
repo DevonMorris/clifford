@@ -33,6 +33,8 @@ use crate::spec::TypeSpec;
 pub struct AtomToRust {
     /// Map from symbol name (e.g., "a_x") to (prefix, field) for accessor generation.
     symbol_map: HashMap<String, (String, String)>,
+    /// Set of prefixes that require `.as_inner()` for field access (wrapper types).
+    wrapped_prefixes: std::collections::HashSet<String>,
 }
 
 impl AtomToRust {
@@ -49,6 +51,32 @@ impl AtomToRust {
     /// let converter = AtomToRust::new(&[&vector_type, &bivector_type], &["a", "b"]);
     /// ```
     pub fn new(types: &[&TypeSpec], prefixes: &[&str]) -> Self {
+        Self::new_with_wrappers(types, prefixes, &[])
+    }
+
+    /// Creates a converter with wrapper type support.
+    ///
+    /// # Arguments
+    ///
+    /// * `types` - The types whose fields will appear in expressions
+    /// * `prefixes` - The variable prefixes used (e.g., "self", "rhs")
+    /// * `wrapped_prefixes` - Prefixes that use wrapper types (need `.as_inner()`)
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // For Wedge<B> for Unit<A>: self is wrapped, rhs is not
+    /// let converter = AtomToRust::new_with_wrappers(
+    ///     &[&type_a, &type_b],
+    ///     &["self", "rhs"],
+    ///     &["self"],  // self needs .as_inner()
+    /// );
+    /// ```
+    pub fn new_with_wrappers(
+        types: &[&TypeSpec],
+        prefixes: &[&str],
+        wrapper_prefixes: &[&str],
+    ) -> Self {
         let mut symbol_map = HashMap::new();
 
         for (ty, prefix) in types.iter().zip(prefixes.iter()) {
@@ -58,7 +86,12 @@ impl AtomToRust {
             }
         }
 
-        Self { symbol_map }
+        let wrapped_prefixes = wrapper_prefixes.iter().map(|s| (*s).to_string()).collect();
+
+        Self {
+            symbol_map,
+            wrapped_prefixes,
+        }
     }
 
     /// Converts a Symbolica `Atom` to a Rust `TokenStream`.
@@ -155,7 +188,13 @@ impl AtomToRust {
             // It's a field reference like "a_x"
             let prefix_ident = format_ident!("{}", prefix);
             let field_ident = format_ident!("{}", field);
-            quote! { #prefix_ident.#field_ident() }
+
+            // For wrapper types, access via .as_inner()
+            if self.wrapped_prefixes.contains(prefix) {
+                quote! { #prefix_ident.as_inner().#field_ident() }
+            } else {
+                quote! { #prefix_ident.#field_ident() }
+            }
         } else {
             // Unknown variable - emit as identifier (for constants or errors)
             let ident = format_ident!("{}", name.replace("clifford_codegen::", ""));
