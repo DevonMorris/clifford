@@ -3,6 +3,20 @@
 **Status**: Draft
 **Goal**: Create interactive visualizations demonstrating each algebra's unique geometric capabilities
 
+## Sub-PRDs
+
+| PRD | Title | Algebras |
+|-----|-------|----------|
+| [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework | (infrastructure) |
+| [PRD-48.2](prd-48.2-euclidean-visualization.md) | Euclidean Visualization | euclidean2, euclidean3 |
+| [PRD-48.3](prd-48.3-projective2-visualization.md) | Projective 2D Visualization | projective2 |
+| [PRD-48.4](prd-48.4-projective3-visualization.md) | Projective 3D Visualization | projective3 |
+| [PRD-48.5](prd-48.5-conformal3-visualization.md) | Conformal 3D Visualization | conformal3 |
+| [PRD-48.6](prd-48.6-quaternion-dualquat-visualization.md) | Quaternion & Dual Quaternion | quaternion, dualquat |
+| [PRD-48.7](prd-48.7-complex-dual-visualization.md) | Complex & Dual Numbers | complex, dual |
+| [PRD-48.8](prd-48.8-non-euclidean-visualization.md) | Non-Euclidean Geometry | hyperbolic2, elliptic2 |
+| [PRD-48.9](prd-48.9-minkowski-visualization.md) | Minkowski Spacetime | minkowski2, minkowski3 |
+
 ## Motivation
 
 The clifford library now supports 14 distinct algebras with powerful code generation. However, the mathematical beauty and practical utility of these algebras is hard to appreciate without visual demonstrations. This PRD proposes a comprehensive visualization suite that:
