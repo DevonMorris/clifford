@@ -1,258 +1,293 @@
-# PRD-48.10: Visual Regression Testing
+# PRD-48.10: Visual Testing via Invariants and Coordinate Assertions
 
 **Status**: Draft
 **Parent**: PRD-48
 **Depends on**: PRD-48.1
-**Goal**: Automated visual testing to catch rendering regressions
+**Goal**: Automated testing that proves correctness, not just detects change
 
-## Overview
+## Philosophy: Correctness Over Change Detection
 
-Visual output is the primary deliverable of the visualization demos. Unit tests can verify calculations, but only visual tests can catch:
-- Rendering artifacts
-- Color/style regressions
-- Layout issues
-- Animation glitches at specific frames
+Golden image ("blessed") tests are fundamentally change detectors, not correctness proofs. They can tell you *something changed* but not *whether the change is correct*. For a mathematical visualization library, we need tests that verify:
 
-## Approach: Golden Image Comparison
+1. **Coordinate correctness**: A point at (3, 4) renders at the correct screen position
+2. **Visual invariants**: Geometric properties hold visually (orthogonal lines look orthogonal)
+3. **Scene graph correctness**: The right primitives exist with the right properties
+4. **Mathematical relationships**: Visual output matches algebraic computation
 
-1. **Generate golden images**: Run demos in deterministic state, capture screenshots
-2. **CI comparison**: Re-run demos, capture new screenshots, compare pixel-by-pixel
-3. **Threshold tolerance**: Allow small differences (anti-aliasing, font rendering)
-4. **Failure artifacts**: Save diff images for human review
+## Testing Strategies
 
-## Tools
+### 1. Coordinate Mapping Tests
 
-### Screenshot Capture
+Verify that algebraic coordinates map to correct screen coordinates:
 
-**Linux (CI and local)**:
-```bash
-# scrot - simple and reliable
-scrot --focused --delay 1 screenshot.png
-
-# maim - more features
-maim --window $(xdotool getactivewindow) screenshot.png
-
-# For headless CI: Xvfb (virtual framebuffer)
-Xvfb :99 -screen 0 1024x768x24 &
-export DISPLAY=:99
-cargo run --example euclidean2 &
-sleep 2
-scrot screenshot.png
-```
-
-**egui built-in** (preferred for determinism):
 ```rust
-// egui can render to an image buffer directly
-use egui::ColorImage;
+#[test]
+fn test_point_renders_at_correct_position() {
+    let demo = Euclidean2Demo::new();
+    let point = Vector::new(3.0, 4.0);
 
-fn capture_frame(ctx: &egui::Context) -> ColorImage {
-    // Use egui's frame capture API
-    ctx.tessellate(shapes)
-    // Render to image...
+    // Get the screen position where this point would render
+    let screen_pos = demo.world_to_screen(point);
+
+    // Verify the mapping is correct given the viewport
+    let expected = demo.viewport.world_to_screen(3.0, 4.0);
+    assert_eq!(screen_pos, expected);
+}
+
+#[test]
+fn test_rotor_rotates_vector_correctly() {
+    let demo = Euclidean2Demo::new();
+    let rotor = Rotor::from_angle(std::f32::consts::FRAC_PI_2);
+    let input = Vector::new(1.0, 0.0);
+
+    // Apply rotor algebraically
+    let rotated = rotor.transform(&input);
+
+    // Verify the visual representation matches
+    let input_screen = demo.world_to_screen(input);
+    let rotated_screen = demo.world_to_screen(rotated);
+
+    // 90 degree rotation: (1, 0) -> (0, 1)
+    relative_eq!(rotated.x(), 0.0, epsilon = 1e-6);
+    relative_eq!(rotated.y(), 1.0, epsilon = 1e-6);
 }
 ```
 
-### Image Comparison
+### 2. Visual Invariant Property Tests
 
-**Rust crates**:
-```toml
-[dev-dependencies]
-image = "0.25"
-img_diff = "0.2"  # or pixelmatch-rs
-```
+Use proptest to verify geometric invariants hold across random inputs:
 
-**Comparison implementation**:
 ```rust
-use image::{GenericImageView, Rgba};
+proptest! {
+    /// Rotation preserves distance from origin
+    #[test]
+    fn rotation_preserves_distance(
+        angle in -PI..PI,
+        x in -10.0f32..10.0,
+        y in -10.0f32..10.0,
+    ) {
+        let demo = Euclidean2Demo::new();
+        let rotor = Rotor::from_angle(angle);
+        let point = Vector::new(x, y);
 
-/// Compare two images, return percentage of differing pixels
-fn compare_images(golden: &str, actual: &str, threshold: u8) -> f64 {
-    let golden_img = image::open(golden).unwrap();
-    let actual_img = image::open(actual).unwrap();
+        let original_dist = (x * x + y * y).sqrt();
+        let rotated = rotor.transform(&point);
+        let rotated_dist = (rotated.x().powi(2) + rotated.y().powi(2)).sqrt();
 
-    assert_eq!(golden_img.dimensions(), actual_img.dimensions(),
-        "Image dimensions must match");
-
-    let (width, height) = golden_img.dimensions();
-    let total_pixels = (width * height) as f64;
-    let mut diff_pixels = 0u64;
-
-    for y in 0..height {
-        for x in 0..width {
-            let g = golden_img.get_pixel(x, y);
-            let a = actual_img.get_pixel(x, y);
-            if !pixels_similar(g, a, threshold) {
-                diff_pixels += 1;
-            }
-        }
+        prop_assert!(relative_eq!(original_dist, rotated_dist, epsilon = 1e-5));
     }
 
-    (diff_pixels as f64 / total_pixels) * 100.0
-}
+    /// Two points joined by a line should both be incident with that line
+    #[test]
+    fn join_creates_incident_line(
+        x1 in -10.0f32..10.0,
+        y1 in -10.0f32..10.0,
+        x2 in -10.0f32..10.0,
+        y2 in -10.0f32..10.0,
+    ) {
+        let p1 = Point::from_cartesian(x1, y1);
+        let p2 = Point::from_cartesian(x2, y2);
+        let line = p1.wedge(&p2);
 
-fn pixels_similar(a: Rgba<u8>, b: Rgba<u8>, threshold: u8) -> bool {
-    (a[0] as i16 - b[0] as i16).abs() <= threshold as i16 &&
-    (a[1] as i16 - b[1] as i16).abs() <= threshold as i16 &&
-    (a[2] as i16 - b[2] as i16).abs() <= threshold as i16
-}
-```
+        // Both points should be incident with the line
+        // (regressive product should be near zero)
+        let incident1 = p1.antiwedge(&line);
+        let incident2 = p2.antiwedge(&line);
 
-## Test Infrastructure
-
-### Directory Structure
-
-```
-tests/
-  visual/
-    mod.rs                    # Visual test harness
-    golden/                   # Reference images (committed to git)
-      euclidean2/
-        rotor_0deg.png
-        rotor_45deg.png
-        rotor_90deg.png
-      projective2/
-        point_line_join.png
-        motor_animation_frame0.png
-      ...
-    actual/                   # Generated during test (gitignored)
-    diff/                     # Diff images on failure (gitignored)
-```
-
-### Test Harness
-
-```rust
-// tests/visual/mod.rs
-
-use std::path::PathBuf;
-
-pub struct VisualTest {
-    name: String,
-    golden_dir: PathBuf,
-    actual_dir: PathBuf,
-    diff_dir: PathBuf,
-    tolerance_percent: f64,  // Max allowed difference
-    pixel_threshold: u8,     // Per-pixel color threshold
-}
-
-impl VisualTest {
-    pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            golden_dir: PathBuf::from("tests/visual/golden"),
-            actual_dir: PathBuf::from("tests/visual/actual"),
-            diff_dir: PathBuf::from("tests/visual/diff"),
-            tolerance_percent: 0.1,  // 0.1% pixel difference allowed
-            pixel_threshold: 2,      // RGB values can differ by 2
-        }
+        prop_assert!(incident1.is_near_zero(1e-5));
+        prop_assert!(incident2.is_near_zero(1e-5));
     }
 
-    pub fn compare(&self, test_name: &str) -> Result<(), VisualTestError> {
-        let golden = self.golden_dir.join(&self.name).join(format!("{}.png", test_name));
-        let actual = self.actual_dir.join(&self.name).join(format!("{}.png", test_name));
+    /// Parallel lines should not intersect (meet at ideal point)
+    #[test]
+    fn parallel_lines_meet_at_infinity(
+        x in -10.0f32..10.0,
+        y in -10.0f32..10.0,
+        dx in -1.0f32..1.0,
+        dy in -1.0f32..1.0,
+        offset in 0.1f32..5.0,
+    ) {
+        let p1 = Point::from_cartesian(x, y);
+        let p2 = Point::from_cartesian(x + dx, y + dy);
+        let line1 = p1.wedge(&p2);
 
-        if !golden.exists() {
-            return Err(VisualTestError::MissingGolden(golden));
+        // Offset line perpendicular to direction
+        let perp_x = -dy * offset;
+        let perp_y = dx * offset;
+        let p3 = Point::from_cartesian(x + perp_x, y + perp_y);
+        let p4 = Point::from_cartesian(x + dx + perp_x, y + dy + perp_y);
+        let line2 = p3.wedge(&p4);
+
+        let intersection = line1.antiwedge(&line2);
+
+        // Intersection should be an ideal point (weight = 0)
+        prop_assert!(intersection.is_ideal(1e-5));
+    }
+}
+```
+
+### 3. Scene Graph Assertions
+
+Test the structure of what gets rendered, not the pixels:
+
+```rust
+#[test]
+fn test_euclidean2_scene_structure() {
+    let mut demo = Euclidean2Demo::default();
+    demo.angle = std::f32::consts::FRAC_PI_4;
+
+    let scene = demo.build_scene();
+
+    // Verify expected primitives exist
+    assert!(scene.has_vector("original"));
+    assert!(scene.has_vector("rotated"));
+    assert!(scene.has_arc("rotation_arc"));
+
+    // Verify vector properties
+    let original = scene.get_vector("original");
+    assert_eq!(original.start, Point2::ORIGIN);
+    assert_eq!(original.color, Color::BLUE);
+
+    let rotated = scene.get_vector("rotated");
+    assert_eq!(rotated.start, Point2::ORIGIN);
+    assert_eq!(rotated.color, Color::GREEN);
+
+    // Verify the rotated vector is actually rotated 45 degrees
+    let angle_diff = original.angle_to(&rotated);
+    relative_eq!(angle_diff, std::f32::consts::FRAC_PI_4, epsilon = 1e-5);
+}
+
+#[test]
+fn test_projective2_join_scene() {
+    let mut demo = Projective2Demo::default();
+    demo.add_point(1.0, 2.0);
+    demo.add_point(4.0, 5.0);
+
+    let scene = demo.build_scene();
+
+    // Two points should create a line
+    assert_eq!(scene.point_count(), 2);
+    assert_eq!(scene.line_count(), 1);
+
+    // The line should pass through both points
+    let line = scene.get_line(0);
+    assert!(line.contains_point(1.0, 2.0, 1e-5));
+    assert!(line.contains_point(4.0, 5.0, 1e-5));
+}
+```
+
+### 4. Animation Frame Tests
+
+Test that animations produce correct intermediate states:
+
+```rust
+#[test]
+fn test_motor_interpolation_midpoint() {
+    let demo = Projective3Demo::default();
+
+    let start = Motor::identity();
+    let end = Motor::from_translation(10.0, 0.0, 0.0);
+
+    // At t=0.5, should be halfway
+    let mid = start.slerp(&end, 0.5);
+    let mid_translation = mid.extract_translation();
+
+    relative_eq!(mid_translation.x(), 5.0, epsilon = 1e-5);
+    relative_eq!(mid_translation.y(), 0.0, epsilon = 1e-5);
+    relative_eq!(mid_translation.z(), 0.0, epsilon = 1e-5);
+}
+
+#[test]
+fn test_animation_frame_sequence() {
+    let mut demo = Euclidean2Demo::default();
+    demo.set_animation_duration(1.0);
+
+    // Frame at t=0
+    demo.set_time(0.0);
+    let scene_0 = demo.build_scene();
+    let angle_0 = scene_0.get_rotor_angle();
+
+    // Frame at t=0.5
+    demo.set_time(0.5);
+    let scene_50 = demo.build_scene();
+    let angle_50 = scene_50.get_rotor_angle();
+
+    // Frame at t=1.0
+    demo.set_time(1.0);
+    let scene_100 = demo.build_scene();
+    let angle_100 = scene_100.get_rotor_angle();
+
+    // Verify smooth interpolation
+    assert!(angle_0 < angle_50);
+    assert!(angle_50 < angle_100);
+}
+```
+
+## Automated Visual Inspection
+
+For issues that are hard to express as coordinate assertions, we provide automated first-pass inspection:
+
+### Screenshot Analysis Tool
+
+```rust
+/// Automated visual analysis that flags potential issues
+pub struct VisualInspector {
+    tolerance: f32,
+}
+
+impl VisualInspector {
+    /// Analyze a screenshot for common rendering issues
+    pub fn inspect(&self, image: &ColorImage) -> Vec<VisualIssue> {
+        let mut issues = Vec::new();
+
+        // Check for blank/all-black frames
+        if self.is_blank(image) {
+            issues.push(VisualIssue::BlankFrame);
         }
 
-        let diff_percent = compare_images(
-            golden.to_str().unwrap(),
-            actual.to_str().unwrap(),
-            self.pixel_threshold
-        );
-
-        if diff_percent > self.tolerance_percent {
-            // Generate diff image for debugging
-            let diff_path = self.diff_dir.join(&self.name).join(format!("{}_diff.png", test_name));
-            generate_diff_image(&golden, &actual, &diff_path);
-
-            return Err(VisualTestError::DifferenceExceeded {
-                test: test_name.to_string(),
-                expected: self.tolerance_percent,
-                actual: diff_percent,
-                diff_image: diff_path,
-            });
+        // Check for NaN artifacts (often appear as black or white pixels)
+        if self.has_nan_artifacts(image) {
+            issues.push(VisualIssue::PossibleNanArtifacts);
         }
 
-        Ok(())
+        // Check for clipping (content outside viewport)
+        if self.has_edge_clipping(image) {
+            issues.push(VisualIssue::EdgeClipping);
+        }
+
+        // Check for z-fighting (flickering depth)
+        if self.has_z_fighting_patterns(image) {
+            issues.push(VisualIssue::PossibleZFighting);
+        }
+
+        issues
+    }
+
+    fn is_blank(&self, image: &ColorImage) -> bool {
+        let pixels = &image.pixels;
+        let first = pixels[0];
+        pixels.iter().all(|p| *p == first)
+    }
+
+    fn has_nan_artifacts(&self, image: &ColorImage) -> bool {
+        // NaN often renders as solid black or white clusters
+        // Look for suspicious uniform rectangles
+        // ...
+        false
     }
 }
 
 #[derive(Debug)]
-pub enum VisualTestError {
-    MissingGolden(PathBuf),
-    DifferenceExceeded {
-        test: String,
-        expected: f64,
-        actual: f64,
-        diff_image: PathBuf,
-    },
+pub enum VisualIssue {
+    BlankFrame,
+    PossibleNanArtifacts,
+    EdgeClipping,
+    PossibleZFighting,
+    UnexpectedColor { expected: Color, found: Color },
 }
 ```
 
-### Deterministic Rendering
-
-For reproducible screenshots, demos must support deterministic mode:
-
-```rust
-// examples/visualization/common/app.rs
-
-pub struct DeterministicConfig {
-    pub window_size: (u32, u32),
-    pub animation_time: f32,      // Fixed time for animation state
-    pub random_seed: Option<u64>, // If any randomness
-}
-
-pub trait VisualizationApp {
-    // ... existing methods ...
-
-    /// Set up deterministic state for visual testing
-    fn set_deterministic(&mut self, config: DeterministicConfig) {
-        // Default: no-op, override in demos that need it
-    }
-
-    /// Capture current frame as image (for visual testing)
-    fn capture_frame(&self, ctx: &egui::Context) -> egui::ColorImage;
-}
-```
-
-### Example Visual Test
-
-```rust
-// tests/visual_euclidean2.rs
-
-use clifford_visualization::euclidean2::Euclidean2Demo;
-use visual_test::VisualTest;
-
-#[test]
-fn test_euclidean2_rotor_angles() {
-    let test = VisualTest::new("euclidean2");
-
-    // Test rotor at 0°
-    let mut demo = Euclidean2Demo::default();
-    demo.set_deterministic(DeterministicConfig {
-        window_size: (800, 600),
-        animation_time: 0.0,
-        random_seed: None,
-    });
-    demo.angle = 0.0;
-    demo.capture_to("tests/visual/actual/euclidean2/rotor_0deg.png");
-    test.compare("rotor_0deg").unwrap();
-
-    // Test rotor at 45°
-    demo.angle = std::f32::consts::FRAC_PI_4;
-    demo.capture_to("tests/visual/actual/euclidean2/rotor_45deg.png");
-    test.compare("rotor_45deg").unwrap();
-
-    // Test rotor at 90°
-    demo.angle = std::f32::consts::FRAC_PI_2;
-    demo.capture_to("tests/visual/actual/euclidean2/rotor_90deg.png");
-    test.compare("rotor_90deg").unwrap();
-}
-```
-
-## CI Integration
-
-### GitHub Actions Workflow
+### CI Integration
 
 ```yaml
 # .github/workflows/visual-tests.yml
@@ -261,12 +296,10 @@ name: Visual Tests
 on:
   push:
     paths:
-      - 'examples/visualization/**'
-      - 'tests/visual/**'
+      - 'crates/clifford-viz/**'
   pull_request:
     paths:
-      - 'examples/visualization/**'
-      - 'tests/visual/**'
+      - 'crates/clifford-viz/**'
 
 jobs:
   visual-tests:
@@ -279,195 +312,132 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libxkbcommon-x11-0 libgl1-mesa-dri
 
-      - name: Run visual tests
+      - name: Run coordinate and invariant tests
         run: |
-          xvfb-run --auto-servernum cargo test --test visual_tests
+          cargo test -p clifford-viz --lib
 
-      - name: Upload diff images on failure
-        if: failure()
+      - name: Run visual inspection
+        run: |
+          xvfb-run --auto-servernum cargo test -p clifford-viz --test visual_inspection
+        continue-on-error: true  # Flag for review, don't block
+
+      - name: Upload inspection results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-test-diffs
-          path: tests/visual/diff/
+          name: visual-inspection-results
+          path: target/visual-inspection/
           retention-days: 7
 ```
 
-### Local Golden Image Update
+## Test Infrastructure
 
-```bash
-# Script to update golden images after intentional changes
-# scripts/bless-visual-tests.sh
+### Directory Structure
 
-#!/bin/bash
-set -e
-
-echo "Blessing visual tests (updating baseline images)..."
-
-# Run each demo in deterministic mode, capture screenshots
-for demo in euclidean2 euclidean3 projective2 projective3; do
-    echo "Capturing $demo..."
-    cargo run --example $demo -- --bless
-done
-
-echo "Baseline images updated in tests/visual/golden/"
-echo "Review changes with: git diff --stat tests/visual/golden/"
+```
+crates/clifford-viz/
+  src/
+    testing/
+      mod.rs              # Test utilities
+      scene.rs            # Scene graph for assertions
+      inspector.rs        # Automated visual inspection
+      viewport.rs         # Coordinate mapping tests
+  tests/
+    coordinate_tests.rs   # World-to-screen mapping
+    invariant_tests.rs    # Property-based visual invariants
+    scene_tests.rs        # Scene graph assertions
+    visual_inspection.rs  # Automated screenshot analysis
 ```
 
-## Demo Integration
-
-Each demo needs a `--bless` flag for automated screenshot capture:
+### Scene Graph for Testing
 
 ```rust
-// examples/visualization/euclidean2.rs
-
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
-
-    if args.contains(&"--bless".to_string()) {
-        capture_golden_images();
-        return;
-    }
-
-    // Normal interactive mode
-    run_app::<Euclidean2Demo>()
+/// Testable scene representation
+pub struct TestScene {
+    vectors: HashMap<String, TestVector>,
+    points: Vec<TestPoint>,
+    lines: Vec<TestLine>,
+    arcs: HashMap<String, TestArc>,
 }
 
-fn capture_golden_images() {
-    let test_cases = vec![
-        ("rotor_0deg", 0.0_f32),
-        ("rotor_45deg", std::f32::consts::FRAC_PI_4),
-        ("rotor_90deg", std::f32::consts::FRAC_PI_2),
-        ("rotor_180deg", std::f32::consts::PI),
-    ];
+impl TestScene {
+    pub fn has_vector(&self, name: &str) -> bool {
+        self.vectors.contains_key(name)
+    }
 
-    for (name, angle) in test_cases {
-        let mut demo = Euclidean2Demo::default();
-        demo.angle = angle;
-        demo.set_deterministic(DeterministicConfig {
-            window_size: (800, 600),
-            animation_time: 0.0,
-            random_seed: None,
-        });
+    pub fn get_vector(&self, name: &str) -> &TestVector {
+        &self.vectors[name]
+    }
 
-        let path = format!("tests/visual/golden/euclidean2/{}.png", name);
-        demo.render_to_file(&path);
-        println!("Captured: {}", path);
+    pub fn point_count(&self) -> usize {
+        self.points.len()
+    }
+
+    pub fn line_count(&self) -> usize {
+        self.lines.len()
+    }
+}
+
+pub struct TestVector {
+    pub start: Point2,
+    pub end: Point2,
+    pub color: Color,
+}
+
+impl TestVector {
+    pub fn angle_to(&self, other: &TestVector) -> f32 {
+        let self_dir = (self.end - self.start).normalize();
+        let other_dir = (other.end - other.start).normalize();
+        self_dir.angle_between(other_dir)
     }
 }
 ```
-
-## Test Cases Per Demo
-
-### euclidean2
-- `rotor_0deg.png` - No rotation
-- `rotor_45deg.png` - 45° rotation
-- `rotor_90deg.png` - 90° rotation
-- `rotor_180deg.png` - 180° rotation
-- `bivector_visible.png` - With bivector arc shown
-- `animation_frame_25.png` - Animation at 25% progress
-
-### projective2
-- `empty.png` - Initial empty state
-- `two_points.png` - Two points placed
-- `point_line_join.png` - Line joining two points
-- `line_intersection.png` - Two lines meeting at a point
-- `motor_identity.png` - Motor at identity
-- `motor_rotated.png` - Motor with rotation applied
-
-### conformal3
-- `sphere_only.png` - Inversion sphere
-- `sphere_inversion.png` - Sphere being inverted
-- `line_to_circle.png` - Line transforming to circle
-- `mobius_animation_50.png` - Möbius transform at 50%
-
-### (similar for all other demos)
 
 ## Implementation Tasks
 
-1. [ ] Set up Git LFS for golden images (`.gitattributes`)
-2. [ ] Add `image` and comparison crate to dev-dependencies
-3. [ ] Create `tests/visual/mod.rs` harness
-4. [ ] Create golden image directory structure
-5. [ ] Add `DeterministicConfig` to `VisualizationApp` trait
-6. [ ] Add `--bless` flag to each demo
-7. [ ] Implement `render_to_file()` for headless capture
-8. [ ] Create `scripts/bless-visual-tests.sh`
-9. [ ] Add GitHub Actions workflow (with `lfs: true`)
-10. [ ] Generate initial golden images for each demo
-11. [ ] Document golden image update process in CONTRIBUTING.md
+1. [ ] Create `crates/clifford-viz/src/testing/` module
+2. [ ] Implement `TestScene` and test primitives
+3. [ ] Add `build_scene()` method to each demo
+4. [ ] Write coordinate mapping tests for each algebra
+5. [ ] Write property-based visual invariant tests
+6. [ ] Implement `VisualInspector` for automated analysis
+7. [ ] Add GitHub Actions workflow
+8. [ ] Document test patterns in CONTRIBUTING.md
 
 ## Verification
 
 ```bash
-# Run visual tests locally
-cargo test --test visual_tests
+# Run all visualization tests
+cargo test -p clifford-viz
 
-# Update golden images after intentional changes
-./scripts/bless-visual-tests.sh
-git diff tests/visual/golden/  # Review changes
-git add tests/visual/golden/
-git commit -m "Update golden images for XYZ change"
+# Run specific test categories
+cargo test -p clifford-viz coordinate
+cargo test -p clifford-viz invariant
+cargo test -p clifford-viz scene
+
+# Run visual inspection (requires display)
+xvfb-run cargo test -p clifford-viz --test visual_inspection
 ```
 
-## Benefits
+## Benefits Over Golden Images
 
-1. **Catch regressions**: Any visual change triggers test failure
-2. **Review process**: Diff images make it easy to review visual changes
-3. **Documentation**: Golden images serve as visual documentation
-4. **Confidence**: Refactor rendering code with confidence
-5. **Cross-platform**: Can detect platform-specific rendering issues
+| Aspect | Golden Images | Invariant Tests |
+|--------|---------------|-----------------|
+| Detects bugs | Sometimes | Yes |
+| Proves correctness | No | Yes |
+| Handles rendering differences | Poorly | N/A |
+| Maintenance burden | High | Low |
+| Documents intent | No | Yes |
+| Works headless | Awkwardly | Mostly |
+| Test failures are actionable | "Something changed" | "This invariant violated" |
 
-## Git LFS Setup (Required)
+## When Human Review is Needed
 
-Golden images will churn during development. Use Git LFS from the start to avoid bloating the repo history.
+The automated inspection flags issues but doesn't block CI. When issues are flagged:
 
-### Initial Setup
+1. CI uploads screenshots to artifacts
+2. Reviewer checks flagged issues
+3. If issue is real: fix the bug
+4. If false positive: improve inspector heuristics
 
-```bash
-# Install LFS (if not already)
-git lfs install
-
-# Track golden images
-git lfs track "crates/clifford-viz/tests/visual/golden/**/*.png"
-git add .gitattributes
-git commit -m "chore: track golden images with Git LFS"
-```
-
-### .gitattributes
-
-```gitattributes
-# Golden images for visual regression tests
-crates/clifford-viz/tests/visual/golden/**/*.png filter=lfs diff=lfs merge=lfs -text
-```
-
-### CI Configuration
-
-GitHub Actions has LFS support built-in:
-
-```yaml
-- uses: actions/checkout@v4
-  with:
-    lfs: true  # Fetch LFS files
-```
-
-### Image Size Guidelines
-
-Even with LFS, keep images reasonably sized:
-- Resolution: 800×600 (sufficient for regression testing)
-- Format: PNG (lossless, but compress with `oxipng` before committing)
-- Optimization: `oxipng -o 4 *.png` reduces size ~20-40%
-
-### Platform Differences
-
-Font rendering and anti-aliasing differ between platforms. Options:
-1. Only run visual tests on Linux CI
-2. Use platform-specific golden images
-3. Increase tolerance threshold
-4. Use custom fonts embedded in the demo
-
-### Flaky Tests
-
-Visual tests can be flaky due to timing. Mitigations:
-1. Deterministic animation state (fixed time, not real-time)
-2. Disable animations during capture
-3. Multiple retries with exponential backoff
+This gives automated first-pass analysis while keeping humans in the loop for subjective visual quality.
