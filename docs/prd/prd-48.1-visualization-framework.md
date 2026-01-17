@@ -70,7 +70,7 @@ crates/clifford-viz/
 ### 1. Base Application Trait
 
 ```rust
-// examples/visualization/common/app.rs
+// crates/clifford-viz/src/common/app.rs
 
 /// Base trait for visualization demos
 pub trait VisualizationApp {
@@ -86,10 +86,28 @@ pub trait VisualizationApp {
     /// Render the control panel (sliders, buttons, etc.)
     fn controls(&mut self, ui: &mut egui::Ui);
 
-    /// Optional: info panel with explanatory text
+    /// Optional: info panel with explanatory text (status bar)
     fn info(&self, ui: &mut egui::Ui) {
         // Default: no info panel
     }
+
+    /// REQUIRED: Educational content for the "Learn" popup window.
+    /// All visualizations MUST provide educational content explaining:
+    /// - What the visualization demonstrates
+    /// - The underlying mathematics
+    /// - How to interact with it
+    /// - Key concepts to understand
+    fn educational_content(&self) -> Option<EducationalContent>;
+}
+
+/// Structured educational content for the "Learn" popup
+pub struct EducationalContent {
+    pub title: &'static str,
+    pub overview: &'static str,
+    pub math_background: &'static str,
+    pub how_to_use: &'static str,
+    pub key_concepts: &'static str,
+    pub resources: &'static [(&'static str, &'static str)],
 }
 
 /// Run a visualization app
@@ -608,18 +626,20 @@ crates/clifford-viz/
 
 ## Implementation Tasks
 
-1. [ ] Create `crates/clifford-viz/src/common/mod.rs` with re-exports
-2. [ ] Implement `app.rs` with base trait and runner
-3. [ ] Implement `colors.rs` color palette
-4. [ ] Implement `grid.rs` for 2D grids and axes
-5. [ ] Implement `shapes.rs` 2D primitives (point, arrow, circle, line, arc)
+1. [x] Create `crates/clifford-viz/src/common/mod.rs` with re-exports
+2. [x] Implement `app.rs` with base trait and runner
+3. [x] Implement `colors.rs` color palette
+4. [x] Implement `grid.rs` for 2D grids and axes
+5. [x] Implement `shapes.rs` 2D primitives (point, arrow, circle, line, arc)
 6. [ ] Implement `shapes3d.rs` 3D primitives (box, sphere, plane, line, arrow)
 7. [ ] Implement `viewport3d.rs` 3D viewport with three-d
 8. [ ] Implement `camera.rs` 3D camera with orbit controls
-9. [ ] Implement `widgets.rs` reusable UI components
-10. [ ] Implement `animation.rs` timing utilities
-11. [ ] Create minimal 2D test app
+9. [x] Implement `widgets.rs` reusable UI components
+10. [x] Implement `animation.rs` timing utilities
+11. [x] Create minimal 2D test app
 12. [ ] Create minimal 3D test app
+13. [x] Add `EducationalContent` struct and "Learn" popup window
+14. [x] Add `testing` module with proptest support (feature-gated)
 
 ## Verification
 

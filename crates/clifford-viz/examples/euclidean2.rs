@@ -310,7 +310,66 @@ impl VisualizationApp for Euclidean2Demo {
             ui.colored_label(palette::LINE, "\u{1f534} Full rotation angle");
         });
     }
+
+    fn educational_content(&self) -> Option<EducationalContent> {
+        Some(EUCLIDEAN2_EDUCATION)
+    }
 }
+
+/// Educational content for the 2D Euclidean rotor visualization.
+const EUCLIDEAN2_EDUCATION: EducationalContent = EducationalContent {
+    title: "2D Rotors in Geometric Algebra",
+
+    overview: "\
+This visualization demonstrates how rotations work in 2D Geometric Algebra (GA). \
+Unlike traditional rotation matrices or complex numbers, GA uses objects called \
+'rotors' that naturally encode rotations and compose beautifully.
+
+The key insight is that rotors use HALF the rotation angle internally. This \
+might seem strange at first, but it's what makes rotation composition work \
+perfectly: to combine two rotations, you simply multiply their rotors.",
+
+    math_background: "\
+A rotor R that rotates by angle \u{03b8} is defined as:
+
+    R = cos(\u{03b8}/2) + sin(\u{03b8}/2)e\u{2081}\u{2082}
+
+where e\u{2081}\u{2082} is the unit bivector (the oriented xy-plane).
+
+To rotate a vector v, we use the 'sandwich product':
+
+    v' = R v R\u{2020}
+
+where R\u{2020} is the reverse of R (same scalar, negated bivector).
+
+Why half-angles? Consider composing two rotations:
+
+    R\u{2082}(R\u{2081} v R\u{2081}\u{2020})R\u{2082}\u{2020} = (R\u{2082}R\u{2081}) v (R\u{2082}R\u{2081})\u{2020}
+
+The total rotor is simply R\u{2082}R\u{2081}, and the half-angles add up \
+to give the correct total rotation!",
+
+    how_to_use: "\
+\u{2022} Drag the angle slider to rotate the vector field
+\u{2022} Click 'Play' to animate continuous rotation
+\u{2022} The purple arc shows the HALF-angle (what's stored in the rotor)
+\u{2022} The red arc shows the FULL rotation angle
+\u{2022} Adjust the highlighted vector to see specific input/output pairs
+\u{2022} Toggle display options to focus on different aspects",
+
+    key_concepts: "\
+\u{2022} Rotors encode rotations using HALF the angle
+\u{2022} The sandwich product v' = RvR\u{2020} applies the rotation
+\u{2022} Rotations compose by multiplying rotors: R_total = R\u{2082}R\u{2081}
+\u{2022} Rotors are always unit magnitude: |R| = 1
+\u{2022} The bivector e\u{2081}\u{2082} represents the plane of rotation
+\u{2022} This naturally extends to 3D (and higher dimensions!)",
+
+    resources: &[
+        ("Rigid Geometric Algebra Wiki", "https://rigidgeometricalgebra.org/wiki/"),
+        ("Look, Ma, No Matrices!", "https://enkimute.github.io/LookMaNoMatrices/"),
+    ],
+};
 
 fn main() -> eframe::Result<()> {
     run_app::<Euclidean2Demo>()
