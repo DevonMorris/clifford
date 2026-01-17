@@ -376,6 +376,109 @@ impl<'a> ConstraintDeriver<'a> {
         let symbols = self.create_symbols(ty, field_prefix);
         self.compute_antiproduct_antireverse_at_grade(ty, dim, &symbols)
     }
+
+    /// Derives the weight norm squared expression for PGA types.
+    ///
+    /// In PGA, the weight norm is the degenerate part of the element.
+    /// For points, this is the w coordinate. For planes, it's the d coefficient.
+    /// The weight norm squared is the sum of squares of all weight (degenerate) fields.
+    ///
+    /// Weight fields are those whose blade contains the degenerate basis vector (e0).
+    pub fn derive_weight_norm_squared(&self, ty: &TypeSpec, field_prefix: &str) -> Atom {
+        let symbols = self.create_symbols(ty, field_prefix);
+        let (p, q, r) = self.algebra.signature();
+        // Degenerate indices are p+q..p+q+r
+        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+
+        let mut terms: Vec<Atom> = Vec::new();
+
+        for field in &ty.fields {
+            // Check if this blade contains a degenerate basis vector
+            let blade = field.blade_index;
+            let is_weight = degenerate_indices
+                .iter()
+                .any(|&idx| (blade & (1 << idx)) != 0);
+
+            if is_weight {
+                if let Some(sym) = symbols.get(&blade) {
+                    // Add sym²
+                    terms.push(sym * sym);
+                }
+            }
+        }
+
+        if terms.is_empty() {
+            Atom::num(0)
+        } else {
+            terms.into_iter().reduce(|acc, t| acc + t).unwrap()
+        }
+    }
+
+    /// Derives the bulk norm squared expression for PGA types.
+    ///
+    /// In PGA, the bulk norm is the non-degenerate part of the element.
+    /// The bulk norm squared is the sum of squares of all bulk (non-degenerate) fields.
+    ///
+    /// Bulk fields are those whose blade does NOT contain the degenerate basis vector (e0).
+    pub fn derive_bulk_norm_squared(&self, ty: &TypeSpec, field_prefix: &str) -> Atom {
+        let symbols = self.create_symbols(ty, field_prefix);
+        let (p, q, r) = self.algebra.signature();
+        // Degenerate indices are p+q..p+q+r
+        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+
+        let mut terms: Vec<Atom> = Vec::new();
+
+        for field in &ty.fields {
+            // Check if this blade does NOT contain any degenerate basis vectors
+            let blade = field.blade_index;
+            let is_bulk = degenerate_indices
+                .iter()
+                .all(|&idx| (blade & (1 << idx)) == 0);
+
+            if is_bulk {
+                if let Some(sym) = symbols.get(&blade) {
+                    // Add sym²
+                    terms.push(sym * sym);
+                }
+            }
+        }
+
+        if terms.is_empty() {
+            Atom::num(0)
+        } else {
+            terms.into_iter().reduce(|acc, t| acc + t).unwrap()
+        }
+    }
+
+    /// Derives individual weight component expressions for the Ideal wrapper.
+    ///
+    /// For Ideal elements (elements at infinity in PGA), all weight components
+    /// must be zero. This returns a list of the symbolic expressions for each
+    /// weight field, which can be used as constraints in Groebner simplification.
+    pub fn derive_weight_components(&self, ty: &TypeSpec, field_prefix: &str) -> Vec<Atom> {
+        let symbols = self.create_symbols(ty, field_prefix);
+        let (p, q, r) = self.algebra.signature();
+        // Degenerate indices are p+q..p+q+r
+        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+
+        let mut components = Vec::new();
+
+        for field in &ty.fields {
+            // Check if this blade contains a degenerate basis vector
+            let blade = field.blade_index;
+            let is_weight = degenerate_indices
+                .iter()
+                .any(|&idx| (blade & (1 << idx)) != 0);
+
+            if is_weight {
+                if let Some(sym) = symbols.get(&blade) {
+                    components.push(sym.clone());
+                }
+            }
+        }
+
+        components
+    }
 }
 
 #[cfg(test)]

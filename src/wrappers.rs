@@ -76,12 +76,10 @@
 //! - [Rigid GA Wiki - Geometric norm](https://rigidgeometricalgebra.org/wiki/index.php?title=Geometric_norm)
 //! - [Rigid GA Wiki - Unitization](https://rigidgeometricalgebra.org/wiki/index.php?title=Unitization)
 
-use core::fmt::Debug;
-use core::hash::Hash;
-use core::ops::Deref;
-
 use crate::norm::{DegenerateNormed, IndefiniteNormed, Normed};
 use crate::scalar::Float;
+use core::fmt::Debug;
+use core::hash::Hash;
 // Import num_traits for method access
 use num_traits::Float as _;
 use num_traits::One;
@@ -201,15 +199,6 @@ impl<T: Normed> Unit<T> {
     }
 }
 
-impl<T: Normed> Deref for Unit<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl<T: Normed> AsRef<T> for Unit<T> {
     #[inline]
     fn as_ref(&self) -> &T {
@@ -255,6 +244,43 @@ impl<'de, T: Normed + serde::Deserialize<'de>> serde::Deserialize<'de> for Unit<
     {
         let inner = T::deserialize(deserializer)?;
         Ok(Self { inner })
+    }
+}
+
+/// Optimized `Normed` implementation for `Unit<T>`.
+///
+/// Since `Unit<T>` guarantees `norm() == 1`, all norm operations are trivial.
+impl<T: Normed + Clone> Normed for Unit<T> {
+    type Scalar = T::Scalar;
+
+    #[inline]
+    fn norm_squared(&self) -> Self::Scalar {
+        Self::Scalar::one()
+    }
+
+    #[inline]
+    fn norm(&self) -> Self::Scalar {
+        Self::Scalar::one()
+    }
+
+    #[inline]
+    fn try_normalize(&self) -> Option<Self> {
+        Some(self.clone())
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        self.clone()
+    }
+
+    #[inline]
+    fn scale(&self, factor: Self::Scalar) -> Self {
+        // Scaling a unit element and re-normalizing gives the same unit direction
+        // (or its negation if factor is negative). For simplicity, we delegate to inner.
+        // SAFETY: Scaling preserves direction, re-normalization gives norm=1.
+        let scaled = self.inner.scale(factor);
+        // If factor is zero, try_normalize returns None, so we fall back to self
+        Self::try_new(scaled).unwrap_or_else(|| self.clone())
     }
 }
 
@@ -366,15 +392,6 @@ impl<T: DegenerateNormed> Bulk<T> {
     }
 }
 
-impl<T: DegenerateNormed> Deref for Bulk<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl<T: DegenerateNormed> AsRef<T> for Bulk<T> {
     #[inline]
     fn as_ref(&self) -> &T {
@@ -420,6 +437,72 @@ impl<'de, T: DegenerateNormed + serde::Deserialize<'de>> serde::Deserialize<'de>
     {
         let inner = T::deserialize(deserializer)?;
         Ok(Self { inner })
+    }
+}
+
+/// Optimized `Normed` implementation for `Bulk<T>`.
+///
+/// `Bulk<T>` guarantees `bulk_norm() == 1`. The regular norm delegates to inner.
+impl<T: DegenerateNormed + Clone> Normed for Bulk<T> {
+    type Scalar = T::Scalar;
+
+    #[inline]
+    fn norm_squared(&self) -> Self::Scalar {
+        self.inner.norm_squared()
+    }
+
+    #[inline]
+    fn norm(&self) -> Self::Scalar {
+        self.inner.norm()
+    }
+
+    #[inline]
+    fn try_normalize(&self) -> Option<Self> {
+        self.inner.try_normalize().map(|n| Self { inner: n })
+    }
+
+    #[inline]
+    fn normalize(&self) -> Self {
+        Self {
+            inner: self.inner.normalize(),
+        }
+    }
+
+    #[inline]
+    fn scale(&self, factor: Self::Scalar) -> Self {
+        let scaled = self.inner.scale(factor);
+        // Re-normalize by bulk norm to maintain constraint
+        Self::try_new(scaled).unwrap_or_else(|| self.clone())
+    }
+}
+
+/// Optimized `DegenerateNormed` implementation for `Bulk<T>`.
+///
+/// Since `Bulk<T>` guarantees `bulk_norm() == 1`, bulk norm operations are trivial.
+impl<T: DegenerateNormed + Clone> DegenerateNormed for Bulk<T> {
+    #[inline]
+    fn bulk_norm_squared(&self) -> Self::Scalar {
+        Self::Scalar::one()
+    }
+
+    #[inline]
+    fn bulk_norm(&self) -> Self::Scalar {
+        Self::Scalar::one()
+    }
+
+    #[inline]
+    fn weight_norm_squared(&self) -> Self::Scalar {
+        self.inner.weight_norm_squared()
+    }
+
+    #[inline]
+    fn weight_norm(&self) -> Self::Scalar {
+        self.inner.weight_norm()
+    }
+
+    #[inline]
+    fn try_unitize(&self) -> Option<Self> {
+        self.inner.try_unitize().and_then(Self::try_new)
     }
 }
 
@@ -533,15 +616,6 @@ impl<T: DegenerateNormed> Unitized<T> {
     /// Returns a reference to the inner value.
     #[inline]
     pub fn as_inner(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<T: DegenerateNormed> Deref for Unitized<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
@@ -701,15 +775,6 @@ impl<T: DegenerateNormed> Ideal<T> {
     }
 }
 
-impl<T: DegenerateNormed> Deref for Ideal<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl<T: DegenerateNormed> AsRef<T> for Ideal<T> {
     #[inline]
     fn as_ref(&self) -> &T {
@@ -850,15 +915,6 @@ impl<T: IndefiniteNormed> Proper<T> {
     /// Returns a reference to the inner value.
     #[inline]
     pub fn as_inner(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<T: IndefiniteNormed> Deref for Proper<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
@@ -1013,15 +1069,6 @@ impl<T: IndefiniteNormed> Spacelike<T> {
     }
 }
 
-impl<T: IndefiniteNormed> Deref for Spacelike<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
 impl<T: IndefiniteNormed> AsRef<T> for Spacelike<T> {
     #[inline]
     fn as_ref(&self) -> &T {
@@ -1166,15 +1213,6 @@ impl<T: IndefiniteNormed> Null<T> {
     /// Returns a reference to the inner value.
     #[inline]
     pub fn as_inner(&self) -> &T {
-        &self.inner
-    }
-}
-
-impl<T: IndefiniteNormed> Deref for Null<T> {
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }

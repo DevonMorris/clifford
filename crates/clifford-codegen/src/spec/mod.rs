@@ -63,6 +63,6 @@ pub use bundled::{EUCLIDEAN2, EUCLIDEAN3};
 pub use error::ParseError;
 pub use ir::{
     AlgebraSpec, BasisVector, FieldSpec, InvolutionKind, NormSpec, ProductEntry, ProductsSpec,
-    SignatureSpec, TypeSpec,
+    SignatureSpec, TypeSpec, WrapperKind,
 };
 pub use parser::parse_spec;

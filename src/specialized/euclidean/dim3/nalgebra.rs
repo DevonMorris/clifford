@@ -425,7 +425,7 @@ mod tests {
             // Rotors have double cover: r and -r represent the same rotation
             // So we test rotation equivalence instead of component equality
             let test_v = Vector::new(1.0, 2.0, 3.0);
-            let rotated_orig = r.transform(&test_v);
+            let rotated_orig = r.as_inner().transform(&test_v);
             let rotated_back = back.transform(&test_v);
             prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
@@ -436,7 +436,7 @@ mod tests {
             let back: Rotor<f64> = rot.into();
 
             let test_v = Vector::new(1.0, 2.0, 3.0);
-            let rotated_orig = r.transform(&test_v);
+            let rotated_orig = r.as_inner().transform(&test_v);
             let rotated_back = back.transform(&test_v);
             prop_assert!(relative_eq!(rotated_orig, rotated_back, epsilon = RELATIVE_EQ_EPS, max_relative = RELATIVE_EQ_EPS));
         }
@@ -449,7 +449,7 @@ mod tests {
             let na_v: na::Vector3<f64> = v.into();
 
             // Rotate with clifford rotor
-            let rotated_ga = r.transform(&v);
+            let rotated_ga = r.as_inner().transform(&v);
 
             // Rotate with nalgebra quaternion
             let q: na::UnitQuaternion<f64> = r.into_inner().into();

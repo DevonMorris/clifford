@@ -154,7 +154,7 @@ mod tests {
             let na_v: na::Vector2<f64> = v.into();
 
             // Rotate with clifford rotor
-            let rotated_ga = r.transform(&v);
+            let rotated_ga = r.as_inner().transform(&v);
 
             // Rotate with nalgebra Rotation2
             let rotation: na::Rotation2<f64> = r.into_inner().into();

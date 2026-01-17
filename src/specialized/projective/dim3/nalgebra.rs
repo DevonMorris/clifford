@@ -313,25 +313,25 @@ mod tests {
     proptest! {
         #[test]
         fn point_roundtrip(p in any::<UnitizedPoint<f64>>()) {
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let back: Point<f64> = na_p.into();
 
             // Compare Cartesian coordinates (back has w=1 from from_cartesian)
-            prop_assert!(relative_eq!(p.cartesian_x(), back.x(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.cartesian_y(), back.y(), epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.cartesian_z(), back.z(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_x(), back.x(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_y(), back.y(), epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_z(), back.z(), epsilon = EPS, max_relative = EPS));
         }
 
         #[test]
         fn point_try_from_finite(p in any::<UnitizedPoint<f64>>()) {
-            let result: Result<na::Point3<f64>, _> = (*p).try_into();
+            let result: Result<na::Point3<f64>, _> = p.as_inner().clone().try_into();
             prop_assert!(result.is_ok());
 
             let na_p = result.unwrap();
             // na_p contains Cartesian coordinates (division by w happened in conversion)
-            prop_assert!(relative_eq!(p.cartesian_x(), na_p.x, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.cartesian_y(), na_p.y, epsilon = EPS, max_relative = EPS));
-            prop_assert!(relative_eq!(p.cartesian_z(), na_p.z, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_x(), na_p.x, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_y(), na_p.y, epsilon = EPS, max_relative = EPS));
+            prop_assert!(relative_eq!(p.as_inner().cartesian_z(), na_p.z, epsilon = EPS, max_relative = EPS));
         }
     }
 
@@ -354,12 +354,12 @@ mod tests {
         #[test]
         fn motor_roundtrip(m in any::<Unitized<Motor<f64>>>()) {
             // Round-trip through Isometry
-            let iso: na::Isometry3<f64> = (*m).into();
+            let iso: na::Isometry3<f64> = m.as_inner().clone().into();
             let back: Motor<f64> = iso.into();
 
             // Debug output
             eprintln!("Original motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
-                m.s(), m.rx(), m.ty(), m.tz(), m.tx(), m.ry(), m.rz(), m.ps());
+                m.as_inner().s(), m.as_inner().rx(), m.as_inner().ty(), m.as_inner().tz(), m.as_inner().tx(), m.as_inner().ry(), m.as_inner().rz(), m.as_inner().ps());
             eprintln!("Isometry: rotation={:?}, translation={:?}",
                 iso.rotation.quaternion(), iso.translation.vector);
             eprintln!("Back motor: s={}, e23={}, e31={}, e12={}, e01={}, e02={}, e03={}, e0123={}",
@@ -374,7 +374,7 @@ mod tests {
             ];
 
             for test_p in test_points {
-                let result1 = m.transform(&test_p);
+                let result1 = m.as_inner().transform(&test_p);
                 let result2 = back.transform(&test_p);
 
                 prop_assert!(
@@ -405,11 +405,11 @@ mod tests {
             p in any::<UnitizedPoint<f64>>(),
         ) {
             // Transform with clifford motor
-            let result_ga = m.transform(&*p);
+            let result_ga = m.as_inner().transform(p.as_inner());
 
             // Transform with nalgebra isometry
-            let iso: na::Isometry3<f64> = (*m).into();
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let iso: na::Isometry3<f64> = m.as_inner().clone().into();
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             // Compare Cartesian results (GA result must be divided by w)
@@ -434,13 +434,13 @@ mod tests {
             p in any::<UnitizedPoint<f64>>(),
         ) {
             // Inverse with clifford
-            let inv_ga = m.inverse();
-            let result_ga = inv_ga.transform(&*p);
+            let inv_ga = m.as_inner().inverse();
+            let result_ga = inv_ga.transform(p.as_inner());
 
             // Inverse with nalgebra
-            let iso: na::Isometry3<f64> = (*m).into();
+            let iso: na::Isometry3<f64> = m.as_inner().clone().into();
             let inv_na = iso.inverse();
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = inv_na.transform_point(&na_p);
 
             // Compare Cartesian results (GA result must be divided by w)
@@ -478,8 +478,8 @@ mod tests {
                 na::UnitQuaternion::identity(),
             );
 
-            let result_ga = motor.transform(&*p);
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let result_ga = motor.transform(p.as_inner());
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -501,8 +501,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::x_axis(), angle),
             );
 
-            let result_ga = motor.transform(&*p);
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let result_ga = motor.transform(p.as_inner());
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -524,8 +524,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::y_axis(), angle),
             );
 
-            let result_ga = motor.transform(&*p);
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let result_ga = motor.transform(p.as_inner());
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -547,8 +547,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na::Vector3::z_axis(), angle),
             );
 
-            let result_ga = motor.transform(&*p);
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let result_ga = motor.transform(p.as_inner());
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -580,8 +580,8 @@ mod tests {
                 na::UnitQuaternion::from_axis_angle(&na_axis, angle),
             );
 
-            let result_ga = motor.transform(&*p);
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let result_ga = motor.transform(p.as_inner());
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_result = iso.transform_point(&na_p);
 
             prop_assert!(relative_eq!(result_ga.cartesian_x(), na_result.x, epsilon = EPS, max_relative = EPS));
@@ -659,10 +659,10 @@ mod tests {
             let flector = Flector::from_plane_through_origin(nx, ny, nz);
 
             // Reflect with flector
-            let result_ga = flector.transform(&*p);
+            let result_ga = flector.transform(p.as_inner());
 
             // Reflect manually
-            let na_p: na::Point3<f64> = (*p).try_into().unwrap();
+            let na_p: na::Point3<f64> = p.as_inner().clone().try_into().unwrap();
             let na_normal = na::Vector3::new(nx, ny, nz);
             let result_na = reflect_point_through_origin_plane(&na_p, &na_normal);
 
@@ -698,21 +698,21 @@ mod tests {
             let flector = Flector::from_plane(&plane);
 
             // Reflect twice
-            let once = flector.transform(&*p);
+            let once = flector.transform(p.as_inner());
             let twice = flector.transform(&once);
 
             // Should be back at original point (compare Cartesian coordinates)
             prop_assert!(
-                relative_eq!(p.cartesian_x(), twice.cartesian_x(), epsilon = EPS, max_relative = EPS),
-                "x mismatch after double reflection: {} vs {}", p.cartesian_x(), twice.cartesian_x()
+                relative_eq!(p.as_inner().cartesian_x(), twice.cartesian_x(), epsilon = EPS, max_relative = EPS),
+                "x mismatch after double reflection: {} vs {}", p.as_inner().cartesian_x(), twice.cartesian_x()
             );
             prop_assert!(
-                relative_eq!(p.cartesian_y(), twice.cartesian_y(), epsilon = EPS, max_relative = EPS),
-                "y mismatch after double reflection: {} vs {}", p.cartesian_y(), twice.cartesian_y()
+                relative_eq!(p.as_inner().cartesian_y(), twice.cartesian_y(), epsilon = EPS, max_relative = EPS),
+                "y mismatch after double reflection: {} vs {}", p.as_inner().cartesian_y(), twice.cartesian_y()
             );
             prop_assert!(
-                relative_eq!(p.cartesian_z(), twice.cartesian_z(), epsilon = EPS, max_relative = EPS),
-                "z mismatch after double reflection: {} vs {}", p.cartesian_z(), twice.cartesian_z()
+                relative_eq!(p.as_inner().cartesian_z(), twice.cartesian_z(), epsilon = EPS, max_relative = EPS),
+                "z mismatch after double reflection: {} vs {}", p.as_inner().cartesian_z(), twice.cartesian_z()
             );
         }
     }
