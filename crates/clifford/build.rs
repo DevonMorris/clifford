@@ -76,72 +76,72 @@ impl AlgebraConfig {
 const ALGEBRAS: &[AlgebraConfig] = &[
     AlgebraConfig::new(
         "euclidean2",
-        "algebras/euclidean2.toml",
+        "../../algebras/euclidean2.toml",
         "src/specialized/euclidean/dim2/generated",
     ),
     AlgebraConfig::new(
         "euclidean3",
-        "algebras/euclidean3.toml",
+        "../../algebras/euclidean3.toml",
         "src/specialized/euclidean/dim3/generated",
     ),
     AlgebraConfig::new(
         "projective2",
-        "algebras/projective2.toml",
+        "../../algebras/projective2.toml",
         "src/specialized/projective/dim2/generated",
     ),
     AlgebraConfig::new(
         "projective3",
-        "algebras/projective3.toml",
+        "../../algebras/projective3.toml",
         "src/specialized/projective/dim3/generated",
     ),
     AlgebraConfig::new(
         "hyperbolic",
-        "algebras/hyperbolic.toml",
+        "../../algebras/hyperbolic.toml",
         "src/specialized/hyperbolic/generated",
     ),
     AlgebraConfig::new(
         "complex",
-        "algebras/complex.toml",
+        "../../algebras/complex.toml",
         "src/specialized/complex/generated",
     ),
     AlgebraConfig::new(
         "dual",
-        "algebras/dual.toml",
+        "../../algebras/dual.toml",
         "src/specialized/dual/generated",
     ),
     AlgebraConfig::new(
         "quaternion",
-        "algebras/quaternion.toml",
+        "../../algebras/quaternion.toml",
         "src/specialized/quaternion/generated",
     ),
     AlgebraConfig::new(
         "minkowski2",
-        "algebras/minkowski2.toml",
+        "../../algebras/minkowski2.toml",
         "src/specialized/minkowski/dim2/generated",
     ),
     AlgebraConfig::new(
         "dualquat",
-        "algebras/dualquat.toml",
+        "../../algebras/dualquat.toml",
         "src/specialized/dualquat/generated",
     ),
     AlgebraConfig::new(
         "elliptic2",
-        "algebras/elliptic2.toml",
+        "../../algebras/elliptic2.toml",
         "src/specialized/elliptic/dim2/generated",
     ),
     AlgebraConfig::new(
         "hyperbolic2",
-        "algebras/hyperbolic2.toml",
+        "../../algebras/hyperbolic2.toml",
         "src/specialized/hyperbolic/dim2/generated",
     ),
     AlgebraConfig::new(
         "minkowski3",
-        "algebras/minkowski3.toml",
+        "../../algebras/minkowski3.toml",
         "src/specialized/minkowski/dim3/generated",
     ),
     AlgebraConfig::new(
         "conformal3",
-        "algebras/conformal3.toml",
+        "../../algebras/conformal3.toml",
         "src/specialized/conformal/dim3/generated",
     )
     .with_no_groebner(),
@@ -155,7 +155,7 @@ fn main() {
     for config in ALGEBRAS {
         println!("cargo::rerun-if-changed={}", config.toml_path);
     }
-    println!("cargo::rerun-if-changed=crates/clifford-codegen/src");
+    println!("cargo::rerun-if-changed=../clifford-codegen/src");
 
     for (i, config) in ALGEBRAS.iter().enumerate() {
         log_debug!(
