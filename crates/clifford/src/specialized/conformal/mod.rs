@@ -6,18 +6,20 @@
 //!
 //! # Available Algebras
 //!
+//! - **[`dim2`]**: 2D Conformal GA Cl(3,1,0) - embeds 2D Euclidean space
 //! - **[`dim3`]**: 3D Conformal GA Cl(4,1,0) - embeds 3D Euclidean space
 //!
 //! # Conformal Model
 //!
 //! The conformal model represents geometric objects elegantly:
 //!
-//! | Grade | Geometric Object |
-//! |-------|-----------------|
-//! | 1 | Round points (null vectors are actual points) |
-//! | 2 | Dipoles (point pairs), flat points |
-//! | 3 | Circles, lines (circles through infinity) |
-//! | 4 | Spheres, planes (spheres through infinity) |
+//! | Grade | 2D CGA | 3D CGA |
+//! |-------|--------|--------|
+//! | 1 | Round points | Round points |
+//! | 2 | Point pairs, flat points | Dipoles, flat points |
+//! | 3 | Circles, lines | Circles, lines |
+//! | 4 | Pseudoscalar | Spheres, planes |
+//! | 5 | - | Pseudoscalar |
 //!
 //! # Key Properties
 //!
@@ -31,4 +33,5 @@
 //! See <https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page>
 //! for detailed documentation on CGA operations and conventions.
 
+pub mod dim2;
 pub mod dim3;

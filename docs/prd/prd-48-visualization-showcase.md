@@ -11,6 +11,7 @@
 | [PRD-48.1](prd-48.1-visualization-framework.md) | Visualization Framework (2D + 3D) | (infrastructure) | 1 |
 | [PRD-48.10](prd-48.10-visual-testing.md) | Visual Regression Testing | (infrastructure) | 1 |
 | [PRD-48.11](prd-48.11-wasm-deployment.md) | WASM Web Deployment | (infrastructure) | 7 |
+| [PRD-48.12](prd-48.12-conformal2-visualization.md) | Conformal 2D Visualization | conformal2 | 4 |
 | [PRD-48.2](prd-48.2-euclidean-visualization.md) | Euclidean Visualization | euclidean2, euclidean3 | 2 |
 | [PRD-48.3](prd-48.3-projective2-visualization.md) | Projective 2D Visualization | projective2 | 3 |
 | [PRD-48.4](prd-48.4-projective3-visualization.md) | Projective 3D Visualization | projective3 | 3 |
@@ -714,7 +715,7 @@ Each sub-PRD should maintain a "Candidates for API" section listing methods disc
 
 ## Success Criteria
 
-- [ ] All 14 algebras have at least one visualization
+- [ ] All 15 algebras have at least one visualization
 - [ ] Demos run at 60fps on mid-range hardware
 - [ ] WASM builds work for web deployment
 - [ ] Each demo has explanatory text for educational value
