@@ -222,22 +222,6 @@ When adding a new product or unary operation to codegen, you must:
 
 ## Testing
 
-### Symbolica Test Naming
-
-Tests in `clifford-codegen` that use Symbolica **must** be prefixed with `symbolica_`:
-```rust
-#[test]
-fn symbolica_generates_geometric_product() { ... }  // Uses Symbolica - needs prefix
-
-#[test]
-fn parse_spec_handles_empty_types() { ... }  // No Symbolica - no prefix needed
-```
-
-**When to add the prefix:**
-- Any test creating `Algebra`, `ProductTable`, `SymbolicProduct`
-- Any test calling `compute_terms()`, `generate_products_file()`
-- Any test in `symbolic/` modules
-
 ### Property-Based Testing
 
 ```rust
