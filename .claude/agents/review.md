@@ -36,6 +36,7 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 - [ ] Uses `RELATIVE_EQ_EPS` constant (not magic numbers)
 - [ ] Uses generic wrappers (`Unit<T>`, `Bulk<T>`) not bespoke types
 - [ ] **Symbolica tests prefixed with `symbolica_`**
+- [ ] **No golden image tests** - visual tests must use invariants/assertions
 
 ### Style
 - [ ] No clippy/compiler warnings
@@ -56,6 +57,40 @@ You are reviewing code for Clifford, a Rust geometric algebra library.
 ### Git
 - [ ] Small, logical commits
 - [ ] Conventional commit format: `type(scope): description`
+
+## Visual Testing Reviews
+
+**Immediately reject any PR with golden image / blessed image tests.**
+
+Golden image tests are change detectors, not correctness proofs. They tell you *something changed* but not *whether it's correct*.
+
+**Red flags to reject:**
+- `assert_images_match!()` or similar pixel comparison
+- `golden/` or `baseline/` directories with reference images
+- `--bless` flags that update reference images
+- Tests that only check "output matches saved file"
+
+**Acceptable approaches:**
+- Coordinate assertions (verify world-to-screen mapping)
+- Visual invariants with proptest (rotation preserves distance, etc.)
+- Scene graph assertions (correct primitives with correct properties)
+- Automated inspection that flags issues for human review
+
+**Example - Reject:**
+```rust
+fn test_rotor() {
+    render_and_compare("golden/rotor.png");  // Just detects change!
+}
+```
+
+**Example - Accept:**
+```rust
+fn test_rotor_preserves_magnitude() {
+    let rotor = Rotor::from_angle(angle);
+    let output = rotor.transform(&input);
+    prop_assert!(relative_eq!(input.magnitude(), output.magnitude()));
+}
+```
 
 ## Codegen Reviews
 

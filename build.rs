@@ -209,32 +209,37 @@ fn generate_algebra(config: &AlgebraConfig) {
     std::fs::create_dir_all(output_path)
         .unwrap_or_else(|e| panic!("Failed to create {}: {}", config.output_dir, e));
 
-    // Generate and write mod.rs
+    // Collect file paths for formatting later
+    let mod_path = output_path.join("mod.rs");
+    let types_path = output_path.join("types.rs");
+    let conversions_path = output_path.join("conversions.rs");
+    let traits_path = output_path.join("traits.rs");
+
+    // Phase 1: Write all files first (before formatting)
+    // This ensures all module references exist when rustfmt runs.
+
     log_debug!("  Generating mod.rs");
     let mod_content = generate_mod_file(&spec.name);
-    write_file(&output_path.join("mod.rs"), &format_tokens(&mod_content));
+    write_file(&mod_path, &format_tokens(&mod_content));
 
-    // Generate and write types.rs
     log_debug!("  Generating types.rs");
     let types_content = type_gen.generate_types_file();
-    write_file(
-        &output_path.join("types.rs"),
-        &format_tokens(&types_content),
-    );
+    write_file(&types_path, &format_tokens(&types_content));
 
-    // Generate and write conversions.rs
     log_debug!("  Generating conversions.rs");
     let conversions_content = conversions_gen.generate_conversions_file();
-    write_file(
-        &output_path.join("conversions.rs"),
-        &format_tokens(&conversions_content),
-    );
+    write_file(&conversions_path, &format_tokens(&conversions_content));
 
-    // Generate and write traits.rs (special: returns tokens + formatted tests string)
     log_debug!("  Generating traits.rs");
     let (traits_tokens, traits_tests) = traits_gen.generate_traits_file();
     let traits_content = format!("{}{}", format_tokens(&traits_tokens), traits_tests);
-    write_file(&output_path.join("traits.rs"), &traits_content);
+    write_file(&traits_path, &traits_content);
+
+    // Phase 2: Format all files (now all module references exist)
+    format_file(&mod_path);
+    format_file(&types_path);
+    format_file(&conversions_path);
+    format_file(&traits_path);
 
     let elapsed = start.elapsed();
     log_debug!(
@@ -259,14 +264,16 @@ fn generate_mod_file(name: &str) -> proc_macro2::TokenStream {
     }
 }
 
-/// Writes content to a file and formats it with rustfmt.
+/// Writes content to a file (without formatting).
 fn write_file(path: &Path, content: &str) {
     log_debug!("    Writing {} ({} bytes)", path.display(), content.len());
 
     std::fs::write(path, content)
         .unwrap_or_else(|e| panic!("Failed to write {}: {}", path.display(), e));
+}
 
-    // Format the generated file with rustfmt
+/// Formats a file with rustfmt.
+fn format_file(path: &Path) {
     let status = std::process::Command::new("rustfmt")
         .arg("--edition")
         .arg("2024")

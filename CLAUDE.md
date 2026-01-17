@@ -52,6 +52,42 @@ A Rust library for Geometric Algebra (Clifford Algebra).
 - Use `RELATIVE_EQ_EPS` constant from `crate::test_utils`
 - See the **test agent** for detailed testing patterns
 
+#### Visual Testing Philosophy
+
+**CRITICAL: Never use golden image ("blessed") tests for visual code.**
+
+Golden image tests are change detectors, not correctness proofs. They tell you *something changed* but not *whether it's correct*. For visualization code, use:
+
+1. **Coordinate assertions** - Verify world-to-screen coordinate mappings
+2. **Visual invariants** - Property-based tests for geometric properties (rotation preserves distance, joined points are incident with line, etc.)
+3. **Scene graph assertions** - Test that primitives exist with correct properties
+4. **Automated inspection** - Flag blank frames, NaN artifacts, clipping issues for human review
+
+**Wrong:**
+```rust
+// Just detects change, doesn't prove correctness
+fn test_rotor_visual() {
+    render_frame();
+    assert_images_match!("golden/rotor_45deg.png");
+}
+```
+
+**Right:**
+```rust
+// Proves the rotation is actually correct
+fn test_rotor_rotates_correctly() {
+    let rotor = Rotor::from_angle(FRAC_PI_4);
+    let input = Vector::new(1.0, 0.0);
+    let output = rotor.transform(&input);
+
+    // Verify the actual geometric property
+    relative_eq!(output.x(), FRAC_1_SQRT_2, epsilon = 1e-6);
+    relative_eq!(output.y(), FRAC_1_SQRT_2, epsilon = 1e-6);
+}
+```
+
+See PRD-48.10 for detailed visual testing patterns.
+
 ### 8. Code Review
 - PRs are reviewed by Greptile (AI-powered review)
 - Address feedback before merging; comment `@greptileai review` after fixes
