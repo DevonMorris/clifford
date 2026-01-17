@@ -247,8 +247,6 @@ When PRD-48 is implemented, add:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true  # For golden images
 
       - name: Install dependencies
         run: sudo apt-get install -y libxkbcommon-x11-0 libgl1-mesa-dri
@@ -256,9 +254,10 @@ When PRD-48 is implemented, add:
       - name: Build clifford-viz
         run: cargo build -p clifford-viz
 
-      - name: Run visual tests
+      - name: Run visual correctness tests
         run: |
-          xvfb-run --auto-servernum cargo test -p clifford-viz --test visual_tests
+          cargo test -p clifford-viz --lib
+          xvfb-run --auto-servernum cargo test -p clifford-viz --test visual_inspection
 
   build-wasm:
     runs-on: ubuntu-latest

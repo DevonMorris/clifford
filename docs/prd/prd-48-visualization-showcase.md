@@ -93,9 +93,10 @@ crates/
       minkowski2.rs
       minkowski3.rs
     tests/
-      visual/           # Visual regression tests
-        mod.rs
-        golden/         # Baseline images
+      visual/           # Visual correctness tests
+        coordinate_tests.rs
+        invariant_tests.rs
+        scene_tests.rs
 ```
 
 Run with: `cargo run -p clifford-viz --example projective3 --release`
