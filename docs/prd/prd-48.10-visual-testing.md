@@ -384,16 +384,17 @@ fn capture_golden_images() {
 
 ## Implementation Tasks
 
-1. [ ] Add `image` and comparison crate to dev-dependencies
-2. [ ] Create `tests/visual/mod.rs` harness
-3. [ ] Create golden image directory structure
-4. [ ] Add `DeterministicConfig` to `VisualizationApp` trait
-5. [ ] Add `--bless` flag to each demo
-6. [ ] Implement `render_to_file()` for headless capture
-7. [ ] Create `scripts/bless-visual-tests.sh`
-8. [ ] Add GitHub Actions workflow
-9. [ ] Generate initial golden images for each demo
-10. [ ] Document golden image update process in CONTRIBUTING.md
+1. [ ] Set up Git LFS for golden images (`.gitattributes`)
+2. [ ] Add `image` and comparison crate to dev-dependencies
+3. [ ] Create `tests/visual/mod.rs` harness
+4. [ ] Create golden image directory structure
+5. [ ] Add `DeterministicConfig` to `VisualizationApp` trait
+6. [ ] Add `--bless` flag to each demo
+7. [ ] Implement `render_to_file()` for headless capture
+8. [ ] Create `scripts/bless-visual-tests.sh`
+9. [ ] Add GitHub Actions workflow (with `lfs: true`)
+10. [ ] Generate initial golden images for each demo
+11. [ ] Document golden image update process in CONTRIBUTING.md
 
 ## Verification
 
@@ -416,16 +417,45 @@ git commit -m "Update golden images for XYZ change"
 4. **Confidence**: Refactor rendering code with confidence
 5. **Cross-platform**: Can detect platform-specific rendering issues
 
-## Considerations
+## Git LFS Setup (Required)
 
-### Git LFS for Golden Images
+Golden images will churn during development. Use Git LFS from the start to avoid bloating the repo history.
 
-Golden images can grow large. Consider Git LFS:
+### Initial Setup
 
 ```bash
-# .gitattributes
-tests/visual/golden/**/*.png filter=lfs diff=lfs merge=lfs -text
+# Install LFS (if not already)
+git lfs install
+
+# Track golden images
+git lfs track "crates/clifford-viz/tests/visual/golden/**/*.png"
+git add .gitattributes
+git commit -m "chore: track golden images with Git LFS"
 ```
+
+### .gitattributes
+
+```gitattributes
+# Golden images for visual regression tests
+crates/clifford-viz/tests/visual/golden/**/*.png filter=lfs diff=lfs merge=lfs -text
+```
+
+### CI Configuration
+
+GitHub Actions has LFS support built-in:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    lfs: true  # Fetch LFS files
+```
+
+### Image Size Guidelines
+
+Even with LFS, keep images reasonably sized:
+- Resolution: 800×600 (sufficient for regression testing)
+- Format: PNG (lossless, but compress with `oxipng` before committing)
+- Optimization: `oxipng -o 4 *.png` reduces size ~20-40%
 
 ### Platform Differences
 
