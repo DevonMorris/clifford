@@ -2,7 +2,7 @@
 //!
 //! Run with: `cargo bench --bench generic`
 
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
 use std::hint::black_box;
 
@@ -44,8 +44,8 @@ fn bench_rotor_rotation(c: &mut Criterion) {
     let mut rotor: Multivector<f64, Euclidean3> = Multivector::scalar(half.cos());
     let e1: Multivector<f64, Euclidean3> = Multivector::basis_vector(0);
     let e2: Multivector<f64, Euclidean3> = Multivector::basis_vector(1);
-    let e12 = &e1 * &e2;
-    rotor = &rotor + &(&e12 * half.sin());
+    let e12 = e1 * e2;
+    rotor += e12 * half.sin();
 
     let v: Multivector<f64, Euclidean3> = Multivector::vector(&[1.0, 0.0, 0.0]);
 

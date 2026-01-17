@@ -74,19 +74,6 @@ impl Default for Euclidean2Demo {
     }
 }
 
-/// Create a scaled rotor that both rotates and dilates.
-///
-/// A unit rotor R with |R| = 1 preserves vector length.
-/// A scaled rotor S = kR with |S| = k scales vectors by k² via sandwich product.
-/// So for dilation factor d, we need |R| = sqrt(d).
-fn make_dilating_rotor(angle: f64, dilation: f64) -> Rotor<f64> {
-    let half = angle / 2.0;
-    let scale = dilation.sqrt();
-    // R = scale * (cos(θ/2) - sin(θ/2)e₁₂)
-    // Note: clifford library uses negated bivector convention
-    Rotor::new_unchecked(scale * half.cos(), -scale * half.sin())
-}
-
 impl VisualizationApp for Euclidean2Demo {
     fn name(&self) -> &'static str {
         "Euclidean 2D - Rotor Animation"
@@ -101,7 +88,7 @@ impl VisualizationApp for Euclidean2Demo {
 
     fn render(&self, ui: &mut egui::Ui) {
         // Create the rotor from the current angle and dilation
-        let rotor = make_dilating_rotor(f64::from(self.angle), f64::from(self.dilation));
+        let rotor = Rotor::with_dilation(f64::from(self.angle), f64::from(self.dilation));
 
         // Calculate bounds for the plot
         let bounds = (self.grid_size as f32 * self.vector_spacing + 1.5) as f64;
@@ -276,8 +263,8 @@ impl VisualizationApp for Euclidean2Demo {
 
         // Rotor display
         section_separator(ui, Some("Rotor Components"));
-        let rotor = make_dilating_rotor(f64::from(self.angle), f64::from(self.dilation));
-        let rotor_magnitude = (rotor.s() * rotor.s() + rotor.b() * rotor.b()).sqrt();
+        let rotor = Rotor::with_dilation(f64::from(self.angle), f64::from(self.dilation));
+        let rotor_magnitude = rotor.dilation_factor().sqrt();
         ga_value_display(
             ui,
             "R",

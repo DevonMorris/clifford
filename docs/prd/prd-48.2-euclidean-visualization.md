@@ -304,3 +304,23 @@ cargo run -p clifford-viz --example euclidean3 --release
 - [ ] Rotor composition demo shows non-commutativity
 - [ ] Camera controls work (drag to orbit)
 - [ ] Educational popup explains gimbal lock vs rotors
+
+## API Extraction
+
+**IMPORTANT**: While developing visualizations, identify useful methods that should be promoted to the main algebra API.
+
+After completing each visualization, review for methods that would benefit users:
+
+### Candidates from euclidean2
+- [ ] `Rotor::with_scale(angle, scale)` - create dilating rotor
+- [ ] `Rotor::scale(&self)` / `Rotor::dilation_factor(&self)` - extract scale from rotor
+
+### Candidates from euclidean3
+- [ ] TBD after implementation
+
+### Process
+1. Identify helper functions written in visualization code
+2. Evaluate if they have general utility beyond visualization
+3. If useful, add to `extensions.rs` for the corresponding algebra
+4. Follow CLAUDE.md guidelines (no shadowing traits, semantic naming)
+5. Add tests and documentation

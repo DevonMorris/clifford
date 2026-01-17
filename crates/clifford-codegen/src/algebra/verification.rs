@@ -29,7 +29,7 @@ fn matches_clifford_euclidean_2d() {
             let mut mv_b = Multivector::<f64, Euclidean2>::zero();
             mv_b.set(CliffordBlade::from_index(b), 1.0);
 
-            let mv_result = &mv_a * &mv_b;
+            let mv_result = mv_a * mv_b;
 
             // Find the non-zero coefficient in the result
             let mut found_blade = None;
@@ -100,7 +100,7 @@ fn matches_clifford_euclidean_3d() {
             let mut mv_b = Multivector::<f64, Euclidean3>::zero();
             mv_b.set(CliffordBlade::from_index(b), 1.0);
 
-            let mv_result = &mv_a * &mv_b;
+            let mv_result = mv_a * mv_b;
 
             // Find the non-zero coefficient
             let mut found_blade = None;
@@ -253,8 +253,8 @@ fn associativity_matches_multivector() {
         let mut mv_c = Multivector::<f64, Euclidean3>::zero();
         mv_c.set(CliffordBlade::from_index(c), 1.0);
 
-        let mv_left = &(&mv_a * &mv_b) * &mv_c;
-        let mv_right = &mv_a * &(&mv_b * &mv_c);
+        let mv_left = (mv_a * mv_b) * mv_c;
+        let mv_right = mv_a * (mv_b * mv_c);
 
         // They should be equal
         for i in 0..8 {
@@ -291,7 +291,7 @@ fn all_products_match_multivector_3d() {
             let mut mv_b = Multivector::<f64, Euclidean3>::zero();
             mv_b.set(CliffordBlade::from_index(b), 1.0);
 
-            let mv_result = &mv_a * &mv_b;
+            let mv_result = mv_a * mv_b;
 
             // Extract result from Multivector
             let mut mv_sign = 0i8;

@@ -10,7 +10,7 @@
 //! cargo bench --bench projective --features nalgebra-0_34
 //! ```
 
-#![allow(missing_docs)]
+#![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;

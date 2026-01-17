@@ -4736,7 +4736,7 @@ mod verification_tests {{
             let mv_b: Multivector<f64, {sig}> = b.into();
 
             // LHS: complement(a * b)
-            let lhs = (&mv_a * &mv_b).complement();
+            let lhs = (mv_a * mv_b).complement();
 
             // RHS: complement(a) ⋇ complement(b)
             let rhs = mv_a.complement().antiproduct(&mv_b.complement());
@@ -4758,7 +4758,7 @@ mod verification_tests {{
             let lhs = mv_a.antiproduct(&mv_b).complement();
 
             // RHS: complement(a) * complement(b)
-            let rhs = &mv_a.complement() * &mv_b.complement();
+            let rhs = mv_a.complement() * mv_b.complement();
 
             prop_assert!(
                 relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),

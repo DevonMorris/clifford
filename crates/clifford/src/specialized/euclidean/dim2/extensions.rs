@@ -214,4 +214,65 @@ impl<T: Float> Rotor<T> {
         // Negate xy because from_angle stores -sin(θ/2) in the bivector component
         T::atan2(-self.b(), self.s()) * T::TWO
     }
+
+    /// Creates a rotor that both rotates and dilates (scales uniformly).
+    ///
+    /// A unit rotor (`|R| = 1`) performs pure rotation. A scaled rotor
+    /// (`|R| = k`) rotates and scales vectors by `k²` via the sandwich product.
+    ///
+    /// This method creates a rotor with magnitude `√dilation` so that
+    /// `R v R†` scales vectors by `dilation`.
+    ///
+    /// # Arguments
+    ///
+    /// * `angle` - Rotation angle in radians (counterclockwise)
+    /// * `dilation` - Scaling factor for vectors (must be positive)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::ops::Transform;
+    /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
+    /// use approx::abs_diff_eq;
+    ///
+    /// // Rotate 90° and scale by 2×
+    /// let r = Rotor::with_dilation(std::f64::consts::FRAC_PI_2, 2.0);
+    /// let v = Vector::new(1.0, 0.0);
+    /// let result = r.transform(&v);
+    ///
+    /// // Should be at (0, 2) - rotated and doubled
+    /// assert!(abs_diff_eq!(result.x(), 0.0, epsilon = 1e-10));
+    /// assert!(abs_diff_eq!(result.y(), 2.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn with_dilation(angle: T, dilation: T) -> Self {
+        let half = angle / T::TWO;
+        let scale = dilation.sqrt();
+        // Negate bivector: sandwich R v R̃ rotates opposite to the bivector angle
+        Self::new_unchecked(scale * half.cos(), -scale * half.sin())
+    }
+
+    /// Returns the dilation (scaling) factor of this rotor.
+    ///
+    /// For a rotor with magnitude `|R| = k`, the sandwich product `R v R†`
+    /// scales vectors by `k²`. This method returns that scaling factor.
+    ///
+    /// For unit rotors, returns `1.0`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::euclidean::dim2::Rotor;
+    /// use approx::abs_diff_eq;
+    ///
+    /// let r = Rotor::with_dilation(0.5, 4.0);
+    /// assert!(abs_diff_eq!(r.dilation_factor(), 4.0, epsilon = 1e-10));
+    ///
+    /// let unit = Rotor::from_angle(1.0);
+    /// assert!(abs_diff_eq!(unit.dilation_factor(), 1.0, epsilon = 1e-10));
+    /// ```
+    #[inline]
+    pub fn dilation_factor(&self) -> T {
+        self.norm_squared()
+    }
 }
