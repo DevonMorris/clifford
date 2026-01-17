@@ -8,7 +8,7 @@ use std::time::Instant;
 
 use clifford_codegen::algebra::{Algebra, ProductTable};
 use clifford_codegen::codegen::{
-    ConversionsGenerator, TraitsGenerator, TypeGenerator, format_tokens,
+    format_tokens, ConversionsGenerator, TraitsGenerator, TypeGenerator,
 };
 use clifford_codegen::spec::parse_spec;
 
@@ -65,103 +65,140 @@ impl AlgebraConfig {
         }
     }
 
-    /// Disables Groebner basis simplification for this algebra.
-    const fn with_no_groebner(mut self) -> Self {
-        self.options.use_groebner = false;
+    /// Sets whether to use Groebner basis simplification for this algebra.
+    fn with_groebner(mut self, use_groebner: bool) -> Self {
+        self.options.use_groebner = use_groebner;
         self
     }
 }
 
-/// Algebra configurations.
-const ALGEBRAS: &[AlgebraConfig] = &[
-    AlgebraConfig::new(
-        "euclidean2",
-        "algebras/euclidean2.toml",
-        "src/specialized/euclidean/dim2/generated",
-    ),
-    AlgebraConfig::new(
-        "euclidean3",
-        "algebras/euclidean3.toml",
-        "src/specialized/euclidean/dim3/generated",
-    ),
-    AlgebraConfig::new(
-        "projective2",
-        "algebras/projective2.toml",
-        "src/specialized/projective/dim2/generated",
-    ),
-    AlgebraConfig::new(
-        "projective3",
-        "algebras/projective3.toml",
-        "src/specialized/projective/dim3/generated",
-    ),
-    AlgebraConfig::new(
-        "hyperbolic",
-        "algebras/hyperbolic.toml",
-        "src/specialized/hyperbolic/generated",
-    ),
-    AlgebraConfig::new(
-        "complex",
-        "algebras/complex.toml",
-        "src/specialized/complex/generated",
-    ),
-    AlgebraConfig::new(
-        "dual",
-        "algebras/dual.toml",
-        "src/specialized/dual/generated",
-    ),
-    AlgebraConfig::new(
-        "quaternion",
-        "algebras/quaternion.toml",
-        "src/specialized/quaternion/generated",
-    ),
-    AlgebraConfig::new(
-        "minkowski2",
-        "algebras/minkowski2.toml",
-        "src/specialized/minkowski/dim2/generated",
-    ),
-    AlgebraConfig::new(
-        "dualquat",
-        "algebras/dualquat.toml",
-        "src/specialized/dualquat/generated",
-    ),
-    AlgebraConfig::new(
-        "elliptic2",
-        "algebras/elliptic2.toml",
-        "src/specialized/elliptic/dim2/generated",
-    ),
-    AlgebraConfig::new(
-        "hyperbolic2",
-        "algebras/hyperbolic2.toml",
-        "src/specialized/hyperbolic/dim2/generated",
-    ),
-    AlgebraConfig::new(
-        "minkowski3",
-        "algebras/minkowski3.toml",
-        "src/specialized/minkowski/dim3/generated",
-    ),
-    AlgebraConfig::new(
-        "conformal3",
-        "algebras/conformal3.toml",
-        "src/specialized/conformal/dim3/generated",
-    )
-    .with_no_groebner(),
-];
+/// Returns algebra configurations with groebner settings based on build profile.
+///
+/// - Release builds: all algebras use groebner basis simplification
+/// - Debug builds: only projective2 uses groebner (to maintain test coverage of that codepath)
+fn get_algebras(is_release: bool) -> Vec<AlgebraConfig> {
+    // projective2 always uses groebner to ensure codepath coverage
+    let default_groebner = is_release;
+
+    vec![
+        AlgebraConfig::new(
+            "euclidean2",
+            "algebras/euclidean2.toml",
+            "src/specialized/euclidean/dim2/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "euclidean3",
+            "algebras/euclidean3.toml",
+            "src/specialized/euclidean/dim3/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "projective2",
+            "algebras/projective2.toml",
+            "src/specialized/projective/dim2/generated",
+        )
+        .with_groebner(true), // Always use groebner for projective2
+        AlgebraConfig::new(
+            "projective3",
+            "algebras/projective3.toml",
+            "src/specialized/projective/dim3/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "hyperbolic",
+            "algebras/hyperbolic.toml",
+            "src/specialized/hyperbolic/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "complex",
+            "algebras/complex.toml",
+            "src/specialized/complex/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "dual",
+            "algebras/dual.toml",
+            "src/specialized/dual/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "quaternion",
+            "algebras/quaternion.toml",
+            "src/specialized/quaternion/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "minkowski2",
+            "algebras/minkowski2.toml",
+            "src/specialized/minkowski/dim2/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "dualquat",
+            "algebras/dualquat.toml",
+            "src/specialized/dualquat/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "elliptic2",
+            "algebras/elliptic2.toml",
+            "src/specialized/elliptic/dim2/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "hyperbolic2",
+            "algebras/hyperbolic2.toml",
+            "src/specialized/hyperbolic/dim2/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "minkowski3",
+            "algebras/minkowski3.toml",
+            "src/specialized/minkowski/dim3/generated",
+        )
+        .with_groebner(default_groebner),
+        AlgebraConfig::new(
+            "conformal3",
+            "algebras/conformal3.toml",
+            "src/specialized/conformal/dim3/generated",
+        )
+        .with_groebner(default_groebner),
+    ]
+}
 
 fn main() {
     let total_start = Instant::now();
-    log_info!("Starting code generation for {} algebras", ALGEBRAS.len());
+
+    // Detect build profile: release builds get full groebner simplification
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
+    let is_release = profile == "release";
+
+    let algebras = get_algebras(is_release);
+
+    log_info!(
+        "Starting code generation for {} algebras (profile={}, groebner={})",
+        algebras.len(),
+        profile,
+        if is_release {
+            "all"
+        } else {
+            "projective2 only"
+        }
+    );
 
     // Register rerun-if-changed for all TOML files and the codegen crate
-    for config in ALGEBRAS {
+    for config in &algebras {
         println!("cargo::rerun-if-changed={}", config.toml_path);
     }
     println!("cargo::rerun-if-changed=crates/clifford-codegen/src");
 
-    for (i, config) in ALGEBRAS.iter().enumerate() {
+    for (i, config) in algebras.iter().enumerate() {
         log_debug!(
             "[{}/{}] Generating {}...",
             i + 1,
-            ALGEBRAS.len(),
+            algebras.len(),
             config.name
         );
         generate_algebra(config);
@@ -170,7 +207,7 @@ fn main() {
     let total_elapsed = total_start.elapsed();
     log_info!(
         "Code generation complete: {} algebras in {:.2}s",
-        ALGEBRAS.len(),
+        algebras.len(),
         total_elapsed.as_secs_f64()
     );
 }
