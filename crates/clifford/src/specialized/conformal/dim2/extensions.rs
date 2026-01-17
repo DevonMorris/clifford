@@ -355,8 +355,8 @@ impl<T: Float> Motor<T> {
     ///
     /// The result is the geometric product: `other * self`
     #[inline]
-    pub fn compose(&self, other: &Self) -> Self {
-        *other * *self
+    pub fn compose(&self, other: Self) -> Self {
+        other * *self
     }
 
     /// Returns the inverse motor.
