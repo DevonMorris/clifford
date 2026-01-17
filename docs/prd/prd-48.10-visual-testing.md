@@ -296,26 +296,26 @@ jobs:
 
 ```bash
 # Script to update golden images after intentional changes
-# scripts/update-golden-images.sh
+# scripts/bless-visual-tests.sh
 
 #!/bin/bash
 set -e
 
-echo "Running demos to capture new golden images..."
+echo "Blessing visual tests (updating baseline images)..."
 
 # Run each demo in deterministic mode, capture screenshots
 for demo in euclidean2 euclidean3 projective2 projective3; do
     echo "Capturing $demo..."
-    cargo run --example $demo -- --capture-golden
+    cargo run --example $demo -- --bless
 done
 
-echo "Golden images updated in tests/visual/golden/"
+echo "Baseline images updated in tests/visual/golden/"
 echo "Review changes with: git diff --stat tests/visual/golden/"
 ```
 
 ## Demo Integration
 
-Each demo needs a `--capture-golden` flag for automated screenshot capture:
+Each demo needs a `--bless` flag for automated screenshot capture:
 
 ```rust
 // examples/visualization/euclidean2.rs
@@ -323,7 +323,7 @@ Each demo needs a `--capture-golden` flag for automated screenshot capture:
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    if args.contains(&"--capture-golden".to_string()) {
+    if args.contains(&"--bless".to_string()) {
         capture_golden_images();
         return;
     }
@@ -388,9 +388,9 @@ fn capture_golden_images() {
 2. [ ] Create `tests/visual/mod.rs` harness
 3. [ ] Create golden image directory structure
 4. [ ] Add `DeterministicConfig` to `VisualizationApp` trait
-5. [ ] Add `--capture-golden` flag to each demo
+5. [ ] Add `--bless` flag to each demo
 6. [ ] Implement `render_to_file()` for headless capture
-7. [ ] Create `scripts/update-golden-images.sh`
+7. [ ] Create `scripts/bless-visual-tests.sh`
 8. [ ] Add GitHub Actions workflow
 9. [ ] Generate initial golden images for each demo
 10. [ ] Document golden image update process in CONTRIBUTING.md
@@ -402,7 +402,7 @@ fn capture_golden_images() {
 cargo test --test visual_tests
 
 # Update golden images after intentional changes
-./scripts/update-golden-images.sh
+./scripts/bless-visual-tests.sh
 git diff tests/visual/golden/  # Review changes
 git add tests/visual/golden/
 git commit -m "Update golden images for XYZ change"
