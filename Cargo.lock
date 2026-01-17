@@ -1458,11 +1458,14 @@ dependencies = [
 name = "clifford-viz"
 version = "0.1.0"
 dependencies = [
+ "approx",
  "clifford",
+ "clifford-viz",
  "eframe",
  "egui",
  "egui_plot",
  "image",
+ "proptest",
 ]
 
 [[package]]

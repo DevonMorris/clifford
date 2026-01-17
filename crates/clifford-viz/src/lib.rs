@@ -77,6 +77,9 @@
 //!   - [`common::grid`]: Grid rendering
 //!   - [`common::shapes`]: 2D shape primitives
 //!   - [`common::widgets`]: UI components
+//! - `testing` (feature-gated): Testing utilities for verifying visualization correctness
+//!   - `testing::invariants`: Geometric invariant helpers
+//!   - `testing::scene`: Scene graph for assertions
 //!
 //! # Examples
 //!
@@ -89,6 +92,9 @@
 #![warn(missing_docs)]
 
 pub mod common;
+
+#[cfg(feature = "testing")]
+pub mod testing;
 
 /// Re-export egui for convenience.
 pub use egui;
