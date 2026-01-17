@@ -29,6 +29,7 @@
 
 mod constraint_derive;
 mod constraint_simplify;
+mod groebner;
 mod parser;
 mod product;
 mod simplify;
@@ -38,6 +39,9 @@ mod verify;
 
 pub use constraint_derive::{ConstraintDeriver, DerivedConstraint};
 pub use constraint_simplify::ConstraintSimplifier;
+pub use groebner::{
+    GroebnerCache, GroebnerSimplifier, ProductConstraintCollector, ReductionResult,
+};
 pub use parser::{ConstraintExpr, ConstraintParser, ParseError};
 pub use product::{ProductKind, SymbolicField, SymbolicProduct};
 pub use simplify::ExpressionSimplifier;

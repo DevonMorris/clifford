@@ -10,7 +10,8 @@ use crate::algebra::{Algebra, Blade, ProductTable};
 use crate::spec::{AlgebraSpec, InvolutionKind, TypeSpec};
 use crate::symbolic::{
     AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
-    ProductKind as SymbolicProductKind, SolutionType, SymbolicProduct,
+    GroebnerSimplifier, ProductConstraintCollector, ProductKind as SymbolicProductKind,
+    SolutionType, SymbolicProduct,
 };
 
 /// Generates trait implementations for algebra types.
@@ -61,15 +62,37 @@ pub struct TraitsGenerator<'a> {
     algebra: &'a Algebra,
     /// The product table for term computation.
     table: ProductTable,
+    /// Whether Groebner basis simplification is enabled.
+    enable_groebner: bool,
 }
 
 impl<'a> TraitsGenerator<'a> {
-    /// Creates a new traits generator.
+    /// Creates a new traits generator with default options.
+    ///
+    /// Groebner simplification is enabled by default.
     pub fn new(spec: &'a AlgebraSpec, algebra: &'a Algebra, table: ProductTable) -> Self {
+        Self::with_options(spec, algebra, table, true)
+    }
+
+    /// Creates a new traits generator with explicit Groebner option.
+    ///
+    /// # Arguments
+    ///
+    /// * `spec` - The algebra specification
+    /// * `algebra` - The algebra for computations
+    /// * `table` - The product table for term computation
+    /// * `enable_groebner` - Whether to enable Groebner basis simplification
+    pub fn with_options(
+        spec: &'a AlgebraSpec,
+        algebra: &'a Algebra,
+        table: ProductTable,
+        enable_groebner: bool,
+    ) -> Self {
         Self {
             spec,
             algebra,
             table,
+            enable_groebner,
         }
     }
 
@@ -410,6 +433,11 @@ impl<'a> TraitsGenerator<'a> {
     ///
     /// This is used by Mul operators to inline the formula instead of calling
     /// a separate function.
+    ///
+    /// The simplification pipeline is:
+    /// 1. Apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
+    /// 2. Expand and collect like terms
+    /// 3. Apply Groebner basis reduction for constrained types (e.g., Lines with Plücker)
     fn compute_product_expressions(
         &self,
         type_a: &TypeSpec,
@@ -422,6 +450,9 @@ impl<'a> TraitsGenerator<'a> {
 
         // Create constraint simplifier for input type constraints
         let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["self", "rhs"]);
+
+        // Create Groebner simplifier for constraint-based reduction
+        let groebner_simplifier = self.create_groebner_simplifier(type_a, type_b);
 
         // Create symbolic field variables
         let a_symbols = symbolic_product.create_field_symbols(type_a, "self");
@@ -442,9 +473,38 @@ impl<'a> TraitsGenerator<'a> {
                 let with_constraints = constraint_simplifier.apply(&field.expression);
                 // Then simplify (expand and collect like terms)
                 let simplified = expr_simplifier.simplify(&with_constraints);
-                converter.convert(&simplified)
+                // Apply Groebner reduction for constrained types
+                let reduced = groebner_simplifier.reduce_atom(&simplified);
+                converter.convert(&reduced)
             })
             .collect()
+    }
+
+    /// Creates a Groebner simplifier for the given input types.
+    ///
+    /// Collects constraint polynomials from both input types and computes
+    /// the Groebner basis. If there are no constraints or Groebner is disabled,
+    /// returns a disabled simplifier that passes expressions through unchanged.
+    fn create_groebner_simplifier(
+        &self,
+        type_a: &TypeSpec,
+        type_b: &TypeSpec,
+    ) -> GroebnerSimplifier {
+        // If Groebner is disabled, return a disabled simplifier
+        if !self.enable_groebner {
+            return GroebnerSimplifier::new(vec![], true);
+        }
+
+        let collector =
+            ProductConstraintCollector::new(self.algebra, self.spec.norm.primary_involution);
+
+        // Collect constraints from both input types
+        let mut constraints = Vec::new();
+        constraints.extend(collector.collect_constraints(type_a, "self"));
+        constraints.extend(collector.collect_constraints(type_b, "rhs"));
+
+        // Create Groebner simplifier (uses grevlex ordering for faster computation)
+        GroebnerSimplifier::new(constraints, true)
     }
 
     /// Computes sandwich product expressions: v × x × rev(v).

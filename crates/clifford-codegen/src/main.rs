@@ -69,6 +69,15 @@ enum Commands {
         #[arg(long)]
         no_arbitrary: bool,
 
+        /// Disable Groebner basis simplification.
+        ///
+        /// When enabled (by default), the generator uses Groebner basis reduction
+        /// to simplify expressions for constrained types (e.g., Lines with Plücker
+        /// constraint). This typically reduces term count but can be disabled for
+        /// debugging or performance comparisons.
+        #[arg(long)]
+        no_groebner: bool,
+
         /// Show what would be generated.
         #[arg(long)]
         dry_run: bool,
@@ -145,6 +154,8 @@ struct GenerateOptions {
     output: Option<PathBuf>,
     /// Include nalgebra conversions.
     nalgebra: bool,
+    /// Disable Groebner simplification.
+    no_groebner: bool,
     /// Dry run mode.
     dry_run: bool,
     /// Force overwrite.
@@ -164,6 +175,7 @@ fn main() -> Result<()> {
             serde: _,        // CLI arg accepted but not yet implemented
             no_tests: _,     // CLI arg accepted but not yet implemented
             no_arbitrary: _, // CLI arg accepted but not yet implemented
+            no_groebner,
             dry_run,
             force,
             verbose,
@@ -171,6 +183,7 @@ fn main() -> Result<()> {
             let options = GenerateOptions {
                 output,
                 nalgebra,
+                no_groebner,
                 dry_run,
                 force,
                 verbose,
@@ -240,7 +253,8 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
 
     // Create generators
     let type_gen = TypeGenerator::new(&spec, &algebra);
-    let traits_gen = TraitsGenerator::new(&spec, &algebra, table);
+    let enable_groebner = !options.no_groebner;
+    let traits_gen = TraitsGenerator::with_options(&spec, &algebra, table, enable_groebner);
     let conversions_gen = ConversionsGenerator::new(&spec, &algebra);
 
     // Generate files (traits is special - returns tuple)
