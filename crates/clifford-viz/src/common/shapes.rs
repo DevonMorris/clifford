@@ -200,12 +200,70 @@ pub fn labeled_line_segment(
     line_segment(x1, y1, x2, y2, color).name(name)
 }
 
+/// Clip a line segment to a square boundary centered at the origin.
+///
+/// Uses the Liang-Barsky algorithm.
+///
+/// Returns `Some((x1, y1, x2, y2))` if any part of the line is visible,
+/// or `None` if the line is completely outside the bounds.
+#[must_use]
+fn clip_line_to_bounds(
+    x1: f64,
+    y1: f64,
+    x2: f64,
+    y2: f64,
+    bounds: f64,
+) -> Option<(f64, f64, f64, f64)> {
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+
+    // Parameters for the four boundaries: -bounds <= x,y <= bounds
+    let p = [-dx, dx, -dy, dy];
+    let q = [x1 + bounds, bounds - x1, y1 + bounds, bounds - y1];
+
+    let mut t0 = 0.0f64;
+    let mut t1 = 1.0f64;
+
+    for i in 0..4 {
+        if p[i].abs() < 1e-10 {
+            // Line is parallel to this boundary
+            if q[i] < 0.0 {
+                return None; // Line is outside and parallel
+            }
+        } else {
+            let t = q[i] / p[i];
+            if p[i] < 0.0 {
+                // Entering boundary
+                t0 = t0.max(t);
+            } else {
+                // Leaving boundary
+                t1 = t1.min(t);
+            }
+        }
+    }
+
+    if t0 > t1 {
+        return None; // Line is completely outside
+    }
+
+    // Compute clipped endpoints
+    let clipped_x1 = x1 + t0 * dx;
+    let clipped_y1 = y1 + t0 * dy;
+    let clipped_x2 = x1 + t1 * dx;
+    let clipped_y2 = y1 + t1 * dy;
+
+    Some((clipped_x1, clipped_y1, clipped_x2, clipped_y2))
+}
+
 /// Draw an "infinite" line given a point and direction, clipped to bounds.
+///
+/// The line is properly clipped to the viewport boundaries to prevent
+/// automatic viewport resizing when lines extend beyond the visible area.
 ///
 /// # Arguments
 /// * `px`, `py` - A point on the line
 /// * `dx`, `dy` - Direction vector of the line
-/// * `bounds` - The line will be drawn from -bounds to +bounds (approximately)
+/// * `bounds` - The viewport extent (line is clipped to [-bounds, bounds] on both axes)
 /// * `color` - Line color
 #[must_use]
 pub fn infinite_line_2d(px: f64, py: f64, dx: f64, dy: f64, bounds: f64, color: Color32) -> Line {
@@ -217,17 +275,27 @@ pub fn infinite_line_2d(px: f64, py: f64, dx: f64, dy: f64, bounds: f64, color: 
             .width(line_weights::THICK);
     }
 
-    // Normalize direction and extend in both directions
+    // Normalize direction and compute extended line endpoints
     let nx = dx / len;
     let ny = dy / len;
-    let t_max = bounds * 2.0;
+    let t_max = bounds * 3.0; // Extend far enough to cover any viewport position
 
-    Line::new(PlotPoints::new(vec![
-        [px - t_max * nx, py - t_max * ny],
-        [px + t_max * nx, py + t_max * ny],
-    ]))
-    .color(color)
-    .width(line_weights::THICK)
+    let x1 = px - t_max * nx;
+    let y1 = py - t_max * ny;
+    let x2 = px + t_max * nx;
+    let y2 = py + t_max * ny;
+
+    // Clip to viewport bounds
+    if let Some((cx1, cy1, cx2, cy2)) = clip_line_to_bounds(x1, y1, x2, y2, bounds) {
+        Line::new(PlotPoints::new(vec![[cx1, cy1], [cx2, cy2]]))
+            .color(color)
+            .width(line_weights::THICK)
+    } else {
+        // Line is completely outside viewport - return empty line
+        Line::new(PlotPoints::new(vec![]))
+            .color(color)
+            .width(line_weights::THICK)
+    }
 }
 
 /// Draw a line from its homogeneous coordinates (ax + by + c = 0).
