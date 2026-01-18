@@ -253,13 +253,19 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 });
         }
 
-        // Optional bottom panel: info (smaller on mobile)
+        // Optional bottom panel: info (scrollable on mobile to prevent overflow)
         if self.app.show_info_panel() {
             egui::TopBottomPanel::bottom("info")
                 .resizable(true)
                 .default_height(if is_mobile { 40.0 } else { 60.0 })
                 .show(ctx, |ui| {
-                    self.app.info(ui);
+                    if is_mobile {
+                        egui::ScrollArea::horizontal().show(ui, |ui| {
+                            self.app.info(ui);
+                        });
+                    } else {
+                        self.app.info(ui);
+                    }
                 });
         }
 
