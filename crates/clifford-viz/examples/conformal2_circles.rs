@@ -436,7 +436,7 @@ const CONFORMAL2_CIRCLES_EDUCATION: EducationalContent = EducationalContent {
 In Conformal Geometric Algebra (CGA), three points uniquely determine a circle \
 through the wedge (outer) product:
 
-    Circle = P\u{2081} \u{2227} P\u{2082} \u{2227} P\u{2083}
+    Circle = P1 ^ P2 ^ P3
 
 This is the conformal analogue of \"two points determine a line\" in projective \
 geometry. The beauty of CGA is that circles and lines are treated uniformly - \
@@ -445,37 +445,37 @@ a line is simply a circle passing through the point at infinity.",
     math_background: "\
 POINT EMBEDDING in CGA:
 A 2D point (x, y) is embedded as a null vector:
-    P = x\u{00b7}e\u{2081} + y\u{00b7}e\u{2082} + e\u{2083} + \u{00bd}(x\u{00b2}+y\u{00b2})\u{00b7}e\u{2084}
+    P = x*e1 + y*e2 + e3 + (1/2)*(x^2+y^2)*e4
 
 CIRCLE FROM THREE POINTS:
-    C = P\u{2081} \u{2227} P\u{2082} \u{2227} P\u{2083}
+    C = P1 ^ P2 ^ P3
 
 The result is a trivector (grade-3 element) with components:
-    C = w\u{00b7}e\u{2081}\u{2082}\u{2083} + cx\u{00b7}e\u{2081}\u{2082}\u{2084} + cy\u{00b7}e\u{2081}\u{2083}\u{2084} + r\u{00b7}e\u{2082}\u{2083}\u{2084}
+    C = w*e123 + cx*e124 + cy*e134 + r*e234
 
 EXTRACTING CENTER AND RADIUS:
 In our Cl(3,1) orthonormal basis:
     center_x = r / w
     center_y = -cy / w
-    radius\u{00b2} = 2\u{00b7}cx/w + center_x\u{00b2} + center_y\u{00b2}
+    radius^2 = 2*cx/w + center_x^2 + center_y^2
 
 COLLINEARITY (LINE DETECTION):
-When w \u{2248} 0, the three points are collinear and the \"circle\" is \
+When w ~ 0, the three points are collinear and the \"circle\" is \
 actually a line (circle through infinity with infinite radius).",
 
     how_to_use: "\
-\u{2022} DRAG POINTS to move them and see the circle update in real-time
-\u{2022} Use PRESETS to quickly set up common configurations
-\u{2022} Watch the CENTER and RADIUS update as you move points
-\u{2022} Make points COLLINEAR to see the circle become a line
-\u{2022} Enable SHOW ALGEBRA to see the raw trivector components",
+- DRAG POINTS to move them and see the circle update in real-time
+- Use PRESETS to quickly set up common configurations
+- Watch the CENTER and RADIUS update as you move points
+- Make points COLLINEAR to see the circle become a line
+- Enable SHOW ALGEBRA to see the raw trivector components",
 
     key_concepts: "\
-\u{2022} Wedge product (\u{2227}) creates higher-grade elements
-\u{2022} Three non-collinear points \u{2192} unique circle
-\u{2022} Three collinear points \u{2192} line (w = 0)
-\u{2022} Circle center and radius are extracted algebraically
-\u{2022} CGA unifies circles and lines as the same type of object",
+- Wedge product (^) creates higher-grade elements
+- Three non-collinear points -> unique circle
+- Three collinear points -> line (w = 0)
+- Circle center and radius are extracted algebraically
+- CGA unifies circles and lines as the same type of object",
 
     resources: &[
         (

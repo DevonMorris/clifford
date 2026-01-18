@@ -401,46 +401,46 @@ This demo also shows what happens with non-unit rotors: they combine rotation \
 with uniform scaling (dilation). Try the dilation slider to see!",
 
     math_background: "\
-A UNIT rotor R (|R| = 1) that rotates by angle \u{03b8} is:
+A UNIT rotor R (|R| = 1) that rotates by angle theta is:
 
-    R = cos(\u{03b8}/2) - sin(\u{03b8}/2)e\u{2081}\u{2082}
+    R = cos(theta/2) - sin(theta/2)*e12
 
-where e\u{2081}\u{2082} is the unit bivector (oriented xy-plane).
+where e12 is the unit bivector (oriented xy-plane).
 
-The sandwich product v' = RvR\u{2020} transforms vectors:
-  \u{2022} R\u{2020} is the reverse (same scalar, negated bivector)
-  \u{2022} Unit rotors (|R| = 1) preserve vector length
-  \u{2022} Non-unit rotors scale vectors by |R|\u{00b2}
+The sandwich product v' = RvR~ transforms vectors:
+  - R~ is the reverse (same scalar, negated bivector)
+  - Unit rotors (|R| = 1) preserve vector length
+  - Non-unit rotors scale vectors by |R|^2
 
 SCALED ROTORS combine rotation with dilation:
 
-    S = k\u{00b7}R  where k = \u{221a}(dilation factor)
+    S = k*R  where k = sqrt(dilation factor)
 
-    v' = SvS\u{2020} rotates AND scales by |S|\u{00b2} = k\u{00b2}
+    v' = SvS~ rotates AND scales by |S|^2 = k^2
 
-So |R| = 2 means vectors are scaled by 4\u{00d7}, and |R| = 0.5 \
-means vectors are scaled by 0.25\u{00d7}.
+So |R| = 2 means vectors are scaled by 4x, and |R| = 0.5 \
+means vectors are scaled by 0.25x.
 
-Composition still works: S\u{2082}S\u{2081} gives combined rotation \
+Composition still works: S2*S1 gives combined rotation \
 AND combined scaling!",
 
     how_to_use: "\
-\u{2022} Drag the angle slider to rotate the vector field
-\u{2022} Adjust the DILATION slider to see scaling effects
-\u{2022} Click 'Play' to animate continuous rotation
-\u{2022} The purple arc shows the HALF-angle (stored in rotor)
-\u{2022} The coral arc shows the FULL rotation angle
-\u{2022} When dilating, two circles show input vs output magnitude
-\u{2022} Watch |R| change as you adjust dilation",
+- Drag the angle slider to rotate the vector field
+- Adjust the DILATION slider to see scaling effects
+- Click 'Play' to animate continuous rotation
+- The purple arc shows the HALF-angle (stored in rotor)
+- The coral arc shows the FULL rotation angle
+- When dilating, two circles show input vs output magnitude
+- Watch |R| change as you adjust dilation",
 
     key_concepts: "\
-\u{2022} Rotors encode rotation using HALF the angle
-\u{2022} UNIT rotors (|R| = 1) perform PURE rotation
-\u{2022} NON-UNIT rotors combine rotation with scaling by |R|\u{00b2}
-\u{2022} Sandwich product: v' = RvR\u{2020}
-\u{2022} Composition: R_total = R\u{2082}R\u{2081} (angles add, scales multiply)
-\u{2022} The bivector e\u{2081}\u{2082} represents the rotation plane
-\u{2022} This extends naturally to 3D and higher dimensions",
+- Rotors encode rotation using HALF the angle
+- UNIT rotors (|R| = 1) perform PURE rotation
+- NON-UNIT rotors combine rotation with scaling by |R|^2
+- Sandwich product: v' = RvR~
+- Composition: R_total = R2*R1 (angles add, scales multiply)
+- The bivector e12 represents the rotation plane
+- This extends naturally to 3D and higher dimensions",
 
     resources: &[
         (
