@@ -13,3 +13,6 @@ review.md
 
 # Claude Code ctags index
 .claude/tags
+
+# Trunk WASM build output
+/crates/clifford-viz/dist/
