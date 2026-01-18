@@ -49,15 +49,17 @@ impl VisualizationApp for RotorDemo {
     }
 
     fn render(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+
         // Create the rotor from angle
-        let rotor = Rotor::<f64>::from_angle(f64::from(self.angle));
+        let the_rotor = Rotor::<f64>::from_angle(f64::from(self.angle));
 
         // Create and rotate the input vector
         let input = Vector::new(
             f64::from(self.input_vector.0),
             f64::from(self.input_vector.1),
         );
-        let output = rotor.transform(&input);
+        let output = the_rotor.transform(&input);
 
         // Build the plot
         Plot::new("rotor_plot")
@@ -67,10 +69,10 @@ impl VisualizationApp for RotorDemo {
             .show(ui, |plot_ui| {
                 // Draw grid
                 if self.show_grid {
-                    for line in grid_2d(5.0, 1.0) {
-                        plot_ui.line(line);
+                    for l in grid_2d(&ctx, 5.0, 1.0) {
+                        plot_ui.line(l);
                     }
-                    for axis in axes_2d(5.0) {
+                    for axis in axes_2d(&ctx, 5.0) {
                         plot_ui.line(axis);
                     }
                 }
@@ -84,21 +86,19 @@ impl VisualizationApp for RotorDemo {
                         arc_radius,
                         0.0,
                         f64::from(self.angle),
-                        palette::ROTOR,
+                        rotor(&ctx),
                     ) {
                         plot_ui.line(arc_line);
                     }
                 }
 
                 // Draw input vector (blue)
-                for arrow in labeled_arrow(0.0, 0.0, input.x(), input.y(), palette::POINT, "input")
-                {
+                for arrow in labeled_arrow(0.0, 0.0, input.x(), input.y(), point(&ctx), "input") {
                     plot_ui.line(arrow);
                 }
 
                 // Draw output vector (green)
-                for arrow in
-                    labeled_arrow(0.0, 0.0, output.x(), output.y(), palette::PLANE, "output")
+                for arrow in labeled_arrow(0.0, 0.0, output.x(), output.y(), plane(&ctx), "output")
                 {
                     plot_ui.line(arrow);
                 }
@@ -106,14 +106,14 @@ impl VisualizationApp for RotorDemo {
                 // Draw points at vector tips
                 plot_ui.points(
                     Points::new(vec![[input.x(), input.y()]])
-                        .color(palette::POINT)
+                        .color(point(&ctx))
                         .radius(6.0)
                         .filled(true)
                         .name("Input tip"),
                 );
                 plot_ui.points(
                     Points::new(vec![[output.x(), output.y()]])
-                        .color(palette::PLANE)
+                        .color(plane(&ctx))
                         .radius(6.0)
                         .filled(true)
                         .name("Output tip"),
@@ -122,7 +122,7 @@ impl VisualizationApp for RotorDemo {
                 // Draw a circle showing the rotation path
                 let input_len = (input.x() * input.x() + input.y() * input.y()).sqrt();
                 plot_ui.line(
-                    circle_2d(0.0, 0.0, input_len, with_alpha(palette::GRID, 100), 64)
+                    circle_2d(0.0, 0.0, input_len, with_alpha(grid(&ctx), 100), 64)
                         .name("Rotation path"),
                 );
             });
@@ -157,13 +157,13 @@ impl VisualizationApp for RotorDemo {
 
         // Display rotor components
         section_separator(ui, Some("Rotor Components"));
-        let rotor = Rotor::<f64>::from_angle(f64::from(self.angle));
+        let the_rotor = Rotor::<f64>::from_angle(f64::from(self.angle));
         ga_value_display(
             ui,
             "R",
             &[
-                ("1", rotor.s() as f32),
-                ("e\u{2081}\u{2082}", rotor.b() as f32),
+                ("1", the_rotor.s() as f32),
+                ("e\u{2081}\u{2082}", the_rotor.b() as f32),
             ],
         );
 
@@ -172,8 +172,8 @@ impl VisualizationApp for RotorDemo {
             ui,
             &format!(
                 "R = cos(\u{03b8}/2) + sin(\u{03b8}/2)e\u{2081}\u{2082}\n  = {:.3} + {:.3}e\u{2081}\u{2082}",
-                rotor.s(),
-                rotor.b()
+                the_rotor.s(),
+                the_rotor.b()
             ),
         );
     }

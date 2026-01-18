@@ -7,7 +7,7 @@
 //! - Educational popup window with math explanations
 //! - Consistent layout and styling
 
-use eframe::egui;
+use egui;
 
 /// Base trait for visualization demos.
 ///
@@ -108,35 +108,36 @@ pub struct EducationalContent {
     pub resources: &'static [(&'static str, &'static str)],
 }
 
-/// Internal wrapper that adapts a [`VisualizationApp`] to eframe's [`eframe::App`].
-struct AppWrapper<T: VisualizationApp> {
+/// Wrapper that adapts a [`VisualizationApp`] to eframe's [`eframe::App`].
+///
+/// This is used internally by [`run_app`] and externally by the WASM
+/// demo launcher to wrap demos in the standard visualization framework.
+///
+/// Only available with the `native` feature or on WASM.
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
+pub struct AppWrapper<T: VisualizationApp> {
     /// The wrapped visualization app.
     app: T,
-    /// Timestamp of the last frame, used to compute delta time.
-    last_time: Option<std::time::Instant>,
     /// Whether the educational window is open.
     learn_window_open: bool,
 }
 
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
 impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
     fn default() -> Self {
         Self {
             app: T::default(),
-            last_time: None,
             learn_window_open: false,
         }
     }
 }
 
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
 impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Calculate delta time
-        let now = std::time::Instant::now();
-        let dt = self
-            .last_time
-            .map(|t| now.duration_since(t).as_secs_f32())
-            .unwrap_or(0.0);
-        self.last_time = Some(now);
+        // Use egui's built-in timing (works on both native and WASM)
+        // Cap at 0.1s to handle edge cases (first frame, sleeping, etc.)
+        let dt = ctx.input(|i| i.stable_dt.min(0.1));
 
         // Update app logic
         self.app.update(dt);
@@ -200,6 +201,7 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
 }
 
 /// Render educational content with nice formatting.
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
 fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
     // Overview section
     ui.heading("Overview");
@@ -240,6 +242,9 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
 
 /// Run a visualization app with default window options.
 ///
+/// This function is only available on native platforms (not WASM) and requires
+/// the `native` feature to be enabled.
+///
 /// # Type Parameters
 /// * `T` - A type implementing [`VisualizationApp`] and [`Default`]
 ///
@@ -252,6 +257,7 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
 ///     run_app::<MyDemo>()
 /// }
 /// ```
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 pub fn run_app<T: VisualizationApp + Default + 'static>() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -269,11 +275,15 @@ pub fn run_app<T: VisualizationApp + Default + 'static>() -> eframe::Result<()> 
 
 /// Run a visualization app with custom options.
 ///
+/// This function is only available on native platforms (not WASM) and requires
+/// the `native` feature to be enabled.
+///
 /// # Arguments
 /// * `options` - Custom native options for the window
 ///
 /// # Errors
 /// Returns an error if the window creation fails.
+#[cfg(all(feature = "native", not(target_arch = "wasm32")))]
 pub fn run_app_with_options<T: VisualizationApp + Default + 'static>(
     options: eframe::NativeOptions,
 ) -> eframe::Result<()> {
@@ -310,6 +320,10 @@ impl Default for WindowConfig {
 
 impl WindowConfig {
     /// Create native options from this config.
+    ///
+    /// This method is only available on native platforms (not WASM) and requires
+    /// the `native` feature to be enabled.
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     #[must_use]
     pub fn to_native_options(&self) -> eframe::NativeOptions {
         eframe::NativeOptions {

@@ -93,6 +93,10 @@
 
 pub mod common;
 
+/// Demo implementations (only available with `native` feature or on WASM).
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
+pub mod demos;
+
 #[cfg(feature = "testing")]
 pub mod testing;
 
@@ -102,7 +106,8 @@ pub use egui;
 /// Re-export egui_plot for convenience.
 pub use egui_plot;
 
-/// Re-export eframe for convenience.
+/// Re-export eframe for convenience (only available with `native` feature or on WASM).
+#[cfg(any(feature = "native", target_arch = "wasm32"))]
 pub use eframe;
 
 /// Prelude module for convenient imports.

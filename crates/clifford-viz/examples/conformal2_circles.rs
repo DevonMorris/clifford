@@ -130,9 +130,11 @@ impl VisualizationApp for Conformal2CirclesDemo {
     }
 
     fn render(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+
         // Compute the circle using CGA wedge product
-        let circle = self.compute_circle();
-        let is_line = circle.is_line(COLLINEARITY_EPSILON);
+        let cga_circle = self.compute_circle();
+        let is_line = cga_circle.is_line(COLLINEARITY_EPSILON);
 
         let response = Plot::new("conformal2_circles_plot")
             .data_aspect(1.0)
@@ -150,10 +152,10 @@ impl VisualizationApp for Conformal2CirclesDemo {
             .show(ui, |plot_ui| {
                 // Draw coordinate grid
                 if self.show_grid {
-                    for line in grid_2d(VIEWPORT_BOUNDS, 1.0) {
-                        plot_ui.line(line);
+                    for l in grid_2d(&ctx, VIEWPORT_BOUNDS, 1.0) {
+                        plot_ui.line(l);
                     }
-                    for axis in axes_2d(VIEWPORT_BOUNDS) {
+                    for axis in axes_2d(&ctx, VIEWPORT_BOUNDS) {
                         plot_ui.line(axis);
                     }
                 }
@@ -162,7 +164,8 @@ impl VisualizationApp for Conformal2CirclesDemo {
                 // Treat as line if: collinear (w≈0) OR radius too large OR center too far
                 let (draw_as_line, center_opt, radius_opt) = if is_line {
                     (true, None, None)
-                } else if let (Some((cx, cy)), Some(r)) = (circle.center(), circle.radius()) {
+                } else if let (Some((cx, cy)), Some(r)) = (cga_circle.center(), cga_circle.radius())
+                {
                     // Check if circle is effectively a line (too large to draw sensibly)
                     let center_dist = (cx * cx + cy * cy).sqrt();
                     let too_large = r > MAX_DRAWABLE_RADIUS || center_dist > MAX_DRAWABLE_RADIUS;
@@ -195,7 +198,7 @@ impl VisualizationApp for Conformal2CirclesDemo {
                                 dx / len,
                                 dy / len,
                                 VIEWPORT_BOUNDS,
-                                palette::CIRCLE,
+                                circle(&ctx),
                             )
                             .name(label);
                             plot_ui.line(plot_line);
@@ -204,14 +207,14 @@ impl VisualizationApp for Conformal2CirclesDemo {
                 } else if let (Some((cx, cy)), Some(r)) = (center_opt, radius_opt) {
                     // Draw the circle
                     let circle_line =
-                        circle_2d(cx, cy, r, palette::CIRCLE, self.circle_segments).name("Circle");
+                        circle_2d(cx, cy, r, circle(&ctx), self.circle_segments).name("Circle");
                     plot_ui.line(circle_line);
 
                     // Draw center marker (only if visible in viewport)
                     if cx.abs() < VIEWPORT_BOUNDS * 2.0 && cy.abs() < VIEWPORT_BOUNDS * 2.0 {
                         plot_ui.points(
                             Points::new(vec![[cx, cy]])
-                                .color(with_alpha(palette::CIRCLE, 150))
+                                .color(with_alpha(circle(&ctx), 150))
                                 .radius(4.0)
                                 .filled(false)
                                 .name("Center"),
@@ -222,7 +225,7 @@ impl VisualizationApp for Conformal2CirclesDemo {
                     if let Some((px, py)) = self.points[0].euclidean() {
                         if cx.abs() < VIEWPORT_BOUNDS * 2.0 && cy.abs() < VIEWPORT_BOUNDS * 2.0 {
                             let radius_line =
-                                line_segment(cx, cy, px, py, with_alpha(palette::CIRCLE, 100))
+                                line_segment(cx, cy, px, py, with_alpha(circle(&ctx), 100))
                                     .name("Radius");
                             plot_ui.line(radius_line);
                         }
@@ -230,14 +233,14 @@ impl VisualizationApp for Conformal2CirclesDemo {
                 }
 
                 // Draw the three defining points
-                for point in &self.points {
-                    if let Some((x, y)) = point.euclidean() {
+                for pt in &self.points {
+                    if let Some((x, y)) = pt.euclidean() {
                         plot_ui.points(
                             Points::new(vec![[x, y]])
-                                .color(palette::POINT)
+                                .color(point(&ctx))
                                 .radius(7.0)
                                 .filled(true)
-                                .name(&point.name),
+                                .name(&pt.name),
                         );
                     }
                 }
@@ -273,17 +276,19 @@ impl VisualizationApp for Conformal2CirclesDemo {
     }
 
     fn controls(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+
         // Compute circle for display
-        let circle = self.compute_circle();
-        let is_line = circle.is_line(COLLINEARITY_EPSILON);
+        let cga_circle = self.compute_circle();
+        let is_line = cga_circle.is_line(COLLINEARITY_EPSILON);
 
         // === Point Coordinates ===
         group_header(ui, "Points (drag to move)");
 
-        for point in &mut self.points {
+        for pt in &mut self.points {
             ui.horizontal(|ui| {
-                ui.label(&point.name);
-                if let Some((x, y)) = point.euclidean() {
+                ui.label(&pt.name);
+                if let Some((x, y)) = pt.euclidean() {
                     let mut new_x = x as f32;
                     let mut new_y = y as f32;
 
@@ -291,7 +296,7 @@ impl VisualizationApp for Conformal2CirclesDemo {
                     ui.add(egui::DragValue::new(&mut new_y).speed(0.1).prefix("y: "));
 
                     if (f64::from(new_x) - x).abs() > 1e-6 || (f64::from(new_y) - y).abs() > 1e-6 {
-                        point.set_position(f64::from(new_x), f64::from(new_y));
+                        pt.set_position(f64::from(new_x), f64::from(new_y));
                     }
                 }
             });
@@ -305,30 +310,30 @@ impl VisualizationApp for Conformal2CirclesDemo {
         section_separator(ui, Some("Result"));
 
         if is_line {
-            ui.colored_label(palette::CIRCLE, "Line (collinear points)");
+            ui.colored_label(circle(&ctx), "Line (collinear points)");
             ui.label("w \u{2248} 0 \u{2192} circle through infinity");
             info_box(
                 ui,
                 "When three points are collinear,\ntheir wedge product has w = 0,\nrepresenting a line (infinite radius).",
             );
-        } else if let (Some((cx, cy)), Some(r)) = (circle.center(), circle.radius()) {
+        } else if let (Some((cx, cy)), Some(r)) = (cga_circle.center(), cga_circle.radius()) {
             // Check if radius is too large to draw as circle
             let center_dist = (cx * cx + cy * cy).sqrt();
             let is_effectively_line = r > MAX_DRAWABLE_RADIUS || center_dist > MAX_DRAWABLE_RADIUS;
 
             if is_effectively_line {
-                ui.colored_label(palette::CIRCLE, "Line (nearly collinear)");
+                ui.colored_label(circle(&ctx), "Line (nearly collinear)");
                 ui.label(format!("radius = {:.1} (too large to display)", r));
                 info_box(
                     ui,
                     "As points approach collinearity,\nthe radius grows toward infinity.\nDrawn as a line for stability.",
                 );
             } else {
-                ui.colored_label(palette::CIRCLE, "Circle");
+                ui.colored_label(circle(&ctx), "Circle");
                 ui.add_space(spacing::XS);
                 point2_display(ui, "Center", cx as f32, cy as f32);
                 value_display(ui, "Radius", r as f32, 4);
-                if let Some(k) = circle.curvature() {
+                if let Some(k) = cga_circle.curvature() {
                     value_display(ui, "Curvature (1/r)", k as f32, 4);
                 }
             }
@@ -345,10 +350,10 @@ impl VisualizationApp for Conformal2CirclesDemo {
                 ui,
                 "C",
                 &[
-                    ("e\u{2081}\u{2082}\u{2083}", circle.w() as f32),
-                    ("e\u{2081}\u{2082}\u{2084}", circle.cx() as f32),
-                    ("e\u{2081}\u{2083}\u{2084}", circle.cy() as f32),
-                    ("e\u{2082}\u{2083}\u{2084}", circle.r() as f32),
+                    ("e\u{2081}\u{2082}\u{2083}", cga_circle.w() as f32),
+                    ("e\u{2081}\u{2082}\u{2084}", cga_circle.cx() as f32),
+                    ("e\u{2081}\u{2083}\u{2084}", cga_circle.cy() as f32),
+                    ("e\u{2082}\u{2083}\u{2084}", cga_circle.r() as f32),
                 ],
             );
 
@@ -401,25 +406,26 @@ impl VisualizationApp for Conformal2CirclesDemo {
     }
 
     fn info(&self, ui: &mut egui::Ui) {
-        let circle = self.compute_circle();
-        let is_line = circle.is_line(COLLINEARITY_EPSILON);
+        let ctx = ui.ctx().clone();
+        let cga_circle = self.compute_circle();
+        let is_line = cga_circle.is_line(COLLINEARITY_EPSILON);
 
         ui.horizontal(|ui| {
             if is_line {
-                ui.colored_label(palette::CIRCLE, "Result: Line (collinear)");
-            } else if let (Some((cx, cy)), Some(r)) = (circle.center(), circle.radius()) {
+                ui.colored_label(circle(&ctx), "Result: Line (collinear)");
+            } else if let (Some((cx, cy)), Some(r)) = (cga_circle.center(), cga_circle.radius()) {
                 let center_dist = (cx * cx + cy * cy).sqrt();
                 if r > MAX_DRAWABLE_RADIUS || center_dist > MAX_DRAWABLE_RADIUS {
-                    ui.colored_label(palette::CIRCLE, format!("Line (r={:.1})", r));
+                    ui.colored_label(circle(&ctx), format!("Line (r={:.1})", r));
                 } else {
                     ui.colored_label(
-                        palette::CIRCLE,
+                        circle(&ctx),
                         format!("Circle: center=({:.2}, {:.2}) r={:.2}", cx, cy, r),
                     );
                 }
             }
             ui.separator();
-            ui.label(format!("w={:.4}", circle.w()));
+            ui.label(format!("w={:.4}", cga_circle.w()));
         });
     }
 

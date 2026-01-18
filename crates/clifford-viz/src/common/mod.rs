@@ -66,12 +66,53 @@ pub mod widgets;
 /// Imports the most commonly used types and functions.
 pub mod prelude {
     pub use super::animation::{Animation, animation_controls, easing, progress_slider};
-    pub use super::app::{
-        EducationalContent, VisualizationApp, WindowConfig, run_app, run_app_with_options,
-    };
+    #[cfg(any(feature = "native", target_arch = "wasm32"))]
+    pub use super::app::AppWrapper;
+    pub use super::app::{EducationalContent, VisualizationApp, WindowConfig};
+    #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
+    pub use super::app::{run_app, run_app_with_options};
     pub use super::colors::{
-        darken, desaturate, highlight, hsl_to_color, lerp_color, line_weights, palette, rainbow,
-        spacing, transitions, with_alpha,
+        // Theme-aware color functions
+        active,
+        background,
+        circle,
+        // Modules
+        dark,
+        // Color utilities
+        darken,
+        desaturate,
+        grid,
+        grid_major,
+        grid_minor,
+        highlight,
+        hovered,
+        hsl_to_color,
+        is_dark_mode,
+        lerp_color,
+        light,
+        line,
+        line_secondary,
+        line_weights,
+        motor,
+        palette,
+        plane,
+        plane_secondary,
+        point,
+        point_secondary,
+        rainbow,
+        rotor,
+        selected,
+        spacing,
+        sphere,
+        surface,
+        t_axis,
+        text_primary,
+        text_secondary,
+        transitions,
+        with_alpha,
+        x_axis,
+        y_axis,
+        z_axis,
     };
     pub use super::grid::{axes_2d, grid_2d, grid_2d_with_minor, origin_marker, polar_grid};
     pub use super::shapes::{

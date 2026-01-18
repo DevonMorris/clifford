@@ -9,14 +9,21 @@
 //! 1. **Minor lines** - Very subtle, `GRID_MINOR` color, `HAIRLINE` weight
 //! 2. **Major lines** - Slightly visible, `GRID_MAJOR` color, `THIN` weight
 //! 3. **Axes** - Clear but desaturated, semantic colors, `NORMAL` weight
+//!
+//! # Theme Support
+//!
+//! All grid functions take an `&egui::Context` parameter and automatically
+//! adapt colors to the current light/dark theme.
 
+use egui::Context;
 use egui_plot::{Line, PlotPoints};
 
-use super::colors::{line_weights, palette};
+use super::colors::{grid, grid_major, grid_minor, line_weights, x_axis, y_axis};
 
 /// Create a 2D Cartesian grid centered at the origin.
 ///
 /// # Arguments
+/// * `ctx` - The egui context (for theme-aware colors)
 /// * `bounds` - Half-width/height of the grid (grid spans from -bounds to +bounds)
 /// * `step` - Distance between grid lines
 ///
@@ -24,7 +31,8 @@ use super::colors::{line_weights, palette};
 /// A vector of [`Line`] objects representing the grid lines.
 /// Uses subtle colors that don't compete with visualization content.
 #[must_use]
-pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
+pub fn grid_2d(ctx: &Context, bounds: f64, step: f64) -> Vec<Line> {
+    let grid_color = grid(ctx);
     let mut lines = Vec::new();
     let n = (bounds / step).ceil() as i32;
 
@@ -38,13 +46,13 @@ pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
         // Vertical line
         lines.push(
             Line::new(PlotPoints::new(vec![[v, -bounds], [v, bounds]]))
-                .color(palette::GRID)
+                .color(grid_color)
                 .width(line_weights::HAIRLINE),
         );
         // Horizontal line
         lines.push(
             Line::new(PlotPoints::new(vec![[-bounds, v], [bounds, v]]))
-                .color(palette::GRID)
+                .color(grid_color)
                 .width(line_weights::HAIRLINE),
         );
     }
@@ -54,20 +62,21 @@ pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
 /// Create coordinate axes with colored axis lines.
 ///
 /// # Arguments
+/// * `ctx` - The egui context (for theme-aware colors)
 /// * `bounds` - Half-length of each axis (axes span from -bounds to +bounds)
 ///
 /// # Returns
 /// A vector of two [`Line`] objects: the X axis (muted red) and Y axis (muted green).
 /// Uses desaturated colors for a professional, non-fatiguing appearance.
 #[must_use]
-pub fn axes_2d(bounds: f64) -> Vec<Line> {
+pub fn axes_2d(ctx: &Context, bounds: f64) -> Vec<Line> {
     vec![
         Line::new(PlotPoints::new(vec![[-bounds, 0.0], [bounds, 0.0]]))
-            .color(palette::X_AXIS)
+            .color(x_axis(ctx))
             .width(line_weights::NORMAL)
             .name("x"),
         Line::new(PlotPoints::new(vec![[0.0, -bounds], [0.0, bounds]]))
-            .color(palette::Y_AXIS)
+            .color(y_axis(ctx))
             .width(line_weights::NORMAL)
             .name("y"),
     ]
@@ -81,6 +90,7 @@ pub fn axes_2d(bounds: f64) -> Vec<Line> {
 /// - Axis lines are skipped (use `axes_2d` separately)
 ///
 /// # Arguments
+/// * `ctx` - The egui context (for theme-aware colors)
 /// * `bounds` - Half-width/height of the grid
 /// * `major_step` - Distance between major (more visible) grid lines
 /// * `minor_divisions` - Number of minor lines between each major line
@@ -88,7 +98,14 @@ pub fn axes_2d(bounds: f64) -> Vec<Line> {
 /// # Returns
 /// Grid lines with major lines drawn more prominently than minor lines.
 #[must_use]
-pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) -> Vec<Line> {
+pub fn grid_2d_with_minor(
+    ctx: &Context,
+    bounds: f64,
+    major_step: f64,
+    minor_divisions: u32,
+) -> Vec<Line> {
+    let major_color = grid_major(ctx);
+    let minor_color = grid_minor(ctx);
     let mut lines = Vec::new();
     let minor_step = major_step / f64::from(minor_divisions);
     let n = (bounds / minor_step).ceil() as i32;
@@ -104,9 +121,9 @@ pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) ->
         }
 
         let (color, width) = if is_major {
-            (palette::GRID_MAJOR, line_weights::THIN)
+            (major_color, line_weights::THIN)
         } else {
-            (palette::GRID_MINOR, line_weights::HAIRLINE)
+            (minor_color, line_weights::HAIRLINE)
         };
 
         // Vertical line
@@ -128,6 +145,7 @@ pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) ->
 /// Create a polar grid (concentric circles and radial lines).
 ///
 /// # Arguments
+/// * `ctx` - The egui context (for theme-aware colors)
 /// * `max_radius` - Maximum radius of the grid
 /// * `radial_step` - Distance between concentric circles
 /// * `angular_divisions` - Number of radial lines (evenly spaced)
@@ -137,6 +155,7 @@ pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) ->
 /// Grid lines forming a polar coordinate system.
 #[must_use]
 pub fn polar_grid(
+    ctx: &Context,
     max_radius: f64,
     radial_step: f64,
     angular_divisions: u32,
@@ -144,6 +163,7 @@ pub fn polar_grid(
 ) -> Vec<Line> {
     use std::f64::consts::PI;
 
+    let grid_color = grid(ctx);
     let mut lines = Vec::new();
 
     // Concentric circles
@@ -158,7 +178,7 @@ pub fn polar_grid(
             .collect();
         lines.push(
             Line::new(PlotPoints::new(points))
-                .color(palette::GRID)
+                .color(grid_color)
                 .width(line_weights::HAIRLINE),
         );
     }
@@ -170,7 +190,7 @@ pub fn polar_grid(
         let dy = max_radius * angle.sin();
         lines.push(
             Line::new(PlotPoints::new(vec![[0.0, 0.0], [dx, dy]]))
-                .color(palette::GRID)
+                .color(grid_color)
                 .width(line_weights::HAIRLINE),
         );
     }
@@ -183,18 +203,20 @@ pub fn polar_grid(
 /// This provides a subtle visual anchor at the coordinate origin.
 ///
 /// # Arguments
+/// * `ctx` - The egui context (for theme-aware colors)
 /// * `size` - Half-length of the crosshair arms
 ///
 /// # Returns
 /// Two short line segments forming a crosshair.
 #[must_use]
-pub fn origin_marker(size: f64) -> Vec<Line> {
+pub fn origin_marker(ctx: &Context, size: f64) -> Vec<Line> {
+    let marker_color = grid_major(ctx);
     vec![
         Line::new(PlotPoints::new(vec![[-size, 0.0], [size, 0.0]]))
-            .color(palette::GRID_MAJOR)
+            .color(marker_color)
             .width(line_weights::THIN),
         Line::new(PlotPoints::new(vec![[0.0, -size], [0.0, size]]))
-            .color(palette::GRID_MAJOR)
+            .color(marker_color)
             .width(line_weights::THIN),
     ]
 }
