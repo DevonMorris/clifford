@@ -69,8 +69,8 @@ pub mod prelude {
     #[cfg(any(feature = "native", target_arch = "wasm32"))]
     pub use super::app::AppWrapper;
     pub use super::app::{
-        configure_responsive_style, screen_size, EducationalContent, ScreenSize, VisualizationApp,
-        WindowConfig,
+        EducationalContent, ScreenSize, VisualizationApp, WindowConfig, configure_responsive_style,
+        screen_size,
     };
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     pub use super::app::{run_app, run_app_with_options};

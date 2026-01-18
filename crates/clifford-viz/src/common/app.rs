@@ -485,11 +485,26 @@ pub fn configure_responsive_style(ctx: &egui::Context) {
 
     // Configure text styles
     let text_styles: std::collections::BTreeMap<TextStyle, FontId> = [
-        (TextStyle::Small, FontId::new(base_size * 0.75, FontFamily::Proportional)),
-        (TextStyle::Body, FontId::new(base_size, FontFamily::Proportional)),
-        (TextStyle::Button, FontId::new(base_size, FontFamily::Proportional)),
-        (TextStyle::Heading, FontId::new(heading_size, FontFamily::Proportional)),
-        (TextStyle::Monospace, FontId::new(base_size * 0.9, FontFamily::Monospace)),
+        (
+            TextStyle::Small,
+            FontId::new(base_size * 0.75, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Body,
+            FontId::new(base_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Button,
+            FontId::new(base_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Heading,
+            FontId::new(heading_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Monospace,
+            FontId::new(base_size * 0.9, FontFamily::Monospace),
+        ),
     ]
     .into();
 
