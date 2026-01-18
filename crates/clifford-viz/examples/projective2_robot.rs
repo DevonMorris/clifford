@@ -557,10 +557,8 @@ impl VisualizationApp for Robot2DDemo {
         ui.checkbox(&mut self.show_frames, "Show coordinate frames");
         ui.checkbox(&mut self.show_trail, "Show end effector trail");
 
-        if self.show_trail {
-            if ui.button("Clear Trail").clicked() {
-                self.trail.clear();
-            }
+        if self.show_trail && ui.button("Clear Trail").clicked() {
+            self.trail.clear();
         }
 
         // Preset poses

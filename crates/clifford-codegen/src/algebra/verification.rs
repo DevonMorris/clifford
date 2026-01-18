@@ -3,8 +3,6 @@
 //! These tests ensure that our blade algebra engine produces results
 //! identical to the reference `clifford::Multivector` implementation.
 
-#![cfg(test)]
-
 use clifford::basis::Blade as CliffordBlade;
 use clifford::prelude::Multivector;
 use clifford::signature::{Euclidean2, Euclidean3};

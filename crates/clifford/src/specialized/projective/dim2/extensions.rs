@@ -479,6 +479,113 @@ mod tests {
     }
 
     #[test]
+    fn motor_transforms_point_and_line_consistently() {
+        use crate::ops::Join;
+        use std::f64::consts::FRAC_PI_4;
+
+        // Create two points and the line through them
+        let p1 = Point::<f64>::from_cartesian(1.0, 0.0);
+        let p2 = Point::<f64>::from_cartesian(0.0, 1.0);
+        let line = p1.join(&p2);
+
+        eprintln!("Original p1: ({}, {})", p1.cartesian_x(), p1.cartesian_y());
+        eprintln!("Original p2: ({}, {})", p2.cartesian_x(), p2.cartesian_y());
+        eprintln!(
+            "Original line: nx={}, ny={}, d={}",
+            line.nx(),
+            line.ny(),
+            line.d()
+        );
+
+        // Create a rotation motor
+        let motor = Motor::<f64>::from_rotation(FRAC_PI_4);
+        eprintln!(
+            "Motor: ty={}, tx={}, r={}, ps={}",
+            motor.ty(),
+            motor.tx(),
+            motor.r(),
+            motor.ps()
+        );
+
+        // Transform points and line separately
+        let p1_transformed = motor.transform(&p1);
+        let p2_transformed = motor.transform(&p2);
+        let line_transformed = motor.transform(&line);
+
+        eprintln!(
+            "Transformed p1: ({}, {})",
+            p1_transformed.cartesian_x(),
+            p1_transformed.cartesian_y()
+        );
+        eprintln!(
+            "Transformed p2: ({}, {})",
+            p2_transformed.cartesian_x(),
+            p2_transformed.cartesian_y()
+        );
+        eprintln!(
+            "Transformed line (antisandwich): nx={}, ny={}, d={}",
+            line_transformed.nx(),
+            line_transformed.ny(),
+            line_transformed.d()
+        );
+
+        // Also compute line from transformed points
+        let line_from_transformed = p1_transformed.join(&p2_transformed);
+        eprintln!(
+            "Line from transformed points: nx={}, ny={}, d={}",
+            line_from_transformed.nx(),
+            line_from_transformed.ny(),
+            line_from_transformed.d()
+        );
+
+        // The transformed line should match the line through transformed points
+        // (up to scale, since these are projective elements)
+        let scale = if line_transformed.nx().abs() > 0.1 {
+            line_from_transformed.nx() / line_transformed.nx()
+        } else if line_transformed.ny().abs() > 0.1 {
+            line_from_transformed.ny() / line_transformed.ny()
+        } else {
+            line_from_transformed.d() / line_transformed.d()
+        };
+
+        eprintln!("Scale factor: {}", scale);
+
+        assert!(
+            relative_eq!(
+                line_transformed.nx() * scale,
+                line_from_transformed.nx(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "nx mismatch: transformed={}, from_points={}",
+            line_transformed.nx(),
+            line_from_transformed.nx()
+        );
+        assert!(
+            relative_eq!(
+                line_transformed.ny() * scale,
+                line_from_transformed.ny(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "ny mismatch: transformed={}, from_points={}",
+            line_transformed.ny(),
+            line_from_transformed.ny()
+        );
+        assert!(
+            relative_eq!(
+                line_transformed.d() * scale,
+                line_from_transformed.d(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "d mismatch: transformed={}, from_points={}",
+            line_transformed.d(),
+            line_from_transformed.d()
+        );
+    }
+
+    #[test]
     fn point_join_creates_line() {
         let p1 = Point::<f64>::origin();
         let p2 = Point::<f64>::from_cartesian(1.0, 0.0);
