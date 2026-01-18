@@ -56,11 +56,12 @@ Think 3-4 steps ahead:
 
 ### 3. Clean Git History
 - **Never push directly to `main`** - all changes go through pull requests
-- **Always branch from latest `origin/main`**:
+- **CRITICAL: Always start new work from latest `origin/main`** - before writing any code for a new task, run:
   ```bash
   git fetch origin main
   git checkout -b feat/your-feature origin/main
   ```
+  This prevents stale branches and merge conflicts. Do this even if you're already on a feature branch from earlier work.
 - Work in feature branches: `feat/multivector`, `fix/product-sign`
 - **Small, logical commits** - each commit should be a single logical change
 - Use conventional commit format: `type(scope): description`

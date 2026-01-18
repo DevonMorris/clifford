@@ -273,7 +273,12 @@ Type aliases are generated: `BulkMotor<T>`, `UnitVector<T>`, etc.
 
 ## Workflow
 
-1. Branch from latest `origin/main`
+1. **CRITICAL: Start from latest `origin/main`** - Before writing any code, run:
+   ```bash
+   git fetch origin main
+   git checkout -b feat/your-feature origin/main
+   ```
+   Do this even if you're already on a feature branch from earlier work.
 2. Write code with full documentation
 3. Add property-based tests
 4. **Verify before commit**: `cargo fmt && cargo clippy && cargo doc --no-deps && cargo test`

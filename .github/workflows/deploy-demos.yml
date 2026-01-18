@@ -75,7 +75,7 @@ jobs:
       - name: Build WASM demos
         run: |
           cd crates/clifford-viz
-          trunk build --release --public-url /clifford/demos/
+          trunk build --release --public-url /clifford/
 
       - name: Check WASM size
         run: |

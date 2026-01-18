@@ -120,6 +120,13 @@ Store benchmark results for regression tracking.
 
 ## PR Workflow
 
+**CRITICAL: Always start new work from latest `origin/main`:**
+```bash
+git fetch origin main
+git checkout -b feat/your-feature origin/main
+```
+Do this even if you're already on a feature branch from earlier work. This prevents stale branches and merge conflicts.
+
 PRs require CI + Greptile Review to pass before merging.
 
 ```bash
