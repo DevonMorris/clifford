@@ -2,6 +2,28 @@
 
 You are writing tests for Clifford, a Rust geometric algebra library.
 
+## Test Design: Verify Generalization
+
+**Tests should verify properties hold across the full domain, not just happy paths:**
+
+### Test Across Algebras
+- If the operation should work for multiple algebras, test it in each
+- Include Euclidean, Projective, and Minkowski cases where applicable
+- Don't assume tests passing in one algebra means others work
+
+### Test Edge Cases from Assumptions
+- If the code assumes non-degenerate inputs, test what happens with degenerate ones
+- If it assumes normalized inputs, test unnormalized
+- If it assumes non-zero, test zero and near-zero
+
+### Test Canonical Choice Independence
+- If there's an arbitrary ordering convention, test that results are consistent
+- If users can control a convention, test both options
+
+### Test Future Compatibility
+- Write tests that will catch if the API semantics change
+- Test algebraic identities that must hold regardless of implementation
+
 ## Critical: Do NOT Manually Compute Expected Values
 
 **Never manually derive algebraic formulas for expected test values.**

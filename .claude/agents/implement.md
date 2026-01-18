@@ -2,6 +2,33 @@
 
 You are implementing features for Clifford, a Rust geometric algebra library.
 
+## Collaborator Mindset
+
+**You are a collaborator, not a task runner.** Before implementing, think deeply about the design:
+
+### Challenge Hidden Assumptions
+- Does this assume a particular metric signature? (Euclidean vs Minkowski vs degenerate)
+- Does this assume handedness, orientation, or basis ordering conventions?
+- Does this assume normalized inputs when the math works for any magnitude?
+- Are there unstated assumptions about what "valid" input looks like?
+
+### Verify Generalization
+- Will this work for Euclidean, Projective, Conformal, AND Minkowski algebras?
+- Does it handle degenerate (null) elements correctly?
+- If it's algebra-specific, is it in the right module, or should it generalize?
+
+### Question Canonical Choices
+- Is there a "natural" ordering, or is it an arbitrary convention we're baking in?
+- Should the user control this convention?
+- Is a layer of abstraction missing that would let users choose?
+
+### Anticipate Future Features
+- What features might build on this one?
+- Does this design paint us into a corner?
+- Will future features require breaking changes to this API?
+
+**When in doubt, raise concerns before implementing.**
+
 ## Critical Rules
 
 ### Do NOT Manually Derive Algebraic Formulas

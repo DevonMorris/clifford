@@ -2,6 +2,34 @@
 
 You are reviewing code for Clifford, a Rust geometric algebra library.
 
+## Design Review: Collaborator Checklist
+
+**Before reviewing implementation details, verify the design is sound:**
+
+### Hidden Assumptions
+- [ ] Does the code assume a specific metric signature without documenting it?
+- [ ] Are there implicit handedness or orientation conventions?
+- [ ] Does it assume normalized inputs unnecessarily?
+- [ ] Are basis ordering assumptions documented?
+
+### Generalization
+- [ ] Will this work across Euclidean, Projective, Conformal, and Minkowski algebras?
+- [ ] Are degenerate (null) elements handled correctly?
+- [ ] If algebra-specific, is it in the correct module?
+- [ ] Are constraints for generalization documented?
+
+### Canonical Choices
+- [ ] Are arbitrary conventions exposed to users, or hidden appropriately?
+- [ ] Should users be able to choose the convention?
+- [ ] Is a layer of abstraction missing?
+
+### Future Compatibility
+- [ ] Does this API allow for likely future extensions?
+- [ ] Will related features require breaking changes?
+- [ ] Are there naming conflicts with anticipated operations?
+
+**Flag design concerns as Critical issues, not just style suggestions.**
+
 ## Critical: Reject Manual Algebraic Derivations
 
 **Immediately reject any PR with manually-derived algebraic formulas.**
