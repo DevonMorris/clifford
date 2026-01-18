@@ -7,11 +7,20 @@
 //! - Circles and arcs
 //!
 //! All shapes return [`egui_plot`] primitives that can be added to a plot.
+//!
+//! # Line Weights
+//!
+//! Shapes use semantic line weights from [`line_weights`]:
+//! - `THICK` (2.0) for primary elements like arrows and shapes
+//! - `NORMAL` (1.5) for standard outlines
+//! - `THIN` (1.0) for supporting elements
 
 use std::f64::consts::PI;
 
 use egui::Color32;
 use egui_plot::{Line, PlotPoints, Points};
+
+use super::colors::line_weights;
 
 /// Draw a point marker at the specified coordinates.
 ///
@@ -60,7 +69,7 @@ pub fn arrow_2d(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32) -> Vec<Line>
     // Main shaft
     let shaft = Line::new(PlotPoints::new(vec![[ox, oy], [ox + dx, oy + dy]]))
         .color(color)
-        .width(2.0);
+        .width(line_weights::THICK);
 
     // Arrowhead wings
     let tip_x = ox + dx;
@@ -74,7 +83,7 @@ pub fn arrow_2d(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32) -> Vec<Line>
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     let h2 = Line::new(PlotPoints::new(vec![
         [tip_x, tip_y],
@@ -84,7 +93,7 @@ pub fn arrow_2d(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32) -> Vec<Line>
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     vec![shaft, h1, h2]
 }
@@ -104,7 +113,7 @@ pub fn labeled_arrow(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32, name: &
     // Main shaft with name
     let shaft = Line::new(PlotPoints::new(vec![[ox, oy], [ox + dx, oy + dy]]))
         .color(color)
-        .width(2.0)
+        .width(line_weights::THICK)
         .name(name);
 
     // Arrowhead wings
@@ -119,7 +128,7 @@ pub fn labeled_arrow(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32, name: &
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     let h2 = Line::new(PlotPoints::new(vec![
         [tip_x, tip_y],
@@ -129,7 +138,7 @@ pub fn labeled_arrow(ox: f64, oy: f64, dx: f64, dy: f64, color: Color32, name: &
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     vec![shaft, h1, h2]
 }
@@ -149,7 +158,9 @@ pub fn circle_2d(cx: f64, cy: f64, radius: f64, color: Color32, segments: usize)
             [cx + radius * angle.cos(), cy + radius * angle.sin()]
         })
         .collect();
-    Line::new(PlotPoints::new(points)).color(color).width(2.0)
+    Line::new(PlotPoints::new(points))
+        .color(color)
+        .width(line_weights::NORMAL)
 }
 
 /// Draw a filled circle (disk) as a polygon.
@@ -164,7 +175,7 @@ pub fn filled_circle(cx: f64, cy: f64, radius: f64, color: Color32, segments: us
         .collect();
     Line::new(PlotPoints::new(points))
         .color(color)
-        .width(1.0)
+        .width(line_weights::THIN)
         .fill(0.0) // Fill to y=0 baseline - this is a limitation of egui_plot
 }
 
@@ -173,7 +184,7 @@ pub fn filled_circle(cx: f64, cy: f64, radius: f64, color: Color32, segments: us
 pub fn line_segment(x1: f64, y1: f64, x2: f64, y2: f64, color: Color32) -> Line {
     Line::new(PlotPoints::new(vec![[x1, y1], [x2, y2]]))
         .color(color)
-        .width(2.0)
+        .width(line_weights::THICK)
 }
 
 /// Draw a labeled line segment.
@@ -203,7 +214,7 @@ pub fn infinite_line_2d(px: f64, py: f64, dx: f64, dy: f64, bounds: f64, color: 
         // Degenerate case: return a point
         return Line::new(PlotPoints::new(vec![[px, py], [px, py]]))
             .color(color)
-            .width(2.0);
+            .width(line_weights::THICK);
     }
 
     // Normalize direction and extend in both directions
@@ -216,7 +227,7 @@ pub fn infinite_line_2d(px: f64, py: f64, dx: f64, dy: f64, bounds: f64, color: 
         [px + t_max * nx, py + t_max * ny],
     ]))
     .color(color)
-    .width(2.0)
+    .width(line_weights::THICK)
 }
 
 /// Draw a line from its homogeneous coordinates (ax + by + c = 0).
@@ -230,7 +241,7 @@ pub fn line_from_homogeneous(a: f64, b: f64, c: f64, bounds: f64, color: Color32
         // Degenerate line
         return Line::new(PlotPoints::new(vec![[0.0, 0.0], [0.0, 0.0]]))
             .color(color)
-            .width(2.0);
+            .width(line_weights::THICK);
     }
 
     // Direction is perpendicular to (a, b)
@@ -272,7 +283,9 @@ pub fn arc_2d(
         })
         .collect();
 
-    Line::new(PlotPoints::new(points)).color(color).width(2.0)
+    Line::new(PlotPoints::new(points))
+        .color(color)
+        .width(line_weights::THICK)
 }
 
 /// Draw an arc with an arrow at the end, useful for showing rotation direction.
@@ -305,7 +318,7 @@ pub fn arc_with_arrow(
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     let h2 = Line::new(PlotPoints::new(vec![
         [end_x, end_y],
@@ -315,7 +328,7 @@ pub fn arc_with_arrow(
         ],
     ]))
     .color(color)
-    .width(2.0);
+    .width(line_weights::THICK);
 
     vec![arc, h1, h2]
 }
@@ -342,7 +355,9 @@ pub fn polygon(vertices: &[[f64; 2]], color: Color32) -> Line {
     if !points.is_empty() {
         points.push(points[0]); // Close the polygon
     }
-    Line::new(PlotPoints::new(points)).color(color).width(2.0)
+    Line::new(PlotPoints::new(points))
+        .color(color)
+        .width(line_weights::THICK)
 }
 
 /// Draw a regular polygon centered at the given point.
@@ -361,5 +376,7 @@ pub fn regular_polygon(
             [cx + radius * angle.cos(), cy + radius * angle.sin()]
         })
         .collect();
-    Line::new(PlotPoints::new(points)).color(color).width(2.0)
+    Line::new(PlotPoints::new(points))
+        .color(color)
+        .width(line_weights::THICK)
 }

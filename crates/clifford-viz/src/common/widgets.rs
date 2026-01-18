@@ -5,8 +5,17 @@
 //! - Vector input fields
 //! - GA value displays with proper notation
 //! - Info boxes and tooltips
+//!
+//! # Design Principles
+//!
+//! - Use spacing constants from [`spacing`] for consistent layout
+//! - Use color palette from [`palette`] for visual consistency
+//! - Group related controls visually
+//! - Provide clear visual hierarchy
 
 use egui::Color32;
+
+use super::colors::{palette, spacing};
 
 /// A slider for angle input that displays in degrees but stores radians.
 ///
@@ -156,14 +165,20 @@ pub fn point3_display(ui: &mut egui::Ui, label: &str, x: f32, y: f32, z: f32) {
 }
 
 /// An info box with styled background for explanatory text.
+///
+/// Uses the design system's surface color with warm tint for better readability.
 pub fn info_box(ui: &mut egui::Ui, text: &str) {
     egui::Frame::none()
-        .fill(Color32::from_rgba_unmultiplied(0, 0, 0, 200))
-        .inner_margin(8.0)
-        .outer_margin(4.0)
+        .fill(Color32::from_rgba_unmultiplied(25, 25, 30, 220)) // Warm dark with slight blue tint
+        .inner_margin(spacing::SM)
+        .outer_margin(spacing::XS)
         .rounding(4.0)
         .show(ui, |ui| {
-            ui.label(egui::RichText::new(text).color(Color32::WHITE).size(12.0));
+            ui.label(
+                egui::RichText::new(text)
+                    .color(palette::TEXT_PRIMARY)
+                    .size(12.0),
+            );
         });
 }
 
@@ -180,24 +195,36 @@ pub fn collapsible_section<R>(
 }
 
 /// A section separator with an optional title.
+///
+/// Creates visual separation between control groups with proper spacing.
 pub fn section_separator(ui: &mut egui::Ui, title: Option<&str>) {
-    ui.add_space(8.0);
+    ui.add_space(spacing::SM);
     if let Some(title) = title {
         ui.horizontal(|ui| {
             ui.separator();
-            ui.label(egui::RichText::new(title).small().weak());
+            ui.label(
+                egui::RichText::new(title)
+                    .small()
+                    .color(palette::TEXT_SECONDARY),
+            );
             ui.separator();
         });
     } else {
         ui.separator();
     }
-    ui.add_space(4.0);
+    ui.add_space(spacing::XS);
 }
 
 /// A help tooltip that appears on hover.
+///
+/// Uses a styled question mark that's more universally readable.
 pub fn help_marker(ui: &mut egui::Ui, text: &str) {
-    ui.label(egui::RichText::new("\u{2753}").small())
-        .on_hover_text(text);
+    ui.label(
+        egui::RichText::new("?")
+            .small()
+            .color(palette::TEXT_SECONDARY),
+    )
+    .on_hover_text(text);
 }
 
 /// A labeled help marker next to a control.
@@ -234,4 +261,42 @@ pub fn toggle_button(ui: &mut egui::Ui, label: &str, value: &mut bool) -> egui::
         *value = !*value;
     }
     response
+}
+
+/// A compact row of toggle checkboxes.
+///
+/// Use this instead of vertical checkbox lists for display options.
+pub fn toggle_row(ui: &mut egui::Ui, toggles: &mut [(&str, &mut bool)]) {
+    ui.horizontal(|ui| {
+        for (label, value) in toggles.iter_mut() {
+            ui.checkbox(value, *label);
+        }
+    });
+}
+
+/// A read-only value display with a subtle background.
+///
+/// Use for computed values that the user can't edit.
+pub fn readonly_value(ui: &mut egui::Ui, label: &str, value: &str) {
+    ui.horizontal(|ui| {
+        ui.label(format!("{}:", label));
+        egui::Frame::none()
+            .fill(Color32::from_rgba_unmultiplied(40, 40, 46, 180))
+            .inner_margin(egui::vec2(spacing::XS, 2.0))
+            .rounding(2.0)
+            .show(ui, |ui| {
+                ui.monospace(value);
+            });
+    });
+}
+
+/// A styled header for a control group.
+pub fn group_header(ui: &mut egui::Ui, title: &str) {
+    ui.add_space(spacing::SM);
+    ui.label(
+        egui::RichText::new(title)
+            .strong()
+            .color(palette::TEXT_PRIMARY),
+    );
+    ui.add_space(spacing::XS);
 }

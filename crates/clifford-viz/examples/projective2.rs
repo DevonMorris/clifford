@@ -26,6 +26,10 @@ use clifford::specialized::projective::dim2::{Line, Motor, Point};
 use clifford_viz::common::prelude::*;
 use egui_plot::{Plot, Points};
 
+/// Fixed viewport bounds for stable viewing experience.
+/// Using fixed bounds prevents disorienting viewport jumps.
+const VIEWPORT_BOUNDS: f64 = 5.0;
+
 /// A draggable point in the visualization.
 #[derive(Clone)]
 struct DraggablePoint {
@@ -304,8 +308,6 @@ impl VisualizationApp for Projective2Demo {
     }
 
     fn render(&mut self, ui: &mut egui::Ui) {
-        let bounds = 5.0;
-
         let response = Plot::new("projective2_plot")
             .data_aspect(1.0)
             .show_axes(false)
@@ -314,12 +316,12 @@ impl VisualizationApp for Projective2Demo {
             .allow_drag(false) // We handle drag ourselves for point manipulation
             .allow_boxed_zoom(false)
             .show(ui, |plot_ui| {
-                // Draw coordinate grid
+                // Draw coordinate grid (using fixed bounds for stability)
                 if self.show_grid {
-                    for line in grid_2d(bounds, 1.0) {
+                    for line in grid_2d(VIEWPORT_BOUNDS, 1.0) {
                         plot_ui.line(line);
                     }
-                    for axis in axes_2d(bounds) {
+                    for axis in axes_2d(VIEWPORT_BOUNDS) {
                         plot_ui.line(axis);
                     }
                 }
@@ -328,16 +330,21 @@ impl VisualizationApp for Projective2Demo {
                 for (idx, derived) in self.derived_lines.iter().enumerate() {
                     let line = self.transform_line(&derived.line);
                     let color = if derived.selected {
-                        palette::ROTOR
+                        palette::SELECTED
                     } else {
                         palette::LINE
                     };
 
                     // Draw line using homogeneous coordinates
                     // Line equation: nx*x + ny*y + d = 0 (standard form ax + by + c = 0)
-                    let plot_line =
-                        line_from_homogeneous(line.nx(), line.ny(), line.d(), bounds, color)
-                            .name(format!("Line {}", idx + 1));
+                    let plot_line = line_from_homogeneous(
+                        line.nx(),
+                        line.ny(),
+                        line.d(),
+                        VIEWPORT_BOUNDS,
+                        color,
+                    )
+                    .name(format!("Line {}", idx + 1));
                     plot_ui.line(plot_line);
 
                     // Draw normal vector if enabled
@@ -383,13 +390,13 @@ impl VisualizationApp for Projective2Demo {
                         let len = (dx * dx + dy * dy).sqrt();
                         if len > 1e-10 {
                             // Draw at edge of view to indicate direction
-                            let scale = bounds * 0.9 / len;
+                            let scale = VIEWPORT_BOUNDS * 0.9 / len;
                             plot_ui.points(
                                 Points::new(vec![[dx * scale, dy * scale]])
                                     .color(with_alpha(palette::PLANE, 100))
                                     .radius(6.0)
                                     .filled(false)
-                                    .name("Ideal point (∞)"),
+                                    .name("Ideal point (\u{221e})"),
                             );
                         }
                     }
@@ -400,7 +407,7 @@ impl VisualizationApp for Projective2Demo {
                     let point = self.transform_point(&point_data.point);
                     if let Some((x, y)) = point.to_cartesian() {
                         let color = if point_data.selected {
-                            palette::ROTOR
+                            palette::SELECTED
                         } else {
                             palette::POINT
                         };
@@ -510,24 +517,24 @@ impl VisualizationApp for Projective2Demo {
     }
 
     fn controls(&mut self, ui: &mut egui::Ui) {
-        // Tool mode selection
-        section_separator(ui, Some("Tools"));
+        // === Tool Mode Selection ===
+        group_header(ui, "Tools");
         ui.horizontal(|ui| {
             if ui
-                .selectable_label(self.tool_mode == ToolMode::Select, "🖱 Select")
+                .selectable_label(self.tool_mode == ToolMode::Select, "Select")
                 .clicked()
             {
                 self.tool_mode = ToolMode::Select;
             }
             if ui
-                .selectable_label(self.tool_mode == ToolMode::AddPoint, "➕ Add Point")
+                .selectable_label(self.tool_mode == ToolMode::AddPoint, "Add Point")
                 .clicked()
             {
                 self.tool_mode = ToolMode::AddPoint;
             }
         });
 
-        // Point management
+        // === Point Management ===
         section_separator(ui, Some("Points"));
 
         // Add point button
@@ -539,7 +546,7 @@ impl VisualizationApp for Projective2Demo {
         }
 
         // List points with edit controls
-        ui.add_space(4.0);
+        ui.add_space(spacing::XS);
         let mut points_to_remove = Vec::new();
         let mut selection_changed = false;
 
@@ -567,7 +574,7 @@ impl VisualizationApp for Projective2Demo {
                 }
 
                 // Delete button
-                if ui.button("🗑").clicked() {
+                if ui.button("\u{1f5d1}").clicked() {
                     points_to_remove.push(idx);
                 }
             });
@@ -589,15 +596,15 @@ impl VisualizationApp for Projective2Demo {
                 .collect();
         }
 
-        // Join operation (wedge)
-        section_separator(ui, Some("Join (∧) - Line through Points"));
+        // === Join Operation (wedge) ===
+        section_separator(ui, Some("Join (\u{2227}) - Line through Points"));
         ui.label(format!("Selected: {} points", self.join_selection.len()));
 
         if self.join_selection.len() == 2 {
             let p1_name = &self.points[self.join_selection[0]].name;
             let p2_name = &self.points[self.join_selection[1]].name;
             if ui
-                .button(format!("Create Line {} ∧ {}", p1_name, p2_name))
+                .button(format!("Create Line {} \u{2227} {}", p1_name, p2_name))
                 .clicked()
             {
                 self.perform_join();
@@ -609,7 +616,7 @@ impl VisualizationApp for Projective2Demo {
 
         // Lines list
         if !self.derived_lines.is_empty() {
-            ui.add_space(4.0);
+            ui.add_space(spacing::XS);
             ui.label("Lines:");
             let mut lines_to_remove = Vec::new();
 
@@ -627,7 +634,7 @@ impl VisualizationApp for Projective2Demo {
                         l.ny(),
                         l.d()
                     ));
-                    if ui.button("🗑").clicked() {
+                    if ui.button("\u{1f5d1}").clicked() {
                         lines_to_remove.push(idx);
                     }
                 });
@@ -648,14 +655,14 @@ impl VisualizationApp for Projective2Demo {
                 .collect();
         }
 
-        // Meet operation (antiwedge)
-        section_separator(ui, Some("Meet (∨) - Intersection"));
+        // === Meet Operation (antiwedge) ===
+        section_separator(ui, Some("Meet (\u{2228}) - Intersection"));
         ui.label(format!("Selected: {} lines", self.meet_selection.len()));
 
         if self.meet_selection.len() == 2 {
             if ui
                 .button(format!(
-                    "Find Intersection L{} ∨ L{}",
+                    "Find Intersection L{} \u{2228} L{}",
                     self.meet_selection[0] + 1,
                     self.meet_selection[1] + 1
                 ))
@@ -670,7 +677,7 @@ impl VisualizationApp for Projective2Demo {
 
         // Intersection points display
         if !self.derived_points.is_empty() {
-            ui.add_space(4.0);
+            ui.add_space(spacing::XS);
             ui.label("Intersections:");
             for (idx, derived) in self.derived_points.iter().enumerate() {
                 if let Some((x, y)) = derived.point.to_cartesian() {
@@ -681,12 +688,18 @@ impl VisualizationApp for Projective2Demo {
             }
         }
 
-        // Motor controls
+        // === Motor Transform ===
         section_separator(ui, Some("Motor Transform"));
         ui.checkbox(&mut self.apply_motor, "Apply motor transformation");
 
         if self.apply_motor {
-            angle_slider_range(ui, "Rotation θ", &mut self.motor_rotation, -360.0, 360.0);
+            angle_slider_range(
+                ui,
+                "Rotation \u{03b8}",
+                &mut self.motor_rotation,
+                -360.0,
+                360.0,
+            );
 
             ui.horizontal(|ui| {
                 ui.label("Translation");
@@ -715,23 +728,25 @@ impl VisualizationApp for Projective2Demo {
                 ui,
                 "M",
                 &[
-                    ("e₁", self.motor.ty() as f32),
-                    ("e₂", self.motor.tx() as f32),
-                    ("e₃", self.motor.r() as f32),
-                    ("e₁₂₃", self.motor.ps() as f32),
+                    ("e\u{2081}", self.motor.ty() as f32),
+                    ("e\u{2082}", self.motor.tx() as f32),
+                    ("e\u{2083}", self.motor.r() as f32),
+                    ("e\u{2081}\u{2082}\u{2083}", self.motor.ps() as f32),
                 ],
             );
 
-            ui.add_space(4.0);
+            ui.add_space(spacing::XS);
             animation_controls(ui, &mut self.animation);
             progress_slider(ui, &mut self.animation);
         }
 
-        // Display options
+        // === Display Options (compact) ===
         section_separator(ui, Some("Display Options"));
-        ui.checkbox(&mut self.show_grid, "Show grid");
-        ui.checkbox(&mut self.show_coordinates, "Show coordinates in list");
-        ui.checkbox(&mut self.show_normals, "Show line normals");
+        ui.horizontal(|ui| {
+            ui.checkbox(&mut self.show_grid, "Grid");
+            ui.checkbox(&mut self.show_normals, "Normals");
+        });
+        ui.checkbox(&mut self.show_coordinates, "Coordinates in list");
 
         // Update derived geometry when points change
         self.update_derived_lines();
@@ -740,15 +755,18 @@ impl VisualizationApp for Projective2Demo {
 
     fn info(&self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            ui.label(format!("{} points", self.points.len()));
+            ui.colored_label(palette::POINT, format!("{} points", self.points.len()));
             ui.separator();
-            ui.label(format!("{} lines", self.derived_lines.len()));
+            ui.colored_label(palette::LINE, format!("{} lines", self.derived_lines.len()));
             ui.separator();
-            ui.label(format!("{} intersections", self.derived_points.len()));
+            ui.colored_label(
+                palette::PLANE,
+                format!("{} intersections", self.derived_points.len()),
+            );
             ui.separator();
             if self.apply_motor {
                 ui.label(format!(
-                    "Motor: θ={:.1}° t=({:.1}, {:.1})",
+                    "Motor: \u{03b8}={:.1}\u{00b0} t=({:.1}, {:.1})",
                     self.motor_rotation.to_degrees(),
                     self.motor_tx,
                     self.motor_ty
@@ -773,54 +791,54 @@ This visualization demonstrates 2D Projective Geometric Algebra, which provides 
 a unified framework for point-line geometry and rigid transformations.
 
 Key insight: In PGA, geometric operations become algebraic products:
-• The JOIN of two points (line through them) is their wedge product (∧)
-• The MEET of two lines (intersection point) is their antiwedge product (∨)
-• MOTORS encode rotation and translation as a single algebraic element
+\u{2022} The JOIN of two points (line through them) is their wedge product (\u{2227})
+\u{2022} The MEET of two lines (intersection point) is their antiwedge product (\u{2228})
+\u{2022} MOTORS encode rotation and translation as a single algebraic element
 
 This demo lets you explore these operations interactively.",
 
     math_background: "\
 POINTS are grade-1 elements in homogeneous coordinates:
-    P = x·e₁ + y·e₂ + w·e₀
+    P = x\u{00b7}e\u{2081} + y\u{00b7}e\u{2082} + w\u{00b7}e\u{2080}
 
 For a finite point at (x, y), we set w = 1.
 
 LINES are grade-2 elements representing ax + by + c = 0:
-    L = c·e₁₂ + a·e₁₀ + b·e₂₀
+    L = c\u{00b7}e\u{2081}\u{2082} + a\u{00b7}e\u{2081}\u{2080} + b\u{00b7}e\u{2082}\u{2080}
 
-JOIN (∧) - Line through two points:
-    L = P₁ ∧ P₂
+JOIN (\u{2227}) - Line through two points:
+    L = P\u{2081} \u{2227} P\u{2082}
 
-MEET (∨) - Intersection of two lines:
-    P = L₁ ∨ L₂
+MEET (\u{2228}) - Intersection of two lines:
+    P = L\u{2081} \u{2228} L\u{2082}
 
 If lines are parallel, the result is an IDEAL POINT (w = 0), \
 representing the direction at infinity.
 
 MOTORS are elements of the odd subalgebra (grades 1 and 3):
-    M = ty·e₁ + tx·e₂ + r·e₃ + ps·e₁₂₃
+    M = ty\u{00b7}e\u{2081} + tx\u{00b7}e\u{2082} + r\u{00b7}e\u{2083} + ps\u{00b7}e\u{2081}\u{2082}\u{2083}
 
 They transform geometry via the antisandwich product:
-    P' = M⁻¹PM  (point transformation)
-    L' = M⁻¹LM  (line transformation)",
+    P' = M\u{207b}\u{00b9}PM  (point transformation)
+    L' = M\u{207b}\u{00b9}LM  (line transformation)",
 
     how_to_use: "\
-• ADD POINTS: Select 'Add Point' tool and click on the plot
-• SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
-• DRAG POINTS: Select 'Select' tool and drag a point to move it
-• JOIN OPERATION: Select 2 points, then click 'Create Line'
-• MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
-• MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
-• Lines update in real-time as you drag points
-• Enable 'Show line normals' to visualize line orientations",
+\u{2022} ADD POINTS: Select 'Add Point' tool and click on the plot
+\u{2022} SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
+\u{2022} DRAG POINTS: Select 'Select' tool and drag a point to move it
+\u{2022} JOIN OPERATION: Select 2 points, then click 'Create Line'
+\u{2022} MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
+\u{2022} MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
+\u{2022} Lines update in real-time as you drag points
+\u{2022} Enable 'Normals' to visualize line orientations",
 
     key_concepts: "\
-• Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
-• Ideal points (w=0) represent directions at infinity
-• Wedge product (∧) computes JOIN: line through two points
-• Antiwedge product (∨) computes MEET: intersection of two lines
-• Motors compose rotation and translation into one operation
-• Antisandwich product transforms geometry while preserving incidence",
+\u{2022} Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
+\u{2022} Ideal points (w=0) represent directions at infinity
+\u{2022} Wedge product (\u{2227}) computes JOIN: line through two points
+\u{2022} Antiwedge product (\u{2228}) computes MEET: intersection of two lines
+\u{2022} Motors compose rotation and translation into one operation
+\u{2022} Antisandwich product transforms geometry while preserving incidence",
 
     resources: &[
         (

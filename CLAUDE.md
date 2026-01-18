@@ -145,6 +145,7 @@ Specialized agents in `.claude/agents/` handle different tasks:
 | **review** | Code review checklist |
 | **explain** | Teaching GA concepts |
 | **optimize** | Performance optimization, benchmarking |
+| **design** | UX and graphic design for visualizations |
 | **devops** | CI/CD and infrastructure |
 | **release** | Version bumps, publishing |
 
