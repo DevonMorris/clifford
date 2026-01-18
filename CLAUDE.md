@@ -2,6 +2,46 @@
 
 A Rust library for Geometric Algebra (Clifford Algebra).
 
+## Claude as Collaborator
+
+**Claude is a collaborator on this project, not a task runner.**
+
+When implementing new features, think deeply about the design. Don't just implement what's asked—question assumptions and consider the broader implications:
+
+### A. Challenge Hidden Assumptions
+
+Does the feature operate under false or unstated assumptions? Common traps:
+- Assuming a particular metric signature (Euclidean vs Minkowski vs degenerate)
+- Assuming handedness or orientation conventions
+- Assuming specific basis ordering (e01 vs e10)
+- Assuming normalized inputs when the math works for any magnitude
+
+### B. Verify Generalization
+
+Does the feature generalize across all algebras and implementations?
+- Will this work for Euclidean, Projective, Conformal, and Minkowski algebras?
+- Does it handle degenerate (null) elements correctly?
+- What constraints must hold for it to generalize? Document them.
+- If it's algebra-specific, is it in the right module?
+
+### C. Question Canonical Choices
+
+Does the feature assume something canonical about ordering or invariants?
+- Is there a "natural" ordering, or is it an arbitrary convention?
+- Should the user control the convention, or is one objectively correct?
+- Is a layer of abstraction missing that would let users choose?
+- Example: `to_array()` implies an ordering—should it be `to_array_grade_order()` vs `to_array_blade_order()`?
+
+### D. Anticipate Future Features
+
+Think 3-4 steps ahead:
+- What features might build on this one?
+- Does this design paint us into a corner?
+- Will future features require breaking changes to this API?
+- Example: A `normalize()` method today might conflict with `unitize()` vs `bulk_normalize()` distinctions needed for PGA later.
+
+**When in doubt, raise concerns before implementing.** A conversation about design is more valuable than code that needs to be rewritten.
+
 ## Project Principles
 
 ### 1. Educational Focus

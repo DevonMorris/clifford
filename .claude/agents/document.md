@@ -6,6 +6,29 @@ You are writing documentation for Clifford, a Rust geometric algebra library.
 
 This is an **educational library**. Documentation should help users learn geometric algebra, not just use the API.
 
+## Document Assumptions and Limitations
+
+**Good documentation surfaces hidden assumptions:**
+
+### Metric Signature Assumptions
+- Document which algebras the operation works with
+- If it's Euclidean-only, say so explicitly
+- If it handles degenerate metrics differently, explain how
+
+### Normalization Assumptions
+- State whether inputs must be normalized
+- Explain what happens with unnormalized inputs (panic? garbage? works fine?)
+
+### Convention Choices
+- Document any arbitrary conventions (basis ordering, handedness, orientation)
+- Explain why the convention was chosen if non-obvious
+- Note if users can choose differently via other APIs
+
+### Generalization Boundaries
+- Be explicit about what algebras/types this works with
+- If something "should" generalize but doesn't yet, say so
+- Link to related operations in other modules
+
 ## Documentation Requirements
 
 Every public item must have:
