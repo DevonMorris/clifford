@@ -2,10 +2,17 @@
 //!
 //! Provides functions to draw Cartesian grids and coordinate axes
 //! with consistent styling across all visualization demos.
+//!
+//! # Visual Hierarchy
+//!
+//! Grids use a three-level hierarchy to avoid competing with visualization content:
+//! 1. **Minor lines** - Very subtle, `GRID_MINOR` color, `HAIRLINE` weight
+//! 2. **Major lines** - Slightly visible, `GRID_MAJOR` color, `THIN` weight
+//! 3. **Axes** - Clear but desaturated, semantic colors, `NORMAL` weight
 
 use egui_plot::{Line, PlotPoints};
 
-use super::colors::palette;
+use super::colors::{line_weights, palette};
 
 /// Create a 2D Cartesian grid centered at the origin.
 ///
@@ -15,7 +22,7 @@ use super::colors::palette;
 ///
 /// # Returns
 /// A vector of [`Line`] objects representing the grid lines.
-/// The axis lines (at x=0 and y=0) are drawn thicker.
+/// Uses subtle colors that don't compete with visualization content.
 #[must_use]
 pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
     let mut lines = Vec::new();
@@ -23,19 +30,22 @@ pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
 
     for i in -n..=n {
         let v = f64::from(i) * step;
-        let width = if i == 0 { 1.5 } else { 0.5 };
+        // Skip axis lines (drawn separately with colors)
+        if i == 0 {
+            continue;
+        }
 
         // Vertical line
         lines.push(
             Line::new(PlotPoints::new(vec![[v, -bounds], [v, bounds]]))
                 .color(palette::GRID)
-                .width(width as f32),
+                .width(line_weights::HAIRLINE),
         );
         // Horizontal line
         lines.push(
             Line::new(PlotPoints::new(vec![[-bounds, v], [bounds, v]]))
                 .color(palette::GRID)
-                .width(width as f32),
+                .width(line_weights::HAIRLINE),
         );
     }
     lines
@@ -47,30 +57,36 @@ pub fn grid_2d(bounds: f64, step: f64) -> Vec<Line> {
 /// * `bounds` - Half-length of each axis (axes span from -bounds to +bounds)
 ///
 /// # Returns
-/// A vector of two [`Line`] objects: the X axis (red) and Y axis (green).
+/// A vector of two [`Line`] objects: the X axis (muted red) and Y axis (muted green).
+/// Uses desaturated colors for a professional, non-fatiguing appearance.
 #[must_use]
 pub fn axes_2d(bounds: f64) -> Vec<Line> {
     vec![
         Line::new(PlotPoints::new(vec![[-bounds, 0.0], [bounds, 0.0]]))
             .color(palette::X_AXIS)
-            .width(2.0)
+            .width(line_weights::NORMAL)
             .name("x"),
         Line::new(PlotPoints::new(vec![[0.0, -bounds], [0.0, bounds]]))
             .color(palette::Y_AXIS)
-            .width(2.0)
+            .width(line_weights::NORMAL)
             .name("y"),
     ]
 }
 
 /// Create a fine grid with major and minor lines.
 ///
+/// This creates a clear visual hierarchy:
+/// - Minor lines are very subtle (every `major_step / minor_divisions`)
+/// - Major lines are slightly more visible (every `major_step`)
+/// - Axis lines are skipped (use `axes_2d` separately)
+///
 /// # Arguments
 /// * `bounds` - Half-width/height of the grid
-/// * `major_step` - Distance between major (thick) grid lines
+/// * `major_step` - Distance between major (more visible) grid lines
 /// * `minor_divisions` - Number of minor lines between each major line
 ///
 /// # Returns
-/// Grid lines with major lines drawn thicker than minor lines.
+/// Grid lines with major lines drawn more prominently than minor lines.
 #[must_use]
 pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) -> Vec<Line> {
     let mut lines = Vec::new();
@@ -82,12 +98,15 @@ pub fn grid_2d_with_minor(bounds: f64, major_step: f64, minor_divisions: u32) ->
         let is_major = i % (minor_divisions as i32) == 0;
         let is_axis = i == 0;
 
-        let (color, width) = if is_axis {
-            (palette::GRID, 2.0)
-        } else if is_major {
-            (palette::GRID, 1.0)
+        // Skip axis lines (drawn separately)
+        if is_axis {
+            continue;
+        }
+
+        let (color, width) = if is_major {
+            (palette::GRID_MAJOR, line_weights::THIN)
         } else {
-            (super::colors::with_alpha(palette::GRID, 80), 0.5)
+            (palette::GRID_MINOR, line_weights::HAIRLINE)
         };
 
         // Vertical line
@@ -140,7 +159,7 @@ pub fn polar_grid(
         lines.push(
             Line::new(PlotPoints::new(points))
                 .color(palette::GRID)
-                .width(0.5),
+                .width(line_weights::HAIRLINE),
         );
     }
 
@@ -152,11 +171,32 @@ pub fn polar_grid(
         lines.push(
             Line::new(PlotPoints::new(vec![[0.0, 0.0], [dx, dy]]))
                 .color(palette::GRID)
-                .width(0.5),
+                .width(line_weights::HAIRLINE),
         );
     }
 
     lines
+}
+
+/// Create an origin marker (small crosshair at the origin).
+///
+/// This provides a subtle visual anchor at the coordinate origin.
+///
+/// # Arguments
+/// * `size` - Half-length of the crosshair arms
+///
+/// # Returns
+/// Two short line segments forming a crosshair.
+#[must_use]
+pub fn origin_marker(size: f64) -> Vec<Line> {
+    vec![
+        Line::new(PlotPoints::new(vec![[-size, 0.0], [size, 0.0]]))
+            .color(palette::GRID_MAJOR)
+            .width(line_weights::THIN),
+        Line::new(PlotPoints::new(vec![[0.0, -size], [0.0, size]]))
+            .color(palette::GRID_MAJOR)
+            .width(line_weights::THIN),
+    ]
 }
 
 /// Default bounds for most visualizations.

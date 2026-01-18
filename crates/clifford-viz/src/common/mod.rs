@@ -69,16 +69,20 @@ pub mod prelude {
     pub use super::app::{
         EducationalContent, VisualizationApp, WindowConfig, run_app, run_app_with_options,
     };
-    pub use super::colors::{hsl_to_color, lerp_color, palette, rainbow, with_alpha};
-    pub use super::grid::{axes_2d, grid_2d, grid_2d_with_minor, polar_grid};
+    pub use super::colors::{
+        darken, desaturate, highlight, hsl_to_color, lerp_color, line_weights, palette, rainbow,
+        spacing, transitions, with_alpha,
+    };
+    pub use super::grid::{axes_2d, grid_2d, grid_2d_with_minor, origin_marker, polar_grid};
     pub use super::shapes::{
         arc_2d, arc_with_arrow, arrow_2d, bivector_2d, circle_2d, infinite_line_2d, labeled_arrow,
         labeled_line_segment, labeled_point, line_from_homogeneous, line_segment, point_marker,
         polygon, regular_polygon,
     };
     pub use super::widgets::{
-        angle_slider, angle_slider_range, collapsible_section, ga_value_display, help_marker,
-        info_box, mode_selector, point2_display, point3_display, section_separator, toggle_button,
-        value_display, vector2_input, vector2_input_range, vector3_input, with_help,
+        angle_slider, angle_slider_range, collapsible_section, ga_value_display, group_header,
+        help_marker, info_box, mode_selector, point2_display, point3_display, readonly_value,
+        section_separator, toggle_button, toggle_row, value_display, vector2_input,
+        vector2_input_range, vector3_input, with_help,
     };
 }

@@ -29,6 +29,10 @@ use clifford::specialized::euclidean::dim2::{Rotor, Vector};
 use clifford_viz::common::prelude::*;
 use egui_plot::{Plot, Points};
 
+/// Fixed viewport bounds for stable viewing experience.
+/// Using fixed bounds prevents disorienting viewport jumps.
+const VIEWPORT_BOUNDS: f64 = 5.0;
+
 /// Demo state for 2D Euclidean rotor visualization.
 struct Euclidean2Demo {
     /// Current rotation angle in radians.
@@ -90,9 +94,6 @@ impl VisualizationApp for Euclidean2Demo {
         // Create the rotor from the current angle and dilation
         let rotor = Rotor::with_dilation(f64::from(self.angle), f64::from(self.dilation));
 
-        // Calculate bounds for the plot
-        let bounds = (self.grid_size as f32 * self.vector_spacing + 1.5) as f64;
-
         Plot::new("euclidean2_plot")
             .data_aspect(1.0)
             .show_axes(false)
@@ -100,12 +101,12 @@ impl VisualizationApp for Euclidean2Demo {
             .allow_zoom(true)
             .allow_drag(true)
             .show(ui, |plot_ui| {
-                // Draw coordinate grid
+                // Draw coordinate grid (using fixed bounds for stability)
                 if self.show_grid {
-                    for line in grid_2d(bounds, f64::from(self.vector_spacing)) {
+                    for line in grid_2d(VIEWPORT_BOUNDS, f64::from(self.vector_spacing)) {
                         plot_ui.line(line);
                     }
-                    for axis in axes_2d(bounds) {
+                    for axis in axes_2d(VIEWPORT_BOUNDS) {
                         plot_ui.line(axis);
                     }
                 }
@@ -168,13 +169,13 @@ impl VisualizationApp for Euclidean2Demo {
                             let dx = rotated.x() * arrow_scale;
                             let dy = rotated.y() * arrow_scale;
 
-                            // Draw from grid position
+                            // Draw from grid position with softer color
                             for arrow in arrow_2d(
                                 base_x - dx / 2.0,
                                 base_y - dy / 2.0,
                                 dx,
                                 dy,
-                                with_alpha(palette::POINT, 180),
+                                with_alpha(palette::POINT, 160),
                             ) {
                                 plot_ui.line(arrow);
                             }
@@ -193,26 +194,32 @@ impl VisualizationApp for Euclidean2Demo {
                     // Circle showing the rotation path (input magnitude)
                     let input_len = (input.x() * input.x() + input.y() * input.y()).sqrt();
                     plot_ui.line(
-                        circle_2d(0.0, 0.0, input_len, with_alpha(palette::GRID, 80), 64)
-                            .name("Input magnitude"),
+                        circle_2d(
+                            0.0,
+                            0.0,
+                            input_len,
+                            with_alpha(palette::GRID_MAJOR, 100),
+                            64,
+                        )
+                        .name("Input magnitude"),
                     );
 
                     // If dilating, show the output magnitude circle too
                     if (self.dilation - 1.0).abs() > 0.01 {
                         let output_len = (output.x() * output.x() + output.y() * output.y()).sqrt();
                         plot_ui.line(
-                            circle_2d(0.0, 0.0, output_len, with_alpha(palette::PLANE, 60), 64)
+                            circle_2d(0.0, 0.0, output_len, with_alpha(palette::PLANE, 80), 64)
                                 .name("Output magnitude"),
                         );
                     }
 
-                    // Input vector (blue, dashed-style via thinner line)
+                    // Input vector (soft blue)
                     for arrow in labeled_arrow(0.0, 0.0, input.x(), input.y(), palette::POINT, "v")
                     {
                         plot_ui.line(arrow);
                     }
 
-                    // Output vector (green)
+                    // Output vector (soft green)
                     for arrow in
                         labeled_arrow(0.0, 0.0, output.x(), output.y(), palette::PLANE, "Rv")
                     {
@@ -239,8 +246,8 @@ impl VisualizationApp for Euclidean2Demo {
     }
 
     fn controls(&mut self, ui: &mut egui::Ui) {
-        // Rotation angle
-        section_separator(ui, Some("Rotation"));
+        // === Primary Control: Rotation ===
+        group_header(ui, "Rotation");
         angle_slider_range(ui, "Angle \u{03b8}", &mut self.angle, -360.0, 360.0);
 
         // Dilation control
@@ -257,11 +264,11 @@ impl VisualizationApp for Euclidean2Demo {
         });
 
         // Animation controls
-        ui.add_space(4.0);
+        ui.add_space(spacing::XS);
         animation_controls(ui, &mut self.animation);
         progress_slider(ui, &mut self.animation);
 
-        // Rotor display
+        // === Rotor Components ===
         section_separator(ui, Some("Rotor Components"));
         let rotor = Rotor::with_dilation(f64::from(self.angle), f64::from(self.dilation));
         let rotor_magnitude = rotor.dilation_factor().sqrt();
@@ -298,7 +305,7 @@ impl VisualizationApp for Euclidean2Demo {
             );
         }
 
-        // Highlight vector input
+        // === Highlighted Vector ===
         section_separator(ui, Some("Highlighted Vector"));
         ui.checkbox(&mut self.show_highlight, "Show highlighted vector");
         if self.show_highlight {
@@ -331,12 +338,16 @@ impl VisualizationApp for Euclidean2Demo {
             }
         }
 
-        // Display options
+        // === Display Options (compact toggle row) ===
         section_separator(ui, Some("Display Options"));
-        ui.checkbox(&mut self.show_grid, "Show grid");
-        ui.checkbox(&mut self.show_vector_field, "Show vector field");
-        ui.checkbox(&mut self.show_bivector, "Show bivector (\u{03b8}/2 arc)");
-        ui.checkbox(&mut self.show_rotation_arc, "Show rotation arc (\u{03b8})");
+        ui.horizontal(|ui| {
+            ui.checkbox(&mut self.show_grid, "Grid");
+            ui.checkbox(&mut self.show_vector_field, "Field");
+        });
+        ui.horizontal(|ui| {
+            ui.checkbox(&mut self.show_bivector, "Bivector (\u{03b8}/2)");
+            ui.checkbox(&mut self.show_rotation_arc, "Arc (\u{03b8})");
+        });
 
         // Vector field options
         if self.show_vector_field {
@@ -359,13 +370,13 @@ impl VisualizationApp for Euclidean2Demo {
                 ));
             }
             ui.separator();
-            ui.label("\u{1f535} Input v");
+            ui.colored_label(palette::POINT, "Input v");
             ui.separator();
-            ui.label("\u{1f7e2} Output Rv");
+            ui.colored_label(palette::PLANE, "Output Rv");
             ui.separator();
-            ui.colored_label(palette::ROTOR, "\u{1f7e3} Half-angle");
+            ui.colored_label(palette::ROTOR, "Half-angle");
             ui.separator();
-            ui.colored_label(palette::LINE, "\u{1f534} Full angle");
+            ui.colored_label(palette::LINE, "Full angle");
         });
     }
 
@@ -418,7 +429,7 @@ AND combined scaling!",
 \u{2022} Adjust the DILATION slider to see scaling effects
 \u{2022} Click 'Play' to animate continuous rotation
 \u{2022} The purple arc shows the HALF-angle (stored in rotor)
-\u{2022} The red arc shows the FULL rotation angle
+\u{2022} The coral arc shows the FULL rotation angle
 \u{2022} When dilating, two circles show input vs output magnitude
 \u{2022} Watch |R| change as you adjust dilation",
 
