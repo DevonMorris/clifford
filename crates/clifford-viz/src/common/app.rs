@@ -277,9 +277,14 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
 
     // Mathematical Background section
     ui.heading("Mathematical Background");
-    // Render with monospace for formulas
+    // Render with monospace for formulas (theme-aware background)
+    let code_bg = if ui.ctx().style().visuals.dark_mode {
+        egui::Color32::from_rgb(40, 40, 50)
+    } else {
+        egui::Color32::from_rgb(240, 240, 245)
+    };
     egui::Frame::none()
-        .fill(egui::Color32::from_rgba_unmultiplied(40, 40, 50, 255))
+        .fill(code_bg)
         .inner_margin(12.0)
         .outer_margin(4.0)
         .rounding(4.0)
