@@ -71,7 +71,38 @@ Controls should guide the user through a learning journey, not dump all options 
 - Secondary controls: smaller, grouped horizontally
 - Read-only displays: distinct styling (monospace, subtle background)
 
-### 5. Transitions & Feedback
+### 5. Mobile Responsiveness
+
+**The visualization must work on mobile devices.** Consider:
+- Screen widths from 320px to 2560px+
+- Touch interactions (larger tap targets, no hover-only features)
+- Limited screen real estate
+
+**Mobile breakpoint:** `600px` - below this, use mobile layout
+
+**Mobile patterns:**
+- **Collapsible sidebar** - Hidden by default, toggle with hamburger menu (☰)
+- **Touch-friendly controls** - Minimum 44×44px tap targets
+- **Simplified info panels** - Reduce or hide secondary information
+- **Full-width visualization** - Maximize canvas space
+
+**Implementation in `AppWrapper`:**
+```rust
+let screen_width = ctx.screen_rect().width();
+let is_mobile = screen_width < 600.0;
+
+if is_mobile && !self.sidebar_open {
+    // Show hamburger button
+}
+```
+
+**Never:**
+- Assume hover states are available (touch has no hover)
+- Use tiny controls that are hard to tap
+- Show all panels simultaneously on mobile
+- Make critical features hover-only
+
+### 6. Transitions & Feedback
 
 **State changes should never be instant.** Smooth transitions:
 - Help users track what changed
@@ -101,6 +132,8 @@ When reviewing visualization code, check:
 - [ ] Control panel has clear visual grouping
 - [ ] Section headers separate logical groups
 - [ ] Primary controls are prominently placed
+- [ ] Mobile layout tested (sidebar collapses, controls accessible)
+- [ ] Touch targets are minimum 44×44px on mobile
 
 ### Interaction
 - [ ] Hover states exist for interactive elements
@@ -135,6 +168,8 @@ When reviewing visualization code, check:
 - No hover/feedback on interactive elements
 - Text with insufficient contrast
 - Controls that look disabled but aren't (or vice versa)
+- Sidebar covering entire mobile screen with no way to close
+- Critical features only accessible via hover (inaccessible on touch)
 
 ### Suggestions
 - Transition animations could be smoother
