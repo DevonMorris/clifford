@@ -3,6 +3,7 @@
 //! This module provides the `DemoMenu` component which displays a list of
 //! available demos and allows navigation between them in the web version.
 
+use crate::common::app::{configure_responsive_style, screen_size};
 use crate::common::colors;
 
 /// Demo entry with metadata for display.
@@ -51,15 +52,20 @@ impl DemoMenu {
 
 impl eframe::App for DemoMenu {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Install image loaders for egui (needed for include_image!)
+        // Install image loaders and responsive styles
         egui_extras::install_image_loaders(ctx);
+        configure_responsive_style(ctx);
 
-        let is_mobile = ctx.screen_rect().width() < 600.0;
+        let screen = screen_size(ctx);
+        let is_mobile = screen.is_mobile();
+
+        // Spacing scales with screen size
+        let sp = if is_mobile { 1.0 } else { 1.5 };
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
-                    ui.add_space(if is_mobile { 16.0 } else { 32.0 });
+                    ui.add_space(24.0 * sp);
 
                     // Logo
                     let logo_size = if is_mobile { 80.0 } else { 120.0 };
@@ -69,41 +75,40 @@ impl eframe::App for DemoMenu {
                             .rounding(8.0),
                     );
 
-                    ui.add_space(if is_mobile { 8.0 } else { 12.0 });
+                    ui.add_space(8.0 * sp);
 
-                    // Title
-                    ui.heading(egui::RichText::new("Clifford").size(if is_mobile { 28.0 } else { 36.0 }));
-                    ui.label(egui::RichText::new("Geometric Algebra for Rust").size(if is_mobile { 14.0 } else { 16.0 }));
+                    // Title (uses global Heading style)
+                    ui.heading(egui::RichText::new("Clifford").strong());
+                    ui.label("Geometric Algebra for Rust");
 
-                    ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+                    ui.add_space(12.0 * sp);
 
                     // External links
                     ui.horizontal(|ui| {
-                        ui.spacing_mut().item_spacing.x = if is_mobile { 8.0 } else { 16.0 };
                         ui.hyperlink_to("📦 Crates.io", "https://crates.io/crates/clifford");
                         ui.hyperlink_to("📚 Docs.rs", "https://docs.rs/clifford");
                         ui.hyperlink_to("🔗 GitHub", "https://github.com/DevonMorris/clifford");
                     });
 
-                    ui.add_space(if is_mobile { 16.0 } else { 24.0 });
+                    ui.add_space(16.0 * sp);
                 });
 
                 ui.separator();
-                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+                ui.add_space(12.0 * sp);
 
                 ui.vertical_centered(|ui| {
-                    ui.label(egui::RichText::new("Interactive Demos").size(if is_mobile { 18.0 } else { 20.0 }).strong());
+                    ui.label(egui::RichText::new("Interactive Demos").strong());
                     let desc_color = colors::text_secondary(ui.ctx());
                     ui.colored_label(desc_color, "Learn Geometric Algebra through visualization");
                 });
 
-                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+                ui.add_space(12.0 * sp);
 
                 render_demo_category(ui, "Euclidean Geometry", EUCLIDEAN_DEMOS, is_mobile);
-                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+                ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS, is_mobile);
 
-                ui.add_space(if is_mobile { 20.0 } else { 32.0 });
+                ui.add_space(24.0 * sp);
                 ui.separator();
                 ui.add_space(8.0);
 

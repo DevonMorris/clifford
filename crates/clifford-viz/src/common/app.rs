@@ -148,9 +148,12 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
         // Request continuous repaint for animations
         ctx.request_repaint();
 
+        // Apply responsive styling
+        configure_responsive_style(ctx);
+
         // Responsive layout based on screen size
-        let screen_width = ctx.screen_rect().width();
-        let is_mobile = screen_width < 600.0;
+        let screen = screen_size(ctx);
+        let is_mobile = screen.is_mobile();
 
         // On mobile, show a floating menu button when sidebar is closed
         if is_mobile && !self.sidebar_open {
@@ -406,4 +409,98 @@ impl WindowConfig {
             ..Default::default()
         }
     }
+}
+
+// =============================================================================
+// Responsive Styling
+// =============================================================================
+
+/// Screen size category for responsive design.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScreenSize {
+    /// Mobile: < 600px
+    Mobile,
+    /// Tablet: 600-1024px
+    Tablet,
+    /// Desktop: > 1024px
+    Desktop,
+}
+
+impl ScreenSize {
+    /// Determine screen size category from width.
+    #[must_use]
+    pub fn from_width(width: f32) -> Self {
+        if width < 600.0 {
+            Self::Mobile
+        } else if width < 1024.0 {
+            Self::Tablet
+        } else {
+            Self::Desktop
+        }
+    }
+
+    /// Check if this is a mobile screen.
+    #[must_use]
+    pub fn is_mobile(self) -> bool {
+        self == Self::Mobile
+    }
+}
+
+/// Configure responsive styles based on screen size.
+///
+/// Call this once per frame to set up font sizes and spacing that adapt
+/// to the current screen width. This eliminates the need for manual
+/// `if is_mobile` checks throughout the UI code.
+///
+/// # Example
+/// ```ignore
+/// fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+///     configure_responsive_style(ctx);
+///     // ... rest of UI code uses normal egui widgets
+/// }
+/// ```
+pub fn configure_responsive_style(ctx: &egui::Context) {
+    use egui::{FontFamily, FontId, TextStyle};
+
+    let screen_size = ScreenSize::from_width(ctx.screen_rect().width());
+
+    // Base font size scales with screen size
+    let base_size = match screen_size {
+        ScreenSize::Mobile => 14.0,
+        ScreenSize::Tablet => 15.0,
+        ScreenSize::Desktop => 16.0,
+    };
+
+    let heading_size = match screen_size {
+        ScreenSize::Mobile => 20.0,
+        ScreenSize::Tablet => 24.0,
+        ScreenSize::Desktop => 28.0,
+    };
+
+    // Configure text styles
+    let text_styles: std::collections::BTreeMap<TextStyle, FontId> = [
+        (TextStyle::Small, FontId::new(base_size * 0.75, FontFamily::Proportional)),
+        (TextStyle::Body, FontId::new(base_size, FontFamily::Proportional)),
+        (TextStyle::Button, FontId::new(base_size, FontFamily::Proportional)),
+        (TextStyle::Heading, FontId::new(heading_size, FontFamily::Proportional)),
+        (TextStyle::Monospace, FontId::new(base_size * 0.9, FontFamily::Monospace)),
+    ]
+    .into();
+
+    // Apply styles
+    ctx.style_mut(|style| {
+        style.text_styles = text_styles;
+
+        // Adjust spacing for mobile
+        if screen_size.is_mobile() {
+            style.spacing.item_spacing = egui::vec2(6.0, 4.0);
+            style.spacing.button_padding = egui::vec2(6.0, 3.0);
+        }
+    });
+}
+
+/// Get the current screen size category.
+#[must_use]
+pub fn screen_size(ctx: &egui::Context) -> ScreenSize {
+    ScreenSize::from_width(ctx.screen_rect().width())
 }
