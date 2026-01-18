@@ -130,7 +130,7 @@ impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
         Self {
             app: T::default(),
             learn_window_open: false,
-            sidebar_open: true, // Start open, will auto-close on mobile
+            sidebar_open: false, // Closed by default (desktop ignores this)
         }
     }
 }
@@ -152,11 +152,6 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
         let screen_width = ctx.screen_rect().width();
         let is_mobile = screen_width < 600.0;
 
-        // Auto-close sidebar on mobile on first frame
-        if is_mobile && self.sidebar_open && ctx.input(|i| i.time) < 0.1 {
-            self.sidebar_open = false;
-        }
-
         // On mobile, show a floating menu button when sidebar is closed
         if is_mobile && !self.sidebar_open {
             egui::Area::new(egui::Id::new("menu_button"))
@@ -172,34 +167,57 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 });
         }
 
-        // Left panel: controls (hidden on mobile when closed)
-        if !is_mobile || self.sidebar_open {
+        // Desktop: permanent side panel
+        if !is_mobile {
             egui::SidePanel::left("controls")
-                .resizable(!is_mobile)
-                .default_width(if is_mobile { 200.0 } else { 250.0 })
-                .max_width(if is_mobile { 280.0 } else { 400.0 })
+                .resizable(true)
+                .default_width(250.0)
+                .max_width(400.0)
                 .show(ctx, |ui| {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        // Close button on mobile
-                        if is_mobile {
-                            ui.horizontal(|ui| {
-                                ui.heading("Controls");
-                                ui.with_layout(
-                                    egui::Layout::right_to_left(egui::Align::Center),
-                                    |ui| {
-                                        if ui.button("\u{2715}").clicked() {
-                                            self.sidebar_open = false;
-                                        }
-                                    },
-                                );
-                            });
-                        } else {
-                            ui.heading("Controls");
-                        }
+                        ui.heading("Controls");
                         ui.separator();
                         self.app.controls(ui);
 
-                        // Learn button at bottom of controls (if educational content exists)
+                        if self.app.educational_content().is_some() {
+                            ui.add_space(16.0);
+                            ui.separator();
+                            if ui
+                                .button("\u{1f4d6} Learn About This")
+                                .on_hover_text("Open educational explanation")
+                                .clicked()
+                            {
+                                self.learn_window_open = true;
+                            }
+                        }
+                    });
+                });
+        }
+
+        // Mobile: overlay panel (doesn't push content)
+        if is_mobile && self.sidebar_open {
+            let screen_height = ctx.screen_rect().height();
+            egui::Window::new("Controls")
+                .id(egui::Id::new("mobile_controls"))
+                .fixed_pos(egui::pos2(0.0, 0.0))
+                .fixed_size(egui::vec2(240.0, screen_height))
+                .title_bar(false)
+                .resizable(false)
+                .collapsible(false)
+                .show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.heading("Controls");
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if ui.button("\u{2715}").clicked() {
+                                self.sidebar_open = false;
+                            }
+                        });
+                    });
+                    ui.separator();
+
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        self.app.controls(ui);
+
                         if self.app.educational_content().is_some() {
                             ui.add_space(16.0);
                             ui.separator();
