@@ -37,6 +37,20 @@ const PROJECTIVE_DEMOS: &[DemoEntry] = &[
     },
 ];
 
+/// Conformal geometry demos.
+const CONFORMAL_DEMOS: &[DemoEntry] = &[
+    DemoEntry {
+        id: "conformal2_circles",
+        name: "Circle from Three Points",
+        description: "Create circles via wedge product in 2D CGA",
+    },
+    DemoEntry {
+        id: "conformal2_inversion",
+        name: "Circle Inversion",
+        description: "Conformal transformation that swaps inside and outside",
+    },
+];
+
 /// Landing page showing available demos.
 ///
 /// This implements `eframe::App` directly rather than `VisualizationApp`
@@ -113,6 +127,8 @@ impl eframe::App for DemoMenu {
                 render_demo_category(ui, "Euclidean Geometry", EUCLIDEAN_DEMOS, is_mobile);
                 ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS, is_mobile);
+                ui.add_space(12.0 * sp);
+                render_demo_category(ui, "Conformal Geometry (CGA)", CONFORMAL_DEMOS, is_mobile);
 
                 ui.add_space(24.0 * sp);
                 ui.separator();
