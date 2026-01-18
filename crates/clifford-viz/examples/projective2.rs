@@ -116,9 +116,7 @@ struct Projective2Demo {
     /// Whether to show normal vectors on lines.
     show_normals: bool,
     /// Index of point being dragged (if any).
-    /// Note: Interactive dragging requires more complex mouse handling.
-    /// For now, points are edited via the control panel.
-    _dragging_point: Option<usize>,
+    dragging_point: Option<usize>,
     /// Indices of selected points for join operation.
     join_selection: Vec<usize>,
     /// Indices of selected lines for meet operation.
@@ -150,7 +148,7 @@ impl Default for Projective2Demo {
             show_coordinates: true,
             apply_motor: false,
             show_normals: false,
-            _dragging_point: None,
+            dragging_point: None,
             join_selection: Vec::new(),
             meet_selection: Vec::new(),
         }
@@ -305,7 +303,7 @@ impl VisualizationApp for Projective2Demo {
         }
     }
 
-    fn render(&self, ui: &mut egui::Ui) {
+    fn render(&mut self, ui: &mut egui::Ui) {
         let bounds = 5.0;
 
         let response = Plot::new("projective2_plot")
@@ -425,16 +423,89 @@ impl VisualizationApp for Projective2Demo {
                 }
             });
 
-        // Handle mouse interactions for point creation/selection
-        // Note: egui_plot interactions are limited, so we use the response
-        if let Some(pos) = response.response.hover_pos() {
-            let _plot_pos = response.transform.value_from_position(pos);
+        // Handle mouse interactions for point creation/selection/dragging
+        if let Some(pos) = response.response.interact_pointer_pos() {
+            let plot_pos = response.transform.value_from_position(pos);
+            let mouse_x = plot_pos.x;
+            let mouse_y = plot_pos.y;
 
-            // Handle click
-            if response.response.clicked() {
-                // This would need additional state management for proper click handling
-                // For now, point manipulation is done via the controls panel
+            // Helper: find nearest point within threshold
+            let find_nearest_point = |points: &[DraggablePoint], x: f64, y: f64| -> Option<usize> {
+                let threshold = 0.4; // Distance in plot units
+                let mut nearest_idx = None;
+                let mut nearest_dist = threshold;
+
+                for (idx, point_data) in points.iter().enumerate() {
+                    if let Some((px, py)) = point_data.cartesian() {
+                        let dist = ((px - x).powi(2) + (py - y).powi(2)).sqrt();
+                        if dist < nearest_dist {
+                            nearest_dist = dist;
+                            nearest_idx = Some(idx);
+                        }
+                    }
+                }
+                nearest_idx
+            };
+
+            match self.tool_mode {
+                ToolMode::AddPoint => {
+                    // Create a new point on click
+                    if response.response.clicked() {
+                        let name = self.next_point_name();
+                        self.points.push(DraggablePoint::new(
+                            self.next_point_id,
+                            mouse_x,
+                            mouse_y,
+                            &name,
+                        ));
+                        self.next_point_id += 1;
+                    }
+                }
+                ToolMode::Select => {
+                    // Handle drag start - find point to drag
+                    if response.response.drag_started() {
+                        self.dragging_point = find_nearest_point(&self.points, mouse_x, mouse_y);
+                    }
+
+                    // Handle active dragging - move the point
+                    if response.response.dragged() {
+                        if let Some(idx) = self.dragging_point {
+                            if idx < self.points.len() {
+                                self.points[idx].point = Point::from_cartesian(mouse_x, mouse_y);
+                            }
+                        }
+                    }
+
+                    // Handle drag release
+                    if response.response.drag_stopped() {
+                        self.dragging_point = None;
+                    }
+
+                    // Handle click (without drag) for selection toggle
+                    if response.response.clicked() && self.dragging_point.is_none() {
+                        if let Some(idx) = find_nearest_point(&self.points, mouse_x, mouse_y) {
+                            self.points[idx].selected = !self.points[idx].selected;
+                            // Update join selection
+                            self.join_selection = self
+                                .points
+                                .iter()
+                                .enumerate()
+                                .filter(|(_, p)| p.selected)
+                                .map(|(i, _)| i)
+                                .collect();
+                        } else {
+                            // Click on empty space - deselect all
+                            for point in &mut self.points {
+                                point.selected = false;
+                            }
+                            self.join_selection.clear();
+                        }
+                    }
+                }
             }
+        } else {
+            // Mouse left the plot area - cancel any drag
+            self.dragging_point = None;
         }
     }
 
@@ -734,11 +805,13 @@ They transform geometry via the antisandwich product:
     L' = M⁻¹LM  (line transformation)",
 
     how_to_use: "\
-• ADD POINTS: Click 'Add Point at Origin' and drag coordinates
-• JOIN OPERATION: Select 2 points (checkboxes), click 'Create Line'
+• ADD POINTS: Select 'Add Point' tool and click on the plot
+• SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
+• DRAG POINTS: Select 'Select' tool and drag a point to move it
+• JOIN OPERATION: Select 2 points, then click 'Create Line'
 • MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
 • MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
-• Drag point coordinates to see lines update in real-time
+• Lines update in real-time as you drag points
 • Enable 'Show line normals' to visualize line orientations",
 
     key_concepts: "\

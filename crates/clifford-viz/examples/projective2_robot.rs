@@ -242,7 +242,7 @@ impl VisualizationApp for Robot2DDemo {
         }
     }
 
-    fn render(&self, ui: &mut egui::Ui) {
+    fn render(&mut self, ui: &mut egui::Ui) {
         let (base, elbow, end_effector) = self.forward_kinematics();
         let l1 = f64::from(self.link1_length);
         let l2 = f64::from(self.link2_length);

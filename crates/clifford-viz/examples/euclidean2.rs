@@ -86,7 +86,7 @@ impl VisualizationApp for Euclidean2Demo {
         }
     }
 
-    fn render(&self, ui: &mut egui::Ui) {
+    fn render(&mut self, ui: &mut egui::Ui) {
         // Create the rotor from the current angle and dilation
         let rotor = Rotor::with_dilation(f64::from(self.angle), f64::from(self.dilation));
 

@@ -27,8 +27,8 @@ use eframe::egui;
 ///         // Update animation state
 ///     }
 ///
-///     fn render(&self, ui: &mut egui::Ui) {
-///         // Draw visualization
+///     fn render(&mut self, ui: &mut egui::Ui) {
+///         // Draw visualization and handle mouse interactions
 ///     }
 ///
 ///     fn controls(&mut self, ui: &mut egui::Ui) {
@@ -49,7 +49,8 @@ pub trait VisualizationApp {
     /// Render the main visualization area.
     ///
     /// This is typically where you'd draw to a plot or custom painter.
-    fn render(&self, ui: &mut egui::Ui);
+    /// Takes `&mut self` to allow handling mouse interactions.
+    fn render(&mut self, ui: &mut egui::Ui);
 
     /// Render the control panel (sliders, buttons, etc.).
     fn controls(&mut self, ui: &mut egui::Ui);

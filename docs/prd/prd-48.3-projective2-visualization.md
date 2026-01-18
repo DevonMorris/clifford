@@ -1,6 +1,6 @@
 # PRD-48.3: Projective 2D (PGA) Visualization
 
-**Status**: Draft
+**Status**: Complete
 **Parent**: PRD-48
 **Depends on**: PRD-48.1
 **Goal**: Interactive demos for 2D projective geometric algebra
@@ -11,7 +11,7 @@ Demonstrate the power of 2D PGA for point-line geometry and rigid transformation
 
 ## Demo: Interactive Point-Line Geometry
 
-**File**: `examples/visualization/projective2.rs`
+**File**: `crates/clifford-viz/examples/projective2.rs`
 
 ### Features
 
@@ -194,7 +194,7 @@ M = [s: 0.924, tx: 0.383, ty: 0.924, r: 0.383]
 
 ## Advanced Demo: 2D Robot Arm
 
-**File**: `examples/visualization/projective2_robot.rs`
+**File**: `crates/clifford-viz/examples/projective2_robot.rs`
 
 ### Features
 
@@ -275,37 +275,38 @@ impl Robot2D {
 ## Implementation Tasks
 
 ### projective2.rs (Main Demo)
-1. [ ] Point creation on click
-2. [ ] Point dragging
-3. [ ] Point selection (single and multi)
-4. [ ] Join operation (wedge) visualization
-5. [ ] Meet operation (antiwedge) visualization
-6. [ ] Line rendering (infinite, clipped to view)
-7. [ ] Motor controls (rotation + translation sliders)
-8. [ ] Motor application to all objects
-9. [ ] Motor animation
-10. [ ] Coordinate display panel
+1. [x] Point creation via click (AddPoint tool) or button
+2. [x] Point dragging (Select tool drag) and editing via sliders
+3. [x] Point selection via click (Select tool) or checkboxes
+4. [x] Join operation (wedge) visualization
+5. [x] Meet operation (antiwedge) visualization
+6. [x] Line rendering (infinite, clipped to view)
+7. [x] Motor controls (rotation + translation sliders)
+8. [x] Motor application to all objects
+9. [x] Motor animation
+10. [x] Coordinate display panel
 
 ### projective2_robot.rs (Advanced)
-1. [ ] Robot arm structure
-2. [ ] Forward kinematics via motor composition
-3. [ ] Joint angle sliders
-4. [ ] Link visualization
-5. [ ] End effector position display
-6. [ ] Workspace boundary visualization (optional)
+1. [x] Robot arm structure
+2. [x] Forward kinematics via motor composition
+3. [x] Joint angle sliders
+4. [x] Link visualization
+5. [x] End effector position display
+6. [x] Workspace boundary visualization
 
 ## Verification
 
 ```bash
-cargo run --example projective2 --release
-cargo run --example projective2_robot --release
+cargo run -p clifford-viz --example projective2 --release
+cargo run -p clifford-viz --example projective2_robot --release
 ```
 
 ### Checklist
-- [ ] Click creates points at correct coordinates
-- [ ] Dragging points updates derived lines in real-time
-- [ ] Join creates correct line through two points
-- [ ] Meet finds correct intersection (or point at infinity for parallel)
-- [ ] Motor smoothly transforms all geometry
-- [ ] Robot arm end effector matches manual calculation
-- [ ] Motor composition order is correct (right-to-left)
+- [x] Click creates points at correct coordinates (AddPoint tool)
+- [x] Click selects/deselects points (Select tool)
+- [x] Dragging points updates derived lines in real-time
+- [x] Join creates correct line through two points
+- [x] Meet finds correct intersection (or point at infinity for parallel)
+- [x] Motor smoothly transforms all geometry
+- [x] Robot arm end effector matches manual calculation
+- [x] Motor composition order is correct (right-to-left)
