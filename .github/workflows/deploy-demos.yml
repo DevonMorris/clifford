@@ -75,7 +75,10 @@ jobs:
       - name: Build WASM demos
         run: |
           cd crates/clifford-viz
-          trunk build --release --public-url /clifford/
+          trunk build --release --public-url /
+
+      - name: Add CNAME for custom domain
+        run: echo "clifford-rs.dev" > crates/clifford-viz/dist/CNAME
 
       - name: Check WASM size
         run: |
