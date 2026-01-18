@@ -791,54 +791,54 @@ This visualization demonstrates 2D Projective Geometric Algebra, which provides 
 a unified framework for point-line geometry and rigid transformations.
 
 Key insight: In PGA, geometric operations become algebraic products:
-\u{2022} The JOIN of two points (line through them) is their wedge product (\u{2227})
-\u{2022} The MEET of two lines (intersection point) is their antiwedge product (\u{2228})
-\u{2022} MOTORS encode rotation and translation as a single algebraic element
+- The JOIN of two points (line through them) is their wedge product (^)
+- The MEET of two lines (intersection point) is their antiwedge product (v)
+- MOTORS encode rotation and translation as a single algebraic element
 
 This demo lets you explore these operations interactively.",
 
     math_background: "\
 POINTS are grade-1 elements in homogeneous coordinates:
-    P = x\u{00b7}e\u{2081} + y\u{00b7}e\u{2082} + w\u{00b7}e\u{2080}
+    P = x*e1 + y*e2 + w*e0
 
 For a finite point at (x, y), we set w = 1.
 
 LINES are grade-2 elements representing ax + by + c = 0:
-    L = c\u{00b7}e\u{2081}\u{2082} + a\u{00b7}e\u{2081}\u{2080} + b\u{00b7}e\u{2082}\u{2080}
+    L = c*e12 + a*e10 + b*e20
 
-JOIN (\u{2227}) - Line through two points:
-    L = P\u{2081} \u{2227} P\u{2082}
+JOIN (^) - Line through two points:
+    L = P1 ^ P2
 
-MEET (\u{2228}) - Intersection of two lines:
-    P = L\u{2081} \u{2228} L\u{2082}
+MEET (v) - Intersection of two lines:
+    P = L1 v L2
 
 If lines are parallel, the result is an IDEAL POINT (w = 0), \
 representing the direction at infinity.
 
 MOTORS are elements of the odd subalgebra (grades 1 and 3):
-    M = ty\u{00b7}e\u{2081} + tx\u{00b7}e\u{2082} + r\u{00b7}e\u{2083} + ps\u{00b7}e\u{2081}\u{2082}\u{2083}
+    M = ty*e1 + tx*e2 + r*e3 + ps*e123
 
 They transform geometry via the antisandwich product:
-    P' = M\u{207b}\u{00b9}PM  (point transformation)
-    L' = M\u{207b}\u{00b9}LM  (line transformation)",
+    P' = M^(-1) P M  (point transformation)
+    L' = M^(-1) L M  (line transformation)",
 
     how_to_use: "\
-\u{2022} ADD POINTS: Select 'Add Point' tool and click on the plot
-\u{2022} SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
-\u{2022} DRAG POINTS: Select 'Select' tool and drag a point to move it
-\u{2022} JOIN OPERATION: Select 2 points, then click 'Create Line'
-\u{2022} MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
-\u{2022} MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
-\u{2022} Lines update in real-time as you drag points
-\u{2022} Enable 'Normals' to visualize line orientations",
+- ADD POINTS: Select 'Add Point' tool and click on the plot
+- SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
+- DRAG POINTS: Select 'Select' tool and drag a point to move it
+- JOIN OPERATION: Select 2 points, then click 'Create Line'
+- MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
+- MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
+- Lines update in real-time as you drag points
+- Enable 'Normals' to visualize line orientations",
 
     key_concepts: "\
-\u{2022} Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
-\u{2022} Ideal points (w=0) represent directions at infinity
-\u{2022} Wedge product (\u{2227}) computes JOIN: line through two points
-\u{2022} Antiwedge product (\u{2228}) computes MEET: intersection of two lines
-\u{2022} Motors compose rotation and translation into one operation
-\u{2022} Antisandwich product transforms geometry while preserving incidence",
+- Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
+- Ideal points (w=0) represent directions at infinity
+- Wedge product (^) computes JOIN: line through two points
+- Antiwedge product (v) computes MEET: intersection of two lines
+- Motors compose rotation and translation into one operation
+- Antisandwich product transforms geometry while preserving incidence",
 
     resources: &[
         (
