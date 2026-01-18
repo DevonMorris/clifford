@@ -410,6 +410,7 @@ mod tests {
             alias_of: None,
             versor: None,
             is_sparse: false,
+            inverse_sandwich_targets: vec![],
         }
     }
 

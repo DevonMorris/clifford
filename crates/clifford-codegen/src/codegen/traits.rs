@@ -187,7 +187,7 @@ impl<'a> TraitsGenerator<'a> {
         let has_versor_impls = self.will_generate_versor_impls();
 
         let versor_import = if has_versor_impls {
-            quote! { Versor, }
+            quote! { Versor, VersorInverse, InverseSandwich, InverseAntisandwich, }
         } else {
             quote! {}
         };
@@ -1488,6 +1488,94 @@ impl<'a> TraitsGenerator<'a> {
             }
         }
 
+        // InverseSandwich trait - generated from versor types
+        // Uses inverse instead of reverse: v × x × v⁻¹
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(self.generate_inverse_sandwich_trait(versor_type, target_type));
+                    }
+                }
+            }
+        }
+
+        // InverseSandwich trait - generated from explicit inverse_sandwich_targets
+        // This allows non-versor types (like Circle in CGA) to perform inverse sandwiches
+        for source_type in &self.spec.types {
+            if source_type.alias_of.is_some() {
+                continue;
+            }
+            // Skip versors (already handled above)
+            if source_type.versor.is_some() {
+                continue;
+            }
+            // Only process types with explicit inverse_sandwich_targets
+            if source_type.inverse_sandwich_targets.is_empty() {
+                continue;
+            }
+
+            for target_name in &source_type.inverse_sandwich_targets {
+                if let Some(target_type) = self.find_type(target_name) {
+                    impls.push(self.generate_inverse_sandwich_trait(source_type, target_type));
+                }
+            }
+        }
+
+        // InverseAntisandwich trait - generated from versor types
+        // Uses inverse instead of antireverse: v ⊛ x ⊛ v⁻¹
+        for versor_type in &self.spec.types {
+            if versor_type.alias_of.is_some() {
+                continue;
+            }
+            if let Some(ref versor_spec) = versor_type.versor {
+                let targets = if versor_spec.sandwich_targets.is_empty() {
+                    self.infer_sandwich_targets(versor_type)
+                } else {
+                    versor_spec.sandwich_targets.clone()
+                };
+
+                for target_name in &targets {
+                    if let Some(target_type) = self.find_type(target_name) {
+                        impls.push(
+                            self.generate_inverse_antisandwich_trait(versor_type, target_type),
+                        );
+                    }
+                }
+            }
+        }
+
+        // InverseAntisandwich trait - generated from explicit inverse_sandwich_targets
+        // This allows non-versor types (like Circle in CGA) to perform inverse antisandwiches
+        for source_type in &self.spec.types {
+            if source_type.alias_of.is_some() {
+                continue;
+            }
+            // Skip versors (already handled above)
+            if source_type.versor.is_some() {
+                continue;
+            }
+            // Only process types with explicit inverse_sandwich_targets
+            if source_type.inverse_sandwich_targets.is_empty() {
+                continue;
+            }
+
+            for target_name in &source_type.inverse_sandwich_targets {
+                if let Some(target_type) = self.find_type(target_name) {
+                    impls.push(self.generate_inverse_antisandwich_trait(source_type, target_type));
+                }
+            }
+        }
+
         // Versor trait - generated for versor types (Rotor, Motor, Flector)
         // Provides compose() method for versor composition
         impls.extend(self.generate_versor_traits());
@@ -1891,6 +1979,9 @@ impl<'a> TraitsGenerator<'a> {
                 }
             }
         }
+
+        // VersorInverse trait - for versor types (Rotor, Motor, Flector)
+        impls.extend(self.generate_versor_inverse_traits());
 
         quote! { #(#impls)* }
     }
@@ -2554,6 +2645,114 @@ impl<'a> TraitsGenerator<'a> {
         }
     }
 
+    /// Generates InverseSandwich trait impl from versor type.
+    ///
+    /// InverseSandwich computes `v × x × v⁻¹` where `v⁻¹ = rev(v) / |v|²`.
+    /// This is equivalent to `sandwich(x) / |v|²` and correctly handles non-unit versors.
+    fn generate_inverse_sandwich_trait(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let is_degenerate = self.spec.signature.r > 0;
+
+        // Compute the sandwich expression for each output field (same as regular sandwich)
+        let field_exprs = self.compute_sandwich_expressions(versor, operand);
+
+        // Scale each field by inv_norm_sq
+        let scaled_fields: Vec<TokenStream> = field_exprs
+            .iter()
+            .map(|expr| quote! { (#expr) * inv_norm_sq })
+            .collect();
+
+        // Generate constructor call
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#scaled_fields),*) };
+
+        // For degenerate algebras (PGA), use bulk_norm_squared
+        // For non-degenerate algebras, use norm_squared
+        let norm_computation = if is_degenerate {
+            quote! {
+                let norm_sq = <Self as crate::norm::DegenerateNormed>::bulk_norm_squared(self);
+            }
+        } else {
+            quote! {
+                let norm_sq = <Self as crate::norm::Normed>::norm_squared(self);
+            }
+        };
+
+        quote! {
+            impl<T: Float> InverseSandwich<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn try_inverse_sandwich(&self, operand: &#operand_name<T>) -> Option<#operand_name<T>> {
+                    #norm_computation
+                    if norm_sq.abs() < T::epsilon() {
+                        return None;
+                    }
+                    let inv_norm_sq = T::one() / norm_sq;
+                    Some(#constructor_call)
+                }
+            }
+        }
+    }
+
+    /// Generates InverseAntisandwich trait impl from versor type.
+    ///
+    /// InverseAntisandwich computes `v ⊛ x ⊛ v⁻¹` where `v⁻¹ = antirev(v) / |v|²`.
+    /// This is equivalent to `antisandwich(x) / |v|²` and correctly handles non-unit versors.
+    fn generate_inverse_antisandwich_trait(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+    ) -> TokenStream {
+        let versor_name = format_ident!("{}", versor.name);
+        let operand_name = format_ident!("{}", operand.name);
+        let is_degenerate = self.spec.signature.r > 0;
+
+        // Compute the antisandwich expression for each output field (same as regular antisandwich)
+        let field_exprs = self.compute_antisandwich_expressions(versor, operand);
+
+        // Scale each field by inv_norm_sq
+        let scaled_fields: Vec<TokenStream> = field_exprs
+            .iter()
+            .map(|expr| quote! { (#expr) * inv_norm_sq })
+            .collect();
+
+        // Generate constructor call
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#scaled_fields),*) };
+
+        // For degenerate algebras (PGA), use bulk_norm_squared
+        // For non-degenerate algebras, use norm_squared
+        let norm_computation = if is_degenerate {
+            quote! {
+                let norm_sq = <Self as crate::norm::DegenerateNormed>::bulk_norm_squared(self);
+            }
+        } else {
+            quote! {
+                let norm_sq = <Self as crate::norm::Normed>::norm_squared(self);
+            }
+        };
+
+        quote! {
+            impl<T: Float> InverseAntisandwich<#operand_name<T>> for #versor_name<T> {
+                type Output = #operand_name<T>;
+
+                #[inline]
+                fn try_inverse_antisandwich(&self, operand: &#operand_name<T>) -> Option<#operand_name<T>> {
+                    #norm_computation
+                    if norm_sq.abs() < T::epsilon() {
+                        return None;
+                    }
+                    let inv_norm_sq = T::one() / norm_sq;
+                    Some(#constructor_call)
+                }
+            }
+        }
+    }
+
     /// Generates wrapper Sandwich trait impl with optimized computation.
     ///
     /// Uses Groebner basis reduction to simplify sandwich products when
@@ -2880,6 +3079,78 @@ impl<'a> TraitsGenerator<'a> {
                     });
                 }
             }
+        }
+
+        impls
+    }
+
+    /// Generates VersorInverse trait impls for all versor types and types with inverse_sandwich_targets.
+    ///
+    /// The VersorInverse trait provides `try_inverse()` for computing the
+    /// multiplicative inverse of a versor: `V⁻¹ = rev(V) / |V|²`.
+    ///
+    /// For non-degenerate algebras (Euclidean), this uses the standard norm.
+    /// For degenerate algebras (PGA), this uses the bulk norm.
+    fn generate_versor_inverse_traits(&self) -> Vec<TokenStream> {
+        let mut impls = Vec::new();
+        let is_degenerate = self.spec.signature.r > 0;
+
+        // Find all types that need VersorInverse:
+        // 1. Versor types (Rotor, Motor, Flector)
+        // 2. Non-versor types with explicit inverse_sandwich_targets (like Circle in CGA)
+        let types_needing_inverse: Vec<_> = self
+            .spec
+            .types
+            .iter()
+            .filter(|t| {
+                t.alias_of.is_none()
+                    && (t.versor.is_some() || !t.inverse_sandwich_targets.is_empty())
+            })
+            .collect();
+
+        for ty in types_needing_inverse {
+            let type_name = format_ident!("{}", ty.name);
+
+            // Compute scaled fields: rev(V) / norm_squared
+            let scaled_fields: Vec<TokenStream> = ty
+                .fields
+                .iter()
+                .map(|field| {
+                    let field_name = format_ident!("{}", field.name);
+                    let grade = field.grade;
+                    // Reverse sign: (-1)^(k(k-1)/2)
+                    if (grade * grade.saturating_sub(1) / 2).is_multiple_of(2) {
+                        quote! { self.#field_name() * inv_norm_sq }
+                    } else {
+                        quote! { -self.#field_name() * inv_norm_sq }
+                    }
+                })
+                .collect();
+
+            // For degenerate algebras (PGA), use bulk_norm_squared
+            // For non-degenerate algebras, use norm_squared
+            let norm_computation = if is_degenerate {
+                quote! {
+                    let norm_sq = <Self as crate::norm::DegenerateNormed>::bulk_norm_squared(self);
+                }
+            } else {
+                quote! {
+                    let norm_sq = <Self as crate::norm::Normed>::norm_squared(self);
+                }
+            };
+
+            impls.push(quote! {
+                impl<T: Float> VersorInverse for #type_name<T> {
+                    fn try_inverse(&self) -> Option<Self> {
+                        #norm_computation
+                        if norm_sq.abs() < T::epsilon() {
+                            return None;
+                        }
+                        let inv_norm_sq = T::one() / norm_sq;
+                        Some(Self::new_unchecked(#(#scaled_fields),*))
+                    }
+                }
+            });
         }
 
         impls

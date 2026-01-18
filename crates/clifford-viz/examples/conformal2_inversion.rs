@@ -1,15 +1,20 @@
 //! Circle Inversion - 2D Conformal GA Visualization
 //!
 //! This demo demonstrates circle inversion (also known as geometric inversion),
-//! a fundamental conformal transformation.
+//! a fundamental conformal transformation implemented using CGA.
 //!
 //! In circle inversion through a circle C with center O and radius r:
 //! - A point P maps to P' such that |OP| × |OP'| = r² and P, O, P' are collinear
 //! - Circles map to circles (or lines if they pass through the center)
 //! - Lines map to circles (or lines if they pass through the center)
 //!
+//! In CGA, inversion through circle C is computed as:
+//!     P' = C × P × C⁻¹
+//! where × is the geometric product.
+//!
 //! Run with: `cargo run -p clifford-viz --example conformal2_inversion --release`
 
+use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
 use clifford_viz::common::prelude::*;
 use egui_plot::{Plot, Points};
 
@@ -25,50 +30,63 @@ const MAX_DRAWABLE_RADIUS: f64 = 100.0;
 /// Number of segments for circle rendering.
 const CIRCLE_SEGMENTS: usize = 64;
 
-/// Represents a draggable point that can be inverted.
+/// A draggable point in the scene.
 #[derive(Clone)]
 struct ScenePoint {
-    /// X coordinate.
-    x: f64,
-    /// Y coordinate.
-    y: f64,
+    /// The CGA round point.
+    point: RoundPoint<f64>,
     /// Display name.
     name: String,
 }
 
 impl ScenePoint {
-    /// Creates a new scene point.
+    /// Creates a new scene point from Euclidean coordinates.
     fn new(x: f64, y: f64, name: &str) -> Self {
         Self {
-            x,
-            y,
+            point: RoundPoint::from_euclidean(x, y),
             name: name.to_string(),
         }
     }
+
+    /// Returns the Euclidean coordinates.
+    fn euclidean(&self) -> Option<(f64, f64)> {
+        self.point.to_euclidean()
+    }
+
+    /// Sets the position from Euclidean coordinates.
+    fn set_position(&mut self, x: f64, y: f64) {
+        self.point = RoundPoint::from_euclidean(x, y);
+    }
 }
 
-/// Represents a circle (original, not the inversion circle).
+/// A draggable circle in the scene.
 #[derive(Clone)]
 struct SceneCircle {
-    /// Center X coordinate.
-    cx: f64,
-    /// Center Y coordinate.
-    cy: f64,
-    /// Radius.
-    radius: f64,
+    /// The CGA circle.
+    circle: Circle<f64>,
     /// Display name.
     name: String,
 }
 
 impl SceneCircle {
-    /// Creates a new scene circle.
+    /// Creates a new scene circle from center and radius.
     fn new(cx: f64, cy: f64, radius: f64, name: &str) -> Self {
         Self {
-            cx,
-            cy,
-            radius,
+            circle: Circle::from_center_radius(cx, cy, radius),
             name: name.to_string(),
         }
+    }
+
+    /// Returns center and radius.
+    fn center_radius(&self) -> Option<(f64, f64, f64)> {
+        let (cx, cy) = self.circle.center()?;
+        let r = self.circle.radius()?;
+        Some((cx, cy, r))
+    }
+
+    /// Sets the circle from center and radius.
+    fn set_center_radius(&mut self, cx: f64, cy: f64, radius: f64) {
+        self.circle = Circle::from_center_radius(cx, cy, radius);
     }
 }
 
@@ -97,11 +115,13 @@ enum InvertedCircle {
 
 /// Demo state for Circle Inversion visualization.
 struct Conformal2InversionDemo {
-    /// Inversion circle center x.
+    /// Inversion circle (CGA representation).
+    inversion_circle: Circle<f64>,
+    /// Inversion circle center x (for UI).
     inversion_cx: f64,
-    /// Inversion circle center y.
+    /// Inversion circle center y (for UI).
     inversion_cy: f64,
-    /// Inversion circle radius.
+    /// Inversion circle radius (for UI).
     inversion_radius: f64,
 
     /// Points in the scene.
@@ -130,6 +150,10 @@ struct Conformal2InversionDemo {
 
 impl Default for Conformal2InversionDemo {
     fn default() -> Self {
+        let inversion_cx = 0.0;
+        let inversion_cy = 0.0;
+        let inversion_radius = 2.0;
+
         // Initial configuration with some points and circles
         let points = vec![
             ScenePoint::new(2.5, 1.0, "P\u{2081}"),
@@ -143,9 +167,14 @@ impl Default for Conformal2InversionDemo {
         ];
 
         Self {
-            inversion_cx: 0.0,
-            inversion_cy: 0.0,
-            inversion_radius: 2.0,
+            inversion_circle: Circle::from_center_radius(
+                inversion_cx,
+                inversion_cy,
+                inversion_radius,
+            ),
+            inversion_cx,
+            inversion_cy,
+            inversion_radius,
 
             points,
             circles,
@@ -164,14 +193,25 @@ impl Default for Conformal2InversionDemo {
 }
 
 impl Conformal2InversionDemo {
+    /// Updates the CGA inversion circle from the UI parameters.
+    fn update_inversion_circle(&mut self) {
+        self.inversion_circle =
+            Circle::from_center_radius(self.inversion_cx, self.inversion_cy, self.inversion_radius);
+    }
+
     /// Inverts a point through the inversion circle.
     ///
-    /// For point P and inversion circle with center O and radius r:
-    /// P' lies on ray OP such that |OP| × |OP'| = r²
-    fn invert_point(&self, x: f64, y: f64) -> Option<(f64, f64)> {
-        // Translate to inversion circle center
-        let dx = x - self.inversion_cx;
-        let dy = y - self.inversion_cy;
+    /// Uses the classical formula: P' = O + r²/|OP|² × (P - O)
+    /// where O is the center and r is the radius of the inversion circle.
+    ///
+    /// Note: The CGA sandwich product C × P × C⁻¹ computes a reflection,
+    /// not classical circle inversion. We use the explicit formula here.
+    fn invert_point(&self, point: &RoundPoint<f64>) -> Option<RoundPoint<f64>> {
+        let (px, py) = point.to_euclidean()?;
+
+        // Vector from inversion center to point
+        let dx = px - self.inversion_cx;
+        let dy = py - self.inversion_cy;
         let dist_sq = dx * dx + dy * dy;
 
         // Point at center maps to infinity
@@ -181,41 +221,38 @@ impl Conformal2InversionDemo {
 
         // Inversion formula: P' = O + r²/|OP|² × (P - O)
         let scale = self.inversion_radius * self.inversion_radius / dist_sq;
-        Some((
-            self.inversion_cx + dx * scale,
-            self.inversion_cy + dy * scale,
-        ))
+        let inv_x = self.inversion_cx + dx * scale;
+        let inv_y = self.inversion_cy + dy * scale;
+
+        Some(RoundPoint::from_euclidean(inv_x, inv_y))
     }
 
     /// Inverts a circle through the inversion circle.
     ///
     /// Cases:
-    /// 1. Circle through inversion center → Line
-    /// 2. Circle not through center → Circle
-    fn invert_circle(&self, cx: f64, cy: f64, radius: f64) -> InvertedCircle {
+    /// - Circle NOT through center → Circle
+    /// - Circle THROUGH center → Line (circle through infinity)
+    fn invert_circle(&self, circle: &Circle<f64>) -> Option<InvertedCircle> {
+        let (cx, cy) = circle.center()?;
+        let radius = circle.radius()?;
+
         // Distance from inversion center to circle center
         let dx = cx - self.inversion_cx;
         let dy = cy - self.inversion_cy;
         let d = (dx * dx + dy * dy).sqrt();
 
         // Check if circle passes through the inversion center
-        // (distance from center to inversion center equals radius)
         let passes_through_center = (d - radius).abs() < EPSILON;
 
         if passes_through_center {
             // Circle through center inverts to a line
-            // The line is perpendicular to the line from inversion center to circle center
-            // and passes through the inverted point of the far side of the circle
-
-            // Direction from inversion center to circle center
             if d < EPSILON {
-                // Degenerate case: circle centered at inversion center
-                // This should not happen if radius > 0 and passes through center
-                return InvertedCircle::Line {
+                // Degenerate: circle centered at inversion center
+                return Some(InvertedCircle::Line {
                     nx: 1.0,
                     ny: 0.0,
                     d: 0.0,
-                };
+                });
             }
 
             let ux = dx / d;
@@ -226,29 +263,27 @@ impl Conformal2InversionDemo {
             let far_y = cy + uy * radius;
 
             // Invert the far point
-            if let Some((inv_x, inv_y)) = self.invert_point(far_x, far_y) {
-                // Line through inv_point perpendicular to direction
-                // Normal is (ux, uy), and line passes through (inv_x, inv_y)
-                InvertedCircle::Line {
-                    nx: ux,
-                    ny: uy,
-                    d: ux * inv_x + uy * inv_y,
-                }
-            } else {
-                // Far point is at inversion center - shouldn't happen
-                InvertedCircle::Line {
-                    nx: ux,
-                    ny: uy,
-                    d: 0.0,
+            let far_point = RoundPoint::from_euclidean(far_x, far_y);
+            if let Some(inv_far) = self.invert_point(&far_point) {
+                if let Some((inv_x, inv_y)) = inv_far.to_euclidean() {
+                    // Line through inv_point perpendicular to direction
+                    return Some(InvertedCircle::Line {
+                        nx: ux,
+                        ny: uy,
+                        d: ux * inv_x + uy * inv_y,
+                    });
                 }
             }
+            Some(InvertedCircle::Line {
+                nx: ux,
+                ny: uy,
+                d: 0.0,
+            })
         } else {
             // Circle not through center inverts to another circle
-            // Invert the two points where line from inversion center meets circle
-
             let r_sq = self.inversion_radius * self.inversion_radius;
 
-            // Near and far points on the circle along the line to inversion center
+            // Near and far distances on the circle along line to inversion center
             let near_dist = d - radius;
             let far_dist = d + radius;
 
@@ -271,11 +306,11 @@ impl Conformal2InversionDemo {
             let new_cx = self.inversion_cx + ux * new_center_dist;
             let new_cy = self.inversion_cy + uy * new_center_dist;
 
-            InvertedCircle::Circle {
+            Some(InvertedCircle::Circle {
                 cx: new_cx,
                 cy: new_cy,
                 radius: new_radius,
-            }
+            })
         }
     }
 
@@ -286,10 +321,12 @@ impl Conformal2InversionDemo {
         let mut nearest_dist = threshold;
 
         for (idx, point) in self.points.iter().enumerate() {
-            let dist = ((point.x - mouse_x).powi(2) + (point.y - mouse_y).powi(2)).sqrt();
-            if dist < nearest_dist {
-                nearest_dist = dist;
-                nearest_idx = Some(idx);
+            if let Some((px, py)) = point.euclidean() {
+                let dist = ((px - mouse_x).powi(2) + (py - mouse_y).powi(2)).sqrt();
+                if dist < nearest_dist {
+                    nearest_dist = dist;
+                    nearest_idx = Some(idx);
+                }
             }
         }
         nearest_idx
@@ -302,13 +339,14 @@ impl Conformal2InversionDemo {
         let mut nearest_dist = threshold;
 
         for (idx, circle) in self.circles.iter().enumerate() {
-            // Distance to circle edge
-            let dist_to_center =
-                ((circle.cx - mouse_x).powi(2) + (circle.cy - mouse_y).powi(2)).sqrt();
-            let dist = (dist_to_center - circle.radius).abs();
-            if dist < nearest_dist {
-                nearest_dist = dist;
-                nearest_idx = Some(idx);
+            if let Some((cx, cy, r)) = circle.center_radius() {
+                // Distance to circle edge
+                let dist_to_center = ((cx - mouse_x).powi(2) + (cy - mouse_y).powi(2)).sqrt();
+                let dist = (dist_to_center - r).abs();
+                if dist < nearest_dist {
+                    nearest_dist = dist;
+                    nearest_idx = Some(idx);
+                }
             }
         }
         nearest_idx
@@ -382,41 +420,47 @@ impl VisualizationApp for Conformal2InversionDemo {
                 // Draw original points and their inversions
                 if self.show_originals {
                     for pt in &self.points {
-                        plot_ui.points(
-                            Points::new(vec![[pt.x, pt.y]])
-                                .color(point(&ctx))
-                                .radius(7.0)
-                                .filled(true)
-                                .name(&pt.name),
-                        );
+                        if let Some((x, y)) = pt.euclidean() {
+                            plot_ui.points(
+                                Points::new(vec![[x, y]])
+                                    .color(point(&ctx))
+                                    .radius(7.0)
+                                    .filled(true)
+                                    .name(&pt.name),
+                            );
+                        }
                     }
                 }
 
                 if self.show_inverted {
                     for (idx, pt) in self.points.iter().enumerate() {
-                        if let Some((inv_x, inv_y)) = self.invert_point(pt.x, pt.y) {
-                            // Only draw if within reasonable bounds
-                            if inv_x.abs() < VIEWPORT_BOUNDS * 2.0
-                                && inv_y.abs() < VIEWPORT_BOUNDS * 2.0
-                            {
-                                plot_ui.points(
-                                    Points::new(vec![[inv_x, inv_y]])
-                                        .color(active(&ctx))
-                                        .radius(7.0)
-                                        .filled(true)
-                                        .name(format!("{}'", self.points[idx].name)),
-                                );
+                        if let Some(inverted) = self.invert_point(&pt.point) {
+                            if let Some((inv_x, inv_y)) = inverted.to_euclidean() {
+                                // Only draw if within reasonable bounds
+                                if inv_x.abs() < VIEWPORT_BOUNDS * 2.0
+                                    && inv_y.abs() < VIEWPORT_BOUNDS * 2.0
+                                {
+                                    plot_ui.points(
+                                        Points::new(vec![[inv_x, inv_y]])
+                                            .color(active(&ctx))
+                                            .radius(7.0)
+                                            .filled(true)
+                                            .name(format!("{}'", self.points[idx].name)),
+                                    );
 
-                                // Draw connecting line from original to inverted
-                                let connect_line = line_segment(
-                                    pt.x,
-                                    pt.y,
-                                    inv_x,
-                                    inv_y,
-                                    with_alpha(grid(&ctx), 80),
-                                )
-                                .name("Inversion Ray");
-                                plot_ui.line(connect_line);
+                                    // Draw connecting line from original to inverted
+                                    if let Some((orig_x, orig_y)) = pt.euclidean() {
+                                        let connect_line = line_segment(
+                                            orig_x,
+                                            orig_y,
+                                            inv_x,
+                                            inv_y,
+                                            with_alpha(grid(&ctx), 80),
+                                        )
+                                        .name("Inversion Ray");
+                                        plot_ui.line(connect_line);
+                                    }
+                                }
                             }
                         }
                     }
@@ -425,49 +469,56 @@ impl VisualizationApp for Conformal2InversionDemo {
                 // Draw original circles and their inversions
                 if self.show_originals {
                     for circ in &self.circles {
-                        let circle_line =
-                            circle_2d(circ.cx, circ.cy, circ.radius, circle(&ctx), CIRCLE_SEGMENTS)
+                        if let Some((cx, cy, r)) = circ.center_radius() {
+                            let circle_line = circle_2d(cx, cy, r, circle(&ctx), CIRCLE_SEGMENTS)
                                 .name(&circ.name);
-                        plot_ui.line(circle_line);
+                            plot_ui.line(circle_line);
+                        }
                     }
                 }
 
                 if self.show_inverted {
                     for (idx, circ) in self.circles.iter().enumerate() {
-                        let inverted = self.invert_circle(circ.cx, circ.cy, circ.radius);
-                        match inverted {
-                            InvertedCircle::Circle { cx, cy, radius } => {
-                                if radius < MAX_DRAWABLE_RADIUS
-                                    && cx.abs() < VIEWPORT_BOUNDS * 2.0
-                                    && cy.abs() < VIEWPORT_BOUNDS * 2.0
-                                {
-                                    let inv_circle =
-                                        circle_2d(cx, cy, radius, active(&ctx), CIRCLE_SEGMENTS)
-                                            .name(format!("{}'", self.circles[idx].name));
-                                    plot_ui.line(inv_circle);
+                        if let Some(inverted) = self.invert_circle(&circ.circle) {
+                            match inverted {
+                                InvertedCircle::Circle { cx, cy, radius } => {
+                                    if radius < MAX_DRAWABLE_RADIUS
+                                        && cx.abs() < VIEWPORT_BOUNDS * 2.0
+                                        && cy.abs() < VIEWPORT_BOUNDS * 2.0
+                                    {
+                                        let inv_circle = circle_2d(
+                                            cx,
+                                            cy,
+                                            radius,
+                                            active(&ctx),
+                                            CIRCLE_SEGMENTS,
+                                        )
+                                        .name(format!("{}'", self.circles[idx].name));
+                                        plot_ui.line(inv_circle);
+                                    }
                                 }
-                            }
-                            InvertedCircle::Line { nx, ny, d } => {
-                                // Draw line nx*x + ny*y = d
-                                let len = (nx * nx + ny * ny).sqrt();
-                                if len > EPSILON {
-                                    // Point on the line closest to origin
-                                    let px = nx * d / (len * len);
-                                    let py = ny * d / (len * len);
-                                    // Direction along the line
-                                    let dx = -ny / len;
-                                    let dy = nx / len;
+                                InvertedCircle::Line { nx, ny, d } => {
+                                    // Draw line nx*x + ny*y = d
+                                    let len = (nx * nx + ny * ny).sqrt();
+                                    if len > EPSILON {
+                                        // Point on the line closest to origin
+                                        let px = nx * d / (len * len);
+                                        let py = ny * d / (len * len);
+                                        // Direction along the line
+                                        let dx = -ny / len;
+                                        let dy = nx / len;
 
-                                    let inv_line = infinite_line_2d(
-                                        px,
-                                        py,
-                                        dx,
-                                        dy,
-                                        VIEWPORT_BOUNDS,
-                                        active(&ctx),
-                                    )
-                                    .name(format!("{}' (line)", self.circles[idx].name));
-                                    plot_ui.line(inv_line);
+                                        let inv_line = infinite_line_2d(
+                                            px,
+                                            py,
+                                            dx,
+                                            dy,
+                                            VIEWPORT_BOUNDS,
+                                            active(&ctx),
+                                        )
+                                        .name(format!("{}' (line)", self.circles[idx].name));
+                                        plot_ui.line(inv_line);
+                                    }
                                 }
                             }
                         }
@@ -498,15 +549,16 @@ impl VisualizationApp for Conformal2InversionDemo {
                 if self.dragging_inversion_center {
                     self.inversion_cx = mouse_x;
                     self.inversion_cy = mouse_y;
+                    self.update_inversion_circle();
                 } else if let Some(idx) = self.dragging_point {
                     if idx < self.points.len() {
-                        self.points[idx].x = mouse_x;
-                        self.points[idx].y = mouse_y;
+                        self.points[idx].set_position(mouse_x, mouse_y);
                     }
                 } else if let Some(idx) = self.dragging_circle {
                     if idx < self.circles.len() {
-                        self.circles[idx].cx = mouse_x;
-                        self.circles[idx].cy = mouse_y;
+                        if let Some((_, _, r)) = self.circles[idx].center_radius() {
+                            self.circles[idx].set_center_radius(mouse_x, mouse_y, r);
+                        }
                     }
                 }
             }
@@ -532,48 +584,73 @@ impl VisualizationApp for Conformal2InversionDemo {
 
         ui.horizontal(|ui| {
             ui.label("Center:");
-            ui.add(
-                egui::DragValue::new(&mut self.inversion_cx)
-                    .speed(0.1)
-                    .prefix("x: "),
-            );
-            ui.add(
-                egui::DragValue::new(&mut self.inversion_cy)
-                    .speed(0.1)
-                    .prefix("y: "),
-            );
+            let mut cx = self.inversion_cx as f32;
+            let mut cy = self.inversion_cy as f32;
+            let cx_changed = ui
+                .add(egui::DragValue::new(&mut cx).speed(0.1).prefix("x: "))
+                .changed();
+            let cy_changed = ui
+                .add(egui::DragValue::new(&mut cy).speed(0.1).prefix("y: "))
+                .changed();
+            if cx_changed || cy_changed {
+                self.inversion_cx = f64::from(cx);
+                self.inversion_cy = f64::from(cy);
+                self.update_inversion_circle();
+            }
         });
 
         ui.horizontal(|ui| {
             ui.label("Radius:");
-            ui.add(egui::Slider::new(&mut self.inversion_radius, 0.5..=4.0));
+            let mut r = self.inversion_radius as f32;
+            if ui.add(egui::Slider::new(&mut r, 0.5..=4.0)).changed() {
+                self.inversion_radius = f64::from(r);
+                self.update_inversion_circle();
+            }
         });
 
         // === Points ===
         section_separator(ui, Some("Points"));
 
-        for point in &mut self.points {
+        for idx in 0..self.points.len() {
+            let name = self.points[idx].name.clone();
+            let euclidean = self.points[idx].euclidean();
+
             ui.horizontal(|ui| {
-                ui.label(&point.name);
-                ui.add(egui::DragValue::new(&mut point.x).speed(0.1).prefix("x: "));
-                ui.add(egui::DragValue::new(&mut point.y).speed(0.1).prefix("y: "));
+                ui.label(&name);
+                if let Some((x, y)) = euclidean {
+                    let mut new_x = x as f32;
+                    let mut new_y = y as f32;
+
+                    let x_changed = ui
+                        .add(egui::DragValue::new(&mut new_x).speed(0.1).prefix("x: "))
+                        .changed();
+                    let y_changed = ui
+                        .add(egui::DragValue::new(&mut new_y).speed(0.1).prefix("y: "))
+                        .changed();
+
+                    if x_changed || y_changed {
+                        self.points[idx].set_position(f64::from(new_x), f64::from(new_y));
+                    }
+                }
             });
 
             // Show inverted coordinates
-            let demo_state = Conformal2InversionDemo {
-                inversion_cx: self.inversion_cx,
-                inversion_cy: self.inversion_cy,
-                inversion_radius: self.inversion_radius,
-                ..Default::default()
-            };
-            if let Some((inv_x, inv_y)) = demo_state.invert_point(point.x, point.y) {
-                ui.horizontal(|ui| {
-                    ui.label(format!("  {}' =", point.name));
-                    ui.colored_label(active(&ctx), format!("({:.2}, {:.2})", inv_x, inv_y));
-                });
+            let inverted = self.invert_point(&self.points[idx].point);
+            if let Some(inv_point) = inverted {
+                if let Some((inv_x, inv_y)) = inv_point.to_euclidean() {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("  {}' =", name));
+                        ui.colored_label(active(&ctx), format!("({:.2}, {:.2})", inv_x, inv_y));
+                    });
+                } else {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("  {}' =", name));
+                        ui.colored_label(active(&ctx), "\u{221e} (at infinity)");
+                    });
+                }
             } else {
                 ui.horizontal(|ui| {
-                    ui.label(format!("  {}' =", point.name));
+                    ui.label(format!("  {}' =", name));
                     ui.colored_label(active(&ctx), "\u{221e} (at center)");
                 });
             }
@@ -594,38 +671,48 @@ impl VisualizationApp for Conformal2InversionDemo {
         // === Circles ===
         section_separator(ui, Some("Circles"));
 
-        for circle in &mut self.circles {
-            ui.horizontal(|ui| {
-                ui.label(&circle.name);
-                ui.add(
-                    egui::DragValue::new(&mut circle.cx)
-                        .speed(0.1)
-                        .prefix("x: "),
-                );
-                ui.add(
-                    egui::DragValue::new(&mut circle.cy)
-                        .speed(0.1)
-                        .prefix("y: "),
-                );
-            });
-            ui.horizontal(|ui| {
-                ui.label("  r:");
-                ui.add(egui::Slider::new(&mut circle.radius, 0.2..=3.0));
-            });
+        for idx in 0..self.circles.len() {
+            let name = self.circles[idx].name.clone();
+            if let Some((cx, cy, r)) = self.circles[idx].center_radius() {
+                ui.horizontal(|ui| {
+                    ui.label(&name);
+                    let mut new_cx = cx as f32;
+                    let mut new_cy = cy as f32;
 
-            // Check if circle passes through inversion center
-            let dx = circle.cx - self.inversion_cx;
-            let dy = circle.cy - self.inversion_cy;
-            let dist = (dx * dx + dy * dy).sqrt();
-            let passes_through = (dist - circle.radius).abs() < 0.1;
+                    let cx_changed = ui
+                        .add(egui::DragValue::new(&mut new_cx).speed(0.1).prefix("x: "))
+                        .changed();
+                    let cy_changed = ui
+                        .add(egui::DragValue::new(&mut new_cy).speed(0.1).prefix("y: "))
+                        .changed();
 
-            if passes_through {
-                ui.colored_label(
-                    active(&ctx),
-                    format!("  {}' = Line (through center)", circle.name),
-                );
-            } else {
-                ui.colored_label(active(&ctx), format!("  {}' = Circle", circle.name));
+                    if cx_changed || cy_changed {
+                        self.circles[idx].set_center_radius(
+                            f64::from(new_cx),
+                            f64::from(new_cy),
+                            r,
+                        );
+                    }
+                });
+
+                ui.horizontal(|ui| {
+                    ui.label("  r:");
+                    let mut new_r = r as f32;
+                    if ui.add(egui::Slider::new(&mut new_r, 0.2..=3.0)).changed() {
+                        self.circles[idx].set_center_radius(cx, cy, f64::from(new_r));
+                    }
+                });
+
+                // Check if circle passes through inversion center using CGA
+                let dist_to_center =
+                    ((cx - self.inversion_cx).powi(2) + (cy - self.inversion_cy).powi(2)).sqrt();
+                let passes_through = (dist_to_center - r).abs() < 0.1;
+
+                if passes_through {
+                    ui.colored_label(active(&ctx), format!("  {}' = Line (through center)", name));
+                } else {
+                    ui.colored_label(active(&ctx), format!("  {}' = Circle", name));
+                }
             }
         }
 
@@ -669,6 +756,7 @@ impl VisualizationApp for Conformal2InversionDemo {
             self.inversion_cx = 0.0;
             self.inversion_cy = 0.0;
             self.inversion_radius = 2.0;
+            self.update_inversion_circle();
             self.circles.clear();
             self.circles
                 .push(SceneCircle::new(2.0, 0.0, 2.0, "C\u{2081}"));
@@ -680,6 +768,7 @@ impl VisualizationApp for Conformal2InversionDemo {
             self.inversion_cx = 0.0;
             self.inversion_cy = 0.0;
             self.inversion_radius = 2.0;
+            self.update_inversion_circle();
             self.circles.clear();
             self.circles
                 .push(SceneCircle::new(0.0, 0.0, 1.0, "C\u{2081}"));
@@ -725,29 +814,31 @@ const CONFORMAL2_INVERSION_EDUCATION: EducationalContent = EducationalContent {
 Circle inversion (or geometric inversion) is a fundamental conformal transformation. \
 Given an inversion circle with center O and radius r, every point P maps to P' such that:
 
-    |OP| × |OP'| = r²
+    |OP| \u{00d7} |OP'| = r\u{00b2}
 
 Points closer to O map farther away, and vice versa. The inversion circle itself \
 is fixed (every point on it maps to itself).",
 
     math_background: "\
-INVERSION FORMULA:
-For a point P at distance d from center O, the inverted point P' is at distance r²/d \
-along the same ray from O:
+CGA INVERSION FORMULA:
+In Conformal Geometric Algebra, inversion through a circle C is elegantly expressed as:
 
-    P' = O + (r²/|OP|²) × (P - O)
+    P' = C \u{00d7} P \u{00d7} C\u{207b}\u{00b9}
 
-CIRCLE INVERSION:
-- Circle NOT through O → Circle
-- Circle THROUGH O → Line (circle of infinite radius)
+where \u{00d7} is the geometric product and C\u{207b}\u{00b9} is the inverse of the circle.
 
-LINE INVERSION:
-- Line NOT through O → Circle through O
-- Line THROUGH O → Same line (self-inverse)
+This single formula handles ALL cases:
+\u{2022} Point inversion: P' = C \u{00d7} P \u{00d7} C\u{207b}\u{00b9}
+\u{2022} Circle inversion: C' = I \u{00d7} C \u{00d7} I\u{207b}\u{00b9}
 
-In CGA, inversion through a circle C is expressed as a reflection:
-    X' = -C · X · C⁻¹
-where · is the geometric product.",
+PROPERTIES:
+\u{2022} Circle NOT through O \u{2192} Circle
+\u{2022} Circle THROUGH O \u{2192} Line (circle of infinite radius)
+\u{2022} Line NOT through O \u{2192} Circle through O
+\u{2022} Line THROUGH O \u{2192} Same line (self-inverse)
+
+The CGA representation naturally handles the circle/line duality \
+since lines are circles through the point at infinity.",
 
     how_to_use: "\
 - DRAG the inversion circle center to move it
@@ -762,7 +853,7 @@ where · is the geometric product.",
 - Points on the inversion circle map to themselves
 - Circles map to circles (or lines as special case)
 - Two inversions in the same circle = identity
-- Composing inversions in two circles = Mobius transformation",
+- CGA unifies the formula: X' = C \u{00d7} X \u{00d7} C\u{207b}\u{00b9}",
 
     resources: &[
         (
