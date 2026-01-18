@@ -24,28 +24,59 @@ primary_involution = "reverse"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Vector]
 grades = [1]
 description = "Spacetime vector (can be spacelike, timelike, or null)"
-fields = ["x", "y", "z", "t"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "z", blade = "e3" },
+  { name = "t", blade = "e4" }
+]
 
 [types.Bivector]
 grades = [2]
 description = "Bivector (spatial rotations + spacetime boosts)"
-fields = ["xy", "xz", "xt", "yz", "yt", "zt"]
+field_map = [
+  { name = "xy", blade = "e12" },
+  { name = "xz", blade = "e13" },
+  { name = "xt", blade = "e14" },
+  { name = "yz", blade = "e23" },
+  { name = "yt", blade = "e24" },
+  { name = "zt", blade = "e34" }
+]
 
 [types.Trivector]
 grades = [3]
 description = "Trivector (spacetime volumes)"
-fields = ["xyz", "xyt", "xzt", "yzt"]
+field_map = [
+  { name = "xyz", blade = "e123" },
+  { name = "xyt", blade = "e124" },
+  { name = "xzt", blade = "e134" },
+  { name = "yzt", blade = "e234" }
+]
 
 [types.Pseudoscalar]
 grades = [4]
 description = "Pseudoscalar (oriented 4-volume)"
-fields = ["xyzt"]
+field_map = [
+  { name = "xyzt", blade = "e1234" }
+]
 
 [types.Eventor]
 grades = [0, 2, 4]
 description = "Even-graded element (Lorentz transformations)"
-fields = ["s", "xy", "xz", "xt", "yz", "yt", "zt", "xyzt"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "xy", blade = "e12" },
+  { name = "xz", blade = "e13" },
+  { name = "xt", blade = "e14" },
+  { name = "yz", blade = "e23" },
+  { name = "yt", blade = "e24" },
+  { name = "zt", blade = "e34" },
+  { name = "xyzt", blade = "e1234" }
+]

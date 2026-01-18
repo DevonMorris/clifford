@@ -23,18 +23,31 @@ primary_involution = "clifford_conjugate"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Imaginary]
 grades = [1]
 description = "Pure imaginary quaternion (i and j components)"
-fields = ["i", "j"]
+field_map = [
+  { name = "i", blade = "e1" },
+  { name = "j", blade = "e2" }
+]
 
 [types.Bivector]
 grades = [2]
 description = "Bivector component (k = ij)"
-fields = ["k"]
+field_map = [
+  { name = "k", blade = "e12" }
+]
 
 [types.Quaternion]
 grades = [0, 1, 2]
 description = "Quaternion: w + xi + yj + zk"
-fields = ["w", "i", "j", "k"]
+field_map = [
+  { name = "w", blade = "s" },
+  { name = "i", blade = "e1" },
+  { name = "j", blade = "e2" },
+  { name = "k", blade = "e12" }
+]

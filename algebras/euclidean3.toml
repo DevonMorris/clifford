@@ -19,11 +19,18 @@ zero = []
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Vector]
 grades = [1]
 description = "3D vector"
-fields = ["x", "y", "z"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "z", blade = "e3" }
+]
 
 [types.Bivector]
 grades = [2]
@@ -32,8 +39,11 @@ description = "3D bivector"
 # - rz (e12): rotation around the z-axis (in the xy-plane)
 # - ry (e13): rotation around the y-axis (in the xz-plane)
 # - rx (e23): rotation around the x-axis (in the yz-plane)
-# Lexicographic order: [e12, e13, e23] → [rz, ry, rx]
-fields = ["rz", "ry", "rx"]
+field_map = [
+  { name = "rz", blade = "e12" },
+  { name = "ry", blade = "e13" },
+  { name = "rx", blade = "e23" }
+]
 
 [types.Rotor]
 grades = [0, 2]
@@ -41,12 +51,19 @@ description = "3D rotor (unit versor for rotations)"
 # Rotors represent 3D rotations via the sandwich product: R * v * R^-1
 # - s: scalar part (cos(theta/2) for a rotation by angle theta)
 # - rz, ry, rx: rotation components (see Bivector docs)
-fields = ["s", "rz", "ry", "rx"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "rz", blade = "e12" },
+  { name = "ry", blade = "e13" },
+  { name = "rx", blade = "e23" }
+]
 
 [types.Trivector]
 grades = [3]
 description = "3D trivector (pseudoscalar)"
-fields = ["ps"]
+field_map = [
+  { name = "ps", blade = "e123" }
+]
 
 # Note: Entity_0_3 (scalar + pseudoscalar) is valid but rarely used
 # Note: Entity_1_3 (vector + trivector) is the odd subalgebra

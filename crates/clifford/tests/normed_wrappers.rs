@@ -89,24 +89,28 @@ use clifford::wrappers::Bulk;
 #[test]
 fn motor_implements_degenerate_normed() {
     // A pure rotation motor (no translation)
+    // Per RGA convention: rotation uses velocity bivectors (tx, ry, rz) and ps for identity
+    // For x-axis rotation by pi/2: tx = sin(pi/4), ps = cos(pi/4)
     let motor = Motor::new_unchecked(
-        0.5_f64.sqrt(), // s = cos(pi/4)
-        0.0,
-        0.0,
-        0.5_f64.sqrt(), // e12 = sin(pi/4)
-        0.0,
-        0.0,
-        0.0,
-        0.0,
+        0.0,            // s = 0 (no translation coupling)
+        0.0,            // tz (e12) - moment z
+        0.0,            // ty (e13) - moment y
+        0.5_f64.sqrt(), // tx (e14) = sin(pi/4) - velocity x (rotation around x)
+        0.0,            // rx (e23) - moment x
+        0.0,            // ry (e24) - velocity y
+        0.0,            // rz (e34) - velocity z
+        0.5_f64.sqrt(), // ps = cos(pi/4) - identity
     );
 
-    // Bulk norm should be 1 for a unit rotation
+    // Bulk norm should be 0 for pure rotation (no translation/moment)
+    // Bulk = sqrt(s² + tz² + ty² + rx²) = 0
     let bulk = motor.bulk_norm();
-    assert!(relative_eq!(bulk, 1.0, epsilon = EPS, max_relative = EPS));
+    assert!(bulk.abs() < EPS);
 
-    // Weight norm should be 0 for pure rotation (no translation)
+    // Weight norm should be 1 for a unit rotation
+    // Weight = sqrt(tx² + ry² + rz² + ps²) = sqrt(0.5 + 0 + 0 + 0.5) = 1
     let weight = motor.weight_norm();
-    assert!(weight.abs() < EPS);
+    assert!(relative_eq!(weight, 1.0, epsilon = EPS, max_relative = EPS));
 }
 
 #[test]

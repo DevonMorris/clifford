@@ -200,10 +200,18 @@ pub struct VersorSpec {
 pub struct FieldSpec {
     /// Field name (e.g., "x", "xy").
     pub name: String,
-    /// Blade index this field holds.
+    /// Blade index this field holds (canonical bitmask form).
     pub blade_index: usize,
     /// Grade of the blade.
     pub grade: usize,
+    /// Sign relative to canonical blade ordering (+1 or -1).
+    ///
+    /// When a blade is specified in non-canonical order (e.g., "e20" instead of "e02"),
+    /// this sign captures the parity of the permutation needed to reach canonical form.
+    /// For example, e20 = -e02, so sign = -1.
+    ///
+    /// This sign is applied during product generation to ensure correct results.
+    pub sign: i8,
 }
 
 /// Product specifications for all product types.

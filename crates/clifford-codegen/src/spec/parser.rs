@@ -193,8 +193,45 @@ fn parse_blade_names(
     Ok(blade_names)
 }
 
-/// Parses a blade name like "e12" or "e123" into its index.
-fn parse_blade_index(name: &str, dim: usize) -> Result<usize, ParseError> {
+/// Result of parsing a blade name, including sign correction.
+#[derive(Debug, Clone, Copy)]
+pub struct BladeParseResult {
+    /// Canonical blade index (bitmask with bits in standard order).
+    pub index: usize,
+    /// Sign relative to canonical ordering (+1 or -1).
+    /// e.g., e20 = -e02, so sign = -1.
+    pub sign: i8,
+    /// Grade of the blade (number of basis vectors).
+    pub grade: usize,
+}
+
+/// Parses a blade name like "e12", "e20", "e312", or "s" into its canonical index and sign.
+///
+/// Non-canonical orderings (e.g., "e20" instead of "e02") are supported and will
+/// compute the appropriate sign correction based on permutation parity.
+///
+/// # Special cases
+///
+/// - "s" → index=0, sign=+1, grade=0 (scalar blade)
+///
+/// # Examples
+///
+/// - "s" → index=0, sign=+1, grade=0 (scalar)
+/// - "e1" → index=1 (0b1), sign=+1, grade=1
+/// - "e12" → index=3 (0b11), sign=+1 (already canonical)
+/// - "e21" → index=3 (0b11), sign=-1 (one swap needed)
+/// - "e20" → index=5 (0b101 for bases 0,2), sign=-1 (one swap: 20→02)
+/// - "e312" → index=7 (0b111), sign=+1 (312→132→123 = 2 swaps = even)
+fn parse_blade_with_sign(name: &str, dim: usize) -> Result<BladeParseResult, ParseError> {
+    // Special case: "s" for scalar (grade 0)
+    if name == "s" {
+        return Ok(BladeParseResult {
+            index: 0,
+            sign: 1,
+            grade: 0,
+        });
+    }
+
     // Must start with 'e'
     if !name.starts_with('e') {
         return Err(ParseError::InvalidBladeName {
@@ -209,8 +246,8 @@ fn parse_blade_index(name: &str, dim: usize) -> Result<usize, ParseError> {
         });
     }
 
-    // Each digit is a 1-based basis vector index
-    let mut index = 0usize;
+    // Parse indices in the order given
+    let mut indices: Vec<usize> = Vec::new();
     for c in digits.chars() {
         let digit = c.to_digit(10).ok_or_else(|| ParseError::InvalidBladeName {
             name: name.to_string(),
@@ -224,18 +261,54 @@ fn parse_blade_index(name: &str, dim: usize) -> Result<usize, ParseError> {
             });
         }
 
-        // Convert to 0-based and set bit
-        let bit = digit - 1;
-        if (index >> bit) & 1 == 1 {
-            // Duplicate index in blade name
+        // Convert to 0-based
+        let idx = digit - 1;
+
+        // Check for duplicates
+        if indices.contains(&idx) {
             return Err(ParseError::InvalidBladeName {
                 name: name.to_string(),
             });
         }
-        index |= 1 << bit;
+        indices.push(idx);
     }
 
-    Ok(index)
+    // Compute canonical bitmask
+    let mut index = 0usize;
+    for &idx in &indices {
+        index |= 1 << idx;
+    }
+
+    // Compute sign from permutation parity
+    // Count inversions: pairs (i,j) where i < j but indices[i] > indices[j]
+    let sign = permutation_sign(&indices);
+
+    let grade = indices.len();
+
+    Ok(BladeParseResult { index, sign, grade })
+}
+
+/// Computes the sign of a permutation by counting inversions.
+///
+/// Returns +1 for even permutations, -1 for odd permutations.
+fn permutation_sign(indices: &[usize]) -> i8 {
+    let mut inversions = 0;
+    for i in 0..indices.len() {
+        for j in (i + 1)..indices.len() {
+            if indices[i] > indices[j] {
+                inversions += 1;
+            }
+        }
+    }
+    if inversions % 2 == 0 { 1 } else { -1 }
+}
+
+/// Parses a blade name like "e12" or "e123" into its canonical index (legacy compatibility).
+///
+/// This is a wrapper around `parse_blade_with_sign` that only returns the index,
+/// ignoring the sign. Use `parse_blade_with_sign` for full sign support.
+fn parse_blade_index(name: &str, dim: usize) -> Result<usize, ParseError> {
+    Ok(parse_blade_with_sign(name, dim)?.index)
 }
 
 /// Parses the types section.
@@ -268,8 +341,8 @@ fn parse_type(
     name: &str,
     raw: &RawTypeSpec,
     dim: usize,
-    sig: &SignatureSpec,
-    blade_names: &HashMap<usize, String>,
+    _sig: &SignatureSpec,
+    _blade_names: &HashMap<usize, String>,
 ) -> Result<TypeSpec, ParseError> {
     // Validate grades
     for &grade in &raw.grades {
@@ -282,30 +355,15 @@ fn parse_type(
         }
     }
 
-    // Check if this is a sparse type (explicit blade mappings)
-    let is_sparse = !raw.blades.is_empty();
+    // field_map is required for all non-alias types
+    if raw.alias_of.is_none() && raw.field_map.is_empty() {
+        return Err(ParseError::MissingFieldMap {
+            type_name: name.to_string(),
+        });
+    }
 
-    // Build fields
-    let fields = if is_sparse {
-        // Sparse type: use explicit blade mappings
-        build_sparse_fields(&raw.fields, &raw.blades, &raw.grades, dim, name)?
-    } else if raw.fields.is_empty() {
-        // Generate default fields from blade names
-        generate_default_fields(&raw.grades, dim, sig, blade_names)
-    } else {
-        // Compute expected field count for non-sparse types
-        let expected_fields: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
-
-        // Use provided fields
-        if raw.fields.len() != expected_fields {
-            return Err(ParseError::FieldCountMismatch {
-                type_name: name.to_string(),
-                expected: expected_fields,
-                got: raw.fields.len(),
-            });
-        }
-        build_fields_from_names(&raw.fields, &raw.grades, dim, name, blade_names, sig)?
-    };
+    // Build fields from field_map
+    let fields = build_fields_from_field_map(&raw.field_map, &raw.grades, dim, name)?;
 
     // Check for duplicate field names
     let mut field_names = HashSet::new();
@@ -341,6 +399,10 @@ fn parse_type(
         None
     };
 
+    // Determine if this is a sparse type (not all blades of the grade are present)
+    let expected_blade_count: usize = raw.grades.iter().map(|&g| binomial(dim, g)).sum();
+    let is_sparse = fields.len() < expected_blade_count;
+
     Ok(TypeSpec {
         name: name.to_string(),
         grades: raw.grades.clone(),
@@ -352,200 +414,39 @@ fn parse_type(
     })
 }
 
-/// Generates default field specs from blade indices.
-fn generate_default_fields(
-    grades: &[usize],
-    dim: usize,
-    sig: &SignatureSpec,
-    blade_names: &HashMap<usize, String>,
-) -> Vec<FieldSpec> {
-    let mut fields = Vec::new();
-
-    for &grade in grades {
-        for blade_index in 0usize..(1 << dim) {
-            if blade_index.count_ones() as usize == grade {
-                let name = blade_names
-                    .get(&blade_index)
-                    .cloned()
-                    .unwrap_or_else(|| default_blade_name(blade_index, sig));
-
-                fields.push(FieldSpec {
-                    name,
-                    blade_index,
-                    grade,
-                });
-            }
-        }
-    }
-
-    fields
-}
-
-/// Generates a default blade name from basis vector names.
-fn default_blade_name(blade_index: usize, sig: &SignatureSpec) -> String {
-    if blade_index == 0 {
-        return "s".to_string();
-    }
-
-    let mut name = String::new();
-    for basis in &sig.basis {
-        if (blade_index >> basis.index) & 1 == 1 {
-            name.push_str(&basis.name);
-        }
-    }
-    name
-}
-
-/// Builds field specs from provided field names.
+/// Builds field specs from explicit field_map entries.
 ///
-/// # Canonical Ordering Requirement
-///
-/// Fields in TOML must be listed in **canonical blade order**:
-/// 1. First by grade (ascending)
-/// 2. Within each grade, by blade index (ascending)
-///
-/// Blade indices follow the bitmask convention where bit `i` indicates
-/// the presence of basis vector `eᵢ`. For example, in 3D:
-///
-/// | Index | Binary | Blade | Grade |
-/// |-------|--------|-------|-------|
-/// | 0     | 000    | 1     | 0     |
-/// | 1     | 001    | e₁    | 1     |
-/// | 2     | 010    | e₂    | 1     |
-/// | 3     | 011    | e₁₂   | 2     |
-/// | 4     | 100    | e₃    | 1     |
-/// | 5     | 101    | e₁₃   | 2     |
-/// | 6     | 110    | e₂₃   | 2     |
-/// | 7     | 111    | e₁₂₃  | 3     |
-///
-/// Builds field specs from provided field names.
-///
-/// This function tries to compute the correct blade_index for each field:
-/// 1. First, looks up the field name in the blade_names mapping (from [blades] section)
-/// 2. If not found, looks up by default blade name (e.g., "s", "e12", "e123")
-/// 3. If still not found, falls back to assuming canonical blade order
-///
-/// The fallback to canonical order maintains backward compatibility with
-/// algebras that use custom field names without explicit blade mappings.
-fn build_fields_from_names(
-    names: &[String],
-    grades: &[usize],
-    dim: usize,
-    type_name: &str,
-    blade_names: &HashMap<usize, String>,
-    sig: &SignatureSpec,
-) -> Result<Vec<FieldSpec>, ParseError> {
-    // Build inverted mapping: field_name -> blade_index
-    let name_to_index: HashMap<String, usize> = blade_names
-        .iter()
-        .map(|(&idx, name)| (name.clone(), idx))
-        .collect();
-
-    // Also add default blade names (e.g., "s" for scalar, "e123" for trivector)
-    let mut name_to_index_with_defaults: HashMap<String, usize> = name_to_index;
-    for blade_index in 0usize..(1 << dim) {
-        let default_name = default_blade_name(blade_index, sig);
-        name_to_index_with_defaults
-            .entry(default_name)
-            .or_insert(blade_index);
-    }
-
-    // Collect expected blade indices in canonical order for fallback
-    let mut blade_indices_canonical = Vec::new();
-    for &grade in grades {
-        for blade_index in 0usize..(1 << dim) {
-            if blade_index.count_ones() as usize == grade {
-                blade_indices_canonical.push((blade_index, grade));
-            }
-        }
-    }
-
-    if names.len() != blade_indices_canonical.len() {
-        return Err(ParseError::FieldCountMismatch {
-            type_name: type_name.to_string(),
-            expected: blade_indices_canonical.len(),
-            got: names.len(),
-        });
-    }
-
-    // Build field specs - try to look up name, otherwise use canonical order
-    let mut fields = Vec::with_capacity(names.len());
-    for (i, name) in names.iter().enumerate() {
-        let (blade_index, grade) = if let Some(&idx) = name_to_index_with_defaults.get(name) {
-            // Found in mapping - use the correct blade_index
-            let grade = idx.count_ones() as usize;
-            (idx, grade)
-        } else {
-            // Not found - fall back to canonical order (maintains backward compatibility)
-            blade_indices_canonical[i]
-        };
-
-        fields.push(FieldSpec {
-            name: name.clone(),
-            blade_index,
-            grade,
-        });
-    }
-
-    Ok(fields)
-}
-
-/// Builds field specs for sparse types with explicit blade mappings.
-///
-/// Sparse types specify exactly which blades they use via the `blades` field
-/// in TOML. This allows types that use only a subset of blades within a grade
-/// (e.g., Line uses 6 of 10 grade-3 blades in CGA).
-///
-/// # Arguments
-///
-/// * `field_names` - Names for each field
-/// * `blade_names` - Explicit blade names (e.g., "e415", "e235")
-/// * `grades` - Expected grades for validation
-/// * `dim` - Algebra dimension
-/// * `type_name` - Type name for error messages
-///
-/// # Returns
-///
-/// A vector of `FieldSpec` with explicit blade indices, or an error if validation fails.
-fn build_sparse_fields(
-    field_names: &[String],
-    blade_names: &[String],
+/// Each entry in field_map specifies a field name and its corresponding blade.
+/// Blade names can use non-canonical ordering (e.g., "e20" instead of "e02"),
+/// and the appropriate sign correction will be computed.
+fn build_fields_from_field_map(
+    field_map: &[super::raw::RawFieldMapping],
     grades: &[usize],
     dim: usize,
     type_name: &str,
 ) -> Result<Vec<FieldSpec>, ParseError> {
-    // Validate field and blade counts match
-    if field_names.len() != blade_names.len() {
-        return Err(ParseError::SparseBladeCountMismatch {
-            type_name: type_name.to_string(),
-            blades: blade_names.len(),
-            fields: field_names.len(),
-        });
-    }
+    let mut fields = Vec::with_capacity(field_map.len());
 
-    let mut fields = Vec::with_capacity(field_names.len());
-
-    for (field_name, blade_name) in field_names.iter().zip(blade_names.iter()) {
-        // Parse blade name to get its index
-        let blade_index = parse_blade_index(blade_name, dim)?;
-
-        // Compute the blade's grade (number of bits set)
-        let blade_grade = blade_index.count_ones() as usize;
+    for mapping in field_map {
+        // Parse blade name with sign detection
+        let blade_result = parse_blade_with_sign(&mapping.blade, dim)?;
 
         // Validate blade grade matches specified grades
-        if !grades.contains(&blade_grade) {
-            return Err(ParseError::SparseBladeGradeMismatch {
+        if !grades.contains(&blade_result.grade) {
+            return Err(ParseError::FieldMapGradeMismatch {
                 type_name: type_name.to_string(),
-                blade: blade_name.clone(),
-                blade_grade,
+                field: mapping.name.clone(),
+                blade: mapping.blade.clone(),
+                blade_grade: blade_result.grade,
                 grades: grades.to_vec(),
             });
         }
 
         fields.push(FieldSpec {
-            name: field_name.clone(),
-            blade_index,
-            grade: blade_grade,
+            name: mapping.name.clone(),
+            blade_index: blade_result.index,
+            grade: blade_result.grade,
+            sign: blade_result.sign,
         });
     }
 
@@ -973,17 +874,25 @@ mod tests {
 
             [types.Scalar]
             grades = [0]
+            field_map = [{ name = "s", blade = "s" }]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
 
             [types.Bivector]
             grades = [2]
+            field_map = [{ name = "b", blade = "e12" }]
 
             [types.Rotor]
             grades = [0, 2]
-            fields = ["s", "xy"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "xy", blade = "e12" }
+            ]
             "#,
         )
         .unwrap();
@@ -1092,29 +1001,34 @@ mod tests {
     }
 
     #[test]
-    fn reject_field_count_mismatch() {
-        let result = parse_spec(
+    fn sparse_type_with_subset_of_blades() {
+        // With field_map, providing fewer blades than the grade has is valid
+        // and marks the type as sparse
+        let spec = parse_spec(
             r#"
             [algebra]
             name = "test"
+            complete = false
 
             [signature]
             positive = ["e1", "e2", "e3"]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
             "#,
-        );
+        )
+        .unwrap();
 
-        assert!(matches!(
-            result,
-            Err(ParseError::FieldCountMismatch {
-                expected: 3,
-                got: 2,
-                ..
-            })
-        ));
+        let vector = spec.types.iter().find(|t| t.name == "Vector").unwrap();
+        assert!(
+            vector.is_sparse,
+            "Type with subset of blades should be sparse"
+        );
+        assert_eq!(vector.fields.len(), 2);
     }
 
     #[test]
@@ -1129,7 +1043,10 @@ mod tests {
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "x"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "x", blade = "e2" }
+            ]
             "#,
         );
 
@@ -1257,16 +1174,19 @@ mod tests {
                     name: "xy".to_string(),
                     blade_index: 3,
                     grade: 2,
+                    sign: 1,
                 },
                 FieldSpec {
                     name: "xz".to_string(),
                     blade_index: 5,
                     grade: 2,
+                    sign: 1,
                 },
                 FieldSpec {
                     name: "yz".to_string(),
                     blade_index: 6,
                     grade: 2,
+                    sign: 1,
                 },
             ],
             alias_of: None,
@@ -1285,16 +1205,19 @@ mod tests {
                     name: "yz".to_string(),
                     blade_index: 6,
                     grade: 2,
+                    sign: 1,
                 }, // Wrong!
                 FieldSpec {
                     name: "xz".to_string(),
                     blade_index: 5,
                     grade: 2,
+                    sign: 1,
                 }, // Wrong!
                 FieldSpec {
                     name: "xy".to_string(),
                     blade_index: 3,
                     grade: 2,
+                    sign: 1,
                 }, // Wrong!
             ],
             alias_of: None,
@@ -1313,21 +1236,25 @@ mod tests {
                     name: "s".to_string(),
                     blade_index: 0,
                     grade: 0,
+                    sign: 1,
                 },
                 FieldSpec {
                     name: "xy".to_string(),
                     blade_index: 3,
                     grade: 2,
+                    sign: 1,
                 },
                 FieldSpec {
                     name: "xz".to_string(),
                     blade_index: 5,
                     grade: 2,
+                    sign: 1,
                 },
                 FieldSpec {
                     name: "yz".to_string(),
                     blade_index: 6,
                     grade: 2,
+                    sign: 1,
                 },
             ],
             alias_of: None,
@@ -1449,6 +1376,7 @@ mod tests {
             r#"
             [algebra]
             name = "conformal3"
+            complete = false
 
             [signature]
             positive = ["e1", "e2", "e3", "e4"]
@@ -1456,9 +1384,15 @@ mod tests {
 
             [types.Line]
             grades = [3]
-            fields = ["vx", "vy", "vz", "mx", "my", "mz"]
-            blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
             description = "Line (circle through infinity)"
+            field_map = [
+                { name = "vx", blade = "e145" },
+                { name = "vy", blade = "e245" },
+                { name = "vz", blade = "e345" },
+                { name = "mx", blade = "e235" },
+                { name = "my", blade = "e135" },
+                { name = "mz", blade = "e125" }
+            ]
             "#,
         )
         .unwrap();
@@ -1487,7 +1421,8 @@ mod tests {
     }
 
     #[test]
-    fn reject_sparse_blade_count_mismatch() {
+    fn reject_field_map_grade_mismatch() {
+        // Test that a blade grade mismatch in field_map is rejected
         let result = parse_spec(
             r#"
             [algebra]
@@ -1498,41 +1433,15 @@ mod tests {
 
             [types.Bad]
             grades = [2]
-            fields = ["xy", "xz"]
-            blades = ["e12"]
+            field_map = [
+                { name = "xyz", blade = "e123" }
+            ]
             "#,
         );
 
         assert!(matches!(
             result,
-            Err(ParseError::SparseBladeCountMismatch {
-                blades: 1,
-                fields: 2,
-                ..
-            })
-        ));
-    }
-
-    #[test]
-    fn reject_sparse_blade_grade_mismatch() {
-        let result = parse_spec(
-            r#"
-            [algebra]
-            name = "test"
-
-            [signature]
-            positive = ["e1", "e2", "e3"]
-
-            [types.Bad]
-            grades = [2]
-            fields = ["xyz"]
-            blades = ["e123"]
-            "#,
-        );
-
-        assert!(matches!(
-            result,
-            Err(ParseError::SparseBladeGradeMismatch { blade_grade: 3, .. })
+            Err(ParseError::FieldMapGradeMismatch { blade_grade: 3, .. })
         ));
     }
 
@@ -1550,17 +1459,25 @@ mod tests {
 
             [types.Scalar]
             grades = [0]
+            field_map = [{ name = "s", blade = "s" }]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
 
             [types.Bivector]
             grades = [2]
+            field_map = [{ name = "b", blade = "e12" }]
 
             [types.Rotor]
             grades = [0, 2]
-            fields = ["s", "xy"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "xy", blade = "e12" }
+            ]
             "#,
         );
 
@@ -1585,13 +1502,18 @@ mod tests {
 
             [types.Scalar]
             grades = [0]
+            field_map = [{ name = "s", blade = "s" }]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
 
             [types.Bivector]
             grades = [2]
+            field_map = [{ name = "b", blade = "e12" }]
             "#,
         );
 
@@ -1616,13 +1538,18 @@ mod tests {
 
             [types.Scalar]
             grades = [0]
+            field_map = [{ name = "s", blade = "s" }]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
 
             [types.Bivector]
             grades = [2]
+            field_map = [{ name = "b", blade = "e12" }]
             "#,
         );
 
@@ -1644,13 +1571,18 @@ mod tests {
 
             [types.Scalar]
             grades = [0]
+            field_map = [{ name = "s", blade = "s" }]
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" }
+            ]
 
             [types.Bivector]
             grades = [2]
+            field_map = [{ name = "b", blade = "e12" }]
             "#,
         );
 
@@ -1660,5 +1592,25 @@ mod tests {
             "Incomplete algebra with complete=false should succeed: {:?}",
             result
         );
+    }
+
+    #[test]
+    fn require_field_map_for_types() {
+        // Test that types without field_map are rejected
+        let result = parse_spec(
+            r#"
+            [algebra]
+            name = "test"
+            complete = false
+
+            [signature]
+            positive = ["e1", "e2"]
+
+            [types.Vector]
+            grades = [1]
+            "#,
+        );
+
+        assert!(matches!(result, Err(ParseError::MissingFieldMap { .. })));
     }
 }

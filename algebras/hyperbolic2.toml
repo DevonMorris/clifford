@@ -34,7 +34,9 @@ primary_involution = "reverse"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
-fields = ["s"]
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Point]
 grades = [1]
@@ -45,7 +47,11 @@ description = "Point in hyperbolic plane (homogeneous coordinates)"
 # Ordinary points: x² + y² - t² < 0 (inside light cone)
 # Ideal points: x² + y² - t² = 0 (on the absolute/light cone)
 # Ultra-ideal: x² + y² - t² > 0 (outside light cone)
-fields = ["x", "y", "t"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "t", blade = "e3" }
+]
 
 [types.Line]
 grades = [2]
@@ -53,12 +59,18 @@ description = "Geodesic line in hyperbolic plane"
 # Lines are bivectors:
 # - xy: rotation in the xy-plane
 # - xt, yt: boost components
-fields = ["xy", "xt", "yt"]
+field_map = [
+  { name = "xy", blade = "e12" },
+  { name = "xt", blade = "e13" },
+  { name = "yt", blade = "e23" }
+]
 
 [types.Pseudoscalar]
 grades = [3]
 description = "Pseudoscalar (volume element)"
-fields = ["xyt"]
+field_map = [
+  { name = "xyt", blade = "e123" }
+]
 
 [types.Rotor]
 grades = [0, 2]
@@ -66,4 +78,9 @@ description = "Rotor for hyperbolic rotations and boosts"
 # Rotors in hyperbolic geometry:
 # - Pure xy rotation: ordinary rotation
 # - xt/yt components: hyperbolic boosts (Lorentz transformations)
-fields = ["s", "xy", "xt", "yt"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "xy", blade = "e12" },
+  { name = "xt", blade = "e13" },
+  { name = "yt", blade = "e23" }
+]

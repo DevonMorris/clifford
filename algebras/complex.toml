@@ -22,13 +22,21 @@ primary_involution = "clifford_conjugate"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.ImagUnit]
 grades = [1]
 description = "Pure imaginary unit (i where i² = -1)"
-fields = ["i"]
+field_map = [
+  { name = "i", blade = "e1" }
+]
 
 [types.Complex]
 grades = [0, 1]
 description = "Complex number: a + bi where i² = -1"
-fields = ["real", "imag"]
+field_map = [
+  { name = "real", blade = "s" },
+  { name = "imag", blade = "e1" }
+]

@@ -23,13 +23,21 @@ primary_involution = "grade_involution"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.DualUnit]
 grades = [1]
 description = "Pure dual unit (ε where ε² = 0)"
-fields = ["eps"]
+field_map = [
+  { name = "eps", blade = "e1" }
+]
 
 [types.Dual]
 grades = [0, 1]
 description = "Dual number: a + bε where ε² = 0"
-fields = ["real", "dual"]
+field_map = [
+  { name = "real", blade = "s" },
+  { name = "dual", blade = "e1" }
+]

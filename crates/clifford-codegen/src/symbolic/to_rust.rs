@@ -404,6 +404,7 @@ mod tests {
                     name: n.to_string(),
                     blade_index: *idx,
                     grade: 1,
+                    sign: 1,
                 })
                 .collect(),
             alias_of: None,

@@ -26,36 +26,75 @@ primary_involution = "reverse"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.RoundPoint]
 grades = [1]
 description = "Round point (null vectors represent actual points)"
-fields = ["x", "y", "z", "w", "u"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "z", blade = "e3" },
+  { name = "w", blade = "e4" },
+  { name = "u", blade = "e5" }
+]
 
 [types.Dipole]
 grades = [2]
 description = "Dipole (point pair, oriented line segment)"
 # CGA wiki convention: m = moment (spatial bivectors), v = velocity (e4 bivectors), p = position (e5 bivectors)
-# Canonical blade order: e12, e13, e23, e14, e24, e34, e15, e25, e35, e45
-fields = ["mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw"]
+# Blade order by bitmask: e12, e13, e23, e14, e24, e34, e15, e25, e35, e45
+field_map = [
+  { name = "mx", blade = "e12" },
+  { name = "my", blade = "e13" },
+  { name = "mz", blade = "e23" },
+  { name = "vx", blade = "e14" },
+  { name = "vy", blade = "e24" },
+  { name = "vz", blade = "e34" },
+  { name = "px", blade = "e15" },
+  { name = "py", blade = "e25" },
+  { name = "pz", blade = "e35" },
+  { name = "pw", blade = "e45" }
+]
 
 [types.Circle]
 grades = [3]
 description = "Circle in 3D space"
 # CGA wiki convention: g = plane normal, m = center, v = moment
-# Canonical blade order: e123, e124, e134, e234, e125, e135, e235, e145, e245, e345
-# Maps to: gw (e321), gz (e412), gy (e431), gx (e423), mz (e125), my (e315), mx (e235), vx (e415), vy (e425), vz (e435)
-fields = ["gw", "gz", "gy", "gx", "mz", "my", "mx", "vx", "vy", "vz"]
+# Blade order by bitmask: e123, e124, e134, e234, e125, e135, e235, e145, e245, e345
+field_map = [
+  { name = "gw", blade = "e123" },
+  { name = "gz", blade = "e124" },
+  { name = "gy", blade = "e134" },
+  { name = "gx", blade = "e234" },
+  { name = "mz", blade = "e125" },
+  { name = "my", blade = "e135" },
+  { name = "mx", blade = "e235" },
+  { name = "vx", blade = "e145" },
+  { name = "vy", blade = "e245" },
+  { name = "vz", blade = "e345" }
+]
 
 [types.Sphere]
 grades = [4]
 description = "Sphere in 3D space"
-fields = ["u", "x", "y", "z", "w"]
+# Blade order by bitmask: e1234, e1235, e1245, e1345, e2345
+field_map = [
+  { name = "u", blade = "e1234" },
+  { name = "x", blade = "e1235" },
+  { name = "y", blade = "e1245" },
+  { name = "z", blade = "e1345" },
+  { name = "w", blade = "e2345" }
+]
 
 [types.Pseudoscalar]
 grades = [5]
 description = "Pseudoscalar (oriented 5-volume)"
-fields = ["xyzwu"]
+field_map = [
+  { name = "xyzwu", blade = "e12345" }
+]
 
 [types.Motor]
 grades = [0, 2, 4]
@@ -63,7 +102,24 @@ description = "Motor (even subalgebra for conformal transformations)"
 # Grade 0: s (scalar)
 # Grade 2: same as Dipole - m (moment), v (velocity), p (position)
 # Grade 4: u (pseudoscalar weight), s (sphere components)
-fields = ["s", "mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw", "u", "sx", "sy", "sz", "sw"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "mx", blade = "e12" },
+  { name = "my", blade = "e13" },
+  { name = "mz", blade = "e23" },
+  { name = "vx", blade = "e14" },
+  { name = "vy", blade = "e24" },
+  { name = "vz", blade = "e34" },
+  { name = "px", blade = "e15" },
+  { name = "py", blade = "e25" },
+  { name = "pz", blade = "e35" },
+  { name = "pw", blade = "e45" },
+  { name = "u", blade = "e1234" },
+  { name = "sx", blade = "e1235" },
+  { name = "sy", blade = "e1245" },
+  { name = "sz", blade = "e1345" },
+  { name = "sw", blade = "e2345" }
+]
 
 # ============================================================
 # Sparse Types (subset of blades within a grade)
@@ -75,22 +131,36 @@ fields = ["s", "mx", "my", "mz", "vx", "vy", "vz", "px", "py", "pz", "pw", "u", 
 # Uses only 6 of the 10 grade-3 blades
 [types.Line]
 grades = [3]
-fields = ["vx", "vy", "vz", "mx", "my", "mz"]
-blades = ["e145", "e245", "e345", "e235", "e135", "e125"]
 description = "Line (circle through infinity, g=0)"
+field_map = [
+  { name = "vx", blade = "e145" },
+  { name = "vy", blade = "e245" },
+  { name = "vz", blade = "e345" },
+  { name = "mx", blade = "e235" },
+  { name = "my", blade = "e135" },
+  { name = "mz", blade = "e125" }
+]
 
 # Plane = Sphere through infinity (u=0)
 # Uses only 4 of the 5 grade-4 blades
 [types.Plane]
 grades = [4]
-fields = ["x", "y", "z", "w"]
-blades = ["e2345", "e1345", "e1245", "e1235"]
 description = "Plane (sphere through infinity, u=0)"
+field_map = [
+  { name = "x", blade = "e2345" },
+  { name = "y", blade = "e1345" },
+  { name = "z", blade = "e1245" },
+  { name = "w", blade = "e1235" }
+]
 
 # FlatPoint = Dipole with v=0, m=0
 # Uses only 4 of the 10 grade-2 blades
 [types.FlatPoint]
 grades = [2]
-fields = ["px", "py", "pz", "pw"]
-blades = ["e15", "e25", "e35", "e45"]
 description = "Flat point (v=0, m=0)"
+field_map = [
+  { name = "px", blade = "e15" },
+  { name = "py", blade = "e25" },
+  { name = "pz", blade = "e35" },
+  { name = "pw", blade = "e45" }
+]

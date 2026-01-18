@@ -18,18 +18,29 @@ zero = []
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Vector]
 grades = [1]
 description = "2D vector"
-fields = ["x", "y"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" }
+]
 
 [types.Bivector]
 grades = [2]
 description = "2D bivector (pseudoscalar)"
-fields = ["b"]
+field_map = [
+  { name = "b", blade = "e12" }
+]
 
 [types.Rotor]
 grades = [0, 2]
 description = "2D rotor (unit versor for rotations)"
-fields = ["s", "b"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "b", blade = "e12" }
+]

@@ -177,22 +177,21 @@ impl<T: Float + na::RealField> From<Motor<T>> for na::Isometry3<T> {
     /// ```
     fn from(motor: Motor<T>) -> Self {
         // Normalize rotation quaternion to ensure valid unit quaternion
-        // Rotation uses (bx, ty, tz, ps) which are positions 4, 5, 6, 7
-        // (originally named e01, e02, e03, e0123 in the old TOML)
-        let rot_norm_sq = motor.rx() * motor.rx()
+        // Per RGA convention, velocity/rotation uses e41=-e14(tx), e42=-e24(ry), e43=-e34(rz), 𝟙(ps)
+        // Note: rx(e23), ty(e13), tz(e12) are MOMENT/TRANSLATION bivectors, not rotation!
+        let rot_norm_sq = motor.tx() * motor.tx()
             + motor.ry() * motor.ry()
             + motor.rz() * motor.rz()
             + motor.ps() * motor.ps();
         let rot_norm = num_traits::Float::sqrt(rot_norm_sq);
 
         // Extract rotation quaternion
-        // PGA antisandwich uses antireverse which differs from quaternion conjugate.
-        // Negate the bivector components to match nalgebra's rotation direction.
-        // Mapping: (w, i, j, k) = (ps, -bx, -ty, -tz)
+        // PGA velocity bivectors e41, e42, e43 correspond to -e14=-tx, -e24=-ry, -e34=-rz
+        // Quaternion: (w, i, j, k) = (ps, -tx, -ry, -rz)
         let rotation = if rot_norm > T::epsilon() {
             na::UnitQuaternion::from_quaternion(na::Quaternion::new(
                 motor.ps() / rot_norm,
-                -motor.rx() / rot_norm,
+                -motor.tx() / rot_norm,
                 -motor.ry() / rot_norm,
                 -motor.rz() / rot_norm,
             ))
@@ -246,17 +245,17 @@ impl<T: Float + na::RealField> From<na::Isometry3<T>> for Motor<T> {
         let t = iso.translation.vector;
 
         // Create a pure rotation motor from the quaternion
-        // Rotation uses positions bx (e23), ty (e24), tz (e34), ps (e0123)
-        // PGA convention uses opposite signs for bivector components
+        // Per RGA convention, velocity bivectors e41, e42, e43 = -e14, -e24, -e34 = -tx, -ry, -rz
+        // Quaternion (w, i, j, k) maps to Motor (ps, -tx, -ry, -rz), so tx = -i, ry = -j, rz = -k
         let rotor = Motor::new_unchecked(
-            T::zero(), // s
-            T::zero(), // bz (e12) - unused for rotation
-            T::zero(), // by (e13) - unused for rotation
-            T::zero(), // tx (e14) - unused for rotation
-            -q.i,      // bx (e23) - x-rotation
-            -q.j,      // ty (e24) - y-rotation
-            -q.k,      // tz (e34) - z-rotation
-            q.w,       // ps (e0123) - scalar
+            T::zero(), // s - unused for pure rotation
+            T::zero(), // tz (e12) - unused for rotation
+            T::zero(), // ty (e13) - unused for rotation
+            -q.i,      // tx (e14 = -e41) - x-rotation velocity (negated from quaternion i)
+            T::zero(), // rx (e23) - unused for rotation (this is a moment bivector)
+            -q.j,      // ry (e24 = -e42) - y-rotation velocity (negated from quaternion j)
+            -q.k,      // rz (e34 = -e43) - z-rotation velocity (negated from quaternion k)
+            q.w,       // ps (e0123) - scalar/identity
         );
 
         // Create a pure translation motor

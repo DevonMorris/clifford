@@ -24,23 +24,39 @@ primary_involution = "clifford_conjugate"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Vector]
 grades = [1]
 description = "Vector in Minkowski plane (can be spacelike, timelike, or null)"
-fields = ["x", "t"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "t", blade = "e2" }
+]
 
 [types.Bivector]
 grades = [2]
 description = "Bivector (pseudoscalar, squares to +1)"
-fields = ["xt"]
+field_map = [
+  { name = "xt", blade = "e12" }
+]
 
 [types.Eventor]
 grades = [0, 2]
 description = "Even-graded element (scalar + bivector), isomorphic to hyperbolic numbers"
-fields = ["s", "xt"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "xt", blade = "e12" }
+]
 
 [types.Spacetime]
 grades = [0, 1, 2]
 description = "Full element in the Minkowski plane (all grades)"
-fields = ["s", "x", "t", "xt"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "x", blade = "e1" },
+  { name = "t", blade = "e2" },
+  { name = "xt", blade = "e12" }
+]

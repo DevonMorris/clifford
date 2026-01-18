@@ -365,7 +365,11 @@ mod tests {
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y", "z"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" },
+                { name = "z", blade = "e3" }
+            ]
             "#,
         )
         .unwrap();

@@ -22,13 +22,21 @@ primary_involution = "grade_involution"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.HypUnit]
 grades = [1]
 description = "Pure hyperbolic unit (j where j² = +1)"
-fields = ["j"]
+field_map = [
+  { name = "j", blade = "e1" }
+]
 
 [types.Hyperbolic]
 grades = [0, 1]
 description = "Hyperbolic number: a + bj where j² = +1"
-fields = ["real", "hyp"]
+field_map = [
+  { name = "real", blade = "s" },
+  { name = "hyp", blade = "e1" }
+]
