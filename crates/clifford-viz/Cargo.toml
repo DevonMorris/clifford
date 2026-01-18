@@ -66,6 +66,10 @@ name = "conformal2_circles"
 required-features = ["native"]
 
 [[example]]
+name = "conformal2_inversion"
+required-features = ["native"]
+
+[[example]]
 name = "visualization_test"
 required-features = ["native"]
 

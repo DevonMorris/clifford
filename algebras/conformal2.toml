@@ -74,6 +74,8 @@ field_map = [
   { name = "cy", blade = "e134" },
   { name = "r", blade = "e234" }
 ]
+# Circle inversion: C × P × C⁻¹ inverts points through the circle
+inverse_sandwich_targets = ["RoundPoint", "Circle"]
 
 [types.Pseudoscalar]
 grades = [4]

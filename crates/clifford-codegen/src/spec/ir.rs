@@ -176,6 +176,14 @@ pub struct TypeSpec {
     /// Sparse types have explicit blade mappings and don't use all blades of their grades.
     /// For example, a Line in CGA uses only 6 of the 10 grade-3 blades.
     pub is_sparse: bool,
+    /// Types that can be transformed via inverse sandwich product.
+    ///
+    /// This allows non-versor types (like Circle in CGA) to perform
+    /// inverse sandwich transformations: `X' = T * X * T⁻¹`.
+    ///
+    /// For versors, this is typically empty (uses auto-inferred targets).
+    /// For blades like Circle, this explicitly lists valid targets.
+    pub inverse_sandwich_targets: Vec<String>,
 }
 
 /// Versor specification for a type.

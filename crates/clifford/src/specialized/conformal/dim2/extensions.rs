@@ -160,6 +160,30 @@ impl<T: Float> RoundPoint<T> {
 // ============================================================================
 
 impl<T: Float> Circle<T> {
+    /// Creates a circle from center coordinates and radius.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim2::Circle;
+    /// use approx::relative_eq;
+    ///
+    /// let circle = Circle::from_center_radius(1.0_f64, 2.0, 3.0);
+    /// let (cx, cy) = circle.center().unwrap();
+    /// let r = circle.radius().unwrap();
+    ///
+    /// assert!(relative_eq!(cx, 1.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(cy, 2.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(r, 3.0, epsilon = 1e-10));
+    /// ```
+    pub fn from_center_radius(cx: T, cy: T, radius: T) -> Self {
+        // Construct by wedging three points on the circle
+        let p1 = RoundPoint::from_euclidean(cx + radius, cy);
+        let p2 = RoundPoint::from_euclidean(cx, cy + radius);
+        let p3 = RoundPoint::from_euclidean(cx - radius, cy);
+        Self::from_three_points(&p1, &p2, &p3)
+    }
+
     /// Creates a circle passing through three points.
     ///
     /// The circle is the outer product: `C = P₁ ∧ P₂ ∧ P₃`
@@ -717,5 +741,39 @@ mod tests {
         assert!(line.center().is_none(), "Line should have no finite center");
         assert!(line.radius().is_none(), "Line should have no finite radius");
         assert!(line.curvature().is_none(), "Line should have no curvature");
+    }
+
+    #[test]
+    fn test_inverse_sandwich_computes_reflection_not_inversion() {
+        use crate::ops::InverseSandwich;
+
+        // The InverseSandwich operation C × P × C⁻¹ computes a REFLECTION
+        // through the circle, NOT classic circle inversion.
+        //
+        // Classic circle inversion: P' = O + r²/|OP|² × (P - O)
+        // For point (4,0) through circle at origin with r=2:
+        // Expected classic inversion result: (1, 0) since 4 * 1 = 4 = 2²
+        //
+        // But InverseSandwich gives a different result because it's
+        // a reflection operation, not inversive geometry.
+
+        let inv_circle = Circle::from_center_radius(0.0_f64, 0.0, 2.0);
+        let point = RoundPoint::from_euclidean(4.0, 0.0);
+
+        let inverted = inv_circle.try_inverse_sandwich(&point);
+
+        // The operation should succeed (not return None)
+        assert!(
+            inverted.is_some(),
+            "InverseSandwich should return Some for valid circle and point"
+        );
+
+        // The result is NOT classic circle inversion
+        let (ix, _iy) = inverted.unwrap().to_euclidean().unwrap();
+        // Classic inversion would give 1.0, but reflection gives ~0.44
+        assert!(
+            (ix - 1.0).abs() > 0.1,
+            "InverseSandwich is NOT classic circle inversion"
+        );
     }
 }

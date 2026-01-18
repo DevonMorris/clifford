@@ -564,6 +564,7 @@ mod tests {
             versor: None,
             alias_of: None,
             is_sparse: false,
+            inverse_sandwich_targets: vec![],
         }
     }
 

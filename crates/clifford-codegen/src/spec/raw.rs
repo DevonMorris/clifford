@@ -102,6 +102,17 @@ pub struct RawTypeSpec {
     pub field_map: Vec<RawFieldMapping>,
     /// Type this aliases.
     pub alias_of: Option<String>,
+    /// Types that can be transformed via inverse sandwich product.
+    ///
+    /// This allows non-versor types (like Circle in CGA) to specify
+    /// inverse sandwich transformations: `X' = T * X * T⁻¹`.
+    ///
+    /// Example:
+    /// ```toml
+    /// inverse_sandwich_targets = ["RoundPoint", "Circle"]
+    /// ```
+    #[serde(default)]
+    pub inverse_sandwich_targets: Vec<String>,
 }
 
 /// A single field-to-blade mapping in the TOML specification.

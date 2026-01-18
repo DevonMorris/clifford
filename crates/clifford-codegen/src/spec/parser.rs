@@ -411,6 +411,7 @@ fn parse_type(
         alias_of: raw.alias_of.clone(),
         versor,
         is_sparse,
+        inverse_sandwich_targets: raw.inverse_sandwich_targets.clone(),
     })
 }
 
@@ -1192,6 +1193,7 @@ mod tests {
             alias_of: None,
             versor: None,
             is_sparse: false,
+            inverse_sandwich_targets: vec![],
         };
         assert!(super::validate_canonical_field_order(&valid_type));
 
@@ -1223,6 +1225,7 @@ mod tests {
             alias_of: None,
             versor: None,
             is_sparse: false,
+            inverse_sandwich_targets: vec![],
         };
         assert!(!super::validate_canonical_field_order(&invalid_type));
 
@@ -1260,6 +1263,7 @@ mod tests {
             alias_of: None,
             versor: None,
             is_sparse: false,
+            inverse_sandwich_targets: vec![],
         };
         assert!(super::validate_canonical_field_order(&valid_rotor));
     }

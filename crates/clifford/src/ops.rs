@@ -294,6 +294,76 @@ pub trait Antisandwich<Operand> {
     fn antisandwich(&self, operand: &Operand) -> Self::Output;
 }
 
+/// Inverse sandwich product (`v × x × v⁻¹`).
+///
+/// The inverse sandwich uses the multiplicative inverse instead of the reverse.
+/// This correctly handles **non-unit versors** where `rev(v) ≠ v⁻¹`.
+///
+/// # Comparison with Sandwich
+///
+/// | Product | Formula | When to use |
+/// |---------|---------|-------------|
+/// | Sandwich | `v × x × rev(v)` | Unit versors only (`\|v\| = 1`) |
+/// | InverseSandwich | `v × x × v⁻¹` | Any versor (unit or non-unit) |
+///
+/// For **unit versors** (where `|v| = 1`), both products are equivalent since
+/// `rev(v) = v⁻¹`. For **non-unit versors**, Sandwich scales the result by
+/// `|v|²` while InverseSandwich gives the correct transformation.
+///
+/// # When to Use
+///
+/// - Use `Sandwich` for performance when working with normalized versors
+/// - Use `InverseSandwich` when versors may not be normalized, or when
+///   you need mathematically correct results regardless of scaling
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::InverseSandwich;
+///
+/// // Works correctly even if motor is not normalized
+/// let unnormalized_motor = Motor::from_translation(10.0, 20.0, 30.0);
+/// let transformed = unnormalized_motor.try_inverse_sandwich(&point);
+/// ```
+pub trait InverseSandwich<Operand> {
+    /// The output type.
+    type Output;
+
+    /// Computes the inverse sandwich product `self × operand × self⁻¹`.
+    ///
+    /// Returns `None` if `self` has zero norm (not invertible).
+    fn try_inverse_sandwich(&self, operand: &Operand) -> Option<Self::Output>;
+}
+
+/// Inverse antisandwich product (`v ⊛ x ⊛ v⁻¹`).
+///
+/// The inverse antisandwich uses the multiplicative inverse with the antiproduct.
+/// This correctly handles **non-unit versors** in degenerate algebras (PGA).
+///
+/// # Comparison with Antisandwich
+///
+/// | Product | Formula | When to use |
+/// |---------|---------|-------------|
+/// | Antisandwich | `v ⊛ x ⊛ antirev(v)` | Unit versors only |
+/// | InverseAntisandwich | `v ⊛ x ⊛ v⁻¹` | Any versor (unit or non-unit) |
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::InverseAntisandwich;
+///
+/// let result = motor.try_inverse_antisandwich(&point);
+/// ```
+pub trait InverseAntisandwich<Operand> {
+    /// The output type.
+    type Output;
+
+    /// Computes the inverse antisandwich product `self ⊛ operand ⊛ self⁻¹`.
+    ///
+    /// Returns `None` if `self` has zero norm (not invertible).
+    fn try_inverse_antisandwich(&self, operand: &Operand) -> Option<Self::Output>;
+}
+
 /// Dot product (metric inner product).
 ///
 /// The dot product `a • b` is non-zero only when `grade(a) = grade(b)`.
@@ -566,6 +636,65 @@ pub trait Versor<Rhs = Self> {
     /// Composes this versor with another, returning a versor representing
     /// the sequential application of both transformations.
     fn compose(&self, other: &Rhs) -> Self::Output;
+}
+
+/// Versor inverse.
+///
+/// The inverse of a versor `V` satisfies `V × V⁻¹ = 1` (scalar identity).
+/// For versors, the inverse is computed as:
+///
+/// ```text
+/// V⁻¹ = rev(V) / (V · rev(V)) = rev(V) / |V|²
+/// ```
+///
+/// Where `rev(V)` is the reverse and `|V|²` is the norm squared.
+///
+/// # Unit Versors
+///
+/// For unit versors (where `|V|² = 1`), the inverse simplifies to just the reverse:
+/// `V⁻¹ = rev(V)`. This is why unit rotors and normalized motors are preferred
+/// for transformations - their inverses are trivial to compute.
+///
+/// # Non-invertible Case
+///
+/// Versors with zero norm are not invertible. The `try_inverse()` method
+/// returns `None` for such cases. This can occur with:
+/// - Zero versors (all components zero)
+/// - Null versors in degenerate algebras
+///
+/// # Properties
+///
+/// - `V × V⁻¹ = 1` (right inverse)
+/// - `V⁻¹ × V = 1` (left inverse)
+/// - `(A × B)⁻¹ = B⁻¹ × A⁻¹` (reversal of composition order)
+/// - For unit versors: `V⁻¹ = rev(V)`
+///
+/// # Example
+///
+/// ```ignore
+/// use clifford::ops::VersorInverse;
+///
+/// // Get the inverse of a motor
+/// let motor_inv = motor.try_inverse().expect("non-zero motor");
+///
+/// // Verify: motor × motor_inv ≈ identity
+/// let identity = motor.compose(&motor_inv);
+///
+/// // For unit versors, inverse equals reverse
+/// let unit_rotor = rotor.try_normalize().unwrap();
+/// assert_eq!(unit_rotor.try_inverse(), Some(unit_rotor.reverse()));
+/// ```
+///
+/// # Reference
+///
+/// [RGA Motors](https://rigidgeometricalgebra.org/wiki/index.php?title=Motor)
+pub trait VersorInverse {
+    /// Computes the versor inverse, if it exists.
+    ///
+    /// Returns `None` if the versor has zero norm and is thus not invertible.
+    fn try_inverse(&self) -> Option<Self>
+    where
+        Self: Sized;
 }
 
 // ============================================================================
