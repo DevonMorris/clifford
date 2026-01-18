@@ -183,10 +183,116 @@ impl<T: Float> Circle<T> {
 
     /// Returns true if this represents a line (circle through infinity).
     ///
-    /// A line is a circle with w = 0 (the e123 component).
+    /// A line is a circle with w = 0 (the e₁₂₃ component).
+    /// When three points are collinear, their wedge product has w ≈ 0.
     #[inline]
     pub fn is_line(&self, epsilon: T) -> bool {
         self.w().abs() < epsilon
+    }
+
+    /// Extracts the Euclidean center coordinates of the circle.
+    ///
+    /// Returns `None` if this is a line (w ≈ 0), since lines have no finite center.
+    ///
+    /// # Mathematical Background
+    ///
+    /// In our Cl(3,1) orthonormal basis, the Circle trivector components encode
+    /// the center as:
+    /// - center_x = r / w (e₂₃₄ component divided by e₁₂₃ component)
+    /// - center_y = -cy / w (negated e₁₃₄ component divided by e₁₂₃ component)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
+    /// use approx::relative_eq;
+    ///
+    /// let p1 = RoundPoint::from_euclidean(3.0_f64, 2.0);
+    /// let p2 = RoundPoint::from_euclidean(2.0, 3.0);
+    /// let p3 = RoundPoint::from_euclidean(1.0, 2.0);
+    ///
+    /// let circle = Circle::from_three_points(&p1, &p2, &p3);
+    /// let (cx, cy) = circle.center().unwrap();
+    ///
+    /// assert!(relative_eq!(cx, 2.0, epsilon = 1e-10));
+    /// assert!(relative_eq!(cy, 2.0, epsilon = 1e-10));
+    /// ```
+    pub fn center(&self) -> Option<(T, T)> {
+        if self.w().abs() < T::epsilon() {
+            return None; // This is a line, no finite center
+        }
+        let w = self.w();
+        let center_x = self.r() / w;
+        let center_y = -self.cy() / w;
+        Some((center_x, center_y))
+    }
+
+    /// Extracts the radius of the circle.
+    ///
+    /// Returns `None` if this is a line (w ≈ 0), since lines have infinite radius.
+    ///
+    /// # Mathematical Background
+    ///
+    /// In our Cl(3,1) orthonormal basis, the radius is computed as:
+    /// ```text
+    /// radius² = 2 * cx / w + center_x² + center_y²
+    /// ```
+    /// where cx is the e₁₂₄ component, and center coordinates are extracted
+    /// from other components.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
+    /// use approx::relative_eq;
+    ///
+    /// // Create unit circle at origin
+    /// let p1 = RoundPoint::from_euclidean(1.0_f64, 0.0);
+    /// let p2 = RoundPoint::from_euclidean(0.0, 1.0);
+    /// let p3 = RoundPoint::from_euclidean(-1.0, 0.0);
+    ///
+    /// let circle = Circle::from_three_points(&p1, &p2, &p3);
+    /// let radius = circle.radius().unwrap();
+    ///
+    /// assert!(relative_eq!(radius, 1.0, epsilon = 1e-10));
+    /// ```
+    pub fn radius(&self) -> Option<T> {
+        if self.w().abs() < T::epsilon() {
+            return None; // This is a line, infinite radius
+        }
+        let w = self.w();
+        let center_x = self.r() / w;
+        let center_y = -self.cy() / w;
+        let radius_sq = T::TWO * self.cx() / w + center_x * center_x + center_y * center_y;
+        // radius_sq should be non-negative for a valid circle
+        if radius_sq < T::zero() {
+            return None;
+        }
+        Some(radius_sq.sqrt())
+    }
+
+    /// Returns the curvature (1/radius) of the circle.
+    ///
+    /// Returns `None` if this is a line (curvature = 0) or if radius extraction fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
+    /// use approx::relative_eq;
+    ///
+    /// // Circle with radius 2
+    /// let p1 = RoundPoint::from_euclidean(2.0_f64, 0.0);
+    /// let p2 = RoundPoint::from_euclidean(0.0, 2.0);
+    /// let p3 = RoundPoint::from_euclidean(-2.0, 0.0);
+    ///
+    /// let circle = Circle::from_three_points(&p1, &p2, &p3);
+    /// let curvature = circle.curvature().unwrap();
+    ///
+    /// assert!(relative_eq!(curvature, 0.5, epsilon = 1e-10));
+    /// ```
+    pub fn curvature(&self) -> Option<T> {
+        self.radius().map(|r| T::one() / r)
     }
 }
 
@@ -477,5 +583,139 @@ mod tests {
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
+    }
+
+    #[test]
+    fn test_circle_is_line_detection() {
+        use crate::ops::Wedge;
+
+        // Three collinear points should produce a line (w ≈ 0)
+        let p1 = RoundPoint::from_euclidean(0.0_f64, 0.0);
+        let p2 = RoundPoint::from_euclidean(1.0, 0.0);
+        let p3 = RoundPoint::from_euclidean(2.0, 0.0);
+
+        let result: Circle<f64> = p1.wedge(&p2).wedge(&p3);
+        println!("\nCollinear points (0,0), (1,0), (2,0):");
+        println!(
+            "  w = {:.6}, is_line = {}",
+            result.w(),
+            result.is_line(1e-10)
+        );
+        assert!(
+            result.is_line(1e-10),
+            "Collinear points should produce a line (w=0)"
+        );
+
+        // Non-collinear points should produce a circle (w ≠ 0)
+        let p1 = RoundPoint::from_euclidean(1.0_f64, 0.0);
+        let p2 = RoundPoint::from_euclidean(0.0, 1.0);
+        let p3 = RoundPoint::from_euclidean(-1.0, 0.0);
+
+        let result: Circle<f64> = p1.wedge(&p2).wedge(&p3);
+        println!("\nNon-collinear points (1,0), (0,1), (-1,0):");
+        println!(
+            "  w = {:.6}, is_line = {}",
+            result.w(),
+            result.is_line(1e-10)
+        );
+        assert!(
+            !result.is_line(1e-10),
+            "Non-collinear points should produce a circle (w≠0)"
+        );
+    }
+
+    #[test]
+    fn test_circle_center_radius_extraction() {
+        // Test the Circle::center() and Circle::radius() methods
+        let test_cases: Vec<(f64, f64, f64)> = vec![
+            (0.0, 0.0, 1.0),
+            (0.0, 0.0, 2.0),
+            (0.0, 0.0, 0.5),
+            (1.0, 0.0, 1.0),
+            (0.0, 1.0, 1.0),
+            (1.0, 1.0, 1.0),
+            (2.0, 3.0, 1.0),
+            (1.0, 1.0, 2.0),
+            (-1.0, -1.0, 1.5),
+            (3.5, -2.7, 1.2),
+        ];
+
+        for (expected_cx, expected_cy, expected_r) in &test_cases {
+            // Three points on circle
+            let p1 = RoundPoint::from_euclidean(expected_cx + expected_r, *expected_cy);
+            let p2 = RoundPoint::from_euclidean(*expected_cx, expected_cy + expected_r);
+            let p3 = RoundPoint::from_euclidean(expected_cx - expected_r, *expected_cy);
+
+            let circle = Circle::from_three_points(&p1, &p2, &p3);
+
+            // Test center extraction
+            let (calc_cx, calc_cy) = circle.center().expect("Circle should have finite center");
+            assert!(
+                relative_eq!(
+                    calc_cx,
+                    *expected_cx,
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
+                "Center x mismatch: expected {}, got {}",
+                expected_cx,
+                calc_cx
+            );
+            assert!(
+                relative_eq!(
+                    calc_cy,
+                    *expected_cy,
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
+                "Center y mismatch: expected {}, got {}",
+                expected_cy,
+                calc_cy
+            );
+
+            // Test radius extraction
+            let calc_r = circle.radius().expect("Circle should have finite radius");
+            assert!(
+                relative_eq!(
+                    calc_r,
+                    *expected_r,
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
+                "Radius mismatch: expected {}, got {}",
+                expected_r,
+                calc_r
+            );
+
+            // Test curvature
+            let calc_curv = circle.curvature().expect("Circle should have curvature");
+            let expected_curv = 1.0 / expected_r;
+            assert!(
+                relative_eq!(
+                    calc_curv,
+                    expected_curv,
+                    epsilon = RELATIVE_EQ_EPS,
+                    max_relative = RELATIVE_EQ_EPS
+                ),
+                "Curvature mismatch: expected {}, got {}",
+                expected_curv,
+                calc_curv
+            );
+        }
+    }
+
+    #[test]
+    fn test_circle_line_has_no_center_or_radius() {
+        // Collinear points form a line, which should return None for center/radius
+        let p1 = RoundPoint::from_euclidean(0.0_f64, 0.0);
+        let p2 = RoundPoint::from_euclidean(1.0, 0.0);
+        let p3 = RoundPoint::from_euclidean(2.0, 0.0);
+
+        let line = Circle::from_three_points(&p1, &p2, &p3);
+
+        assert!(line.is_line(1e-10), "Collinear points should form a line");
+        assert!(line.center().is_none(), "Line should have no finite center");
+        assert!(line.radius().is_none(), "Line should have no finite radius");
+        assert!(line.curvature().is_none(), "Line should have no curvature");
     }
 }
