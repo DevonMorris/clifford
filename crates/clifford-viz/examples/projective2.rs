@@ -336,22 +336,18 @@ impl VisualizationApp for Projective2Demo {
                     };
 
                     // Draw line using homogeneous coordinates
-                    let plot_line = line_from_homogeneous(
-                        line.normal_x(),
-                        line.normal_y(),
-                        line.dist(),
-                        bounds,
-                        color,
-                    )
-                    .name(format!("Line {}", idx + 1));
+                    // Line equation: nx*x + ny*y + d = 0 (standard form ax + by + c = 0)
+                    let plot_line =
+                        line_from_homogeneous(line.nx(), line.ny(), line.d(), bounds, color)
+                            .name(format!("Line {}", idx + 1));
                     plot_ui.line(plot_line);
 
                     // Draw normal vector if enabled
                     if self.show_normals {
-                        // Find a point on the line for drawing normal
-                        let a = line.normal_x();
-                        let b = line.normal_y();
-                        let c = line.dist();
+                        // Normal vector is (nx, ny) from the line equation
+                        let a = line.nx();
+                        let b = line.ny();
+                        let c = line.d();
                         let norm_sq = a * a + b * b;
                         if norm_sq > 1e-10 {
                             let px = -a * c / norm_sq;
@@ -552,12 +548,13 @@ impl VisualizationApp for Projective2Demo {
                         // Update meet selection
                     }
                     let l = &line_data.line;
+                    // Line equation: nx*x + ny*y + d = 0
                     ui.label(format!(
                         "L{}: {:.2}x + {:.2}y + {:.2} = 0",
                         idx + 1,
-                        l.normal_x(),
-                        l.normal_y(),
-                        l.dist()
+                        l.nx(),
+                        l.ny(),
+                        l.d()
                     ));
                     if ui.button("🗑").clicked() {
                         lines_to_remove.push(idx);

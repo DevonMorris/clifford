@@ -166,7 +166,13 @@ impl<'a> ConversionsGenerator<'a> {
         for field in &ty.fields {
             let field_name = format_ident!("{}", field.name);
             let idx = field.blade_index;
-            coeffs[idx] = quote! { value.#field_name() };
+            // Apply field sign: if field stores e31 (sign=-1), we need to negate
+            // to get the canonical e13 coefficient for the multivector.
+            if field.sign < 0 {
+                coeffs[idx] = quote! { -value.#field_name() };
+            } else {
+                coeffs[idx] = quote! { value.#field_name() };
+            }
         }
 
         quote! {
@@ -206,7 +212,13 @@ impl<'a> ConversionsGenerator<'a> {
             .iter()
             .map(|field| {
                 let idx = field.blade_index;
-                quote! { mv.get(Blade::from_index(#idx)) }
+                // Apply field sign: if field stores e31 (sign=-1), we need to negate
+                // the canonical e13 coefficient from the multivector.
+                if field.sign < 0 {
+                    quote! { -mv.get(Blade::from_index(#idx)) }
+                } else {
+                    quote! { mv.get(Blade::from_index(#idx)) }
+                }
             })
             .collect();
 

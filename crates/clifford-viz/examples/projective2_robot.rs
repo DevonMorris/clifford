@@ -458,7 +458,11 @@ impl VisualizationApp for Robot2DDemo {
             ui.checkbox(&mut self.animate_joint1, "Animate");
             if self.animate_joint1
                 && ui
-                    .button(if self.animation1.playing { "⏸" } else { "▶" })
+                    .button(if self.animation1.playing {
+                        "⏸"
+                    } else {
+                        "▶"
+                    })
                     .clicked()
             {
                 self.animation1.playing = !self.animation1.playing;
@@ -473,11 +477,14 @@ impl VisualizationApp for Robot2DDemo {
             ui.checkbox(&mut self.animate_joint2, "Animate");
             if self.animate_joint2
                 && ui
-                    .button(if self.animation2.playing { "⏸" } else { "▶" })
+                    .button(if self.animation2.playing {
+                        "⏸"
+                    } else {
+                        "▶"
+                    })
                     .clicked()
-                {
-                    self.animation2.playing = !self.animation2.playing;
-                }
+            {
+                self.animation2.playing = !self.animation2.playing;
             }
         });
 
@@ -537,9 +544,9 @@ impl VisualizationApp for Robot2DDemo {
             "F_total",
             &[
                 ("1", m_total.s() as f32),
-                ("e₀₁", m_total.dist() as f32),
-                ("e₀₂", m_total.normal_x() as f32),
-                ("e₁₂", m_total.normal_y() as f32),
+                ("d", m_total.d() as f32),
+                ("nx", m_total.nx() as f32),
+                ("ny", m_total.ny() as f32),
             ],
         );
 

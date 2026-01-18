@@ -70,14 +70,19 @@ field_map = [
 [types.Line]
 grades = [2]
 description = "2D line"
-# Line equation: normal_x * x + normal_y * y + dist = 0
-# The normal vector (normal_x, normal_y) is perpendicular to the line.
-# The dist component is the signed distance from the origin (scaled by normal magnitude).
-# Blade order: e12 (dist), e13 (normal_x), e23 (normal_y)
+# Line equation: nx * x + ny * y + d = 0 (standard form)
+#
+# From the wedge product P1 ∧ P2 of two points (x1,y1,w1) and (x2,y2,w2):
+# - e12 = x1*y2 - y1*x2 = c (constant term)
+# - e23 = y1*w2 - w1*y2 = a (x-coefficient)
+# - e13 = x1*w2 - w1*x2 = -b (NEGATIVE of y-coefficient)
+#
+# We use e31 (= -e13) for ny so that ny stores the positive y-coefficient directly.
+# This is enabled by PRD-51's field_map sign correction feature.
 field_map = [
-  { name = "dist", blade = "e12" },
-  { name = "normal_x", blade = "e13" },
-  { name = "normal_y", blade = "e23" }
+  { name = "d", blade = "e12" },
+  { name = "nx", blade = "e23" },
+  { name = "ny", blade = "e31" }
 ]
 
 [types.Trivector]
@@ -106,9 +111,10 @@ grades = [0, 2]
 description = "2D reflection/glide transformation via antisandwich"
 # Grade 0: scalar (s)
 # Grade 2: Line components representing the reflection line
+# (same conventions as Line type: d, nx, ny with e31 for ny)
 field_map = [
   { name = "s", blade = "s" },
-  { name = "dist", blade = "e12" },
-  { name = "normal_x", blade = "e13" },
-  { name = "normal_y", blade = "e23" }
+  { name = "d", blade = "e12" },
+  { name = "nx", blade = "e23" },
+  { name = "ny", blade = "e31" }
 ]

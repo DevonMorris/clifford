@@ -201,7 +201,11 @@ impl<'a> UnaryGenerator<'a> {
                     let (sign, comp_blade) = self.table.complement(in_field.blade_index);
                     if comp_blade == out_blade && sign != 0 {
                         let in_name = format_ident!("{}", in_field.name);
-                        if sign > 0 {
+                        // Apply field signs for non-canonical blade orderings:
+                        // - in_field.sign converts stored value to canonical blade value
+                        // - out_field.sign converts canonical blade value to stored value
+                        let total_sign = sign * in_field.sign * out_field.sign;
+                        if total_sign > 0 {
                             expr = quote! { a.#in_name() };
                         } else {
                             expr = quote! { -a.#in_name() };
