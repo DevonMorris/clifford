@@ -1175,13 +1175,16 @@ impl<'a> TraitsGenerator<'a> {
     // Product Trait Implementations (clifford::ops)
     // ========================================================================
 
-    /// Checks if a type represents a single-grade blade (not a versor/multivector).
+    /// Checks if a type represents a single-grade blade.
     ///
-    /// Single-grade types have exactly one grade and are not marked as versors.
-    /// Examples: Scalar (grade 0), Vector (grade 1), Bivector (grade 2), etc.
-    /// Counter-examples: Rotor (grades 0,2), Motor (grades 0,2,0123), Flector (grades 1,3,...)
+    /// Single-grade types have exactly one grade.
+    /// Examples: Scalar (grade 0), Vector (grade 1), Bivector (grade 2), Circle (grade 3), etc.
+    /// Counter-examples: Rotor (grades 0,2), Motor (grades 0,2,4), Flector (grades 1,3)
+    ///
+    /// Note: A single-grade blade can also be a versor (e.g., Vector is a reflector,
+    /// Circle in CGA is an inversor). Being a blade and being a versor are orthogonal properties.
     fn is_single_grade_blade(&self, ty: &TypeSpec) -> bool {
-        ty.grades.len() == 1 && ty.versor.is_none()
+        ty.grades.len() == 1
     }
 
     /// Generates all product trait implementations.
@@ -2601,7 +2604,9 @@ impl<'a> TraitsGenerator<'a> {
         };
 
         // For sandwich, output is typically same type as operand
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> Sandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2633,7 +2638,9 @@ impl<'a> TraitsGenerator<'a> {
         };
 
         // For antisandwich, output is typically same type as operand
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> Antisandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2682,7 +2689,9 @@ impl<'a> TraitsGenerator<'a> {
             }
         };
 
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> InverseSandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2736,7 +2745,9 @@ impl<'a> TraitsGenerator<'a> {
             }
         };
 
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> InverseAntisandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
