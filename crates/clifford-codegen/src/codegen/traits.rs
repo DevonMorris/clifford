@@ -694,7 +694,15 @@ impl<'a> TraitsGenerator<'a> {
         operand
             .fields
             .iter()
-            .map(|field| self.compute_sandwich_field(versor, operand, field.blade_index, false))
+            .map(|field| {
+                let expr = self.compute_sandwich_field(versor, operand, field.blade_index, false);
+                // Apply output field sign for non-canonical blade ordering
+                if field.sign < 0 {
+                    quote! { -(#expr) }
+                } else {
+                    expr
+                }
+            })
             .collect()
     }
 
@@ -709,7 +717,15 @@ impl<'a> TraitsGenerator<'a> {
         operand
             .fields
             .iter()
-            .map(|field| self.compute_sandwich_field(versor, operand, field.blade_index, true))
+            .map(|field| {
+                let expr = self.compute_sandwich_field(versor, operand, field.blade_index, true);
+                // Apply output field sign for non-canonical blade ordering
+                if field.sign < 0 {
+                    quote! { -(#expr) }
+                } else {
+                    expr
+                }
+            })
             .collect()
     }
 
@@ -776,7 +792,10 @@ impl<'a> TraitsGenerator<'a> {
                     }
 
                     if result == result_blade {
-                        let final_sign = sign_vx * sign_vxr * rev_sign;
+                        // Apply input field signs for non-canonical blade orderings.
+                        // v1 and v2 are both from versor_type, x is from operand_type.
+                        let input_sign = field_v1.sign * field_x.sign * field_v2.sign;
+                        let final_sign = sign_vx * sign_vxr * rev_sign * input_sign;
                         let key = (
                             field_v1.name.clone(),
                             field_x.name.clone(),

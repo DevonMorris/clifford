@@ -103,54 +103,58 @@ impl<T: Float> Line<T> {
         crate::ops::Wedge::wedge(point, &ideal)
     }
 
-    /// Creates a line from normal (a, b) and distance c: ax + by + c = 0.
+    /// Creates a line from the standard equation ax + by + c = 0.
     ///
-    /// The line equation is: normal_x*x + normal_y*y + dist = 0
+    /// The coefficients map directly to internal representation:
+    /// - nx = a (x-coefficient)
+    /// - ny = b (y-coefficient)
+    /// - d = c (constant term)
     #[inline]
     pub fn from_equation(a: T, b: T, c: T) -> Self {
-        // new() takes (dist, normal_x, normal_y)
+        // new() takes (d, nx, ny) where the equation is: nx*x + ny*y + d = 0
         Self::new(c, a, b)
     }
 
     /// X-axis (line y = 0).
     ///
-    /// The x-axis (y = 0) has normal vector (0, 1), so normal_y = 1.
+    /// The x-axis has equation 0*x + 1*y + 0 = 0.
     #[inline]
     pub fn x_axis() -> Self {
-        // new() takes (dist, normal_x, normal_y)
         Self::new(T::zero(), T::zero(), T::one())
     }
 
     /// Y-axis (line x = 0).
     ///
-    /// The y-axis (x = 0) has normal vector (1, 0), so normal_x = 1.
+    /// The y-axis has equation 1*x + 0*y + 0 = 0.
     #[inline]
     pub fn y_axis() -> Self {
-        // new() takes (dist, normal_x, normal_y)
         Self::new(T::zero(), T::one(), T::zero())
     }
 
-    /// Normal vector (normal_x, normal_y).
+    /// Normal vector (a, b) where the line equation is ax + by + c = 0.
+    ///
+    /// Returns (nx, ny) directly.
     #[inline]
     pub fn normal(&self) -> EuclideanVector<T> {
-        EuclideanVector::new(self.normal_x(), self.normal_y())
+        EuclideanVector::new(self.nx(), self.ny())
     }
 
-    /// Distance from origin (dist component).
+    /// Distance from origin (d component, the constant term).
     #[inline]
     pub fn distance_from_origin(&self) -> T {
-        self.dist()
+        self.d()
     }
 
     /// Check if line passes through origin.
     pub fn through_origin(&self, epsilon: T) -> bool {
-        self.dist().abs() < epsilon
+        self.d().abs() < epsilon
     }
 
     /// Check if two lines are parallel.
     pub fn is_parallel(&self, other: &Line<T>, epsilon: T) -> bool {
-        // Lines are parallel if their normals are parallel
-        let cross = self.normal_x() * other.normal_y() - self.normal_y() * other.normal_x();
+        // Lines are parallel if their normals are parallel.
+        // Cross product of normals: nx1*ny2 - ny1*nx2
+        let cross = self.nx() * other.ny() - self.ny() * other.nx();
         cross.abs() < epsilon
     }
 
@@ -159,19 +163,21 @@ impl<T: Float> Line<T> {
         use crate::norm::DegenerateNormed;
         let n1 = self.try_unitize().unwrap_or(*self);
         let n2 = other.try_unitize().unwrap_or(*other);
-        let cos_angle = (n1.normal_x() * n2.normal_x() + n1.normal_y() * n2.normal_y())
-            .abs()
-            .min(T::one());
+        // Dot product of normals (nx, ny)
+        let cos_angle = (n1.nx() * n2.nx() + n1.ny() * n2.ny()).abs().min(T::one());
         cos_angle.acos()
     }
 
     /// Signed distance from a point to this line.
     ///
     /// The line should be unitized for accurate results.
+    /// Uses the standard formula: (a*x + b*y + c) / sqrt(a² + b²)
     pub fn signed_distance(&self, point: &Point<T>) -> T {
         use crate::norm::DegenerateNormed;
         let l = self.try_unitize().unwrap_or(*self);
-        (l.normal_x() * point.x() + l.normal_y() * point.y() + l.dist() * point.w()) / point.w()
+        // Line equation: nx*x + ny*y + d = 0
+        // Distance = (nx*px + ny*py + d*w) / w
+        (l.nx() * point.x() + l.ny() * point.y() + l.d() * point.w()) / point.w()
     }
 
     /// Distance from a point to this line.
@@ -321,8 +327,8 @@ impl<T: Float> Flector<T> {
     pub fn from_line(line: &Line<T>) -> Self {
         use crate::norm::DegenerateNormed;
         let l = line.try_unitize().unwrap_or(*line);
-        // new() takes (s, dist, normal_x, normal_y)
-        Self::new(T::zero(), l.dist(), l.normal_x(), l.normal_y())
+        // new() takes (s, d, nx, ny)
+        Self::new(T::zero(), l.d(), l.nx(), l.ny())
     }
 
     /// Reflect through y-axis (x = 0).
@@ -339,8 +345,9 @@ impl<T: Float> Flector<T> {
 
     /// Reflect through line at angle θ from x-axis through origin.
     pub fn reflect_through_angle(angle: T) -> Self {
-        // Line through origin with normal at angle θ: normal = (sin(θ), -cos(θ))
-        // new() takes (dist, normal_x, normal_y)
+        // Line through origin at angle θ from x-axis.
+        // Normal is perpendicular to line direction, so normal = (sin(θ), -cos(θ))
+        // For line equation a*x + b*y = 0: a = sin(θ), b = -cos(θ)
         let line = Line::new(T::zero(), angle.sin(), -angle.cos());
         Self::from_line(&line)
     }
@@ -348,8 +355,8 @@ impl<T: Float> Flector<T> {
     /// Line part (the grade-2 reflection line).
     #[inline]
     pub fn line_part(&self) -> Line<T> {
-        // Line::new() takes (dist, normal_x, normal_y)
-        Line::new(self.dist(), self.normal_x(), self.normal_y())
+        // Line::new() takes (d, nx, ny)
+        Line::new(self.d(), self.nx(), self.ny())
     }
 
     /// Check if this is a pure reflection (no scalar component).
@@ -472,6 +479,113 @@ mod tests {
     }
 
     #[test]
+    fn motor_transforms_point_and_line_consistently() {
+        use crate::ops::Join;
+        use std::f64::consts::FRAC_PI_4;
+
+        // Create two points and the line through them
+        let p1 = Point::<f64>::from_cartesian(1.0, 0.0);
+        let p2 = Point::<f64>::from_cartesian(0.0, 1.0);
+        let line = p1.join(&p2);
+
+        eprintln!("Original p1: ({}, {})", p1.cartesian_x(), p1.cartesian_y());
+        eprintln!("Original p2: ({}, {})", p2.cartesian_x(), p2.cartesian_y());
+        eprintln!(
+            "Original line: nx={}, ny={}, d={}",
+            line.nx(),
+            line.ny(),
+            line.d()
+        );
+
+        // Create a rotation motor
+        let motor = Motor::<f64>::from_rotation(FRAC_PI_4);
+        eprintln!(
+            "Motor: ty={}, tx={}, r={}, ps={}",
+            motor.ty(),
+            motor.tx(),
+            motor.r(),
+            motor.ps()
+        );
+
+        // Transform points and line separately
+        let p1_transformed = motor.transform(&p1);
+        let p2_transformed = motor.transform(&p2);
+        let line_transformed = motor.transform(&line);
+
+        eprintln!(
+            "Transformed p1: ({}, {})",
+            p1_transformed.cartesian_x(),
+            p1_transformed.cartesian_y()
+        );
+        eprintln!(
+            "Transformed p2: ({}, {})",
+            p2_transformed.cartesian_x(),
+            p2_transformed.cartesian_y()
+        );
+        eprintln!(
+            "Transformed line (antisandwich): nx={}, ny={}, d={}",
+            line_transformed.nx(),
+            line_transformed.ny(),
+            line_transformed.d()
+        );
+
+        // Also compute line from transformed points
+        let line_from_transformed = p1_transformed.join(&p2_transformed);
+        eprintln!(
+            "Line from transformed points: nx={}, ny={}, d={}",
+            line_from_transformed.nx(),
+            line_from_transformed.ny(),
+            line_from_transformed.d()
+        );
+
+        // The transformed line should match the line through transformed points
+        // (up to scale, since these are projective elements)
+        let scale = if line_transformed.nx().abs() > 0.1 {
+            line_from_transformed.nx() / line_transformed.nx()
+        } else if line_transformed.ny().abs() > 0.1 {
+            line_from_transformed.ny() / line_transformed.ny()
+        } else {
+            line_from_transformed.d() / line_transformed.d()
+        };
+
+        eprintln!("Scale factor: {}", scale);
+
+        assert!(
+            relative_eq!(
+                line_transformed.nx() * scale,
+                line_from_transformed.nx(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "nx mismatch: transformed={}, from_points={}",
+            line_transformed.nx(),
+            line_from_transformed.nx()
+        );
+        assert!(
+            relative_eq!(
+                line_transformed.ny() * scale,
+                line_from_transformed.ny(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "ny mismatch: transformed={}, from_points={}",
+            line_transformed.ny(),
+            line_from_transformed.ny()
+        );
+        assert!(
+            relative_eq!(
+                line_transformed.d() * scale,
+                line_from_transformed.d(),
+                epsilon = RELATIVE_EQ_EPS,
+                max_relative = RELATIVE_EQ_EPS
+            ),
+            "d mismatch: transformed={}, from_points={}",
+            line_transformed.d(),
+            line_from_transformed.d()
+        );
+    }
+
+    #[test]
     fn point_join_creates_line() {
         let p1 = Point::<f64>::origin();
         let p2 = Point::<f64>::from_cartesian(1.0, 0.0);
@@ -479,10 +593,27 @@ mod tests {
         let line = p1.join(&p2);
 
         // Line through origin and (1, 0) is the x-axis (y = 0)
-        // The wedge product gives normal_x component (e01) for this line
-        assert!(line.normal_x().abs() > 0.1);
-        // And the line should pass through origin (dist = 0)
-        assert!(line.dist().abs() < 0.1);
+        // Standard equation: 0*x + 1*y + 0 = 0
+        // With our convention: nx=0, ny=1, d=0
+        assert!(relative_eq!(
+            line.nx(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        assert!(relative_eq!(
+            line.ny(),
+            1.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
+        // And the line should pass through origin (d = 0)
+        assert!(relative_eq!(
+            line.d(),
+            0.0,
+            epsilon = RELATIVE_EQ_EPS,
+            max_relative = RELATIVE_EQ_EPS
+        ));
     }
 
     #[test]
@@ -516,16 +647,16 @@ mod tests {
         let result = f.transform(&p);
 
         // Reflecting (1, 2) through x-axis should give (1, -2)
-        // Note: antisandwich may produce w=-1, so we check raw homogeneous coords
-        // which are correct up to sign (projective equivalence)
+        // Use Cartesian coordinates since antisandwich may return different
+        // projective representatives (e.g., (-1, 2, -1) instead of (1, -2, 1))
         assert!(relative_eq!(
-            result.x(),
+            result.cartesian_x(),
             1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.y(),
+            result.cartesian_y(),
             -2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
@@ -540,16 +671,16 @@ mod tests {
         let result = f.transform(&p);
 
         // Reflecting (1, 2) through y-axis should give (-1, 2)
-        // Note: antisandwich may produce w=-1, so we check raw homogeneous coords
-        // which are correct up to sign (projective equivalence)
+        // Use Cartesian coordinates since antisandwich may return different
+        // projective representatives (e.g., (1, -2, -1) instead of (-1, 2, 1))
         assert!(relative_eq!(
-            result.x(),
+            result.cartesian_x(),
             -1.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS
         ));
         assert!(relative_eq!(
-            result.y(),
+            result.cartesian_y(),
             2.0,
             epsilon = RELATIVE_EQ_EPS,
             max_relative = RELATIVE_EQ_EPS

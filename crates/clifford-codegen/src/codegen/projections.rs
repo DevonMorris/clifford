@@ -160,7 +160,7 @@ impl<'a> ProjectionGenerator<'a> {
             .fields
             .iter()
             .map(|field| {
-                let mut terms = self.compute_projection_terms(type_a, type_b, field.blade_index);
+                let mut terms = self.compute_projection_terms(type_a, type_b, field.blade_index, field.sign);
                 // Negate all terms to correct the sign
                 for term in &mut terms {
                     term.coeff = -term.coeff;
@@ -234,7 +234,7 @@ impl<'a> ProjectionGenerator<'a> {
             .fields
             .iter()
             .map(|field| {
-                let mut terms = self.compute_antiprojection_terms(type_a, type_b, field.blade_index);
+                let mut terms = self.compute_antiprojection_terms(type_a, type_b, field.blade_index, field.sign);
                 // Negate all terms to correct the sign
                 for term in &mut terms {
                     term.coeff = -term.coeff;
@@ -317,6 +317,7 @@ impl<'a> ProjectionGenerator<'a> {
         type_a: &TypeSpec,
         type_b: &TypeSpec,
         result_blade: usize,
+        output_field_sign: i8,
     ) -> Vec<ProjectionTerm> {
         let mut terms: HashMap<(String, String, String), i32> = HashMap::new();
 
@@ -344,7 +345,9 @@ impl<'a> ProjectionGenerator<'a> {
                         continue;
                     }
 
-                    let total_sign = antidual_sign * wedge_sign * reg_sign;
+                    // Apply all field signs for non-canonical blade orderings
+                    let field_signs = field_a.sign * field_b1.sign * field_b2.sign * output_field_sign;
+                    let total_sign = antidual_sign * wedge_sign * reg_sign * field_signs;
                     let key = (
                         field_a.name.clone(),
                         field_b1.name.clone(),
@@ -374,6 +377,7 @@ impl<'a> ProjectionGenerator<'a> {
         type_a: &TypeSpec,
         type_b: &TypeSpec,
         result_blade: usize,
+        output_field_sign: i8,
     ) -> Vec<ProjectionTerm> {
         let mut terms: HashMap<(String, String, String), i32> = HashMap::new();
 
@@ -401,7 +405,9 @@ impl<'a> ProjectionGenerator<'a> {
                         continue;
                     }
 
-                    let total_sign = antidual_sign * reg_sign * wedge_sign;
+                    // Apply all field signs for non-canonical blade orderings
+                    let field_signs = field_a.sign * field_b1.sign * field_b2.sign * output_field_sign;
+                    let total_sign = antidual_sign * reg_sign * wedge_sign * field_signs;
                     let key = (
                         field_a.name.clone(),
                         field_b1.name.clone(),

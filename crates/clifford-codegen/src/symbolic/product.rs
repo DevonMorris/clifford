@@ -132,10 +132,13 @@ impl SymbolicProduct {
                     a_symbols,
                     b_symbols,
                 );
+                // Apply output field sign for non-canonical blade ordering
+                // (e.g., e31 = -e13, so sign = -1 and we negate the expression)
+                let signed_expr = if output_field.sign < 0 { -expr } else { expr };
                 SymbolicField {
                     name: output_field.name.clone(),
                     blade_index: output_field.blade_index,
-                    expression: expr,
+                    expression: signed_expr,
                 }
             })
             .collect()
@@ -169,15 +172,17 @@ impl SymbolicProduct {
                 let expr = self.compute_sandwich_field(
                     versor_type,
                     operand_type,
-                    output_field.blade_index,
+                    output_field,
                     versor_symbols,
                     operand_symbols,
                     use_antiproduct,
                 );
+                // Apply output field sign for non-canonical blade ordering
+                let signed_expr = if output_field.sign < 0 { -expr } else { expr };
                 SymbolicField {
                     name: output_field.name.clone(),
                     blade_index: output_field.blade_index,
-                    expression: expr,
+                    expression: signed_expr,
                 }
             })
             .collect()
@@ -190,12 +195,13 @@ impl SymbolicProduct {
         &self,
         versor_type: &TypeSpec,
         operand_type: &TypeSpec,
-        result_blade: usize,
+        output_field: &crate::spec::FieldSpec,
         versor_symbols: &HashMap<String, Atom>,
         operand_symbols: &HashMap<String, Atom>,
         use_antiproduct: bool,
     ) -> Atom {
         let dim = self.table.dim();
+        let result_blade = output_field.blade_index;
         let mut terms: Vec<Atom> = Vec::new();
 
         for field_v1 in &versor_type.fields {
@@ -248,7 +254,10 @@ impl SymbolicProduct {
                         continue;
                     }
 
-                    let final_sign = sign_vx * sign_vxr * rev_sign;
+                    // Apply input field signs for non-canonical blade orderings.
+                    // v1 and v2 are both from versor_type, x is from operand_type.
+                    let input_sign = field_v1.sign * field_x.sign * field_v2.sign;
+                    let final_sign = sign_vx * sign_vxr * rev_sign * input_sign;
                     if final_sign == 0 {
                         continue;
                     }
@@ -323,9 +332,14 @@ impl SymbolicProduct {
                 let a_sym = a_symbols.get(&field_a.name).unwrap();
                 let b_sym = b_symbols.get(&field_b.name).unwrap();
 
-                // Create term: sign * a_field * b_field
+                // Apply input field signs for non-canonical blade orderings.
+                // If a field is specified as e.g., e31 (sign = -1), the stored value
+                // represents the negated canonical blade value.
+                let input_sign = sign * field_a.sign * field_b.sign;
+
+                // Create term: total_sign * a_field * b_field
                 let product = a_sym * b_sym;
-                let term = if sign > 0 { product } else { -product };
+                let term = if input_sign > 0 { product } else { -product };
                 terms.push(term);
             }
         }

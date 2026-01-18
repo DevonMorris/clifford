@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc c56cdbad9c5914cda21555dfa953230116fa67aaa3e7d90ece833d5f2ca3af90 # shrinks to m = Unitized(Motor { s: 11.907358260571286, tz: 0.0, ty: 0.0, tx: 0.0, rx: -9.668679216304813, ry: 0.0, rz: 1.0, ps: 0.0 })

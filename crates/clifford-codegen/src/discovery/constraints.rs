@@ -667,7 +667,7 @@ mod tests {
         ];
 
         for (name, algebra, grade) in &test_cases {
-            let constraints = derive_blade_constraint(&[*grade], &algebra);
+            let constraints = derive_blade_constraint(&[*grade], algebra);
             let num_blades = blades_of_grades(algebra.dim(), &[*grade]).len();
 
             eprintln!(
@@ -709,7 +709,7 @@ mod tests {
         ];
 
         for (name, algebra, grades) in &test_cases {
-            let constraint = derive_field_constraint(grades, &algebra);
+            let constraint = derive_field_constraint(grades, algebra);
 
             eprintln!("{}: {:?}", name, grades);
             if let Some(c) = constraint {

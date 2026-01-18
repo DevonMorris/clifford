@@ -3,8 +3,6 @@
 //! These tests verify the algebraic properties of the blade algebra engine
 //! using proptest to ensure correctness across a wide range of inputs.
 
-#![cfg(test)]
-
 use proptest::prelude::*;
 
 use super::grade::grade;
@@ -96,7 +94,7 @@ proptest! {
             let gb = grade(b);
             let gr = grade(result);
 
-            let min_grade = if ga >= gb { ga - gb } else { gb - ga };
+            let min_grade = ga.abs_diff(gb);
             let max_grade = ga + gb;
 
             prop_assert!(gr >= min_grade, "grade {} < min {}", gr, min_grade);
@@ -162,7 +160,7 @@ proptest! {
     #[test]
     fn reverse_sign_pattern(blade in blade_6d()) {
         let g = grade(blade);
-        let expected_positive = (g * (g.wrapping_sub(1)) / 2) % 2 == 0;
+        let expected_positive = (g * (g.wrapping_sub(1)) / 2).is_multiple_of(2);
 
         // For Euclidean metric, blade * blade gives sign based on grade
         let (sign, result) = basis_product(blade, blade, |_| 1);

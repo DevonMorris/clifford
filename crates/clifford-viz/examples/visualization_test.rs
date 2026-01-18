@@ -48,7 +48,7 @@ impl VisualizationApp for RotorDemo {
         }
     }
 
-    fn render(&self, ui: &mut egui::Ui) {
+    fn render(&mut self, ui: &mut egui::Ui) {
         // Create the rotor from angle
         let rotor = Rotor::<f64>::from_angle(f64::from(self.angle));
 
