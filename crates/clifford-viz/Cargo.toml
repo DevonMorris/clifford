@@ -69,7 +69,6 @@ required-features = ["native"]
 name = "visualization_test"
 required-features = ["native"]
 
-# Binary requires native feature for desktop, but trunk handles WASM builds
+# Binary works on both native (with native feature) and WASM (via target-specific deps)
 [[bin]]
 name = "demo_launcher"
-required-features = ["native"]
