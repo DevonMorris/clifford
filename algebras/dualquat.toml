@@ -24,23 +24,45 @@ primary_involution = "clifford_conjugate"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Vector]
 grades = [1]
 description = "Vector with quaternion (i,j) and dual (d) components"
-fields = ["i", "j", "d"]
+field_map = [
+  { name = "i", blade = "e1" },
+  { name = "j", blade = "e2" },
+  { name = "d", blade = "e3" }
+]
 
 [types.Bivector]
 grades = [2]
 description = "Bivector: k from quaternion, di/dj from dual part"
-fields = ["k", "di", "dj"]
+field_map = [
+  { name = "k", blade = "e12" },
+  { name = "di", blade = "e13" },
+  { name = "dj", blade = "e23" }
+]
 
 [types.Trivector]
 grades = [3]
 description = "Trivector (pseudoscalar, dk component)"
-fields = ["dk"]
+field_map = [
+  { name = "dk", blade = "e123" }
+]
 
 [types.DualQuaternion]
 grades = [0, 1, 2, 3]
 description = "Full dual quaternion for rigid transformations"
-fields = ["s", "i", "j", "d", "k", "di", "dj", "dk"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "i", blade = "e1" },
+  { name = "j", blade = "e2" },
+  { name = "d", blade = "e3" },
+  { name = "k", blade = "e12" },
+  { name = "di", blade = "e13" },
+  { name = "dj", blade = "e23" },
+  { name = "dk", blade = "e123" }
+]

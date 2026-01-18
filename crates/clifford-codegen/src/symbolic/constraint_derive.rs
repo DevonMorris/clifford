@@ -501,7 +501,12 @@ mod tests {
 
             [types.Rotor]
             grades = [0, 2]
-            fields = ["s", "xy", "xz", "yz"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "xy", blade = "e12" },
+                { name = "xz", blade = "e13" },
+                { name = "yz", blade = "e23" }
+            ]
             "#,
         )
         .unwrap();
@@ -533,7 +538,11 @@ mod tests {
 
             [types.Vector]
             grades = [1]
-            fields = ["x", "y", "z"]
+            field_map = [
+                { name = "x", blade = "e1" },
+                { name = "y", blade = "e2" },
+                { name = "z", blade = "e3" }
+            ]
             "#,
         )
         .unwrap();
@@ -567,7 +576,16 @@ mod tests {
 
             [types.Motor]
             grades = [0, 2, 4]
-            fields = ["s", "e01", "e02", "e03", "e12", "e31", "e23", "e0123"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "e01", blade = "e14" },
+                { name = "e02", blade = "e24" },
+                { name = "e03", blade = "e34" },
+                { name = "e12", blade = "e12" },
+                { name = "e31", blade = "e13" },
+                { name = "e23", blade = "e23" },
+                { name = "e0123", blade = "e1234" }
+            ]
             "#,
         )
         .unwrap();
@@ -608,7 +626,14 @@ mod tests {
 
             [types.Line]
             grades = [2]
-            fields = ["e01", "e02", "e03", "e12", "e31", "e23"]
+            field_map = [
+                { name = "e01", blade = "e14" },
+                { name = "e02", blade = "e24" },
+                { name = "e03", blade = "e34" },
+                { name = "e12", blade = "e12" },
+                { name = "e31", blade = "e13" },
+                { name = "e23", blade = "e23" }
+            ]
             "#,
         )
         .unwrap();
@@ -642,7 +667,12 @@ mod tests {
 
             [types.Rotor]
             grades = [0, 2]
-            fields = ["s", "xy", "xz", "yz"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "xy", blade = "e12" },
+                { name = "xz", blade = "e13" },
+                { name = "yz", blade = "e23" }
+            ]
             "#,
         )
         .unwrap();
@@ -676,7 +706,16 @@ mod tests {
 
             [types.Motor]
             grades = [0, 2, 4]
-            fields = ["s", "e01", "e02", "e03", "e12", "e31", "e23", "e0123"]
+            field_map = [
+                { name = "s", blade = "s" },
+                { name = "e01", blade = "e14" },
+                { name = "e02", blade = "e24" },
+                { name = "e03", blade = "e34" },
+                { name = "e12", blade = "e12" },
+                { name = "e31", blade = "e13" },
+                { name = "e23", blade = "e23" },
+                { name = "e0123", blade = "e1234" }
+            ]
             "#,
         )
         .unwrap();

@@ -153,6 +153,32 @@ pub enum ParseError {
         /// Human-readable details of missing products.
         details: String,
     },
+
+    /// Type is missing required field_map.
+    #[error(
+        "type '{type_name}' is missing required field_map (explicit blade-to-field mappings are required)"
+    )]
+    MissingFieldMap {
+        /// The type name.
+        type_name: String,
+    },
+
+    /// Blade grade in field_map doesn't match type's grades.
+    #[error(
+        "type '{type_name}' field '{field}' maps to blade '{blade}' (grade {blade_grade}) but type only spans grades {grades:?}"
+    )]
+    FieldMapGradeMismatch {
+        /// The type name.
+        type_name: String,
+        /// The field name.
+        field: String,
+        /// The blade name.
+        blade: String,
+        /// The blade's actual grade.
+        blade_grade: usize,
+        /// The expected grades.
+        grades: Vec<usize>,
+    },
 }
 
 /// Describes a product that has no matching output type.

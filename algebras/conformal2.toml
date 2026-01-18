@@ -26,6 +26,9 @@ primary_involution = "reverse"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.RoundPoint]
 grades = [1]
@@ -34,40 +37,67 @@ description = "Round point (null vectors represent actual 2D points)"
 # x, y: Euclidean coordinates
 # o: origin weight (e3 coefficient)
 # i: infinity weight (e4 coefficient)
-# Canonical blade order: e1, e2, e3, e4
-fields = ["x", "y", "o", "i"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "o", blade = "e3" },
+  { name = "i", blade = "e4" }
+]
 
 [types.PointPair]
 grades = [2]
 description = "Point pair / dipole (two points or oriented line segment)"
-# Canonical blade order: e12, e13, e14, e23, e24, e34
+# Blade order by bitmask: e12, e13, e23, e14, e24, e34
 # m: moment (spatial bivector e12)
-# ox, oy: origin bivectors (e13, e23 -> e3 wedge ei)
-# ix, iy: infinity bivectors (e14, e24 -> e4 wedge ei)
+# ox, oy: origin bivectors (e3 wedge ei: e13, e23)
+# ix, iy: infinity bivectors (e4 wedge ei: e14, e24)
 # oi: origin-infinity bivector (e34)
-fields = ["m", "ox", "ix", "oy", "iy", "oi"]
+field_map = [
+  { name = "m", blade = "e12" },
+  { name = "ox", blade = "e13" },
+  { name = "oy", blade = "e23" },
+  { name = "ix", blade = "e14" },
+  { name = "iy", blade = "e24" },
+  { name = "oi", blade = "e34" }
+]
 
 [types.Circle]
 grades = [3]
 description = "Circle in 2D space (or line as circle through infinity)"
-# Canonical blade order: e123, e124, e134, e234
+# Blade order by bitmask: e123, e124, e134, e234
 # w: weight (e123 coefficient - Euclidean trivector)
 # cx, cy: center encoding (e124, e134 - with e4)
 # r: radius encoding (e234 - all with e4)
-fields = ["w", "cx", "cy", "r"]
+field_map = [
+  { name = "w", blade = "e123" },
+  { name = "cx", blade = "e124" },
+  { name = "cy", blade = "e134" },
+  { name = "r", blade = "e234" }
+]
 
 [types.Pseudoscalar]
 grades = [4]
 description = "Pseudoscalar (oriented 4-volume)"
-fields = ["xyoi"]
+field_map = [
+  { name = "xyoi", blade = "e1234" }
+]
 
 [types.Motor]
 grades = [0, 2, 4]
 description = "Motor (even subalgebra for conformal transformations)"
 # Grade 0: s (scalar)
-# Grade 2: same as PointPair - m, ox, ix, oy, iy, oi
+# Grade 2: same as PointPair - m, ox, oy, ix, iy, oi
 # Grade 4: ps (pseudoscalar)
-fields = ["s", "m", "ox", "ix", "oy", "iy", "oi", "ps"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "m", blade = "e12" },
+  { name = "ox", blade = "e13" },
+  { name = "oy", blade = "e23" },
+  { name = "ix", blade = "e14" },
+  { name = "iy", blade = "e24" },
+  { name = "oi", blade = "e34" },
+  { name = "ps", blade = "e1234" }
+]
 
 # ============================================================
 # Sparse Types (subset of blades within a grade)
@@ -78,14 +108,20 @@ fields = ["s", "m", "ox", "ix", "oy", "iy", "oi", "ps"]
 # Uses only 3 of the 4 grade-3 blades (excluding e123)
 [types.Line]
 grades = [3]
-fields = ["nx", "ny", "d"]
-blades = ["e124", "e134", "e234"]
 description = "Line (circle through infinity, w=0)"
+field_map = [
+  { name = "nx", blade = "e124" },
+  { name = "ny", blade = "e134" },
+  { name = "d", blade = "e234" }
+]
 
 # FlatPoint = PointPair with only e4 components
 # Uses only 3 of the 6 grade-2 blades
 [types.FlatPoint]
 grades = [2]
-fields = ["ix", "iy", "oi"]
-blades = ["e14", "e24", "e34"]
 description = "Flat point (point pair with only infinity components)"
+field_map = [
+  { name = "ix", blade = "e14" },
+  { name = "iy", blade = "e24" },
+  { name = "oi", blade = "e34" }
+]

@@ -713,12 +713,8 @@ impl<T: Float> Motor<T> {
     /// ```
     #[inline]
     pub fn identity() -> Self {
-        // In PGA with antiproduct-based composition and antisandwich-based
-        // transforms, the identity motor is the pseudoscalar e0123=1, not
-        // the scalar s=1. This is because:
-        // - compose() uses antiproduct: M1 ⊛ M2 = ∁(∁M1 × ∁M2)
-        // - transform() uses antisandwich: M ⊛ X ⊛ antirev(M)
-        // The pseudoscalar is the identity for the antiproduct.
+        // The identity motor has ps=1 (pseudoscalar) and all other components zero.
+        // This is because the antisandwich formula uses ps² for identity pass-through.
         Self::new_unchecked(
             T::zero(),
             T::zero(),
@@ -727,7 +723,7 @@ impl<T: Float> Motor<T> {
             T::zero(),
             T::zero(),
             T::zero(),
-            T::one(), // e0123 = 1
+            T::one(), // ps = 1 (identity)
         )
     }
 
@@ -735,78 +731,84 @@ impl<T: Float> Motor<T> {
     ///
     /// Creates a motor that translates by the vector (dx, dy, dz).
     ///
-    /// Translation motor in RGA convention: T = τₓe₂₃ - τᵧe₃₁ + τᵤe₁₂ + e₀₁₂₃
-    /// where τ = (dx/2, dy/2, dz/2) is half the displacement.
-    /// Note: e31 has opposite sign due to cyclic ordering (e31 = -e13).
+    /// Per RGA convention (<https://rigidgeometricalgebra.org/wiki/index.php?title=Motor>):
+    /// Translation motor: T = t_x·e₂₃ + t_y·e₃₁ + t_z·e₁₂ + 𝟙
+    /// where t = d/2 (half displacement) and 𝟙 is the antiscalar (pseudoscalar).
     ///
-    /// This uses e0123 (antiscalar) as the identity, matching rotation motors,
-    /// so they compose correctly under antiproduct.
+    /// Note: e₃₁ = -e₁₃ in canonical ordering.
     pub fn from_translation(dx: T, dy: T, dz: T) -> Self {
         let half = T::one() / T::TWO;
-        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
-        // Translation uses tz, ty, tx (positions 1-3)
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA translation uses e23, e31, e12 which map to rx, -ty, tz
         Self::new_unchecked(
-            T::zero(),  // s
-            dz * half,  // tz - z-translation
-            -dy * half, // ty - y-translation (negated due to e13 sign)
-            dx * half,  // tx - x-translation
-            T::zero(),  // rx
-            T::zero(),  // ry
-            T::zero(),  // rz
-            T::one(),   // ps (identity)
+            T::zero(),  // s = 0
+            dz * half,  // tz (e12) - z-translation
+            -dy * half, // ty (e13) - y-translation (negated: e31 = -e13)
+            T::zero(),  // tx (e14) - not used for translation in RGA
+            dx * half,  // rx (e23) - x-translation in RGA convention
+            T::zero(),  // ry (e24) - not used for translation
+            T::zero(),  // rz (e34) - not used for translation
+            T::one(),   // ps = 1 (antiscalar identity)
         )
     }
 
     /// Pure rotation around x-axis through origin.
+    ///
+    /// Per RGA convention, rotation uses velocity bivectors e41, e42, e43.
+    /// Rotation around x-axis uses e41 = -e14 (our tx field, negated).
     pub fn from_rotation_x(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
-        // Rotation around x uses rx (position 4)
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA rotation around x uses e41 = -e14, so tx = -sin(θ/2)
         Self::new_unchecked(
-            T::zero(),   // s
-            T::zero(),   // tz
-            T::zero(),   // ty
-            T::zero(),   // tx
-            -half.sin(), // rx - rotation around x-axis
-            T::zero(),   // ry
-            T::zero(),   // rz
-            half.cos(),  // ps = cos(θ/2)
+            T::zero(),   // s = 0
+            T::zero(),   // tz (e12)
+            T::zero(),   // ty (e13)
+            -half.sin(), // tx (e14) = -e41 rotation velocity
+            T::zero(),   // rx (e23)
+            T::zero(),   // ry (e24)
+            T::zero(),   // rz (e34)
+            half.cos(),  // ps = cos(θ/2) (antiscalar identity)
         )
     }
 
     /// Pure rotation around y-axis through origin.
+    ///
+    /// Per RGA convention, rotation uses velocity bivectors e41, e42, e43.
+    /// Rotation around y-axis uses e42 = -e24 (our ry field, negated).
     pub fn from_rotation_y(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Motor fields: [s, tz, ty, tx, rx, ry, rz, ps]
-        // Rotation around y uses ry (position 5)
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA rotation around y uses e42 = -e24, so ry = -sin(θ/2)
         Self::new_unchecked(
-            T::zero(),   // s
-            T::zero(),   // tz
-            T::zero(),   // ty
-            T::zero(),   // tx
-            T::zero(),   // rx
-            -half.sin(), // ry - rotation around y-axis
-            T::zero(),   // rz
-            half.cos(),  // ps = cos(θ/2)
+            T::zero(),   // s = 0
+            T::zero(),   // tz (e12)
+            T::zero(),   // ty (e13)
+            T::zero(),   // tx (e14)
+            T::zero(),   // rx (e23)
+            -half.sin(), // ry (e24) = -e42 rotation velocity
+            T::zero(),   // rz (e34)
+            half.cos(),  // ps = cos(θ/2) (antiscalar identity)
         )
     }
 
     /// Pure rotation around z-axis through origin.
     ///
-    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding, matching original.
+    /// Per RGA convention, rotation uses velocity bivectors e41, e42, e43.
+    /// Rotation around z-axis uses e43 = -e34 (our rz field, negated).
     pub fn from_rotation_z(angle: T) -> Self {
         let half = angle / T::TWO;
-        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
-        // Rotation around z uses position 6 (tz = e34)
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA rotation around z uses e43 = -e34, so rz = -sin(θ/2)
         Self::new_unchecked(
-            T::zero(),   // s
-            T::zero(),   // bz (e12)
-            T::zero(),   // by (e13)
+            T::zero(),   // s = 0
+            T::zero(),   // tz (e12)
+            T::zero(),   // ty (e13)
             T::zero(),   // tx (e14)
-            T::zero(),   // bx (e23)
-            T::zero(),   // ty (e24)
-            -half.sin(), // tz (e34) - rotation around z-axis
-            half.cos(),  // ps (e0123) = cos(θ/2)
+            T::zero(),   // rx (e23)
+            T::zero(),   // ry (e24)
+            -half.sin(), // rz (e34) = -e43 rotation velocity
+            half.cos(),  // ps = cos(θ/2) (antiscalar identity)
         )
     }
 
@@ -815,26 +817,30 @@ impl<T: Float> Motor<T> {
     /// The axis vector determines the rotation axis (will be normalized).
     /// The rotation follows the right-hand rule.
     ///
-    /// Uses positions 4-6 (bx, ty, tz) for rotation encoding.
+    /// Per RGA convention, rotation uses velocity bivectors e41, e42, e43.
     pub fn from_axis_angle(axis: &EuclideanVector<T>, angle: T) -> Self {
         let half = angle / T::TWO;
         let (sin_half, cos_half) = (half.sin(), half.cos());
         let axis_norm = axis.normalized();
-        // Motor fields (lexicographic): [s, bz(e12), by(e13), tx(e14), bx(e23), ty(e24), tz(e34), ps(e0123)]
-        // Rotation uses positions 4, 5, 6 (bx, ty, tz)
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA rotation uses e41=-e14, e42=-e24, e43=-e34 for axis components
         Self::new_unchecked(
-            T::zero(),                 // s
-            T::zero(),                 // bz (e12)
-            T::zero(),                 // by (e13)
-            T::zero(),                 // tx (e14)
-            -sin_half * axis_norm.x(), // bx (e23) - rotation around x-axis
-            -sin_half * axis_norm.y(), // ty (e24) - rotation around y-axis
-            -sin_half * axis_norm.z(), // tz (e34) - rotation around z-axis
-            cos_half,                  // ps (e0123) = cos(θ/2)
+            T::zero(),                 // s = 0
+            T::zero(),                 // tz (e12)
+            T::zero(),                 // ty (e13)
+            -sin_half * axis_norm.x(), // tx (e14) = -e41·axis.x
+            T::zero(),                 // rx (e23)
+            -sin_half * axis_norm.y(), // ry (e24) = -e42·axis.y
+            -sin_half * axis_norm.z(), // rz (e34) = -e43·axis.z
+            cos_half,                  // ps = cos(θ/2) (antiscalar identity)
         )
     }
 
     /// Screw motion along a line.
+    ///
+    /// Per RGA convention, a screw motor combines:
+    /// - Rotation around the line (velocity bivectors e41, e42, e43)
+    /// - Translation along the line (moment bivectors e23, e31, e12)
     pub fn from_line(line: &Line<T>, angle: T, distance: T) -> Self {
         let line_unit = line.unitized();
         let half_angle = angle / T::TWO;
@@ -845,15 +851,18 @@ impl<T: Float> Motor<T> {
         let d = line_unit.direction();
         let m = line_unit.moment();
 
+        // Motor fields: [s, tz(e12), ty(e13), tx(e14), rx(e23), ry(e24), rz(e34), ps]
+        // RGA translation moment: e23→rx, e31=-e13→-ty, e12→tz
+        // RGA rotation velocity: e41=-e14→-tx, e42=-e24→-ry, e43=-e34→-rz
         Self::new_unchecked(
-            cos_a,
-            sin_a * m.x() + half_dist * cos_a * d.x(), // e23 (translation)
-            sin_a * m.y() + half_dist * cos_a * d.y(), // e31 (translation)
-            sin_a * m.z() + half_dist * cos_a * d.z(), // e12 (translation)
-            sin_a * d.x(),                             // e01 (rotation)
-            sin_a * d.y(),                             // e02 (rotation)
-            sin_a * d.z(),                             // e03 (rotation)
-            -half_dist * sin_a,
+            T::zero(),                                    // s = 0
+            sin_a * m.z() + half_dist * cos_a * d.z(),    // tz (e12) - translation z
+            -(sin_a * m.y() + half_dist * cos_a * d.y()), // ty (e13) = -e31 - translation y (negated)
+            -sin_a * d.x(),                               // tx (e14) = -e41 - rotation velocity x
+            sin_a * m.x() + half_dist * cos_a * d.x(),    // rx (e23) - translation x
+            -sin_a * d.y(),                               // ry (e24) = -e42 - rotation velocity y
+            -sin_a * d.z(),                               // rz (e34) = -e43 - rotation velocity z
+            cos_a,                                        // ps = cos(θ/2) (identity part)
         )
     }
 

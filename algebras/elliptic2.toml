@@ -32,13 +32,19 @@ primary_involution = "reverse"
 [types.Scalar]
 grades = [0]
 description = "Scalar (grade-0 element)"
-fields = ["s"]
+field_map = [
+  { name = "s", blade = "s" }
+]
 
 [types.Point]
 grades = [1]
 description = "Point on the elliptic plane (homogeneous coordinates)"
 # Points represented as unit vectors in R³ (or antipodal pairs on S²)
-fields = ["x", "y", "z"]
+field_map = [
+  { name = "x", blade = "e1" },
+  { name = "y", blade = "e2" },
+  { name = "z", blade = "e3" }
+]
 
 [types.Line]
 grades = [2]
@@ -47,12 +53,18 @@ description = "Line on the elliptic plane (great circle)"
 # - xy: component in the e₁e₂ plane
 # - xz: component in the e₁e₃ plane
 # - yz: component in the e₂e₃ plane
-fields = ["xy", "xz", "yz"]
+field_map = [
+  { name = "xy", blade = "e12" },
+  { name = "xz", blade = "e13" },
+  { name = "yz", blade = "e23" }
+]
 
 [types.Pseudoscalar]
 grades = [3]
 description = "Pseudoscalar (volume element)"
-fields = ["xyz"]
+field_map = [
+  { name = "xyz", blade = "e123" }
+]
 
 [types.Rotor]
 grades = [0, 2]
@@ -60,4 +72,9 @@ description = "Rotor for rotations on the elliptic plane"
 # Rotors transform points: R * p * R̃
 # - s: scalar part (cos(θ/2))
 # - xy, xz, yz: bivector part (axis-angle encoding)
-fields = ["s", "xy", "xz", "yz"]
+field_map = [
+  { name = "s", blade = "s" },
+  { name = "xy", blade = "e12" },
+  { name = "xz", blade = "e13" },
+  { name = "yz", blade = "e23" }
+]

@@ -82,19 +82,36 @@ pub struct RawTypeSpec {
     pub grades: Vec<usize>,
     /// Documentation.
     pub description: Option<String>,
-    /// Custom field names.
-    #[serde(default)]
-    pub fields: Vec<String>,
-    /// Explicit blade mappings for sparse types.
+    /// Explicit field-to-blade mappings (required for all types).
     ///
-    /// When provided, fields are mapped to specific blades instead of
-    /// assuming all blades of the specified grades. Blade names use the
+    /// Each entry maps a field name to a specific blade. Blade names use the
     /// format "e123" where digits are 1-based basis vector indices.
     ///
-    /// Example: `blades = ["e415", "e425", "e435"]` for a type using
-    /// only 3 of the 10 grade-3 blades in a 5D algebra.
+    /// Non-canonical blade orderings (e.g., "e20" instead of "e02") are supported
+    /// and will automatically apply the correct sign correction.
+    ///
+    /// Example:
+    /// ```toml
+    /// field_map = [
+    ///   { name = "nx", blade = "e20" },  # e20 = -e02
+    ///   { name = "ny", blade = "e01" },
+    ///   { name = "d", blade = "e12" }
+    /// ]
+    /// ```
     #[serde(default)]
-    pub blades: Vec<String>,
+    pub field_map: Vec<RawFieldMapping>,
     /// Type this aliases.
     pub alias_of: Option<String>,
+}
+
+/// A single field-to-blade mapping in the TOML specification.
+#[derive(Debug, Deserialize)]
+pub struct RawFieldMapping {
+    /// Field name (e.g., "x", "nx", "dist").
+    pub name: String,
+    /// Blade name (e.g., "e1", "e20", "e123").
+    ///
+    /// Non-canonical orderings like "e20" (instead of "e02") are supported
+    /// and will compute the appropriate sign correction.
+    pub blade: String,
 }
