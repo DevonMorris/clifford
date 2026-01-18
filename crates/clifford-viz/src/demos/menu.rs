@@ -4,6 +4,7 @@
 //! available demos and allows navigation between them in the web version.
 
 use crate::common::colors;
+use egui::ImageSource;
 
 /// Demo entry with metadata for display.
 struct DemoEntry {
@@ -57,6 +58,13 @@ impl eframe::App for DemoMenu {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(if is_mobile { 16.0 } else { 32.0 });
+
+                    // Logo
+                    let logo_size = if is_mobile { 80.0 } else { 120.0 };
+                    let logo: ImageSource<'_> = egui::include_image!("../../clifford.png");
+                    ui.add(egui::Image::new(logo).max_size(egui::vec2(logo_size, logo_size)));
+
+                    ui.add_space(if is_mobile { 8.0 } else { 12.0 });
 
                     // Title
                     ui.heading(egui::RichText::new("Clifford").size(if is_mobile { 28.0 } else { 36.0 }));

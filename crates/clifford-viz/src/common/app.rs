@@ -206,12 +206,14 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 .collapsible(false)
                 .show(ctx, |ui| {
                     ui.horizontal(|ui| {
+                        // Close button on left (same position as hamburger menu)
+                        if ui
+                            .add(egui::Button::new("\u{2715}").min_size(egui::vec2(36.0, 36.0)))
+                            .clicked()
+                        {
+                            self.sidebar_open = false;
+                        }
                         ui.heading("Controls");
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if ui.button("\u{2715}").clicked() {
-                                self.sidebar_open = false;
-                            }
-                        });
                     });
                     ui.separator();
 
