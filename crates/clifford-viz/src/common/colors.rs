@@ -12,18 +12,29 @@
 //! - Geometric objects (soft, pleasant)
 //! - Transformations
 //! - Interactive states (can be more saturated)
+//!
+//! # Theme Support
+//!
+//! Colors automatically adapt to light/dark mode. Use the theme-aware functions
+//! (e.g., [`point()`], [`line()`], [`grid()`]) which take an `&egui::Context`
+//! and return the appropriate color for the current theme.
+//!
+//! ```ignore
+//! use clifford_viz::common::colors::{point, line};
+//!
+//! fn render(&self, ui: &mut egui::Ui) {
+//!     let ctx = ui.ctx();
+//!     let point_color = point(ctx);
+//!     let line_color = line(ctx);
+//! }
+//! ```
 
-use egui::Color32;
+use egui::{Color32, Context};
 
-/// Primary color palette for geometric objects and UI elements.
+/// Dark mode color palette.
 ///
-/// # Design Principles
-///
-/// 1. **No pure saturated primaries** - They clash and tire the eyes
-/// 2. **Supporting elements fade back** - Grid, labels use low-contrast colors
-/// 3. **Focus elements can pop** - But use saturation sparingly
-/// 4. **Warm neutrals** - Background has slight warmth, not pure gray
-pub mod palette {
+/// These colors are optimized for dark backgrounds with light foreground elements.
+pub mod dark {
     use super::*;
 
     // === Backgrounds ===
@@ -89,6 +100,377 @@ pub mod palette {
     pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(224, 224, 224); // #e0e0e0
     /// Secondary text color (for labels, hints).
     pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(158, 158, 158); // #9e9e9e
+}
+
+/// Light mode color palette.
+///
+/// These colors are optimized for light backgrounds with dark foreground elements.
+/// Geometric object colors are more saturated for better contrast on white.
+pub mod light {
+    use super::*;
+
+    // === Backgrounds ===
+    /// Main background color (warm off-white).
+    pub const BACKGROUND: Color32 = Color32::from_rgb(250, 250, 248); // #fafaf8
+    /// Elevated surface color (for panels, cards).
+    pub const SURFACE: Color32 = Color32::from_rgb(255, 255, 255); // #ffffff
+
+    // === Grid (subtle on light background) ===
+    /// Default grid line color.
+    pub const GRID: Color32 = Color32::from_rgb(220, 220, 224); // #dcdce0
+    /// Minor grid lines (most subtle).
+    pub const GRID_MINOR: Color32 = Color32::from_rgb(235, 235, 238); // #ebebee
+    /// Major grid lines (slightly more visible).
+    pub const GRID_MAJOR: Color32 = Color32::from_rgb(200, 200, 206); // #c8c8ce
+
+    // === Axes (slightly more saturated for light backgrounds) ===
+    /// Color for the X axis (deeper brick red).
+    pub const X_AXIS: Color32 = Color32::from_rgb(168, 64, 60); // #a8403c
+    /// Color for the Y axis (deeper sage green).
+    pub const Y_AXIS: Color32 = Color32::from_rgb(70, 134, 74); // #46864a
+    /// Color for the Z axis (deeper steel blue).
+    pub const Z_AXIS: Color32 = Color32::from_rgb(60, 113, 156); // #3c719c
+    /// Color for the time axis in Minkowski space (deeper amber).
+    pub const T_AXIS: Color32 = Color32::from_rgb(180, 140, 60); // #b48c3c
+
+    // === Geometric Objects (more saturated for light backgrounds) ===
+    /// Color for points in visualizations (deeper blue).
+    pub const POINT: Color32 = Color32::from_rgb(56, 115, 180); // #3873b4
+    /// Color for lines in visualizations (deeper coral).
+    pub const LINE: Color32 = Color32::from_rgb(180, 82, 74); // #b4524a
+    /// Color for planes in visualizations (deeper green).
+    pub const PLANE: Color32 = Color32::from_rgb(64, 138, 80); // #408a50
+    /// Color for circles in visualizations (deeper gold).
+    pub const CIRCLE: Color32 = Color32::from_rgb(180, 148, 60); // #b4943c
+    /// Color for spheres in visualizations (darker gray).
+    pub const SPHERE: Color32 = Color32::from_rgb(108, 112, 120); // #6c7078
+
+    // === Transformations ===
+    /// Color for rotors in visualizations (deeper purple).
+    pub const ROTOR: Color32 = Color32::from_rgb(122, 90, 138); // #7a5a8a
+    /// Color for motors in visualizations (deeper cyan).
+    pub const MOTOR: Color32 = Color32::from_rgb(60, 130, 140); // #3c828c
+
+    // === Secondary (darker variants for multiple objects of same type) ===
+    /// Secondary point color (muted blue).
+    pub const POINT_SECONDARY: Color32 = Color32::from_rgb(100, 145, 195); // #6491c3
+    /// Secondary line color (muted coral).
+    pub const LINE_SECONDARY: Color32 = Color32::from_rgb(195, 118, 110); // #c3766e
+    /// Secondary plane color (muted green).
+    pub const PLANE_SECONDARY: Color32 = Color32::from_rgb(100, 158, 112); // #649e70
+
+    // === Interactive States ===
+    /// Color for selected objects (deeper gold for light bg).
+    pub const SELECTED: Color32 = Color32::from_rgb(230, 180, 40); // #e6b428
+    /// Color for hovered objects (soft blue tint).
+    pub const HOVERED: Color32 = Color32::from_rgb(180, 200, 230); // #b4c8e6
+    /// Color for active/animating objects.
+    pub const ACTIVE: Color32 = Color32::from_rgb(134, 183, 89); // #86b759
+
+    // === Text ===
+    /// Primary text color (dark gray, not pure black).
+    pub const TEXT_PRIMARY: Color32 = Color32::from_rgb(38, 38, 42); // #26262a
+    /// Secondary text color (for labels, hints).
+    pub const TEXT_SECONDARY: Color32 = Color32::from_rgb(100, 100, 106); // #64646a
+}
+
+/// Legacy palette module for backwards compatibility.
+///
+/// These are the dark mode colors. For theme-aware colors, use the
+/// functions like [`point()`], [`line()`], etc.
+pub mod palette {
+    pub use super::dark::*;
+}
+
+// =============================================================================
+// Theme-aware color functions
+// =============================================================================
+
+/// Returns `true` if the current egui theme is dark mode.
+#[inline]
+#[must_use]
+pub fn is_dark_mode(ctx: &Context) -> bool {
+    ctx.style().visuals.dark_mode
+}
+
+// --- Backgrounds ---
+
+/// Background color for the current theme.
+#[inline]
+#[must_use]
+pub fn background(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::BACKGROUND
+    } else {
+        light::BACKGROUND
+    }
+}
+
+/// Surface color for the current theme.
+#[inline]
+#[must_use]
+pub fn surface(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::SURFACE
+    } else {
+        light::SURFACE
+    }
+}
+
+// --- Grid ---
+
+/// Grid line color for the current theme.
+#[inline]
+#[must_use]
+pub fn grid(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::GRID
+    } else {
+        light::GRID
+    }
+}
+
+/// Minor grid line color for the current theme.
+#[inline]
+#[must_use]
+pub fn grid_minor(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::GRID_MINOR
+    } else {
+        light::GRID_MINOR
+    }
+}
+
+/// Major grid line color for the current theme.
+#[inline]
+#[must_use]
+pub fn grid_major(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::GRID_MAJOR
+    } else {
+        light::GRID_MAJOR
+    }
+}
+
+// --- Axes ---
+
+/// X axis color for the current theme.
+#[inline]
+#[must_use]
+pub fn x_axis(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::X_AXIS
+    } else {
+        light::X_AXIS
+    }
+}
+
+/// Y axis color for the current theme.
+#[inline]
+#[must_use]
+pub fn y_axis(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::Y_AXIS
+    } else {
+        light::Y_AXIS
+    }
+}
+
+/// Z axis color for the current theme.
+#[inline]
+#[must_use]
+pub fn z_axis(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::Z_AXIS
+    } else {
+        light::Z_AXIS
+    }
+}
+
+/// Time axis color for the current theme (Minkowski space).
+#[inline]
+#[must_use]
+pub fn t_axis(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::T_AXIS
+    } else {
+        light::T_AXIS
+    }
+}
+
+// --- Geometric Objects ---
+
+/// Point color for the current theme.
+#[inline]
+#[must_use]
+pub fn point(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::POINT
+    } else {
+        light::POINT
+    }
+}
+
+/// Line color for the current theme.
+#[inline]
+#[must_use]
+pub fn line(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::LINE
+    } else {
+        light::LINE
+    }
+}
+
+/// Plane color for the current theme.
+#[inline]
+#[must_use]
+pub fn plane(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::PLANE
+    } else {
+        light::PLANE
+    }
+}
+
+/// Circle color for the current theme.
+#[inline]
+#[must_use]
+pub fn circle(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::CIRCLE
+    } else {
+        light::CIRCLE
+    }
+}
+
+/// Sphere color for the current theme.
+#[inline]
+#[must_use]
+pub fn sphere(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::SPHERE
+    } else {
+        light::SPHERE
+    }
+}
+
+// --- Transformations ---
+
+/// Rotor color for the current theme.
+#[inline]
+#[must_use]
+pub fn rotor(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::ROTOR
+    } else {
+        light::ROTOR
+    }
+}
+
+/// Motor color for the current theme.
+#[inline]
+#[must_use]
+pub fn motor(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::MOTOR
+    } else {
+        light::MOTOR
+    }
+}
+
+// --- Secondary Colors ---
+
+/// Secondary point color for the current theme.
+#[inline]
+#[must_use]
+pub fn point_secondary(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::POINT_SECONDARY
+    } else {
+        light::POINT_SECONDARY
+    }
+}
+
+/// Secondary line color for the current theme.
+#[inline]
+#[must_use]
+pub fn line_secondary(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::LINE_SECONDARY
+    } else {
+        light::LINE_SECONDARY
+    }
+}
+
+/// Secondary plane color for the current theme.
+#[inline]
+#[must_use]
+pub fn plane_secondary(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::PLANE_SECONDARY
+    } else {
+        light::PLANE_SECONDARY
+    }
+}
+
+// --- Interactive States ---
+
+/// Selected object color for the current theme.
+#[inline]
+#[must_use]
+pub fn selected(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::SELECTED
+    } else {
+        light::SELECTED
+    }
+}
+
+/// Hovered object color for the current theme.
+#[inline]
+#[must_use]
+pub fn hovered(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::HOVERED
+    } else {
+        light::HOVERED
+    }
+}
+
+/// Active/animating object color for the current theme.
+#[inline]
+#[must_use]
+pub fn active(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::ACTIVE
+    } else {
+        light::ACTIVE
+    }
+}
+
+// --- Text ---
+
+/// Primary text color for the current theme.
+#[inline]
+#[must_use]
+pub fn text_primary(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::TEXT_PRIMARY
+    } else {
+        light::TEXT_PRIMARY
+    }
+}
+
+/// Secondary text color for the current theme.
+#[inline]
+#[must_use]
+pub fn text_secondary(ctx: &Context) -> Color32 {
+    if is_dark_mode(ctx) {
+        dark::TEXT_SECONDARY
+    } else {
+        light::TEXT_SECONDARY
+    }
 }
 
 /// Line weight constants for consistent visual hierarchy.

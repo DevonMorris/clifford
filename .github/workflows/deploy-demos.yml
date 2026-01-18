@@ -1,0 +1,103 @@
+name: Deploy Web Demos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/clifford-viz/**'
+      - 'crates/clifford/**'
+      - 'algebras/**'
+      - '.github/workflows/deploy-demos.yml'
+  workflow_dispatch:
+
+# Ensure only one deployment runs at a time
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  SYMBOLICA_HIDE_BANNER: "1"
+
+jobs:
+  # Reuse codegen from CI workflow pattern
+  codegen:
+    name: Codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Cache generated code
+        id: cache-generated
+        uses: actions/cache@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+
+      - name: Generate algebra code
+        if: steps.cache-generated.outputs.cache-hit != 'true'
+        run: cargo build -p clifford
+
+      - name: Upload generated code
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-code
+          path: crates/clifford/src/specialized/**/generated
+          retention-days: 1
+
+  build:
+    name: Build WASM
+    needs: codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust with WASM target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Download generated code
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-code
+          path: crates/clifford/src/specialized
+
+      - name: Install Trunk
+        uses: jetli/trunk-action@v0.5.0
+        with:
+          version: 'latest'
+
+      - name: Build WASM demos
+        run: |
+          cd crates/clifford-viz
+          trunk build --release --public-url /clifford/demos/
+
+      - name: Check WASM size
+        run: |
+          echo "WASM bundle size:"
+          ls -lh crates/clifford-viz/dist/*.wasm || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: crates/clifford-viz/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
