@@ -56,13 +56,34 @@ impl eframe::App for DemoMenu {
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.vertical_centered(|ui| {
-                    ui.add_space(if is_mobile { 20.0 } else { 40.0 });
-                    ui.heading("Clifford Algebra Visualizations");
-                    ui.label("Interactive demos for learning Geometric Algebra");
+                    ui.add_space(if is_mobile { 16.0 } else { 32.0 });
+
+                    // Title
+                    ui.heading(egui::RichText::new("Clifford").size(if is_mobile { 28.0 } else { 36.0 }));
+                    ui.label(egui::RichText::new("Geometric Algebra for Rust").size(if is_mobile { 14.0 } else { 16.0 }));
+
+                    ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+
+                    // External links
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing.x = if is_mobile { 8.0 } else { 16.0 };
+                        ui.hyperlink_to("📦 Crates.io", "https://crates.io/crates/clifford");
+                        ui.hyperlink_to("📚 Docs.rs", "https://docs.rs/clifford");
+                        ui.hyperlink_to("🔗 GitHub", "https://github.com/DevonMorris/clifford");
+                    });
+
                     ui.add_space(if is_mobile { 16.0 } else { 24.0 });
                 });
 
                 ui.separator();
+                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+
+                ui.vertical_centered(|ui| {
+                    ui.label(egui::RichText::new("Interactive Demos").size(if is_mobile { 18.0 } else { 20.0 }).strong());
+                    let desc_color = colors::text_secondary(ui.ctx());
+                    ui.colored_label(desc_color, "Learn Geometric Algebra through visualization");
+                });
+
                 ui.add_space(if is_mobile { 12.0 } else { 16.0 });
 
                 render_demo_category(ui, "Euclidean Geometry", EUCLIDEAN_DEMOS, is_mobile);
@@ -74,11 +95,8 @@ impl eframe::App for DemoMenu {
                 ui.add_space(8.0);
 
                 ui.vertical_centered(|ui| {
-                    ui.label("Built with Clifford - A Rust Geometric Algebra Library");
-                    ui.hyperlink_to(
-                        "GitHub Repository",
-                        "https://github.com/DevonMorris/clifford",
-                    );
+                    let footer_color = colors::text_secondary(ui.ctx());
+                    ui.colored_label(footer_color, "Built with Rust + egui • MIT License");
                 });
 
                 ui.add_space(16.0);
