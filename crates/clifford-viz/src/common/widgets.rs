@@ -15,7 +15,7 @@
 
 use egui::Color32;
 
-use super::colors::{palette, spacing};
+use super::colors::{self, palette, spacing};
 
 /// A slider for angle input that displays in degrees but stores radians.
 ///
@@ -168,17 +168,20 @@ pub fn point3_display(ui: &mut egui::Ui, label: &str, x: f32, y: f32, z: f32) {
 ///
 /// Uses the design system's surface color with warm tint for better readability.
 pub fn info_box(ui: &mut egui::Ui, text: &str) {
+    let bg = if colors::is_dark_mode(ui.ctx()) {
+        Color32::from_rgba_unmultiplied(25, 25, 30, 220)
+    } else {
+        Color32::from_rgba_unmultiplied(235, 235, 240, 220)
+    };
+    let text_color = colors::text_primary(ui.ctx());
+
     egui::Frame::none()
-        .fill(Color32::from_rgba_unmultiplied(25, 25, 30, 220)) // Warm dark with slight blue tint
+        .fill(bg)
         .inner_margin(spacing::SM)
         .outer_margin(spacing::XS)
         .rounding(4.0)
         .show(ui, |ui| {
-            ui.label(
-                egui::RichText::new(text)
-                    .color(palette::TEXT_PRIMARY)
-                    .size(12.0),
-            );
+            ui.label(egui::RichText::new(text).color(text_color).size(12.0));
         });
 }
 
@@ -278,10 +281,16 @@ pub fn toggle_row(ui: &mut egui::Ui, toggles: &mut [(&str, &mut bool)]) {
 ///
 /// Use for computed values that the user can't edit.
 pub fn readonly_value(ui: &mut egui::Ui, label: &str, value: &str) {
+    let bg = if colors::is_dark_mode(ui.ctx()) {
+        Color32::from_rgba_unmultiplied(40, 40, 46, 180)
+    } else {
+        Color32::from_rgba_unmultiplied(230, 230, 235, 180)
+    };
+
     ui.horizontal(|ui| {
         ui.label(format!("{}:", label));
         egui::Frame::none()
-            .fill(Color32::from_rgba_unmultiplied(40, 40, 46, 180))
+            .fill(bg)
             .inner_margin(egui::vec2(spacing::XS, 2.0))
             .rounding(2.0)
             .show(ui, |ui| {

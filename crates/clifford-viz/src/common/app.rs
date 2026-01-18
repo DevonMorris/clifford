@@ -130,7 +130,7 @@ impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
         Self {
             app: T::default(),
             learn_window_open: false,
-            sidebar_open: true, // Start open, will auto-close on mobile
+            sidebar_open: false, // Closed by default (desktop ignores this)
         }
     }
 }
@@ -148,14 +148,12 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
         // Request continuous repaint for animations
         ctx.request_repaint();
 
-        // Responsive layout based on screen size
-        let screen_width = ctx.screen_rect().width();
-        let is_mobile = screen_width < 600.0;
+        // Apply responsive styling
+        configure_responsive_style(ctx);
 
-        // Auto-close sidebar on mobile on first frame
-        if is_mobile && self.sidebar_open && ctx.input(|i| i.time) < 0.1 {
-            self.sidebar_open = false;
-        }
+        // Responsive layout based on screen size
+        let screen = screen_size(ctx);
+        let is_mobile = screen.is_mobile();
 
         // On mobile, show a floating menu button when sidebar is closed
         if is_mobile && !self.sidebar_open {
@@ -172,34 +170,59 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 });
         }
 
-        // Left panel: controls (hidden on mobile when closed)
-        if !is_mobile || self.sidebar_open {
+        // Desktop: permanent side panel
+        if !is_mobile {
             egui::SidePanel::left("controls")
-                .resizable(!is_mobile)
-                .default_width(if is_mobile { 200.0 } else { 250.0 })
-                .max_width(if is_mobile { 280.0 } else { 400.0 })
+                .resizable(true)
+                .default_width(250.0)
+                .max_width(400.0)
                 .show(ctx, |ui| {
                     egui::ScrollArea::vertical().show(ui, |ui| {
-                        // Close button on mobile
-                        if is_mobile {
-                            ui.horizontal(|ui| {
-                                ui.heading("Controls");
-                                ui.with_layout(
-                                    egui::Layout::right_to_left(egui::Align::Center),
-                                    |ui| {
-                                        if ui.button("\u{2715}").clicked() {
-                                            self.sidebar_open = false;
-                                        }
-                                    },
-                                );
-                            });
-                        } else {
-                            ui.heading("Controls");
-                        }
+                        ui.heading("Controls");
                         ui.separator();
                         self.app.controls(ui);
 
-                        // Learn button at bottom of controls (if educational content exists)
+                        if self.app.educational_content().is_some() {
+                            ui.add_space(16.0);
+                            ui.separator();
+                            if ui
+                                .button("\u{1f4d6} Learn About This")
+                                .on_hover_text("Open educational explanation")
+                                .clicked()
+                            {
+                                self.learn_window_open = true;
+                            }
+                        }
+                    });
+                });
+        }
+
+        // Mobile: overlay panel (doesn't push content)
+        if is_mobile && self.sidebar_open {
+            let screen_height = ctx.screen_rect().height();
+            egui::Window::new("Controls")
+                .id(egui::Id::new("mobile_controls"))
+                .fixed_pos(egui::pos2(0.0, 0.0))
+                .fixed_size(egui::vec2(240.0, screen_height))
+                .title_bar(false)
+                .resizable(false)
+                .collapsible(false)
+                .show(ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        // Close button on left (same position as hamburger menu)
+                        if ui
+                            .add(egui::Button::new("\u{2715}").min_size(egui::vec2(36.0, 36.0)))
+                            .clicked()
+                        {
+                            self.sidebar_open = false;
+                        }
+                        ui.heading("Controls");
+                    });
+                    ui.separator();
+
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        self.app.controls(ui);
+
                         if self.app.educational_content().is_some() {
                             ui.add_space(16.0);
                             ui.separator();
@@ -230,13 +253,19 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 });
         }
 
-        // Optional bottom panel: info (smaller on mobile)
+        // Optional bottom panel: info (scrollable on mobile to prevent overflow)
         if self.app.show_info_panel() {
             egui::TopBottomPanel::bottom("info")
                 .resizable(true)
                 .default_height(if is_mobile { 40.0 } else { 60.0 })
                 .show(ctx, |ui| {
-                    self.app.info(ui);
+                    if is_mobile {
+                        egui::ScrollArea::horizontal().show(ui, |ui| {
+                            self.app.info(ui);
+                        });
+                    } else {
+                        self.app.info(ui);
+                    }
                 });
         }
 
@@ -257,9 +286,14 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
 
     // Mathematical Background section
     ui.heading("Mathematical Background");
-    // Render with monospace for formulas
+    // Render with monospace for formulas (theme-aware background)
+    let code_bg = if ui.ctx().style().visuals.dark_mode {
+        egui::Color32::from_rgb(40, 40, 50)
+    } else {
+        egui::Color32::from_rgb(240, 240, 245)
+    };
     egui::Frame::none()
-        .fill(egui::Color32::from_rgba_unmultiplied(40, 40, 50, 255))
+        .fill(code_bg)
         .inner_margin(12.0)
         .outer_margin(4.0)
         .rounding(4.0)
@@ -381,4 +415,113 @@ impl WindowConfig {
             ..Default::default()
         }
     }
+}
+
+// =============================================================================
+// Responsive Styling
+// =============================================================================
+
+/// Screen size category for responsive design.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScreenSize {
+    /// Mobile: < 600px
+    Mobile,
+    /// Tablet: 600-1024px
+    Tablet,
+    /// Desktop: > 1024px
+    Desktop,
+}
+
+impl ScreenSize {
+    /// Determine screen size category from width.
+    #[must_use]
+    pub fn from_width(width: f32) -> Self {
+        if width < 600.0 {
+            Self::Mobile
+        } else if width < 1024.0 {
+            Self::Tablet
+        } else {
+            Self::Desktop
+        }
+    }
+
+    /// Check if this is a mobile screen.
+    #[must_use]
+    pub fn is_mobile(self) -> bool {
+        self == Self::Mobile
+    }
+}
+
+/// Configure responsive styles based on screen size.
+///
+/// Call this once per frame to set up font sizes and spacing that adapt
+/// to the current screen width. This eliminates the need for manual
+/// `if is_mobile` checks throughout the UI code.
+///
+/// # Example
+/// ```ignore
+/// fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+///     configure_responsive_style(ctx);
+///     // ... rest of UI code uses normal egui widgets
+/// }
+/// ```
+pub fn configure_responsive_style(ctx: &egui::Context) {
+    use egui::{FontFamily, FontId, TextStyle};
+
+    let screen_size = ScreenSize::from_width(ctx.screen_rect().width());
+
+    // Base font size scales with screen size
+    let base_size = match screen_size {
+        ScreenSize::Mobile => 14.0,
+        ScreenSize::Tablet => 15.0,
+        ScreenSize::Desktop => 16.0,
+    };
+
+    let heading_size = match screen_size {
+        ScreenSize::Mobile => 20.0,
+        ScreenSize::Tablet => 24.0,
+        ScreenSize::Desktop => 28.0,
+    };
+
+    // Configure text styles
+    let text_styles: std::collections::BTreeMap<TextStyle, FontId> = [
+        (
+            TextStyle::Small,
+            FontId::new(base_size * 0.75, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Body,
+            FontId::new(base_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Button,
+            FontId::new(base_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Heading,
+            FontId::new(heading_size, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Monospace,
+            FontId::new(base_size * 0.9, FontFamily::Monospace),
+        ),
+    ]
+    .into();
+
+    // Apply styles
+    ctx.style_mut(|style| {
+        style.text_styles = text_styles;
+
+        // Adjust spacing for mobile
+        if screen_size.is_mobile() {
+            style.spacing.item_spacing = egui::vec2(6.0, 4.0);
+            style.spacing.button_padding = egui::vec2(6.0, 3.0);
+        }
+    });
+}
+
+/// Get the current screen size category.
+#[must_use]
+pub fn screen_size(ctx: &egui::Context) -> ScreenSize {
+    ScreenSize::from_width(ctx.screen_rect().width())
 }
