@@ -68,7 +68,7 @@ impl eframe::App for DemoMenu {
                     ui.add_space(24.0 * sp);
 
                     // Logo
-                    let logo_size = if is_mobile { 80.0 } else { 120.0 };
+                    let logo_size = if is_mobile { 100.0 } else { 150.0 };
                     ui.add(
                         egui::Image::new(egui::include_image!("../../clifford.png"))
                             .max_size(egui::vec2(logo_size, logo_size))
@@ -83,12 +83,18 @@ impl eframe::App for DemoMenu {
 
                     ui.add_space(12.0 * sp);
 
-                    // External links
-                    ui.horizontal(|ui| {
+                    // External links (stack vertically on mobile)
+                    if is_mobile {
                         ui.hyperlink_to("📦 Crates.io", "https://crates.io/crates/clifford");
                         ui.hyperlink_to("📚 Docs.rs", "https://docs.rs/clifford");
                         ui.hyperlink_to("🔗 GitHub", "https://github.com/DevonMorris/clifford");
-                    });
+                    } else {
+                        ui.horizontal(|ui| {
+                            ui.hyperlink_to("📦 Crates.io", "https://crates.io/crates/clifford");
+                            ui.hyperlink_to("📚 Docs.rs", "https://docs.rs/clifford");
+                            ui.hyperlink_to("🔗 GitHub", "https://github.com/DevonMorris/clifford");
+                        });
+                    }
 
                     ui.add_space(16.0 * sp);
                 });
