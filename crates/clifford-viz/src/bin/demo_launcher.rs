@@ -13,12 +13,17 @@ fn main() {
     eprintln!("  cargo run -p clifford-viz --example euclidean2 --release");
     eprintln!("  cargo run -p clifford-viz --example projective2 --release");
     eprintln!("  cargo run -p clifford-viz --example projective2_robot --release");
+    eprintln!("  cargo run -p clifford-viz --example conformal2_circles --release");
+    eprintln!("  cargo run -p clifford-viz --example conformal2_inversion --release");
 }
 
 #[cfg(target_arch = "wasm32")]
 use clifford_viz::common::prelude::AppWrapper;
 #[cfg(target_arch = "wasm32")]
-use clifford_viz::demos::{DemoMenu, Euclidean2Demo, Projective2Demo, RobotArmDemo};
+use clifford_viz::demos::{
+    Conformal2CirclesDemo, Conformal2InversionDemo, DemoMenu, Euclidean2Demo, Projective2Demo,
+    RobotArmDemo,
+};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
 
@@ -91,6 +96,8 @@ fn create_app(name: &str, cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::A
         "euclidean2" => Box::new(AppWrapper::<Euclidean2Demo>::default()),
         "projective2" => Box::new(AppWrapper::<Projective2Demo>::default()),
         "projective2_robot" => Box::new(AppWrapper::<RobotArmDemo>::default()),
+        "conformal2_circles" => Box::new(AppWrapper::<Conformal2CirclesDemo>::default()),
+        "conformal2_inversion" => Box::new(AppWrapper::<Conformal2InversionDemo>::default()),
         _ => Box::new(DemoMenu::new(cc)),
     }
 }
