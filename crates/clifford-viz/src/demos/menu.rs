@@ -3,7 +3,7 @@
 //! This module provides the `DemoMenu` component which displays a list of
 //! available demos and allows navigation between them in the web version.
 
-use crate::common::colors::palette;
+use crate::common::colors;
 
 /// Demo entry with metadata for display.
 struct DemoEntry {
@@ -86,13 +86,15 @@ fn render_demo_category(ui: &mut egui::Ui, title: &str, demos: &[DemoEntry]) {
     ui.heading(title);
     ui.add_space(8.0);
 
+    let description_color = colors::text_secondary(ui.ctx());
+
     for demo in demos {
         ui.horizontal(|ui| {
             if ui.link(demo.name).clicked() {
                 navigate_to_demo(demo.id);
             }
             ui.label(" - ");
-            ui.colored_label(palette::GRID_MINOR, demo.description);
+            ui.colored_label(description_color, demo.description);
         });
         ui.add_space(4.0);
     }

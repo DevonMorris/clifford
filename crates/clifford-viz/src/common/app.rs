@@ -120,6 +120,8 @@ pub struct AppWrapper<T: VisualizationApp> {
     app: T,
     /// Whether the educational window is open.
     learn_window_open: bool,
+    /// Whether the sidebar is open (for mobile toggle).
+    sidebar_open: bool,
 }
 
 #[cfg(any(feature = "native", target_arch = "wasm32"))]
@@ -128,6 +130,7 @@ impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
         Self {
             app: T::default(),
             learn_window_open: false,
+            sidebar_open: true, // Start open, will auto-close on mobile
         }
     }
 }
@@ -145,34 +148,78 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
         // Request continuous repaint for animations
         ctx.request_repaint();
 
-        // Left panel: controls
-        egui::SidePanel::left("controls")
-            .resizable(true)
-            .default_width(250.0)
-            .show(ctx, |ui| {
-                ui.heading("Controls");
-                ui.separator();
-                self.app.controls(ui);
+        // Responsive layout based on screen size
+        let screen_width = ctx.screen_rect().width();
+        let is_mobile = screen_width < 600.0;
 
-                // Learn button at bottom of controls (if educational content exists)
-                if self.app.educational_content().is_some() {
-                    ui.add_space(16.0);
-                    ui.separator();
+        // Auto-close sidebar on mobile on first frame
+        if is_mobile && self.sidebar_open && ctx.input(|i| i.time) < 0.1 {
+            self.sidebar_open = false;
+        }
+
+        // On mobile, show a floating menu button when sidebar is closed
+        if is_mobile && !self.sidebar_open {
+            egui::Area::new(egui::Id::new("menu_button"))
+                .fixed_pos(egui::pos2(8.0, 8.0))
+                .show(ctx, |ui| {
                     if ui
-                        .button("\u{1f4d6} Learn About This")
-                        .on_hover_text("Open educational explanation")
+                        .add(egui::Button::new("\u{2630}").min_size(egui::vec2(36.0, 36.0)))
+                        .on_hover_text("Open controls")
                         .clicked()
                     {
-                        self.learn_window_open = true;
+                        self.sidebar_open = true;
                     }
-                }
-            });
+                });
+        }
+
+        // Left panel: controls (hidden on mobile when closed)
+        if !is_mobile || self.sidebar_open {
+            egui::SidePanel::left("controls")
+                .resizable(!is_mobile)
+                .default_width(if is_mobile { 200.0 } else { 250.0 })
+                .max_width(if is_mobile { 280.0 } else { 400.0 })
+                .show(ctx, |ui| {
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        // Close button on mobile
+                        if is_mobile {
+                            ui.horizontal(|ui| {
+                                ui.heading("Controls");
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        if ui.button("\u{2715}").clicked() {
+                                            self.sidebar_open = false;
+                                        }
+                                    },
+                                );
+                            });
+                        } else {
+                            ui.heading("Controls");
+                        }
+                        ui.separator();
+                        self.app.controls(ui);
+
+                        // Learn button at bottom of controls (if educational content exists)
+                        if self.app.educational_content().is_some() {
+                            ui.add_space(16.0);
+                            ui.separator();
+                            if ui
+                                .button("\u{1f4d6} Learn About This")
+                                .on_hover_text("Open educational explanation")
+                                .clicked()
+                            {
+                                self.learn_window_open = true;
+                            }
+                        }
+                    });
+                });
+        }
 
         // Educational window (popup)
         if let Some(content) = self.app.educational_content() {
             egui::Window::new(format!("\u{1f4d6} {}", content.title))
                 .open(&mut self.learn_window_open)
-                .default_width(500.0)
+                .default_width(if is_mobile { 300.0 } else { 500.0 })
                 .default_height(400.0)
                 .resizable(true)
                 .collapsible(true)
@@ -183,11 +230,11 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
                 });
         }
 
-        // Optional bottom panel: info
+        // Optional bottom panel: info (smaller on mobile)
         if self.app.show_info_panel() {
             egui::TopBottomPanel::bottom("info")
                 .resizable(true)
-                .default_height(60.0)
+                .default_height(if is_mobile { 40.0 } else { 60.0 })
                 .show(ctx, |ui| {
                     self.app.info(ui);
                 });
