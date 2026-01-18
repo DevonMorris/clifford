@@ -51,52 +51,68 @@ impl DemoMenu {
 
 impl eframe::App for DemoMenu {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let is_mobile = ctx.screen_rect().width() < 600.0;
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(40.0);
-                ui.heading("Clifford Algebra Visualizations");
-                ui.label("Interactive demos for learning Geometric Algebra");
-                ui.add_space(24.0);
-            });
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(if is_mobile { 20.0 } else { 40.0 });
+                    ui.heading("Clifford Algebra Visualizations");
+                    ui.label("Interactive demos for learning Geometric Algebra");
+                    ui.add_space(if is_mobile { 16.0 } else { 24.0 });
+                });
 
-            ui.separator();
-            ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
 
-            render_demo_category(ui, "Euclidean Geometry", EUCLIDEAN_DEMOS);
-            ui.add_space(16.0);
-            render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS);
+                render_demo_category(ui, "Euclidean Geometry", EUCLIDEAN_DEMOS, is_mobile);
+                ui.add_space(if is_mobile { 12.0 } else { 16.0 });
+                render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS, is_mobile);
 
-            ui.add_space(32.0);
-            ui.separator();
-            ui.add_space(8.0);
+                ui.add_space(if is_mobile { 20.0 } else { 32.0 });
+                ui.separator();
+                ui.add_space(8.0);
 
-            ui.vertical_centered(|ui| {
-                ui.label("Built with Clifford - A Rust Geometric Algebra Library");
-                ui.hyperlink_to(
-                    "GitHub Repository",
-                    "https://github.com/DevonMorris/clifford",
-                );
+                ui.vertical_centered(|ui| {
+                    ui.label("Built with Clifford - A Rust Geometric Algebra Library");
+                    ui.hyperlink_to(
+                        "GitHub Repository",
+                        "https://github.com/DevonMorris/clifford",
+                    );
+                });
+
+                ui.add_space(16.0);
             });
         });
     }
 }
 
 /// Render a category of demos with a header and list of entries.
-fn render_demo_category(ui: &mut egui::Ui, title: &str, demos: &[DemoEntry]) {
+fn render_demo_category(ui: &mut egui::Ui, title: &str, demos: &[DemoEntry], is_mobile: bool) {
     ui.heading(title);
     ui.add_space(8.0);
 
     let description_color = colors::text_secondary(ui.ctx());
 
     for demo in demos {
-        ui.horizontal(|ui| {
+        if is_mobile {
+            // Stack vertically on mobile
             if ui.link(demo.name).clicked() {
                 navigate_to_demo(demo.id);
             }
-            ui.label(" - ");
             ui.colored_label(description_color, demo.description);
-        });
-        ui.add_space(4.0);
+            ui.add_space(8.0);
+        } else {
+            // Horizontal on desktop
+            ui.horizontal(|ui| {
+                if ui.link(demo.name).clicked() {
+                    navigate_to_demo(demo.id);
+                }
+                ui.label(" - ");
+                ui.colored_label(description_color, demo.description);
+            });
+            ui.add_space(4.0);
+        }
     }
 }
 
