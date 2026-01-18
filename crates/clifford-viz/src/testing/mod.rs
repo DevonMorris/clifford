@@ -25,9 +25,11 @@
 //! }
 //! ```
 
+mod inspector;
 mod invariants;
 mod scene;
 
+pub use inspector::*;
 pub use invariants::*;
 pub use scene::*;
 

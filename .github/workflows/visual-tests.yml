@@ -1,0 +1,130 @@
+name: Visual Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/clifford-viz/**'
+      - 'crates/clifford/src/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/clifford-viz/**'
+      - 'crates/clifford/src/**'
+
+env:
+  CARGO_TERM_COLOR: always
+  SYMBOLICA_HIDE_BANNER: "1"
+
+jobs:
+  # Reuse generated code from the main CI cache
+  codegen:
+    name: Codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # Cache generated algebra code based on inputs
+      - name: Cache generated code
+        id: cache-generated
+        uses: actions/cache@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+
+      # Only run codegen if cache miss
+      - name: Generate algebra code
+        if: steps.cache-generated.outputs.cache-hit != 'true'
+        run: cargo build -p clifford
+
+  # Run coordinate and invariant tests (no display required)
+  invariant-tests:
+    name: Invariant Tests
+    needs: codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
+
+      # Restore generated code from cache
+      - name: Restore generated code
+        uses: actions/cache/restore@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+          fail-on-cache-miss: true
+
+      # Run invariant tests for visualization
+      # These test mathematical correctness without rendering
+      - name: Run invariant tests
+        run: cargo nextest run -p clifford-viz --features testing
+
+  # Visual inspection tests (requires display)
+  # These run headless and flag issues for human review
+  visual-inspection:
+    name: Visual Inspection
+    needs: codegen
+    runs-on: ubuntu-latest
+    # Don't block PR on visual inspection - just flag for review
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@nextest
+
+      # Restore generated code from cache
+      - name: Restore generated code
+        uses: actions/cache/restore@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+          fail-on-cache-miss: true
+
+      # Install X11 dependencies for headless rendering
+      - name: Install display dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxkbcommon-x11-0 libgl1-mesa-dri libxcb-xfixes0-dev
+
+      # Run visual inspection tests with virtual framebuffer
+      - name: Run visual inspection
+        run: |
+          xvfb-run --auto-servernum cargo nextest run -p clifford-viz --features testing --test visual_inspection || true
+
+      # Upload inspection results for human review
+      - name: Upload inspection results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-inspection-results
+          path: target/visual-inspection/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # Clippy lint for visualization code
+  clippy-viz:
+    name: Clippy (viz)
+    needs: codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+
+      # Restore generated code from cache
+      - name: Restore generated code
+        uses: actions/cache/restore@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+          fail-on-cache-miss: true
+
+      - name: Clippy visualization crate
+        run: cargo clippy -p clifford-viz --features testing -- -D warnings
