@@ -52,6 +52,9 @@ impl DemoMenu {
 
 impl eframe::App for DemoMenu {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Install image loaders for egui (needed for include_image!)
+        egui_extras::install_image_loaders(ctx);
+
         let is_mobile = ctx.screen_rect().width() < 600.0;
 
         egui::CentralPanel::default().show(ctx, |ui| {
