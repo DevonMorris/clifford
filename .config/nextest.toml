@@ -6,11 +6,21 @@
 #
 # See: https://nexte.st/docs/configuration/
 
+# Define test groups for controlling concurrency
+[test-groups]
+# Symbolica tests must run serially to avoid instance conflicts
+symbolica = { max-threads = 1 }
+
 [profile.default]
-# Use all available CPU cores
+# Use all available CPU cores for non-Symbolica tests
 test-threads = "num-cpus"
 # Only show status for failing tests (reduces output noise)
 status-level = "fail"
+
+# All clifford-codegen tests use Symbolica
+[[profile.default.overrides]]
+filter = "package(clifford-codegen)"
+test-group = "symbolica"
 
 [profile.ci]
 # CI profile with same settings
@@ -19,3 +29,7 @@ test-threads = "num-cpus"
 fail-fast = true
 # Only show status for failing tests
 status-level = "fail"
+
+[[profile.ci.overrides]]
+filter = "package(clifford-codegen)"
+test-group = "symbolica"
