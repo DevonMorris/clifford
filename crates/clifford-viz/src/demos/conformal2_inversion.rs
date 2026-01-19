@@ -13,6 +13,7 @@
 //! where × is the geometric product.
 
 use crate::common::prelude::*;
+use clifford::ops::InverseSandwich;
 use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
 use egui_plot::{Plot, Points};
 
@@ -197,118 +198,37 @@ impl Conformal2InversionDemo {
             Circle::from_center_radius(self.inversion_cx, self.inversion_cy, self.inversion_radius);
     }
 
-    /// Inverts a point through the inversion circle.
+    /// Inverts a point through the inversion circle using CGA.
     ///
-    /// Uses the classical formula: P' = O + r²/|OP|² × (P - O)
-    /// where O is the center and r is the radius of the inversion circle.
+    /// In Conformal Geometric Algebra, circle inversion is computed as:
+    ///     P' = C × P × C⁻¹
+    /// where × is the geometric product.
     ///
-    /// Note: The CGA sandwich product C × P × C⁻¹ computes a reflection,
-    /// not classical circle inversion. We use the explicit formula here.
+    /// This is the `InverseSandwich` operation.
     fn invert_point(&self, point: &RoundPoint<f64>) -> Option<RoundPoint<f64>> {
-        let (px, py) = point.to_euclidean()?;
-
-        // Vector from inversion center to point
-        let dx = px - self.inversion_cx;
-        let dy = py - self.inversion_cy;
-        let dist_sq = dx * dx + dy * dy;
-
-        // Point at center maps to infinity
-        if dist_sq < EPSILON {
-            return None;
-        }
-
-        // Inversion formula: P' = O + r²/|OP|² × (P - O)
-        let scale = self.inversion_radius * self.inversion_radius / dist_sq;
-        let inv_x = self.inversion_cx + dx * scale;
-        let inv_y = self.inversion_cy + dy * scale;
-
-        Some(RoundPoint::from_euclidean(inv_x, inv_y))
+        self.inversion_circle.try_inverse_sandwich(point)
     }
 
-    /// Inverts a circle through the inversion circle.
+    /// Inverts a circle through the inversion circle using CGA.
+    ///
+    /// In Conformal Geometric Algebra, circle inversion is computed as:
+    ///     C' = I × C × I⁻¹
+    /// where I is the inversion circle and × is the geometric product.
     ///
     /// Cases:
     /// - Circle NOT through center → Circle
     /// - Circle THROUGH center → Line (circle through infinity)
     fn invert_circle(&self, circle: &Circle<f64>) -> Option<InvertedCircle> {
-        let (cx, cy) = circle.center()?;
-        let radius = circle.radius()?;
+        let result = self.inversion_circle.try_inverse_sandwich(circle)?;
 
-        // Distance from inversion center to circle center
-        let dx = cx - self.inversion_cx;
-        let dy = cy - self.inversion_cy;
-        let d = (dx * dx + dy * dy).sqrt();
-
-        // Check if circle passes through the inversion center
-        let passes_through_center = (d - radius).abs() < EPSILON;
-
-        if passes_through_center {
-            // Circle through center inverts to a line
-            if d < EPSILON {
-                // Degenerate: circle centered at inversion center
-                return Some(InvertedCircle::Line {
-                    nx: 1.0,
-                    ny: 0.0,
-                    d: 0.0,
-                });
-            }
-
-            let ux = dx / d;
-            let uy = dy / d;
-
-            // The far point of the circle from inversion center
-            let far_x = cx + ux * radius;
-            let far_y = cy + uy * radius;
-
-            // Invert the far point
-            let far_point = RoundPoint::from_euclidean(far_x, far_y);
-            if let Some(inv_far) = self.invert_point(&far_point) {
-                if let Some((inv_x, inv_y)) = inv_far.to_euclidean() {
-                    // Line through inv_point perpendicular to direction
-                    return Some(InvertedCircle::Line {
-                        nx: ux,
-                        ny: uy,
-                        d: ux * inv_x + uy * inv_y,
-                    });
-                }
-            }
-            Some(InvertedCircle::Line {
-                nx: ux,
-                ny: uy,
-                d: 0.0,
-            })
+        // Check if the result is a line (circle through infinity)
+        if let Some((nx, ny, d)) = result.to_line_params(EPSILON) {
+            Some(InvertedCircle::Line { nx, ny, d })
         } else {
-            // Circle not through center inverts to another circle
-            let r_sq = self.inversion_radius * self.inversion_radius;
-
-            // Near and far distances on the circle along line to inversion center
-            let near_dist = d - radius;
-            let far_dist = d + radius;
-
-            // Inverted distances
-            let inv_near_dist = r_sq / near_dist;
-            let inv_far_dist = r_sq / far_dist;
-
-            // New radius and center distance
-            let new_radius = (inv_near_dist - inv_far_dist).abs() / 2.0;
-            let new_center_dist = (inv_near_dist + inv_far_dist) / 2.0;
-
-            // Direction from inversion center to original circle center
-            let (ux, uy) = if d > EPSILON {
-                (dx / d, dy / d)
-            } else {
-                (1.0, 0.0)
-            };
-
-            // New center position
-            let new_cx = self.inversion_cx + ux * new_center_dist;
-            let new_cy = self.inversion_cy + uy * new_center_dist;
-
-            Some(InvertedCircle::Circle {
-                cx: new_cx,
-                cy: new_cy,
-                radius: new_radius,
-            })
+            // Result is a regular circle
+            let (cx, cy) = result.center()?;
+            let radius = result.radius()?;
+            Some(InvertedCircle::Circle { cx, cy, radius })
         }
     }
 
