@@ -1,29 +1,16 @@
 # Nextest configuration for clifford
 #
-# This configuration handles Symbolica's global state requirements by running
-# Symbolica tests serially while keeping all other tests parallel.
-#
 # Usage:
 #   cargo nextest run                    # Run all tests
 #   cargo nextest run -p clifford-codegen  # Run codegen tests only
 #
 # See: https://nexte.st/docs/configuration/
 
-# Define test groups for controlling concurrency
-[test-groups]
-# Symbolica tests must run serially due to global state conflicts
-symbolica = { max-threads = 1 }
-
 [profile.default]
-# Use all available CPU cores for non-Symbolica tests
+# Use all available CPU cores
 test-threads = "num-cpus"
 # Only show status for failing tests (reduces output noise)
 status-level = "fail"
-
-# All clifford-codegen tests use Symbolica (directly or via parse_spec/codegen)
-[[profile.default.overrides]]
-filter = "package(clifford-codegen)"
-test-group = "symbolica"
 
 [profile.ci]
 # CI profile with same settings
@@ -32,7 +19,3 @@ test-threads = "num-cpus"
 fail-fast = true
 # Only show status for failing tests
 status-level = "fail"
-
-[[profile.ci.overrides]]
-filter = "package(clifford-codegen)"
-test-group = "symbolica"
