@@ -74,9 +74,9 @@ impl Default for Conformal2CirclesDemo {
     fn default() -> Self {
         // Initial triangle of points that form a circle
         let points = vec![
-            DraggablePoint::new(2.0, 0.0, "P\u{2081}"),
-            DraggablePoint::new(0.0, 2.0, "P\u{2082}"),
-            DraggablePoint::new(-2.0, 0.0, "P\u{2083}"),
+            DraggablePoint::new(2.0, 0.0, "P_1"),
+            DraggablePoint::new(0.0, 2.0, "P_2"),
+            DraggablePoint::new(-2.0, 0.0, "P_3"),
         ];
 
         Self {
@@ -302,14 +302,14 @@ impl VisualizationApp for Conformal2CirclesDemo {
 
         // === CGA Operation ===
         section_separator(ui, Some("CGA Operation"));
-        ui.label("Circle = P\u{2081} \u{2227} P\u{2082} \u{2227} P\u{2083}");
+        ui.label("Circle = P_1 ^ P_2 ^ P_3");
 
         // === Result ===
         section_separator(ui, Some("Result"));
 
         if is_line {
             ui.colored_label(circle(&ctx), "Line (collinear points)");
-            ui.label("w \u{2248} 0 \u{2192} circle through infinity");
+            ui.label("w ~= 0 -> circle through infinity");
             info_box(
                 ui,
                 "When three points are collinear,\ntheir wedge product has w = 0,\nrepresenting a line (infinite radius).",
@@ -366,7 +366,7 @@ impl VisualizationApp for Conformal2CirclesDemo {
             ui.add_space(spacing::XS);
             info_box(
                 ui,
-                "Circle is P\u{2081} \u{2227} P\u{2082} \u{2227} P\u{2083}\n\
+                "Circle is P_1 ^ P_2 ^ P_3\n\
                  Center & radius extracted via\n\
                  orthonormal CGA formulas.",
             );

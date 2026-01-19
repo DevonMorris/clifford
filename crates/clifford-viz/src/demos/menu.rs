@@ -49,6 +49,11 @@ const CONFORMAL_DEMOS: &[DemoEntry] = &[
         name: "Circle Inversion",
         description: "Conformal transformation that swaps inside and outside",
     },
+    DemoEntry {
+        id: "conformal2_mobius",
+        name: "Mobius Transformations",
+        description: "Compose translations, rotations, dilations, and inversions",
+    },
 ];
 
 /// Complex and dual number demos.

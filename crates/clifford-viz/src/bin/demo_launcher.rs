@@ -15,6 +15,7 @@ fn main() {
     eprintln!("  cargo run -p clifford-viz --example projective2_robot --release");
     eprintln!("  cargo run -p clifford-viz --example conformal2_circles --release");
     eprintln!("  cargo run -p clifford-viz --example conformal2_inversion --release");
+    eprintln!("  cargo run -p clifford-viz --example conformal2_mobius --release");
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -22,8 +23,8 @@ use clifford_viz::common::prelude::AppWrapper;
 #[cfg(target_arch = "wasm32")]
 use clifford_viz::demos::{
     ComplexDomainDemo, ComplexFractalDemo, Conformal2CirclesDemo, Conformal2InversionDemo,
-    DemoMenu, DualAutodiffDemo, Euclidean2Demo, Minkowski2DiagramDemo, Minkowski2DilationDemo,
-    Projective2Demo, RobotArmDemo,
+    Conformal2MobiusDemo, DemoMenu, DualAutodiffDemo, Euclidean2Demo, Minkowski2DiagramDemo,
+    Minkowski2DilationDemo, Projective2Demo, RobotArmDemo,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -102,6 +103,7 @@ fn create_app(name: &str, cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::A
         // Conformal demos
         "conformal2_circles" => Box::new(AppWrapper::<Conformal2CirclesDemo>::default()),
         "conformal2_inversion" => Box::new(AppWrapper::<Conformal2InversionDemo>::default()),
+        "conformal2_mobius" => Box::new(AppWrapper::<Conformal2MobiusDemo>::default()),
         // Complex and dual number demos
         "complex_domain" => Box::new(AppWrapper::<ComplexDomainDemo>::default()),
         "complex_fractal" => Box::new(AppWrapper::<ComplexFractalDemo>::default()),

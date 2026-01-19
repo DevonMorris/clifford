@@ -48,14 +48,14 @@ impl ComplexFunction {
     fn name(&self) -> &'static str {
         match self {
             Self::Identity => "z",
-            Self::Square => "z\u{00b2}",
-            Self::Cube => "z\u{00b3}",
+            Self::Square => "z^2",
+            Self::Cube => "z^3",
             Self::Reciprocal => "1/z",
             Self::Exp => "exp(z)",
             Self::Sin => "sin(z)",
             Self::Cos => "cos(z)",
             Self::Log => "log(z)",
-            Self::Sqrt => "\u{221a}z",
+            Self::Sqrt => "sqrtz",
         }
     }
 
@@ -347,10 +347,10 @@ impl VisualizationApp for ComplexDomainDemo {
         info_box(
             ui,
             "Hue = argument (phase)\n\
-             0\u{00b0} = red (positive real)\n\
-             90\u{00b0} = yellow (positive imag)\n\
-             180\u{00b0} = cyan (negative real)\n\
-             270\u{00b0} = blue (negative imag)\n\n\
+             0 deg = red (positive real)\n\
+             90 deg = yellow (positive imag)\n\
+             180 deg = cyan (negative real)\n\
+             270 deg = blue (negative imag)\n\n\
              Brightness = magnitude\n\
              Dark = small |f(z)|\n\
              Bright = large |f(z)|",
@@ -383,7 +383,7 @@ const COMPLEX_DOMAIN_EDUCATION: EducationalContent = EducationalContent {
     title: "Domain Coloring for Complex Functions",
 
     overview: "\
-Domain coloring is a technique for visualizing complex functions f: C \u{2192} C.
+Domain coloring is a technique for visualizing complex functions f: C -> C.
 Since both input and output are 2-dimensional, we can't use a simple 2D graph.
 Instead, we color each point z in the domain based on the value f(z).
 
@@ -393,37 +393,37 @@ that expose the structure of complex functions.",
 
     math_background: "\
 Every complex number can be written in polar form:
-    z = r\u{00b7}e^(i\u{03b8}) = r(cos\u{03b8} + i\u{00b7}sin\u{03b8})
+    z = r*e^(itheta) = r(costheta + i*sintheta)
 
-where r = |z| is the magnitude and \u{03b8} = arg(z) is the argument.
+where r = |z| is the magnitude and theta = arg(z) is the argument.
 
 Domain coloring maps:
-  \u{2022} arg(f(z)) \u{2192} hue (color wheel)
-  \u{2022} |f(z)| \u{2192} brightness (log scale)
+  - arg(f(z)) -> hue (color wheel)
+  - |f(z)| -> brightness (log scale)
 
 Key features to recognize:
-  \u{2022} ZEROS: All colors meet at a point (f(z) = 0)
-  \u{2022} POLES: Colors cycle infinitely (f(z) \u{2192} \u{221e})
-  \u{2022} BRANCH CUTS: Color discontinuities (e.g., log, sqrt)
-  \u{2022} Essential singularities: Wild color chaos
+  - ZEROS: All colors meet at a point (f(z) = 0)
+  - POLES: Colors cycle infinitely (f(z) -> inf)
+  - BRANCH CUTS: Color discontinuities (e.g., log, sqrt)
+  - Essential singularities: Wild color chaos
 
-For z\u{00b2}, colors cycle TWICE around the origin (degree 2).
-For z\u{00b3}, colors cycle THREE times (degree 3).",
+For z^2, colors cycle TWICE around the origin (degree 2).
+For z^3, colors cycle THREE times (degree 3).",
 
     how_to_use: "\
-\u{2022} Select a function from the grid
-\u{2022} Hover to see z and f(z) values
-\u{2022} Adjust scale to zoom in/out
-\u{2022} Toggle contours to see magnitude levels
-\u{2022} Look for zeros (all colors meet) and poles (color cycles)",
+- Select a function from the grid
+- Hover to see z and f(z) values
+- Adjust scale to zoom in/out
+- Toggle contours to see magnitude levels
+- Look for zeros (all colors meet) and poles (color cycles)",
 
     key_concepts: "\
-\u{2022} Complex functions map C \u{2192} C (4D problem!)
-\u{2022} Hue = argument, Brightness = magnitude
-\u{2022} Zeros appear as points where all colors meet
-\u{2022} Poles show infinite color cycling
-\u{2022} The number of color cycles = degree of zero/pole
-\u{2022} Branch cuts create color discontinuities",
+- Complex functions map C -> C (4D problem!)
+- Hue = argument, Brightness = magnitude
+- Zeros appear as points where all colors meet
+- Poles show infinite color cycling
+- The number of color cycles = degree of zero/pole
+- Branch cuts create color discontinuities",
 
     resources: &[
         (

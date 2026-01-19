@@ -44,14 +44,14 @@ impl DiffFunction {
     /// Returns the display name of the function.
     fn name(&self) -> &'static str {
         match self {
-            Self::Square => "x\u{00b2}",
-            Self::Cube => "x\u{00b3}",
+            Self::Square => "x^2",
+            Self::Cube => "x^3",
             Self::Sin => "sin(x)",
             Self::Cos => "cos(x)",
             Self::Exp => "exp(x)",
             Self::Log => "ln(x)",
-            Self::Sqrt => "\u{221a}x",
-            Self::Custom => "x\u{00b3} - 2x + 1",
+            Self::Sqrt => "sqrtx",
+            Self::Custom => "x^3 - 2x + 1",
         }
     }
 
@@ -59,13 +59,13 @@ impl DiffFunction {
     fn derivative_name(&self) -> &'static str {
         match self {
             Self::Square => "2x",
-            Self::Cube => "3x\u{00b2}",
+            Self::Cube => "3x^2",
             Self::Sin => "cos(x)",
             Self::Cos => "-sin(x)",
             Self::Exp => "exp(x)",
             Self::Log => "1/x",
-            Self::Sqrt => "1/(2\u{221a}x)",
-            Self::Custom => "3x\u{00b2} - 2",
+            Self::Sqrt => "1/(2sqrtx)",
+            Self::Custom => "3x^2 - 2",
         }
     }
 
@@ -355,9 +355,9 @@ impl VisualizationApp for DualAutodiffDemo {
         info_box(
             ui,
             &format!(
-                "Input: x + \u{03b5} = {:.4} + \u{03b5}\n\n\
-                 f(x + \u{03b5}) = {}\n\n\
-                 Result: {:.4} + {:.4}\u{03b5}\n\n\
+                "Input: x + eps = {:.4} + eps\n\n\
+                 f(x + eps) = {}\n\n\
+                 Result: {:.4} + {:.4}eps\n\n\
                  Therefore:\n\
                    f(x)  = {:.4}\n\
                    f'(x) = {:.4}",
@@ -447,46 +447,46 @@ const DUAL_AUTODIFF_EDUCATION: EducationalContent = EducationalContent {
     overview: "\
 Dual numbers provide a beautiful way to compute EXACT derivatives without
 limits, finite differences, or symbolic manipulation. By extending the
-real numbers with an infinitesimal \u{03b5} where \u{03b5}\u{00b2} = 0, function
+real numbers with an infinitesimal eps where eps^2 = 0, function
 evaluation automatically tracks the derivative!
 
 This is 'forward-mode automatic differentiation' - the foundation for
 computing gradients in machine learning, physics simulations, and more.",
 
     math_background: "\
-A DUAL NUMBER has the form a + b\u{03b5} where \u{03b5}\u{00b2} = 0.
+A DUAL NUMBER has the form a + beps where eps^2 = 0.
 
 Multiplication follows naturally:
-    (a + b\u{03b5})(c + d\u{03b5}) = ac + (ad + bc)\u{03b5}
+    (a + beps)(c + deps) = ac + (ad + bc)eps
 
 The magic: for ANY smooth function f, Taylor expansion gives:
-    f(x + \u{03b5}) = f(x) + f'(x)\u{03b5} + f''(x)\u{03b5}\u{00b2}/2 + ...
-                = f(x) + f'(x)\u{03b5}  (since \u{03b5}\u{00b2} = 0!)
+    f(x + eps) = f(x) + f'(x)eps + f''(x)eps^2/2 + ...
+                = f(x) + f'(x)eps  (since eps^2 = 0!)
 
-So just evaluate f(x + \u{03b5}) and extract:
-  \u{2022} Real part = f(x)
-  \u{2022} Dual part = f'(x)
+So just evaluate f(x + eps) and extract:
+  - Real part = f(x)
+  - Dual part = f'(x)
 
-Example: f(x) = x\u{00b2}
-    f(x + \u{03b5}) = (x + \u{03b5})\u{00b2}
-                = x\u{00b2} + 2x\u{03b5} + \u{03b5}\u{00b2}
-                = x\u{00b2} + 2x\u{03b5}  (\u{03b5}\u{00b2} = 0)
-    \u{2192} f'(x) = 2x  \u{2714}",
+Example: f(x) = x^2
+    f(x + eps) = (x + eps)^2
+                = x^2 + 2xeps + eps^2
+                = x^2 + 2xeps  (eps^2 = 0)
+    -> f'(x) = 2x  [ok]",
 
     how_to_use: "\
-\u{2022} Select a function to differentiate
-\u{2022} Adjust x to see the tangent line move
-\u{2022} Enable 'Secant' to compare with numerical differentiation
-\u{2022} Adjust h to see numerical error increase/decrease
-\u{2022} Animate x to watch the tangent track the curve",
+- Select a function to differentiate
+- Adjust x to see the tangent line move
+- Enable 'Secant' to compare with numerical differentiation
+- Adjust h to see numerical error increase/decrease
+- Animate x to watch the tangent track the curve",
 
     key_concepts: "\
-\u{2022} \u{03b5}\u{00b2} = 0: the nilpotent infinitesimal
-\u{2022} f(x + \u{03b5}) = f(x) + f'(x)\u{03b5}: automatic derivatives
-\u{2022} NO truncation error (unlike finite differences)
-\u{2022} NO symbolic manipulation needed
-\u{2022} Chain rule works automatically through composition
-\u{2022} Foundation of forward-mode autodiff in ML",
+- eps^2 = 0: the nilpotent infinitesimal
+- f(x + eps) = f(x) + f'(x)eps: automatic derivatives
+- NO truncation error (unlike finite differences)
+- NO symbolic manipulation needed
+- Chain rule works automatically through composition
+- Foundation of forward-mode autodiff in ML",
 
     resources: &[
         (

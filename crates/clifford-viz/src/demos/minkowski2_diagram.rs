@@ -525,7 +525,7 @@ impl VisualizationApp for Minkowski2DiagramDemo {
         });
 
         let gamma = 1.0 / (1.0 - self.boost_velocity * self.boost_velocity).sqrt();
-        value_display(ui, "\u{03b3}", gamma, 3);
+        value_display(ui, "gamma", gamma, 3);
 
         ui.add_space(spacing::XS);
         animation_controls(ui, &mut self.animation);
@@ -575,16 +575,16 @@ impl VisualizationApp for Minkowski2DiagramDemo {
                 let interval_type = IntervalType::from_interval_squared(s2);
 
                 ui.add_space(spacing::XS);
-                value_display(ui, "\u{0394}s\u{00b2}", s2 as f32, 3);
+                value_display(ui, "Deltas^2", s2 as f32, 3);
                 ui.label(format!("Type: {}", interval_type.description()));
 
                 if let Some(tau) = e1.proper_time_to(e2) {
-                    value_display(ui, "\u{03c4}", tau as f32, 3);
+                    value_display(ui, "tau", tau as f32, 3);
                 }
 
                 info_box(
                     ui,
-                    "\u{0394}s\u{00b2} is invariant under boosts!\nTry changing v and watch it stay constant.",
+                    "Deltas^2 is invariant under boosts!\nTry changing v and watch it stay constant.",
                 );
             }
         }
@@ -614,7 +614,7 @@ impl VisualizationApp for Minkowski2DiagramDemo {
                 {
                     changed = true;
                 }
-                if ui.small_button("\u{2715}").clicked() {
+                if ui.small_button("X").clicked() {
                     events_to_remove.push(i);
                 }
             });
@@ -671,7 +671,7 @@ impl VisualizationApp for Minkowski2DiagramDemo {
             ui.label("1+1D Spacetime (c = 1)");
             ui.separator();
             ui.label(format!(
-                "v = {:.2}c, \u{03b3} = {:.2}",
+                "v = {:.2}c, gamma = {:.2}",
                 self.boost_velocity,
                 1.0 / (1.0 - self.boost_velocity * self.boost_velocity).sqrt()
             ));
@@ -698,47 +698,47 @@ This visualization demonstrates the structure of MINKOWSKI SPACETIME in 1+1 dime
 (one spatial dimension + time). This is the geometry of special relativity.
 
 The key features are:
-\u{2022} Light travels at 45\u{00b0} (we use units where c = 1)
-\u{2022} The LIGHT CONE divides spacetime into causally connected and disconnected regions
-\u{2022} LORENTZ BOOSTS transform between reference frames moving at different velocities
-\u{2022} The SPACETIME INTERVAL \u{0394}s\u{00b2} is INVARIANT under boosts",
+- Light travels at 45 deg (we use units where c = 1)
+- The LIGHT CONE divides spacetime into causally connected and disconnected regions
+- LORENTZ BOOSTS transform between reference frames moving at different velocities
+- The SPACETIME INTERVAL Deltas^2 is INVARIANT under boosts",
 
     math_background: "\
 The spacetime interval between two events is:
 
-    \u{0394}s\u{00b2} = \u{0394}t\u{00b2} - \u{0394}x\u{00b2}   (with c = 1)
+    Deltas^2 = Deltat^2 - Deltax^2   (with c = 1)
 
 This is INVARIANT under Lorentz transformations!
 
 Interval types:
-  \u{2022} \u{0394}s\u{00b2} > 0: TIMELIKE (inside light cone)
+  - Deltas^2 > 0: TIMELIKE (inside light cone)
       - Events CAN be causally connected
-      - \u{03c4} = \u{221a}(\u{0394}s\u{00b2}) is the proper time
-  \u{2022} \u{0394}s\u{00b2} < 0: SPACELIKE (outside light cone)
+      - tau = sqrt(Deltas^2) is the proper time
+  - Deltas^2 < 0: SPACELIKE (outside light cone)
       - Events CANNOT be causally connected
-  \u{2022} \u{0394}s\u{00b2} = 0: LIGHTLIKE (on the light cone)
+  - Deltas^2 = 0: LIGHTLIKE (on the light cone)
       - Events connected by light rays
 
 Lorentz boost with velocity v:
-    t' = \u{03b3}(t - vx)
-    x' = \u{03b3}(x - vt)
-    where \u{03b3} = 1/\u{221a}(1 - v\u{00b2})",
+    t' = gamma(t - vx)
+    x' = gamma(x - vt)
+    where gamma = 1/sqrt(1 - v^2)",
 
     how_to_use: "\
-\u{2022} Use the velocity slider to apply a Lorentz boost
-\u{2022} Watch events move but the INTERVAL stays constant!
-\u{2022} The light cone (45\u{00b0} lines) is the same in all frames
-\u{2022} Select two events to see their spacetime interval
-\u{2022} Dashed lines show the boosted coordinate axes (t', x')
-\u{2022} Click 'Play' to animate continuous boosts",
+- Use the velocity slider to apply a Lorentz boost
+- Watch events move but the INTERVAL stays constant!
+- The light cone (45 deg lines) is the same in all frames
+- Select two events to see their spacetime interval
+- Dashed lines show the boosted coordinate axes (t', x')
+- Click 'Play' to animate continuous boosts",
 
     key_concepts: "\
-\u{2022} LIGHT CONE: 45\u{00b0} lines from origin, boundary of causality
-\u{2022} TIMELIKE: Inside cone, accessible, has proper time
-\u{2022} SPACELIKE: Outside cone, inaccessible, no causal connection
-\u{2022} INVARIANT INTERVAL: \u{0394}s\u{00b2} = \u{0394}t\u{00b2} - \u{0394}x\u{00b2} same in all frames
-\u{2022} LORENTZ BOOST: Transforms coordinates, preserves interval
-\u{2022} The factor \u{03b3} = 1/\u{221a}(1-v\u{00b2}) appears in time dilation",
+- LIGHT CONE: 45 deg lines from origin, boundary of causality
+- TIMELIKE: Inside cone, accessible, has proper time
+- SPACELIKE: Outside cone, inaccessible, no causal connection
+- INVARIANT INTERVAL: Deltas^2 = Deltat^2 - Deltax^2 same in all frames
+- LORENTZ BOOST: Transforms coordinates, preserves interval
+- The factor gamma = 1/sqrt(1-v^2) appears in time dilation",
 
     resources: &[
         (

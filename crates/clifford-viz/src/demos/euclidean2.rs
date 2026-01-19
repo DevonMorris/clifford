@@ -239,7 +239,7 @@ impl VisualizationApp for Euclidean2Demo {
     fn controls(&mut self, ui: &mut egui::Ui) {
         // === Primary Control: Rotation ===
         group_header(ui, "Rotation");
-        angle_slider_range(ui, "Angle \u{03b8}", &mut self.angle, -360.0, 360.0);
+        angle_slider_range(ui, "Angle theta", &mut self.angle, -360.0, 360.0);
 
         // Dilation control
         ui.horizontal(|ui| {
@@ -266,10 +266,7 @@ impl VisualizationApp for Euclidean2Demo {
         ga_value_display(
             ui,
             "R",
-            &[
-                ("1", rotor.s() as f32),
-                ("e\u{2081}\u{2082}", rotor.b() as f32),
-            ],
+            &[("1", rotor.s() as f32), ("e_1_2", rotor.b() as f32)],
         );
         value_display(ui, "|R|", rotor_magnitude as f32, 4);
 
@@ -278,7 +275,7 @@ impl VisualizationApp for Euclidean2Demo {
             info_box(
                 ui,
                 &format!(
-                    "R = cos(\u{03b8}/2) - sin(\u{03b8}/2)e\u{2081}\u{2082}\n  = {:.4} - {:.4}e\u{2081}\u{2082}\n|R| = 1 (unit rotor, pure rotation)",
+                    "R = cos(theta/2) - sin(theta/2)e_1_2\n  = {:.4} - {:.4}e_1_2\n|R| = 1 (unit rotor, pure rotation)",
                     (self.angle / 2.0).cos(),
                     (self.angle / 2.0).sin()
                 ),
@@ -287,7 +284,7 @@ impl VisualizationApp for Euclidean2Demo {
             info_box(
                 ui,
                 &format!(
-                    "R = k(cos(\u{03b8}/2) - sin(\u{03b8}/2)e\u{2081}\u{2082})\nk = \u{221a}{:.2} = {:.4}\n|R| = {:.4} (scales by |R|\u{00b2} = {:.2})",
+                    "R = k(cos(theta/2) - sin(theta/2)e_1_2)\nk = sqrt{:.2} = {:.4}\n|R| = {:.4} (scales by |R|^2 = {:.2})",
                     self.dilation,
                     self.dilation.sqrt(),
                     rotor_magnitude,
@@ -322,9 +319,9 @@ impl VisualizationApp for Euclidean2Demo {
             if (self.dilation - 1.0).abs() > 0.01 {
                 ui.horizontal(|ui| {
                     ui.label(format!("|v| = {:.3}", input_mag));
-                    ui.label("\u{2192}");
+                    ui.label("->");
                     ui.label(format!("|Rv| = {:.3}", output_mag));
-                    ui.label(format!("(\u{00d7}{:.2})", output_mag / input_mag));
+                    ui.label(format!("(x{:.2})", output_mag / input_mag));
                 });
             }
         }
@@ -336,8 +333,8 @@ impl VisualizationApp for Euclidean2Demo {
             ui.checkbox(&mut self.show_vector_field, "Field");
         });
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.show_bivector, "Bivector (\u{03b8}/2)");
-            ui.checkbox(&mut self.show_rotation_arc, "Arc (\u{03b8})");
+            ui.checkbox(&mut self.show_bivector, "Bivector (theta/2)");
+            ui.checkbox(&mut self.show_rotation_arc, "Arc (theta)");
         });
 
         // Vector field options
@@ -356,7 +353,7 @@ impl VisualizationApp for Euclidean2Demo {
                 ui.label("2D rotation using unit rotor (pure rotation, no scaling)");
             } else {
                 ui.label(format!(
-                    "2D rotation + dilation (|R|={:.2}, scales by {:.2}\u{00d7})",
+                    "2D rotation + dilation (|R|={:.2}, scales by {:.2}x)",
                     self.dilation.sqrt(),
                     self.dilation
                 ));
@@ -393,46 +390,46 @@ This demo also shows what happens with non-unit rotors: they combine rotation \
 with uniform scaling (dilation). Try the dilation slider to see!",
 
     math_background: "\
-A UNIT rotor R (|R| = 1) that rotates by angle \u{03b8} is:
+A UNIT rotor R (|R| = 1) that rotates by angle theta is:
 
-    R = cos(\u{03b8}/2) - sin(\u{03b8}/2)e\u{2081}\u{2082}
+    R = cos(theta/2) - sin(theta/2)e_1_2
 
-where e\u{2081}\u{2082} is the unit bivector (oriented xy-plane).
+where e_1_2 is the unit bivector (oriented xy-plane).
 
-The sandwich product v' = RvR\u{2020} transforms vectors:
-  \u{2022} R\u{2020} is the reverse (same scalar, negated bivector)
-  \u{2022} Unit rotors (|R| = 1) preserve vector length
-  \u{2022} Non-unit rotors scale vectors by |R|\u{00b2}
+The sandwich product v' = RvRrev transforms vectors:
+  - Rrev is the reverse (same scalar, negated bivector)
+  - Unit rotors (|R| = 1) preserve vector length
+  - Non-unit rotors scale vectors by |R|^2
 
 SCALED ROTORS combine rotation with dilation:
 
-    S = k\u{00b7}R  where k = \u{221a}(dilation factor)
+    S = k*R  where k = sqrt(dilation factor)
 
-    v' = SvS\u{2020} rotates AND scales by |S|\u{00b2} = k\u{00b2}
+    v' = SvSrev rotates AND scales by |S|^2 = k^2
 
-So |R| = 2 means vectors are scaled by 4\u{00d7}, and |R| = 0.5 \
-means vectors are scaled by 0.25\u{00d7}.
+So |R| = 2 means vectors are scaled by 4x, and |R| = 0.5 \
+means vectors are scaled by 0.25x.
 
-Composition still works: S\u{2082}S\u{2081} gives combined rotation \
+Composition still works: S_2S_1 gives combined rotation \
 AND combined scaling!",
 
     how_to_use: "\
-\u{2022} Drag the angle slider to rotate the vector field
-\u{2022} Adjust the DILATION slider to see scaling effects
-\u{2022} Click 'Play' to animate continuous rotation
-\u{2022} The purple arc shows the HALF-angle (stored in rotor)
-\u{2022} The coral arc shows the FULL rotation angle
-\u{2022} When dilating, two circles show input vs output magnitude
-\u{2022} Watch |R| change as you adjust dilation",
+- Drag the angle slider to rotate the vector field
+- Adjust the DILATION slider to see scaling effects
+- Click 'Play' to animate continuous rotation
+- The purple arc shows the HALF-angle (stored in rotor)
+- The coral arc shows the FULL rotation angle
+- When dilating, two circles show input vs output magnitude
+- Watch |R| change as you adjust dilation",
 
     key_concepts: "\
-\u{2022} Rotors encode rotation using HALF the angle
-\u{2022} UNIT rotors (|R| = 1) perform PURE rotation
-\u{2022} NON-UNIT rotors combine rotation with scaling by |R|\u{00b2}
-\u{2022} Sandwich product: v' = RvR\u{2020}
-\u{2022} Composition: R_total = R\u{2082}R\u{2081} (angles add, scales multiply)
-\u{2022} The bivector e\u{2081}\u{2082} represents the rotation plane
-\u{2022} This extends naturally to 3D and higher dimensions",
+- Rotors encode rotation using HALF the angle
+- UNIT rotors (|R| = 1) perform PURE rotation
+- NON-UNIT rotors combine rotation with scaling by |R|^2
+- Sandwich product: v' = RvRrev
+- Composition: R_total = R_2R_1 (angles add, scales multiply)
+- The bivector e_1_2 represents the rotation plane
+- This extends naturally to 3D and higher dimensions",
 
     resources: &[
         (

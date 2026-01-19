@@ -364,14 +364,8 @@ impl VisualizationApp for RobotArmDemo {
         // === Joint Angles ===
         group_header(ui, "Joint Angles");
 
-        angle_slider_range(ui, "Base \u{03b8}\u{2081}", &mut self.theta1, -180.0, 180.0);
-        angle_slider_range(
-            ui,
-            "Elbow \u{03b8}\u{2082}",
-            &mut self.theta2,
-            -180.0,
-            180.0,
-        );
+        angle_slider_range(ui, "Base theta_1", &mut self.theta1, -180.0, 180.0);
+        angle_slider_range(ui, "Elbow theta_2", &mut self.theta2, -180.0, 180.0);
 
         if ui.button("Reset Angles").clicked() {
             self.theta1 = 0.5;
@@ -481,7 +475,7 @@ impl VisualizationApp for RobotArmDemo {
             ));
             ui.separator();
             ui.label(format!(
-                "\u{03b8}\u{2081}={:.1}\u{00b0} \u{03b8}\u{2082}={:.1}\u{00b0}",
+                "theta_1={:.1} deg theta_2={:.1} deg",
                 self.theta1.to_degrees(),
                 self.theta2.to_degrees()
             ));
@@ -507,53 +501,53 @@ represented by a Motor, and the end effector position is computed by \
 sequentially transforming points through the kinematic chain.
 
 Key insight: In 2D PGA, Motors encode rotation elegantly. We use \
-Motor::from_rotation(\u{03b8}) to create a rotation around the origin, \
+Motor::from_rotation(theta) to create a rotation around the origin, \
 then apply it via the antisandwich product (transform).",
 
     math_background: "\
 FORWARD KINEMATICS computes positions from joint angles:
 
-Base joint at origin: P\u{2080} = (0, 0)
+Base joint at origin: P_0 = (0, 0)
 
 Elbow position:
-    L\u{2081} = (link1_length, 0)  // Link 1 in local coords
-    M\u{2081} = Motor::from_rotation(\u{03b8}\u{2081})
-    Elbow = M\u{2081}.transform(L\u{2081})
+    L_1 = (link1_length, 0)  // Link 1 in local coords
+    M_1 = Motor::from_rotation(theta_1)
+    Elbow = M_1.transform(L_1)
 
 End effector position:
-    L\u{2082} = (link2_length, 0)  // Link 2 in local coords
-    M\u{2082} = Motor::from_rotation(\u{03b8}\u{2081} + \u{03b8}\u{2082})  // Total rotation
-    End = Elbow + M\u{2082}.transform(L\u{2082})
+    L_2 = (link2_length, 0)  // Link 2 in local coords
+    M_2 = Motor::from_rotation(theta_1 + theta_2)  // Total rotation
+    End = Elbow + M_2.transform(L_2)
 
 MOTOR FORMULA for rotation around origin:
-    M = cos(\u{03b8}/2) - sin(\u{03b8}/2)\u{00b7}e\u{2083}
+    M = cos(theta/2) - sin(theta/2)*e_3
 
-The antisandwich product M\u{207b}\u{00b9}PM transforms point P.
+The antisandwich product M^-1PM transforms point P.
 
 WORKSPACE is the annular region between:
-    r_max = L\u{2081} + L\u{2082}  (fully extended)
-    r_min = |L\u{2081} - L\u{2082}|  (fully folded)
+    r_max = L_1 + L_2  (fully extended)
+    r_min = |L_1 - L_2|  (fully folded)
 
-Any point in this region is reachable by some (\u{03b8}\u{2081}, \u{03b8}\u{2082}).",
+Any point in this region is reachable by some (theta_1, theta_2).",
 
     how_to_use: "\
-\u{2022} JOINT SLIDERS: Drag \u{03b8}\u{2081} and \u{03b8}\u{2082} to control the arm
-\u{2022} LINK LENGTHS: Adjust to change arm proportions and workspace
-\u{2022} ANIMATION: Select Circle or Figure-8 to see motion patterns
-\u{2022} WORKSPACE: Enable to see the reachable area boundaries
-\u{2022} TRAIL: Enable to visualize the end effector path over time
-\u{2022} ANGLES: Show joint angle arcs for visual feedback
+- JOINT SLIDERS: Drag theta_1 and theta_2 to control the arm
+- LINK LENGTHS: Adjust to change arm proportions and workspace
+- ANIMATION: Select Circle or Figure-8 to see motion patterns
+- WORKSPACE: Enable to see the reachable area boundaries
+- TRAIL: Enable to visualize the end effector path over time
+- ANGLES: Show joint angle arcs for visual feedback
 
-Try setting both angles to 0\u{00b0} to see the arm fully extended along the x-axis, \
-or set \u{03b8}\u{2082} to \u{00b1}180\u{00b0} to fold the arm back on itself.",
+Try setting both angles to 0 deg to see the arm fully extended along the x-axis, \
+or set theta_2 to +-180 deg to fold the arm back on itself.",
 
     key_concepts: "\
-\u{2022} Motors encode rotation via antisandwich product
-\u{2022} Sequential transformation follows kinematic chain
-\u{2022} Joint angles are relative: \u{03b8}\u{2082} is relative to link 1
-\u{2022} Workspace = annular region of reachable positions
-\u{2022} Forward kinematics: (\u{03b8}\u{2081}, \u{03b8}\u{2082}) \u{2192} (x, y)
-\u{2022} Inverse kinematics: (x, y) \u{2192} (\u{03b8}\u{2081}, \u{03b8}\u{2082}) (not covered)",
+- Motors encode rotation via antisandwich product
+- Sequential transformation follows kinematic chain
+- Joint angles are relative: theta_2 is relative to link 1
+- Workspace = annular region of reachable positions
+- Forward kinematics: (theta_1, theta_2) -> (x, y)
+- Inverse kinematics: (x, y) -> (theta_1, theta_2) (not covered)",
 
     resources: &[
         (

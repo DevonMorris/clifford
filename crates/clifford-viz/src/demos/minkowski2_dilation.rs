@@ -430,14 +430,14 @@ impl VisualizationApp for Minkowski2DilationDemo {
                     plot_ui.text(
                         Text::new(
                             egui_plot::PlotPoint::new(-2.0, t_total / 2.0),
-                            format!("\u{03c4} = {:.1}", tau_home),
+                            format!("tau = {:.1}", tau_home),
                         )
                         .color(point(&ctx)),
                     );
                     plot_ui.text(
                         Text::new(
                             egui_plot::PlotPoint::new(3.5, t_total / 2.0),
-                            format!("\u{03c4} = {:.1}", tau_travel),
+                            format!("tau = {:.1}", tau_travel),
                         )
                         .color(plane(&ctx)),
                     );
@@ -459,7 +459,7 @@ impl VisualizationApp for Minkowski2DilationDemo {
         });
 
         let gamma = 1.0 / (1.0 - self.travel_velocity * self.travel_velocity).sqrt();
-        value_display(ui, "\u{03b3}", gamma, 3);
+        value_display(ui, "gamma", gamma, 3);
 
         ui.horizontal(|ui| {
             ui.label("Total time:");
@@ -489,7 +489,7 @@ impl VisualizationApp for Minkowski2DilationDemo {
         info_box(
             ui,
             &format!(
-                "Stay-at-home: \u{03c4} = {:.2}\nTraveler: \u{03c4} = {:.2}\n\nDifference: {:.2} ({:.0}% younger!)",
+                "Stay-at-home: tau = {:.2}\nTraveler: tau = {:.2}\n\nDifference: {:.2} ({:.0}% younger!)",
                 tau_home,
                 tau_travel,
                 tau_home - tau_travel,
@@ -501,10 +501,10 @@ impl VisualizationApp for Minkowski2DilationDemo {
         ui.label("The traveler ages LESS because:");
         info_box(
             ui,
-            "\u{2022} Proper time = path length in spacetime\n\
-             \u{2022} Straight worldline = LONGEST proper time\n\
-             \u{2022} This is opposite to Euclidean geometry!\n\
-             \u{2022} \u{03c4}_travel = T/\u{03b3} < T = \u{03c4}_home",
+            "- Proper time = path length in spacetime\n\
+             - Straight worldline = LONGEST proper time\n\
+             - This is opposite to Euclidean geometry!\n\
+             - tau_travel = T/gamma < T = tau_home",
         );
 
         // === Display Options ===
@@ -536,13 +536,13 @@ impl VisualizationApp for Minkowski2DilationDemo {
             ui.label("Twin Paradox");
             ui.separator();
             ui.label(format!(
-                "v = {:.2}c, \u{03b3} = {:.2}",
+                "v = {:.2}c, gamma = {:.2}",
                 self.travel_velocity, gamma
             ));
             ui.separator();
-            ui.colored_label(point(&ctx), format!("Home: \u{03c4}={:.1}", tau_home));
+            ui.colored_label(point(&ctx), format!("Home: tau={:.1}", tau_home));
             ui.separator();
-            ui.colored_label(plane(&ctx), format!("Travel: \u{03c4}={:.1}", tau_travel));
+            ui.colored_label(plane(&ctx), format!("Travel: tau={:.1}", tau_travel));
         });
     }
 
@@ -569,39 +569,39 @@ the straight path has the LONGEST proper time.",
     math_background: "\
 Proper time along a worldline is:
 
-    \u{03c4} = \u{222b} \u{221a}(dt\u{00b2} - dx\u{00b2}) = \u{222b} \u{221a}(1 - v\u{00b2}) dt
+    tau = integral sqrt(dt^2 - dx^2) = integral sqrt(1 - v^2) dt
 
 For the STAY-AT-HOME twin (v = 0):
-    \u{03c4}_home = T (total coordinate time)
+    tau_home = T (total coordinate time)
 
 For the TRAVELER (speed v, round trip):
-    \u{03c4}_travel = T/\u{03b3} = T\u{221a}(1 - v\u{00b2})
+    tau_travel = T/gamma = Tsqrt(1 - v^2)
 
-Since \u{03b3} > 1 for any v > 0, we have:
-    \u{03c4}_travel < \u{03c4}_home
+Since gamma > 1 for any v > 0, we have:
+    tau_travel < tau_home
 
 The traveler ages less!
 
 Example with v = 0.8c:
-    \u{03b3} = 1/\u{221a}(1 - 0.64) = 1/\u{221a}0.36 = 5/3 \u{2248} 1.67
+    gamma = 1/sqrt(1 - 0.64) = 1/sqrt0.36 = 5/3 ~= 1.67
     If home twin ages 10 years, traveler ages only 6 years!",
 
     how_to_use: "\
-\u{2022} Adjust travel speed to see how time dilation changes
-\u{2022} The tick marks show equal intervals of PROPER TIME
-\u{2022} Count ticks: traveler has FEWER ticks!
-\u{2022} Dashed lines show traveler's 'now' (simultaneity)
-\u{2022} Watch simultaneity lines jump at turnaround
-\u{2022} Click Play to animate the journey",
+- Adjust travel speed to see how time dilation changes
+- The tick marks show equal intervals of PROPER TIME
+- Count ticks: traveler has FEWER ticks!
+- Dashed lines show traveler's 'now' (simultaneity)
+- Watch simultaneity lines jump at turnaround
+- Click Play to animate the journey",
 
     key_concepts: "\
-\u{2022} PROPER TIME: Experienced time along a worldline
-\u{2022} Proper time = path length in spacetime
-\u{2022} STRAIGHT path has LONGEST proper time (unlike Euclidean!)
-\u{2022} Time dilation factor: \u{03c4} = T/\u{03b3}
-\u{2022} NOT a paradox: acceleration breaks the symmetry
-\u{2022} The traveler feels acceleration; the stay-at-home doesn't
-\u{2022} Simultaneity lines show the asymmetry clearly",
+- PROPER TIME: Experienced time along a worldline
+- Proper time = path length in spacetime
+- STRAIGHT path has LONGEST proper time (unlike Euclidean!)
+- Time dilation factor: tau = T/gamma
+- NOT a paradox: acceleration breaks the symmetry
+- The traveler feels acceleration; the stay-at-home doesn't
+- Simultaneity lines show the asymmetry clearly",
 
     resources: &[
         (
