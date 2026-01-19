@@ -1175,13 +1175,49 @@ impl<'a> TraitsGenerator<'a> {
     // Product Trait Implementations (clifford::ops)
     // ========================================================================
 
-    /// Checks if a type represents a single-grade blade (not a versor/multivector).
+    /// Checks if a type represents a single-grade blade.
     ///
-    /// Single-grade types have exactly one grade and are not marked as versors.
-    /// Examples: Scalar (grade 0), Vector (grade 1), Bivector (grade 2), etc.
-    /// Counter-examples: Rotor (grades 0,2), Motor (grades 0,2,0123), Flector (grades 1,3,...)
+    /// Single-grade types have exactly one grade.
+    /// Examples: Scalar (grade 0), Vector (grade 1), Bivector (grade 2), Circle (grade 3), etc.
+    /// Counter-examples: Rotor (grades 0,2), Motor (grades 0,2,4), Flector (grades 1,3)
+    ///
+    /// Note: A single-grade blade can also be a versor (e.g., Vector is a reflector,
+    /// Circle in CGA is an inversor). Being a blade and being a versor are orthogonal properties.
     fn is_single_grade_blade(&self, ty: &TypeSpec) -> bool {
-        ty.grades.len() == 1 && ty.versor.is_none()
+        ty.grades.len() == 1
+    }
+
+    /// Checks if a type has non-zero bulk norm capability.
+    ///
+    /// A type has non-zero bulk norm if it has at least one field whose blade
+    /// does NOT involve any degenerate basis vectors (those with metric == 0).
+    ///
+    /// This is used to filter out types like `DualUnit` in Cl(0,0,1) where all
+    /// blades are purely degenerate, making bulk_norm structurally zero.
+    fn has_nonzero_bulk_norm(&self, ty: &TypeSpec) -> bool {
+        // Find indices of degenerate basis vectors (those with metric == 0)
+        let degenerate_indices: Vec<usize> = self
+            .spec
+            .signature
+            .basis
+            .iter()
+            .filter(|b| b.metric == 0)
+            .map(|b| b.index)
+            .collect();
+
+        // If there are no degenerate basis vectors, all types have bulk norm
+        if degenerate_indices.is_empty() {
+            return true;
+        }
+
+        // Check if any field is a "bulk" field (no degenerate basis in its blade)
+        ty.fields.iter().any(|f| {
+            // Check if this field's blade involves any degenerate basis vector
+            !degenerate_indices.iter().any(|&deg_idx| {
+                // Check if bit `deg_idx` is set in the blade_index
+                (f.blade_index >> deg_idx) & 1 == 1
+            })
+        })
     }
 
     /// Generates all product trait implementations.
@@ -2601,7 +2637,9 @@ impl<'a> TraitsGenerator<'a> {
         };
 
         // For sandwich, output is typically same type as operand
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> Sandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2633,7 +2671,9 @@ impl<'a> TraitsGenerator<'a> {
         };
 
         // For antisandwich, output is typically same type as operand
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> Antisandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2682,7 +2722,9 @@ impl<'a> TraitsGenerator<'a> {
             }
         };
 
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> InverseSandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -2736,7 +2778,9 @@ impl<'a> TraitsGenerator<'a> {
             }
         };
 
+        // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[allow(unused_variables)]
             impl<T: Float> InverseAntisandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -5322,6 +5366,8 @@ mod verification_tests {{
                 .filter(|t| t.alias_of.is_none())
                 // Filter to types that are versors (have bulk_norm)
                 .filter(|t| t.versor.is_some())
+                // Filter to types that have non-zero bulk norm (exclude purely degenerate types)
+                .filter(|t| self.has_nonzero_bulk_norm(t))
                 .map(|ty| {
                     let name = &ty.name;
                     let name_lower = ty.name.to_lowercase();

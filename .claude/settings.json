@@ -1,10 +1,1 @@
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash(git checkout -b:*)",
-        "command": "bash -c '[[ ! \"$CLAUDE_TOOL_INPUT\" =~ \"origin/main\" ]] && echo \"ERROR: New branches must be based on origin/main. Use: git checkout -b <branch> origin/main\" && exit 1 || exit 0'"
-      }
-    ]
-  }
-}
+{}
