@@ -396,14 +396,9 @@ impl VisualizationApp for Conformal2InversionDemo {
                             match inverted {
                                 InvertedCircle::Circle { cx, cy, radius } => {
                                     // Fixed viewport - just draw the circle, let plot clip naturally
-                                    let inv_circle = circle_2d(
-                                        cx,
-                                        cy,
-                                        radius,
-                                        active(&ctx),
-                                        CIRCLE_SEGMENTS,
-                                    )
-                                    .name(format!("{}'", self.circles[idx].name));
+                                    let inv_circle =
+                                        circle_2d(cx, cy, radius, active(&ctx), CIRCLE_SEGMENTS)
+                                            .name(format!("{}'", self.circles[idx].name));
                                     plot_ui.line(inv_circle);
                                 }
                                 InvertedCircle::Line { nx, ny, d } => {
