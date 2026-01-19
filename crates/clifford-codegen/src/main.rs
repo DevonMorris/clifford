@@ -248,7 +248,7 @@ fn generate(spec_path: &std::path::Path, options: &GenerateOptions) -> Result<()
     }
 
     // Build algebra
-    let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+    let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
     let table = ProductTable::new(&algebra);
 
     // Create generators
@@ -358,7 +358,7 @@ fn verify(path: &std::path::Path, spec_path: Option<&std::path::Path>) -> Result
     if let Some(spec_path) = spec_path {
         let spec_content = std::fs::read_to_string(spec_path)?;
         let spec = parse_spec(&spec_content)?;
-        let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+        let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
 
         println!("  Comparing against: {}", spec_path.display());
 
@@ -395,7 +395,7 @@ fn list_products(
 ) -> Result<()> {
     let spec_content = std::fs::read_to_string(spec_path)?;
     let spec = parse_spec(&spec_content)?;
-    let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+    let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
 
     if table_format {
         println!("| A | B | Product | Result Type |");
@@ -512,7 +512,7 @@ fn list_blades(
 ) -> Result<()> {
     let spec_content = std::fs::read_to_string(spec_path)?;
     let spec = parse_spec(&spec_content)?;
-    let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+    let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
 
     let dim = algebra.dim();
     let num_blades = 1usize << dim;

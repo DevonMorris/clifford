@@ -1,5 +1,13 @@
 # Minkowski Plane
 # Cl(1,1,0) - 2D spacetime algebra
+#
+# Uses physics (timelike-positive) convention:
+#   e1 (space) squares to -1
+#   e2 (time) squares to +1
+# So v² = t² - x², giving:
+#   - Timelike vectors: v² > 0 (inside light cone)
+#   - Spacelike vectors: v² < 0 (outside light cone)
+#   - Lightlike vectors: v² = 0 (on light cone)
 
 [algebra]
 complete = false
@@ -8,14 +16,19 @@ module_path = "minkowski/dim2"
 description = "Minkowski plane Cl(1,1,0)"
 
 [signature]
-positive = ["e1"]
-negative = ["e2"]
+positive = ["e2"]
+negative = ["e1"]
 zero = []
 
 [norm]
-# Minkowski plane uses Clifford conjugate for norm
-# Note: This gives an indefinite norm (can be positive, negative, or zero)
-primary_involution = "clifford_conjugate"
+# Minkowski plane uses reverse for norm squared computation.
+# For vectors, v * reverse(v) = v² gives the spacetime interval.
+# With e1² = -1 (space) and e2² = +1 (time), this gives t² - x²,
+# which is the physics (timelike-positive) convention:
+#   - Timelike vectors: v² > 0 (inside light cone)
+#   - Spacelike vectors: v² < 0 (outside light cone)
+#   - Lightlike vectors: v² = 0 (on light cone)
+primary_involution = "reverse"
 
 # ============================================================
 # Types

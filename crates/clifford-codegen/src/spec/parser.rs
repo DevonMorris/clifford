@@ -92,6 +92,18 @@ pub fn parse_spec(toml_content: &str) -> Result<AlgebraSpec, ParseError> {
 }
 
 /// Parses the signature section.
+///
+/// Basis vectors can be specified in any order across the positive/negative/zero
+/// arrays. The index of each basis is determined by the number in its name
+/// (e.g., "e1" → index 0, "e2" → index 1), NOT by its position in the array.
+///
+/// This allows physics conventions like Minkowski with space (e1) negative and
+/// time (e2) positive:
+/// ```toml
+/// [signature]
+/// positive = ["e2"]  # e2² = +1 (time)
+/// negative = ["e1"]  # e1² = -1 (space)
+/// ```
 fn parse_signature(raw: &RawSignature) -> Result<SignatureSpec, ParseError> {
     let p = raw.positive.len();
     let q = raw.negative.len();
@@ -118,36 +130,128 @@ fn parse_signature(raw: &RawSignature) -> Result<SignatureSpec, ParseError> {
         }
     }
 
+    // Determine indexing mode: numeric (e1, e2, etc.) or positional (ep, em, etc.)
+    // If ALL names are numeric, use numeric indexing; otherwise use positional
+    let all_names: Vec<&String> = raw
+        .positive
+        .iter()
+        .chain(raw.negative.iter())
+        .chain(raw.zero.iter())
+        .collect();
+
+    let use_numeric_indexing = all_names
+        .iter()
+        .all(|name| try_parse_basis_index(name, dim).is_some());
+
     // Build basis vectors
     let mut basis = Vec::with_capacity(dim);
-    let mut index = 0;
 
-    for name in &raw.positive {
-        basis.push(BasisVector {
-            name: name.clone(),
-            index,
-            metric: 1,
-        });
-        index += 1;
-    }
-    for name in &raw.negative {
-        basis.push(BasisVector {
-            name: name.clone(),
-            index,
-            metric: -1,
-        });
-        index += 1;
-    }
-    for name in &raw.zero {
-        basis.push(BasisVector {
-            name: name.clone(),
-            index,
-            metric: 0,
-        });
-        index += 1;
+    if use_numeric_indexing {
+        // Numeric indexing: extract index from name (e.g., "e1" → index 0)
+        // This allows arbitrary metric assignment regardless of array order
+        for name in &raw.positive {
+            let index = try_parse_basis_index(name, dim).unwrap();
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: 1,
+            });
+        }
+        for name in &raw.negative {
+            let index = try_parse_basis_index(name, dim).unwrap();
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: -1,
+            });
+        }
+        for name in &raw.zero {
+            let index = try_parse_basis_index(name, dim).unwrap();
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: 0,
+            });
+        }
+
+        // Sort by index for consistent ordering
+        basis.sort_by_key(|b| b.index);
+
+        // Validate that indices are contiguous 0..dim
+        for (expected, bv) in basis.iter().enumerate() {
+            if bv.index != expected {
+                return Err(ParseError::NonContiguousBasisIndices {
+                    expected,
+                    found: bv.index,
+                    name: bv.name.clone(),
+                });
+            }
+        }
+    } else {
+        // Positional indexing: assign indices in order (positive, then negative, then zero)
+        // Used for non-numeric basis names like "ep", "em" in CGA
+        let mut index = 0;
+        for name in &raw.positive {
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: 1,
+            });
+            index += 1;
+        }
+        for name in &raw.negative {
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: -1,
+            });
+            index += 1;
+        }
+        for name in &raw.zero {
+            basis.push(BasisVector {
+                name: name.clone(),
+                index,
+                metric: 0,
+            });
+            index += 1;
+        }
     }
 
     Ok(SignatureSpec { basis, p, q, r })
+}
+
+/// Tries to parse a basis vector name like "e1" or "e2" into its 0-based index.
+///
+/// Returns `Some(index)` if the name follows a numeric pattern, `None` otherwise.
+/// This is used to determine whether to use numeric or positional indexing for signatures.
+///
+/// # Naming Conventions
+///
+/// - Standard bases: "e1" → 0, "e2" → 1, "e3" → 2, etc. (1-indexed names, 0-indexed result)
+/// - PGA convention: "e0" → last index (dim-1) for backward compatibility
+fn try_parse_basis_index(name: &str, dim: usize) -> Option<usize> {
+    if !name.starts_with('e') {
+        return None;
+    }
+
+    let digits = &name[1..];
+    if digits.is_empty() {
+        return None;
+    }
+
+    let num: usize = digits.parse().ok()?;
+
+    // Special case: e0 maps to the last index (PGA convention for degenerate basis)
+    if num == 0 {
+        return Some(dim - 1);
+    }
+
+    if num > dim {
+        return None;
+    }
+
+    // Convert to 0-based (e1 → 0, e2 → 1, etc.)
+    Some(num - 1)
 }
 
 /// Parses the norm configuration section.
@@ -500,7 +604,7 @@ pub fn validate_canonical_field_order(ty: &TypeSpec) -> bool {
 /// This ensures that sparse types like Line and Plane can participate in products.
 fn infer_products_from_types(types: &[TypeSpec], signature: &SignatureSpec) -> ProductsSpec {
     // Build algebra for product computation
-    let algebra = Algebra::new(signature.p, signature.q, signature.r);
+    let algebra = Algebra::from_metrics(signature.metrics_by_index());
     let dim = signature.dim();
 
     // Check if any types are sparse
@@ -768,7 +872,7 @@ fn check_algebra_completeness(
     types: &[TypeSpec],
     signature: &SignatureSpec,
 ) -> Vec<MissingProduct> {
-    let algebra = Algebra::new(signature.p, signature.q, signature.r);
+    let algebra = Algebra::from_metrics(signature.metrics_by_index());
 
     // Build entity list (exclude sparse and alias types for now)
     // TODO: PRD-45 will add blade-level inference for sparse types

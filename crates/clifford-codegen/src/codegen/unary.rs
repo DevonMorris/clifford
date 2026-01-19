@@ -19,7 +19,7 @@ pub struct UnaryGenerator<'a> {
 impl<'a> UnaryGenerator<'a> {
     /// Creates a new unary generator.
     pub fn new(spec: &'a AlgebraSpec) -> Self {
-        let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+        let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
         let table = ProductTable::new(&algebra);
         Self { spec, table }
     }

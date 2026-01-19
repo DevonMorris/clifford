@@ -10,6 +10,8 @@ mod conformal2_inversion;
 mod dual_autodiff;
 mod euclidean2;
 mod menu;
+mod minkowski2_diagram;
+mod minkowski2_dilation;
 mod projective2;
 mod projective2_robot;
 
@@ -20,5 +22,7 @@ pub use conformal2_inversion::Conformal2InversionDemo;
 pub use dual_autodiff::DualAutodiffDemo;
 pub use euclidean2::Euclidean2Demo;
 pub use menu::DemoMenu;
+pub use minkowski2_diagram::Minkowski2DiagramDemo;
+pub use minkowski2_dilation::Minkowski2DilationDemo;
 pub use projective2::Projective2Demo;
 pub use projective2_robot::RobotArmDemo;

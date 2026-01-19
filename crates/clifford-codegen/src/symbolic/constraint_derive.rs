@@ -386,9 +386,8 @@ impl<'a> ConstraintDeriver<'a> {
     /// Weight fields are those whose blade contains the degenerate basis vector (e0).
     pub fn derive_weight_norm_squared(&self, ty: &TypeSpec, field_prefix: &str) -> Atom {
         let symbols = self.create_symbols(ty, field_prefix);
-        let (p, q, r) = self.algebra.signature();
-        // Degenerate indices are p+q..p+q+r
-        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+        // Get degenerate indices directly from algebra (supports arbitrary metric ordering)
+        let degenerate_indices: Vec<_> = self.algebra.degenerate_indices().collect();
 
         let mut terms: Vec<Atom> = Vec::new();
 
@@ -422,9 +421,8 @@ impl<'a> ConstraintDeriver<'a> {
     /// Bulk fields are those whose blade does NOT contain the degenerate basis vector (e0).
     pub fn derive_bulk_norm_squared(&self, ty: &TypeSpec, field_prefix: &str) -> Atom {
         let symbols = self.create_symbols(ty, field_prefix);
-        let (p, q, r) = self.algebra.signature();
-        // Degenerate indices are p+q..p+q+r
-        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+        // Get degenerate indices directly from algebra (supports arbitrary metric ordering)
+        let degenerate_indices: Vec<_> = self.algebra.degenerate_indices().collect();
 
         let mut terms: Vec<Atom> = Vec::new();
 
@@ -457,9 +455,8 @@ impl<'a> ConstraintDeriver<'a> {
     /// weight field, which can be used as constraints in Groebner simplification.
     pub fn derive_weight_components(&self, ty: &TypeSpec, field_prefix: &str) -> Vec<Atom> {
         let symbols = self.create_symbols(ty, field_prefix);
-        let (p, q, r) = self.algebra.signature();
-        // Degenerate indices are p+q..p+q+r
-        let degenerate_indices: Vec<_> = (p + q..p + q + r).collect();
+        // Get degenerate indices directly from algebra (supports arbitrary metric ordering)
+        let degenerate_indices: Vec<_> = self.algebra.degenerate_indices().collect();
 
         let mut components = Vec::new();
 

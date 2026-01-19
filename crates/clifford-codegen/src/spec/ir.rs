@@ -100,6 +100,21 @@ impl SignatureSpec {
         self.basis.iter().filter(|b| b.metric == 1).map(|b| b.index)
     }
 
+    /// Returns a vector of metric values indexed by basis index.
+    ///
+    /// This is useful for creating an `Algebra` with the correct per-basis metrics:
+    /// ```ignore
+    /// let metrics = signature.metrics_by_index();
+    /// let algebra = Algebra::from_metrics(metrics);
+    /// ```
+    pub fn metrics_by_index(&self) -> Vec<i8> {
+        let mut metrics = vec![0i8; self.dim()];
+        for bv in &self.basis {
+            metrics[bv.index] = bv.metric;
+        }
+        metrics
+    }
+
     /// Returns indices of basis vectors that square to -1 (negative metric).
     pub fn negative_indices(&self) -> impl Iterator<Item = usize> + '_ {
         self.basis
