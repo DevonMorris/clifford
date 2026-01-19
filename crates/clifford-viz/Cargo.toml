@@ -99,6 +99,10 @@ required-features = ["native"]
 name = "conformal2_mobius"
 required-features = ["native"]
 
+[[example]]
+name = "conformal2_intersection"
+required-features = ["native"]
+
 # Binary works on both native (with native feature) and WASM (via target-specific deps)
 [[bin]]
 name = "demo_launcher"
