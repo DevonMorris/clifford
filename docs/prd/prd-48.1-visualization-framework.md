@@ -1,9 +1,24 @@
 # PRD-48.1: Visualization Framework Setup
 
-**Status**: Draft
+**Status**: 2D Complete, 3D Pending
 **Parent**: PRD-48
 **Depends on**: PRD-49 (workspace restructure)
 **Goal**: Establish common infrastructure for all visualization demos
+
+## 2D Framework Status: COMPLETE
+
+The 2D visualization framework is fully implemented and has been used to build 12 demos. See [PRD-48.13](prd-48.13-3d-demo-strategy.md) for lessons learned.
+
+### What Was Built
+- `VisualizationApp` trait with educational content support
+- Responsive design (mobile/tablet/desktop)
+- Color palette and theming
+- 2D shape primitives (point, arrow, circle, arc, line, polygon)
+- Grid and axis rendering
+- Animation utilities
+- Reusable UI widgets
+
+---
 
 ## Overview
 
@@ -626,20 +641,38 @@ crates/clifford-viz/
 
 ## Implementation Tasks
 
+### 2D Framework (Complete)
 1. [x] Create `crates/clifford-viz/src/common/mod.rs` with re-exports
 2. [x] Implement `app.rs` with base trait and runner
 3. [x] Implement `colors.rs` color palette
 4. [x] Implement `grid.rs` for 2D grids and axes
 5. [x] Implement `shapes.rs` 2D primitives (point, arrow, circle, line, arc)
-6. [ ] Implement `shapes3d.rs` 3D primitives (box, sphere, plane, line, arrow)
-7. [ ] Implement `viewport3d.rs` 3D viewport with three-d
-8. [ ] Implement `camera.rs` 3D camera with orbit controls
-9. [x] Implement `widgets.rs` reusable UI components
-10. [x] Implement `animation.rs` timing utilities
-11. [x] Create minimal 2D test app
-12. [ ] Create minimal 3D test app
-13. [x] Add `EducationalContent` struct and "Learn" popup window
-14. [x] Add `testing` module with proptest support (feature-gated)
+6. [x] Implement `widgets.rs` reusable UI components
+7. [x] Implement `animation.rs` timing utilities
+8. [x] Create minimal 2D test app
+9. [x] Add `EducationalContent` struct and "Learn" popup window
+10. [x] Add `testing` module with proptest support (feature-gated)
+
+### 3D Framework (Pending)
+See [PRD-48.13](prd-48.13-3d-demo-strategy.md) for detailed strategy.
+
+**Approach**: Custom 3D projection via egui_plot (guarantees WASM compatibility)
+
+11. [ ] Implement `camera3d.rs` - Camera with orbit controls and perspective projection
+    - [ ] `Camera3D` struct
+    - [ ] `project()` - 3D to 2D perspective projection
+    - [ ] Orbit/zoom/pan controls
+    - [ ] `camera_controls_widget()` for UI
+12. [ ] Implement `shapes3d.rs` - 3D primitives rendered via projection:
+    - [ ] `wireframe_box()` - 12 edge lines
+    - [ ] `coordinate_axes()` - RGB arrows
+    - [ ] `line_3d()` - Single line segment
+    - [ ] `arrow_3d()` - Line with arrowhead
+    - [ ] `point_3d()` - Small circle marker
+    - [ ] `circle_3d()` - Projected as ellipse
+    - [ ] `sphere_wireframe()` - Latitude/longitude lines
+13. [ ] Create minimal 3D test app (`test_3d.rs`)
+14. [ ] Validate 3D works in WASM via `trunk serve`
 
 ## Verification
 
