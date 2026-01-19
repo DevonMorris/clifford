@@ -1,8 +1,5 @@
 # Nextest configuration for clifford
 #
-# This configuration handles Symbolica's global state requirements by running
-# Symbolica tests serially while keeping all other tests parallel.
-#
 # Usage:
 #   cargo nextest run                    # Run all tests
 #   cargo nextest run -p clifford-codegen  # Run codegen tests only
@@ -11,7 +8,9 @@
 
 # Define test groups for controlling concurrency
 [test-groups]
-# Symbolica tests must run serially due to global state conflicts
+# Symbolica tests must run serially - the hobbyist license allows multiple
+# cores but not multiple instances, and nextest runs each test as a separate
+# process (instance)
 symbolica = { max-threads = 1 }
 
 [profile.default]
@@ -20,7 +19,7 @@ test-threads = "num-cpus"
 # Only show status for failing tests (reduces output noise)
 status-level = "fail"
 
-# All clifford-codegen tests use Symbolica (directly or via parse_spec/codegen)
+# All clifford-codegen tests use Symbolica
 [[profile.default.overrides]]
 filter = "package(clifford-codegen)"
 test-group = "symbolica"

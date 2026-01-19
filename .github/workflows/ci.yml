@@ -8,63 +8,11 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  # Hide Symbolica banner (allowed for non-commercial use)
-  # See: https://symbolica.io/docs/get_started.html
-  SYMBOLICA_HIDE_BANNER: "1"
+  SYMBOLICA_LICENSE: ${{ secrets.SYMBOLICA_LICENSE }}
 
 jobs:
-  # Generate algebra code once, cache for all other jobs
-  # This avoids Symbolica's single-instance limitation
-  codegen:
-    name: Codegen
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-
-      # Cache generated algebra code based on inputs
-      - name: Cache generated code
-        id: cache-generated
-        uses: actions/cache@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-
-      # Only run codegen if cache miss
-      - name: Generate algebra code
-        if: steps.cache-generated.outputs.cache-hit != 'true'
-        run: cargo build -p clifford
-
-  check:
-    name: Check
-    needs: codegen
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
-
-      # Check with serde and proptest (non-mutually-exclusive features)
-      - run: cargo check --features proptest-support,serde
-      # Check latest nalgebra version (API is stable across versions)
-      - run: cargo check --no-default-features --features nalgebra-0_34
-      # Check rerun integration compiles
-      - run: cargo check --features rerun-0_28
-      # Verify benchmarks compile
-      - run: cargo check --benches
-
   test:
     name: Test
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -72,41 +20,22 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@nextest
 
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
-
-      # Use nextest to handle Symbolica's global state (runs symbolica_* tests serially)
       - run: cargo nextest run --features proptest-support,serde
 
   test-nalgebra:
     name: Test nalgebra
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@nextest
-
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
 
       # Only test latest nalgebra version (API is stable across 0.32-0.34)
       - run: cargo nextest run --no-default-features --features nalgebra-0_34,proptest-support
 
   fmt:
     name: Format
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,19 +44,12 @@ jobs:
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
 
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
-
+      # Build to generate code before formatting
+      - run: cargo build -p clifford
       - run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -136,42 +58,28 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
 
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
-
       # Lint with serde and proptest (non-mutually-exclusive features)
       - run: cargo clippy --features proptest-support,serde -- -D warnings
       # Lint latest nalgebra version (API is stable across 0.32-0.34)
       - run: cargo clippy --no-default-features --features nalgebra-0_34 -- -D warnings
+      # Verify rerun integration compiles
+      - run: cargo check --features rerun-0_28
+      # Verify benchmarks compile
+      - run: cargo check --benches
 
   doc:
     name: Documentation
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
-
       # Doc with nalgebra-0_34 (latest) plus other features (no default to avoid conflict)
       - run: cargo doc --no-default-features --features proptest-support,serde,nalgebra-0_34 --no-deps
 
   viz:
     name: Visualization
-    needs: codegen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,14 +87,6 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
-
-      # Restore generated code from cache
-      - name: Restore generated code
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/clifford/src/specialized/**/generated
-          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
-          fail-on-cache-miss: true
 
       # Build for native
       - run: cargo build -p clifford-viz --features native
