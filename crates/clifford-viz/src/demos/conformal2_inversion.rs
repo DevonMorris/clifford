@@ -152,14 +152,14 @@ impl Default for Conformal2InversionDemo {
 
         // Initial configuration with some points and circles
         let points = vec![
-            ScenePoint::new(2.5, 1.0, "P\u{2081}"),
-            ScenePoint::new(3.0, -1.5, "P\u{2082}"),
-            ScenePoint::new(-2.0, 2.0, "P\u{2083}"),
+            ScenePoint::new(2.5, 1.0, "P_1"),
+            ScenePoint::new(3.0, -1.5, "P_2"),
+            ScenePoint::new(-2.0, 2.0, "P_3"),
         ];
 
         let circles = vec![
-            SceneCircle::new(-2.0, -1.0, 1.0, "C\u{2081}"),
-            SceneCircle::new(3.5, 2.0, 0.8, "C\u{2082}"),
+            SceneCircle::new(-2.0, -1.0, 1.0, "C_1"),
+            SceneCircle::new(3.5, 2.0, 0.8, "C_2"),
         ];
 
         Self {
@@ -549,21 +549,19 @@ impl VisualizationApp for Conformal2InversionDemo {
                 } else {
                     ui.horizontal(|ui| {
                         ui.label(format!("  {}' =", name));
-                        ui.colored_label(active(&ctx), "\u{221e} (at infinity)");
+                        ui.colored_label(active(&ctx), "inf (at infinity)");
                     });
                 }
             } else {
                 ui.horizontal(|ui| {
                     ui.label(format!("  {}' =", name));
-                    ui.colored_label(active(&ctx), "\u{221e} (at center)");
+                    ui.colored_label(active(&ctx), "inf (at center)");
                 });
             }
         }
 
         if ui.button("+ Add Point").clicked() && self.points.len() < 6 {
-            let subscripts = [
-                "\u{2081}", "\u{2082}", "\u{2083}", "\u{2084}", "\u{2085}", "\u{2086}",
-            ];
+            let subscripts = ["_1", "_2", "_3", "_4", "_5", "_6"];
             let idx = self.points.len();
             self.points.push(ScenePoint::new(
                 1.0 + (idx + 1) as f64 * 0.5,
@@ -622,7 +620,7 @@ impl VisualizationApp for Conformal2InversionDemo {
 
         if ui.button("+ Add Circle").clicked() && self.circles.len() < 4 {
             let idx = self.circles.len() + 1;
-            let subscripts = ["\u{2081}", "\u{2082}", "\u{2083}", "\u{2084}"];
+            let subscripts = ["_1", "_2", "_3", "_4"];
             self.circles.push(SceneCircle::new(
                 2.0,
                 idx as f64,
@@ -644,11 +642,11 @@ impl VisualizationApp for Conformal2InversionDemo {
             info_box(
                 ui,
                 "Transformation Rules:\n\
-                 \u{2022} Point \u{2192} Point\n\
-                 \u{2022} Circle \u{2192} Circle (general)\n\
-                 \u{2022} Circle thru center \u{2192} Line\n\
-                 \u{2022} Line \u{2192} Circle (general)\n\
-                 \u{2022} Line thru center \u{2192} Line",
+                 - Point -> Point\n\
+                 - Circle -> Circle (general)\n\
+                 - Circle thru center -> Line\n\
+                 - Line -> Circle (general)\n\
+                 - Line thru center -> Line",
             );
         }
 
@@ -662,10 +660,9 @@ impl VisualizationApp for Conformal2InversionDemo {
             self.inversion_radius = 2.0;
             self.update_inversion_circle();
             self.circles.clear();
-            self.circles
-                .push(SceneCircle::new(2.0, 0.0, 2.0, "C\u{2081}"));
+            self.circles.push(SceneCircle::new(2.0, 0.0, 2.0, "C_1"));
             self.points.clear();
-            self.points.push(ScenePoint::new(3.0, 1.0, "P\u{2081}"));
+            self.points.push(ScenePoint::new(3.0, 1.0, "P_1"));
         }
 
         if ui.button("Concentric circles").clicked() {
@@ -674,10 +671,8 @@ impl VisualizationApp for Conformal2InversionDemo {
             self.inversion_radius = 2.0;
             self.update_inversion_circle();
             self.circles.clear();
-            self.circles
-                .push(SceneCircle::new(0.0, 0.0, 1.0, "C\u{2081}"));
-            self.circles
-                .push(SceneCircle::new(0.0, 0.0, 3.0, "C\u{2082}"));
+            self.circles.push(SceneCircle::new(0.0, 0.0, 1.0, "C_1"));
+            self.circles.push(SceneCircle::new(0.0, 0.0, 3.0, "C_2"));
             self.points.clear();
         }
 
@@ -718,7 +713,7 @@ const CONFORMAL2_INVERSION_EDUCATION: EducationalContent = EducationalContent {
 Circle inversion (or geometric inversion) is a fundamental conformal transformation. \
 Given an inversion circle with center O and radius r, every point P maps to P' such that:
 
-    |OP| \u{00d7} |OP'| = r\u{00b2}
+    |OP| x |OP'| = r^2
 
 Points closer to O map farther away, and vice versa. The inversion circle itself \
 is fixed (every point on it maps to itself).",
@@ -727,19 +722,19 @@ is fixed (every point on it maps to itself).",
 CGA INVERSION FORMULA:
 In Conformal Geometric Algebra, inversion through a circle C is elegantly expressed as:
 
-    P' = C \u{00d7} P \u{00d7} C\u{207b}\u{00b9}
+    P' = C x P x C^-1
 
-where \u{00d7} is the geometric product and C\u{207b}\u{00b9} is the inverse of the circle.
+where x is the geometric product and C^-1 is the inverse of the circle.
 
 This single formula handles ALL cases:
-\u{2022} Point inversion: P' = C \u{00d7} P \u{00d7} C\u{207b}\u{00b9}
-\u{2022} Circle inversion: C' = I \u{00d7} C \u{00d7} I\u{207b}\u{00b9}
+- Point inversion: P' = C x P x C^-1
+- Circle inversion: C' = I x C x I^-1
 
 PROPERTIES:
-\u{2022} Circle NOT through O \u{2192} Circle
-\u{2022} Circle THROUGH O \u{2192} Line (circle of infinite radius)
-\u{2022} Line NOT through O \u{2192} Circle through O
-\u{2022} Line THROUGH O \u{2192} Same line (self-inverse)
+- Circle NOT through O -> Circle
+- Circle THROUGH O -> Line (circle of infinite radius)
+- Line NOT through O -> Circle through O
+- Line THROUGH O -> Same line (self-inverse)
 
 The CGA representation naturally handles the circle/line duality \
 since lines are circles through the point at infinity.",
@@ -757,7 +752,7 @@ since lines are circles through the point at infinity.",
 - Points on the inversion circle map to themselves
 - Circles map to circles (or lines as special case)
 - Two inversions in the same circle = identity
-- CGA unifies the formula: X' = C \u{00d7} X \u{00d7} C\u{207b}\u{00b9}",
+- CGA unifies the formula: X' = C x X x C^-1",
 
     resources: &[
         (

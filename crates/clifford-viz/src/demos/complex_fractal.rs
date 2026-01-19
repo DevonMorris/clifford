@@ -471,7 +471,7 @@ const COMPLEX_FRACTAL_EDUCATION: EducationalContent = EducationalContent {
 
     overview: "\
 The Mandelbrot set and Julia sets are iconic fractals defined by the simple
-iteration z \u{2192} z\u{00b2} + c. Despite this simplicity, they exhibit
+iteration z -> z^2 + c. Despite this simplicity, they exhibit
 infinite complexity and self-similarity at all scales.
 
 The Mandelbrot set is the 'master catalog' of Julia sets: each point c in the
@@ -480,36 +480,36 @@ Mandelbrot set have CONNECTED Julia sets; points OUTSIDE have 'dust' Julia sets.
 
     math_background: "\
 Both fractals use the iteration:
-    z_{n+1} = z_n\u{00b2} + c
+    z_{n+1} = z_n^2 + c
 
-MANDELBROT SET: Fix z\u{2080} = 0, vary c.
-    M = {c \u{2208} C : |z_n| stays bounded}
+MANDELBROT SET: Fix z_0 = 0, vary c.
+    M = {c  in  C : |z_n| stays bounded}
 
-JULIA SET: Fix c, vary z\u{2080}.
-    J_c = {z\u{2080} \u{2208} C : |z_n| stays bounded}
+JULIA SET: Fix c, vary z_0.
+    J_c = {z_0  in  C : |z_n| stays bounded}
 
 The ESCAPE TIME (how many iterations before |z| > 2) creates
 the colorful images. Points that never escape are in the set.
 
-KEY THEOREM: J_c is connected \u{21d4} c \u{2208} M
+KEY THEOREM: J_c is connected <-> c  in  M
 
 This beautiful connection means you can 'see' the Julia set's
 structure just by looking at where c lies in the Mandelbrot set.",
 
     how_to_use: "\
-\u{2022} Click on Mandelbrot to select c for Julia set
-\u{2022} Use presets to see famous Julia sets
-\u{2022} Animate c to watch Julia sets transform
-\u{2022} Increase iterations for more detail
-\u{2022} Zoom in to see infinite detail",
+- Click on Mandelbrot to select c for Julia set
+- Use presets to see famous Julia sets
+- Animate c to watch Julia sets transform
+- Increase iterations for more detail
+- Zoom in to see infinite detail",
 
     key_concepts: "\
-\u{2022} z \u{2192} z\u{00b2} + c: simple rule, infinite complexity
-\u{2022} Mandelbrot: c varies, z\u{2080} = 0
-\u{2022} Julia: z\u{2080} varies, c fixed
-\u{2022} Connected Julia \u{21d4} c in Mandelbrot
-\u{2022} Self-similar at all zoom levels
-\u{2022} Boundary has Hausdorff dimension 2",
+- z -> z^2 + c: simple rule, infinite complexity
+- Mandelbrot: c varies, z_0 = 0
+- Julia: z_0 varies, c fixed
+- Connected Julia <-> c in Mandelbrot
+- Self-similar at all zoom levels
+- Boundary has Hausdorff dimension 2",
 
     resources: &[
         (

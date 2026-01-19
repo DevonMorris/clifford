@@ -396,7 +396,7 @@ impl VisualizationApp for Projective2Demo {
                                     .color(with_alpha(plane(&ctx), 100))
                                     .radius(6.0)
                                     .filled(false)
-                                    .name("Ideal point (\u{221e})"),
+                                    .name("Ideal point (inf)"),
                             );
                         }
                     }
@@ -574,7 +574,7 @@ impl VisualizationApp for Projective2Demo {
                 }
 
                 // Delete button
-                if ui.button("\u{1f5d1}").clicked() {
+                if ui.button("[del]").clicked() {
                     points_to_remove.push(idx);
                 }
             });
@@ -597,14 +597,14 @@ impl VisualizationApp for Projective2Demo {
         }
 
         // === Join Operation (wedge) ===
-        section_separator(ui, Some("Join (\u{2227}) - Line through Points"));
+        section_separator(ui, Some("Join (^) - Line through Points"));
         ui.label(format!("Selected: {} points", self.join_selection.len()));
 
         if self.join_selection.len() == 2 {
             let p1_name = &self.points[self.join_selection[0]].name;
             let p2_name = &self.points[self.join_selection[1]].name;
             if ui
-                .button(format!("Create Line {} \u{2227} {}", p1_name, p2_name))
+                .button(format!("Create Line {} ^ {}", p1_name, p2_name))
                 .clicked()
             {
                 self.perform_join();
@@ -634,7 +634,7 @@ impl VisualizationApp for Projective2Demo {
                         l.ny(),
                         l.d()
                     ));
-                    if ui.button("\u{1f5d1}").clicked() {
+                    if ui.button("[del]").clicked() {
                         lines_to_remove.push(idx);
                     }
                 });
@@ -656,13 +656,13 @@ impl VisualizationApp for Projective2Demo {
         }
 
         // === Meet Operation (antiwedge) ===
-        section_separator(ui, Some("Meet (\u{2228}) - Intersection"));
+        section_separator(ui, Some("Meet (v) - Intersection"));
         ui.label(format!("Selected: {} lines", self.meet_selection.len()));
 
         if self.meet_selection.len() == 2 {
             if ui
                 .button(format!(
-                    "Find Intersection L{} \u{2228} L{}",
+                    "Find Intersection L{} v L{}",
                     self.meet_selection[0] + 1,
                     self.meet_selection[1] + 1
                 ))
@@ -695,7 +695,7 @@ impl VisualizationApp for Projective2Demo {
         if self.apply_motor {
             angle_slider_range(
                 ui,
-                "Rotation \u{03b8}",
+                "Rotation theta",
                 &mut self.motor_rotation,
                 -360.0,
                 360.0,
@@ -728,10 +728,10 @@ impl VisualizationApp for Projective2Demo {
                 ui,
                 "M",
                 &[
-                    ("e\u{2081}", self.motor.ty() as f32),
-                    ("e\u{2082}", self.motor.tx() as f32),
-                    ("e\u{2083}", self.motor.r() as f32),
-                    ("e\u{2081}\u{2082}\u{2083}", self.motor.ps() as f32),
+                    ("e_1", self.motor.ty() as f32),
+                    ("e_2", self.motor.tx() as f32),
+                    ("e_3", self.motor.r() as f32),
+                    ("e_1_2_3", self.motor.ps() as f32),
                 ],
             );
 
@@ -767,7 +767,7 @@ impl VisualizationApp for Projective2Demo {
             ui.separator();
             if self.apply_motor {
                 ui.label(format!(
-                    "Motor: \u{03b8}={:.1}\u{00b0} t=({:.1}, {:.1})",
+                    "Motor: theta={:.1} deg t=({:.1}, {:.1})",
                     self.motor_rotation.to_degrees(),
                     self.motor_tx,
                     self.motor_ty
@@ -792,54 +792,54 @@ This visualization demonstrates 2D Projective Geometric Algebra, which provides 
 a unified framework for point-line geometry and rigid transformations.
 
 Key insight: In PGA, geometric operations become algebraic products:
-\u{2022} The JOIN of two points (line through them) is their wedge product (\u{2227})
-\u{2022} The MEET of two lines (intersection point) is their antiwedge product (\u{2228})
-\u{2022} MOTORS encode rotation and translation as a single algebraic element
+- The JOIN of two points (line through them) is their wedge product (^)
+- The MEET of two lines (intersection point) is their antiwedge product (v)
+- MOTORS encode rotation and translation as a single algebraic element
 
 This demo lets you explore these operations interactively.",
 
     math_background: "\
 POINTS are grade-1 elements in homogeneous coordinates:
-    P = x\u{00b7}e\u{2081} + y\u{00b7}e\u{2082} + w\u{00b7}e\u{2080}
+    P = x*e_1 + y*e_2 + w*e_0
 
 For a finite point at (x, y), we set w = 1.
 
 LINES are grade-2 elements representing ax + by + c = 0:
-    L = c\u{00b7}e\u{2081}\u{2082} + a\u{00b7}e\u{2081}\u{2080} + b\u{00b7}e\u{2082}\u{2080}
+    L = c*e_1_2 + a*e_1_0 + b*e_2_0
 
-JOIN (\u{2227}) - Line through two points:
-    L = P\u{2081} \u{2227} P\u{2082}
+JOIN (^) - Line through two points:
+    L = P_1 ^ P_2
 
-MEET (\u{2228}) - Intersection of two lines:
-    P = L\u{2081} \u{2228} L\u{2082}
+MEET (v) - Intersection of two lines:
+    P = L_1 v L_2
 
 If lines are parallel, the result is an IDEAL POINT (w = 0), \
 representing the direction at infinity.
 
 MOTORS are elements of the odd subalgebra (grades 1 and 3):
-    M = ty\u{00b7}e\u{2081} + tx\u{00b7}e\u{2082} + r\u{00b7}e\u{2083} + ps\u{00b7}e\u{2081}\u{2082}\u{2083}
+    M = ty*e_1 + tx*e_2 + r*e_3 + ps*e_1_2_3
 
 They transform geometry via the antisandwich product:
-    P' = M\u{207b}\u{00b9}PM  (point transformation)
-    L' = M\u{207b}\u{00b9}LM  (line transformation)",
+    P' = M^-1PM  (point transformation)
+    L' = M^-1LM  (line transformation)",
 
     how_to_use: "\
-\u{2022} ADD POINTS: Select 'Add Point' tool and click on the plot
-\u{2022} SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
-\u{2022} DRAG POINTS: Select 'Select' tool and drag a point to move it
-\u{2022} JOIN OPERATION: Select 2 points, then click 'Create Line'
-\u{2022} MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
-\u{2022} MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
-\u{2022} Lines update in real-time as you drag points
-\u{2022} Enable 'Normals' to visualize line orientations",
+- ADD POINTS: Select 'Add Point' tool and click on the plot
+- SELECT POINTS: Select 'Select' tool and click near a point to toggle selection
+- DRAG POINTS: Select 'Select' tool and drag a point to move it
+- JOIN OPERATION: Select 2 points, then click 'Create Line'
+- MEET OPERATION: Select 2 lines (checkboxes), click 'Find Intersection'
+- MOTOR TRANSFORM: Enable 'Apply motor transformation', adjust sliders
+- Lines update in real-time as you drag points
+- Enable 'Normals' to visualize line orientations",
 
     key_concepts: "\
-\u{2022} Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
-\u{2022} Ideal points (w=0) represent directions at infinity
-\u{2022} Wedge product (\u{2227}) computes JOIN: line through two points
-\u{2022} Antiwedge product (\u{2228}) computes MEET: intersection of two lines
-\u{2022} Motors compose rotation and translation into one operation
-\u{2022} Antisandwich product transforms geometry while preserving incidence",
+- Homogeneous coordinates: P = (x, y, w) with w=1 for finite points
+- Ideal points (w=0) represent directions at infinity
+- Wedge product (^) computes JOIN: line through two points
+- Antiwedge product (v) computes MEET: intersection of two lines
+- Motors compose rotation and translation into one operation
+- Antisandwich product transforms geometry while preserving incidence",
 
     resources: &[
         (

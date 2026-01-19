@@ -86,7 +86,39 @@ Think 3-4 steps ahead:
 - **Private fields with public accessors** for specialized types
 - **Use Clifford types in APIs**, not tuples
 
-### 7. Testing
+### 7. ASCII-Only Display Text
+
+**Use plain ASCII for all user-facing text.** Unicode symbols often render incorrectly across different fonts and platforms.
+
+| Instead of | Use |
+|------------|-----|
+| `θ`, `α`, `β` | `theta`, `alpha`, `angle` |
+| `°` (degree) | `deg` or spell out |
+| `→`, `←` | `->`, `<-` |
+| `∘` (compose) | `*` or `o` |
+| `×` (cross) | `x` or `*` |
+| `·` (dot) | `.` or `*` |
+| `²`, `³` | `^2`, `^3` |
+| `√` | `sqrt` |
+| `∞` | `inf` |
+| `₁`, `₂` (subscripts) | `_1`, `_2` or `1`, `2` |
+| `≈` | `~=` or `approx` |
+| `≠` | `!=` |
+| `≤`, `≥` | `<=`, `>=` |
+| `∈` | `in` |
+| `∧`, `∨` | `^`, `v` or `and`, `or` |
+| Bullet `•` | `-` or `*` |
+
+**Example:**
+```rust
+// Wrong: Unicode that may not render
+"R(45°) ∘ T(1, 2) → result"
+
+// Right: Plain ASCII
+"R(45 deg) * T(1, 2) -> result"
+```
+
+### 8. Testing
 - **Property-based testing is mandatory** with `proptest`
 - Use `prop_assert!` inside `proptest!` blocks
 - Use `relative_eq!` with both `epsilon` AND `max_relative` parameters
@@ -129,12 +161,12 @@ fn test_rotor_rotates_correctly() {
 
 See PRD-48.10 for detailed visual testing patterns.
 
-### 8. Code Review
+### 9. Code Review
 - PRs are reviewed by Greptile (AI-powered review)
 - Address feedback before merging; comment `@greptileai review` after fixes
 - **No `todo!()` macros** - code must be complete
 
-### 9. Claude Code Agents
+### 10. Claude Code Agents
 
 Specialized agents in `.claude/agents/` handle different tasks:
 
@@ -150,14 +182,14 @@ Specialized agents in `.claude/agents/` handle different tasks:
 | **devops** | CI/CD and infrastructure |
 | **release** | Version bumps, publishing |
 
-### 10. Code Navigation with ctags
+### 11. Code Navigation with ctags
 
 Use the ctags index (`.claude/tags`) for efficient code navigation:
 - When looking up definitions (classes, functions, traits), use `/ctags-usage` skill
 - Prefer ctags lookups over broad grep searches for specific symbol definitions
 - Run `/refresh` to regenerate the index after major code changes
 
-### 11. Code Generation
+### 12. Code Generation
 
 **CRITICAL: Do NOT manually derive algebraic formulas.**
 
@@ -168,7 +200,7 @@ Use the `clifford-codegen` tool for all algebraic operations:
 
 See the **implement agent** for detailed codegen usage.
 
-### 12. Semantic Field Naming
+### 13. Semantic Field Naming
 
 **CRITICAL: Field names must reflect what the field DOES, not which blade it corresponds to.**
 
@@ -188,7 +220,7 @@ The Motor has 8 components. In point-based PGA with antisandwich:
 
 Always verify by checking how factory methods use the fields.
 
-### 13. Extension Methods
+### 14. Extension Methods
 
 **CRITICAL: Prefer generated traits over extension methods.**
 
