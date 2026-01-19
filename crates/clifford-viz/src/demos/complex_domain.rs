@@ -51,7 +51,7 @@ impl ComplexFunction {
             Self::Square => "z\u{00b2}",
             Self::Cube => "z\u{00b3}",
             Self::Reciprocal => "1/z",
-            Self::Exp => "e\u{1d63}",
+            Self::Exp => "exp(z)",
             Self::Sin => "sin(z)",
             Self::Cos => "cos(z)",
             Self::Log => "log(z)",
