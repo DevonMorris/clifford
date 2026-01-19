@@ -291,17 +291,36 @@ impl VisualizationApp for ComplexFractalDemo {
                 self.render_fractal_plot(ui, false, &ctx);
             }
             FractalMode::SideBySide => {
-                ui.columns(2, |columns| {
-                    columns[0].vertical_centered(|ui| {
+                let available = ui.available_size();
+                let is_wide = available.x > available.y;
+
+                if is_wide {
+                    // Side by side (columns) for wide layouts
+                    ui.columns(2, |columns| {
+                        columns[0].vertical_centered(|ui| {
+                            ui.label("Mandelbrot Set");
+                        });
+                        self.render_fractal_plot(&mut columns[0], true, &ctx);
+
+                        columns[1].vertical_centered(|ui| {
+                            ui.label("Julia Set");
+                        });
+                        self.render_fractal_plot(&mut columns[1], false, &ctx);
+                    });
+                } else {
+                    // Stacked (rows) for tall layouts
+                    ui.vertical_centered(|ui| {
                         ui.label("Mandelbrot Set");
                     });
-                    self.render_fractal_plot(&mut columns[0], true, &ctx);
+                    self.render_fractal_plot(ui, true, &ctx);
 
-                    columns[1].vertical_centered(|ui| {
+                    ui.add_space(8.0);
+
+                    ui.vertical_centered(|ui| {
                         ui.label("Julia Set");
                     });
-                    self.render_fractal_plot(&mut columns[1], false, &ctx);
-                });
+                    self.render_fractal_plot(ui, false, &ctx);
+                }
             }
         }
     }
