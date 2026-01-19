@@ -72,6 +72,18 @@ name = "conformal2_inversion"
 required-features = ["native"]
 
 [[example]]
+name = "complex_domain"
+required-features = ["native"]
+
+[[example]]
+name = "complex_fractal"
+required-features = ["native"]
+
+[[example]]
+name = "dual_autodiff"
+required-features = ["native"]
+
+[[example]]
 name = "visualization_test"
 required-features = ["native"]
 

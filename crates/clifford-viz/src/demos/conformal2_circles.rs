@@ -343,25 +343,32 @@ impl VisualizationApp for Conformal2CirclesDemo {
 
         if self.show_algebra {
             ui.add_space(spacing::XS);
-            ui.label("Circle trivector components:");
+            ui.label("Extracted circle parameters:");
+            if let (Some((cx, cy)), Some(r)) = (cga_circle.center(), cga_circle.radius()) {
+                value_display(ui, "cx", cx as f32, 3);
+                value_display(ui, "cy", cy as f32, 3);
+                value_display(ui, "r", r as f32, 3);
+            }
+
+            ui.add_space(spacing::XS);
+            ui.label("Raw trivector components:");
             ga_value_display(
                 ui,
                 "C",
                 &[
-                    ("e\u{2081}\u{2082}\u{2083}", cga_circle.w() as f32),
-                    ("e\u{2081}\u{2082}\u{2084}", cga_circle.cx() as f32),
-                    ("e\u{2081}\u{2083}\u{2084}", cga_circle.cy() as f32),
-                    ("e\u{2082}\u{2083}\u{2084}", cga_circle.r() as f32),
+                    ("w", cga_circle.w() as f32),
+                    ("e12em", cga_circle.e12em() as f32),
+                    ("e1epem", cga_circle.e1epem() as f32),
+                    ("e2epem", cga_circle.e2epem() as f32),
                 ],
             );
 
             ui.add_space(spacing::XS);
             info_box(
                 ui,
-                "In our Cl(3,1) basis:\n\
-                 \u{2022} center_x = e\u{2082}\u{2083}\u{2084} / e\u{2081}\u{2082}\u{2083}\n\
-                 \u{2022} center_y = -e\u{2081}\u{2083}\u{2084} / e\u{2081}\u{2082}\u{2083}\n\
-                 \u{2022} radius\u{00b2} = 2\u{00b7}e\u{2081}\u{2082}\u{2084}/w + cx\u{00b2} + cy\u{00b2}",
+                "Circle is P\u{2081} \u{2227} P\u{2082} \u{2227} P\u{2083}\n\
+                 Center & radius extracted via\n\
+                 orthonormal CGA formulas.",
             );
         }
 

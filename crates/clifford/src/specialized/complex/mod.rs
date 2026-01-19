@@ -42,6 +42,7 @@
 //! - [Complex number](https://en.wikipedia.org/wiki/Complex_number)
 //! - [Clifford algebra](https://en.wikipedia.org/wiki/Clifford_algebra)
 
+mod extensions;
 mod generated;
 
 pub use generated::types::*;

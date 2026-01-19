@@ -51,6 +51,25 @@ const CONFORMAL_DEMOS: &[DemoEntry] = &[
     },
 ];
 
+/// Complex and dual number demos.
+const NUMBER_DEMOS: &[DemoEntry] = &[
+    DemoEntry {
+        id: "complex_domain",
+        name: "Complex Domain Coloring",
+        description: "Visualize complex functions with domain coloring",
+    },
+    DemoEntry {
+        id: "complex_fractal",
+        name: "Mandelbrot & Julia Sets",
+        description: "Explore the iconic fractals of complex dynamics",
+    },
+    DemoEntry {
+        id: "dual_autodiff",
+        name: "Dual Number Autodiff",
+        description: "Automatic differentiation via dual numbers",
+    },
+];
+
 /// Landing page showing available demos.
 ///
 /// This implements `eframe::App` directly rather than `VisualizationApp`
@@ -129,6 +148,8 @@ impl eframe::App for DemoMenu {
                 render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS, is_mobile);
                 ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Conformal Geometry (CGA)", CONFORMAL_DEMOS, is_mobile);
+                ui.add_space(12.0 * sp);
+                render_demo_category(ui, "Complex & Dual Numbers", NUMBER_DEMOS, is_mobile);
 
                 ui.add_space(24.0 * sp);
                 ui.separator();

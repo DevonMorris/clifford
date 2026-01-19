@@ -169,6 +169,34 @@ jobs:
       # Doc with nalgebra-0_34 (latest) plus other features (no default to avoid conflict)
       - run: cargo doc --no-default-features --features proptest-support,serde,nalgebra-0_34 --no-deps
 
+  viz:
+    name: Visualization
+    needs: codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+
+      # Restore generated code from cache
+      - name: Restore generated code
+        uses: actions/cache/restore@v4
+        with:
+          path: crates/clifford/src/specialized/**/generated
+          key: generated-${{ hashFiles('algebras/*.toml', 'crates/clifford-codegen/src/**') }}
+          fail-on-cache-miss: true
+
+      # Build for native
+      - run: cargo build -p clifford-viz --features native
+      # Build for wasm
+      - run: cargo build -p clifford-viz --target wasm32-unknown-unknown
+      # Run tests
+      - run: cargo test -p clifford-viz --features native
+      # Clippy
+      - run: cargo clippy -p clifford-viz --features native -- -D warnings
+
   deny:
     name: Cargo Deny
     runs-on: ubuntu-latest

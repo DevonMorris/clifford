@@ -55,6 +55,7 @@
 //! - [Dual number](https://en.wikipedia.org/wiki/Dual_number)
 //! - [Automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation)
 
+mod extensions;
 mod generated;
 
 pub use generated::types::*;

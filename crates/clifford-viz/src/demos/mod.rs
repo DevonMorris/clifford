@@ -3,15 +3,21 @@
 //! Each demo demonstrates a specific geometric algebra concept.
 //! These can be run natively or compiled to WASM for web deployment.
 
+mod complex_domain;
+mod complex_fractal;
 mod conformal2_circles;
 mod conformal2_inversion;
+mod dual_autodiff;
 mod euclidean2;
 mod menu;
 mod projective2;
 mod projective2_robot;
 
+pub use complex_domain::ComplexDomainDemo;
+pub use complex_fractal::ComplexFractalDemo;
 pub use conformal2_circles::Conformal2CirclesDemo;
 pub use conformal2_inversion::Conformal2InversionDemo;
+pub use dual_autodiff::DualAutodiffDemo;
 pub use euclidean2::Euclidean2Demo;
 pub use menu::DemoMenu;
 pub use projective2::Projective2Demo;
