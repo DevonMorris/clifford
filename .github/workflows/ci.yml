@@ -43,6 +43,8 @@ jobs:
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
 
+      # Build to generate code before formatting
+      - run: cargo build -p clifford
       - run: cargo fmt --all -- --check
 
   clippy:
