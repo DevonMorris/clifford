@@ -308,18 +308,24 @@ impl VisualizationApp for ComplexFractalDemo {
                         self.render_fractal_plot(&mut columns[1], false, &ctx);
                     });
                 } else {
-                    // Stacked (rows) for tall layouts
+                    // Stacked (rows) for tall layouts - allocate half height to each
+                    let half_height = (available.y - 24.0) / 2.0; // Account for labels and spacing
+
                     ui.vertical_centered(|ui| {
                         ui.label("Mandelbrot Set");
                     });
-                    self.render_fractal_plot(ui, true, &ctx);
+                    ui.allocate_ui(egui::Vec2::new(available.x, half_height), |ui| {
+                        self.render_fractal_plot(ui, true, &ctx);
+                    });
 
                     ui.add_space(8.0);
 
                     ui.vertical_centered(|ui| {
                         ui.label("Julia Set");
                     });
-                    self.render_fractal_plot(ui, false, &ctx);
+                    ui.allocate_ui(egui::Vec2::new(available.x, half_height), |ui| {
+                        self.render_fractal_plot(ui, false, &ctx);
+                    });
                 }
             }
         }
