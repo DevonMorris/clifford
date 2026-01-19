@@ -86,16 +86,26 @@ pub fn generate_toml_template(
 }
 
 /// Writes the signature section of the TOML.
+///
+/// Generates basis names based on actual per-index metrics, supporting
+/// arbitrary metric ordering (e.g., physics convention for Minkowski).
 fn write_signature_section(algebra: &Algebra, output: &mut dyn Write) -> io::Result<()> {
     writeln!(output, "[signature]")?;
 
-    // Get signature (p, q, r)
-    let (p, q, r) = algebra.signature();
-
-    // Generate basis names
-    let positive: Vec<String> = (0..p).map(|i| format!("e{}", i + 1)).collect();
-    let negative: Vec<String> = (0..q).map(|i| format!("e{}", p + i + 1)).collect();
-    let zero: Vec<String> = (0..r).map(|i| format!("e{}", p + q + i + 1)).collect();
+    // Build basis arrays by iterating over metrics and checking each basis
+    let dim = algebra.dim();
+    let positive: Vec<String> = (0..dim)
+        .filter(|&i| algebra.metric(i) == 1)
+        .map(|i| format!("e{}", i + 1))
+        .collect();
+    let negative: Vec<String> = (0..dim)
+        .filter(|&i| algebra.metric(i) == -1)
+        .map(|i| format!("e{}", i + 1))
+        .collect();
+    let zero: Vec<String> = (0..dim)
+        .filter(|&i| algebra.metric(i) == 0)
+        .map(|i| format!("e{}", i + 1))
+        .collect();
 
     writeln!(output, "positive = {:?}", positive)?;
     writeln!(output, "negative = {:?}", negative)?;

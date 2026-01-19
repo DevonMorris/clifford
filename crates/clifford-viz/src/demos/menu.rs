@@ -70,6 +70,20 @@ const NUMBER_DEMOS: &[DemoEntry] = &[
     },
 ];
 
+/// Minkowski spacetime demos.
+const MINKOWSKI_DEMOS: &[DemoEntry] = &[
+    DemoEntry {
+        id: "minkowski2_diagram",
+        name: "1+1D Spacetime Diagram",
+        description: "Light cones, Lorentz boosts, and spacetime intervals",
+    },
+    DemoEntry {
+        id: "minkowski2_dilation",
+        name: "Time Dilation (Twin Paradox)",
+        description: "Proper time and the geometry of time dilation",
+    },
+];
+
 /// Landing page showing available demos.
 ///
 /// This implements `eframe::App` directly rather than `VisualizationApp`
@@ -148,6 +162,8 @@ impl eframe::App for DemoMenu {
                 render_demo_category(ui, "Projective Geometry (PGA)", PROJECTIVE_DEMOS, is_mobile);
                 ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Conformal Geometry (CGA)", CONFORMAL_DEMOS, is_mobile);
+                ui.add_space(12.0 * sp);
+                render_demo_category(ui, "Minkowski Spacetime", MINKOWSKI_DEMOS, is_mobile);
                 ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Complex & Dual Numbers", NUMBER_DEMOS, is_mobile);
 

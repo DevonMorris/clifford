@@ -483,7 +483,7 @@ mod tests {
     #[test]
     fn generates_point_onto_plane_projection() {
         let spec = parse_spec(include_str!("../../../../algebras/projective3.toml")).unwrap();
-        let algebra = Algebra::new(spec.signature.p, spec.signature.q, spec.signature.r);
+        let algebra = Algebra::from_metrics(spec.signature.metrics_by_index());
         let table = ProductTable::new(&algebra);
         let generator = ProjectionGenerator::new(&spec, &algebra, table);
 

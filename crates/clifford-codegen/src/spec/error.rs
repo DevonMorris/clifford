@@ -24,6 +24,37 @@ pub enum ParseError {
     #[error("duplicate basis vector name: '{0}'")]
     DuplicateBasisName(String),
 
+    /// Invalid basis vector name in signature.
+    #[error("invalid basis vector name: '{name}' (expected format: e1, e2, e3, etc.)")]
+    InvalidBasisName {
+        /// The invalid basis name.
+        name: String,
+    },
+
+    /// Basis vector index exceeds algebra dimension.
+    #[error("basis '{name}' references index {index} but algebra only has {dim} dimensions")]
+    BasisIndexOutOfBounds {
+        /// The basis name.
+        name: String,
+        /// The invalid index (1-based from name).
+        index: usize,
+        /// Algebra dimension.
+        dim: usize,
+    },
+
+    /// Basis vector indices are not contiguous (0, 1, 2, ...).
+    #[error(
+        "basis vector indices must be contiguous: expected index {expected} but found {found} for '{name}'"
+    )]
+    NonContiguousBasisIndices {
+        /// The expected index.
+        expected: usize,
+        /// The found index.
+        found: usize,
+        /// The basis name with the wrong index.
+        name: String,
+    },
+
     /// Type references a grade that exceeds the algebra dimension.
     #[error("type '{type_name}' has invalid grade {grade} (max: {max})")]
     InvalidGrade {

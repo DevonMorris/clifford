@@ -20,8 +20,16 @@ use super::sign::basis_product;
 /// A geometric algebra defined by its metric signature.
 ///
 /// The algebra encapsulates:
-/// - The metric signature (p, q, r)
+/// - The metric for each basis vector (can be +1, -1, or 0)
 /// - Optional custom names for basis vectors and blades
+///
+/// # Metric Flexibility
+///
+/// Unlike the traditional (p, q, r) signature notation which assumes a fixed
+/// ordering (positive bases first, then negative, then degenerate), this struct
+/// supports arbitrary metric assignments per basis vector. This allows algebras
+/// like Minkowski spacetime to use physics conventions (e.g., e1=space with -1,
+/// e2=time with +1) without being constrained by positional ordering.
 ///
 /// # Example
 ///
@@ -37,15 +45,17 @@ use super::sign::basis_product;
 /// assert_eq!(alg.metric(0), 1);
 /// assert_eq!(alg.metric(1), 1);
 /// assert_eq!(alg.metric(2), 1);
+///
+/// // Create Minkowski with arbitrary metric assignment
+/// let minkowski = Algebra::from_metrics(vec![-1, 1]); // e1²=-1 (space), e2²=+1 (time)
+/// assert_eq!(minkowski.metric(0), -1);
+/// assert_eq!(minkowski.metric(1), 1);
 /// ```
 #[derive(Clone, Debug)]
 pub struct Algebra {
-    /// Number of basis vectors squaring to +1.
-    p: usize,
-    /// Number of basis vectors squaring to -1.
-    q: usize,
-    /// Number of basis vectors squaring to 0.
-    r: usize,
+    /// Metric value for each basis vector (indexed by basis index).
+    /// Values are +1 (positive), -1 (negative), or 0 (degenerate).
+    metrics: Vec<i8>,
     /// Custom names for basis vectors (1-indexed in display).
     basis_names: Vec<String>,
     /// Custom names for blades (blade index -> name).
@@ -56,6 +66,7 @@ impl Algebra {
     /// Creates a new algebra with signature (p, q, r).
     ///
     /// Basis vectors are ordered: first p positive, then q negative, then r null.
+    /// For arbitrary metric assignments, use [`from_metrics`](Self::from_metrics).
     ///
     /// # Example
     ///
@@ -71,13 +82,69 @@ impl Algebra {
     pub fn new(p: usize, q: usize, r: usize) -> Self {
         let dim = p + q + r;
         let basis_names = (1..=dim).map(|i| format!("e{}", i)).collect();
+
+        // Build metrics vector: p positive, then q negative, then r zero
+        let mut metrics = Vec::with_capacity(dim);
+        metrics.extend(std::iter::repeat_n(1i8, p));
+        metrics.extend(std::iter::repeat_n(-1i8, q));
+        metrics.extend(std::iter::repeat_n(0i8, r));
+
         Self {
-            p,
-            q,
-            r,
+            metrics,
             basis_names,
             blade_names: HashMap::new(),
         }
+    }
+
+    /// Creates a new algebra from explicit per-basis metric values.
+    ///
+    /// This allows arbitrary metric assignments without positional constraints.
+    /// Each element in the vector specifies the metric for the corresponding
+    /// basis vector: +1 (positive), -1 (negative), or 0 (degenerate).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::Algebra;
+    ///
+    /// // Minkowski with physics convention: e1=space(-1), e2=time(+1)
+    /// let minkowski = Algebra::from_metrics(vec![-1, 1]);
+    /// assert_eq!(minkowski.dim(), 2);
+    /// assert_eq!(minkowski.metric(0), -1);  // e1 squares to -1
+    /// assert_eq!(minkowski.metric(1), 1);   // e2 squares to +1
+    /// assert_eq!(minkowski.signature(), (1, 1, 0));  // still reports (p,q,r)
+    /// ```
+    pub fn from_metrics(metrics: Vec<i8>) -> Self {
+        let dim = metrics.len();
+        let basis_names = (1..=dim).map(|i| format!("e{}", i)).collect();
+        Self {
+            metrics,
+            basis_names,
+            blade_names: HashMap::new(),
+        }
+    }
+
+    /// Returns the indices of degenerate (metric=0) basis vectors.
+    ///
+    /// This is useful for PGA calculations that need to identify the
+    /// projective basis vectors regardless of their position.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford_codegen::algebra::Algebra;
+    ///
+    /// // PGA with e0 as degenerate
+    /// let pga = Algebra::from_metrics(vec![0, 1, 1, 1]);
+    /// let degenerate: Vec<_> = pga.degenerate_indices().collect();
+    /// assert_eq!(degenerate, vec![0]);
+    /// ```
+    pub fn degenerate_indices(&self) -> impl Iterator<Item = usize> + '_ {
+        self.metrics
+            .iter()
+            .enumerate()
+            .filter(|(_, m)| **m == 0)
+            .map(|(i, _)| i)
     }
 
     /// Creates a Euclidean algebra of dimension n.
@@ -153,13 +220,20 @@ impl Algebra {
     /// Returns the total dimension (number of basis vectors).
     #[inline]
     pub fn dim(&self) -> usize {
-        self.p + self.q + self.r
+        self.metrics.len()
     }
 
-    /// Returns the signature (p, q, r).
+    /// Returns the signature (p, q, r) by counting metric values.
+    ///
+    /// Note: This counts the actual metrics, so it works correctly even
+    /// for algebras created with [`from_metrics`](Self::from_metrics) where
+    /// positive/negative/zero bases may be interleaved.
     #[inline]
     pub fn signature(&self) -> (usize, usize, usize) {
-        (self.p, self.q, self.r)
+        let p = self.metrics.iter().filter(|&&m| m == 1).count();
+        let q = self.metrics.iter().filter(|&&m| m == -1).count();
+        let r = self.metrics.iter().filter(|&&m| m == 0).count();
+        (p, q, r)
     }
 
     /// Returns the total number of blades (2^dim).
@@ -170,29 +244,30 @@ impl Algebra {
 
     /// Returns the metric value for basis vector i.
     ///
-    /// - Returns `+1` for indices `0..p` (positive)
-    /// - Returns `-1` for indices `p..p+q` (negative)
-    /// - Returns `0` for indices `p+q..p+q+r` (null/degenerate)
+    /// Returns the metric for the i-th basis vector:
+    /// - `+1` for positive (Euclidean) bases
+    /// - `-1` for negative (anti-Euclidean/Minkowski) bases
+    /// - `0` for degenerate (null/projective) bases
     ///
     /// # Example
     ///
     /// ```
     /// use clifford_codegen::algebra::Algebra;
     ///
+    /// // Standard (p,q,r) ordering
     /// let cga = Algebra::cga(3);  // signature (4, 1, 0)
     /// assert_eq!(cga.metric(0), 1);   // e1 (positive)
     /// assert_eq!(cga.metric(3), 1);   // e+ (positive)
     /// assert_eq!(cga.metric(4), -1);  // e- (negative)
+    ///
+    /// // Arbitrary metric assignment
+    /// let minkowski = Algebra::from_metrics(vec![-1, 1]);
+    /// assert_eq!(minkowski.metric(0), -1);  // e1 (negative/spacelike)
+    /// assert_eq!(minkowski.metric(1), 1);   // e2 (positive/timelike)
     /// ```
     #[inline]
     pub fn metric(&self, i: usize) -> i8 {
-        if i < self.p {
-            1
-        } else if i < self.p + self.q {
-            -1
-        } else {
-            0
-        }
+        self.metrics[i]
     }
 
     /// Computes the product of two basis blades.
