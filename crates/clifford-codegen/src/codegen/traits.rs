@@ -1187,6 +1187,39 @@ impl<'a> TraitsGenerator<'a> {
         ty.grades.len() == 1
     }
 
+    /// Checks if a type has non-zero bulk norm capability.
+    ///
+    /// A type has non-zero bulk norm if it has at least one field whose blade
+    /// does NOT involve any degenerate basis vectors (those with metric == 0).
+    ///
+    /// This is used to filter out types like `DualUnit` in Cl(0,0,1) where all
+    /// blades are purely degenerate, making bulk_norm structurally zero.
+    fn has_nonzero_bulk_norm(&self, ty: &TypeSpec) -> bool {
+        // Find indices of degenerate basis vectors (those with metric == 0)
+        let degenerate_indices: Vec<usize> = self
+            .spec
+            .signature
+            .basis
+            .iter()
+            .filter(|b| b.metric == 0)
+            .map(|b| b.index)
+            .collect();
+
+        // If there are no degenerate basis vectors, all types have bulk norm
+        if degenerate_indices.is_empty() {
+            return true;
+        }
+
+        // Check if any field is a "bulk" field (no degenerate basis in its blade)
+        ty.fields.iter().any(|f| {
+            // Check if this field's blade involves any degenerate basis vector
+            !degenerate_indices.iter().any(|&deg_idx| {
+                // Check if bit `deg_idx` is set in the blade_index
+                (f.blade_index >> deg_idx) & 1 == 1
+            })
+        })
+    }
+
     /// Generates all product trait implementations.
     fn generate_all_product_traits(&self) -> TokenStream {
         let mut impls = Vec::new();
@@ -5333,6 +5366,8 @@ mod verification_tests {{
                 .filter(|t| t.alias_of.is_none())
                 // Filter to types that are versors (have bulk_norm)
                 .filter(|t| t.versor.is_some())
+                // Filter to types that have non-zero bulk norm (exclude purely degenerate types)
+                .filter(|t| self.has_nonzero_bulk_norm(t))
                 .map(|ty| {
                     let name = &ty.name;
                     let name_lower = ty.name.to_lowercase();
