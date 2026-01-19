@@ -85,9 +85,9 @@ impl Algebra {
 
         // Build metrics vector: p positive, then q negative, then r zero
         let mut metrics = Vec::with_capacity(dim);
-        metrics.extend(std::iter::repeat(1i8).take(p));
-        metrics.extend(std::iter::repeat(-1i8).take(q));
-        metrics.extend(std::iter::repeat(0i8).take(r));
+        metrics.extend(std::iter::repeat_n(1i8, p));
+        metrics.extend(std::iter::repeat_n(-1i8, q));
+        metrics.extend(std::iter::repeat_n(0i8, r));
 
         Self {
             metrics,
