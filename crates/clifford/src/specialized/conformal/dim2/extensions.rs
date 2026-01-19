@@ -415,6 +415,43 @@ impl<T: Float> Circle<T> {
     pub fn curvature(&self) -> Option<T> {
         self.radius().map(|r| T::one() / r)
     }
+
+    /// Extracts line parameters (nx, ny, d) when this Circle represents a line.
+    ///
+    /// Returns `Some((nx, ny, d))` if this is a line (i.e., `is_line()` is true),
+    /// where the line equation is `nx*x + ny*y = d`.
+    ///
+    /// Returns `None` if this is an actual circle, not a line.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
+    /// use clifford::ops::InverseSandwich;
+    /// use approx::relative_eq;
+    ///
+    /// // Circle through the origin (inversion center)
+    /// let inv_circle = Circle::from_center_radius(0.0_f64, 0.0, 2.0);
+    /// let passing_circle = Circle::from_center_radius(2.0, 0.0, 2.0);
+    ///
+    /// // Invert the circle - should become a line
+    /// if let Some(result) = inv_circle.try_inverse_sandwich(&passing_circle) {
+    ///     if let Some((nx, ny, d)) = result.to_line_params(1e-10) {
+    ///         // Result is a line
+    ///         let len = (nx * nx + ny * ny).sqrt();
+    ///         assert!(len > 0.0); // Normal is well-defined
+    ///     }
+    /// }
+    /// ```
+    pub fn to_line_params(&self, epsilon: T) -> Option<(T, T, T)> {
+        if self.is_line(epsilon) {
+            // Line components extracted from the circle representation
+            // (same mapping as Line::from_two_points)
+            Some((self.e12em(), self.e1epem(), self.e2epem()))
+        } else {
+            None
+        }
+    }
 }
 
 // ============================================================================

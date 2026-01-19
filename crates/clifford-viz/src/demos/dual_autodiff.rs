@@ -3,7 +3,9 @@
 //! This demo visualizes how dual numbers compute exact derivatives through
 //! simple arithmetic. The key insight is that for any smooth function f:
 //!
-//!     f(x + ε) = f(x) + f'(x)·ε
+//! ```text
+//! f(x + ε) = f(x) + f'(x)·ε
+//! ```
 //!
 //! where ε² = 0. This gives us the exact derivative with no truncation error!
 
