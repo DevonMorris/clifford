@@ -13,7 +13,7 @@
 //! where × is the geometric product.
 
 use crate::common::prelude::*;
-use clifford::ops::InverseSandwich;
+use clifford::ops::Transform;
 use clifford::specialized::conformal::dim2::{Circle, RoundPoint};
 use egui_plot::{Plot, Points};
 
@@ -23,11 +23,8 @@ const VIEWPORT_BOUNDS: f64 = 6.0;
 /// Epsilon for numerical comparisons.
 const EPSILON: f64 = 1e-10;
 
-/// Maximum radius before we treat a circle as a line.
-const MAX_DRAWABLE_RADIUS: f64 = 100.0;
-
 /// Number of segments for circle rendering.
-const CIRCLE_SEGMENTS: usize = 64;
+const CIRCLE_SEGMENTS: usize = 256;
 
 /// A draggable point in the scene.
 #[derive(Clone)]
@@ -198,37 +195,35 @@ impl Conformal2InversionDemo {
             Circle::from_center_radius(self.inversion_cx, self.inversion_cy, self.inversion_radius);
     }
 
-    /// Inverts a point through the inversion circle using CGA.
+    /// Transforms a point through the inversion circle using CGA.
     ///
-    /// In Conformal Geometric Algebra, circle inversion is computed as:
-    ///     P' = C × P × C⁻¹
-    /// where × is the geometric product.
-    ///
-    /// This is the `InverseSandwich` operation.
+    /// Using sandwich product (reflection): P' = C × P × C̃
+    /// where × is the geometric product and C̃ is the reverse.
     fn invert_point(&self, point: &RoundPoint<f64>) -> Option<RoundPoint<f64>> {
-        self.inversion_circle.try_inverse_sandwich(point)
+        Some(self.inversion_circle.transform(point))
     }
 
-    /// Inverts a circle through the inversion circle using CGA.
+    /// Transforms a circle through the inversion circle using CGA.
     ///
-    /// In Conformal Geometric Algebra, circle inversion is computed as:
-    ///     C' = I × C × I⁻¹
+    /// Using sandwich product (reflection): C' = I × C × Ĩ
     /// where I is the inversion circle and × is the geometric product.
     ///
     /// Cases:
     /// - Circle NOT through center → Circle
     /// - Circle THROUGH center → Line (circle through infinity)
     fn invert_circle(&self, circle: &Circle<f64>) -> Option<InvertedCircle> {
-        let result = self.inversion_circle.try_inverse_sandwich(circle)?;
+        let result = self.inversion_circle.transform(circle);
 
-        // Check if the result is a line (circle through infinity)
-        if let Some((nx, ny, d)) = result.to_line_params(EPSILON) {
-            Some(InvertedCircle::Line { nx, ny, d })
-        } else {
-            // Result is a regular circle
-            let (cx, cy) = result.center()?;
-            let radius = result.radius()?;
+        // Try to extract as a regular circle first
+        if let (Some((cx, cy)), Some(radius)) = (result.center(), result.radius()) {
             Some(InvertedCircle::Circle { cx, cy, radius })
+        } else {
+            // center() or radius() returned None - this is a line
+            // Extract line parameters directly from the circle components
+            let nx = result.e12em();
+            let ny = result.e1epem();
+            let d = result.e2epem();
+            Some(InvertedCircle::Line { nx, ny, d })
         }
     }
 
@@ -400,20 +395,16 @@ impl VisualizationApp for Conformal2InversionDemo {
                         if let Some(inverted) = self.invert_circle(&circ.circle) {
                             match inverted {
                                 InvertedCircle::Circle { cx, cy, radius } => {
-                                    if radius < MAX_DRAWABLE_RADIUS
-                                        && cx.abs() < VIEWPORT_BOUNDS * 2.0
-                                        && cy.abs() < VIEWPORT_BOUNDS * 2.0
-                                    {
-                                        let inv_circle = circle_2d(
-                                            cx,
-                                            cy,
-                                            radius,
-                                            active(&ctx),
-                                            CIRCLE_SEGMENTS,
-                                        )
-                                        .name(format!("{}'", self.circles[idx].name));
-                                        plot_ui.line(inv_circle);
-                                    }
+                                    // Fixed viewport - just draw the circle, let plot clip naturally
+                                    let inv_circle = circle_2d(
+                                        cx,
+                                        cy,
+                                        radius,
+                                        active(&ctx),
+                                        CIRCLE_SEGMENTS,
+                                    )
+                                    .name(format!("{}'", self.circles[idx].name));
+                                    plot_ui.line(inv_circle);
                                 }
                                 InvertedCircle::Line { nx, ny, d } => {
                                     // Draw line nx*x + ny*y = d
