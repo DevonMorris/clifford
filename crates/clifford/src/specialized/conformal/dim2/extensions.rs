@@ -2,6 +2,22 @@
 //!
 //! This module adds geometric operations and convenience methods
 //! to the generated types that are specific to 2D conformal geometry.
+//!
+//! # Basis Convention
+//!
+//! This module uses the **orthonormal conformal basis**:
+//! - `e1`, `e2`: Euclidean basis vectors
+//! - `ep` (e₊): Positive conformal basis (ep² = +1)
+//! - `em` (e₋): Negative conformal basis (em² = -1)
+//!
+//! The null basis vectors relate to orthonormal as:
+//! - `e₀` (origin) = (em - ep) / 2
+//! - `e∞` (infinity) = em + ep
+//!
+//! Point embedding: For Euclidean (x, y), the orthonormal form is:
+//! ```text
+//! P = x·e₁ + y·e₂ + ½(x²+y²-1)·ep + ½(x²+y²+1)·em
+//! ```
 
 use super::generated::types::{Circle, FlatPoint, Line, Motor, PointPair, RoundPoint};
 use crate::scalar::Float;
@@ -13,8 +29,12 @@ use crate::scalar::Float;
 impl<T: Float> RoundPoint<T> {
     /// Creates a round point from Euclidean 2D coordinates.
     ///
-    /// The point is embedded as a null vector:
-    /// `P = x·e₁ + y·e₂ + e₃ + ½(x² + y²)·e₄`
+    /// The point is embedded using the orthonormal basis:
+    /// ```text
+    /// P = x·e₁ + y·e₂ + ½(x²+y²-1)·ep + ½(x²+y²+1)·em
+    /// ```
+    ///
+    /// This produces a null vector (P·P = 0) representing the Euclidean point.
     ///
     /// # Example
     ///
@@ -26,8 +46,14 @@ impl<T: Float> RoundPoint<T> {
     /// ```
     #[inline]
     pub fn from_euclidean(x: T, y: T) -> Self {
-        let half_sq = (x * x + y * y) / T::TWO;
-        Self::new_unchecked(x, y, T::one(), half_sq)
+        let sq = x * x + y * y;
+        let half = T::one() / T::TWO;
+        // Orthonormal embedding:
+        // ep = ½(x² + y² - 1)
+        // em = ½(x² + y² + 1)
+        let ep_coeff = (sq - T::one()) * half;
+        let em_coeff = (sq + T::one()) * half;
+        Self::new_unchecked(x, y, ep_coeff, em_coeff)
     }
 
     /// Creates a round point from Euclidean coordinates with a weight.
@@ -35,11 +61,16 @@ impl<T: Float> RoundPoint<T> {
     /// Useful for creating weighted point combinations.
     #[inline]
     pub fn from_euclidean_weighted(x: T, y: T, weight: T) -> Self {
-        let half_sq = (x * x + y * y) / T::TWO;
-        Self::new_unchecked(x * weight, y * weight, weight, half_sq * weight)
+        let sq = x * x + y * y;
+        let half = T::one() / T::TWO;
+        let ep_coeff = (sq - T::one()) * half;
+        let em_coeff = (sq + T::one()) * half;
+        Self::new_unchecked(x * weight, y * weight, ep_coeff * weight, em_coeff * weight)
     }
 
     /// Origin point (0, 0).
+    ///
+    /// In orthonormal basis: P = -½·ep + ½·em = ½(em - ep) = e₀
     ///
     /// # Example
     ///
@@ -51,20 +82,29 @@ impl<T: Float> RoundPoint<T> {
     /// ```
     #[inline]
     pub fn origin() -> Self {
-        Self::new_unchecked(T::zero(), T::zero(), T::one(), T::zero())
+        let half = T::one() / T::TWO;
+        // Origin: x=0, y=0, so sq=0
+        // ep = ½(0 - 1) = -½
+        // em = ½(0 + 1) = ½
+        Self::new_unchecked(T::zero(), T::zero(), -half, half)
     }
 
     /// Point at infinity.
     ///
-    /// This is the e₄ basis vector, representing the point at infinity.
+    /// In orthonormal basis: e∞ = ep + em
+    ///
+    /// This represents the point at infinity in the conformal model.
     #[inline]
     pub fn infinity() -> Self {
-        Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::one())
+        // e∞ = ep + em
+        Self::new_unchecked(T::zero(), T::zero(), T::one(), T::one())
     }
 
     /// Extracts Euclidean coordinates from a finite round point.
     ///
-    /// Returns `None` for points at infinity (o = 0).
+    /// Returns `None` for points at infinity (where origin weight ≈ 0).
+    ///
+    /// The null basis origin weight is recovered as: o = em - ep
     ///
     /// # Example
     ///
@@ -79,10 +119,12 @@ impl<T: Float> RoundPoint<T> {
     /// ```
     #[inline]
     pub fn to_euclidean(&self) -> Option<(T, T)> {
-        if self.o().abs() < T::epsilon() {
+        // Recover null basis origin weight: o = em - ep
+        let o = self.em() - self.ep();
+        if o.abs() < T::epsilon() {
             None
         } else {
-            Some((self.x() / self.o(), self.y() / self.o()))
+            Some((self.x() / o, self.y() / o))
         }
     }
 
@@ -93,7 +135,8 @@ impl<T: Float> RoundPoint<T> {
     /// May produce incorrect results for points at infinity (o = 0).
     #[inline]
     pub fn euclidean_x(&self) -> T {
-        self.x() / self.o()
+        let o = self.em() - self.ep();
+        self.x() / o
     }
 
     /// Euclidean y-coordinate.
@@ -103,19 +146,40 @@ impl<T: Float> RoundPoint<T> {
     /// May produce incorrect results for points at infinity (o = 0).
     #[inline]
     pub fn euclidean_y(&self) -> T {
-        self.y() / self.o()
+        let o = self.em() - self.ep();
+        self.y() / o
+    }
+
+    /// Returns the null basis origin weight (o = em - ep).
+    ///
+    /// For a normalized point embedding, this equals 1.
+    /// For a point at infinity, this equals 0.
+    #[inline]
+    pub fn null_origin_weight(&self) -> T {
+        self.em() - self.ep()
+    }
+
+    /// Returns the null basis infinity weight (i = (em + ep) / 2).
+    ///
+    /// For a normalized point at (x, y), this equals ½(x² + y²).
+    #[inline]
+    pub fn null_infinity_weight(&self) -> T {
+        (self.em() + self.ep()) / T::TWO
     }
 
     /// Returns true if this is a point at infinity (o ≈ 0).
     #[inline]
     pub fn is_at_infinity(&self, epsilon: T) -> bool {
-        self.o().abs() < epsilon
+        self.null_origin_weight().abs() < epsilon
     }
 
     /// Squared Euclidean distance between two points.
     ///
     /// In CGA, the inner product of two null vectors gives:
     /// `P₁ · P₂ = -½|p₁ - p₂|²`
+    ///
+    /// Using the orthonormal metric (ep² = +1, em² = -1):
+    /// `P · Q = x₁x₂ + y₁y₂ + ep₁·ep₂ - em₁·em₂`
     ///
     /// # Example
     ///
@@ -128,13 +192,15 @@ impl<T: Float> RoundPoint<T> {
     /// assert!(abs_diff_eq!(p1.distance_squared(&p2), 25.0, epsilon = 1e-10));
     /// ```
     pub fn distance_squared(&self, other: &RoundPoint<T>) -> T {
-        // For normalized points (o = 1):
-        // P₁ · P₂ = x₁x₂ + y₁y₂ - o₁i₂ - i₁o₂
-        // = x₁x₂ + y₁y₂ - ½(x₁² + y₁²) - ½(x₂² + y₂²)
-        // = -½((x₁ - x₂)² + (y₁ - y₂)²)
-        let inner = self.x() * other.x() + self.y() * other.y()
-            - self.o() * other.i()
-            - self.i() * other.o();
+        // Using the orthonormal metric:
+        // P · Q = x₁x₂ + y₁y₂ + ep₁·ep₂·(+1) + em₁·em₂·(-1)
+        //       = x₁x₂ + y₁y₂ + ep₁·ep₂ - em₁·em₂
+        //
+        // For null vectors representing Euclidean points:
+        // P · Q = -½|p - q|²
+        // So |p - q|² = -2(P · Q)
+        let inner = self.x() * other.x() + self.y() * other.y() + self.ep() * other.ep()
+            - self.em() * other.em();
         -T::TWO * inner
     }
 
@@ -207,23 +273,29 @@ impl<T: Float> Circle<T> {
 
     /// Returns true if this represents a line (circle through infinity).
     ///
-    /// A line is a circle with w = 0 (the e₁₂₃ component).
-    /// When three points are collinear, their wedge product has w ≈ 0.
+    /// A line is detected when w = e12em, which makes the center/radius
+    /// extraction formulas have a zero denominator.
     #[inline]
     pub fn is_line(&self, epsilon: T) -> bool {
-        self.w().abs() < epsilon
+        (self.w() - self.e12em()).abs() < epsilon
     }
 
     /// Extracts the Euclidean center coordinates of the circle.
     ///
-    /// Returns `None` if this is a line (w ≈ 0), since lines have no finite center.
+    /// Returns `None` if this is a line (w = e12em), since lines have no finite center.
     ///
     /// # Mathematical Background
     ///
-    /// In our Cl(3,1) orthonormal basis, the Circle trivector components encode
-    /// the center as:
-    /// - center_x = r / w (e₂₃₄ component divided by e₁₂₃ component)
-    /// - center_y = -cy / w (negated e₁₃₄ component divided by e₁₂₃ component)
+    /// For the orthonormal conformal basis, the center is extracted from the
+    /// trivector components using empirically derived formulas:
+    ///
+    /// ```text
+    /// cx = e2epem / (w - e12em)
+    /// cy = -e1epem / (w - e12em)
+    /// ```
+    ///
+    /// When w = e12em (denominator is zero), the trivector represents a line,
+    /// which has no finite center.
     ///
     /// # Example
     ///
@@ -242,27 +314,38 @@ impl<T: Float> Circle<T> {
     /// assert!(relative_eq!(cy, 2.0, epsilon = 1e-10));
     /// ```
     pub fn center(&self) -> Option<(T, T)> {
-        if self.w().abs() < T::epsilon() {
-            return None; // This is a line, no finite center
+        // Derived formula for orthonormal CGA basis:
+        //   cx = e2epem / (w - e12em)
+        //   cy = -e1epem / (w - e12em)
+        //
+        // When w = e12em, this is a line (no finite center).
+
+        let denom = self.w() - self.e12em();
+
+        if denom.abs() < T::epsilon() {
+            // This is a line (w = e12em), no finite center
+            return None;
         }
-        let w = self.w();
-        let center_x = self.r() / w;
-        let center_y = -self.cy() / w;
+
+        let center_x = self.e2epem() / denom;
+        let center_y = -self.e1epem() / denom;
         Some((center_x, center_y))
     }
 
     /// Extracts the radius of the circle.
     ///
-    /// Returns `None` if this is a line (w ≈ 0), since lines have infinite radius.
+    /// Returns `None` if this is a line (w = e12em), since lines have infinite radius.
     ///
     /// # Mathematical Background
     ///
-    /// In our Cl(3,1) orthonormal basis, the radius is computed as:
+    /// For the orthonormal conformal basis, the radius is extracted using:
+    ///
     /// ```text
-    /// radius² = 2 * cx / w + center_x² + center_y²
+    /// r² = (e12em + w) / (e12em - w) + cx² + cy²
     /// ```
-    /// where cx is the e₁₂₄ component, and center coordinates are extracted
-    /// from other components.
+    ///
+    /// This formula is derived from the structure of the wedge product P₁ ∧ P₂ ∧ P₃
+    /// in the orthonormal basis.
     ///
     /// # Example
     ///
@@ -281,14 +364,28 @@ impl<T: Float> Circle<T> {
     /// assert!(relative_eq!(radius, 1.0, epsilon = 1e-10));
     /// ```
     pub fn radius(&self) -> Option<T> {
-        if self.w().abs() < T::epsilon() {
-            return None; // This is a line, infinite radius
-        }
+        // Derived formula for orthonormal CGA basis:
+        //   r² = (e12em + w) / (e12em - w) + cx² + cy²
+        //
+        // When w = e12em, the denominator (e12em - w) is zero → line (infinite radius).
+
         let w = self.w();
-        let center_x = self.r() / w;
-        let center_y = -self.cy() / w;
-        let radius_sq = T::TWO * self.cx() / w + center_x * center_x + center_y * center_y;
-        // radius_sq should be non-negative for a valid circle
+        let e12em = self.e12em();
+        let denom = e12em - w; // Note: this is -(w - e12em)
+
+        if denom.abs() < T::epsilon() {
+            // This is a line (w = e12em), infinite radius
+            return None;
+        }
+
+        // Extract center first
+        let center_denom = w - e12em; // = -denom
+        let center_x = self.e2epem() / center_denom;
+        let center_y = -self.e1epem() / center_denom;
+
+        // Compute radius squared
+        let radius_sq = (e12em + w) / denom + center_x * center_x + center_y * center_y;
+
         if radius_sq < T::zero() {
             return None;
         }
@@ -333,7 +430,7 @@ impl<T: Float> Line<T> {
         let inf = RoundPoint::infinity();
         let circle: Circle<T> = p1.wedge(p2).wedge(&inf);
         // Extract line components from the circle (w should be 0)
-        Self::new_unchecked(circle.cx(), circle.cy(), circle.r())
+        Self::new_unchecked(circle.e12em(), circle.e1epem(), circle.e2epem())
     }
 
     /// Creates a line from the equation `nx*x + ny*y = d`.
@@ -352,7 +449,7 @@ impl<T: Float> Line<T> {
 impl<T: Float> FlatPoint<T> {
     /// Creates a flat point from Euclidean coordinates.
     ///
-    /// A flat point represents a point using only the infinity-direction
+    /// A flat point represents a point using only the em-direction
     /// components of a point pair.
     #[inline]
     pub fn from_euclidean(x: T, y: T) -> Self {
@@ -362,10 +459,10 @@ impl<T: Float> FlatPoint<T> {
     /// Extracts Euclidean coordinates.
     #[inline]
     pub fn to_euclidean(&self) -> Option<(T, T)> {
-        if self.oi().abs() < T::epsilon() {
+        if self.epem().abs() < T::epsilon() {
             None
         } else {
-            Some((self.ix() / self.oi(), self.iy() / self.oi()))
+            Some((self.e1em() / self.epem(), self.e2em() / self.epem()))
         }
     }
 }
@@ -390,11 +487,11 @@ impl<T: Float> Motor<T> {
         Self::new_unchecked(
             T::one(),  // s
             T::zero(), // m
-            T::zero(), // ox
-            T::zero(), // ix
-            T::zero(), // oy
-            T::zero(), // iy
-            T::zero(), // oi
+            T::zero(), // e1ep
+            T::zero(), // e2ep
+            T::zero(), // e1em
+            T::zero(), // e2em
+            T::zero(), // epem
             T::zero(), // ps
         )
     }
@@ -404,7 +501,9 @@ impl<T: Float> Motor<T> {
     /// Translates by vector (dx, dy).
     ///
     /// In CGA, a translation is represented as:
-    /// `T = 1 - ½(dx·e₁ + dy·e₂)·e∞ = 1 - ½dx·e₁₄ - ½dy·e₂₄`
+    /// `T = 1 - ½(dx·e₁ + dy·e₂)·e∞ = 1 - ½dx·e₁em - ½dx·e₁ep - ½dy·e₂em - ½dy·e₂ep`
+    ///
+    /// Since e∞ = ep + em, e₁·e∞ = e₁ep + e₁em, etc.
     ///
     /// # Example
     ///
@@ -419,14 +518,17 @@ impl<T: Float> Motor<T> {
     /// ```
     pub fn from_translation(dx: T, dy: T) -> Self {
         let half = T::one() / T::TWO;
+        // Translation: T = 1 - ½·d·e∞ where d = dx·e₁ + dy·e₂
+        // e₁·e∞ = e₁·(ep + em) = e₁ep + e₁em
+        // So the bivector part is: -½dx·(e₁ep + e₁em) - ½dy·(e₂ep + e₂em)
         Self::new_unchecked(
             T::one(),   // s = 1
             T::zero(),  // m = 0
-            T::zero(),  // ox = 0
-            -dx * half, // ix = -dx/2 (e14 component)
-            T::zero(),  // oy = 0
-            -dy * half, // iy = -dy/2 (e24 component)
-            T::zero(),  // oi = 0
+            -dx * half, // e1ep = -dx/2
+            -dy * half, // e2ep = -dy/2
+            -dx * half, // e1em = -dx/2
+            -dy * half, // e2em = -dy/2
+            T::zero(),  // epem = 0
             T::zero(),  // ps = 0
         )
     }
@@ -452,11 +554,11 @@ impl<T: Float> Motor<T> {
         Self::new_unchecked(
             half.cos(),  // s
             -half.sin(), // m (rotation in e12 plane, negated for sandwich)
-            T::zero(),   // ox
-            T::zero(),   // ix
-            T::zero(),   // oy
-            T::zero(),   // iy
-            T::zero(),   // oi
+            T::zero(),   // e1ep
+            T::zero(),   // e2ep
+            T::zero(),   // e1em
+            T::zero(),   // e2em
+            T::zero(),   // epem
             T::zero(),   // ps
         )
     }
@@ -466,17 +568,17 @@ impl<T: Float> Motor<T> {
     /// Scales by factor `k` around the origin.
     ///
     /// In CGA, dilation is represented using hyperbolic functions
-    /// in the origin-infinity plane (e₃₄).
+    /// in the ep-em plane (e₃₄).
     pub fn from_dilation(scale: T) -> Self {
         let half_log = scale.ln() / T::TWO;
         Self::new_unchecked(
             half_log.cosh(), // s
             T::zero(),       // m
-            T::zero(),       // ox
-            T::zero(),       // ix
-            T::zero(),       // oy
-            T::zero(),       // iy
-            half_log.sinh(), // oi (dilation is in e34 plane)
+            T::zero(),       // e1ep
+            T::zero(),       // e2ep
+            T::zero(),       // e1em
+            T::zero(),       // e2em
+            half_log.sinh(), // epem (dilation is in ep-em plane)
             T::zero(),       // ps
         )
     }
@@ -501,11 +603,11 @@ impl<T: Float> Motor<T> {
         Self::new_unchecked(
             rev.s() / norm_sq,
             rev.m() / norm_sq,
-            rev.ox() / norm_sq,
-            rev.ix() / norm_sq,
-            rev.oy() / norm_sq,
-            rev.iy() / norm_sq,
-            rev.oi() / norm_sq,
+            rev.e1ep() / norm_sq,
+            rev.e2ep() / norm_sq,
+            rev.e1em() / norm_sq,
+            rev.e2em() / norm_sq,
+            rev.epem() / norm_sq,
             rev.ps() / norm_sq,
         )
     }
@@ -578,6 +680,45 @@ mod tests {
     }
 
     #[test]
+    fn round_point_is_null_vector() {
+        // Verify the null vector property: P·P = 0
+        let p = RoundPoint::from_euclidean(3.0_f64, 4.0);
+        // Using orthonormal metric: P·P = x² + y² + ep² - em²
+        let p_dot_p = p.x() * p.x() + p.y() * p.y() + p.ep() * p.ep() - p.em() * p.em();
+
+        assert!(
+            relative_eq!(p_dot_p, 0.0, epsilon = 1e-10),
+            "Point should be a null vector: P·P = {} ≠ 0",
+            p_dot_p
+        );
+    }
+
+    #[test]
+    fn round_point_origin_is_null_vector() {
+        let o = RoundPoint::<f64>::origin();
+        let o_dot_o = o.x() * o.x() + o.y() * o.y() + o.ep() * o.ep() - o.em() * o.em();
+
+        assert!(
+            relative_eq!(o_dot_o, 0.0, epsilon = 1e-10),
+            "Origin should be a null vector: O·O = {} ≠ 0",
+            o_dot_o
+        );
+    }
+
+    #[test]
+    fn round_point_infinity_is_null_vector() {
+        let inf = RoundPoint::<f64>::infinity();
+        let inf_dot_inf =
+            inf.x() * inf.x() + inf.y() * inf.y() + inf.ep() * inf.ep() - inf.em() * inf.em();
+
+        assert!(
+            relative_eq!(inf_dot_inf, 0.0, epsilon = 1e-10),
+            "Infinity should be a null vector: e∞·e∞ = {} ≠ 0",
+            inf_dot_inf
+        );
+    }
+
+    #[test]
     fn round_point_distance() {
         let p1 = RoundPoint::<f64>::origin();
         let p2 = RoundPoint::from_euclidean(3.0, 4.0);
@@ -619,15 +760,10 @@ mod tests {
         let p3 = RoundPoint::from_euclidean(2.0, 0.0);
 
         let result: Circle<f64> = p1.wedge(&p2).wedge(&p3);
-        println!("\nCollinear points (0,0), (1,0), (2,0):");
-        println!(
-            "  w = {:.6}, is_line = {}",
-            result.w(),
-            result.is_line(1e-10)
-        );
         assert!(
             result.is_line(1e-10),
-            "Collinear points should produce a line (w=0)"
+            "Collinear points should produce a line (w=0), got w={}",
+            result.w()
         );
 
         // Non-collinear points should produce a circle (w ≠ 0)
@@ -636,15 +772,10 @@ mod tests {
         let p3 = RoundPoint::from_euclidean(-1.0, 0.0);
 
         let result: Circle<f64> = p1.wedge(&p2).wedge(&p3);
-        println!("\nNon-collinear points (1,0), (0,1), (-1,0):");
-        println!(
-            "  w = {:.6}, is_line = {}",
-            result.w(),
-            result.is_line(1e-10)
-        );
         assert!(
             !result.is_line(1e-10),
-            "Non-collinear points should produce a circle (w≠0)"
+            "Non-collinear points should produce a circle (w≠0), got w={}",
+            result.w()
         );
     }
 
@@ -681,7 +812,10 @@ mod tests {
                     epsilon = RELATIVE_EQ_EPS,
                     max_relative = RELATIVE_EQ_EPS
                 ),
-                "Center x mismatch: expected {}, got {}",
+                "Center x mismatch for ({}, {}, {}): expected {}, got {}",
+                expected_cx,
+                expected_cy,
+                expected_r,
                 expected_cx,
                 calc_cx
             );
@@ -692,7 +826,10 @@ mod tests {
                     epsilon = RELATIVE_EQ_EPS,
                     max_relative = RELATIVE_EQ_EPS
                 ),
-                "Center y mismatch: expected {}, got {}",
+                "Center y mismatch for ({}, {}, {}): expected {}, got {}",
+                expected_cx,
+                expected_cy,
+                expected_r,
                 expected_cy,
                 calc_cy
             );
@@ -706,7 +843,10 @@ mod tests {
                     epsilon = RELATIVE_EQ_EPS,
                     max_relative = RELATIVE_EQ_EPS
                 ),
-                "Radius mismatch: expected {}, got {}",
+                "Radius mismatch for ({}, {}, {}): expected {}, got {}",
+                expected_cx,
+                expected_cy,
+                expected_r,
                 expected_r,
                 calc_r
             );
@@ -744,18 +884,18 @@ mod tests {
     }
 
     #[test]
-    fn test_inverse_sandwich_computes_reflection_not_inversion() {
+    fn test_inverse_sandwich_circle_inversion() {
         use crate::ops::InverseSandwich;
 
-        // The InverseSandwich operation C × P × C⁻¹ computes a REFLECTION
-        // through the circle, NOT classic circle inversion.
+        // The InverseSandwich operation C × P × C⁻¹ computes circle inversion
+        // in the orthonormal CGA basis.
         //
-        // Classic circle inversion: P' = O + r²/|OP|² × (P - O)
-        // For point (4,0) through circle at origin with r=2:
-        // Expected classic inversion result: (1, 0) since 4 * 1 = 4 = 2²
+        // Classic circle inversion through a circle of radius r centered at origin:
+        //   P' = (r² / |P|²) * P
         //
-        // But InverseSandwich gives a different result because it's
-        // a reflection operation, not inversive geometry.
+        // For a point at (4, 0) through a circle of radius 2:
+        //   |P| = 4, r = 2, r² = 4
+        //   P' = (4 / 16) * (4, 0) = (1, 0)
 
         let inv_circle = Circle::from_center_radius(0.0_f64, 0.0, 2.0);
         let point = RoundPoint::from_euclidean(4.0, 0.0);
@@ -768,12 +908,60 @@ mod tests {
             "InverseSandwich should return Some for valid circle and point"
         );
 
-        // The result is NOT classic circle inversion
-        let (ix, _iy) = inverted.unwrap().to_euclidean().unwrap();
-        // Classic inversion would give 1.0, but reflection gives ~0.44
+        let (ix, iy) = inverted.unwrap().to_euclidean().unwrap();
+
+        // With the correct orthonormal basis, InverseSandwich gives classic circle inversion
         assert!(
-            (ix - 1.0).abs() > 0.1,
-            "InverseSandwich is NOT classic circle inversion"
+            relative_eq!(ix, 1.0, epsilon = 1e-10),
+            "Inverted x should be 1.0, got {}",
+            ix
+        );
+        assert!(
+            relative_eq!(iy, 0.0, epsilon = 1e-10),
+            "Inverted y should be 0.0, got {}",
+            iy
+        );
+    }
+
+    #[test]
+    fn test_circle_from_three_points_various_positions() {
+        use std::f64::consts::PI;
+
+        // Test with three points at 0°, 120°, 240° around the circle
+        let cx = 2.0_f64;
+        let cy = 3.0;
+        let r = 5.0;
+
+        let angle1 = 0.0_f64;
+        let angle2 = 2.0_f64 * PI / 3.0;
+        let angle3 = 4.0_f64 * PI / 3.0;
+
+        let p1 = RoundPoint::from_euclidean(cx + r * angle1.cos(), cy + r * angle1.sin());
+        let p2 = RoundPoint::from_euclidean(cx + r * angle2.cos(), cy + r * angle2.sin());
+        let p3 = RoundPoint::from_euclidean(cx + r * angle3.cos(), cy + r * angle3.sin());
+
+        let circle = Circle::from_three_points(&p1, &p2, &p3);
+
+        let (extracted_cx, extracted_cy) = circle.center().unwrap();
+        let extracted_r = circle.radius().unwrap();
+
+        assert!(
+            relative_eq!(extracted_cx, cx, epsilon = 1e-10),
+            "Center x: expected {}, got {}",
+            cx,
+            extracted_cx
+        );
+        assert!(
+            relative_eq!(extracted_cy, cy, epsilon = 1e-10),
+            "Center y: expected {}, got {}",
+            cy,
+            extracted_cy
+        );
+        assert!(
+            relative_eq!(extracted_r, r, epsilon = 1e-10),
+            "Radius: expected {}, got {}",
+            r,
+            extracted_r
         );
     }
 }

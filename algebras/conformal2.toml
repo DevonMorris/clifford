@@ -1,6 +1,48 @@
 # 2D Conformal Geometric Algebra
 # Cl(3,1,0) - Embeds 2D Euclidean space into 4D conformal space
 # Reference: https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page
+#
+# ============================================================
+# Basis Convention
+# ============================================================
+#
+# This algebra uses the ORTHONORMAL conformal basis:
+#   e1, e2:  Euclidean basis vectors (e1² = e2² = +1)
+#   e3 (ep): Positive conformal basis (e3² = +1)
+#   e4 (em): Negative conformal basis (e4² = -1)
+#
+# The commonly-used NULL basis (e₀, e∞) relates to orthonormal as:
+#   e₀ (origin)   = (e4 - e3) / 2 = (em - ep) / 2
+#   e∞ (infinity) = e4 + e3       = em + ep
+#
+# Point embedding formulas:
+#   For a Euclidean point at (x, y):
+#
+#   NULL BASIS form:
+#     P = x·e₁ + y·e₂ + 1·e₀ + ½(x²+y²)·e∞
+#
+#   ORTHONORMAL form (what we store):
+#     P = x·e₁ + y·e₂ + ½(x²+y²-1)·e₃ + ½(x²+y²+1)·e₄
+#
+#   Derivation: Substituting e₀ = (e4-e3)/2 and e∞ = e4+e3 into null form:
+#     P = x·e₁ + y·e₂ + 1·(e4-e3)/2 + ½(x²+y²)·(e4+e3)
+#       = x·e₁ + y·e₂ + [½(x²+y²) - ½]·e₃ + [½(x²+y²) + ½]·e₄
+#       = x·e₁ + y·e₂ + ½(x²+y²-1)·e₃ + ½(x²+y²+1)·e₄
+#
+# Special points:
+#   Origin (0,0):   P = -½·e₃ + ½·e₄ = ½(e₄ - e₃) = e₀
+#   Infinity:       P = e₃ + e₄ = e∞
+#
+# Null vector property:
+#   For a properly embedded point, P·P = 0 (null vector)
+#   Using the metric: P·P = x² + y² + e3² + e4² = x² + y² + 1·ep² + (-1)·em²
+#     = x² + y² + [½(x²+y²-1)]² - [½(x²+y²+1)]²
+#     = x² + y² + ¼[(x²+y²-1)² - (x²+y²+1)²]
+#     = x² + y² + ¼[((x²+y²)² - 2(x²+y²) + 1) - ((x²+y²)² + 2(x²+y²) + 1)]
+#     = x² + y² + ¼[-4(x²+y²)]
+#     = x² + y² - (x²+y²) = 0 ✓
+#
+# ============================================================
 
 [algebra]
 complete = false
@@ -9,9 +51,28 @@ module_path = "conformal/dim2"
 description = "2D Conformal Geometric Algebra Cl(3,1,0)"
 
 [signature]
+# e1, e2: Euclidean basis (spatial directions)
+# e3: Positive conformal basis (ep), e3² = +1
+# e4: Negative conformal basis (em), e4² = -1
 positive = ["e1", "e2", "e3"]
 negative = ["e4"]
 zero = []
+
+[blades]
+# Display names for conformal basis vectors
+e3 = "ep"
+e4 = "em"
+# Higher blades involving conformal basis
+e13 = "e1ep"
+e23 = "e2ep"
+e14 = "e1em"
+e24 = "e2em"
+e34 = "epem"
+e123 = "e12ep"
+e124 = "e12em"
+e134 = "e1epem"
+e234 = "e2epem"
+e1234 = "e12epem"
 
 [norm]
 # Conformal GA uses reverse for norm (non-degenerate algebra)
@@ -33,15 +94,17 @@ field_map = [
 [types.RoundPoint]
 grades = [1]
 description = "Round point (null vectors represent actual 2D points)"
-# Semantic field names:
-# x, y: Euclidean coordinates
-# o: origin weight (e3 coefficient)
-# i: infinity weight (e4 coefficient)
+# Field naming:
+#   x, y: SEMANTIC - Euclidean coordinate components (e1, e2 coefficients)
+#   ep, em: NON-SEMANTIC - Orthonormal conformal basis coefficients
+#           These are NOT the null basis weights (o, i) but rather the
+#           orthonormal coefficients computed from them.
+#           To recover null weights: o = em - ep, i = (em + ep) / 2
 field_map = [
   { name = "x", blade = "e1" },
   { name = "y", blade = "e2" },
-  { name = "o", blade = "e3" },
-  { name = "i", blade = "e4" }
+  { name = "ep", blade = "e3" },
+  { name = "em", blade = "e4" }
 ]
 
 [types.PointPair]
@@ -49,30 +112,32 @@ grades = [2]
 description = "Point pair / dipole (two points or oriented line segment)"
 # Blade order by bitmask: e12, e13, e23, e14, e24, e34
 # m: moment (spatial bivector e12)
-# ox, oy: origin bivectors (e3 wedge ei: e13, e23)
-# ix, iy: infinity bivectors (e4 wedge ei: e14, e24)
-# oi: origin-infinity bivector (e34)
+# e1ep, e2ep: e1 ∧ ep, e2 ∧ ep bivectors
+# e1em, e2em: e1 ∧ em, e2 ∧ em bivectors
+# epem: ep ∧ em bivector
 field_map = [
   { name = "m", blade = "e12" },
-  { name = "ox", blade = "e13" },
-  { name = "oy", blade = "e23" },
-  { name = "ix", blade = "e14" },
-  { name = "iy", blade = "e24" },
-  { name = "oi", blade = "e34" }
+  { name = "e1ep", blade = "e13" },
+  { name = "e2ep", blade = "e23" },
+  { name = "e1em", blade = "e14" },
+  { name = "e2em", blade = "e24" },
+  { name = "epem", blade = "e34" }
 ]
 
 [types.Circle]
 grades = [3]
 description = "Circle in 2D space (or line as circle through infinity)"
 # Blade order by bitmask: e123, e124, e134, e234
-# w: weight (e123 coefficient - Euclidean trivector)
-# cx, cy: center encoding (e124, e134 - with e4)
-# r: radius encoding (e234 - all with e4)
+# Field naming: NON-SEMANTIC - coefficients for center/radius extraction
+# w: weight (e12ep coefficient) - determines if this is a line (w=0)
+# e12em: e12 ∧ em coefficient
+# e1epem: e1 ∧ ep ∧ em coefficient
+# e2epem: e2 ∧ ep ∧ em coefficient
 field_map = [
   { name = "w", blade = "e123" },
-  { name = "cx", blade = "e124" },
-  { name = "cy", blade = "e134" },
-  { name = "r", blade = "e234" }
+  { name = "e12em", blade = "e124" },
+  { name = "e1epem", blade = "e134" },
+  { name = "e2epem", blade = "e234" }
 ]
 # Circle inversion: C × P × C⁻¹ inverts points through the circle
 inverse_sandwich_targets = ["RoundPoint", "Circle"]
@@ -81,23 +146,23 @@ inverse_sandwich_targets = ["RoundPoint", "Circle"]
 grades = [4]
 description = "Pseudoscalar (oriented 4-volume)"
 field_map = [
-  { name = "xyoi", blade = "e1234" }
+  { name = "ps", blade = "e1234" }
 ]
 
 [types.Motor]
 grades = [0, 2, 4]
 description = "Motor (even subalgebra for conformal transformations)"
 # Grade 0: s (scalar)
-# Grade 2: same as PointPair - m, ox, oy, ix, iy, oi
+# Grade 2: bivectors (same blades as PointPair)
 # Grade 4: ps (pseudoscalar)
 field_map = [
   { name = "s", blade = "s" },
   { name = "m", blade = "e12" },
-  { name = "ox", blade = "e13" },
-  { name = "oy", blade = "e23" },
-  { name = "ix", blade = "e14" },
-  { name = "iy", blade = "e24" },
-  { name = "oi", blade = "e34" },
+  { name = "e1ep", blade = "e13" },
+  { name = "e2ep", blade = "e23" },
+  { name = "e1em", blade = "e14" },
+  { name = "e2em", blade = "e24" },
+  { name = "epem", blade = "e34" },
   { name = "ps", blade = "e1234" }
 ]
 
@@ -117,13 +182,13 @@ field_map = [
   { name = "d", blade = "e234" }
 ]
 
-# FlatPoint = PointPair with only e4 components
+# FlatPoint = PointPair with only em components
 # Uses only 3 of the 6 grade-2 blades
 [types.FlatPoint]
 grades = [2]
-description = "Flat point (point pair with only infinity components)"
+description = "Flat point (point pair with only em components)"
 field_map = [
-  { name = "ix", blade = "e14" },
-  { name = "iy", blade = "e24" },
-  { name = "oi", blade = "e34" }
+  { name = "e1em", blade = "e14" },
+  { name = "e2em", blade = "e24" },
+  { name = "epem", blade = "e34" }
 ]
