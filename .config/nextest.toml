@@ -8,7 +8,8 @@
 
 # Define test groups for controlling concurrency
 [test-groups]
-# Symbolica tests must run serially to avoid instance conflicts
+# Symbolica tests must run serially - even with a license, concurrent
+# initialization of multiple Symbolica instances causes conflicts
 symbolica = { max-threads = 1 }
 
 [profile.default]

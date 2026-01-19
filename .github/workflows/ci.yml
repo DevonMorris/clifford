@@ -20,13 +20,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@nextest
 
-      # Debug: Check license env var (length only, not value)
-      - name: Check license
-        run: |
-          echo "License var set: $([ -n \"$SYMBOLICA_LICENSE\" ] && echo 'yes' || echo 'no')"
-          echo "License length: ${#SYMBOLICA_LICENSE}"
-          echo "First char: ${SYMBOLICA_LICENSE:0:1}"
-
       - run: cargo nextest run --features proptest-support,serde
 
   test-nalgebra:
