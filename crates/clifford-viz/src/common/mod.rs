@@ -58,6 +58,8 @@
 
 pub mod animation;
 pub mod app;
+#[cfg(feature = "three-d")]
+pub mod app_three_d;
 pub mod camera3d;
 pub mod colors;
 pub mod grid;
@@ -70,7 +72,7 @@ pub mod widgets;
 /// Imports the most commonly used types and functions.
 pub mod prelude {
     pub use super::animation::{Animation, animation_controls, easing, progress_slider};
-    #[cfg(any(feature = "native", target_arch = "wasm32"))]
+    #[cfg(feature = "native")]
     pub use super::app::AppWrapper;
     pub use super::app::{
         EducationalContent, ScreenSize, VisualizationApp, WindowConfig, configure_responsive_style,
@@ -78,6 +80,8 @@ pub mod prelude {
     };
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     pub use super::app::{run_app, run_app_with_options};
+    #[cfg(feature = "three-d")]
+    pub use super::app_three_d::run_three_d_app;
     // 3D camera and shapes
     pub use super::camera3d::{Camera3D, camera_controls, camera_response};
     pub use super::colors::{

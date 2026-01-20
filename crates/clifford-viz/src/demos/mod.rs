@@ -12,6 +12,7 @@ mod conformal2_mobius;
 mod dual_autodiff;
 mod euclidean2;
 mod euclidean3;
+#[cfg(feature = "native")]
 mod menu;
 mod minkowski2_diagram;
 mod minkowski2_dilation;
@@ -28,6 +29,7 @@ pub use conformal2_mobius::Conformal2MobiusDemo;
 pub use dual_autodiff::DualAutodiffDemo;
 pub use euclidean2::Euclidean2Demo;
 pub use euclidean3::Euclidean3Demo;
+#[cfg(feature = "native")]
 pub use menu::DemoMenu;
 pub use minkowski2_diagram::Minkowski2DiagramDemo;
 pub use minkowski2_dilation::Minkowski2DilationDemo;

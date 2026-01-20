@@ -110,11 +110,11 @@ pub struct EducationalContent {
 
 /// Wrapper that adapts a [`VisualizationApp`] to eframe's [`eframe::App`].
 ///
-/// This is used internally by [`run_app`] and externally by the WASM
-/// demo launcher to wrap demos in the standard visualization framework.
+/// This is used internally by [`run_app`] to wrap demos in the standard
+/// visualization framework.
 ///
-/// Only available with the `native` feature or on WASM.
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
+/// Only available with the `native` feature.
+#[cfg(feature = "native")]
 pub struct AppWrapper<T: VisualizationApp> {
     /// The wrapped visualization app.
     app: T,
@@ -124,7 +124,7 @@ pub struct AppWrapper<T: VisualizationApp> {
     sidebar_open: bool,
 }
 
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
+#[cfg(feature = "native")]
 impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
     fn default() -> Self {
         Self {
@@ -135,7 +135,7 @@ impl<T: VisualizationApp + Default> Default for AppWrapper<T> {
     }
 }
 
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
+#[cfg(feature = "native")]
 impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Use egui's built-in timing (works on both native and WASM)
@@ -277,7 +277,7 @@ impl<T: VisualizationApp> eframe::App for AppWrapper<T> {
 }
 
 /// Render educational content with nice formatting.
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
+#[cfg(feature = "native")]
 fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
     // Overview section
     ui.heading("Overview");

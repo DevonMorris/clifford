@@ -2,6 +2,8 @@
 //!
 //! This module provides the `DemoMenu` component which displays a list of
 //! available demos and allows navigation between them in the web version.
+//!
+//! This module is only available with the `native` feature or on WASM.
 
 use crate::common::app::{configure_responsive_style, screen_size};
 use crate::common::colors;

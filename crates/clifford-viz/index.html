@@ -24,7 +24,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/clifford.png">
 
-    <link data-trunk rel="css" href="style.css">
     <link data-trunk rel="copy-file" href="clifford.png"/>
     <style>
         html, body {
@@ -34,7 +33,7 @@
             background-color: #1a1a2e;
         }
 
-        #the_canvas_id {
+        canvas {
             position: absolute;
             top: 0;
             left: 0;
@@ -83,12 +82,10 @@
         Loading visualization...
     </div>
 
-    <canvas id="the_canvas_id"></canvas>
-
     <noscript>
         JavaScript is required to run these visualizations.
     </noscript>
 
-    <link data-trunk rel="rust" data-wasm-opt="z" data-bin="demo_launcher"/>
+    <link data-trunk rel="rust" data-wasm-opt="z" data-bin="demo_launcher" data-cargo-features="three-d"/>
 </body>
 </html>
