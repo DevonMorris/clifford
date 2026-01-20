@@ -61,43 +61,45 @@ Some demos grew to 20-35KB:
 - `projective2.rs`: 31KB
 - **Lesson**: Consider splitting demos or extracting shared code
 
-### Missing Infrastructure for 3D
+### Missing Infrastructure for 3D - RESOLVED
 
-#### 1. 3D Rendering Backend
-PRD-48.1 specified `three-d` but it's not implemented:
-```rust
-// NOT YET IMPLEMENTED:
-// - shapes3d.rs (box, sphere, plane, line, arrow)
-// - viewport3d.rs (3D viewport with three-d)
-// - camera.rs (orbit controls)
-```
+We now have TWO approaches for 3D rendering:
 
-#### 2. 3D Shape Primitives
-Need equivalents of 2D shapes:
-- Point (sphere marker)
-- Line (cylinder or thick line)
-- Plane (bounded quad)
-- Wireframe box
-- Coordinate frame (RGB arrows)
-- Circle in 3D (ring)
-- Sphere (wireframe or solid)
+#### Approach A: Custom Projection via egui_plot (WASM-compatible)
+- `camera3d.rs` - perspective projection, orbit controls
+- `shapes3d.rs` - wireframe primitives
+- Works in WASM, simpler, sufficient for wireframes
+- Used by: `euclidean3.rs` demo
 
-#### 3. Camera Controls
-Orbit camera with mouse drag:
-- Rotate: drag
-- Zoom: scroll
-- Pan: shift+drag
-- Reset to default view
+#### Approach B: three-d Library (Real 3D Rendering)
+- PBR materials with proper lighting
+- three-d manages its own window + OpenGL context
+- egui integration via `GUI` struct
+- Used by: `euclidean3_three_d.rs` demo
+
+**Decision**: Use both approaches:
+- 2D demos + simple 3D wireframes: eframe + egui_plot
+- Full 3D demos with lighting: three-d + egui
 
 ---
 
 ## 3D Demo Strategy
 
-### Phase 1: 3D Infrastructure (PRD-48.1 completion)
+### Dual Architecture
 
-**Goal**: Build shared 3D rendering infrastructure that works in WASM.
+**2D Demos**: eframe + egui + egui_plot (current)
+- All conformal2, projective2, euclidean2 demos
+- Works in WASM via trunk
+- Simple and reliable
 
-#### Chosen Approach: Custom 3D Projection via egui_plot
+**3D Demos**: three-d + egui
+- Real 3D rendering with PBR lighting
+- three-d's `Window` + `GUI` for egui overlay
+- WASM support via wasm-pack (needs validation)
+
+### Phase 1: 3D Infrastructure - COMPLETE
+
+#### Custom Projection (egui_plot approach)
 
 Given that WASM compatibility is critical, we use **Option B: Custom egui-based 3D**.
 
@@ -305,14 +307,16 @@ CGA demos require sphere/circle rendering:
 
 ## Risk Assessment
 
-### ~~High Risk: three-d + WASM Compatibility~~ MITIGATED
+### ~~High Risk: three-d + WASM Compatibility~~ RESOLVED
 ~~three-d uses wgpu which has WASM support but it's more complex than 2D.~~
 
-**Decision**: Use custom 3D projection via egui_plot instead of three-d.
-- egui_plot already proven to work in WASM (all 2D demos work)
-- Projecting 3D -> 2D and drawing with egui_plot is simple and reliable
-- Sufficient for wireframe visualizations (cubes, axes, lines, spheres as circles)
-- No new dependencies required
+**Update**: three-d uses WebGL (not wgpu), and the library compiles for WASM.
+We now have TWO approaches:
+1. Custom projection via egui_plot - proven WASM compatible
+2. three-d library - compiles for WASM, needs runtime validation
+
+Both approaches available. Use custom projection for simple wireframes,
+three-d for demos that need real lighting/materials.
 
 ### Medium Risk: 3D Interaction Complexity
 Selecting/dragging objects in 3D is harder than 2D.
@@ -484,3 +488,70 @@ RGB -> XYZ consistently throughout all visualizations:
 4. **Test coordinate handedness early** - rotate a known shape and verify X/Y/Z directions
 
 5. **Keep camera controls consistent** - orbit, zoom, pan should work the same across all 3D demos
+
+---
+
+## Lessons Learned from three-d Integration
+
+### three-d Library Setup
+
+1. **Feature flag**: Add `three-d = ["dep:three-d", "three-d?/egui-gui"]` for egui integration
+2. **WASM getrandom**: Add `getrandom = { version = "0.3", features = ["wasm_js"] }` for WASM target
+3. **Separate window**: three-d manages its own window, not compatible with eframe
+
+### Flat Shading for Cubes
+
+**Problem**: `CpuMesh::cube()` has shared vertices at corners, so `compute_normals()`
+averages them into useless values.
+
+**Solution**: Create cube mesh with 24 vertices (4 per face) with explicit per-face normals:
+```rust
+let faces = [
+    (4, 5, 6, 7, Vector::new(0.0, 0.0, 1.0)),   // Front +Z
+    // ... 6 faces total
+];
+```
+
+### Transformed Normals
+
+**Critical**: When transforming vertices with a rotor, **normals must also be transformed**:
+```rust
+let rotated_normal = rotor.transform(&base_normal);
+```
+Without this, shading appears flat/wrong because normals point in original directions.
+
+### Showcasing Clifford Types
+
+Keep all geometry as clifford types until render time:
+- Cube vertices: `[Vector<f32>; 8]`
+- Axis direction: `Vector<f32>`
+- Rotation plane: `Bivector<f32>` (Hodge dual of axis)
+- All transforms: `rotor.transform(&vector)`
+
+Only convert to three-d's `Vec3`/`Mat4` in rendering helper functions.
+
+### UI for GA Education
+
+Display GA values prominently:
+- Axis vector: `0.00e1 + 0.00e2 + 1.00e3`
+- Plane bivector: `0.00e23 + 0.00e31 + 1.00e12` (Hodge dual)
+- Rotor: `0.707 + 0.00e23 + 0.00e31 + 0.707e12`
+- Rotor norm: `|R| = 1.0000`
+
+### Lighting Setup
+
+Good defaults for educational demos:
+```rust
+let ambient = AmbientLight::new(&context, 0.3, Srgba::WHITE);
+let key_light = DirectionalLight::new(&context, 2.5, Srgba::WHITE, vec3(-1.0, -1.0, -1.0));
+let fill_light = DirectionalLight::new(&context, 1.0, Srgba::new_opaque(200, 200, 255), vec3(1.0, 0.5, 1.0));
+```
+
+Material with some specularity:
+```rust
+PhysicalMaterial::new_opaque(context, &CpuMaterial {
+    albedo: color,
+    roughness: 0.4,
+    metallic: 0.1,
+    ..Default::default()
+})
