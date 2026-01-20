@@ -62,17 +62,16 @@ impl VisualizationApp for Test3DDemo {
 
         // Get rotated cube vertices
         let base_vertices = unit_cube_vertices();
-        let rotated_vertices: [[f32; 3]; 8] = std::array::from_fn(|i| {
-            self.rotate_y(base_vertices[i], self.angle)
-        });
+        let rotated_vertices: [[f32; 3]; 8] =
+            std::array::from_fn(|i| self.rotate_y(base_vertices[i], self.angle));
 
         // Build the plot
         let response = Plot::new("3d_view")
             .data_aspect(1.0)
             .show_axes(false)
             .show_grid(false)
-            .allow_drag(false)     // We handle drag for camera
-            .allow_scroll(false)   // We handle scroll for zoom
+            .allow_drag(false) // We handle drag for camera
+            .allow_scroll(false) // We handle scroll for zoom
             .show(ui, |plot_ui| {
                 // Draw coordinate axes
                 if self.show_axes {
@@ -82,11 +81,7 @@ impl VisualizationApp for Test3DDemo {
                 }
 
                 // Draw wireframe cube
-                for line in wireframe_box_vertices(
-                    &self.camera,
-                    &rotated_vertices,
-                    line(&ctx),
-                ) {
+                for line in wireframe_box_vertices(&self.camera, &rotated_vertices, line(&ctx)) {
                     plot_ui.line(line);
                 }
 

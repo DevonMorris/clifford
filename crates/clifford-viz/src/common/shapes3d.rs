@@ -81,7 +81,10 @@ pub fn coordinate_axes(camera: &Camera3D, length: f32) -> Vec<Line> {
 ///
 /// Returns lines and label positions for each axis.
 #[must_use]
-pub fn coordinate_axes_labeled(camera: &Camera3D, length: f32) -> (Vec<Line>, Vec<([f64; 2], &'static str)>) {
+pub fn coordinate_axes_labeled(
+    camera: &Camera3D,
+    length: f32,
+) -> (Vec<Line>, Vec<([f64; 2], &'static str)>) {
     let lines = coordinate_axes(camera, length);
 
     let labels = vec![
@@ -139,7 +142,12 @@ pub fn arrow_3d(camera: &Camera3D, start: [f32; 3], end: [f32; 3], color: Color3
             let c = angle.cos() * head_size * 0.4;
             let s = angle.sin() * head_size * 0.4;
             let point = head_base + perp1 * c + perp2 * s;
-            lines.push(line_3d(camera, end, [point.x(), point.y(), point.z()], color));
+            lines.push(line_3d(
+                camera,
+                end,
+                [point.x(), point.y(), point.z()],
+                color,
+            ));
         }
     }
 
@@ -212,11 +220,20 @@ pub fn wireframe_box(
     // 12 edges
     let edges = [
         // Back face
-        (0, 1), (1, 2), (2, 3), (3, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0),
         // Front face
-        (4, 5), (5, 6), (6, 7), (7, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 4),
         // Connecting edges
-        (0, 4), (1, 5), (2, 6), (3, 7),
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7),
     ];
 
     edges
@@ -229,14 +246,27 @@ pub fn wireframe_box(
 ///
 /// Useful when the box has been transformed by a rotor/motor.
 #[must_use]
-pub fn wireframe_box_vertices(camera: &Camera3D, vertices: &[[f32; 3]; 8], color: Color32) -> Vec<Line> {
+pub fn wireframe_box_vertices(
+    camera: &Camera3D,
+    vertices: &[[f32; 3]; 8],
+    color: Color32,
+) -> Vec<Line> {
     let edges = [
         // Back face
-        (0, 1), (1, 2), (2, 3), (3, 0),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0),
         // Front face
-        (4, 5), (5, 6), (6, 7), (7, 4),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 4),
         // Connecting edges
-        (0, 4), (1, 5), (2, 6), (3, 7),
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7),
     ];
 
     edges
@@ -252,13 +282,13 @@ pub fn wireframe_box_vertices(camera: &Camera3D, vertices: &[[f32; 3]; 8], color
 pub fn unit_cube_vertices() -> [[f32; 3]; 8] {
     [
         [-0.5, -0.5, -0.5],
-        [ 0.5, -0.5, -0.5],
-        [ 0.5,  0.5, -0.5],
-        [-0.5,  0.5, -0.5],
-        [-0.5, -0.5,  0.5],
-        [ 0.5, -0.5,  0.5],
-        [ 0.5,  0.5,  0.5],
-        [-0.5,  0.5,  0.5],
+        [0.5, -0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, 0.5, -0.5],
+        [-0.5, -0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [-0.5, 0.5, 0.5],
     ]
 }
 
@@ -317,11 +347,7 @@ pub fn wireframe_sphere(
         let points: Vec<[f64; 2]> = (0..=segments * 2)
             .map(|j| {
                 let angle = 2.0 * PI * j as f32 / (segments * 2) as f32;
-                let point = [
-                    center[0] + r * angle.cos(),
-                    y,
-                    center[2] + r * angle.sin(),
-                ];
+                let point = [center[0] + r * angle.cos(), y, center[2] + r * angle.sin()];
                 camera.project(point)
             })
             .filter(|p| p[0].is_finite() && p[1].is_finite())
@@ -418,12 +444,7 @@ pub fn plane_3d(
 
     // Grid lines
     if grid_lines > 0 {
-        let faded = Color32::from_rgba_unmultiplied(
-            color.r(),
-            color.g(),
-            color.b(),
-            color.a() / 2,
-        );
+        let faded = Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), color.a() / 2);
 
         for i in 1..=grid_lines {
             let t = i as f32 / (grid_lines + 1) as f32;

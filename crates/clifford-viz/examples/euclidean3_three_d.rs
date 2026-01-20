@@ -45,7 +45,12 @@ fn main() {
     // Lighting - key light + fill light + ambient
     let ambient = AmbientLight::new(&context, 0.3, Srgba::WHITE);
     let key_light = DirectionalLight::new(&context, 2.5, Srgba::WHITE, vec3(-1.0, -1.0, -1.0));
-    let fill_light = DirectionalLight::new(&context, 1.0, Srgba::new_opaque(200, 200, 255), vec3(1.0, 0.5, 1.0));
+    let fill_light = DirectionalLight::new(
+        &context,
+        1.0,
+        Srgba::new_opaque(200, 200, 255),
+        vec3(1.0, 0.5, 1.0),
+    );
 
     // UI state
     let mut mode = RotationMode::Rotor;
@@ -94,31 +99,56 @@ fn main() {
                                 ui.label("Rotation Axis (Vector):");
                                 ui.horizontal(|ui| {
                                     ui.colored_label(egui::Color32::from_rgb(255, 100, 100), "x:");
-                                    ui.add(egui::Slider::new(&mut ax, -1.0..=1.0).show_value(false));
+                                    ui.add(
+                                        egui::Slider::new(&mut ax, -1.0..=1.0).show_value(false),
+                                    );
                                     ui.label(format!("{:.2}", ax));
                                 });
                                 ui.horizontal(|ui| {
                                     ui.colored_label(egui::Color32::from_rgb(100, 255, 100), "y:");
-                                    ui.add(egui::Slider::new(&mut ay, -1.0..=1.0).show_value(false));
+                                    ui.add(
+                                        egui::Slider::new(&mut ay, -1.0..=1.0).show_value(false),
+                                    );
                                     ui.label(format!("{:.2}", ay));
                                 });
                                 ui.horizontal(|ui| {
                                     ui.colored_label(egui::Color32::from_rgb(100, 100, 255), "z:");
-                                    ui.add(egui::Slider::new(&mut az, -1.0..=1.0).show_value(false));
+                                    ui.add(
+                                        egui::Slider::new(&mut az, -1.0..=1.0).show_value(false),
+                                    );
                                     ui.label(format!("{:.2}", az));
                                 });
 
                                 ui.horizontal(|ui| {
-                                    if ui.small_button("e1").clicked() { ax = 1.0; ay = 0.0; az = 0.0; }
-                                    if ui.small_button("e2").clicked() { ax = 0.0; ay = 1.0; az = 0.0; }
-                                    if ui.small_button("e3").clicked() { ax = 0.0; ay = 0.0; az = 1.0; }
-                                    if ui.small_button("e1+e2+e3").clicked() { ax = 1.0; ay = 1.0; az = 1.0; }
+                                    if ui.small_button("e1").clicked() {
+                                        ax = 1.0;
+                                        ay = 0.0;
+                                        az = 0.0;
+                                    }
+                                    if ui.small_button("e2").clicked() {
+                                        ax = 0.0;
+                                        ay = 1.0;
+                                        az = 0.0;
+                                    }
+                                    if ui.small_button("e3").clicked() {
+                                        ax = 0.0;
+                                        ay = 0.0;
+                                        az = 1.0;
+                                    }
+                                    if ui.small_button("e1+e2+e3").clicked() {
+                                        ax = 1.0;
+                                        ay = 1.0;
+                                        az = 1.0;
+                                    }
                                 });
 
                                 ui.separator();
                                 ui.horizontal(|ui| {
                                     ui.label("Angle:");
-                                    ui.add(egui::Slider::new(&mut rotor_angle, 0.0..=360.0).suffix(" deg"));
+                                    ui.add(
+                                        egui::Slider::new(&mut rotor_angle, 0.0..=360.0)
+                                            .suffix(" deg"),
+                                    );
                                 });
 
                                 ui.checkbox(&mut auto_rotate, "Auto-rotate");
@@ -135,20 +165,28 @@ fn main() {
                                     let axis_unit = axis_vec.normalized();
                                     ui.label(format!(
                                         "Axis (unit): {:.2}e1 + {:.2}e2 + {:.2}e3",
-                                        axis_unit.x(), axis_unit.y(), axis_unit.z()
+                                        axis_unit.x(),
+                                        axis_unit.y(),
+                                        axis_unit.z()
                                     ));
 
                                     // Rotation plane is the Hodge dual of the axis
                                     let plane: Bivector<f32> = axis_unit.right_complement();
                                     ui.label(format!(
                                         "Plane (dual): {:.2}e23 + {:.2}e31 + {:.2}e12",
-                                        plane.rx(), plane.ry(), plane.rz()
+                                        plane.rx(),
+                                        plane.ry(),
+                                        plane.rz()
                                     ));
 
-                                    let rotor = Rotor::from_angle_plane(rotor_angle.to_radians(), plane);
+                                    let rotor =
+                                        Rotor::from_angle_plane(rotor_angle.to_radians(), plane);
                                     ui.label(format!(
                                         "Rotor: {:.3} + {:.3}e23 + {:.3}e31 + {:.3}e12",
-                                        rotor.s(), rotor.rx(), rotor.ry(), rotor.rz()
+                                        rotor.s(),
+                                        rotor.rx(),
+                                        rotor.ry(),
+                                        rotor.rz()
                                     ));
 
                                     ui.label(format!("|R| = {:.4}", rotor.norm()));
@@ -159,15 +197,24 @@ fn main() {
 
                                 ui.horizontal(|ui| {
                                     ui.label("Yaw (Y):");
-                                    ui.add(egui::Slider::new(&mut euler_yaw, -180.0..=180.0).suffix(" deg"));
+                                    ui.add(
+                                        egui::Slider::new(&mut euler_yaw, -180.0..=180.0)
+                                            .suffix(" deg"),
+                                    );
                                 });
                                 ui.horizontal(|ui| {
                                     ui.label("Pitch (X):");
-                                    ui.add(egui::Slider::new(&mut euler_pitch, -90.0..=90.0).suffix(" deg"));
+                                    ui.add(
+                                        egui::Slider::new(&mut euler_pitch, -90.0..=90.0)
+                                            .suffix(" deg"),
+                                    );
                                 });
                                 ui.horizontal(|ui| {
                                     ui.label("Roll (Z):");
-                                    ui.add(egui::Slider::new(&mut euler_roll, -180.0..=180.0).suffix(" deg"));
+                                    ui.add(
+                                        egui::Slider::new(&mut euler_roll, -180.0..=180.0)
+                                            .suffix(" deg"),
+                                    );
                                 });
 
                                 if (euler_pitch.abs() - 90.0).abs() < 5.0 {
@@ -186,13 +233,25 @@ fn main() {
                                 // Show equivalent rotor
                                 ui.separator();
                                 ui.heading("Equivalent Rotor");
-                                let r_yaw = Rotor::from_angle_plane(euler_yaw.to_radians(), Bivector::unit_ry());
-                                let r_pitch = Rotor::from_angle_plane(euler_pitch.to_radians(), Bivector::unit_rx());
-                                let r_roll = Rotor::from_angle_plane(euler_roll.to_radians(), Bivector::unit_rz());
+                                let r_yaw = Rotor::from_angle_plane(
+                                    euler_yaw.to_radians(),
+                                    Bivector::unit_ry(),
+                                );
+                                let r_pitch = Rotor::from_angle_plane(
+                                    euler_pitch.to_radians(),
+                                    Bivector::unit_rx(),
+                                );
+                                let r_roll = Rotor::from_angle_plane(
+                                    euler_roll.to_radians(),
+                                    Bivector::unit_rz(),
+                                );
                                 let combined = r_yaw * r_pitch * r_roll;
                                 ui.label(format!(
                                     "R = {:.3} + {:.3}e23 + {:.3}e31 + {:.3}e12",
-                                    combined.s(), combined.rx(), combined.ry(), combined.rz()
+                                    combined.s(),
+                                    combined.rx(),
+                                    combined.ry(),
+                                    combined.rz()
                                 ));
                             }
                         }
@@ -239,7 +298,8 @@ fn main() {
             }
             RotationMode::Euler => {
                 let r_yaw = Rotor::from_angle_plane(euler_yaw.to_radians(), Bivector::unit_ry());
-                let r_pitch = Rotor::from_angle_plane(euler_pitch.to_radians(), Bivector::unit_rx());
+                let r_pitch =
+                    Rotor::from_angle_plane(euler_pitch.to_radians(), Bivector::unit_rx());
                 let r_roll = Rotor::from_angle_plane(euler_roll.to_radians(), Bivector::unit_rz());
                 r_yaw * r_pitch * r_roll
             }
@@ -247,10 +307,8 @@ fn main() {
 
         // Transform cube vertices using clifford rotor
         let cube_verts = unit_cube_vertices();
-        let transformed_verts: Vec<Vector<f32>> = cube_verts
-            .iter()
-            .map(|v| rotor.transform(v))
-            .collect();
+        let transformed_verts: Vec<Vector<f32>> =
+            cube_verts.iter().map(|v| rotor.transform(v)).collect();
 
         // Create cube mesh from transformed vertices
         let cube_color = if mode == RotationMode::Euler && (euler_pitch.abs() - 90.0).abs() < 5.0 {
@@ -272,13 +330,8 @@ fn main() {
         };
 
         // Render
-        let mut renderables: Vec<&dyn Object> = vec![
-            &axes,
-            &cube,
-            &local_axes.0,
-            &local_axes.1,
-            &local_axes.2,
-        ];
+        let mut renderables: Vec<&dyn Object> =
+            vec![&axes, &cube, &local_axes.0, &local_axes.1, &local_axes.2];
 
         if let Some(ref plane) = plane_mesh {
             renderables.push(plane);
@@ -303,13 +356,13 @@ fn unit_cube_vertices() -> [Vector<f32>; 8] {
     let s = 0.5;
     [
         Vector::new(-s, -s, -s),
-        Vector::new( s, -s, -s),
-        Vector::new( s,  s, -s),
-        Vector::new(-s,  s, -s),
-        Vector::new(-s, -s,  s),
-        Vector::new( s, -s,  s),
-        Vector::new( s,  s,  s),
-        Vector::new(-s,  s,  s),
+        Vector::new(s, -s, -s),
+        Vector::new(s, s, -s),
+        Vector::new(-s, s, -s),
+        Vector::new(-s, -s, s),
+        Vector::new(s, -s, s),
+        Vector::new(s, s, s),
+        Vector::new(-s, s, s),
     ]
 }
 
@@ -317,7 +370,11 @@ fn unit_cube_vertices() -> [Vector<f32>; 8] {
 fn create_transformed_axes(
     context: &Context,
     rotor: &Rotor<f32>,
-) -> (Gm<Mesh, ColorMaterial>, Gm<Mesh, ColorMaterial>, Gm<Mesh, ColorMaterial>) {
+) -> (
+    Gm<Mesh, ColorMaterial>,
+    Gm<Mesh, ColorMaterial>,
+    Gm<Mesh, ColorMaterial>,
+) {
     let len = 0.8_f32;
 
     // Transform unit vectors with rotor
@@ -343,15 +400,20 @@ fn to_vec3(v: &Vector<f32>) -> Vec3 {
 
 /// Create flat-shaded cube mesh from 8 clifford Vector vertices
 /// Normals are transformed by the rotor to match the rotated faces
-fn create_cube_mesh(context: &Context, verts: &[Vector<f32>], color: Srgba, rotor: &Rotor<f32>) -> Gm<Mesh, PhysicalMaterial> {
+fn create_cube_mesh(
+    context: &Context,
+    verts: &[Vector<f32>],
+    color: Srgba,
+    rotor: &Rotor<f32>,
+) -> Gm<Mesh, PhysicalMaterial> {
     // Face vertex indices and base normals (before rotation)
     let faces: [(usize, usize, usize, usize, Vector<f32>); 6] = [
-        (4, 5, 6, 7, Vector::new(0.0, 0.0, 1.0)),   // Front +Z
-        (1, 0, 3, 2, Vector::new(0.0, 0.0, -1.0)),  // Back -Z
-        (7, 6, 2, 3, Vector::new(0.0, 1.0, 0.0)),   // Top +Y
-        (0, 1, 5, 4, Vector::new(0.0, -1.0, 0.0)),  // Bottom -Y
-        (5, 1, 2, 6, Vector::new(1.0, 0.0, 0.0)),   // Right +X
-        (0, 4, 7, 3, Vector::new(-1.0, 0.0, 0.0)),  // Left -X
+        (4, 5, 6, 7, Vector::new(0.0, 0.0, 1.0)),  // Front +Z
+        (1, 0, 3, 2, Vector::new(0.0, 0.0, -1.0)), // Back -Z
+        (7, 6, 2, 3, Vector::new(0.0, 1.0, 0.0)),  // Top +Y
+        (0, 1, 5, 4, Vector::new(0.0, -1.0, 0.0)), // Bottom -Y
+        (5, 1, 2, 6, Vector::new(1.0, 0.0, 0.0)),  // Right +X
+        (0, 4, 7, 3, Vector::new(-1.0, 0.0, 0.0)), // Left -X
     ];
 
     let mut positions = Vec::with_capacity(24);
@@ -372,10 +434,12 @@ fn create_cube_mesh(context: &Context, verts: &[Vector<f32>], color: Srgba, roto
         normals.push(normal);
     }
 
-    let indices: Vec<u32> = (0..6).flat_map(|face| {
-        let base = face * 4;
-        [base, base + 1, base + 2, base, base + 2, base + 3]
-    }).collect();
+    let indices: Vec<u32> = (0..6)
+        .flat_map(|face| {
+            let base = face * 4;
+            [base, base + 1, base + 2, base, base + 2, base + 3]
+        })
+        .collect();
 
     let mesh = CpuMesh {
         positions: Positions::F32(positions),
@@ -386,23 +450,33 @@ fn create_cube_mesh(context: &Context, verts: &[Vector<f32>], color: Srgba, roto
 
     Gm::new(
         Mesh::new(context, &mesh),
-        PhysicalMaterial::new_opaque(context, &CpuMaterial {
-            albedo: color,
-            roughness: 0.4,
-            metallic: 0.1,
-            ..Default::default()
-        }),
+        PhysicalMaterial::new_opaque(
+            context,
+            &CpuMaterial {
+                albedo: color,
+                roughness: 0.4,
+                metallic: 0.1,
+                ..Default::default()
+            },
+        ),
     )
 }
 
 /// Create arrow from clifford Vector direction
-fn create_arrow_from_vector(context: &Context, direction: &Vector<f32>, color: Srgba) -> Gm<Mesh, ColorMaterial> {
+fn create_arrow_from_vector(
+    context: &Context,
+    direction: &Vector<f32>,
+    color: Srgba,
+) -> Gm<Mesh, ColorMaterial> {
     let length = direction.norm();
     if length < 1e-6 {
         // Degenerate - return tiny mesh
         return Gm::new(
             Mesh::new(context, &CpuMesh::sphere(4)),
-            ColorMaterial { color, ..Default::default() },
+            ColorMaterial {
+                color,
+                ..Default::default()
+            },
         );
     }
 
@@ -410,7 +484,8 @@ fn create_arrow_from_vector(context: &Context, direction: &Vector<f32>, color: S
     let radius = 0.02;
 
     let mut mesh = CpuMesh::cylinder(8);
-    mesh.transform(Mat4::from_nonuniform_scale(radius, length * 0.5, radius)).unwrap();
+    mesh.transform(Mat4::from_nonuniform_scale(radius, length * 0.5, radius))
+        .unwrap();
 
     // Rotate cylinder to point in direction
     let up = vec3(0.0, 1.0, 0.0);
@@ -430,7 +505,10 @@ fn create_arrow_from_vector(context: &Context, direction: &Vector<f32>, color: S
 
     Gm::new(
         Mesh::new(context, &mesh),
-        ColorMaterial { color, ..Default::default() },
+        ColorMaterial {
+            color,
+            ..Default::default()
+        },
     )
 }
 
@@ -457,10 +535,12 @@ fn create_plane_disk(context: &Context, axis: &Vector<f32>) -> Gm<Mesh, ColorMat
     }
 
     // Fan triangles
-    let indices: Vec<u32> = (0..segments).flat_map(|i| {
-        let next = (i + 1) % segments;
-        [0, i + 1, next + 1]
-    }).collect();
+    let indices: Vec<u32> = (0..segments)
+        .flat_map(|i| {
+            let next = (i + 1) % segments;
+            [0, i + 1, next + 1]
+        })
+        .collect();
 
     let mesh = CpuMesh {
         positions: Positions::F32(positions),

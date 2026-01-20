@@ -193,7 +193,8 @@ impl VisualizationApp for Euclidean3Demo {
                 } else {
                     line(&ctx)
                 };
-                for line in wireframe_box_vertices(&self.camera, &transformed_vertices, cube_color) {
+                for line in wireframe_box_vertices(&self.camera, &transformed_vertices, cube_color)
+                {
                     plot_ui.line(line);
                 }
 
@@ -329,7 +330,8 @@ impl VisualizationApp for Euclidean3Demo {
                 let mut pitch_deg = self.euler_pitch.to_degrees();
                 ui.horizontal(|ui| {
                     ui.label("Pitch (X):");
-                    let slider = ui.add(egui::Slider::new(&mut pitch_deg, -90.0..=90.0).suffix(" deg"));
+                    let slider =
+                        ui.add(egui::Slider::new(&mut pitch_deg, -90.0..=90.0).suffix(" deg"));
                     if slider.changed() {
                         self.euler_pitch = pitch_deg.to_radians();
                     }
@@ -359,7 +361,10 @@ impl VisualizationApp for Euclidean3Demo {
 
                 // Quick gimbal lock demo button
                 ui.separator();
-                if ui.button("Set pitch to 90 deg (demo gimbal lock)").clicked() {
+                if ui
+                    .button("Set pitch to 90 deg (demo gimbal lock)")
+                    .clicked()
+                {
                     self.euler_pitch = FRAC_PI_2;
                 }
             }
@@ -438,7 +443,10 @@ impl VisualizationApp for Euclidean3Demo {
                           - Gimbal lock is a fundamental flaw of Euler angles\n\
                           - Rotors and quaternions are the same thing in different notation",
             resources: &[
-                ("Rigid Geometric Algebra Wiki", "https://rigidgeometricalgebra.org"),
+                (
+                    "Rigid Geometric Algebra Wiki",
+                    "https://rigidgeometricalgebra.org",
+                ),
                 (
                     "Visualizing Quaternions (video)",
                     "https://www.youtube.com/watch?v=d4EgbgTm0Bg",

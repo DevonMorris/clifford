@@ -65,7 +65,9 @@ fn main() {
 
                         ui.horizontal(|ui| {
                             ui.label("Angle:");
-                            ui.add(egui::Slider::new(&mut rotation_angle, 0.0..=360.0).suffix(" deg"));
+                            ui.add(
+                                egui::Slider::new(&mut rotation_angle, 0.0..=360.0).suffix(" deg"),
+                            );
                         });
 
                         ui.checkbox(&mut auto_rotate, "Auto-rotate");

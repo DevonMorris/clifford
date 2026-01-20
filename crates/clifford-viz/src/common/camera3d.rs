@@ -55,9 +55,9 @@ impl Default for Camera3D {
         Self {
             target: [0.0, 0.0, 0.0],
             distance: 5.0,
-            azimuth: 0.4,        // Slight angle for 3D effect
-            elevation: 0.3,     // Slight elevation
-            fov: PI / 4.0,      // 45 degrees
+            azimuth: 0.4,   // Slight angle for 3D effect
+            elevation: 0.3, // Slight elevation
+            fov: PI / 4.0,  // 45 degrees
             near: 0.1,
             far: 100.0,
         }
@@ -125,11 +125,7 @@ impl Camera3D {
         let cos_azim = self.azimuth.cos();
         let sin_azim = self.azimuth.sin();
 
-        Vector::new(
-            -sin_elev * sin_azim,
-            cos_elev,
-            -sin_elev * cos_azim,
-        )
+        Vector::new(-sin_elev * sin_azim, cos_elev, -sin_elev * cos_azim)
     }
 
     /// Project a 3D point to 2D screen coordinates.
@@ -148,7 +144,8 @@ impl Camera3D {
             self.target[0] - eye[0],
             self.target[1] - eye[1],
             self.target[2] - eye[2],
-        ).normalized();
+        )
+        .normalized();
 
         // Calculate right vector using GA cross product: forward x up
         let right = forward.cross(up).normalized();
@@ -157,11 +154,7 @@ impl Camera3D {
         let up = right.cross(forward);
 
         // Transform point to camera space
-        let rel = Vector::new(
-            point[0] - eye[0],
-            point[1] - eye[1],
-            point[2] - eye[2],
-        );
+        let rel = Vector::new(point[0] - eye[0], point[1] - eye[1], point[2] - eye[2]);
 
         // Camera space coordinates using GA dot product
         let cam_x = rel.dot(right);
@@ -194,16 +187,13 @@ impl Camera3D {
             self.target[0] - eye[0],
             self.target[1] - eye[1],
             self.target[2] - eye[2],
-        ).normalized();
+        )
+        .normalized();
 
         let right = forward.cross(up).normalized();
         let up = right.cross(forward);
 
-        let rel = Vector::new(
-            point[0] - eye[0],
-            point[1] - eye[1],
-            point[2] - eye[2],
-        );
+        let rel = Vector::new(point[0] - eye[0], point[1] - eye[1], point[2] - eye[2]);
 
         let cam_x = rel.dot(right);
         let cam_y = rel.dot(up);
@@ -258,7 +248,8 @@ impl Camera3D {
             self.target[0] - eye[0],
             self.target[1] - eye[1],
             self.target[2] - eye[2],
-        ).normalized();
+        )
+        .normalized();
 
         let right = forward.cross(up).normalized();
         let up = right.cross(forward);
@@ -325,18 +316,25 @@ pub fn camera_controls(ui: &mut egui::Ui, camera: &mut Camera3D) {
         .show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Distance:");
-                ui.add(egui::DragValue::new(&mut camera.distance)
-                    .speed(0.1)
-                    .range(0.5..=50.0));
+                ui.add(
+                    egui::DragValue::new(&mut camera.distance)
+                        .speed(0.1)
+                        .range(0.5..=50.0),
+                );
             });
 
             ui.horizontal(|ui| {
                 ui.label("Azimuth:");
                 let mut deg = camera.azimuth.to_degrees();
-                if ui.add(egui::DragValue::new(&mut deg)
-                    .speed(1.0)
-                    .range(-180.0..=180.0)
-                    .suffix(" deg")).changed() {
+                if ui
+                    .add(
+                        egui::DragValue::new(&mut deg)
+                            .speed(1.0)
+                            .range(-180.0..=180.0)
+                            .suffix(" deg"),
+                    )
+                    .changed()
+                {
                     camera.azimuth = deg.to_radians();
                 }
             });
@@ -344,10 +342,15 @@ pub fn camera_controls(ui: &mut egui::Ui, camera: &mut Camera3D) {
             ui.horizontal(|ui| {
                 ui.label("Elevation:");
                 let mut deg = camera.elevation.to_degrees();
-                if ui.add(egui::DragValue::new(&mut deg)
-                    .speed(1.0)
-                    .range(-89.0..=89.0)
-                    .suffix(" deg")).changed() {
+                if ui
+                    .add(
+                        egui::DragValue::new(&mut deg)
+                            .speed(1.0)
+                            .range(-89.0..=89.0)
+                            .suffix(" deg"),
+                    )
+                    .changed()
+                {
                     camera.elevation = deg.to_radians();
                 }
             });
@@ -370,9 +373,11 @@ pub fn camera_controls(ui: &mut egui::Ui, camera: &mut Camera3D) {
             });
 
             ui.add_space(4.0);
-            ui.label(egui::RichText::new("Drag to orbit, scroll to zoom, shift+drag to pan")
-                .small()
-                .weak());
+            ui.label(
+                egui::RichText::new("Drag to orbit, scroll to zoom, shift+drag to pan")
+                    .small()
+                    .weak(),
+            );
         });
 }
 
