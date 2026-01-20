@@ -19,6 +19,7 @@ workspace = true
 default = []
 native = ["dep:eframe", "eframe?/default"]
 testing = ["dep:proptest"]
+three-d = ["dep:three-d", "three-d?/egui-gui"]
 
 [dependencies]
 clifford = { path = "../clifford", default-features = false }
@@ -33,6 +34,7 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 egui_plot = "0.30"
 log = "0.4"
 proptest = { version = "1", optional = true }
+three-d = { version = "0.18", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 eframe = { version = "0.30", default-features = false, features = [
@@ -43,6 +45,7 @@ eframe = { version = "0.30", default-features = false, features = [
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["Window", "Location", "Document", "Element", "HtmlCanvasElement"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [dev-dependencies]
 image = "0.25"
@@ -110,6 +113,14 @@ required-features = ["native"]
 [[example]]
 name = "euclidean3"
 required-features = ["native"]
+
+[[example]]
+name = "three_d_test"
+required-features = ["three-d"]
+
+[[example]]
+name = "euclidean3_three_d"
+required-features = ["three-d"]
 
 # Binary works on both native (with native feature) and WASM (via target-specific deps)
 [[bin]]
