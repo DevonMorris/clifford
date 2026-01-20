@@ -17,11 +17,18 @@ struct DemoEntry {
 }
 
 /// Euclidean geometry demos.
-const EUCLIDEAN_DEMOS: &[DemoEntry] = &[DemoEntry {
-    id: "euclidean2",
-    name: "2D Rotors",
-    description: "Rotation and dilation using rotors in 2D Euclidean space",
-}];
+const EUCLIDEAN_DEMOS: &[DemoEntry] = &[
+    DemoEntry {
+        id: "euclidean2",
+        name: "2D Rotors",
+        description: "Rotation and dilation using rotors in 2D Euclidean space",
+    },
+    DemoEntry {
+        id: "euclidean3",
+        name: "3D Rotors vs Euler Angles",
+        description: "Compare GA rotors with Euler angles, see gimbal lock in action",
+    },
+];
 
 /// Projective geometry demos.
 const PROJECTIVE_DEMOS: &[DemoEntry] = &[
@@ -53,6 +60,11 @@ const CONFORMAL_DEMOS: &[DemoEntry] = &[
         id: "conformal2_mobius",
         name: "Mobius Transformations",
         description: "Compose translations, rotations, dilations, and inversions",
+    },
+    DemoEntry {
+        id: "conformal2_intersection",
+        name: "Circle-Circle Intersection",
+        description: "Find intersection points using the wedge product",
     },
 ];
 
@@ -88,6 +100,13 @@ const MINKOWSKI_DEMOS: &[DemoEntry] = &[
         description: "Proper time and the geometry of time dilation",
     },
 ];
+
+/// 3D visualization demos.
+const THREE_D_DEMOS: &[DemoEntry] = &[DemoEntry {
+    id: "test_3d",
+    name: "3D Visualization Test",
+    description: "Wireframe cube with camera orbit controls",
+}];
 
 /// Landing page showing available demos.
 ///
@@ -171,6 +190,8 @@ impl eframe::App for DemoMenu {
                 render_demo_category(ui, "Minkowski Spacetime", MINKOWSKI_DEMOS, is_mobile);
                 ui.add_space(12.0 * sp);
                 render_demo_category(ui, "Complex & Dual Numbers", NUMBER_DEMOS, is_mobile);
+                ui.add_space(12.0 * sp);
+                render_demo_category(ui, "3D Visualization", THREE_D_DEMOS, is_mobile);
 
                 ui.add_space(24.0 * sp);
                 ui.separator();

@@ -274,14 +274,34 @@ Show that `R_total = R_2 * R_1` (right-to-left application):
    - Links to external resources
 
 ### euclidean3.rs
-1. [ ] 3D rendering setup (camera, projection)
-2. [ ] Wireframe cube rendering
-3. [ ] Rotor mode with bivector plane selection
-4. [ ] Euler angles mode with gimbal visualization
-5. [ ] Side-by-side comparison view
-6. [ ] Rotation composition demo
-7. [ ] Animation support
-8. [ ] **Educational content** - gimbal lock explanation, rotor advantages
+
+**Approach**: Custom 3D projection via egui_plot (guaranteed WASM compatibility)
+
+#### Infrastructure Tasks (shared with future 3D demos)
+1. [ ] Implement `Camera3D` struct with orbit controls in `common/camera3d.rs`
+2. [ ] Implement `project()` method (3D to 2D perspective projection)
+3. [ ] Implement mouse drag for camera orbit (drag to rotate view)
+4. [ ] Implement scroll for camera zoom
+5. [ ] Create `render_wireframe_box()` helper in `common/shapes3d.rs`
+6. [ ] Create `render_coordinate_axes()` helper (RGB arrows)
+
+#### Demo-Specific Tasks
+7. [ ] Basic cube visualization with rotor rotation
+8. [ ] Angle slider and bivector plane selector (XY, XZ, YZ, custom)
+9. [ ] Animation support (continuous rotation)
+10. [ ] Euler angles mode implementation
+11. [ ] Gimbal lock detection and visualization (pitch=90deg warning)
+12. [ ] Split-view comparison (Rotor vs Euler)
+13. [ ] Rotation composition demo (show R2*R1 != R1*R2)
+14. [ ] **Educational content** - gimbal lock explanation, rotor half-angle encoding
+
+#### Acceptance Criteria
+- [ ] Demo runs in browser (WASM) at 60fps
+- [ ] Demo runs natively at 60fps
+- [ ] Camera orbit controls work smoothly
+- [ ] Rotor rotation is visually correct
+- [ ] Gimbal lock is clearly demonstrated at pitch=90deg
+- [ ] Educational popup explains the math
 
 ## Verification
 

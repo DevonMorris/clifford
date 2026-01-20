@@ -9,6 +9,8 @@
 //! - [`grid`]: 2D grid and axis rendering
 //! - [`shapes`]: 2D shape primitives (points, arrows, circles, etc.)
 //! - [`widgets`]: Reusable UI components (sliders, displays, etc.)
+//! - [`camera3d`]: 3D camera with perspective projection
+//! - [`shapes3d`]: 3D shape primitives (wireframes, axes, etc.)
 //!
 //! # Quick Start
 //!
@@ -56,9 +58,11 @@
 
 pub mod animation;
 pub mod app;
+pub mod camera3d;
 pub mod colors;
 pub mod grid;
 pub mod shapes;
+pub mod shapes3d;
 pub mod widgets;
 
 /// Prelude for convenient imports.
@@ -74,6 +78,8 @@ pub mod prelude {
     };
     #[cfg(all(feature = "native", not(target_arch = "wasm32")))]
     pub use super::app::{run_app, run_app_with_options};
+    // 3D camera and shapes
+    pub use super::camera3d::{Camera3D, camera_controls, camera_response};
     pub use super::colors::{
         // Theme-aware color functions
         active,
@@ -122,6 +128,10 @@ pub mod prelude {
         arc_2d, arc_with_arrow, arrow_2d, bivector_2d, circle_2d, infinite_line_2d, labeled_arrow,
         labeled_line_segment, labeled_point, line_from_homogeneous, line_segment, point_marker,
         polygon, regular_polygon,
+    };
+    pub use super::shapes3d::{
+        arrow_3d, circle_3d, coordinate_axes, coordinate_axes_labeled, line_3d, plane_3d, point_3d,
+        unit_cube_vertices, wireframe_box, wireframe_box_vertices, wireframe_sphere,
     };
     pub use super::widgets::{
         angle_slider, angle_slider_range, collapsible_section, ga_value_display, group_header,

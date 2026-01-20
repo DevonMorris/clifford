@@ -1,9 +1,15 @@
 # PRD-48.11: WASM Web Deployment
 
-**Status**: Draft
+**Status**: Complete
 **Parent**: PRD-48
 **Depends on**: PRD-48.1, PRD-48.10
 **Goal**: Deploy interactive demos to the web via WebAssembly
+
+## Status
+
+WASM deployment is complete for all 2D demos. The demos are accessible at the GitHub Pages URL.
+
+**Note**: When 3D demos are added (using three-d), WASM compatibility will need to be validated and potentially updated.
 
 ## Motivation
 

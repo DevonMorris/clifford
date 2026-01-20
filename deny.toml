@@ -6,6 +6,9 @@ ignore = [
     # paste crate unmaintained - transitive dependency from nalgebra -> simba
     # No action available since it's not a direct dependency
     "RUSTSEC-2024-0436",
+    # instant crate unmaintained - transitive dependency from three-d and winit
+    # No action available since it's not a direct dependency
+    "RUSTSEC-2024-0384",
 ]
 
 [licenses]

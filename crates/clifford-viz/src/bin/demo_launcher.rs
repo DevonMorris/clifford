@@ -22,9 +22,10 @@ fn main() {
 use clifford_viz::common::prelude::AppWrapper;
 #[cfg(target_arch = "wasm32")]
 use clifford_viz::demos::{
-    ComplexDomainDemo, ComplexFractalDemo, Conformal2CirclesDemo, Conformal2InversionDemo,
-    Conformal2MobiusDemo, DemoMenu, DualAutodiffDemo, Euclidean2Demo, Minkowski2DiagramDemo,
-    Minkowski2DilationDemo, Projective2Demo, RobotArmDemo,
+    ComplexDomainDemo, ComplexFractalDemo, Conformal2CirclesDemo, Conformal2IntersectionDemo,
+    Conformal2InversionDemo, Conformal2MobiusDemo, DemoMenu, DualAutodiffDemo, Euclidean2Demo,
+    Euclidean3Demo, Minkowski2DiagramDemo, Minkowski2DilationDemo, Projective2Demo, RobotArmDemo,
+    Test3DDemo,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
@@ -97,6 +98,7 @@ fn create_app(name: &str, cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::A
     match name {
         // Euclidean demos
         "euclidean2" => Box::new(AppWrapper::<Euclidean2Demo>::default()),
+        "euclidean3" => Box::new(AppWrapper::<Euclidean3Demo>::default()),
         // Projective demos
         "projective2" => Box::new(AppWrapper::<Projective2Demo>::default()),
         "projective2_robot" => Box::new(AppWrapper::<RobotArmDemo>::default()),
@@ -104,6 +106,7 @@ fn create_app(name: &str, cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::A
         "conformal2_circles" => Box::new(AppWrapper::<Conformal2CirclesDemo>::default()),
         "conformal2_inversion" => Box::new(AppWrapper::<Conformal2InversionDemo>::default()),
         "conformal2_mobius" => Box::new(AppWrapper::<Conformal2MobiusDemo>::default()),
+        "conformal2_intersection" => Box::new(AppWrapper::<Conformal2IntersectionDemo>::default()),
         // Complex and dual number demos
         "complex_domain" => Box::new(AppWrapper::<ComplexDomainDemo>::default()),
         "complex_fractal" => Box::new(AppWrapper::<ComplexFractalDemo>::default()),
@@ -111,6 +114,8 @@ fn create_app(name: &str, cc: &eframe::CreationContext<'_>) -> Box<dyn eframe::A
         // Minkowski demos
         "minkowski2_diagram" => Box::new(AppWrapper::<Minkowski2DiagramDemo>::default()),
         "minkowski2_dilation" => Box::new(AppWrapper::<Minkowski2DilationDemo>::default()),
+        // 3D test demo
+        "test_3d" => Box::new(AppWrapper::<Test3DDemo>::default()),
         // Default: show menu
         _ => Box::new(DemoMenu::new(cc)),
     }
