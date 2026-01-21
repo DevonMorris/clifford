@@ -17,17 +17,11 @@ workspace = true
 
 [features]
 default = []
-native = ["dep:eframe", "eframe?/default"]
 testing = ["dep:proptest"]
 three-d = ["dep:three-d", "three-d?/egui-gui"]
 
 [dependencies]
 clifford = { path = "../clifford", default-features = false }
-eframe = { version = "0.29", optional = true, default-features = false, features = [
-    "default_fonts",
-    "glow",
-    "persistence",
-] }
 egui = "0.29"
 egui_extras = { version = "0.29", features = ["image"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
@@ -47,73 +41,53 @@ proptest = "1"
 approx = "0.5"
 clifford-viz = { path = ".", features = ["testing"] }
 
-# Examples require the native feature (windowing support)
+# Examples use three-d for rendering
 [[example]]
 name = "euclidean2"
-required-features = ["native"]
-
-[[example]]
-name = "projective2"
-required-features = ["native"]
-
-[[example]]
-name = "projective2_robot"
-required-features = ["native"]
-
-[[example]]
-name = "conformal2_circles"
-required-features = ["native"]
-
-[[example]]
-name = "conformal2_inversion"
-required-features = ["native"]
-
-[[example]]
-name = "complex_domain"
-required-features = ["native"]
-
-[[example]]
-name = "complex_fractal"
-required-features = ["native"]
-
-[[example]]
-name = "dual_autodiff"
-required-features = ["native"]
-
-[[example]]
-name = "visualization_test"
-required-features = ["native"]
-
-[[example]]
-name = "minkowski2_diagram"
-required-features = ["native"]
-
-[[example]]
-name = "minkowski2_dilation"
-required-features = ["native"]
-
-[[example]]
-name = "conformal2_mobius"
-required-features = ["native"]
-
-[[example]]
-name = "conformal2_intersection"
-required-features = ["native"]
-
-[[example]]
-name = "test_3d"
-required-features = ["native"]
-
-[[example]]
-name = "euclidean3"
-required-features = ["native"]
-
-[[example]]
-name = "three_d_test"
 required-features = ["three-d"]
 
 [[example]]
-name = "euclidean3_three_d"
+name = "projective2"
+required-features = ["three-d"]
+
+[[example]]
+name = "projective2_robot"
+required-features = ["three-d"]
+
+[[example]]
+name = "conformal2_circles"
+required-features = ["three-d"]
+
+[[example]]
+name = "conformal2_inversion"
+required-features = ["three-d"]
+
+[[example]]
+name = "complex_domain"
+required-features = ["three-d"]
+
+[[example]]
+name = "complex_fractal"
+required-features = ["three-d"]
+
+[[example]]
+name = "dual_autodiff"
+required-features = ["three-d"]
+
+[[example]]
+name = "minkowski2_diagram"
+required-features = ["three-d"]
+
+[[example]]
+name = "minkowski2_dilation"
+required-features = ["three-d"]
+
+[[example]]
+name = "conformal2_mobius"
+required-features = ["three-d"]
+
+[[example]]
+name = "conformal2_intersection"
 required-features = ["three-d"]
 
 # Demo launcher using three-d (works native and WASM)

@@ -6,7 +6,9 @@
 //!
 //! This module is only available with the `three-d` feature.
 
-use super::app::{configure_responsive_style, screen_size, EducationalContent, VisualizationApp};
+use super::app::{
+    configure_responsive_style, use_mobile_layout, EducationalContent, VisualizationApp,
+};
 use three_d::*;
 
 /// Run a visualization app using three-d.
@@ -16,9 +18,15 @@ use three_d::*;
 /// # Type Parameters
 /// * `T` - A type implementing [`VisualizationApp`] and [`Default`]
 pub fn run_three_d_app<T: VisualizationApp + Default + 'static>(title: &str) {
+    // On native, cap window size. On WASM, use full browser window for responsiveness.
+    #[cfg(not(target_arch = "wasm32"))]
+    let max_size = Some((1920, 1080));
+    #[cfg(target_arch = "wasm32")]
+    let max_size = None;
+
     let window = Window::new(WindowSettings {
         title: title.to_string(),
-        max_size: Some((1920, 1080)),
+        max_size,
         ..Default::default()
     })
     .unwrap();
@@ -85,8 +93,7 @@ fn render_app_ui<T: VisualizationApp>(
     // Apply responsive styling
     configure_responsive_style(ctx);
 
-    let screen = screen_size(ctx);
-    let is_mobile = screen.is_mobile();
+    let is_mobile = use_mobile_layout(ctx);
 
     // Mobile menu button
     if is_mobile && !*sidebar_open {

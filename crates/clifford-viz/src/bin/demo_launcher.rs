@@ -17,7 +17,7 @@
 //! ```
 
 use clifford_viz::common::app::{
-    configure_responsive_style, screen_size, EducationalContent, VisualizationApp,
+    configure_responsive_style, use_mobile_layout, EducationalContent, VisualizationApp,
 };
 use clifford_viz::demos::*;
 use three_d::*;
@@ -28,7 +28,6 @@ fn main() {
 
     match demo_name.as_str() {
         "euclidean2" => run_demo::<Euclidean2Demo>("Euclidean 2D - Rotor Animation"),
-        "euclidean3" => run_demo::<Euclidean3Demo>("Euclidean 3D - Rotors vs Euler"),
         "projective2" => run_demo::<Projective2Demo>("Projective 2D - Point-Line Geometry"),
         "projective2_robot" => run_demo::<RobotArmDemo>("Robot Arm - 2D PGA"),
         "conformal2_circles" => run_demo::<Conformal2CirclesDemo>("Conformal 2D - Circles"),
@@ -46,14 +45,13 @@ fn main() {
         "dual_autodiff" => run_demo::<DualAutodiffDemo>("Dual Number Autodiff"),
         "minkowski2_diagram" => run_demo::<Minkowski2DiagramDemo>("Minkowski 1+1D Diagram"),
         "minkowski2_dilation" => run_demo::<Minkowski2DilationDemo>("Time Dilation"),
-        "test_3d" => run_demo::<Test3DDemo>("3D Test"),
         "menu" | "" => run_menu(),
         _ => {
             eprintln!("Unknown demo: {}", demo_name);
-            eprintln!("Available demos: euclidean2, euclidean3, projective2, projective2_robot,");
+            eprintln!("Available demos: euclidean2, projective2, projective2_robot,");
             eprintln!("  conformal2_circles, conformal2_inversion, conformal2_mobius,");
             eprintln!("  conformal2_intersection, complex_domain, complex_fractal,");
-            eprintln!("  dual_autodiff, minkowski2_diagram, minkowski2_dilation, test_3d");
+            eprintln!("  dual_autodiff, minkowski2_diagram, minkowski2_dilation");
             run_menu();
         }
     }
@@ -92,9 +90,15 @@ fn get_demo_name() -> String {
 
 /// Run a demo with the three-d framework.
 fn run_demo<T: VisualizationApp + Default + 'static>(title: &str) {
+    // On native, cap window size. On WASM, use full browser window for responsiveness.
+    #[cfg(not(target_arch = "wasm32"))]
+    let max_size = Some((1920, 1080));
+    #[cfg(target_arch = "wasm32")]
+    let max_size = None;
+
     let window = Window::new(WindowSettings {
         title: title.to_string(),
-        max_size: Some((1920, 1080)),
+        max_size,
         ..Default::default()
     })
     .unwrap();
@@ -147,9 +151,15 @@ fn run_demo<T: VisualizationApp + Default + 'static>(title: &str) {
 
 /// Run the demo menu.
 fn run_menu() {
+    // On native, cap window size. On WASM, use full browser window for responsiveness.
+    #[cfg(not(target_arch = "wasm32"))]
+    let max_size = Some((1920, 1080));
+    #[cfg(target_arch = "wasm32")]
+    let max_size = None;
+
     let window = Window::new(WindowSettings {
         title: "Clifford - Geometric Algebra Demos".to_string(),
-        max_size: Some((1920, 1080)),
+        max_size,
         ..Default::default()
     })
     .unwrap();
@@ -189,8 +199,7 @@ fn render_demo_ui<T: VisualizationApp>(
     sidebar_open: &mut bool,
 ) {
     configure_responsive_style(ctx);
-    let screen = screen_size(ctx);
-    let is_mobile = screen.is_mobile();
+    let is_mobile = use_mobile_layout(ctx);
 
     // Mobile menu button
     if is_mobile && !*sidebar_open {
@@ -316,8 +325,7 @@ fn render_demo_ui<T: VisualizationApp>(
 /// Render the menu UI.
 fn render_menu_ui(ctx: &egui::Context) {
     configure_responsive_style(ctx);
-    let screen = screen_size(ctx);
-    let is_mobile = screen.is_mobile();
+    let is_mobile = use_mobile_layout(ctx);
     let sp = if is_mobile { 1.0 } else { 1.5 };
 
     egui::CentralPanel::default().show(ctx, |ui| {
@@ -359,7 +367,6 @@ fn render_menu_ui(ctx: &egui::Context) {
 
             render_demo_category(ui, "Euclidean Geometry", &[
                 ("euclidean2", "2D Rotors", "Rotation using rotors"),
-                ("euclidean3", "3D Rotors vs Euler", "Compare GA rotors with Euler angles"),
             ]);
 
             ui.add_space(12.0 * sp);
@@ -391,12 +398,6 @@ fn render_menu_ui(ctx: &egui::Context) {
                 ("complex_domain", "Domain Coloring", "Visualize complex functions"),
                 ("complex_fractal", "Mandelbrot & Julia", "Explore complex fractals"),
                 ("dual_autodiff", "Dual Autodiff", "Automatic differentiation"),
-            ]);
-
-            ui.add_space(12.0 * sp);
-
-            render_demo_category(ui, "3D Visualization", &[
-                ("test_3d", "3D Test", "Wireframe cube with camera controls"),
             ]);
 
             ui.add_space(24.0 * sp);
