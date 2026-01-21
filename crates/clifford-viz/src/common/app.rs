@@ -170,7 +170,7 @@ impl ScreenSize {
 /// Check if mobile layout should be used.
 ///
 /// Returns true if:
-/// - Width < 600px (narrow screen), OR
+/// - Width < 800px (narrow screen), OR
 /// - Height > Width (portrait orientation)
 ///
 /// This ensures the hamburger menu appears on narrow screens
@@ -178,7 +178,7 @@ impl ScreenSize {
 #[must_use]
 pub fn use_mobile_layout(ctx: &egui::Context) -> bool {
     let rect = ctx.screen_rect();
-    rect.width() < 600.0 || rect.height() > rect.width()
+    rect.width() < 800.0 || rect.height() > rect.width()
 }
 
 /// Configure responsive styles based on screen size.
