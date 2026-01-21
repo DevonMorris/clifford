@@ -63,8 +63,8 @@
 //!     }
 //! }
 //!
-//! fn main() -> eframe::Result<()> {
-//!     run_app::<RotorDemo>()
+//! fn main() {
+//!     run_three_d_app::<RotorDemo>("2D Rotor Demo");
 //! }
 //! ```
 //!
@@ -86,15 +86,15 @@
 //! Run the built-in examples with:
 //!
 //! ```bash
-//! cargo run -p clifford-viz --example euclidean2 --release
+//! cargo run -p clifford-viz --example euclidean2 --features three-d --release
 //! ```
 
 #![warn(missing_docs)]
 
 pub mod common;
 
-/// Demo implementations (only available with `native` feature or on WASM).
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
+/// Demo implementations (available with `three-d` feature or on WASM).
+#[cfg(any(feature = "three-d", target_arch = "wasm32"))]
 pub mod demos;
 
 #[cfg(feature = "testing")]
@@ -105,10 +105,6 @@ pub use egui;
 
 /// Re-export egui_plot for convenience.
 pub use egui_plot;
-
-/// Re-export eframe for convenience (only available with `native` feature or on WASM).
-#[cfg(any(feature = "native", target_arch = "wasm32"))]
-pub use eframe;
 
 /// Prelude module for convenient imports.
 ///
