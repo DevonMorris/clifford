@@ -17,34 +17,22 @@ workspace = true
 
 [features]
 default = []
-native = ["dep:eframe", "eframe?/default"]
 testing = ["dep:proptest"]
 three-d = ["dep:three-d", "three-d?/egui-gui"]
 
 [dependencies]
 clifford = { path = "../clifford", default-features = false }
-eframe = { version = "0.30", optional = true, default-features = false, features = [
-    "default_fonts",
-    "glow",
-    "persistence",
-] }
-egui = "0.30"
-egui_extras = { version = "0.30", features = ["image"] }
+egui = "0.29"
+egui_extras = { version = "0.29", features = ["image"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
-egui_plot = "0.30"
+egui_plot = "0.29"
 log = "0.4"
 proptest = { version = "1", optional = true }
 three-d = { version = "0.18", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-eframe = { version = "0.30", default-features = false, features = [
-    "default_fonts",
-    "glow",
-    "persistence",
-] }
 wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["Window", "Location", "Document", "Element", "HtmlCanvasElement"] }
+web-sys = { version = "0.3", features = ["Window", "Location"] }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [dev-dependencies]
@@ -53,75 +41,56 @@ proptest = "1"
 approx = "0.5"
 clifford-viz = { path = ".", features = ["testing"] }
 
-# Examples require the native feature (windowing support)
+# Examples use three-d for rendering
 [[example]]
 name = "euclidean2"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "projective2"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "projective2_robot"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "conformal2_circles"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "conformal2_inversion"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "complex_domain"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "complex_fractal"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "dual_autodiff"
-required-features = ["native"]
-
-[[example]]
-name = "visualization_test"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "minkowski2_diagram"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "minkowski2_dilation"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "conformal2_mobius"
-required-features = ["native"]
+required-features = ["three-d"]
 
 [[example]]
 name = "conformal2_intersection"
-required-features = ["native"]
-
-[[example]]
-name = "test_3d"
-required-features = ["native"]
-
-[[example]]
-name = "euclidean3"
-required-features = ["native"]
-
-[[example]]
-name = "three_d_test"
 required-features = ["three-d"]
 
-[[example]]
-name = "euclidean3_three_d"
-required-features = ["three-d"]
-
-# Binary works on both native (with native feature) and WASM (via target-specific deps)
+# Demo launcher using three-d (works native and WASM)
 [[bin]]
 name = "demo_launcher"
+required-features = ["three-d"]

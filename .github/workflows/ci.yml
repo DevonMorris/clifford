@@ -88,14 +88,13 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
 
-      # Build for native
-      - run: cargo build -p clifford-viz --features native
+      # Build for native (three-d)
+      - run: cargo build -p clifford-viz --features three-d
       # Build for wasm
-      - run: cargo build -p clifford-viz --target wasm32-unknown-unknown
+      - run: cargo build -p clifford-viz --target wasm32-unknown-unknown --features three-d
       # Run tests
-      - run: cargo test -p clifford-viz --features native
-      # Clippy
-      - run: cargo clippy -p clifford-viz --features native -- -D warnings
+      - run: cargo test -p clifford-viz --features three-d
+      # Clippy is handled by viz-clippy job
 
   deny:
     name: Cargo Deny
