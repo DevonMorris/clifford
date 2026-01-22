@@ -110,10 +110,10 @@ fn run_demo<T: VisualizationApp + Default + 'static>(title: &str) {
     let mut last_time = 0.0;
 
     window.render_loop(move |mut frame_input| {
-        // Calculate delta time
+        // Calculate delta time (accumulated_time is in milliseconds, convert to seconds)
         let current_time = frame_input.accumulated_time;
         let dt = if last_time > 0.0 {
-            ((current_time - last_time) as f32).min(0.1)
+            (((current_time - last_time) / 1000.0) as f32).min(0.1)
         } else {
             0.0
         };
