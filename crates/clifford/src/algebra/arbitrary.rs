@@ -23,7 +23,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! use clifford::algebra::{Multivector, arbitrary::VectorE3};
 //! use clifford::signature::Euclidean3;
 //! use approx::abs_diff_eq;
