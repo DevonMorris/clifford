@@ -19,7 +19,7 @@
 //! ```
 
 use crate::common::prelude::*;
-use clifford::ops::Transform;
+use clifford::ops::{Transform, Versor};
 use clifford::specialized::projective::dim3::{Motor, Point};
 use three_d::*;
 
@@ -32,14 +32,14 @@ pub struct Projective3RobotDemo {
     /// World coordinate axes.
     world_axes: Option<Axes>,
 
-    /// Base joint mesh (cylinder).
-    base_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
-    /// Link 1 mesh (arm segment).
-    link1_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
-    /// Link 2 mesh (arm segment).
-    link2_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
-    /// Link 3 mesh (arm segment).
-    link3_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
+    /// Base joint mesh (sphere).
+    base_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    /// Link 1 mesh (thin cylinder).
+    link1_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    /// Link 2 mesh (thin cylinder).
+    link2_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    /// Link 3 mesh (thin cylinder).
+    link3_mesh: Option<Gm<Mesh, ColorMaterial>>,
     /// End effector mesh (sphere).
     end_effector_mesh: Option<Gm<Mesh, ColorMaterial>>,
 
@@ -112,40 +112,28 @@ impl Default for Projective3RobotDemo {
 impl Projective3RobotDemo {
     /// Computes forward kinematics returning joint positions.
     ///
-    /// Returns (base, shoulder, elbow, wrist, end_effector) positions.
+    /// Uses Versor::compose for proper motor composition.
     fn forward_kinematics(&self) -> (Point<f64>, Point<f64>, Point<f64>, Point<f64>) {
         // Base is at origin
         let base = Point::origin();
 
-        // Joint 1: Rotation around Z-axis (yaw)
+        // Motors for each transformation
         let m1 = Motor::from_rotation_z(f64::from(self.theta1));
-
-        // Translation along Z to get to shoulder (link1 is vertical)
         let t1 = Motor::from_translation(0.0, 0.0, f64::from(self.link1_length));
-
-        // Joint 2: Rotation around Y-axis (pitch) - in the rotated frame
         let m2 = Motor::from_rotation_y(f64::from(self.theta2));
-
-        // Translation along X in the rotated frame (link2 extends outward)
         let t2 = Motor::from_translation(f64::from(self.link2_length), 0.0, 0.0);
-
-        // Joint 3: Rotation around Y-axis (pitch)
         let m3 = Motor::from_rotation_y(f64::from(self.theta3));
-
-        // Translation along X (link3 extends outward)
         let t3 = Motor::from_translation(f64::from(self.link3_length), 0.0, 0.0);
 
-        // Compose motors for each joint position
-        // Shoulder position: after base rotation and first translation
-        let m_shoulder = (m1 * t1).unitized();
+        // Compose motors using Versor::compose (handles RGA properly)
+        // compose(a, b) means "first apply b, then apply a"
+        let m_shoulder = t1.compose(&m1);
         let shoulder = m_shoulder.transform(&base);
 
-        // Elbow position: after shoulder rotation and second translation
-        let m_elbow = (m_shoulder * m2 * t2).unitized();
+        let m_elbow = t2.compose(&m2).compose(&m_shoulder);
         let elbow = m_elbow.transform(&base);
 
-        // End effector position: after all transformations
-        let m_end = (m_elbow * m3 * t3).unitized();
+        let m_end = t3.compose(&m3).compose(&m_elbow);
         let end_effector = m_end.transform(&base);
 
         (shoulder, elbow, end_effector, end_effector)
@@ -169,28 +157,28 @@ impl Projective3RobotDemo {
         }
     }
 
-    /// Build a cylinder transformation between two points.
-    fn link_transform(start: Vec3, end: Vec3, radius: f32) -> Mat4 {
+    /// Build a rotation/translation transform for a pre-scaled arrow.
+    ///
+    /// The arrow mesh is X-aligned and pre-scaled to the link length.
+    /// This function just rotates it to point from start toward end and translates to start.
+    fn arrow_transform(start: Vec3, end: Vec3) -> Mat4 {
         let dir = end - start;
         let length = dir.magnitude();
         if length < 1e-6 {
-            return Mat4::identity();
+            return Mat4::from_translation(start);
         }
         let dir_normalized = dir / length;
 
-        // Scale: radius in X/Z, length in Y (cylinder is Y-aligned)
-        let scale = Mat4::from_nonuniform_scale(radius, length, radius);
-
-        // Rotate from Y-axis to target direction
-        let y_axis = vec3(0.0, 1.0, 0.0);
-        let dot = y_axis.dot(dir_normalized);
+        // Rotate from X-axis to target direction
+        let x_axis = vec3(1.0, 0.0, 0.0);
+        let dot = x_axis.dot(dir_normalized);
 
         let rotation = if dot > 0.9999 {
             Mat4::identity()
         } else if dot < -0.9999 {
-            Mat4::from_angle_x(Rad(std::f32::consts::PI))
+            Mat4::from_angle_z(Rad(std::f32::consts::PI))
         } else {
-            let rot_axis = y_axis.cross(dir_normalized);
+            let rot_axis = x_axis.cross(dir_normalized);
             let rot_axis_len = rot_axis.magnitude();
             if rot_axis_len < 1e-6 {
                 Mat4::identity()
@@ -201,11 +189,8 @@ impl Projective3RobotDemo {
             }
         };
 
-        // Translate to midpoint (cylinder is centered)
-        let midpoint = (start + end) / 2.0;
-        let translation = Mat4::from_translation(midpoint);
-
-        translation * rotation * scale
+        // Translate to start point (arrow starts at origin)
+        Mat4::from_translation(start) * rotation
     }
 }
 
@@ -332,43 +317,68 @@ impl VisualizationApp3D for Projective3RobotDemo {
         // World axes
         self.world_axes = Some(Axes::new(context, 0.02, 2.5));
 
-        // Create cylinder mesh for links (higher polygon count for smoother look)
-        let cylinder = CpuMesh::cylinder(32);
-        let sphere = CpuMesh::sphere(32);
+        // Create arrow meshes for links (pre-scaled like Axes does)
+        let arrow_radius = 0.02;
 
-        // Base pedestal
+        let mut arrow1 = CpuMesh::arrow(0.9, 0.6, 16);
+        arrow1
+            .transform(Mat4::from_nonuniform_scale(
+                self.link1_length,
+                arrow_radius,
+                arrow_radius,
+            ))
+            .unwrap();
+
+        let mut arrow2 = CpuMesh::arrow(0.9, 0.6, 16);
+        arrow2
+            .transform(Mat4::from_nonuniform_scale(
+                self.link2_length,
+                arrow_radius,
+                arrow_radius,
+            ))
+            .unwrap();
+
+        let mut arrow3 = CpuMesh::arrow(0.9, 0.6, 16);
+        arrow3
+            .transform(Mat4::from_nonuniform_scale(
+                self.link3_length,
+                arrow_radius,
+                arrow_radius,
+            ))
+            .unwrap();
+
+        let sphere = CpuMesh::sphere(16);
+
+        // Base - small sphere at origin
         self.base_mesh = Some(Gm::new(
-            Mesh::new(context, &cylinder),
-            PhysicalMaterial::new_opaque(
-                context,
-                &CpuMaterial {
-                    albedo: Srgba::new(80, 80, 90, 255),
-                    roughness: 0.7,
-                    metallic: 0.3,
-                    ..Default::default()
-                },
-            ),
+            Mesh::new(context, &sphere),
+            ColorMaterial {
+                color: Srgba::new(150, 150, 170, 255),
+                ..Default::default()
+            },
         ));
 
-        // Link meshes (blue metallic)
-        let link_material = CpuMaterial {
-            albedo: Srgba::new(70, 130, 200, 255),
-            roughness: 0.4,
-            metallic: 0.6,
-            ..Default::default()
-        };
-
+        // Link meshes - pre-scaled arrows
         self.link1_mesh = Some(Gm::new(
-            Mesh::new(context, &cylinder),
-            PhysicalMaterial::new_opaque(context, &link_material),
+            Mesh::new(context, &arrow1),
+            ColorMaterial {
+                color: Srgba::new(100, 180, 255, 255), // Light blue
+                ..Default::default()
+            },
         ));
         self.link2_mesh = Some(Gm::new(
-            Mesh::new(context, &cylinder),
-            PhysicalMaterial::new_opaque(context, &link_material),
+            Mesh::new(context, &arrow2),
+            ColorMaterial {
+                color: Srgba::new(100, 255, 180, 255), // Cyan
+                ..Default::default()
+            },
         ));
         self.link3_mesh = Some(Gm::new(
-            Mesh::new(context, &cylinder),
-            PhysicalMaterial::new_opaque(context, &link_material),
+            Mesh::new(context, &arrow3),
+            ColorMaterial {
+                color: Srgba::new(255, 200, 100, 255), // Yellow-orange
+                ..Default::default()
+            },
         ));
 
         // End effector (green sphere)
@@ -443,35 +453,31 @@ impl VisualizationApp3D for Projective3RobotDemo {
         camera.set_viewport(frame.viewport);
         control.handle_events(camera, &mut frame.events);
 
-        // Update base pedestal (small cylinder at origin)
+        // Update base (small sphere at origin)
         if let Some(mesh) = &mut self.base_mesh {
-            let scale = Mat4::from_nonuniform_scale(0.3, 0.1, 0.3);
-            let translate = Mat4::from_translation(vec3(0.0, 0.05, 0.0));
-            mesh.set_transformation(translate * scale);
+            mesh.set_transformation(Mat4::from_scale(0.08));
         }
 
-        // Update link meshes (thicker for visibility)
-        let link_radius = 0.06;
-
+        // Update link meshes (pre-scaled arrows, just rotate and translate)
         if let Some(mesh) = &mut self.link1_mesh {
-            mesh.set_transformation(Self::link_transform(base_pos, shoulder_pos, link_radius));
+            mesh.set_transformation(Self::arrow_transform(base_pos, shoulder_pos));
         }
 
         if let Some(mesh) = &mut self.link2_mesh {
-            mesh.set_transformation(Self::link_transform(shoulder_pos, elbow_pos, link_radius));
+            mesh.set_transformation(Self::arrow_transform(shoulder_pos, elbow_pos));
         }
 
         if let Some(mesh) = &mut self.link3_mesh {
-            mesh.set_transformation(Self::link_transform(elbow_pos, end_pos, link_radius));
+            mesh.set_transformation(Self::arrow_transform(elbow_pos, end_pos));
         }
 
         // Update end effector
         if let Some(mesh) = &mut self.end_effector_mesh {
-            mesh.set_transformation(Mat4::from_translation(end_pos) * Mat4::from_scale(0.12));
+            mesh.set_transformation(Mat4::from_translation(end_pos) * Mat4::from_scale(0.1));
         }
 
-        // Update joint spheres (larger to cover cylinder endpoints)
-        let joint_scale = 0.12;
+        // Update joint spheres
+        let joint_scale = 0.06;
         if let Some(mesh) = &mut self.joint1_mesh {
             mesh.set_transformation(
                 Mat4::from_translation(shoulder_pos) * Mat4::from_scale(joint_scale),
