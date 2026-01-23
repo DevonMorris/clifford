@@ -21,7 +21,6 @@
 use crate::common::prelude::*;
 use clifford::ops::Transform;
 use clifford::specialized::projective::dim3::{Motor, Point};
-use std::f32::consts::TAU;
 use three_d::*;
 
 /// Demo for 3D Robot Arm using native three-d rendering.
@@ -97,9 +96,9 @@ impl Default for Projective3RobotDemo {
             ambient_light: None,
             key_light: None,
             fill_light: None,
-            theta1: 0.0,
-            theta2: 0.5,
-            theta3: -0.3,
+            theta1: 0.3,
+            theta2: 0.8,  // ~45 degrees
+            theta3: -0.7, // ~-40 degrees (elbow bent)
             link1_length: 1.0,
             link2_length: 1.5,
             link3_length: 1.0,
@@ -218,11 +217,14 @@ impl VisualizationApp for Projective3RobotDemo {
     fn update(&mut self, dt: f32) {
         self.animation.update(dt);
         if self.animation.playing {
-            // Animate joints in a simple pattern
-            let t = self.animation.progress() * TAU;
-            self.theta1 = t.sin() * 0.5;
-            self.theta2 = 0.5 + (t * 2.0).cos() * 0.3;
-            self.theta3 = -0.3 + (t * 3.0).sin() * 0.4;
+            // Animate joints with visible amplitude
+            let t = self.animation.angle(); // 0 to 2π over loop duration
+            // Base swings ±60 degrees (±1.05 rad)
+            self.theta1 = t.sin() * 1.05;
+            // Shoulder oscillates between 30 and 80 degrees
+            self.theta2 = 0.96 + (t * 2.0).cos() * 0.44;
+            // Elbow oscillates between -90 and -30 degrees
+            self.theta3 = -1.05 + (t * 1.5).sin() * 0.52;
         }
     }
 
@@ -242,15 +244,27 @@ impl VisualizationApp for Projective3RobotDemo {
         section_separator(ui, Some("Link Lengths"));
         ui.horizontal(|ui| {
             ui.label("Link 1:");
-            ui.add(egui::DragValue::new(&mut self.link1_length).speed(0.1).range(0.5..=3.0));
+            ui.add(
+                egui::DragValue::new(&mut self.link1_length)
+                    .speed(0.1)
+                    .range(0.5..=3.0),
+            );
         });
         ui.horizontal(|ui| {
             ui.label("Link 2:");
-            ui.add(egui::DragValue::new(&mut self.link2_length).speed(0.1).range(0.5..=3.0));
+            ui.add(
+                egui::DragValue::new(&mut self.link2_length)
+                    .speed(0.1)
+                    .range(0.5..=3.0),
+            );
         });
         ui.horizontal(|ui| {
             ui.label("Link 3:");
-            ui.add(egui::DragValue::new(&mut self.link3_length).speed(0.1).range(0.5..=3.0));
+            ui.add(
+                egui::DragValue::new(&mut self.link3_length)
+                    .speed(0.1)
+                    .range(0.5..=3.0),
+            );
         });
 
         // === Animation ===
@@ -271,10 +285,7 @@ impl VisualizationApp for Projective3RobotDemo {
         ga_value_display(
             ui,
             "M_end",
-            &[
-                ("s", m_end.s() as f32),
-                ("ps", m_end.ps() as f32),
-            ],
+            &[("s", m_end.s() as f32), ("ps", m_end.ps() as f32)],
         );
 
         // === Display Options ===
@@ -286,7 +297,11 @@ impl VisualizationApp for Projective3RobotDemo {
 
         // === Camera Info ===
         section_separator(ui, Some("Camera"));
-        ui.label(egui::RichText::new("Drag to orbit, scroll to zoom").small().weak());
+        ui.label(
+            egui::RichText::new("Drag to orbit, scroll to zoom")
+                .small()
+                .weak(),
+        );
     }
 
     fn info(&self, ui: &mut egui::Ui) {
@@ -317,9 +332,9 @@ impl VisualizationApp3D for Projective3RobotDemo {
         // World axes
         self.world_axes = Some(Axes::new(context, 0.02, 2.5));
 
-        // Create cylinder mesh for links
-        let cylinder = CpuMesh::cylinder(16);
-        let sphere = CpuMesh::sphere(16);
+        // Create cylinder mesh for links (higher polygon count for smoother look)
+        let cylinder = CpuMesh::cylinder(32);
+        let sphere = CpuMesh::sphere(32);
 
         // Base pedestal
         self.base_mesh = Some(Gm::new(
@@ -435,8 +450,8 @@ impl VisualizationApp3D for Projective3RobotDemo {
             mesh.set_transformation(translate * scale);
         }
 
-        // Update link meshes
-        let link_radius = 0.08;
+        // Update link meshes (thicker for visibility)
+        let link_radius = 0.06;
 
         if let Some(mesh) = &mut self.link1_mesh {
             mesh.set_transformation(Self::link_transform(base_pos, shoulder_pos, link_radius));
@@ -455,8 +470,8 @@ impl VisualizationApp3D for Projective3RobotDemo {
             mesh.set_transformation(Mat4::from_translation(end_pos) * Mat4::from_scale(0.12));
         }
 
-        // Update joint spheres
-        let joint_scale = 0.1;
+        // Update joint spheres (larger to cover cylinder endpoints)
+        let joint_scale = 0.12;
         if let Some(mesh) = &mut self.joint1_mesh {
             mesh.set_transformation(
                 Mat4::from_translation(shoulder_pos) * Mat4::from_scale(joint_scale),
@@ -469,7 +484,7 @@ impl VisualizationApp3D for Projective3RobotDemo {
         }
         if let Some(mesh) = &mut self.joint3_mesh {
             mesh.set_transformation(
-                Mat4::from_translation(end_pos) * Mat4::from_scale(joint_scale * 0.8),
+                Mat4::from_translation(end_pos) * Mat4::from_scale(joint_scale),
             );
         }
 
