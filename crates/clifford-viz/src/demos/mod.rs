@@ -21,6 +21,8 @@ mod projective2_robot;
 mod projective3_lines;
 #[cfg(feature = "three-d")]
 mod projective3_motor;
+#[cfg(feature = "three-d")]
+mod projective3_robot;
 
 pub use complex_domain::ComplexDomainDemo;
 pub use complex_fractal::ComplexFractalDemo;
@@ -40,3 +42,5 @@ pub use projective2_robot::RobotArmDemo;
 pub use projective3_lines::Projective3LinesDemo;
 #[cfg(feature = "three-d")]
 pub use projective3_motor::Projective3MotorDemo;
+#[cfg(feature = "three-d")]
+pub use projective3_robot::Projective3RobotDemo;

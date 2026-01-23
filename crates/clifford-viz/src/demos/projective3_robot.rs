@@ -1,0 +1,585 @@
+//! 3D Robot Arm Visualization with PGA Motors.
+//!
+//! This demo demonstrates forward kinematics of a 3-joint robot arm using
+//! 3D Projective Geometric Algebra (PGA). Each joint rotation is represented
+//! by a Motor, and positions are computed by sequential motor composition.
+//!
+//! ## Robot Structure
+//!
+//! - Joint 1 (Base): Rotation around Z-axis (yaw)
+//! - Joint 2 (Shoulder): Rotation around Y-axis (pitch)
+//! - Joint 3 (Elbow): Rotation around Y-axis (pitch)
+//!
+//! ## Mathematical Background
+//!
+//! Forward kinematics uses motor composition:
+//! ```text
+//! M_total = M_base * T_1 * M_shoulder * T_2 * M_elbow * T_3
+//! End_effector = M_total * Origin
+//! ```
+
+use crate::common::prelude::*;
+use clifford::ops::Transform;
+use clifford::specialized::projective::dim3::{Motor, Point};
+use std::f32::consts::TAU;
+use three_d::*;
+
+/// Demo for 3D Robot Arm using native three-d rendering.
+pub struct Projective3RobotDemo {
+    /// 3D camera for rendering.
+    camera: Option<Camera>,
+    /// Orbit control for camera interaction.
+    control: Option<OrbitControl>,
+    /// World coordinate axes.
+    world_axes: Option<Axes>,
+
+    /// Base joint mesh (cylinder).
+    base_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
+    /// Link 1 mesh (arm segment).
+    link1_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
+    /// Link 2 mesh (arm segment).
+    link2_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
+    /// Link 3 mesh (arm segment).
+    link3_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
+    /// End effector mesh (sphere).
+    end_effector_mesh: Option<Gm<Mesh, ColorMaterial>>,
+
+    /// Joint 1 (shoulder) mesh.
+    joint1_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    /// Joint 2 (elbow) mesh.
+    joint2_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    /// Joint 3 (wrist) mesh.
+    joint3_mesh: Option<Gm<Mesh, ColorMaterial>>,
+
+    /// Ambient lighting.
+    ambient_light: Option<AmbientLight>,
+    /// Key directional light.
+    key_light: Option<DirectionalLight>,
+    /// Fill light.
+    fill_light: Option<DirectionalLight>,
+
+    /// Joint 1 angle (base rotation around Z).
+    theta1: f32,
+    /// Joint 2 angle (shoulder rotation around Y).
+    theta2: f32,
+    /// Joint 3 angle (elbow rotation around Y).
+    theta3: f32,
+
+    /// Link 1 length.
+    link1_length: f32,
+    /// Link 2 length.
+    link2_length: f32,
+    /// Link 3 length.
+    link3_length: f32,
+
+    /// Animation controller.
+    animation: Animation,
+    /// Whether to show world coordinate axes.
+    show_world_axes: bool,
+    /// Whether to show joint spheres.
+    show_joints: bool,
+}
+
+impl Default for Projective3RobotDemo {
+    fn default() -> Self {
+        Self {
+            camera: None,
+            control: None,
+            world_axes: None,
+            base_mesh: None,
+            link1_mesh: None,
+            link2_mesh: None,
+            link3_mesh: None,
+            end_effector_mesh: None,
+            joint1_mesh: None,
+            joint2_mesh: None,
+            joint3_mesh: None,
+            ambient_light: None,
+            key_light: None,
+            fill_light: None,
+            theta1: 0.0,
+            theta2: 0.5,
+            theta3: -0.3,
+            link1_length: 1.0,
+            link2_length: 1.5,
+            link3_length: 1.0,
+            animation: Animation::with_duration(4.0),
+            show_world_axes: true,
+            show_joints: true,
+        }
+    }
+}
+
+impl Projective3RobotDemo {
+    /// Computes forward kinematics returning joint positions.
+    ///
+    /// Returns (base, shoulder, elbow, wrist, end_effector) positions.
+    fn forward_kinematics(&self) -> (Point<f64>, Point<f64>, Point<f64>, Point<f64>) {
+        // Base is at origin
+        let base = Point::origin();
+
+        // Joint 1: Rotation around Z-axis (yaw)
+        let m1 = Motor::from_rotation_z(f64::from(self.theta1));
+
+        // Translation along Z to get to shoulder (link1 is vertical)
+        let t1 = Motor::from_translation(0.0, 0.0, f64::from(self.link1_length));
+
+        // Joint 2: Rotation around Y-axis (pitch) - in the rotated frame
+        let m2 = Motor::from_rotation_y(f64::from(self.theta2));
+
+        // Translation along X in the rotated frame (link2 extends outward)
+        let t2 = Motor::from_translation(f64::from(self.link2_length), 0.0, 0.0);
+
+        // Joint 3: Rotation around Y-axis (pitch)
+        let m3 = Motor::from_rotation_y(f64::from(self.theta3));
+
+        // Translation along X (link3 extends outward)
+        let t3 = Motor::from_translation(f64::from(self.link3_length), 0.0, 0.0);
+
+        // Compose motors for each joint position
+        // Shoulder position: after base rotation and first translation
+        let m_shoulder = (m1 * t1).unitized();
+        let shoulder = m_shoulder.transform(&base);
+
+        // Elbow position: after shoulder rotation and second translation
+        let m_elbow = (m_shoulder * m2 * t2).unitized();
+        let elbow = m_elbow.transform(&base);
+
+        // End effector position: after all transformations
+        let m_end = (m_elbow * m3 * t3).unitized();
+        let end_effector = m_end.transform(&base);
+
+        (shoulder, elbow, end_effector, end_effector)
+    }
+
+    /// Gets the motor for a specific joint configuration.
+    fn get_joint_motor(&self, joint_index: usize) -> Motor<f64> {
+        let m1 = Motor::from_rotation_z(f64::from(self.theta1));
+        let t1 = Motor::from_translation(0.0, 0.0, f64::from(self.link1_length));
+        let m2 = Motor::from_rotation_y(f64::from(self.theta2));
+        let t2 = Motor::from_translation(f64::from(self.link2_length), 0.0, 0.0);
+        let m3 = Motor::from_rotation_y(f64::from(self.theta3));
+        let t3 = Motor::from_translation(f64::from(self.link3_length), 0.0, 0.0);
+
+        match joint_index {
+            0 => Motor::identity(),
+            1 => (m1 * t1).unitized(),
+            2 => (m1 * t1 * m2 * t2).unitized(),
+            3 => (m1 * t1 * m2 * t2 * m3 * t3).unitized(),
+            _ => Motor::identity(),
+        }
+    }
+
+    /// Build a cylinder transformation between two points.
+    fn link_transform(start: Vec3, end: Vec3, radius: f32) -> Mat4 {
+        let dir = end - start;
+        let length = dir.magnitude();
+        if length < 1e-6 {
+            return Mat4::identity();
+        }
+        let dir_normalized = dir / length;
+
+        // Scale: radius in X/Z, length in Y (cylinder is Y-aligned)
+        let scale = Mat4::from_nonuniform_scale(radius, length, radius);
+
+        // Rotate from Y-axis to target direction
+        let y_axis = vec3(0.0, 1.0, 0.0);
+        let dot = y_axis.dot(dir_normalized);
+
+        let rotation = if dot > 0.9999 {
+            Mat4::identity()
+        } else if dot < -0.9999 {
+            Mat4::from_angle_x(Rad(std::f32::consts::PI))
+        } else {
+            let rot_axis = y_axis.cross(dir_normalized);
+            let rot_axis_len = rot_axis.magnitude();
+            if rot_axis_len < 1e-6 {
+                Mat4::identity()
+            } else {
+                let rot_axis_normalized = rot_axis / rot_axis_len;
+                let angle = dot.clamp(-1.0, 1.0).acos();
+                Mat4::from_axis_angle(rot_axis_normalized, Rad(angle))
+            }
+        };
+
+        // Translate to midpoint (cylinder is centered)
+        let midpoint = (start + end) / 2.0;
+        let translation = Mat4::from_translation(midpoint);
+
+        translation * rotation * scale
+    }
+}
+
+impl VisualizationApp for Projective3RobotDemo {
+    fn name(&self) -> &'static str {
+        "3D PGA Robot Arm"
+    }
+
+    fn update(&mut self, dt: f32) {
+        self.animation.update(dt);
+        if self.animation.playing {
+            // Animate joints in a simple pattern
+            let t = self.animation.progress() * TAU;
+            self.theta1 = t.sin() * 0.5;
+            self.theta2 = 0.5 + (t * 2.0).cos() * 0.3;
+            self.theta3 = -0.3 + (t * 3.0).sin() * 0.4;
+        }
+    }
+
+    fn render(&mut self, _ui: &mut egui::Ui) {
+        // 3D rendering is handled by render_3d()
+    }
+
+    fn controls(&mut self, ui: &mut egui::Ui) {
+        // === Joint Controls ===
+        group_header(ui, "Joint Angles");
+
+        angle_slider_range(ui, "Base (Z-rot)", &mut self.theta1, -180.0, 180.0);
+        angle_slider_range(ui, "Shoulder (Y-rot)", &mut self.theta2, -90.0, 90.0);
+        angle_slider_range(ui, "Elbow (Y-rot)", &mut self.theta3, -135.0, 135.0);
+
+        // === Link Lengths ===
+        section_separator(ui, Some("Link Lengths"));
+        ui.horizontal(|ui| {
+            ui.label("Link 1:");
+            ui.add(egui::DragValue::new(&mut self.link1_length).speed(0.1).range(0.5..=3.0));
+        });
+        ui.horizontal(|ui| {
+            ui.label("Link 2:");
+            ui.add(egui::DragValue::new(&mut self.link2_length).speed(0.1).range(0.5..=3.0));
+        });
+        ui.horizontal(|ui| {
+            ui.label("Link 3:");
+            ui.add(egui::DragValue::new(&mut self.link3_length).speed(0.1).range(0.5..=3.0));
+        });
+
+        // === Animation ===
+        section_separator(ui, Some("Animation"));
+        animation_controls(ui, &mut self.animation);
+        progress_slider(ui, &mut self.animation);
+
+        // === End Effector Position ===
+        section_separator(ui, Some("End Effector"));
+        let (_, _, end_effector, _) = self.forward_kinematics();
+        if let Some((x, y, z)) = end_effector.to_cartesian() {
+            info_box(ui, &format!("Position: ({:.3}, {:.3}, {:.3})", x, y, z));
+        }
+
+        // === Motor Components ===
+        section_separator(ui, Some("Forward Kinematics"));
+        let m_end = self.get_joint_motor(3);
+        ga_value_display(
+            ui,
+            "M_end",
+            &[
+                ("s", m_end.s() as f32),
+                ("ps", m_end.ps() as f32),
+            ],
+        );
+
+        // === Display Options ===
+        section_separator(ui, Some("Display"));
+        ui.horizontal(|ui| {
+            ui.checkbox(&mut self.show_world_axes, "World Axes");
+            ui.checkbox(&mut self.show_joints, "Joint Spheres");
+        });
+
+        // === Camera Info ===
+        section_separator(ui, Some("Camera"));
+        ui.label(egui::RichText::new("Drag to orbit, scroll to zoom").small().weak());
+    }
+
+    fn info(&self, ui: &mut egui::Ui) {
+        ui.label("3-DOF robot arm with motor-based forward kinematics");
+    }
+
+    fn educational_content(&self) -> Option<EducationalContent> {
+        Some(PROJECTIVE3_ROBOT_EDUCATION)
+    }
+}
+
+impl VisualizationApp3D for Projective3RobotDemo {
+    fn init_3d(&mut self, context: &Context) {
+        // Create perspective camera
+        self.camera = Some(Camera::new_perspective(
+            Viewport::new_at_origo(1, 1),
+            vec3(5.0, 4.0, 6.0),
+            vec3(0.0, 1.0, 0.0),
+            vec3(0.0, 1.0, 0.0),
+            degrees(45.0),
+            0.1,
+            100.0,
+        ));
+
+        // Orbit control
+        self.control = Some(OrbitControl::new(vec3(0.0, 1.0, 0.0), 1.0, 30.0));
+
+        // World axes
+        self.world_axes = Some(Axes::new(context, 0.02, 2.5));
+
+        // Create cylinder mesh for links
+        let cylinder = CpuMesh::cylinder(16);
+        let sphere = CpuMesh::sphere(16);
+
+        // Base pedestal
+        self.base_mesh = Some(Gm::new(
+            Mesh::new(context, &cylinder),
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(80, 80, 90, 255),
+                    roughness: 0.7,
+                    metallic: 0.3,
+                    ..Default::default()
+                },
+            ),
+        ));
+
+        // Link meshes (blue metallic)
+        let link_material = CpuMaterial {
+            albedo: Srgba::new(70, 130, 200, 255),
+            roughness: 0.4,
+            metallic: 0.6,
+            ..Default::default()
+        };
+
+        self.link1_mesh = Some(Gm::new(
+            Mesh::new(context, &cylinder),
+            PhysicalMaterial::new_opaque(context, &link_material),
+        ));
+        self.link2_mesh = Some(Gm::new(
+            Mesh::new(context, &cylinder),
+            PhysicalMaterial::new_opaque(context, &link_material),
+        ));
+        self.link3_mesh = Some(Gm::new(
+            Mesh::new(context, &cylinder),
+            PhysicalMaterial::new_opaque(context, &link_material),
+        ));
+
+        // End effector (green sphere)
+        self.end_effector_mesh = Some(Gm::new(
+            Mesh::new(context, &sphere),
+            ColorMaterial {
+                color: Srgba::new(50, 255, 100, 255),
+                ..Default::default()
+            },
+        ));
+
+        // Joint spheres (orange)
+        self.joint1_mesh = Some(Gm::new(
+            Mesh::new(context, &sphere),
+            ColorMaterial {
+                color: Srgba::new(255, 150, 50, 255),
+                ..Default::default()
+            },
+        ));
+        self.joint2_mesh = Some(Gm::new(
+            Mesh::new(context, &sphere),
+            ColorMaterial {
+                color: Srgba::new(255, 150, 50, 255),
+                ..Default::default()
+            },
+        ));
+        self.joint3_mesh = Some(Gm::new(
+            Mesh::new(context, &sphere),
+            ColorMaterial {
+                color: Srgba::new(255, 150, 50, 255),
+                ..Default::default()
+            },
+        ));
+
+        // Lighting
+        self.ambient_light = Some(AmbientLight::new(context, 0.3, Srgba::WHITE));
+        self.key_light = Some(DirectionalLight::new(
+            context,
+            1.0,
+            Srgba::WHITE,
+            vec3(-1.0, -1.0, -1.0).normalize(),
+        ));
+        self.fill_light = Some(DirectionalLight::new(
+            context,
+            0.4,
+            Srgba::new(200, 200, 255, 255),
+            vec3(1.0, -0.5, 0.5).normalize(),
+        ));
+    }
+
+    fn render_3d(&mut self, frame: &mut FrameInput) {
+        // Compute joint positions
+        let (shoulder, elbow, end_effector, _) = self.forward_kinematics();
+
+        let base_pos = vec3(0.0, 0.0, 0.0);
+        let shoulder_pos = shoulder
+            .to_cartesian()
+            .map(|(x, y, z)| vec3(x as f32, y as f32, z as f32))
+            .unwrap_or(vec3(0.0, 0.0, 1.0));
+        let elbow_pos = elbow
+            .to_cartesian()
+            .map(|(x, y, z)| vec3(x as f32, y as f32, z as f32))
+            .unwrap_or(vec3(1.0, 0.0, 1.0));
+        let end_pos = end_effector
+            .to_cartesian()
+            .map(|(x, y, z)| vec3(x as f32, y as f32, z as f32))
+            .unwrap_or(vec3(2.0, 0.0, 1.0));
+
+        let camera = self.camera.as_mut().unwrap();
+        let control = self.control.as_mut().unwrap();
+
+        camera.set_viewport(frame.viewport);
+        control.handle_events(camera, &mut frame.events);
+
+        // Update base pedestal (small cylinder at origin)
+        if let Some(mesh) = &mut self.base_mesh {
+            let scale = Mat4::from_nonuniform_scale(0.3, 0.1, 0.3);
+            let translate = Mat4::from_translation(vec3(0.0, 0.05, 0.0));
+            mesh.set_transformation(translate * scale);
+        }
+
+        // Update link meshes
+        let link_radius = 0.08;
+
+        if let Some(mesh) = &mut self.link1_mesh {
+            mesh.set_transformation(Self::link_transform(base_pos, shoulder_pos, link_radius));
+        }
+
+        if let Some(mesh) = &mut self.link2_mesh {
+            mesh.set_transformation(Self::link_transform(shoulder_pos, elbow_pos, link_radius));
+        }
+
+        if let Some(mesh) = &mut self.link3_mesh {
+            mesh.set_transformation(Self::link_transform(elbow_pos, end_pos, link_radius));
+        }
+
+        // Update end effector
+        if let Some(mesh) = &mut self.end_effector_mesh {
+            mesh.set_transformation(Mat4::from_translation(end_pos) * Mat4::from_scale(0.12));
+        }
+
+        // Update joint spheres
+        let joint_scale = 0.1;
+        if let Some(mesh) = &mut self.joint1_mesh {
+            mesh.set_transformation(
+                Mat4::from_translation(shoulder_pos) * Mat4::from_scale(joint_scale),
+            );
+        }
+        if let Some(mesh) = &mut self.joint2_mesh {
+            mesh.set_transformation(
+                Mat4::from_translation(elbow_pos) * Mat4::from_scale(joint_scale),
+            );
+        }
+        if let Some(mesh) = &mut self.joint3_mesh {
+            mesh.set_transformation(
+                Mat4::from_translation(end_pos) * Mat4::from_scale(joint_scale * 0.8),
+            );
+        }
+
+        // Collect objects to render
+        let mut objects: Vec<&dyn Object> = Vec::new();
+
+        if self.show_world_axes {
+            if let Some(axes) = &self.world_axes {
+                objects.push(axes);
+            }
+        }
+
+        if let Some(mesh) = &self.base_mesh {
+            objects.push(mesh);
+        }
+        if let Some(mesh) = &self.link1_mesh {
+            objects.push(mesh);
+        }
+        if let Some(mesh) = &self.link2_mesh {
+            objects.push(mesh);
+        }
+        if let Some(mesh) = &self.link3_mesh {
+            objects.push(mesh);
+        }
+        if let Some(mesh) = &self.end_effector_mesh {
+            objects.push(mesh);
+        }
+
+        if self.show_joints {
+            if let Some(mesh) = &self.joint1_mesh {
+                objects.push(mesh);
+            }
+            if let Some(mesh) = &self.joint2_mesh {
+                objects.push(mesh);
+            }
+            if let Some(mesh) = &self.joint3_mesh {
+                objects.push(mesh);
+            }
+        }
+
+        // Collect lights
+        let lights: Vec<&dyn Light> = vec![
+            self.ambient_light.as_ref().unwrap(),
+            self.key_light.as_ref().unwrap(),
+            self.fill_light.as_ref().unwrap(),
+        ];
+
+        // Render
+        frame.screen().render(camera, objects, &lights);
+    }
+}
+
+/// Educational content for the 3D Robot Arm visualization.
+const PROJECTIVE3_ROBOT_EDUCATION: EducationalContent = EducationalContent {
+    title: "3D Robot Arm with PGA Motors",
+
+    overview: "\
+This demo shows forward kinematics of a 3-DOF robot arm using PGA motors. \
+Each joint is a rotation motor, and link lengths are encoded as translation motors. \
+The end effector position is computed by composing all motors in the kinematic chain.
+
+Motors provide a compact, numerically stable representation for robot kinematics \
+that avoids gimbal lock and matrix drift issues.",
+
+    math_background: "\
+Forward kinematics computes end effector pose from joint angles:
+
+    M_end = M_1 * T_1 * M_2 * T_2 * M_3 * T_3
+
+Where:
+  - M_i = rotation motor for joint i
+  - T_i = translation motor for link i
+
+Joint rotation motors:
+  - M_1 = rotation around Z (base yaw)
+  - M_2 = rotation around local Y (shoulder pitch)
+  - M_3 = rotation around local Y (elbow pitch)
+
+Position computation:
+  - P_shoulder = (M_1 * T_1) * Origin
+  - P_elbow = (M_1 * T_1 * M_2 * T_2) * Origin
+  - P_end = (M_1 * T_1 * M_2 * T_2 * M_3 * T_3) * Origin",
+
+    how_to_use: "\
+- Adjust joint angles with sliders
+- Modify link lengths to change arm geometry
+- Click Play to animate the arm
+- Observe end effector position update
+- Drag to orbit camera, scroll to zoom",
+
+    key_concepts: "\
+- Motors compose multiplicatively: M_total = M_2 * M_1
+- Rotation motors: M = cos(t/2) + sin(t/2)*axis
+- Translation motors: T = 1 + d/2 where d is displacement bivector
+- Unitization prevents numerical drift
+- No gimbal lock (unlike Euler angles)
+- Interpolation via motor slerp is natural",
+
+    resources: &[
+        (
+            "RGA Wiki - Motors",
+            "https://rigidgeometricalgebra.org/wiki/index.php?title=Motor",
+        ),
+        (
+            "PGA for Computer Scientists",
+            "https://bivector.net/PGA4CS.pdf",
+        ),
+        (
+            "Geometric Algebra for Robotics",
+            "https://geometricalgebra.org/",
+        ),
+    ],
+};

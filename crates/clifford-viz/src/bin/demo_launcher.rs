@@ -36,6 +36,7 @@ fn main() {
             run_three_d_app_3d::<Projective3MotorDemo>("3D PGA Motors - Rigid Body Motion")
         }
         "projective3_lines" => run_three_d_app_3d::<Projective3LinesDemo>("3D PGA Plucker Lines"),
+        "projective3_robot" => run_three_d_app_3d::<Projective3RobotDemo>("3D PGA Robot Arm"),
         "conformal2_circles" => run_demo::<Conformal2CirclesDemo>("Conformal 2D - Circles"),
         "conformal2_inversion" => {
             run_demo::<Conformal2InversionDemo>("Conformal 2D - Circle Inversion")
@@ -404,6 +405,11 @@ fn render_menu_ui(ctx: &egui::Context) {
                         "projective3_lines",
                         "3D Plucker Lines",
                         "Line geometry with Plucker coords",
+                    ),
+                    (
+                        "projective3_robot",
+                        "3D Robot Arm",
+                        "Forward kinematics with motors",
                     ),
                 ],
             );
