@@ -77,7 +77,7 @@ pub mod prelude {
         screen_size, use_mobile_layout,
     };
     #[cfg(feature = "three-d")]
-    pub use super::app_three_d::run_three_d_app;
+    pub use super::app_three_d::{VisualizationApp3D, run_three_d_app, run_three_d_app_3d};
     // 3D camera and shapes
     pub use super::camera3d::{Camera3D, camera_controls, camera_response};
     pub use super::colors::{

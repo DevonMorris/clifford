@@ -11,6 +11,8 @@ mod conformal2_inversion;
 mod conformal2_mobius;
 mod dual_autodiff;
 mod euclidean2;
+#[cfg(feature = "three-d")]
+mod euclidean3;
 mod minkowski2_diagram;
 mod minkowski2_dilation;
 mod projective2;
@@ -24,6 +26,8 @@ pub use conformal2_inversion::Conformal2InversionDemo;
 pub use conformal2_mobius::Conformal2MobiusDemo;
 pub use dual_autodiff::DualAutodiffDemo;
 pub use euclidean2::Euclidean2Demo;
+#[cfg(feature = "three-d")]
+pub use euclidean3::Euclidean3Demo;
 pub use minkowski2_diagram::Minkowski2DiagramDemo;
 pub use minkowski2_dilation::Minkowski2DilationDemo;
 pub use projective2::Projective2Demo;

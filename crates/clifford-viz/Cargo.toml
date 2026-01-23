@@ -47,6 +47,10 @@ name = "euclidean2"
 required-features = ["three-d"]
 
 [[example]]
+name = "euclidean3"
+required-features = ["three-d"]
+
+[[example]]
 name = "projective2"
 required-features = ["three-d"]
 
