@@ -106,6 +106,10 @@ required-features = ["three-d"]
 name = "projective3_robot"
 required-features = ["three-d"]
 
+[[example]]
+name = "projective3_geometry"
+required-features = ["three-d"]
+
 # Demo launcher using three-d (works native and WASM)
 [[bin]]
 name = "demo_launcher"
