@@ -94,6 +94,10 @@ required-features = ["three-d"]
 name = "conformal2_intersection"
 required-features = ["three-d"]
 
+[[example]]
+name = "projective3_motor"
+required-features = ["three-d"]
+
 # Demo launcher using three-d (works native and WASM)
 [[bin]]
 name = "demo_launcher"

@@ -32,6 +32,9 @@ fn main() {
         "euclidean3" => run_three_d_app_3d::<Euclidean3Demo>("3D Euclidean Rotors"),
         "projective2" => run_demo::<Projective2Demo>("Projective 2D - Point-Line Geometry"),
         "projective2_robot" => run_demo::<RobotArmDemo>("Robot Arm - 2D PGA"),
+        "projective3_motor" => {
+            run_three_d_app_3d::<Projective3MotorDemo>("3D PGA Motors - Rigid Body Motion")
+        }
         "conformal2_circles" => run_demo::<Conformal2CirclesDemo>("Conformal 2D - Circles"),
         "conformal2_inversion" => {
             run_demo::<Conformal2InversionDemo>("Conformal 2D - Circle Inversion")
@@ -51,9 +54,9 @@ fn main() {
         _ => {
             eprintln!("Unknown demo: {}", demo_name);
             eprintln!("Available demos: euclidean2, euclidean3, projective2, projective2_robot,");
-            eprintln!("  conformal2_circles, conformal2_inversion, conformal2_mobius,");
-            eprintln!("  conformal2_intersection, complex_domain, complex_fractal,");
-            eprintln!("  dual_autodiff, minkowski2_diagram, minkowski2_dilation");
+            eprintln!("  projective3_motor, conformal2_circles, conformal2_inversion,");
+            eprintln!("  conformal2_mobius, conformal2_intersection, complex_domain,");
+            eprintln!("  complex_fractal, dual_autodiff, minkowski2_diagram, minkowski2_dilation");
             run_menu();
         }
     }
@@ -389,6 +392,11 @@ fn render_menu_ui(ctx: &egui::Context) {
                         "projective2_robot",
                         "Robot Arm",
                         "Forward kinematics with motors",
+                    ),
+                    (
+                        "projective3_motor",
+                        "3D Motors",
+                        "Rigid body motion in 3D PGA",
                     ),
                 ],
             );
