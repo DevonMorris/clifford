@@ -35,6 +35,7 @@ fn main() {
         "projective3_motor" => {
             run_three_d_app_3d::<Projective3MotorDemo>("3D PGA Motors - Rigid Body Motion")
         }
+        "projective3_lines" => run_three_d_app_3d::<Projective3LinesDemo>("3D PGA Plucker Lines"),
         "conformal2_circles" => run_demo::<Conformal2CirclesDemo>("Conformal 2D - Circles"),
         "conformal2_inversion" => {
             run_demo::<Conformal2InversionDemo>("Conformal 2D - Circle Inversion")
@@ -54,9 +55,10 @@ fn main() {
         _ => {
             eprintln!("Unknown demo: {}", demo_name);
             eprintln!("Available demos: euclidean2, euclidean3, projective2, projective2_robot,");
-            eprintln!("  projective3_motor, conformal2_circles, conformal2_inversion,");
-            eprintln!("  conformal2_mobius, conformal2_intersection, complex_domain,");
-            eprintln!("  complex_fractal, dual_autodiff, minkowski2_diagram, minkowski2_dilation");
+            eprintln!("  projective3_motor, projective3_lines, conformal2_circles,");
+            eprintln!("  conformal2_inversion, conformal2_mobius, conformal2_intersection,");
+            eprintln!("  complex_domain, complex_fractal, dual_autodiff, minkowski2_diagram,");
+            eprintln!("  minkowski2_dilation");
             run_menu();
         }
     }
@@ -397,6 +399,11 @@ fn render_menu_ui(ctx: &egui::Context) {
                         "projective3_motor",
                         "3D Motors",
                         "Rigid body motion in 3D PGA",
+                    ),
+                    (
+                        "projective3_lines",
+                        "3D Plucker Lines",
+                        "Line geometry with Plucker coords",
                     ),
                 ],
             );

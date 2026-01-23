@@ -18,6 +18,8 @@ mod minkowski2_dilation;
 mod projective2;
 mod projective2_robot;
 #[cfg(feature = "three-d")]
+mod projective3_lines;
+#[cfg(feature = "three-d")]
 mod projective3_motor;
 
 pub use complex_domain::ComplexDomainDemo;
@@ -34,5 +36,7 @@ pub use minkowski2_diagram::Minkowski2DiagramDemo;
 pub use minkowski2_dilation::Minkowski2DilationDemo;
 pub use projective2::Projective2Demo;
 pub use projective2_robot::RobotArmDemo;
+#[cfg(feature = "three-d")]
+pub use projective3_lines::Projective3LinesDemo;
 #[cfg(feature = "three-d")]
 pub use projective3_motor::Projective3MotorDemo;
