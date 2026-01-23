@@ -19,6 +19,7 @@
 use clifford_viz::common::app::{
     EducationalContent, VisualizationApp, configure_responsive_style, use_mobile_layout,
 };
+use clifford_viz::common::app_three_d::run_three_d_app_3d;
 use clifford_viz::demos::*;
 use three_d::*;
 
@@ -28,6 +29,7 @@ fn main() {
 
     match demo_name.as_str() {
         "euclidean2" => run_demo::<Euclidean2Demo>("Euclidean 2D - Rotor Animation"),
+        "euclidean3" => run_three_d_app_3d::<Euclidean3Demo>("3D Euclidean Rotors"),
         "projective2" => run_demo::<Projective2Demo>("Projective 2D - Point-Line Geometry"),
         "projective2_robot" => run_demo::<RobotArmDemo>("Robot Arm - 2D PGA"),
         "conformal2_circles" => run_demo::<Conformal2CirclesDemo>("Conformal 2D - Circles"),
@@ -48,7 +50,7 @@ fn main() {
         "menu" | "" => run_menu(),
         _ => {
             eprintln!("Unknown demo: {}", demo_name);
-            eprintln!("Available demos: euclidean2, projective2, projective2_robot,");
+            eprintln!("Available demos: euclidean2, euclidean3, projective2, projective2_robot,");
             eprintln!("  conformal2_circles, conformal2_inversion, conformal2_mobius,");
             eprintln!("  conformal2_intersection, complex_domain, complex_fractal,");
             eprintln!("  dual_autodiff, minkowski2_diagram, minkowski2_dilation");
@@ -366,7 +368,10 @@ fn render_menu_ui(ctx: &egui::Context) {
             render_demo_category(
                 ui,
                 "Euclidean Geometry",
-                &[("euclidean2", "2D Rotors", "Rotation using rotors")],
+                &[
+                    ("euclidean2", "2D Rotors", "Rotation using rotors"),
+                    ("euclidean3", "3D Rotors", "Native 3D rotation demo"),
+                ],
             );
 
             ui.add_space(12.0 * sp);
