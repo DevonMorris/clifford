@@ -96,9 +96,9 @@ impl Default for Projective3RobotDemo {
             ambient_light: None,
             key_light: None,
             fill_light: None,
-            theta1: 0.3,
-            theta2: 0.8,  // ~45 degrees
-            theta3: -0.7, // ~-40 degrees (elbow bent)
+            theta1: 0.0,  // Start in YZ plane
+            theta2: 0.79, // ~45 degrees (shoulder forward)
+            theta3: -0.52, // ~-30 degrees (elbow slightly bent)
             link1_length: 1.0,
             link2_length: 1.5,
             link3_length: 1.0,
@@ -228,14 +228,21 @@ impl VisualizationApp for Projective3RobotDemo {
     fn update(&mut self, dt: f32) {
         self.animation.update(dt);
         if self.animation.playing {
-            // Animate joints with visible amplitude
+            // Animate joints in a "reaching" motion, mostly in the YZ plane
             let t = self.animation.angle(); // 0 to 2π over loop duration
-            // Base swings ±60 degrees (±1.05 rad)
-            self.theta1 = t.sin() * 1.05;
-            // Shoulder oscillates between 30 and 80 degrees
-            self.theta2 = 0.96 + (t * 2.0).cos() * 0.44;
-            // Elbow oscillates between -90 and -30 degrees
-            self.theta3 = -1.05 + (t * 1.5).sin() * 0.52;
+
+            // Base: minimal rotation to keep motion mostly in YZ plane (±15 deg)
+            self.theta1 = t.sin() * 0.26;
+
+            // Shoulder and elbow coordinate for a natural reaching motion:
+            // - Arm reaches forward and up, then retracts
+            // Shoulder: oscillates 20 to 70 degrees (0.35 to 1.22 rad)
+            self.theta2 = 0.79 + t.cos() * 0.44;
+
+            // Elbow: counteracts shoulder to create smooth reach
+            // When shoulder is forward (low angle), elbow extends (less negative)
+            // When shoulder is back (high angle), elbow bends more
+            self.theta3 = -0.52 + t.cos() * 0.52;
         }
     }
 
