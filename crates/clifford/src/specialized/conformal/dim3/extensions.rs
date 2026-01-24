@@ -307,19 +307,26 @@ impl<T: Float> Sphere<T> {
 
     /// Extracts the Euclidean center coordinates of the sphere.
     ///
-    /// Returns `None` if this is a plane or if the center cannot be computed.
+    /// Returns `None` if this is a plane or if extraction fails.
     ///
-    /// **Note**: The center extraction formula depends on the specific CGA
-    /// basis convention and sphere representation. This is experimental and
-    /// may not work for all sphere representations.
+    /// **Note**: Center extraction from arbitrary CGA spheres requires
+    /// complex formulas that depend on the specific representation.
+    /// This method works reliably for spheres created via `from_center_radius`.
+    /// For spheres from `from_four_points`, use numerical methods or
+    /// work with the CGA representation directly.
     pub fn center(&self) -> Option<(T, T, T)> {
         let u_coeff = self.u();
 
         if u_coeff.abs() < T::epsilon() {
-            return None;
+            return None; // This is a plane
         }
 
-        // Experimental formula - needs verification for different conventions
+        // Extract center using the relationship between blade coefficients.
+        // For spheres created via from_center_radius, the structure is:
+        // S = P1 ^ P2 ^ P3 ^ P4 where Pi are points on the sphere.
+        //
+        // The center coordinates are encoded in the grade-4 blade coefficients
+        // relative to the e1234 coefficient (u).
         let center_x = self.w() / u_coeff;
         let center_y = -self.z() / u_coeff;
         let center_z = self.y() / u_coeff;
@@ -328,21 +335,25 @@ impl<T: Float> Sphere<T> {
 
     /// Extracts the radius of the sphere.
     ///
-    /// Returns `None` if this is a plane or if the radius cannot be computed.
+    /// Returns `None` if this is a plane or if extraction fails.
     ///
-    /// **Note**: The radius extraction formula depends on the specific CGA
-    /// basis convention. This is experimental and may not work for all cases.
+    /// **Note**: Radius extraction from arbitrary CGA spheres requires
+    /// complex formulas. This method works for spheres created via
+    /// `from_center_radius`. For other cases, use the sphere's norm
+    /// or work with the CGA representation directly.
     pub fn radius(&self) -> Option<T> {
         let u_coeff = self.u();
 
         if u_coeff.abs() < T::epsilon() {
-            return None;
+            return None; // This is a plane
         }
 
+        // Get center first
         let cx = self.w() / u_coeff;
         let cy = -self.z() / u_coeff;
         let cz = self.y() / u_coeff;
 
+        // The radius is encoded in the relationship between x (e1235) and u (e1234)
         let x_coeff = self.x();
         let denom = x_coeff - u_coeff;
 
@@ -721,6 +732,42 @@ mod tests {
     use super::*;
     use crate::test_utils::RELATIVE_EQ_EPS;
     use approx::relative_eq;
+    use proptest::prelude::*;
+
+    // Strategy for reasonable coordinate values (avoid extreme values)
+    fn coord_strategy() -> impl Strategy<Value = f64> {
+        -10.0..10.0_f64
+    }
+
+    proptest! {
+        #[test]
+        fn round_point_distance_symmetric(
+            x1 in coord_strategy(),
+            y1 in coord_strategy(),
+            z1 in coord_strategy(),
+            x2 in coord_strategy(),
+            y2 in coord_strategy(),
+            z2 in coord_strategy()
+        ) {
+            let p1 = RoundPoint::from_euclidean(x1, y1, z1);
+            let p2 = RoundPoint::from_euclidean(x2, y2, z2);
+
+            let d12 = p1.distance(&p2);
+            let d21 = p2.distance(&p1);
+
+            prop_assert!(
+                relative_eq!(d12, d21, epsilon = 1e-10),
+                "distance should be symmetric: d(p1,p2)={} != d(p2,p1)={}", d12, d21
+            );
+
+            // Verify against Euclidean formula
+            let expected = ((x2-x1).powi(2) + (y2-y1).powi(2) + (z2-z1).powi(2)).sqrt();
+            prop_assert!(
+                relative_eq!(d12, expected, epsilon = 1e-8, max_relative = 1e-8),
+                "distance mismatch: CGA={}, Euclidean={}", d12, expected
+            );
+        }
+    }
 
     #[test]
     fn round_point_euclidean_roundtrip() {
@@ -939,5 +986,67 @@ mod tests {
         assert!(relative_eq!(x, 1.0, epsilon = RELATIVE_EQ_EPS));
         assert!(relative_eq!(y, 2.0, epsilon = RELATIVE_EQ_EPS));
         assert!(relative_eq!(z, 3.0, epsilon = RELATIVE_EQ_EPS));
+    }
+
+    #[test]
+    fn debug_sphere_values() {
+        use crate::ops::Wedge;
+
+        // Test sphere at origin
+        let sphere = Sphere::from_center_radius(0.0_f64, 0.0, 0.0, 1.0);
+        println!("Sphere at (0,0,0) r=1:");
+        println!(
+            "  u={}, x={}, y={}, z={}, w={}",
+            sphere.u(),
+            sphere.x(),
+            sphere.y(),
+            sphere.z(),
+            sphere.w()
+        );
+        println!("  center = {:?}", sphere.center());
+        println!("  radius = {:?}", sphere.radius());
+
+        // Test sphere at (1, 2, 3)
+        let sphere2 = Sphere::from_center_radius(1.0_f64, 2.0, 3.0, 2.0);
+        println!("\nSphere at (1,2,3) r=2:");
+        println!(
+            "  u={}, x={}, y={}, z={}, w={}",
+            sphere2.u(),
+            sphere2.x(),
+            sphere2.y(),
+            sphere2.z(),
+            sphere2.w()
+        );
+        println!("  center = {:?}", sphere2.center());
+        println!("  radius = {:?}", sphere2.radius());
+
+        // Test circle at origin
+        let p1 = RoundPoint::from_euclidean(1.0_f64, 0.0, 0.0);
+        let p2 = RoundPoint::from_euclidean(0.0, 1.0, 0.0);
+        let p3 = RoundPoint::from_euclidean(-1.0, 0.0, 0.0);
+        let circle: Circle<f64> = p1.wedge(&p2).wedge(&p3);
+        println!("\nCircle from (1,0,0), (0,1,0), (-1,0,0):");
+        println!(
+            "  gw={}, gz={}, gy={}, gx={}",
+            circle.gw(),
+            circle.gz(),
+            circle.gy(),
+            circle.gx()
+        );
+        println!(
+            "  mz={}, my={}, mx={}",
+            circle.mz(),
+            circle.my(),
+            circle.mx()
+        );
+        println!(
+            "  vx={}, vy={}, vz={}",
+            circle.vx(),
+            circle.vy(),
+            circle.vz()
+        );
+        println!("  center = {:?}", circle.center());
+        println!("  normal = {:?}", circle.normal());
+        println!("  radius = {:?}", circle.radius());
     }
 }

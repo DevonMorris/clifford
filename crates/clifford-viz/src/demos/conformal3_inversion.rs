@@ -237,10 +237,16 @@ impl Conformal3InversionDemo {
 
     /// Invert a sphere through the inversion sphere.
     ///
-    /// Note: For simplicity, we compute the inverted sphere by inverting
-    /// center and antipodal points, then reconstructing.
+    /// In CGA, sphere inversion can be computed as: S' = I * S * I^(-1)
+    /// where I is the inversion sphere. For visualization, we use the
+    /// classical geometric formula which is equivalent but easier to
+    /// extract center/radius from.
+    ///
+    /// Classical inversion: For a sphere with center C and radius r,
+    /// inverted through sphere with center O and radius R:
+    /// - If |OC| = r (sphere passes through O), result is a plane
+    /// - Otherwise, invert the near/far points and reconstruct
     fn invert_sphere(&self, sphere: &SceneSphere) -> Option<InvertedSphere> {
-        // Get inversion parameters
         let inv_cx = f64::from(self.inversion_cx);
         let inv_cy = f64::from(self.inversion_cy);
         let inv_cz = f64::from(self.inversion_cz);
@@ -248,13 +254,12 @@ impl Conformal3InversionDemo {
 
         let (cx, cy, cz, r) = sphere.center_radius();
 
-        // Check if sphere passes through inversion center
+        // Distance from inversion center to sphere center
         let dist_to_center =
             ((cx - inv_cx).powi(2) + (cy - inv_cy).powi(2) + (cz - inv_cz).powi(2)).sqrt();
 
         if (dist_to_center - r).abs() < EPSILON {
-            // Sphere passes through inversion center - becomes a plane
-            // The plane is perpendicular to the line from inversion center to sphere center
+            // Sphere passes through inversion center -> becomes a plane
             let dx = cx - inv_cx;
             let dy = cy - inv_cy;
             let dz = cz - inv_cz;
@@ -262,36 +267,31 @@ impl Conformal3InversionDemo {
             if len < EPSILON {
                 return None;
             }
-            let nx = dx / len;
-            let ny = dy / len;
-            let nz = dz / len;
-            // Distance to plane from origin
-            let d = inv_r_sq / (2.0 * dist_to_center);
             return Some(InvertedSphere::Plane {
-                _nx: nx,
-                _ny: ny,
-                _nz: nz,
-                _d: d,
+                _nx: dx / len,
+                _ny: dy / len,
+                _nz: dz / len,
+                _d: inv_r_sq / (2.0 * dist_to_center),
             });
         }
 
-        // General case: invert two antipodal points to find new sphere
-        // Use classical inversion formula: P' = O + r^2 * (P - O) / |P - O|^2
-
-        // Point closest to inversion center
+        // General case: invert the near and far points of the sphere
+        // (points along the line from inversion center through sphere center)
         let dir_x = (cx - inv_cx) / dist_to_center;
         let dir_y = (cy - inv_cy) / dist_to_center;
         let dir_z = (cz - inv_cz) / dist_to_center;
 
+        // Near point (closest to inversion center)
         let near_x = cx - r * dir_x;
         let near_y = cy - r * dir_y;
         let near_z = cz - r * dir_z;
 
+        // Far point (farthest from inversion center)
         let far_x = cx + r * dir_x;
         let far_y = cy + r * dir_y;
         let far_z = cz + r * dir_z;
 
-        // Invert both points classically
+        // Invert both points: P' = O + R^2 * (P - O) / |P - O|^2
         let near_dist_sq =
             (near_x - inv_cx).powi(2) + (near_y - inv_cy).powi(2) + (near_z - inv_cz).powi(2);
         let far_dist_sq =
@@ -309,21 +309,16 @@ impl Conformal3InversionDemo {
         let far_inv_y = inv_cy + inv_r_sq * (far_y - inv_cy) / far_dist_sq;
         let far_inv_z = inv_cz + inv_r_sq * (far_z - inv_cz) / far_dist_sq;
 
-        // New sphere center is midpoint, radius is half distance
-        let new_cx = (near_inv_x + far_inv_x) / 2.0;
-        let new_cy = (near_inv_y + far_inv_y) / 2.0;
-        let new_cz = (near_inv_z + far_inv_z) / 2.0;
-        let new_r = ((near_inv_x - far_inv_x).powi(2)
-            + (near_inv_y - far_inv_y).powi(2)
-            + (near_inv_z - far_inv_z).powi(2))
-        .sqrt()
-            / 2.0;
-
+        // New sphere: center is midpoint, radius is half the distance
         Some(InvertedSphere::Sphere {
-            cx: new_cx,
-            cy: new_cy,
-            cz: new_cz,
-            radius: new_r,
+            cx: (near_inv_x + far_inv_x) / 2.0,
+            cy: (near_inv_y + far_inv_y) / 2.0,
+            cz: (near_inv_z + far_inv_z) / 2.0,
+            radius: ((near_inv_x - far_inv_x).powi(2)
+                + (near_inv_y - far_inv_y).powi(2)
+                + (near_inv_z - far_inv_z).powi(2))
+            .sqrt()
+                / 2.0,
         })
     }
 
