@@ -112,28 +112,58 @@ impl Default for Projective3RobotDemo {
 impl Projective3RobotDemo {
     /// Computes forward kinematics returning joint positions.
     ///
-    /// Motors compose via the `*` operator (antigeometric product in PGA).
+    /// Uses cumulative rotations to find link directions in world frame,
+    /// then computes positions by translating along those directions.
+    ///
+    /// Key insight: ideal points (directions) are only affected by rotation,
+    /// not translation. So we track cumulative rotation separately.
     fn forward_kinematics(&self) -> (Point<f64>, Point<f64>, Point<f64>, Point<f64>) {
-        // Base is at origin
-        let base = Point::origin();
+        // Direction vectors as ideal points (w=0)
+        let x_dir = Point::ideal(1.0, 0.0, 0.0);
+        let z_dir = Point::ideal(0.0, 0.0, 1.0);
 
-        // Motors for each transformation
-        let m1 = Motor::from_rotation_z(f64::from(self.theta1));
-        let t1 = Motor::from_translation(0.0, 0.0, f64::from(self.link1_length));
-        let m2 = Motor::from_rotation_y(f64::from(self.theta2));
-        let t2 = Motor::from_translation(f64::from(self.link2_length), 0.0, 0.0);
-        let m3 = Motor::from_rotation_y(f64::from(self.theta3));
-        let t3 = Motor::from_translation(f64::from(self.link3_length), 0.0, 0.0);
+        // Joint rotations (around axes through origin)
+        let r1 = Motor::from_rotation_z(f64::from(self.theta1));
+        let r2 = Motor::from_rotation_y(f64::from(self.theta2));
+        let r3 = Motor::from_rotation_y(f64::from(self.theta3));
 
-        // Compose motors: t * m means "first apply m, then apply t"
-        let m_shoulder = t1 * m1;
-        let shoulder = m_shoulder.transform(&base);
+        // Cumulative rotations for each frame
+        let rot_1 = r1;
+        let rot_12 = rot_1 * r2;
+        let rot_123 = rot_12 * r3;
 
-        let m_elbow = t2 * m2 * m_shoulder;
-        let elbow = m_elbow.transform(&base);
+        // Link 1: along Z in frame 1 (Z rotation doesn't change Z direction)
+        let link1_dir = rot_1.transform(&z_dir);
+        let l1 = f64::from(self.link1_length);
 
-        let m_end = t3 * m3 * m_elbow;
-        let end_effector = m_end.transform(&base);
+        // Shoulder = base + L1 * link1_direction
+        let shoulder = Point::from_cartesian(
+            l1 * link1_dir.x(),
+            l1 * link1_dir.y(),
+            l1 * link1_dir.z(),
+        );
+
+        // Link 2: along X in frame 2, rotated to world frame
+        let link2_dir = rot_12.transform(&x_dir);
+        let l2 = f64::from(self.link2_length);
+
+        // Elbow = shoulder + L2 * link2_direction
+        let elbow = Point::from_cartesian(
+            shoulder.cartesian_x() + l2 * link2_dir.x(),
+            shoulder.cartesian_y() + l2 * link2_dir.y(),
+            shoulder.cartesian_z() + l2 * link2_dir.z(),
+        );
+
+        // Link 3: along X in frame 3, rotated to world frame
+        let link3_dir = rot_123.transform(&x_dir);
+        let l3 = f64::from(self.link3_length);
+
+        // End effector = elbow + L3 * link3_direction
+        let end_effector = Point::from_cartesian(
+            elbow.cartesian_x() + l3 * link3_dir.x(),
+            elbow.cartesian_y() + l3 * link3_dir.y(),
+            elbow.cartesian_z() + l3 * link3_dir.z(),
+        );
 
         (shoulder, elbow, end_effector, end_effector)
     }
