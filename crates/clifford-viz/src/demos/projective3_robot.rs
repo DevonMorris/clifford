@@ -33,22 +33,22 @@ pub struct Projective3RobotDemo {
     world_axes: Option<Axes>,
 
     /// Base joint mesh (sphere).
-    base_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    base_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// Link 1 mesh (thin cylinder).
-    link1_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    link1_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// Link 2 mesh (thin cylinder).
-    link2_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    link2_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// Link 3 mesh (thin cylinder).
-    link3_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    link3_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// End effector mesh (sphere).
-    end_effector_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    end_effector_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
 
     /// Joint 1 (shoulder) mesh.
-    joint1_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    joint1_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// Joint 2 (elbow) mesh.
-    joint2_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    joint2_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
     /// Joint 3 (wrist) mesh.
-    joint3_mesh: Option<Gm<Mesh, ColorMaterial>>,
+    joint3_mesh: Option<Gm<Mesh, PhysicalMaterial>>,
 
     /// Ambient lighting.
     ambient_light: Option<AmbientLight>,
@@ -384,65 +384,105 @@ impl VisualizationApp3D for Projective3RobotDemo {
         // Base - small sphere at origin
         self.base_mesh = Some(Gm::new(
             Mesh::new(context, &sphere),
-            ColorMaterial {
-                color: Srgba::new(150, 150, 170, 255),
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(150, 150, 170, 255),
+                    roughness: 0.6,
+                    metallic: 0.2,
+                    ..Default::default()
+                },
+            ),
         ));
 
         // Link meshes - pre-scaled arrows
         self.link1_mesh = Some(Gm::new(
             Mesh::new(context, &arrow1),
-            ColorMaterial {
-                color: Srgba::new(100, 180, 255, 255), // Light blue
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(100, 180, 255, 255), // Light blue
+                    roughness: 0.5,
+                    metallic: 0.1,
+                    ..Default::default()
+                },
+            ),
         ));
         self.link2_mesh = Some(Gm::new(
             Mesh::new(context, &arrow2),
-            ColorMaterial {
-                color: Srgba::new(100, 255, 180, 255), // Cyan
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(100, 255, 180, 255), // Cyan
+                    roughness: 0.5,
+                    metallic: 0.1,
+                    ..Default::default()
+                },
+            ),
         ));
         self.link3_mesh = Some(Gm::new(
             Mesh::new(context, &arrow3),
-            ColorMaterial {
-                color: Srgba::new(255, 200, 100, 255), // Yellow-orange
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(255, 200, 100, 255), // Yellow-orange
+                    roughness: 0.5,
+                    metallic: 0.1,
+                    ..Default::default()
+                },
+            ),
         ));
 
         // End effector (green sphere)
         self.end_effector_mesh = Some(Gm::new(
             Mesh::new(context, &sphere),
-            ColorMaterial {
-                color: Srgba::new(50, 255, 100, 255),
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(50, 255, 100, 255),
+                    roughness: 0.4,
+                    metallic: 0.3,
+                    ..Default::default()
+                },
+            ),
         ));
 
         // Joint spheres (orange)
         self.joint1_mesh = Some(Gm::new(
             Mesh::new(context, &sphere),
-            ColorMaterial {
-                color: Srgba::new(255, 150, 50, 255),
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(255, 150, 50, 255),
+                    roughness: 0.4,
+                    metallic: 0.2,
+                    ..Default::default()
+                },
+            ),
         ));
         self.joint2_mesh = Some(Gm::new(
             Mesh::new(context, &sphere),
-            ColorMaterial {
-                color: Srgba::new(255, 150, 50, 255),
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(255, 150, 50, 255),
+                    roughness: 0.4,
+                    metallic: 0.2,
+                    ..Default::default()
+                },
+            ),
         ));
         self.joint3_mesh = Some(Gm::new(
             Mesh::new(context, &sphere),
-            ColorMaterial {
-                color: Srgba::new(255, 150, 50, 255),
-                ..Default::default()
-            },
+            PhysicalMaterial::new_opaque(
+                context,
+                &CpuMaterial {
+                    albedo: Srgba::new(255, 150, 50, 255),
+                    roughness: 0.4,
+                    metallic: 0.2,
+                    ..Default::default()
+                },
+            ),
         ));
 
         // Lighting
