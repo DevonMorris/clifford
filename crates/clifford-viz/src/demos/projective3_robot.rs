@@ -19,7 +19,7 @@
 //! ```
 
 use crate::common::prelude::*;
-use clifford::ops::{Transform, Versor};
+use clifford::ops::Transform;
 use clifford::specialized::projective::dim3::{Motor, Point};
 use three_d::*;
 
@@ -112,7 +112,7 @@ impl Default for Projective3RobotDemo {
 impl Projective3RobotDemo {
     /// Computes forward kinematics returning joint positions.
     ///
-    /// Uses Versor::compose for proper motor composition.
+    /// Motors compose via the `*` operator (antigeometric product in PGA).
     fn forward_kinematics(&self) -> (Point<f64>, Point<f64>, Point<f64>, Point<f64>) {
         // Base is at origin
         let base = Point::origin();
@@ -125,15 +125,14 @@ impl Projective3RobotDemo {
         let m3 = Motor::from_rotation_y(f64::from(self.theta3));
         let t3 = Motor::from_translation(f64::from(self.link3_length), 0.0, 0.0);
 
-        // Compose motors using Versor::compose (handles RGA properly)
-        // compose(a, b) means "first apply b, then apply a"
-        let m_shoulder = t1.compose(&m1);
+        // Compose motors: t * m means "first apply m, then apply t"
+        let m_shoulder = t1 * m1;
         let shoulder = m_shoulder.transform(&base);
 
-        let m_elbow = t2.compose(&m2).compose(&m_shoulder);
+        let m_elbow = t2 * m2 * m_shoulder;
         let elbow = m_elbow.transform(&base);
 
-        let m_end = t3.compose(&m3).compose(&m_elbow);
+        let m_end = t3 * m3 * m_elbow;
         let end_effector = m_end.transform(&base);
 
         (shoulder, elbow, end_effector, end_effector)
