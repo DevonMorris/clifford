@@ -417,6 +417,10 @@ impl<'a> TraitsGenerator<'a> {
     /// The formula is computed inline using symbolic simplification, rather than
     /// calling a separate function. This avoids generating geometric_* functions
     /// which are not type-safe in general.
+    ///
+    /// For self-complementary versors (like Motors in point-based PGA), this uses
+    /// the antiproduct formula: `complement(complement(a) * complement(b))`.
+    /// This ensures that `M1 * M2` composes transformations correctly.
     fn generate_geometric_mul_from_entry(
         &self,
         a: &TypeSpec,
@@ -428,16 +432,32 @@ impl<'a> TraitsGenerator<'a> {
         let b_name = format_ident!("{}", b.name);
         let out_name = format_ident!("{}", output.name);
 
-        // Compute the formula using symbolic machinery
-        let field_exprs =
-            self.compute_product_expressions(a, b, output, SymbolicProductKind::Geometric);
+        // Check if both types are self-complementary versors.
+        // For such types (like Motor in 3D PGA), the standard geometric product
+        // does NOT compose transformations correctly. We need to use the antiproduct:
+        // complement(complement(a) * complement(b))
+        let a_self_complement = a.versor.is_some()
+            && self
+                .find_complement_output_type(a)
+                .map(|t| t == a.name)
+                .unwrap_or(false);
+        let b_self_complement = b.versor.is_some()
+            && self
+                .find_complement_output_type(b)
+                .map(|t| t == b.name)
+                .unwrap_or(false);
 
-        // Generate constructor call with the computed expressions
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+        // For self-complementary versors (like Motor in 3D PGA), use the antigeometric
+        // product instead of the geometric product. This ensures M1 * M2 composes
+        // transformations correctly in point-based PGA where antisandwich is used.
+        let product_kind = if a_self_complement && b_self_complement {
+            SymbolicProductKind::Antigeometric
         } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
+            SymbolicProductKind::Geometric
         };
+
+        let field_exprs = self.compute_product_expressions(a, b, output, product_kind);
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Mul<#b_name<T>> for #a_name<T> {
@@ -3085,30 +3105,12 @@ impl<'a> TraitsGenerator<'a> {
                     let rhs_name = format_ident!("{}", rhs.name);
                     let out_name = format_ident!("{}", output_type);
 
-                    // Check if both types are self-complementary (complement returns same type)
-                    let lhs_self_complement = self
-                        .find_complement_output_type(lhs)
-                        .map(|t| t == lhs.name)
-                        .unwrap_or(false);
-                    let rhs_self_complement = self
-                        .find_complement_output_type(rhs)
-                        .map(|t| t == rhs.name)
-                        .unwrap_or(false);
-
-                    // For self-complementary versors (like Motor in 3D PGA),
-                    // use the antiproduct formula: complement(complement(a) × complement(b))
-                    // This is required for correct composition with antisandwich-based transformations.
-                    let compose_body = if lhs_self_complement && rhs_self_complement {
-                        quote! {
-                            // Antiproduct: complement(complement(a) × complement(b))
-                            (self.right_complement() * other.right_complement()).right_complement()
-                        }
-                    } else {
-                        // Fall back to geometric product for non-self-complementary types
-                        // Use dereference (*) to avoid clone() on Copy types
-                        quote! {
-                            *self * *other
-                        }
+                    // Versor composition uses the Mul operator, which is:
+                    // - Antigeometric product for self-complementary versors (Motor × Motor)
+                    // - Geometric product for other types
+                    // Since the Mul operator is already configured correctly, compose just delegates.
+                    let compose_body = quote! {
+                        *self * *other
                     };
 
                     impls.push(quote! {
