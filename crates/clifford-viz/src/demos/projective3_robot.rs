@@ -239,6 +239,7 @@ impl VisualizationApp for Projective3RobotDemo {
             self.theta2 = 0.96 + (t * 2.0).cos() * 0.44;
             // Elbow oscillates between -90 and -30 degrees
             self.theta3 = -1.05 + (t * 1.5).sin() * 0.52;
+
         }
     }
 
@@ -286,11 +287,17 @@ impl VisualizationApp for Projective3RobotDemo {
         animation_controls(ui, &mut self.animation);
         progress_slider(ui, &mut self.animation);
 
-        // === End Effector Position ===
-        section_separator(ui, Some("End Effector"));
-        let (_, _, end_effector, _) = self.forward_kinematics();
+        // === Joint Positions ===
+        section_separator(ui, Some("Joint Positions"));
+        let (shoulder, elbow, end_effector, _) = self.forward_kinematics();
+        if let Some((x, y, z)) = shoulder.to_cartesian() {
+            ui.label(format!("Shoulder: ({:.2}, {:.2}, {:.2})", x, y, z));
+        }
+        if let Some((x, y, z)) = elbow.to_cartesian() {
+            ui.label(format!("Elbow: ({:.2}, {:.2}, {:.2})", x, y, z));
+        }
         if let Some((x, y, z)) = end_effector.to_cartesian() {
-            info_box(ui, &format!("Position: ({:.3}, {:.3}, {:.3})", x, y, z));
+            ui.label(format!("End: ({:.2}, {:.2}, {:.2})", x, y, z));
         }
 
         // === Motor Components ===
