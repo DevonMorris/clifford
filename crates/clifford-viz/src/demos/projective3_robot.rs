@@ -103,7 +103,7 @@ impl Default for Projective3RobotDemo {
             link2_length: 1.5,
             link3_length: 1.0,
             animation: Animation::with_duration(4.0),
-            show_world_axes: true,
+            show_world_axes: false,
             show_joints: true,
         }
     }
