@@ -96,9 +96,9 @@ impl Default for Projective3RobotDemo {
             ambient_light: None,
             key_light: None,
             fill_light: None,
-            theta1: 0.0,  // Start in YZ plane
-            theta2: 0.79, // ~45 degrees (shoulder forward)
-            theta3: -0.52, // ~-30 degrees (elbow slightly bent)
+            theta1: std::f32::consts::FRAC_PI_2, // 90 deg to put arm in YZ plane
+            theta2: 0.79,                        // ~45 degrees (shoulder forward)
+            theta3: -0.52,                       // ~-30 degrees (elbow slightly bent)
             link1_length: 1.0,
             link2_length: 1.5,
             link3_length: 1.0,
@@ -226,13 +226,14 @@ impl VisualizationApp for Projective3RobotDemo {
     }
 
     fn update(&mut self, dt: f32) {
+        use std::f32::consts::FRAC_PI_2;
         self.animation.update(dt);
         if self.animation.playing {
-            // Animate joints in a "reaching" motion, mostly in the YZ plane
+            // Animate joints in a "reaching" motion in the YZ plane
             let t = self.animation.angle(); // 0 to 2π over loop duration
 
-            // Base: minimal rotation to keep motion mostly in YZ plane (±15 deg)
-            self.theta1 = t.sin() * 0.26;
+            // Base: oscillate around 90 deg (±15 deg) to stay in YZ plane
+            self.theta1 = FRAC_PI_2 + t.sin() * 0.26;
 
             // Shoulder and elbow coordinate for a natural reaching motion:
             // - Arm reaches forward and up, then retracts
