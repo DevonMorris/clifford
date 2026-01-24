@@ -134,10 +134,8 @@ pub fn run_three_d_app_3d<T: VisualizationApp3D + Default + 'static>(title: &str
             .screen()
             .clear(ClearState::color_and_depth(0.1, 0.1, 0.12, 1.0, 1.0));
 
-        // Render 3D objects (before egui overlay)
-        demo.render_3d(&mut frame_input);
-
-        // Render egui overlay (controls, info panel, etc.)
+        // Process egui FIRST to consume events over UI elements.
+        // This prevents OrbitControl from capturing slider/button interactions.
         gui.update(
             &mut frame_input.events,
             frame_input.accumulated_time,
@@ -148,7 +146,10 @@ pub fn run_three_d_app_3d<T: VisualizationApp3D + Default + 'static>(title: &str
             },
         );
 
-        // Render egui to screen
+        // Render 3D objects (after egui consumes UI events)
+        demo.render_3d(&mut frame_input);
+
+        // Render egui to screen (on top of 3D)
         frame_input
             .screen()
             .write(|| gui.render())
