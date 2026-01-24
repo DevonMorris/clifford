@@ -137,11 +137,8 @@ impl Projective3RobotDemo {
         let l1 = f64::from(self.link1_length);
 
         // Shoulder = base + L1 * link1_direction
-        let shoulder = Point::from_cartesian(
-            l1 * link1_dir.x(),
-            l1 * link1_dir.y(),
-            l1 * link1_dir.z(),
-        );
+        let shoulder =
+            Point::from_cartesian(l1 * link1_dir.x(), l1 * link1_dir.y(), l1 * link1_dir.z());
 
         // Link 2: along X in frame 2, rotated to world frame
         let link2_dir = rot_12.transform(&x_dir);
@@ -239,7 +236,6 @@ impl VisualizationApp for Projective3RobotDemo {
             self.theta2 = 0.96 + (t * 2.0).cos() * 0.44;
             // Elbow oscillates between -90 and -30 degrees
             self.theta3 = -1.05 + (t * 1.5).sin() * 0.52;
-
         }
     }
 
