@@ -55,6 +55,11 @@
 //! See <https://conformalgeometricalgebra.org/wiki/index.php?title=Main_Page>
 //! for detailed documentation on the types and operations.
 
+// Generated code (do not edit manually)
 mod generated;
 
+// Domain-specific extensions
+mod extensions;
+
+// Re-export generated types
 pub use generated::types::*;

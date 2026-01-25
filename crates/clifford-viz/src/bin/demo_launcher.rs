@@ -50,6 +50,12 @@ fn main() {
         "conformal2_intersection" => {
             run_demo::<Conformal2IntersectionDemo>("Conformal 2D - Circle Intersection")
         }
+        "conformal3_inversion" => {
+            run_three_d_app_3d::<Conformal3InversionDemo>("Conformal 3D - Sphere Inversion")
+        }
+        "conformal3_circles" => {
+            run_three_d_app_3d::<Conformal3CirclesDemo>("Conformal 3D - Circle Operations")
+        }
         "complex_domain" => run_demo::<ComplexDomainDemo>("Complex Domain Coloring"),
         "complex_fractal" => run_demo::<ComplexFractalDemo>("Complex Fractals"),
         "dual_autodiff" => run_demo::<DualAutodiffDemo>("Dual Number Autodiff"),
@@ -61,8 +67,11 @@ fn main() {
             eprintln!("Available demos: euclidean2, euclidean3, projective2, projective2_robot,");
             eprintln!("  projective3_motor, projective3_lines, conformal2_circles,");
             eprintln!("  conformal2_inversion, conformal2_mobius, conformal2_intersection,");
-            eprintln!("  complex_domain, complex_fractal, dual_autodiff, minkowski2_diagram,");
-            eprintln!("  minkowski2_dilation");
+            eprintln!(
+                "  conformal3_inversion, conformal3_circles, complex_domain, complex_fractal,"
+            );
+            eprintln!("  dual_autodiff,");
+            eprintln!("  minkowski2_diagram, minkowski2_dilation");
             run_menu();
         }
     }
@@ -447,6 +456,16 @@ fn render_menu_ui(ctx: &egui::Context) {
                         "conformal2_intersection",
                         "Circle Intersection",
                         "Find intersection points",
+                    ),
+                    (
+                        "conformal3_inversion",
+                        "3D Sphere Inversion",
+                        "Sphere inversion in 3D CGA",
+                    ),
+                    (
+                        "conformal3_circles",
+                        "3D Circle from Points",
+                        "Create circles in 3D CGA",
                     ),
                 ],
             );

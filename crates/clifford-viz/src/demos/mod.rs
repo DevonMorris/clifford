@@ -9,6 +9,10 @@ mod conformal2_circles;
 mod conformal2_intersection;
 mod conformal2_inversion;
 mod conformal2_mobius;
+#[cfg(feature = "three-d")]
+mod conformal3_circles;
+#[cfg(feature = "three-d")]
+mod conformal3_inversion;
 mod dual_autodiff;
 mod euclidean2;
 #[cfg(feature = "three-d")]
@@ -32,6 +36,10 @@ pub use conformal2_circles::Conformal2CirclesDemo;
 pub use conformal2_intersection::Conformal2IntersectionDemo;
 pub use conformal2_inversion::Conformal2InversionDemo;
 pub use conformal2_mobius::Conformal2MobiusDemo;
+#[cfg(feature = "three-d")]
+pub use conformal3_circles::Conformal3CirclesDemo;
+#[cfg(feature = "three-d")]
+pub use conformal3_inversion::Conformal3InversionDemo;
 pub use dual_autodiff::DualAutodiffDemo;
 pub use euclidean2::Euclidean2Demo;
 #[cfg(feature = "three-d")]
