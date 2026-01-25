@@ -1024,12 +1024,19 @@ mod tests {
                 let ex_cx = sphere.w() / denom;
                 let ex_cy = -sphere.z() / denom;
                 let ex_cz = sphere.y() / denom;
-                println!("  extracted center: ({:.4}, {:.4}, {:.4})", ex_cx, ex_cy, ex_cz);
+                println!(
+                    "  extracted center: ({:.4}, {:.4}, {:.4})",
+                    ex_cx, ex_cy, ex_cz
+                );
 
                 let c_sq = ex_cx * ex_cx + ex_cy * ex_cy + ex_cz * ex_cz;
                 let r_sq_term = (sphere.u() + sphere.x()) / denom;
                 println!("  c^2 = {:.4}, (u+x)/denom = {:.4}", c_sq, r_sq_term);
-                println!("  r^2 via formula = {:.4}, expected = {:.4}", r_sq_term + c_sq, r * r);
+                println!(
+                    "  r^2 via formula = {:.4}, expected = {:.4}",
+                    r_sq_term + c_sq,
+                    r * r
+                );
             }
         }
 
@@ -1044,7 +1051,16 @@ mod tests {
         // Test circles
         println!("\n--- CIRCLES ---");
 
-        fn analyze_circle(name: &str, cx: f64, cy: f64, cz: f64, r: f64, nx: f64, ny: f64, nz: f64) {
+        fn analyze_circle(
+            name: &str,
+            cx: f64,
+            cy: f64,
+            cz: f64,
+            r: f64,
+            nx: f64,
+            ny: f64,
+            nz: f64,
+        ) {
             // Create circle in plane with given normal, centered at (cx, cy, cz)
             // Use three points: center + r*perp1, center + r*perp2, center - r*perp1
             let (px, py, pz) = if nx.abs() < 0.9 {
@@ -1068,7 +1084,10 @@ mod tests {
             use crate::ops::Wedge;
             let circle: Circle<f64> = p1.wedge(&p2).wedge(&p3);
 
-            println!("\n{}: center=({},{},{}), r={}, normal=({},{},{})", name, cx, cy, cz, r, nx, ny, nz);
+            println!(
+                "\n{}: center=({},{},{}), r={}, normal=({},{},{})",
+                name, cx, cy, cz, r, nx, ny, nz
+            );
             println!(
                 "  gw={:.4}, gz={:.4}, gy={:.4}, gx={:.4}",
                 circle.gw(),
@@ -1100,7 +1119,11 @@ mod tests {
                 // Try: cx = my/denom, cy = -mx/denom, cz = gz/gw
                 let ex_cx = circle.my() / denom;
                 let ex_cy = -circle.mx() / denom;
-                let ex_cz = if gw.abs() > 1e-10 { circle.gz() / gw } else { 0.0 };
+                let ex_cz = if gw.abs() > 1e-10 {
+                    circle.gz() / gw
+                } else {
+                    0.0
+                };
                 println!(
                     "  formula A center: ({:.4}, {:.4}, {:.4}) expected ({},{},{})",
                     ex_cx, ex_cy, ex_cz, cx, cy, cz
@@ -1117,7 +1140,10 @@ mod tests {
                 let r_sq_term = (gw + mz) / denom;
                 println!(
                     "  v_sq={:.4}, c_sq={:.4}, (gw+mz)/denom={:.4}, expected r²={:.4}",
-                    v_sq, c_sq, r_sq_term, r * r
+                    v_sq,
+                    c_sq,
+                    r_sq_term,
+                    r * r
                 );
             } else if gw.abs() > 1e-10 {
                 // Plane through origin case
