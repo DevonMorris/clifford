@@ -357,16 +357,28 @@ fn render_menu_ui(ctx: &egui::Context) {
 
                 ui.add_space(12.0 * sp);
 
-                // Links
+                // Links (use explicit URL opening for WASM compatibility)
                 if is_mobile {
-                    ui.hyperlink_to("Crates.io", "https://crates.io/crates/clifford");
-                    ui.hyperlink_to("Docs.rs", "https://docs.rs/clifford");
-                    ui.hyperlink_to("GitHub", "https://github.com/DevonMorris/clifford");
+                    if ui.link("Crates.io").clicked() {
+                        open_external_url("https://crates.io/crates/clifford");
+                    }
+                    if ui.link("Docs.rs").clicked() {
+                        open_external_url("https://docs.rs/clifford");
+                    }
+                    if ui.link("GitHub").clicked() {
+                        open_external_url("https://github.com/DevonMorris/clifford");
+                    }
                 } else {
                     ui.horizontal(|ui| {
-                        ui.hyperlink_to("Crates.io", "https://crates.io/crates/clifford");
-                        ui.hyperlink_to("Docs.rs", "https://docs.rs/clifford");
-                        ui.hyperlink_to("GitHub", "https://github.com/DevonMorris/clifford");
+                        if ui.link("Crates.io").clicked() {
+                            open_external_url("https://crates.io/crates/clifford");
+                        }
+                        if ui.link("Docs.rs").clicked() {
+                            open_external_url("https://docs.rs/clifford");
+                        }
+                        if ui.link("GitHub").clicked() {
+                            open_external_url("https://github.com/DevonMorris/clifford");
+                        }
                     });
                 }
 
@@ -543,6 +555,25 @@ fn render_demo_category(ui: &mut egui::Ui, title: &str, demos: &[(&str, &str, &s
     }
 }
 
+/// Open an external URL in a new tab.
+///
+/// In WASM, egui hyperlinks don't always work with three-d's canvas,
+/// so we use web_sys to open URLs directly.
+fn open_external_url(url: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            let _ = window.open_with_url_and_target(url, "_blank");
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        // On native, print the URL (or could use opener crate)
+        eprintln!("Open in browser: {}", url);
+    }
+}
+
 /// Navigate to a demo.
 fn navigate_to_demo(demo_id: &str) {
     #[cfg(target_arch = "wasm32")]
@@ -595,7 +626,9 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
         ui.add_space(12.0);
         ui.heading("Resources");
         for (name, url) in content.resources {
-            ui.hyperlink_to(*name, *url);
+            if ui.link(*name).clicked() {
+                open_external_url(url);
+            }
         }
     }
 }

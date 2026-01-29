@@ -196,6 +196,12 @@ fn render_app_ui_3d<T: VisualizationApp>(
             )
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
+                    // Back to menu link
+                    if ui.link("<- Back to Menu").clicked() {
+                        navigate_to_demo("menu");
+                    }
+                    ui.separator();
+
                     ui.heading("Controls");
                     ui.separator();
                     demo.controls(ui);
@@ -238,6 +244,12 @@ fn render_app_ui_3d<T: VisualizationApp>(
                 ui.separator();
 
                 egui::ScrollArea::vertical().show(ui, |ui| {
+                    // Back to menu link
+                    if ui.link("<- Back to Menu").clicked() {
+                        navigate_to_demo("menu");
+                    }
+                    ui.separator();
+
                     demo.controls(ui);
 
                     if demo.educational_content().is_some() {
@@ -529,7 +541,47 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
         ui.add_space(12.0);
         ui.heading("Resources");
         for (name, url) in content.resources {
-            ui.hyperlink_to(*name, *url);
+            if ui.link(*name).clicked() {
+                open_external_url(url);
+            }
         }
+    }
+}
+
+/// Open an external URL in a new tab.
+///
+/// In WASM, egui hyperlinks don't always work with three-d's canvas,
+/// so we use web_sys to open URLs directly.
+fn open_external_url(url: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            let _ = window.open_with_url_and_target(url, "_blank");
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        // On native, print the URL (or could use opener crate)
+        eprintln!("Open in browser: {}", url);
+    }
+}
+
+/// Navigate to a demo by changing the URL (web) or printing instructions (native).
+fn navigate_to_demo(demo_id: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            let url = format!("?demo={}", demo_id);
+            let _ = window.location().set_href(&url);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        eprintln!(
+            "To run: cargo run -p clifford-viz --bin demo_launcher --features three-d -- {}",
+            demo_id
+        );
     }
 }
