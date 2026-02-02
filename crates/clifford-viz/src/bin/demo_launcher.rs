@@ -167,6 +167,30 @@ fn run_demo<T: VisualizationApp + Default + 'static>(title: &str) {
     });
 }
 
+/// State for the menu screen.
+struct MenuState {
+    logo_texture: Option<egui::TextureHandle>,
+}
+
+impl MenuState {
+    fn new() -> Self {
+        Self { logo_texture: None }
+    }
+
+    fn get_logo(&mut self, ctx: &egui::Context) -> &egui::TextureHandle {
+        self.logo_texture.get_or_insert_with(|| {
+            let image_bytes = include_bytes!("../../clifford.png");
+            let image = image::load_from_memory(image_bytes)
+                .expect("Failed to load logo")
+                .to_rgba8();
+            let size = [image.width() as usize, image.height() as usize];
+            let pixels = image.into_raw();
+            let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
+            ctx.load_texture("clifford-logo", color_image, egui::TextureOptions::LINEAR)
+        })
+    }
+}
+
 /// Run the demo menu.
 fn run_menu() {
     // On native, cap window size. On WASM, use full browser window for responsiveness.
@@ -184,6 +208,7 @@ fn run_menu() {
 
     let context = window.gl();
     let mut gui = GUI::new(&context);
+    let mut menu_state = MenuState::new();
 
     window.render_loop(move |mut frame_input| {
         frame_input
@@ -196,7 +221,7 @@ fn run_menu() {
             frame_input.viewport,
             frame_input.device_pixel_ratio,
             |ctx| {
-                render_menu_ui(ctx);
+                render_menu_ui(ctx, &mut menu_state);
             },
         );
 
@@ -341,15 +366,27 @@ fn render_demo_ui<T: VisualizationApp>(
 }
 
 /// Render the menu UI.
-fn render_menu_ui(ctx: &egui::Context) {
+fn render_menu_ui(ctx: &egui::Context, state: &mut MenuState) {
     configure_responsive_style(ctx);
     let is_mobile = use_mobile_layout(ctx);
     let sp = if is_mobile { 1.0 } else { 1.5 };
+
+    // Get logo texture
+    let logo = state.get_logo(ctx);
+    let logo_size = if is_mobile {
+        egui::vec2(80.0, 80.0)
+    } else {
+        egui::vec2(120.0, 120.0)
+    };
 
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(24.0 * sp);
+
+                // Logo
+                ui.add(egui::Image::new(logo).fit_to_exact_size(logo_size));
+                ui.add_space(8.0 * sp);
 
                 // Title
                 ui.heading(egui::RichText::new("Clifford").strong());
@@ -558,12 +595,23 @@ fn render_demo_category(ui: &mut egui::Ui, title: &str, demos: &[(&str, &str, &s
 /// Open an external URL in a new tab.
 ///
 /// In WASM, egui hyperlinks don't always work with three-d's canvas,
-/// so we use web_sys to open URLs directly.
+/// so we create an anchor element and click it. This works better on
+/// mobile browsers which block window.open() when not triggered directly
+/// by a user gesture.
 fn open_external_url(url: &str) {
     #[cfg(target_arch = "wasm32")]
     {
+        use wasm_bindgen::JsCast;
         if let Some(window) = web_sys::window() {
-            let _ = window.open_with_url_and_target(url, "_blank");
+            if let Some(document) = window.document() {
+                if let Ok(anchor) = document.create_element("a") {
+                    let anchor: web_sys::HtmlAnchorElement = anchor.unchecked_into();
+                    anchor.set_href(url);
+                    anchor.set_target("_blank");
+                    anchor.set_rel("noopener noreferrer");
+                    anchor.click();
+                }
+            }
         }
     }
 
