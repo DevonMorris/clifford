@@ -8,7 +8,7 @@ description = "Geometric Algebra (Clifford Algebra) for Rust: rotors, motors, PG
 keywords = ["geometric-algebra", "clifford-algebra", "quaternion", "rotation", "pga"]
 categories = ["mathematics", "science"]
 repository = "https://github.com/DevonMorris/clifford"
-readme = "../../README.md"
+readme = "README.md"
 
 [lints]
 workspace = true
