@@ -10,13 +10,6 @@ categories = ["mathematics", "science"]
 repository = "https://github.com/DevonMorris/clifford"
 readme = "../../README.md"
 
-# Include generated code in published crate (even though gitignored)
-include = [
-    "src/**/*.rs",
-    "build.rs",
-    "Cargo.toml",
-]
-
 [lints]
 workspace = true
 
