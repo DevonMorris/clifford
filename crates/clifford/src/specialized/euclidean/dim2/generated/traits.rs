@@ -1253,7 +1253,7 @@ impl<T: Float> Sandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * operand.b() * self.s() + self.b() * operand.b() * self.b(),
+            self.b() * operand.b() * self.b() + self.s() * operand.b() * self.s(),
         )
     }
 }
@@ -1290,13 +1290,14 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.s() * self.s()
-                + self.s() * operand.b() * self.b()
+            -(self.b() * operand.b() * self.s())
                 + self.b() * operand.s() * self.b()
-                - self.b() * operand.b() * self.s(),
-            self.b() * operand.s() * self.s() + self.s() * operand.b() * self.s()
-                - self.s() * operand.s() * self.b()
-                + self.b() * operand.b() * self.b(),
+                + self.s() * operand.b() * self.b()
+                + self.s() * operand.s() * self.s(),
+            self.b() * operand.b() * self.b()
+                + self.b() * operand.s() * self.s()
+                + self.s() * operand.b() * self.s()
+                - self.s() * operand.s() * self.b(),
         )
     }
 }
@@ -1334,7 +1335,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * operand.s() * self.s() + self.b() * operand.s() * self.b())
+        Scalar::new_unchecked(self.b() * operand.s() * self.b() + self.s() * operand.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1370,13 +1371,14 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * operand.x() * self.s() - self.b() * operand.x() * self.b()
+            -(self.b() * operand.x() * self.b())
                 + self.b() * operand.y() * self.s()
+                + self.s() * operand.x() * self.s()
                 + self.s() * operand.y() * self.b(),
-            self.s() * operand.y() * self.s()
+            -(self.b() * operand.x() * self.s())
+                - self.b() * operand.y() * self.b()
                 - self.s() * operand.x() * self.b()
-                - self.b() * operand.x() * self.s()
-                - self.b() * operand.y() * self.b(),
+                + self.s() * operand.y() * self.s(),
         )
     }
 }
@@ -1571,7 +1573,7 @@ impl<T: Float> Sandwich<Bivector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.y() * operand.b() * self.y()) - self.x() * operand.b() * self.x(),
+            -(self.x() * operand.b() * self.x()) - self.y() * operand.b() * self.y(),
         )
     }
 }
@@ -1608,13 +1610,12 @@ impl<T: Float> Sandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.y() * operand.s() * self.y()
-                + self.x() * operand.s() * self.x()
-                + self.x() * operand.b() * self.y()
-                - self.y() * operand.b() * self.x(),
-            -(self.x() * operand.b() * self.x()) - self.y() * operand.s() * self.x()
-                + self.x() * operand.s() * self.y()
-                - self.y() * operand.b() * self.y(),
+            self.x() * operand.b() * self.y() + self.x() * operand.s() * self.x()
+                - self.y() * operand.b() * self.x()
+                + self.y() * operand.s() * self.y(),
+            -(self.x() * operand.b() * self.x()) + self.x() * operand.s() * self.y()
+                - self.y() * operand.b() * self.y()
+                - self.y() * operand.s() * self.x(),
         )
     }
 }
@@ -1652,7 +1653,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.y() * operand.s() * self.y() + self.x() * operand.s() * self.x())
+        Scalar::new_unchecked(self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -1688,14 +1689,12 @@ impl<T: Float> Sandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.y() * operand.y() * self.x()
-                + self.x() * operand.y() * self.y()
-                + self.x() * operand.x() * self.x()
-                - self.y() * operand.x() * self.y(),
-            -(self.x() * operand.y() * self.x())
-                + self.y() * operand.y() * self.y()
-                + self.x() * operand.x() * self.y()
-                + self.y() * operand.x() * self.x(),
+            self.x() * operand.x() * self.x() + self.x() * operand.y() * self.y()
+                - self.y() * operand.x() * self.y()
+                + self.y() * operand.y() * self.x(),
+            self.x() * operand.x() * self.y() - self.x() * operand.y() * self.x()
+                + self.y() * operand.x() * self.x()
+                + self.y() * operand.y() * self.y(),
         )
     }
 }
@@ -1890,7 +1889,7 @@ impl<T: Float> Antisandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * operand.b() * self.s() + self.b() * operand.b() * self.b(),
+            self.b() * operand.b() * self.b() + self.s() * operand.b() * self.s(),
         )
     }
 }
@@ -1927,12 +1926,14 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.s() * self.s() - self.b() * operand.b() * self.s()
+            -(self.b() * operand.b() * self.s())
+                + self.b() * operand.s() * self.b()
                 + self.s() * operand.b() * self.b()
-                + self.b() * operand.s() * self.b(),
-            self.s() * operand.b() * self.s() + self.b() * operand.b() * self.b()
-                - self.s() * operand.s() * self.b()
-                + self.b() * operand.s() * self.s(),
+                + self.s() * operand.s() * self.s(),
+            self.b() * operand.b() * self.b()
+                + self.b() * operand.s() * self.s()
+                + self.s() * operand.b() * self.s()
+                - self.s() * operand.s() * self.b(),
         )
     }
 }
@@ -1970,7 +1971,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * operand.s() * self.s() + self.b() * operand.s() * self.b())
+        Scalar::new_unchecked(self.b() * operand.s() * self.b() + self.s() * operand.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -2006,12 +2007,12 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * operand.x() * self.b() - self.s() * operand.x() * self.s()
-                + self.b() * operand.y() * self.s()
+            self.b() * operand.x() * self.b() + self.b() * operand.y() * self.s()
+                - self.s() * operand.x() * self.s()
                 + self.s() * operand.y() * self.b(),
-            -(self.s() * operand.y() * self.s()) - self.s() * operand.x() * self.b()
-                + self.b() * operand.y() * self.b()
-                - self.b() * operand.x() * self.s(),
+            -(self.b() * operand.x() * self.s()) + self.b() * operand.y() * self.b()
+                - self.s() * operand.x() * self.b()
+                - self.s() * operand.y() * self.s(),
         )
     }
 }
@@ -2243,13 +2244,14 @@ impl<T: Float> Antisandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.y() * operand.b() * self.x()
-                + self.y() * operand.s() * self.y()
+            -(self.x() * operand.b() * self.y())
                 + self.x() * operand.s() * self.x()
-                - self.x() * operand.b() * self.y(),
-            -(self.x() * operand.b() * self.x()) - self.y() * operand.b() * self.y()
-                + self.y() * operand.s() * self.x()
-                - self.x() * operand.s() * self.y(),
+                + self.y() * operand.b() * self.x()
+                + self.y() * operand.s() * self.y(),
+            -(self.x() * operand.b() * self.x())
+                - self.x() * operand.s() * self.y()
+                - self.y() * operand.b() * self.y()
+                + self.y() * operand.s() * self.x(),
         )
     }
 }
@@ -2287,7 +2289,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.y() * operand.s() * self.y() + self.x() * operand.s() * self.x())
+        Scalar::new_unchecked(self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -2323,10 +2325,9 @@ impl<T: Float> Antisandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * operand.x() * self.x())
-                - self.x() * operand.y() * self.y()
-                - self.y() * operand.y() * self.x()
-                + self.y() * operand.x() * self.y(),
+            -(self.x() * operand.x() * self.x()) - self.x() * operand.y() * self.y()
+                + self.y() * operand.x() * self.y()
+                - self.y() * operand.y() * self.x(),
             -(self.x() * operand.x() * self.y()) + self.x() * operand.y() * self.x()
                 - self.y() * operand.x() * self.x()
                 - self.y() * operand.y() * self.y(),
@@ -2899,7 +2900,7 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (self.s() * operand.b() * self.s() + self.b() * operand.b() * self.b()) * inv_norm_sq,
+            (self.b() * operand.b() * self.b() + self.s() * operand.b() * self.s()) * inv_norm_sq,
         ))
     }
 }
@@ -2914,15 +2915,15 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.s() * operand.b() * self.b()
-                + self.s() * operand.s() * self.s()
+            (-(self.b() * operand.b() * self.s())
                 + self.b() * operand.s() * self.b()
-                - self.b() * operand.b() * self.s())
+                + self.s() * operand.b() * self.b()
+                + self.s() * operand.s() * self.s())
                 * inv_norm_sq,
-            (-(self.s() * operand.s() * self.b())
-                + self.b() * operand.b() * self.b()
+            (self.b() * operand.b() * self.b()
+                + self.b() * operand.s() * self.s()
                 + self.s() * operand.b() * self.s()
-                + self.b() * operand.s() * self.s())
+                - self.s() * operand.s() * self.b())
                 * inv_norm_sq,
         ))
     }
@@ -2953,13 +2954,15 @@ impl<T: Float> InverseSandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.b() * operand.y() * self.s() - self.b() * operand.x() * self.b()
+            (-(self.b() * operand.x() * self.b())
+                + self.b() * operand.y() * self.s()
                 + self.s() * operand.x() * self.s()
                 + self.s() * operand.y() * self.b())
                 * inv_norm_sq,
-            (-(self.b() * operand.x() * self.s()) + self.s() * operand.y() * self.s()
+            (-(self.b() * operand.x() * self.s())
                 - self.b() * operand.y() * self.b()
-                - self.s() * operand.x() * self.b())
+                - self.s() * operand.x() * self.b()
+                + self.s() * operand.y() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -3037,7 +3040,7 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (-(self.y() * operand.b() * self.y()) - self.x() * operand.b() * self.x())
+            (-(self.x() * operand.b() * self.x()) - self.y() * operand.b() * self.y())
                 * inv_norm_sq,
         ))
     }
@@ -3053,14 +3056,13 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.x() * operand.s() * self.x() - self.y() * operand.b() * self.x()
-                + self.x() * operand.b() * self.y()
+            (self.x() * operand.b() * self.y() + self.x() * operand.s() * self.x()
+                - self.y() * operand.b() * self.x()
                 + self.y() * operand.s() * self.y())
                 * inv_norm_sq,
-            (-(self.y() * operand.b() * self.y())
-                - self.x() * operand.b() * self.x()
-                - self.y() * operand.s() * self.x()
-                + self.x() * operand.s() * self.y())
+            (-(self.x() * operand.b() * self.x()) + self.x() * operand.s() * self.y()
+                - self.y() * operand.b() * self.y()
+                - self.y() * operand.s() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -3091,15 +3093,13 @@ impl<T: Float> InverseSandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (-(self.y() * operand.x() * self.y())
-                + self.x() * operand.x() * self.x()
-                + self.x() * operand.y() * self.y()
+            (self.x() * operand.x() * self.x() + self.x() * operand.y() * self.y()
+                - self.y() * operand.x() * self.y()
                 + self.y() * operand.y() * self.x())
                 * inv_norm_sq,
-            (self.y() * operand.y() * self.y()
+            (self.x() * operand.x() * self.y() - self.x() * operand.y() * self.x()
                 + self.y() * operand.x() * self.x()
-                + self.x() * operand.x() * self.y()
-                - self.x() * operand.y() * self.x())
+                + self.y() * operand.y() * self.y())
                 * inv_norm_sq,
         ))
     }
@@ -3193,13 +3193,14 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Rotor<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
             (-(self.b() * operand.b() * self.s())
-                + self.s() * operand.s() * self.s()
+                + self.b() * operand.s() * self.b()
                 + self.s() * operand.b() * self.b()
-                + self.b() * operand.s() * self.b())
+                + self.s() * operand.s() * self.s())
                 * inv_norm_sq,
-            (self.b() * operand.b() * self.b() + self.s() * operand.b() * self.s()
-                - self.s() * operand.s() * self.b()
-                + self.b() * operand.s() * self.s())
+            (self.b() * operand.b() * self.b()
+                + self.b() * operand.s() * self.s()
+                + self.s() * operand.b() * self.s()
+                - self.s() * operand.s() * self.b())
                 * inv_norm_sq,
         ))
     }
@@ -3215,7 +3216,7 @@ impl<T: Float> InverseAntisandwich<Scalar<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.s() * operand.s() * self.s() + self.b() * operand.s() * self.b()) * inv_norm_sq,
+            (self.b() * operand.s() * self.b() + self.s() * operand.s() * self.s()) * inv_norm_sq,
         ))
     }
 }
@@ -3230,14 +3231,13 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.s() * operand.y() * self.b() + self.b() * operand.y() * self.s()
+            (self.b() * operand.x() * self.b() + self.b() * operand.y() * self.s()
                 - self.s() * operand.x() * self.s()
-                + self.b() * operand.x() * self.b())
+                + self.s() * operand.y() * self.b())
                 * inv_norm_sq,
-            (-(self.s() * operand.x() * self.b())
-                - self.b() * operand.x() * self.s()
-                - self.s() * operand.y() * self.s()
-                + self.b() * operand.y() * self.b())
+            (-(self.b() * operand.x() * self.s()) + self.b() * operand.y() * self.b()
+                - self.s() * operand.x() * self.b()
+                - self.s() * operand.y() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -3333,13 +3333,13 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Vector<T> {
         Some(Rotor::new_unchecked(
             (-(self.x() * operand.b() * self.y())
                 + self.x() * operand.s() * self.x()
-                + self.y() * operand.s() * self.y()
-                + self.y() * operand.b() * self.x())
+                + self.y() * operand.b() * self.x()
+                + self.y() * operand.s() * self.y())
                 * inv_norm_sq,
-            (self.y() * operand.s() * self.x()
+            (-(self.x() * operand.b() * self.x())
                 - self.x() * operand.s() * self.y()
-                - self.x() * operand.b() * self.x()
-                - self.y() * operand.b() * self.y())
+                - self.y() * operand.b() * self.y()
+                + self.y() * operand.s() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -3370,13 +3370,12 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.y() * operand.x() * self.y()
-                - self.x() * operand.y() * self.y()
-                - self.x() * operand.x() * self.x()
+            (-(self.x() * operand.x() * self.x()) - self.x() * operand.y() * self.y()
+                + self.y() * operand.x() * self.y()
                 - self.y() * operand.y() * self.x())
                 * inv_norm_sq,
-            (-(self.y() * operand.x() * self.x()) - self.x() * operand.x() * self.y()
-                + self.x() * operand.y() * self.x()
+            (-(self.x() * operand.x() * self.y()) + self.x() * operand.y() * self.x()
+                - self.y() * operand.x() * self.x()
                 - self.y() * operand.y() * self.y())
                 * inv_norm_sq,
         ))

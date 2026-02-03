@@ -359,9 +359,16 @@ impl<'a> ProjectionGenerator<'a> {
         }
 
         // Convert to term list, filtering out zeros
-        terms
+        let mut term_list: Vec<_> = terms
             .into_iter()
             .filter(|(_, coeff)| *coeff != 0)
+            .collect();
+
+        // Sort for deterministic output
+        term_list.sort_by(|a, b| a.0.cmp(&b.0));
+
+        term_list
+            .into_iter()
             .map(|((a, b1, b2), coeff)| ProjectionTerm {
                 coeff,
                 a_field: a,
@@ -419,9 +426,16 @@ impl<'a> ProjectionGenerator<'a> {
         }
 
         // Convert to term list, filtering out zeros
-        terms
+        let mut term_list: Vec<_> = terms
             .into_iter()
             .filter(|(_, coeff)| *coeff != 0)
+            .collect();
+
+        // Sort for deterministic output
+        term_list.sort_by(|a, b| a.0.cmp(&b.0));
+
+        term_list
+            .into_iter()
             .map(|((a, b1, b2), coeff)| ProjectionTerm {
                 coeff,
                 a_field: a,
