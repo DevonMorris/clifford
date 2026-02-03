@@ -70,10 +70,10 @@ impl<T: Float> Mul<Bivector<T>> for Bivector<T> {
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
-            -(self.ry() * rhs.rx()) + self.rx() * rhs.ry(),
-            self.rz() * rhs.rx() + -(self.rx() * rhs.rz()),
-            -(self.rz() * rhs.ry()) + self.ry() * rhs.rz(),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
+            -(rhs.rx() * self.ry()) + rhs.ry() * self.rx(),
+            -(rhs.rz() * self.rx()) + rhs.rx() * self.rz(),
+            -(rhs.ry() * self.rz()) + rhs.rz() * self.ry(),
         )
     }
 }
@@ -82,10 +82,10 @@ impl<T: Float> Mul<Rotor<T>> for Bivector<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
-            rhs.s() * self.rz() + -(self.ry() * rhs.rx()) + self.rx() * rhs.ry(),
-            rhs.s() * self.ry() + self.rz() * rhs.rx() + -(self.rx() * rhs.rz()),
-            rhs.s() * self.rx() + -(self.rz() * rhs.ry()) + self.ry() * rhs.rz(),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
+            -(rhs.rx() * self.ry()) + rhs.s() * self.rz() + rhs.ry() * self.rx(),
+            -(rhs.rz() * self.rx()) + rhs.s() * self.ry() + rhs.rx() * self.rz(),
+            -(rhs.ry() * self.rz()) + rhs.s() * self.rx() + rhs.rz() * self.ry(),
         )
     }
 }
@@ -105,9 +105,9 @@ impl<T: Float> Mul<Trivector<T>> for Bivector<T> {
     #[inline]
     fn mul(self, rhs: Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.rx() * rhs.ps()),
-            self.ry() * rhs.ps(),
-            -(self.rz() * rhs.ps()),
+            -(rhs.ps() * self.rx()),
+            rhs.ps() * self.ry(),
+            -(rhs.ps() * self.rz()),
         )
     }
 }
@@ -168,10 +168,10 @@ impl<T: Float> Mul<Bivector<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
-            self.s() * rhs.rz() + -(self.ry() * rhs.rx()) + self.rx() * rhs.ry(),
-            self.s() * rhs.ry() + self.rz() * rhs.rx() + -(self.rx() * rhs.rz()),
-            self.s() * rhs.rx() + -(self.rz() * rhs.ry()) + self.ry() * rhs.rz(),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
+            -(rhs.rx() * self.ry()) + rhs.ry() * self.rx() + rhs.rz() * self.s(),
+            -(rhs.rz() * self.rx()) + rhs.rx() * self.rz() + rhs.ry() * self.s(),
+            -(rhs.ry() * self.rz()) + rhs.rz() * self.ry() + rhs.rx() * self.s(),
         )
     }
 }
@@ -180,22 +180,22 @@ impl<T: Float> Mul<Rotor<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * rhs.s()
-                + -(self.rz() * rhs.rz())
-                + -(self.ry() * rhs.ry())
-                + -(self.rx() * rhs.rx()),
-            self.s() * rhs.rz()
+            -(rhs.rx() * self.rx())
+                + -(rhs.ry() * self.ry())
+                + -(rhs.rz() * self.rz())
+                + rhs.s() * self.s(),
+            -(rhs.rx() * self.ry())
                 + rhs.s() * self.rz()
-                + -(self.ry() * rhs.rx())
-                + self.rx() * rhs.ry(),
-            self.s() * rhs.ry()
+                + rhs.ry() * self.rx()
+                + rhs.rz() * self.s(),
+            -(rhs.rz() * self.rx())
                 + rhs.s() * self.ry()
-                + self.rz() * rhs.rx()
-                + -(self.rx() * rhs.rz()),
-            self.s() * rhs.rx()
+                + rhs.rx() * self.rz()
+                + rhs.ry() * self.s(),
+            -(rhs.ry() * self.rz())
                 + rhs.s() * self.rx()
-                + -(self.rz() * rhs.ry())
-                + self.ry() * rhs.rz(),
+                + rhs.rz() * self.ry()
+                + rhs.rx() * self.s(),
         )
     }
 }
@@ -204,7 +204,7 @@ impl<T: Float> Mul<Scalar<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * rhs.s(),
+            rhs.s() * self.s(),
             rhs.s() * self.rz(),
             rhs.s() * self.ry(),
             rhs.s() * self.rx(),
@@ -258,9 +258,9 @@ impl<T: Float> Mul<Bivector<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.rz(),
-            self.s() * rhs.ry(),
-            self.s() * rhs.rx(),
+            rhs.rz() * self.s(),
+            rhs.ry() * self.s(),
+            rhs.rx() * self.s(),
         )
     }
 }
@@ -269,10 +269,10 @@ impl<T: Float> Mul<Rotor<T>> for Scalar<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * rhs.s(),
-            self.s() * rhs.rz(),
-            self.s() * rhs.ry(),
-            self.s() * rhs.rx(),
+            rhs.s() * self.s(),
+            rhs.rz() * self.s(),
+            rhs.ry() * self.s(),
+            rhs.rx() * self.s(),
         )
     }
 }
@@ -280,21 +280,21 @@ impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 impl<T: Float> Mul<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn mul(self, rhs: Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y(), self.s() * rhs.z())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s(), rhs.z() * self.s())
     }
 }
 impl<T: Float> Add for Trivector<T> {
@@ -344,9 +344,9 @@ impl<T: Float> Mul<Bivector<T>> for Trivector<T> {
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ps() * rhs.rx()),
-            self.ps() * rhs.ry(),
-            -(self.ps() * rhs.rz()),
+            -(rhs.rx() * self.ps()),
+            rhs.ry() * self.ps(),
+            -(rhs.rz() * self.ps()),
         )
     }
 }
@@ -361,7 +361,7 @@ impl<T: Float> Mul<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.ps()))
     }
 }
 impl<T: Float> Mul<Vector<T>> for Trivector<T> {
@@ -369,7 +369,7 @@ impl<T: Float> Mul<Vector<T>> for Trivector<T> {
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.z(),
+            rhs.z() * self.ps(),
             -(rhs.y() * self.ps()),
             rhs.x() * self.ps(),
         )
@@ -421,7 +421,7 @@ impl<T: Float> Mul<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s(), rhs.s() * self.z())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y(), rhs.s() * self.z())
     }
 }
 impl<T: Float> Mul<Trivector<T>> for Vector<T> {
@@ -429,9 +429,9 @@ impl<T: Float> Mul<Trivector<T>> for Vector<T> {
     #[inline]
     fn mul(self, rhs: Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.z() * rhs.ps(),
-            -(self.y() * rhs.ps()),
-            self.x() * rhs.ps(),
+            rhs.ps() * self.z(),
+            -(rhs.ps() * self.y()),
+            rhs.ps() * self.x(),
         )
     }
 }
@@ -440,10 +440,10 @@ impl<T: Float> Mul<Vector<T>> for Vector<T> {
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z(),
-            self.x() * rhs.y() + -(self.y() * rhs.x()),
-            self.x() * rhs.z() + -(rhs.x() * self.z()),
-            self.y() * rhs.z() + -(rhs.y() * self.z()),
+            rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z(),
+            -(rhs.x() * self.y()) + rhs.y() * self.x(),
+            -(rhs.x() * self.z()) + rhs.z() * self.x(),
+            -(rhs.y() * self.z()) + rhs.z() * self.y(),
         )
     }
 }
@@ -498,7 +498,7 @@ impl<T: Float> Wedge<Vector<T>> for Bivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(rhs.x() * self.rx() + -(rhs.y() * self.ry()) + self.rz() * rhs.z())
+        Trivector::new_unchecked(-(rhs.y() * self.ry()) + rhs.x() * self.rx() + rhs.z() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -507,9 +507,9 @@ impl<T: Float> Wedge<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.x() * self.as_inner().rx()
-                + -(rhs.y() * self.as_inner().ry())
-                + self.as_inner().rz() * rhs.z(),
+            -(rhs.y() * self.as_inner().ry())
+                + rhs.x() * self.as_inner().rx()
+                + rhs.z() * self.as_inner().rz(),
         )
     }
 }
@@ -519,9 +519,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.as_inner().x() * self.rx()
-                + -(rhs.as_inner().y() * self.ry())
-                + self.rz() * rhs.as_inner().z(),
+            -(rhs.as_inner().y() * self.ry())
+                + rhs.as_inner().x() * self.rx()
+                + rhs.as_inner().z() * self.rz(),
         )
     }
 }
@@ -531,9 +531,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.as_inner().x() * self.as_inner().rx()
-                + -(rhs.as_inner().y() * self.as_inner().ry())
-                + self.as_inner().rz() * rhs.as_inner().z(),
+            -(rhs.as_inner().y() * self.as_inner().ry())
+                + rhs.as_inner().x() * self.as_inner().rx()
+                + rhs.as_inner().z() * self.as_inner().rz(),
         )
     }
 }
@@ -542,9 +542,9 @@ impl<T: Float> Wedge<Bivector<T>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.rz(),
-            self.s() * rhs.ry(),
-            self.s() * rhs.rx(),
+            rhs.rz() * self.s(),
+            rhs.ry() * self.s(),
+            rhs.rx() * self.s(),
         )
     }
 }
@@ -554,9 +554,9 @@ impl<T: Float> Wedge<Bivector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.rz(),
-            self.as_inner().s() * rhs.ry(),
-            self.as_inner().s() * rhs.rx(),
+            rhs.rz() * self.as_inner().s(),
+            rhs.ry() * self.as_inner().s(),
+            rhs.rx() * self.as_inner().s(),
         )
     }
 }
@@ -566,9 +566,9 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.as_inner().rz(),
-            self.s() * rhs.as_inner().ry(),
-            self.s() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.s(),
+            rhs.as_inner().ry() * self.s(),
+            rhs.as_inner().rx() * self.s(),
         )
     }
 }
@@ -578,9 +578,9 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().rz(),
-            self.as_inner().s() * rhs.as_inner().ry(),
-            self.as_inner().s() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.as_inner().s(),
+            rhs.as_inner().ry() * self.as_inner().s(),
+            rhs.as_inner().rx() * self.as_inner().s(),
         )
     }
 }
@@ -588,7 +588,7 @@ impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -596,7 +596,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -604,7 +604,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -612,14 +612,14 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -627,7 +627,7 @@ impl<T: Float> Wedge<Trivector<T>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -635,7 +635,7 @@ impl<T: Float> Wedge<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -643,14 +643,14 @@ impl<T: Float> Wedge<Unit<Trivector<T>>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y(), self.s() * rhs.z())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s(), rhs.z() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -659,9 +659,9 @@ impl<T: Float> Wedge<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.x(),
-            self.as_inner().s() * rhs.y(),
-            self.as_inner().s() * rhs.z(),
+            rhs.x() * self.as_inner().s(),
+            rhs.y() * self.as_inner().s(),
+            rhs.z() * self.as_inner().s(),
         )
     }
 }
@@ -671,9 +671,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * rhs.as_inner().x(),
-            self.s() * rhs.as_inner().y(),
-            self.s() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.s(),
+            rhs.as_inner().y() * self.s(),
+            rhs.as_inner().z() * self.s(),
         )
     }
 }
@@ -683,9 +683,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().x(),
-            self.as_inner().s() * rhs.as_inner().y(),
-            self.as_inner().s() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().s(),
+            rhs.as_inner().y() * self.as_inner().s(),
+            rhs.as_inner().z() * self.as_inner().s(),
         )
     }
 }
@@ -724,7 +724,7 @@ impl<T: Float> Wedge<Bivector<T>> for Vector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.x() * rhs.rx() + -(self.y() * rhs.ry()) + self.z() * rhs.rz())
+        Trivector::new_unchecked(-(rhs.ry() * self.y()) + rhs.rx() * self.x() + rhs.rz() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -733,9 +733,9 @@ impl<T: Float> Wedge<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().x() * rhs.rx()
-                + -(self.as_inner().y() * rhs.ry())
-                + self.as_inner().z() * rhs.rz(),
+            -(rhs.ry() * self.as_inner().y())
+                + rhs.rx() * self.as_inner().x()
+                + rhs.rz() * self.as_inner().z(),
         )
     }
 }
@@ -745,9 +745,9 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * rhs.as_inner().rx()
-                + -(self.y() * rhs.as_inner().ry())
-                + self.z() * rhs.as_inner().rz(),
+            -(rhs.as_inner().ry() * self.y())
+                + rhs.as_inner().rx() * self.x()
+                + rhs.as_inner().rz() * self.z(),
         )
     }
 }
@@ -757,9 +757,9 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().rx()
-                + -(self.as_inner().y() * rhs.as_inner().ry())
-                + self.as_inner().z() * rhs.as_inner().rz(),
+            -(rhs.as_inner().ry() * self.as_inner().y())
+                + rhs.as_inner().rx() * self.as_inner().x()
+                + rhs.as_inner().rz() * self.as_inner().z(),
         )
     }
 }
@@ -767,7 +767,7 @@ impl<T: Float> Wedge<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s(), rhs.s() * self.z())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y(), rhs.s() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -776,8 +776,8 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.s(),
-            self.as_inner().y() * rhs.s(),
+            rhs.s() * self.as_inner().x(),
+            rhs.s() * self.as_inner().y(),
             rhs.s() * self.as_inner().z(),
         )
     }
@@ -788,8 +788,8 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.as_inner().s(),
-            self.y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.x(),
+            rhs.as_inner().s() * self.y(),
             rhs.as_inner().s() * self.z(),
         )
     }
@@ -800,8 +800,8 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
             rhs.as_inner().s() * self.as_inner().z(),
         )
     }
@@ -811,9 +811,9 @@ impl<T: Float> Wedge<Vector<T>> for Vector<T> {
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.x() * rhs.y() + -(self.y() * rhs.x()),
-            self.x() * rhs.z() + -(rhs.x() * self.z()),
-            self.y() * rhs.z() + -(rhs.y() * self.z()),
+            -(rhs.x() * self.y()) + rhs.y() * self.x(),
+            -(rhs.x() * self.z()) + rhs.z() * self.x(),
+            -(rhs.y() * self.z()) + rhs.z() * self.y(),
         )
     }
 }
@@ -823,9 +823,9 @@ impl<T: Float> Wedge<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.y() + -(self.as_inner().y() * rhs.x()),
-            self.as_inner().x() * rhs.z() + -(rhs.x() * self.as_inner().z()),
-            self.as_inner().y() * rhs.z() + -(rhs.y() * self.as_inner().z()),
+            -(rhs.x() * self.as_inner().y()) + rhs.y() * self.as_inner().x(),
+            -(rhs.x() * self.as_inner().z()) + rhs.z() * self.as_inner().x(),
+            -(rhs.y() * self.as_inner().z()) + rhs.z() * self.as_inner().y(),
         )
     }
 }
@@ -835,9 +835,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.x() * rhs.as_inner().y() + -(self.y() * rhs.as_inner().x()),
-            self.x() * rhs.as_inner().z() + -(rhs.as_inner().x() * self.z()),
-            self.y() * rhs.as_inner().z() + -(rhs.as_inner().y() * self.z()),
+            -(rhs.as_inner().x() * self.y()) + rhs.as_inner().y() * self.x(),
+            -(rhs.as_inner().x() * self.z()) + rhs.as_inner().z() * self.x(),
+            -(rhs.as_inner().y() * self.z()) + rhs.as_inner().z() * self.y(),
         )
     }
 }
@@ -847,9 +847,9 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().y() + -(self.as_inner().y() * rhs.as_inner().x()),
-            self.as_inner().x() * rhs.as_inner().z() + -(rhs.as_inner().x() * self.as_inner().z()),
-            self.as_inner().y() * rhs.as_inner().z() + -(rhs.as_inner().y() * self.as_inner().z()),
+            -(rhs.as_inner().x() * self.as_inner().y()) + rhs.as_inner().y() * self.as_inner().x(),
+            -(rhs.as_inner().x() * self.as_inner().z()) + rhs.as_inner().z() * self.as_inner().x(),
+            -(rhs.as_inner().y() * self.as_inner().z()) + rhs.as_inner().z() * self.as_inner().y(),
         )
     }
 }
@@ -858,9 +858,9 @@ impl<T: Float> Antiwedge<Bivector<T>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.rz() * rhs.ry() + -(self.ry() * rhs.rz()),
-            self.rz() * rhs.rx() + -(self.rx() * rhs.rz()),
-            self.ry() * rhs.rx() + -(self.rx() * rhs.ry()),
+            -(rhs.rz() * self.ry()) + rhs.ry() * self.rz(),
+            -(rhs.rz() * self.rx()) + rhs.rx() * self.rz(),
+            -(rhs.ry() * self.rx()) + rhs.rx() * self.ry(),
         )
     }
 }
@@ -870,9 +870,9 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().rz() * rhs.ry() + -(self.as_inner().ry() * rhs.rz()),
-            self.as_inner().rz() * rhs.rx() + -(self.as_inner().rx() * rhs.rz()),
-            self.as_inner().ry() * rhs.rx() + -(self.as_inner().rx() * rhs.ry()),
+            -(rhs.rz() * self.as_inner().ry()) + rhs.ry() * self.as_inner().rz(),
+            -(rhs.rz() * self.as_inner().rx()) + rhs.rx() * self.as_inner().rz(),
+            -(rhs.ry() * self.as_inner().rx()) + rhs.rx() * self.as_inner().ry(),
         )
     }
 }
@@ -882,9 +882,9 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.rz() * rhs.as_inner().ry() + -(self.ry() * rhs.as_inner().rz()),
-            self.rz() * rhs.as_inner().rx() + -(self.rx() * rhs.as_inner().rz()),
-            self.ry() * rhs.as_inner().rx() + -(self.rx() * rhs.as_inner().ry()),
+            -(rhs.as_inner().rz() * self.ry()) + rhs.as_inner().ry() * self.rz(),
+            -(rhs.as_inner().rz() * self.rx()) + rhs.as_inner().rx() * self.rz(),
+            -(rhs.as_inner().ry() * self.rx()) + rhs.as_inner().rx() * self.ry(),
         )
     }
 }
@@ -894,12 +894,12 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().rz() * rhs.as_inner().ry()
-                + -(self.as_inner().ry() * rhs.as_inner().rz()),
-            self.as_inner().rz() * rhs.as_inner().rx()
-                + -(self.as_inner().rx() * rhs.as_inner().rz()),
-            self.as_inner().ry() * rhs.as_inner().rx()
-                + -(self.as_inner().rx() * rhs.as_inner().ry()),
+            -(rhs.as_inner().rz() * self.as_inner().ry())
+                + rhs.as_inner().ry() * self.as_inner().rz(),
+            -(rhs.as_inner().rz() * self.as_inner().rx())
+                + rhs.as_inner().rx() * self.as_inner().rz(),
+            -(rhs.as_inner().ry() * self.as_inner().rx())
+                + rhs.as_inner().rx() * self.as_inner().ry(),
         )
     }
 }
@@ -908,9 +908,9 @@ impl<T: Float> Antiwedge<Trivector<T>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * rhs.ps(),
-            self.ry() * rhs.ps(),
-            self.rx() * rhs.ps(),
+            rhs.ps() * self.rz(),
+            rhs.ps() * self.ry(),
+            rhs.ps() * self.rx(),
         )
     }
 }
@@ -920,9 +920,9 @@ impl<T: Float> Antiwedge<Trivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().rz() * rhs.ps(),
-            self.as_inner().ry() * rhs.ps(),
-            self.as_inner().rx() * rhs.ps(),
+            rhs.ps() * self.as_inner().rz(),
+            rhs.ps() * self.as_inner().ry(),
+            rhs.ps() * self.as_inner().rx(),
         )
     }
 }
@@ -932,9 +932,9 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * rhs.as_inner().ps(),
-            self.ry() * rhs.as_inner().ps(),
-            self.rx() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.rz(),
+            rhs.as_inner().ps() * self.ry(),
+            rhs.as_inner().ps() * self.rx(),
         )
     }
 }
@@ -944,9 +944,9 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().rz() * rhs.as_inner().ps(),
-            self.as_inner().ry() * rhs.as_inner().ps(),
-            self.as_inner().rx() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.as_inner().rz(),
+            rhs.as_inner().ps() * self.as_inner().ry(),
+            rhs.as_inner().ps() * self.as_inner().rx(),
         )
     }
 }
@@ -954,7 +954,7 @@ impl<T: Float> Antiwedge<Vector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(rhs.x() * self.rx() + -(rhs.y() * self.ry()) + self.rz() * rhs.z())
+        Scalar::new_unchecked(-(rhs.y() * self.ry()) + rhs.x() * self.rx() + rhs.z() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -963,9 +963,9 @@ impl<T: Float> Antiwedge<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.x() * self.as_inner().rx()
-                + -(rhs.y() * self.as_inner().ry())
-                + self.as_inner().rz() * rhs.z(),
+            -(rhs.y() * self.as_inner().ry())
+                + rhs.x() * self.as_inner().rx()
+                + rhs.z() * self.as_inner().rz(),
         )
     }
 }
@@ -975,9 +975,9 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.as_inner().x() * self.rx()
-                + -(rhs.as_inner().y() * self.ry())
-                + self.rz() * rhs.as_inner().z(),
+            -(rhs.as_inner().y() * self.ry())
+                + rhs.as_inner().x() * self.rx()
+                + rhs.as_inner().z() * self.rz(),
         )
     }
 }
@@ -987,9 +987,9 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.as_inner().x() * self.as_inner().rx()
-                + -(rhs.as_inner().y() * self.as_inner().ry())
-                + self.as_inner().rz() * rhs.as_inner().z(),
+            -(rhs.as_inner().y() * self.as_inner().ry())
+                + rhs.as_inner().x() * self.as_inner().rx()
+                + rhs.as_inner().z() * self.as_inner().rz(),
         )
     }
 }
@@ -997,7 +997,7 @@ impl<T: Float> Antiwedge<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1005,7 +1005,7 @@ impl<T: Float> Antiwedge<Trivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1013,7 +1013,7 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1021,7 +1021,7 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.as_inner().s())
     }
 }
 impl<T: Float> Antiwedge<Bivector<T>> for Trivector<T> {
@@ -1029,9 +1029,9 @@ impl<T: Float> Antiwedge<Bivector<T>> for Trivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.rz(),
-            self.ps() * rhs.ry(),
-            self.ps() * rhs.rx(),
+            rhs.rz() * self.ps(),
+            rhs.ry() * self.ps(),
+            rhs.rx() * self.ps(),
         )
     }
 }
@@ -1041,9 +1041,9 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.rz(),
-            self.as_inner().ps() * rhs.ry(),
-            self.as_inner().ps() * rhs.rx(),
+            rhs.rz() * self.as_inner().ps(),
+            rhs.ry() * self.as_inner().ps(),
+            rhs.rx() * self.as_inner().ps(),
         )
     }
 }
@@ -1053,9 +1053,9 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.as_inner().rz(),
-            self.ps() * rhs.as_inner().ry(),
-            self.ps() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.ps(),
+            rhs.as_inner().ry() * self.ps(),
+            rhs.as_inner().rx() * self.ps(),
         )
     }
 }
@@ -1065,9 +1065,9 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.as_inner().rz(),
-            self.as_inner().ps() * rhs.as_inner().ry(),
-            self.as_inner().ps() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.as_inner().ps(),
+            rhs.as_inner().ry() * self.as_inner().ps(),
+            rhs.as_inner().rx() * self.as_inner().ps(),
         )
     }
 }
@@ -1106,7 +1106,7 @@ impl<T: Float> Antiwedge<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -1114,7 +1114,7 @@ impl<T: Float> Antiwedge<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().ps() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.as_inner().ps())
     }
 }
 #[allow(unused_variables)]
@@ -1122,7 +1122,7 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -1130,7 +1130,7 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().ps() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
 impl<T: Float> Antiwedge<Vector<T>> for Trivector<T> {
@@ -1140,7 +1140,7 @@ impl<T: Float> Antiwedge<Vector<T>> for Trivector<T> {
         Vector::new_unchecked(
             rhs.x() * self.ps(),
             rhs.y() * self.ps(),
-            self.ps() * rhs.z(),
+            rhs.z() * self.ps(),
         )
     }
 }
@@ -1152,7 +1152,7 @@ impl<T: Float> Antiwedge<Vector<T>> for Unit<Trivector<T>> {
         Vector::new_unchecked(
             rhs.x() * self.as_inner().ps(),
             rhs.y() * self.as_inner().ps(),
-            self.as_inner().ps() * rhs.z(),
+            rhs.z() * self.as_inner().ps(),
         )
     }
 }
@@ -1164,7 +1164,7 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Trivector<T> {
         Vector::new_unchecked(
             rhs.as_inner().x() * self.ps(),
             rhs.as_inner().y() * self.ps(),
-            self.ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.ps(),
         )
     }
 }
@@ -1176,7 +1176,7 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Unit<Trivector<T>> {
         Vector::new_unchecked(
             rhs.as_inner().x() * self.as_inner().ps(),
             rhs.as_inner().y() * self.as_inner().ps(),
-            self.as_inner().ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.as_inner().ps(),
         )
     }
 }
@@ -1184,7 +1184,7 @@ impl<T: Float> Antiwedge<Bivector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.rx() + -(self.y() * rhs.ry()) + self.z() * rhs.rz())
+        Scalar::new_unchecked(-(rhs.ry() * self.y()) + rhs.rx() * self.x() + rhs.rz() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -1193,9 +1193,9 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.rx()
-                + -(self.as_inner().y() * rhs.ry())
-                + self.as_inner().z() * rhs.rz(),
+            -(rhs.ry() * self.as_inner().y())
+                + rhs.rx() * self.as_inner().x()
+                + rhs.rz() * self.as_inner().z(),
         )
     }
 }
@@ -1205,9 +1205,9 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * rhs.as_inner().rx()
-                + -(self.y() * rhs.as_inner().ry())
-                + self.z() * rhs.as_inner().rz(),
+            -(rhs.as_inner().ry() * self.y())
+                + rhs.as_inner().rx() * self.x()
+                + rhs.as_inner().rz() * self.z(),
         )
     }
 }
@@ -1217,9 +1217,9 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().rx()
-                + -(self.as_inner().y() * rhs.as_inner().ry())
-                + self.as_inner().z() * rhs.as_inner().rz(),
+            -(rhs.as_inner().ry() * self.as_inner().y())
+                + rhs.as_inner().rx() * self.as_inner().x()
+                + rhs.as_inner().rz() * self.as_inner().z(),
         )
     }
 }
@@ -1228,9 +1228,9 @@ impl<T: Float> Antiwedge<Trivector<T>> for Vector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.ps(),
-            self.y() * rhs.ps(),
-            self.z() * rhs.ps(),
+            rhs.ps() * self.x(),
+            rhs.ps() * self.y(),
+            rhs.ps() * self.z(),
         )
     }
 }
@@ -1240,9 +1240,9 @@ impl<T: Float> Antiwedge<Trivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.ps(),
-            self.as_inner().y() * rhs.ps(),
-            self.as_inner().z() * rhs.ps(),
+            rhs.ps() * self.as_inner().x(),
+            rhs.ps() * self.as_inner().y(),
+            rhs.ps() * self.as_inner().z(),
         )
     }
 }
@@ -1252,9 +1252,9 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.as_inner().ps(),
-            self.y() * rhs.as_inner().ps(),
-            self.z() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.x(),
+            rhs.as_inner().ps() * self.y(),
+            rhs.as_inner().ps() * self.z(),
         )
     }
 }
@@ -1264,9 +1264,9 @@ impl<T: Float> Antiwedge<Unit<Trivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().ps(),
-            self.as_inner().y() * rhs.as_inner().ps(),
-            self.as_inner().z() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.as_inner().x(),
+            rhs.as_inner().ps() * self.as_inner().y(),
+            rhs.as_inner().ps() * self.as_inner().z(),
         )
     }
 }
@@ -1275,7 +1275,7 @@ impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
         )
     }
 }
@@ -1285,9 +1285,9 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.rz())
-                + -(self.as_inner().ry() * rhs.ry())
-                + -(self.as_inner().rx() * rhs.rx()),
+            -(rhs.rx() * self.as_inner().rx())
+                + -(rhs.ry() * self.as_inner().ry())
+                + -(rhs.rz() * self.as_inner().rz()),
         )
     }
 }
@@ -1297,9 +1297,9 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.as_inner().rz())
-                + -(self.ry() * rhs.as_inner().ry())
-                + -(self.rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.rx())
+                + -(rhs.as_inner().ry() * self.ry())
+                + -(rhs.as_inner().rz() * self.rz()),
         )
     }
 }
@@ -1309,9 +1309,9 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.as_inner().rz())
-                + -(self.as_inner().ry() * rhs.as_inner().ry())
-                + -(self.as_inner().rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.as_inner().rx())
+                + -(rhs.as_inner().ry() * self.as_inner().ry())
+                + -(rhs.as_inner().rz() * self.as_inner().rz()),
         )
     }
 }
@@ -1320,9 +1320,9 @@ impl<T: Float> LeftContract<Trivector<T>> for Bivector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.rx() * rhs.ps()),
-            self.ry() * rhs.ps(),
-            -(self.rz() * rhs.ps()),
+            -(rhs.ps() * self.rx()),
+            rhs.ps() * self.ry(),
+            -(rhs.ps() * self.rz()),
         )
     }
 }
@@ -1332,9 +1332,9 @@ impl<T: Float> LeftContract<Trivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().rx() * rhs.ps()),
-            self.as_inner().ry() * rhs.ps(),
-            -(self.as_inner().rz() * rhs.ps()),
+            -(rhs.ps() * self.as_inner().rx()),
+            rhs.ps() * self.as_inner().ry(),
+            -(rhs.ps() * self.as_inner().rz()),
         )
     }
 }
@@ -1344,9 +1344,9 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.rx() * rhs.as_inner().ps()),
-            self.ry() * rhs.as_inner().ps(),
-            -(self.rz() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.rx()),
+            rhs.as_inner().ps() * self.ry(),
+            -(rhs.as_inner().ps() * self.rz()),
         )
     }
 }
@@ -1356,9 +1356,9 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().rx() * rhs.as_inner().ps()),
-            self.as_inner().ry() * rhs.as_inner().ps(),
-            -(self.as_inner().rz() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.as_inner().rx()),
+            rhs.as_inner().ps() * self.as_inner().ry(),
+            -(rhs.as_inner().ps() * self.as_inner().rz()),
         )
     }
 }
@@ -1367,9 +1367,9 @@ impl<T: Float> LeftContract<Bivector<T>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.rz(),
-            self.s() * rhs.ry(),
-            self.s() * rhs.rx(),
+            rhs.rz() * self.s(),
+            rhs.ry() * self.s(),
+            rhs.rx() * self.s(),
         )
     }
 }
@@ -1379,9 +1379,9 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.rz(),
-            self.as_inner().s() * rhs.ry(),
-            self.as_inner().s() * rhs.rx(),
+            rhs.rz() * self.as_inner().s(),
+            rhs.ry() * self.as_inner().s(),
+            rhs.rx() * self.as_inner().s(),
         )
     }
 }
@@ -1391,9 +1391,9 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.as_inner().rz(),
-            self.s() * rhs.as_inner().ry(),
-            self.s() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.s(),
+            rhs.as_inner().ry() * self.s(),
+            rhs.as_inner().rx() * self.s(),
         )
     }
 }
@@ -1403,9 +1403,9 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().rz(),
-            self.as_inner().s() * rhs.as_inner().ry(),
-            self.as_inner().s() * rhs.as_inner().rx(),
+            rhs.as_inner().rz() * self.as_inner().s(),
+            rhs.as_inner().ry() * self.as_inner().s(),
+            rhs.as_inner().rx() * self.as_inner().s(),
         )
     }
 }
@@ -1413,7 +1413,7 @@ impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1421,7 +1421,7 @@ impl<T: Float> LeftContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1429,7 +1429,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1437,14 +1437,14 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1452,7 +1452,7 @@ impl<T: Float> LeftContract<Trivector<T>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1460,7 +1460,7 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1468,14 +1468,14 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y(), self.s() * rhs.z())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s(), rhs.z() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1484,9 +1484,9 @@ impl<T: Float> LeftContract<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.x(),
-            self.as_inner().s() * rhs.y(),
-            self.as_inner().s() * rhs.z(),
+            rhs.x() * self.as_inner().s(),
+            rhs.y() * self.as_inner().s(),
+            rhs.z() * self.as_inner().s(),
         )
     }
 }
@@ -1496,9 +1496,9 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * rhs.as_inner().x(),
-            self.s() * rhs.as_inner().y(),
-            self.s() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.s(),
+            rhs.as_inner().y() * self.s(),
+            rhs.as_inner().z() * self.s(),
         )
     }
 }
@@ -1508,9 +1508,9 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().x(),
-            self.as_inner().s() * rhs.as_inner().y(),
-            self.as_inner().s() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().s(),
+            rhs.as_inner().y() * self.as_inner().s(),
+            rhs.as_inner().z() * self.as_inner().s(),
         )
     }
 }
@@ -1518,7 +1518,7 @@ impl<T: Float> LeftContract<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1526,7 +1526,7 @@ impl<T: Float> LeftContract<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.as_inner().ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1534,7 +1534,7 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1542,7 +1542,7 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().ps()))
     }
 }
 impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
@@ -1550,9 +1550,9 @@ impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.y() * rhs.rz()) + -(self.z() * rhs.ry()),
-            self.x() * rhs.rz() + -(self.z() * rhs.rx()),
-            self.x() * rhs.ry() + self.y() * rhs.rx(),
+            -(rhs.rz() * self.y()) + -(rhs.ry() * self.z()),
+            -(rhs.rx() * self.z()) + rhs.rz() * self.x(),
+            rhs.ry() * self.x() + rhs.rx() * self.y(),
         )
     }
 }
@@ -1562,9 +1562,9 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().y() * rhs.rz()) + -(self.as_inner().z() * rhs.ry()),
-            self.as_inner().x() * rhs.rz() + -(self.as_inner().z() * rhs.rx()),
-            self.as_inner().x() * rhs.ry() + self.as_inner().y() * rhs.rx(),
+            -(rhs.rz() * self.as_inner().y()) + -(rhs.ry() * self.as_inner().z()),
+            -(rhs.rx() * self.as_inner().z()) + rhs.rz() * self.as_inner().x(),
+            rhs.ry() * self.as_inner().x() + rhs.rx() * self.as_inner().y(),
         )
     }
 }
@@ -1574,9 +1574,9 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.y() * rhs.as_inner().rz()) + -(self.z() * rhs.as_inner().ry()),
-            self.x() * rhs.as_inner().rz() + -(self.z() * rhs.as_inner().rx()),
-            self.x() * rhs.as_inner().ry() + self.y() * rhs.as_inner().rx(),
+            -(rhs.as_inner().rz() * self.y()) + -(rhs.as_inner().ry() * self.z()),
+            -(rhs.as_inner().rx() * self.z()) + rhs.as_inner().rz() * self.x(),
+            rhs.as_inner().ry() * self.x() + rhs.as_inner().rx() * self.y(),
         )
     }
 }
@@ -1586,11 +1586,11 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().y() * rhs.as_inner().rz())
-                + -(self.as_inner().z() * rhs.as_inner().ry()),
-            self.as_inner().x() * rhs.as_inner().rz()
-                + -(self.as_inner().z() * rhs.as_inner().rx()),
-            self.as_inner().x() * rhs.as_inner().ry() + self.as_inner().y() * rhs.as_inner().rx(),
+            -(rhs.as_inner().rz() * self.as_inner().y())
+                + -(rhs.as_inner().ry() * self.as_inner().z()),
+            -(rhs.as_inner().rx() * self.as_inner().z())
+                + rhs.as_inner().rz() * self.as_inner().x(),
+            rhs.as_inner().ry() * self.as_inner().x() + rhs.as_inner().rx() * self.as_inner().y(),
         )
     }
 }
@@ -1599,9 +1599,9 @@ impl<T: Float> LeftContract<Trivector<T>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.z() * rhs.ps(),
-            -(self.y() * rhs.ps()),
-            self.x() * rhs.ps(),
+            rhs.ps() * self.z(),
+            -(rhs.ps() * self.y()),
+            rhs.ps() * self.x(),
         )
     }
 }
@@ -1611,9 +1611,9 @@ impl<T: Float> LeftContract<Trivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().z() * rhs.ps(),
-            -(self.as_inner().y() * rhs.ps()),
-            self.as_inner().x() * rhs.ps(),
+            rhs.ps() * self.as_inner().z(),
+            -(rhs.ps() * self.as_inner().y()),
+            rhs.ps() * self.as_inner().x(),
         )
     }
 }
@@ -1623,9 +1623,9 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.z() * rhs.as_inner().ps(),
-            -(self.y() * rhs.as_inner().ps()),
-            self.x() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.z(),
+            -(rhs.as_inner().ps() * self.y()),
+            rhs.as_inner().ps() * self.x(),
         )
     }
 }
@@ -1635,9 +1635,9 @@ impl<T: Float> LeftContract<Unit<Trivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().z() * rhs.as_inner().ps(),
-            -(self.as_inner().y() * rhs.as_inner().ps()),
-            self.as_inner().x() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.as_inner().z(),
+            -(rhs.as_inner().ps() * self.as_inner().y()),
+            rhs.as_inner().ps() * self.as_inner().x(),
         )
     }
 }
@@ -1645,7 +1645,7 @@ impl<T: Float> LeftContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -1654,9 +1654,9 @@ impl<T: Float> LeftContract<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.x()
-                + self.as_inner().y() * rhs.y()
-                + self.as_inner().z() * rhs.z(),
+            rhs.x() * self.as_inner().x()
+                + rhs.y() * self.as_inner().y()
+                + rhs.z() * self.as_inner().z(),
         )
     }
 }
@@ -1666,9 +1666,9 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * rhs.as_inner().x()
-                + self.y() * rhs.as_inner().y()
-                + self.z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.x()
+                + rhs.as_inner().y() * self.y()
+                + rhs.as_inner().z() * self.z(),
         )
     }
 }
@@ -1678,9 +1678,9 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x()
-                + self.as_inner().y() * rhs.as_inner().y()
-                + self.as_inner().z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().x()
+                + rhs.as_inner().y() * self.as_inner().y()
+                + rhs.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -1689,7 +1689,7 @@ impl<T: Float> RightContract<Bivector<T>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
         )
     }
 }
@@ -1699,9 +1699,9 @@ impl<T: Float> RightContract<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.rz())
-                + -(self.as_inner().ry() * rhs.ry())
-                + -(self.as_inner().rx() * rhs.rx()),
+            -(rhs.rx() * self.as_inner().rx())
+                + -(rhs.ry() * self.as_inner().ry())
+                + -(rhs.rz() * self.as_inner().rz()),
         )
     }
 }
@@ -1711,9 +1711,9 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.as_inner().rz())
-                + -(self.ry() * rhs.as_inner().ry())
-                + -(self.rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.rx())
+                + -(rhs.as_inner().ry() * self.ry())
+                + -(rhs.as_inner().rz() * self.rz()),
         )
     }
 }
@@ -1723,9 +1723,9 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.as_inner().rz())
-                + -(self.as_inner().ry() * rhs.as_inner().ry())
-                + -(self.as_inner().rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.as_inner().rx())
+                + -(rhs.as_inner().ry() * self.as_inner().ry())
+                + -(rhs.as_inner().rz() * self.as_inner().rz()),
         )
     }
 }
@@ -1781,8 +1781,8 @@ impl<T: Float> RightContract<Vector<T>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.y() * self.rz() + self.ry() * rhs.z(),
-            -(rhs.x() * self.rz()) + self.rx() * rhs.z(),
+            rhs.y() * self.rz() + rhs.z() * self.ry(),
+            -(rhs.x() * self.rz()) + rhs.z() * self.rx(),
             -(rhs.x() * self.ry()) + -(rhs.y() * self.rx()),
         )
     }
@@ -1793,8 +1793,8 @@ impl<T: Float> RightContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.y() * self.as_inner().rz() + self.as_inner().ry() * rhs.z(),
-            -(rhs.x() * self.as_inner().rz()) + self.as_inner().rx() * rhs.z(),
+            rhs.y() * self.as_inner().rz() + rhs.z() * self.as_inner().ry(),
+            -(rhs.x() * self.as_inner().rz()) + rhs.z() * self.as_inner().rx(),
             -(rhs.x() * self.as_inner().ry()) + -(rhs.y() * self.as_inner().rx()),
         )
     }
@@ -1805,8 +1805,8 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.as_inner().y() * self.rz() + self.ry() * rhs.as_inner().z(),
-            -(rhs.as_inner().x() * self.rz()) + self.rx() * rhs.as_inner().z(),
+            rhs.as_inner().y() * self.rz() + rhs.as_inner().z() * self.ry(),
+            -(rhs.as_inner().x() * self.rz()) + rhs.as_inner().z() * self.rx(),
             -(rhs.as_inner().x() * self.ry()) + -(rhs.as_inner().y() * self.rx()),
         )
     }
@@ -1817,9 +1817,9 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.as_inner().y() * self.as_inner().rz() + self.as_inner().ry() * rhs.as_inner().z(),
+            rhs.as_inner().y() * self.as_inner().rz() + rhs.as_inner().z() * self.as_inner().ry(),
             -(rhs.as_inner().x() * self.as_inner().rz())
-                + self.as_inner().rx() * rhs.as_inner().z(),
+                + rhs.as_inner().z() * self.as_inner().rx(),
             -(rhs.as_inner().x() * self.as_inner().ry())
                 + -(rhs.as_inner().y() * self.as_inner().rx()),
         )
@@ -1829,7 +1829,7 @@ impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1837,7 +1837,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1845,7 +1845,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1853,7 +1853,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> RightContract<Bivector<T>> for Trivector<T> {
@@ -1861,9 +1861,9 @@ impl<T: Float> RightContract<Bivector<T>> for Trivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ps() * rhs.rx()),
-            self.ps() * rhs.ry(),
-            -(self.ps() * rhs.rz()),
+            -(rhs.rx() * self.ps()),
+            rhs.ry() * self.ps(),
+            -(rhs.rz() * self.ps()),
         )
     }
 }
@@ -1873,9 +1873,9 @@ impl<T: Float> RightContract<Bivector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().ps() * rhs.rx()),
-            self.as_inner().ps() * rhs.ry(),
-            -(self.as_inner().ps() * rhs.rz()),
+            -(rhs.rx() * self.as_inner().ps()),
+            rhs.ry() * self.as_inner().ps(),
+            -(rhs.rz() * self.as_inner().ps()),
         )
     }
 }
@@ -1885,9 +1885,9 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ps() * rhs.as_inner().rx()),
-            self.ps() * rhs.as_inner().ry(),
-            -(self.ps() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.ps()),
+            rhs.as_inner().ry() * self.ps(),
+            -(rhs.as_inner().rz() * self.ps()),
         )
     }
 }
@@ -1897,9 +1897,9 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().ps() * rhs.as_inner().rx()),
-            self.as_inner().ps() * rhs.as_inner().ry(),
-            -(self.as_inner().ps() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.as_inner().ps()),
+            rhs.as_inner().ry() * self.as_inner().ps(),
+            -(rhs.as_inner().rz() * self.as_inner().ps()),
         )
     }
 }
@@ -1938,7 +1938,7 @@ impl<T: Float> RightContract<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1946,7 +1946,7 @@ impl<T: Float> RightContract<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.as_inner().ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1954,7 +1954,7 @@ impl<T: Float> RightContract<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -1962,7 +1962,7 @@ impl<T: Float> RightContract<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().ps()))
     }
 }
 impl<T: Float> RightContract<Vector<T>> for Trivector<T> {
@@ -1970,7 +1970,7 @@ impl<T: Float> RightContract<Vector<T>> for Trivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.z(),
+            rhs.z() * self.ps(),
             -(rhs.y() * self.ps()),
             rhs.x() * self.ps(),
         )
@@ -1982,7 +1982,7 @@ impl<T: Float> RightContract<Vector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.z(),
+            rhs.z() * self.as_inner().ps(),
             -(rhs.y() * self.as_inner().ps()),
             rhs.x() * self.as_inner().ps(),
         )
@@ -1994,7 +1994,7 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Trivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.ps(),
             -(rhs.as_inner().y() * self.ps()),
             rhs.as_inner().x() * self.ps(),
         )
@@ -2006,7 +2006,7 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.as_inner().ps(),
             -(rhs.as_inner().y() * self.as_inner().ps()),
             rhs.as_inner().x() * self.as_inner().ps(),
         )
@@ -2016,7 +2016,7 @@ impl<T: Float> RightContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s(), rhs.s() * self.z())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y(), rhs.s() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -2025,8 +2025,8 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.s(),
-            self.as_inner().y() * rhs.s(),
+            rhs.s() * self.as_inner().x(),
+            rhs.s() * self.as_inner().y(),
             rhs.s() * self.as_inner().z(),
         )
     }
@@ -2037,8 +2037,8 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.as_inner().s(),
-            self.y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.x(),
+            rhs.as_inner().s() * self.y(),
             rhs.as_inner().s() * self.z(),
         )
     }
@@ -2049,8 +2049,8 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
             rhs.as_inner().s() * self.as_inner().z(),
         )
     }
@@ -2059,7 +2059,7 @@ impl<T: Float> RightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -2068,9 +2068,9 @@ impl<T: Float> RightContract<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.x()
-                + self.as_inner().y() * rhs.y()
-                + self.as_inner().z() * rhs.z(),
+            rhs.x() * self.as_inner().x()
+                + rhs.y() * self.as_inner().y()
+                + rhs.z() * self.as_inner().z(),
         )
     }
 }
@@ -2080,9 +2080,9 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * rhs.as_inner().x()
-                + self.y() * rhs.as_inner().y()
-                + self.z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.x()
+                + rhs.as_inner().y() * self.y()
+                + rhs.as_inner().z() * self.z(),
         )
     }
 }
@@ -2092,9 +2092,9 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x()
-                + self.as_inner().y() * rhs.as_inner().y()
-                + self.as_inner().z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().x()
+                + rhs.as_inner().y() * self.as_inner().y()
+                + rhs.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -2104,25 +2104,25 @@ impl<T: Float> Sandwich<Bivector<T>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * operand.rz() * self.rz() + self.rz() * operand.rx() * self.rx()
+            self.rz() * operand.ry() * self.ry() + self.ry() * operand.ry() * self.rz()
                 - self.ry() * operand.rz() * self.ry()
-                + self.ry() * operand.ry() * self.rz()
-                + self.rx() * operand.rx() * self.rz()
                 - self.rx() * operand.rz() * self.rx()
-                + self.rz() * operand.ry() * self.ry(),
-            -(self.rz() * operand.ry() * self.rz())
-                + self.ry() * operand.ry() * self.ry()
-                + self.rz() * operand.rz() * self.ry()
+                + self.rx() * operand.rx() * self.rz()
+                + self.rz() * operand.rx() * self.rx()
+                + self.rz() * operand.rz() * self.rz(),
+            self.ry() * operand.ry() * self.ry()
                 + self.ry() * operand.rz() * self.rz()
                 + self.ry() * operand.rx() * self.rx()
                 - self.rx() * operand.ry() * self.rx()
-                + self.rx() * operand.rx() * self.ry(),
-            self.ry() * operand.ry() * self.rx() + self.rz() * operand.rz() * self.rx()
-                - self.rz() * operand.rx() * self.rz()
+                + self.rx() * operand.rx() * self.ry()
+                + self.rz() * operand.rz() * self.ry()
+                - self.rz() * operand.ry() * self.rz(),
+            self.rz() * operand.rz() * self.rx() + self.rx() * operand.ry() * self.ry()
                 - self.ry() * operand.rx() * self.ry()
+                + self.rx() * operand.rx() * self.rx()
                 + self.rx() * operand.rz() * self.rz()
-                + self.rx() * operand.ry() * self.ry()
-                + self.rx() * operand.rx() * self.rx(),
+                - self.rz() * operand.rx() * self.rz()
+                + self.ry() * operand.ry() * self.rx(),
         )
     }
 }
@@ -2132,19 +2132,19 @@ impl<T: Float> Sandwich<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.rz(),
             -(operand.ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -2154,21 +2154,21 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+            -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + operand.as_inner().rz() * self.rz() * self.rz(),
+            -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + operand.as_inner().ry() * self.ry() * self.ry(),
+            -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + operand.as_inner().rx() * self.rx() * self.rx(),
         )
     }
 }
@@ -2178,19 +2178,19 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.as_inner().rz(),
             -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.as_inner().rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -2200,38 +2200,41 @@ impl<T: Float> Sandwich<Rotor<T>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.ry() * operand.rx() * self.rz()) - self.rx() * operand.rz() * self.ry()
-                + self.ry() * operand.rz() * self.rx()
-                + self.rx() * operand.s() * self.rx()
-                + self.rz() * operand.rx() * self.ry()
+            self.ry() * operand.s() * self.ry()
                 + self.rz() * operand.s() * self.rz()
-                + self.rx() * operand.ry() * self.rz()
+                + self.rx() * operand.s() * self.rx()
+                - self.ry() * operand.rx() * self.rz()
+                - self.rx() * operand.rz() * self.ry()
                 - self.rz() * operand.ry() * self.rx()
-                + self.ry() * operand.s() * self.ry(),
-            -(self.rx() * operand.rz() * self.rx()) + self.rx() * operand.rx() * self.rz()
-                - self.rx() * operand.s() * self.ry()
-                + self.rz() * operand.rz() * self.rz()
+                + self.ry() * operand.rz() * self.rx()
+                + self.rz() * operand.rx() * self.ry()
+                + self.rx() * operand.ry() * self.rz(),
+            -(self.rx() * operand.s() * self.ry())
+                + self.rz() * operand.ry() * self.ry()
                 + self.ry() * operand.s() * self.rx()
-                + self.ry() * operand.ry() * self.rz()
-                - self.ry() * operand.rz() * self.ry()
+                - self.rx() * operand.rz() * self.rx()
                 + self.rz() * operand.rx() * self.rx()
-                + self.rz() * operand.ry() * self.ry(),
-            -(self.rz() * operand.s() * self.rx()) + self.ry() * operand.ry() * self.ry()
-                - self.rz() * operand.ry() * self.rz()
-                + self.rx() * operand.s() * self.rz()
+                + self.rz() * operand.rz() * self.rz()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rx() * operand.rx() * self.rz()
+                - self.ry() * operand.rz() * self.ry(),
+            self.ry() * operand.ry() * self.ry()
                 + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
                 + self.ry() * operand.rz() * self.rz()
+                - self.rx() * operand.ry() * self.rx()
+                + self.ry() * operand.rx() * self.rx()
+                - self.rz() * operand.ry() * self.rz()
                 + self.rx() * operand.rx() * self.ry()
-                - self.rx() * operand.ry() * self.rx(),
-            self.ry() * operand.ry() * self.rx()
-                - self.ry() * operand.s() * self.rz()
+                + self.rx() * operand.s() * self.rz()
+                - self.rz() * operand.s() * self.rx(),
+            self.rz() * operand.rz() * self.rx()
+                - self.rz() * operand.rx() * self.rz()
                 - self.ry() * operand.rx() * self.ry()
                 + self.rx() * operand.rz() * self.rz()
-                + self.rx() * operand.ry() * self.ry()
                 + self.rx() * operand.rx() * self.rx()
-                + self.rz() * operand.rz() * self.rx()
-                - self.rz() * operand.rx() * self.rz()
+                + self.rx() * operand.ry() * self.ry()
+                + self.ry() * operand.ry() * self.rx()
+                - self.ry() * operand.s() * self.rz()
                 + self.rz() * operand.s() * self.ry(),
         )
     }
@@ -2243,19 +2246,19 @@ impl<T: Float> Sandwich<Rotor<T>> for Unit<Bivector<T>> {
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.rz(),
             -(operand.ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -2265,24 +2268,24 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx(),
-            self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+                + operand.as_inner().s() * self.rz() * self.rz(),
+            -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + operand.as_inner().rz() * self.rz() * self.rz(),
+            -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + operand.as_inner().ry() * self.ry() * self.ry(),
+            -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + operand.as_inner().rx() * self.rx() * self.rx(),
         )
     }
 }
@@ -2293,19 +2296,19 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.as_inner().rz(),
             -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.as_inner().rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -2315,9 +2318,9 @@ impl<T: Float> Sandwich<Scalar<T>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.rx() * operand.s() * self.rx()
+            self.rz() * operand.s() * self.rz()
                 + self.ry() * operand.s() * self.ry()
-                + self.rz() * operand.s() * self.rz(),
+                + self.rx() * operand.s() * self.rx(),
         )
     }
 }
@@ -2335,9 +2338,9 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx(),
+                + operand.as_inner().s() * self.rz() * self.rz(),
         )
     }
 }
@@ -2355,9 +2358,9 @@ impl<T: Float> Sandwich<Trivector<T>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.rx() * operand.ps() * self.rx()
+            self.rz() * operand.ps() * self.rz()
                 + self.ry() * operand.ps() * self.ry()
-                + self.rz() * operand.ps() * self.rz(),
+                + self.rx() * operand.ps() * self.rx(),
         )
     }
 }
@@ -2375,9 +2378,9 @@ impl<T: Float> Sandwich<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.rz() * self.rz() * operand.as_inner().ps()
-                + self.ry() * self.ry() * operand.as_inner().ps()
-                + self.rx() * self.rx() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.rx() * self.rx()
+                + operand.as_inner().ps() * self.ry() * self.ry()
+                + operand.as_inner().ps() * self.rz() * self.rz(),
         )
     }
 }
@@ -2395,25 +2398,27 @@ impl<T: Float> Sandwich<Vector<T>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.rx() * operand.y() * self.ry()) + self.rx() * operand.z() * self.rz()
-                - self.ry() * operand.x() * self.ry()
+            self.rz() * operand.z() * self.rx()
                 - self.rz() * operand.x() * self.rz()
-                - self.ry() * operand.y() * self.rx()
+                - self.ry() * operand.x() * self.ry()
                 + self.rx() * operand.x() * self.rx()
-                + self.rz() * operand.z() * self.rx(),
-            -(self.rz() * operand.z() * self.ry())
-                - self.rz() * operand.y() * self.rz()
-                - self.ry() * operand.x() * self.rx()
-                + self.ry() * operand.y() * self.ry()
-                - self.rx() * operand.x() * self.ry()
+                - self.ry() * operand.y() * self.rx()
+                - self.rx() * operand.y() * self.ry()
+                + self.rx() * operand.z() * self.rz(),
+            self.ry() * operand.y() * self.ry()
                 - self.rx() * operand.y() * self.rx()
-                - self.ry() * operand.z() * self.rz(),
-            -(self.rx() * operand.z() * self.rx()) + self.rz() * operand.z() * self.rz()
-                - self.rz() * operand.y() * self.ry()
-                + self.rx() * operand.x() * self.rz()
+                - self.rz() * operand.y() * self.rz()
+                - self.ry() * operand.z() * self.rz()
+                - self.rx() * operand.x() * self.ry()
+                - self.ry() * operand.x() * self.rx()
+                - self.rz() * operand.z() * self.ry(),
+            -(self.rx() * operand.z() * self.rx())
                 - self.ry() * operand.z() * self.ry()
+                - self.ry() * operand.y() * self.rz()
+                + self.rx() * operand.x() * self.rz()
+                + self.rz() * operand.z() * self.rz()
                 + self.rz() * operand.x() * self.rx()
-                - self.ry() * operand.y() * self.rz(),
+                - self.rz() * operand.y() * self.ry(),
         )
     }
 }
@@ -2423,19 +2428,19 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.x())
+            -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
+                + -(operand.x())
                 + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.z(),
-            -(operand.y())
-                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.z(),
-            operand.z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.z()
-                + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().ry(),
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz(),
+            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
+                + -(operand.y())
+                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry(),
+            -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.z(),
         )
     }
 }
@@ -2445,21 +2450,21 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x() * self.rz() * self.rz())
+            -T::TWO * operand.as_inner().y() * self.rx() * self.ry()
                 + -(operand.as_inner().x() * self.ry() * self.ry())
-                + operand.as_inner().x() * self.rx() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.ry() * self.rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().z(),
-            -(operand.as_inner().y() * self.rz() * self.rz())
-                + operand.as_inner().y() * self.ry() * self.ry()
+                + -(operand.as_inner().x() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().z() * self.rx() * self.rz()
+                + operand.as_inner().x() * self.rx() * self.rx(),
+            -T::TWO * operand.as_inner().x() * self.rx() * self.ry()
+                + -T::TWO * operand.as_inner().z() * self.ry() * self.rz()
                 + -(operand.as_inner().y() * self.rx() * self.rx())
-                + -T::TWO * operand.as_inner().x() * self.ry() * self.rx()
-                + -T::TWO * self.rz() * self.ry() * operand.as_inner().z(),
-            self.rz() * self.rz() * operand.as_inner().z()
-                + -(self.ry() * self.ry() * operand.as_inner().z())
-                + -(self.rx() * self.rx() * operand.as_inner().z())
-                + T::TWO * operand.as_inner().x() * self.rz() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.rz() * self.ry(),
+                + -(operand.as_inner().y() * self.rz() * self.rz())
+                + operand.as_inner().y() * self.ry() * self.ry(),
+            -T::TWO * operand.as_inner().y() * self.ry() * self.rz()
+                + -(operand.as_inner().z() * self.rx() * self.rx())
+                + -(operand.as_inner().z() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().x() * self.rx() * self.rz()
+                + operand.as_inner().z() * self.rz() * self.rz(),
         )
     }
 }
@@ -2469,19 +2474,19 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x())
+            -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
+                + -(operand.as_inner().x())
                 + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().z(),
-            -(operand.as_inner().y())
-                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().z(),
-            operand.as_inner().z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().z()
-                + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().ry(),
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
+                + -(operand.as_inner().y())
+                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry(),
+            -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.as_inner().z(),
         )
     }
 }
@@ -2491,41 +2496,40 @@ impl<T: Float> Sandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.rx() * operand.rz() * self.rx())
-                + self.rz() * operand.rz() * self.rz()
-                + self.rz() * operand.ry() * self.ry()
-                + self.ry() * operand.ry() * self.rz()
-                - self.s() * operand.rx() * self.ry()
-                - self.ry() * operand.rx() * self.s()
-                + self.rz() * operand.rx() * self.rx()
-                + self.rx() * operand.rx() * self.rz()
+            -(self.ry() * operand.rz() * self.ry()) - self.s() * operand.rx() * self.ry()
                 + self.s() * operand.rz() * self.s()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rx() * operand.rx() * self.rz()
+                + self.rz() * operand.ry() * self.ry()
+                + self.rz() * operand.rx() * self.rx()
+                - self.rx() * operand.rz() * self.rx()
+                + self.rz() * operand.rz() * self.rz()
                 + self.s() * operand.ry() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                + self.rx() * operand.ry() * self.s(),
-            self.ry() * operand.rx() * self.rx() - self.s() * operand.rz() * self.rx()
+                + self.rx() * operand.ry() * self.s()
+                - self.ry() * operand.rx() * self.s(),
+            self.s() * operand.ry() * self.s() - self.s() * operand.rz() * self.rx()
                 + self.s() * operand.rx() * self.rz()
-                + self.rz() * operand.rx() * self.s()
-                + self.rz() * operand.rz() * self.ry()
-                + self.s() * operand.ry() * self.s()
-                + self.ry() * operand.rz() * self.rz()
                 - self.rx() * operand.rz() * self.s()
-                - self.rx() * operand.ry() * self.rx()
-                + self.rx() * operand.rx() * self.ry()
+                + self.ry() * operand.rz() * self.rz()
+                + self.rz() * operand.rz() * self.ry()
                 - self.rz() * operand.ry() * self.rz()
-                + self.ry() * operand.ry() * self.ry(),
-            self.rx() * operand.rx() * self.rx()
+                + self.rz() * operand.rx() * self.s()
+                + self.ry() * operand.rx() * self.rx()
+                + self.ry() * operand.ry() * self.ry()
+                - self.rx() * operand.ry() * self.rx()
+                + self.rx() * operand.rx() * self.ry(),
+            self.ry() * operand.rz() * self.s()
+                - self.ry() * operand.rx() * self.ry()
+                - self.s() * operand.ry() * self.rz()
+                + self.ry() * operand.ry() * self.rx()
+                + self.s() * operand.rx() * self.s()
+                - self.rz() * operand.rx() * self.rz()
+                + self.s() * operand.rz() * self.ry()
                 + self.rz() * operand.rz() * self.rx()
                 + self.rx() * operand.rz() * self.rz()
-                + self.s() * operand.rx() * self.s()
-                + self.ry() * operand.rz() * self.s()
+                + self.rx() * operand.rx() * self.rx()
                 - self.rz() * operand.ry() * self.s()
-                + self.ry() * operand.ry() * self.rx()
-                - self.ry() * operand.rx() * self.ry()
-                + self.rx() * operand.ry() * self.ry()
-                + self.s() * operand.rz() * self.ry()
-                - self.rz() * operand.rx() * self.rz()
-                - self.s() * operand.ry() * self.rz(),
+                + self.rx() * operand.ry() * self.ry(),
         )
     }
 }
@@ -2535,27 +2539,27 @@ impl<T: Float> Sandwich<Bivector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
-            operand.ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
-            operand.rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
+                + operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
+                + operand.ry(),
+            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + operand.rx(),
         )
     }
 }
@@ -2565,30 +2569,30 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().rz()
-                + self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + -T::TWO * self.s() * self.ry() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rx() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().ry()
-                + -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.s() * self.rz() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().rx()
-                + -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rz() * operand.as_inner().ry()
-                + T::TWO * self.s() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rx() * self.ry() * self.s()
+                + -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.s()
+                + operand.as_inner().rz() * self.rz() * self.rz()
+                + operand.as_inner().rz() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rz() * self.rx() * self.s()
+                + -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rx() * self.rz() * self.s()
+                + operand.as_inner().ry() * self.ry() * self.ry()
+                + operand.as_inner().ry() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().ry() * self.rz() * self.s()
+                + -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.s()
+                + operand.as_inner().rx() * self.rx() * self.rx()
+                + operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -2598,27 +2602,27 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
+                + operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -2628,69 +2632,67 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.rz() * self.rz()
+            self.rx() * operand.s() * self.rx()
+                + self.s() * operand.rz() * self.rz()
+                + self.rz() * operand.rx() * self.ry()
+                - self.rx() * operand.rx() * self.s()
                 - self.rz() * operand.rz() * self.s()
-                - self.rz() * operand.ry() * self.rx()
+                + self.ry() * operand.rz() * self.rx()
                 - self.ry() * operand.ry() * self.s()
+                + self.s() * operand.ry() * self.ry()
+                - self.rz() * operand.ry() * self.rx()
+                - self.ry() * operand.rx() * self.rz()
+                + self.s() * operand.rx() * self.rx()
                 + self.s() * operand.s() * self.s()
                 + self.rz() * operand.s() * self.rz()
-                - self.ry() * operand.rx() * self.rz()
-                + self.rz() * operand.rx() * self.ry()
-                + self.rx() * operand.s() * self.rx()
-                + self.ry() * operand.s() * self.ry()
-                + self.s() * operand.rx() * self.rx()
-                - self.rx() * operand.rx() * self.s()
                 + self.rx() * operand.ry() * self.rz()
-                + self.ry() * operand.rz() * self.rx()
-                + self.s() * operand.ry() * self.ry()
+                + self.ry() * operand.s() * self.ry()
                 - self.rx() * operand.rz() * self.ry(),
-            -(self.s() * operand.rx() * self.ry())
+            self.s() * operand.rz() * self.s() + self.rz() * operand.rx() * self.rx()
+                - self.ry() * operand.rx() * self.s()
                 + self.rz() * operand.s() * self.s()
+                + self.rx() * operand.rx() * self.rz()
+                - self.s() * operand.rx() * self.ry()
                 + self.rz() * operand.ry() * self.ry()
-                + self.rx() * operand.ry() * self.s()
-                + self.ry() * operand.s() * self.rx()
-                + self.s() * operand.rz() * self.s()
-                - self.rx() * operand.s() * self.ry()
-                - self.rx() * operand.rz() * self.rx()
                 - self.s() * operand.s() * self.rz()
                 + self.s() * operand.ry() * self.rx()
-                + self.rz() * operand.rz() * self.rz()
-                - self.ry() * operand.rx() * self.s()
                 - self.ry() * operand.rz() * self.ry()
-                + self.rx() * operand.rx() * self.rz()
-                + self.rz() * operand.rx() * self.rx()
-                + self.ry() * operand.ry() * self.rz(),
-            -(self.rz() * operand.s() * self.rx()) + self.rx() * operand.rx() * self.ry()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rz() * operand.rz() * self.rz()
+                + self.ry() * operand.s() * self.rx()
+                + self.rx() * operand.ry() * self.s()
+                - self.rx() * operand.s() * self.ry()
+                - self.rx() * operand.rz() * self.rx(),
+            self.s() * operand.ry() * self.s() + self.rx() * operand.rx() * self.ry()
                 - self.rz() * operand.ry() * self.rz()
-                + self.ry() * operand.s() * self.s()
-                + self.rx() * operand.s() * self.rz()
-                - self.s() * operand.rz() * self.rx()
-                + self.rz() * operand.rx() * self.s()
-                + self.s() * operand.rx() * self.rz()
-                - self.rx() * operand.ry() * self.rx()
-                - self.rx() * operand.rz() * self.s()
-                + self.ry() * operand.rx() * self.rx()
-                + self.ry() * operand.rz() * self.rz()
-                + self.rz() * operand.rz() * self.ry()
                 + self.ry() * operand.ry() * self.ry()
+                - self.rx() * operand.rz() * self.s()
+                + self.rz() * operand.rx() * self.s()
+                + self.rz() * operand.rz() * self.ry()
+                + self.ry() * operand.s() * self.s()
+                - self.rz() * operand.s() * self.rx()
+                + self.s() * operand.rx() * self.rz()
                 - self.s() * operand.s() * self.ry()
-                + self.s() * operand.ry() * self.s(),
-            -(self.ry() * operand.rx() * self.ry())
-                + self.rz() * operand.s() * self.ry()
-                + self.rx() * operand.s() * self.s()
-                - self.s() * operand.ry() * self.rz()
+                + self.rx() * operand.s() * self.rz()
+                - self.rx() * operand.ry() * self.rx()
+                + self.ry() * operand.rx() * self.rx()
+                - self.s() * operand.rz() * self.rx()
+                + self.ry() * operand.rz() * self.rz(),
+            -(self.s() * operand.ry() * self.rz()) - self.s() * operand.s() * self.rx()
+                + self.rz() * operand.rz() * self.rx()
+                + self.ry() * operand.ry() * self.rx()
                 + self.ry() * operand.rz() * self.s()
                 + self.rx() * operand.ry() * self.ry()
-                + self.ry() * operand.ry() * self.rx()
-                + self.rx() * operand.rx() * self.rx()
-                + self.s() * operand.rz() * self.ry()
-                + self.rx() * operand.rz() * self.rz()
-                - self.s() * operand.s() * self.rx()
-                - self.rz() * operand.rx() * self.rz()
-                - self.rz() * operand.ry() * self.s()
-                + self.rz() * operand.rz() * self.rx()
                 + self.s() * operand.rx() * self.s()
-                - self.ry() * operand.s() * self.rz(),
+                + self.rz() * operand.s() * self.ry()
+                + self.rx() * operand.rx() * self.rx()
+                - self.ry() * operand.s() * self.rz()
+                - self.ry() * operand.rx() * self.ry()
+                + self.s() * operand.rz() * self.ry()
+                - self.rz() * operand.ry() * self.s()
+                - self.rz() * operand.rx() * self.rz()
+                + self.rx() * operand.s() * self.s()
+                + self.rx() * operand.rz() * self.rz(),
         )
     }
 }
@@ -2701,27 +2703,27 @@ impl<T: Float> Sandwich<Rotor<T>> for Unit<Rotor<T>> {
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
-            operand.ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
-            operand.rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
+                + operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
+                + operand.ry(),
+            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + operand.rx(),
         )
     }
 }
@@ -2731,34 +2733,34 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().rz()
-                + self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + -T::TWO * self.s() * self.ry() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rx() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().ry()
-                + -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.s() * self.rz() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().rx()
-                + -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rz() * operand.as_inner().ry()
-                + T::TWO * self.s() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+                + operand.as_inner().s() * self.rz() * self.rz()
+                + operand.as_inner().s() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rx() * self.ry() * self.s()
+                + -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.s()
+                + operand.as_inner().rz() * self.rz() * self.rz()
+                + operand.as_inner().rz() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rz() * self.rx() * self.s()
+                + -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rx() * self.rz() * self.s()
+                + operand.as_inner().ry() * self.ry() * self.ry()
+                + operand.as_inner().ry() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().ry() * self.rz() * self.s()
+                + -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.s()
+                + operand.as_inner().rx() * self.rx() * self.rx()
+                + operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -2769,27 +2771,27 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
+                + operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -2800,9 +2802,9 @@ impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
             self.s() * operand.s() * self.s()
+                + self.ry() * operand.s() * self.ry()
                 + self.rz() * operand.s() * self.rz()
-                + self.rx() * operand.s() * self.rx()
-                + self.ry() * operand.s() * self.ry(),
+                + self.rx() * operand.s() * self.rx(),
         )
     }
 }
@@ -2820,10 +2822,10 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().s(),
+                + operand.as_inner().s() * self.rz() * self.rz()
+                + operand.as_inner().s() * self.s() * self.s(),
         )
     }
 }
@@ -2841,9 +2843,9 @@ impl<T: Float> Sandwich<Trivector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.s() * operand.ps() * self.s()
+            self.rz() * operand.ps() * self.rz()
                 + self.rx() * operand.ps() * self.rx()
-                + self.rz() * operand.ps() * self.rz()
+                + self.s() * operand.ps() * self.s()
                 + self.ry() * operand.ps() * self.ry(),
         )
     }
@@ -2862,10 +2864,10 @@ impl<T: Float> Sandwich<Unit<Trivector<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().ps()
-                + self.rz() * self.rz() * operand.as_inner().ps()
-                + self.ry() * self.ry() * operand.as_inner().ps()
-                + self.rx() * self.rx() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.rx() * self.rx()
+                + operand.as_inner().ps() * self.ry() * self.ry()
+                + operand.as_inner().ps() * self.rz() * self.rz()
+                + operand.as_inner().ps() * self.s() * self.s(),
         )
     }
 }
@@ -2883,40 +2885,39 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ry() * operand.y() * self.rx())
+            self.s() * operand.x() * self.s()
                 + self.s() * operand.z() * self.ry()
-                + self.rx() * operand.x() * self.rx()
-                + self.rx() * operand.z() * self.rz()
-                + self.ry() * operand.z() * self.s()
-                - self.ry() * operand.x() * self.ry()
-                - self.rx() * operand.y() * self.ry()
+                + self.s() * operand.y() * self.rz()
                 - self.rz() * operand.x() * self.rz()
                 + self.rz() * operand.y() * self.s()
-                + self.s() * operand.x() * self.s()
-                + self.s() * operand.y() * self.rz()
-                + self.rz() * operand.z() * self.rx(),
-            self.ry() * operand.y() * self.ry()
-                - self.rz() * operand.y() * self.rz()
-                - self.rz() * operand.z() * self.ry()
-                - self.rx() * operand.x() * self.ry()
-                - self.rx() * operand.y() * self.rx()
-                + self.rx() * operand.z() * self.s()
-                - self.rz() * operand.x() * self.s()
-                + self.s() * operand.z() * self.rx()
+                - self.ry() * operand.y() * self.rx()
+                - self.ry() * operand.x() * self.ry()
+                - self.rx() * operand.y() * self.ry()
+                + self.ry() * operand.z() * self.s()
+                + self.rx() * operand.x() * self.rx()
+                + self.rz() * operand.z() * self.rx()
+                + self.rx() * operand.z() * self.rz(),
+            -(self.ry() * operand.x() * self.rx()) + self.s() * operand.z() * self.rx()
                 - self.s() * operand.x() * self.rz()
-                - self.ry() * operand.x() * self.rx()
+                + self.s() * operand.y() * self.s()
                 - self.ry() * operand.z() * self.rz()
-                + self.s() * operand.y() * self.s(),
-            -(self.ry() * operand.x() * self.s()) + self.rz() * operand.x() * self.rx()
-                - self.ry() * operand.z() * self.ry()
-                + self.rz() * operand.z() * self.rz()
-                + self.rx() * operand.x() * self.rz()
-                - self.rz() * operand.y() * self.ry()
+                - self.rx() * operand.x() * self.ry()
+                + self.rx() * operand.z() * self.s()
+                + self.ry() * operand.y() * self.ry()
+                - self.rz() * operand.x() * self.s()
+                - self.rz() * operand.z() * self.ry()
+                - self.rz() * operand.y() * self.rz()
+                - self.rx() * operand.y() * self.rx(),
+            -(self.ry() * operand.y() * self.rz()) - self.s() * operand.y() * self.rx()
                 + self.s() * operand.z() * self.s()
-                - self.ry() * operand.y() * self.rz()
-                - self.s() * operand.y() * self.rx()
-                - self.s() * operand.x() * self.ry()
+                - self.rz() * operand.y() * self.ry()
                 - self.rx() * operand.y() * self.s()
+                - self.ry() * operand.z() * self.ry()
+                - self.s() * operand.x() * self.ry()
+                + self.rz() * operand.x() * self.rx()
+                + self.rz() * operand.z() * self.rz()
+                - self.ry() * operand.x() * self.s()
+                + self.rx() * operand.x() * self.rz()
                 - self.rx() * operand.z() * self.rx(),
         )
     }
@@ -2927,27 +2928,27 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
+            -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
                 + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rz()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
-                + T::TWO * self.as_inner().s() * operand.y() * self.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.z()
-                + -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.z(),
-            operand.y()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().s()
+                + operand.x(),
+            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * operand.x() * self.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.z()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.z(),
-            operand.z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.z()
-                + -T::TWO * self.as_inner().s() * operand.x() * self.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * operand.y() * self.as_inner().rx()
-                + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().ry(),
+                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().s()
+                + operand.y(),
+            -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().s()
+                + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.z(),
         )
     }
 }
@@ -2957,30 +2958,30 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x() * self.rz() * self.rz())
+            -T::TWO * operand.as_inner().y() * self.rx() * self.ry()
                 + -(operand.as_inner().x() * self.ry() * self.ry())
+                + -(operand.as_inner().x() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().z() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().y() * self.rz() * self.s()
+                + T::TWO * operand.as_inner().z() * self.ry() * self.s()
                 + operand.as_inner().x() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().x()
-                + T::TWO * self.s() * operand.as_inner().y() * self.rz()
-                + T::TWO * self.s() * self.ry() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().y() * self.ry() * self.rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().z(),
-            -(operand.as_inner().y() * self.rz() * self.rz())
-                + operand.as_inner().y() * self.ry() * self.ry()
+                + operand.as_inner().x() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().x() * self.rx() * self.ry()
+                + -T::TWO * operand.as_inner().z() * self.ry() * self.rz()
+                + -T::TWO * operand.as_inner().x() * self.rz() * self.s()
                 + -(operand.as_inner().y() * self.rx() * self.rx())
-                + self.s() * self.s() * operand.as_inner().y()
-                + -T::TWO * self.s() * operand.as_inner().x() * self.rz()
-                + T::TWO * self.s() * self.rx() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().x() * self.ry() * self.rx()
-                + -T::TWO * self.rz() * self.ry() * operand.as_inner().z(),
-            self.s() * self.s() * operand.as_inner().z()
-                + self.rz() * self.rz() * operand.as_inner().z()
-                + -(self.ry() * self.ry() * operand.as_inner().z())
-                + -(self.rx() * self.rx() * operand.as_inner().z())
-                + -T::TWO * self.s() * operand.as_inner().x() * self.ry()
-                + -T::TWO * self.s() * operand.as_inner().y() * self.rx()
-                + T::TWO * operand.as_inner().x() * self.rz() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.rz() * self.ry(),
+                + -(operand.as_inner().y() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().z() * self.rx() * self.s()
+                + operand.as_inner().y() * self.ry() * self.ry()
+                + operand.as_inner().y() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().y() * self.ry() * self.rz()
+                + -T::TWO * operand.as_inner().x() * self.ry() * self.s()
+                + -T::TWO * operand.as_inner().y() * self.rx() * self.s()
+                + -(operand.as_inner().z() * self.rx() * self.rx())
+                + -(operand.as_inner().z() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().x() * self.rx() * self.rz()
+                + operand.as_inner().z() * self.rz() * self.rz()
+                + operand.as_inner().z() * self.s() * self.s(),
         )
     }
 }
@@ -2990,27 +2991,27 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
+            -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rz()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
-                + T::TWO * self.as_inner().s() * operand.as_inner().y() * self.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().z(),
-            operand.as_inner().y()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().s()
+                + operand.as_inner().x(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * operand.as_inner().x() * self.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().z(),
-            operand.as_inner().z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().z()
-                + -T::TWO * self.as_inner().s() * operand.as_inner().x() * self.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * operand.as_inner().y() * self.as_inner().rx()
-                + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().ry(),
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().y(),
+            -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().s()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.as_inner().z(),
         )
     }
 }
@@ -3040,9 +3041,9 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().rz(),
-            self.s() * self.s() * operand.as_inner().ry(),
-            self.s() * self.s() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.s() * self.s(),
+            operand.as_inner().ry() * self.s() * self.s(),
+            operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -3085,10 +3086,10 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().rz(),
-            self.s() * self.s() * operand.as_inner().ry(),
-            self.s() * self.s() * operand.as_inner().rx(),
+            operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().rz() * self.s() * self.s(),
+            operand.as_inner().ry() * self.s() * self.s(),
+            operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -3126,7 +3127,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -3158,7 +3159,7 @@ impl<T: Float> Sandwich<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * self.s() * operand.as_inner().ps())
+        Trivector::new_unchecked(operand.as_inner().ps() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -3195,9 +3196,9 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().x(),
-            self.s() * self.s() * operand.as_inner().y(),
-            self.s() * self.s() * operand.as_inner().z(),
+            operand.as_inner().x() * self.s() * self.s(),
+            operand.as_inner().y() * self.s() * self.s(),
+            operand.as_inner().z() * self.s() * self.s(),
         )
     }
 }
@@ -3239,9 +3240,9 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * self.ps() * operand.as_inner().rz(),
-            self.ps() * self.ps() * operand.as_inner().ry(),
-            self.ps() * self.ps() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.ps() * self.ps(),
+            operand.as_inner().ry() * self.ps() * self.ps(),
+            operand.as_inner().rx() * self.ps() * self.ps(),
         )
     }
 }
@@ -3285,9 +3286,9 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Trivector<T> {
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s() * self.ps() * self.ps(),
-            self.ps() * self.ps() * operand.as_inner().rz(),
-            self.ps() * self.ps() * operand.as_inner().ry(),
-            self.ps() * self.ps() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.ps() * self.ps(),
+            operand.as_inner().ry() * self.ps() * self.ps(),
+            operand.as_inner().rx() * self.ps() * self.ps(),
         )
     }
 }
@@ -3357,7 +3358,7 @@ impl<T: Float> Sandwich<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * self.ps() * operand.as_inner().ps())
+        Trivector::new_unchecked(operand.as_inner().ps() * self.ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -3396,7 +3397,7 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Trivector<T> {
         Vector::new_unchecked(
             operand.as_inner().x() * self.ps() * self.ps(),
             operand.as_inner().y() * self.ps() * self.ps(),
-            self.ps() * self.ps() * operand.as_inner().z(),
+            operand.as_inner().z() * self.ps() * self.ps(),
         )
     }
 }
@@ -3418,26 +3419,25 @@ impl<T: Float> Sandwich<Bivector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.z() * operand.rz() * self.z()
-                - self.z() * operand.ry() * self.y()
-                - self.x() * operand.rz() * self.x()
-                + self.z() * operand.rx() * self.x()
+            -(self.x() * operand.rz() * self.x()) - self.z() * operand.ry() * self.y()
                 + self.x() * operand.rx() * self.z()
+                + self.z() * operand.rx() * self.x()
+                + self.z() * operand.rz() * self.z()
                 - self.y() * operand.rz() * self.y()
                 - self.y() * operand.ry() * self.z(),
             -(self.z() * operand.ry() * self.z())
-                - self.z() * operand.rz() * self.y()
-                - self.y() * operand.rz() * self.z()
-                + self.y() * operand.ry() * self.y()
-                - self.y() * operand.rx() * self.x()
                 - self.x() * operand.ry() * self.x()
-                - self.x() * operand.rx() * self.y(),
+                - self.y() * operand.rx() * self.x()
+                + self.y() * operand.ry() * self.y()
+                - self.x() * operand.rx() * self.y()
+                - self.y() * operand.rz() * self.z()
+                - self.z() * operand.rz() * self.y(),
             -(self.x() * operand.ry() * self.y()) + self.x() * operand.rx() * self.x()
                 - self.y() * operand.rx() * self.y()
-                + self.z() * operand.rz() * self.x()
                 + self.x() * operand.rz() * self.z()
-                - self.y() * operand.ry() * self.x()
-                - self.z() * operand.rx() * self.z(),
+                + self.z() * operand.rz() * self.x()
+                - self.z() * operand.rx() * self.z()
+                - self.y() * operand.ry() * self.x(),
         )
     }
 }
@@ -3447,19 +3447,19 @@ impl<T: Float> Sandwich<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(operand.rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.ry(),
-            -(operand.ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.rz(),
-            operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.rz())
+                + T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.ry())
+                + T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.rx(),
         )
     }
 }
@@ -3469,21 +3469,21 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * self.x() * operand.as_inner().rz())
-                + -(self.y() * self.y() * operand.as_inner().rz())
-                + self.z() * self.z() * operand.as_inner().rz()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().ry(),
-            -(self.x() * self.x() * operand.as_inner().ry())
-                + self.y() * self.y() * operand.as_inner().ry()
-                + -(self.z() * self.z() * operand.as_inner().ry())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().rz(),
-            self.x() * self.x() * operand.as_inner().rx()
-                + -(self.y() * self.y() * operand.as_inner().rx())
-                + -(self.z() * self.z() * operand.as_inner().rx())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().ry()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.y() * self.z()
+                + -(operand.as_inner().rz() * self.x() * self.x())
+                + -(operand.as_inner().rz() * self.y() * self.y())
+                + T::TWO * operand.as_inner().rx() * self.x() * self.z()
+                + operand.as_inner().rz() * self.z() * self.z(),
+            -T::TWO * operand.as_inner().rx() * self.x() * self.y()
+                + -T::TWO * operand.as_inner().rz() * self.y() * self.z()
+                + -(operand.as_inner().ry() * self.x() * self.x())
+                + -(operand.as_inner().ry() * self.z() * self.z())
+                + operand.as_inner().ry() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.x() * self.y()
+                + -(operand.as_inner().rx() * self.y() * self.y())
+                + -(operand.as_inner().rx() * self.z() * self.z())
+                + T::TWO * operand.as_inner().rz() * self.x() * self.z()
+                + operand.as_inner().rx() * self.x() * self.x(),
         )
     }
 }
@@ -3493,19 +3493,19 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(operand.as_inner().rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().ry(),
-            -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().rz(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().rz())
+                + T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().ry())
+                + T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -3515,38 +3515,39 @@ impl<T: Float> Sandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.y() * operand.s() * self.y() - self.y() * operand.rz() * self.x()
-                + self.x() * operand.rz() * self.y()
-                + self.x() * operand.s() * self.x()
-                + self.z() * operand.s() * self.z()
-                + self.x() * operand.ry() * self.z()
+            self.y() * operand.s() * self.y() - self.z() * operand.ry() * self.x()
                 + self.y() * operand.rx() * self.z()
-                - self.z() * operand.ry() * self.x()
-                - self.z() * operand.rx() * self.y(),
-            -(self.y() * operand.s() * self.x()) - self.y() * operand.rz() * self.y()
-                + self.z() * operand.rz() * self.z()
-                + self.z() * operand.rx() * self.x()
-                - self.x() * operand.rz() * self.x()
-                + self.x() * operand.rx() * self.z()
+                - self.y() * operand.rz() * self.x()
+                + self.x() * operand.ry() * self.z()
+                - self.z() * operand.rx() * self.y()
+                + self.z() * operand.s() * self.z()
+                + self.x() * operand.rz() * self.y()
+                + self.x() * operand.s() * self.x(),
+            self.z() * operand.rx() * self.x() + self.x() * operand.rx() * self.z()
+                - self.y() * operand.s() * self.x()
                 + self.x() * operand.s() * self.y()
                 - self.y() * operand.ry() * self.z()
-                - self.z() * operand.ry() * self.y(),
-            -(self.y() * operand.rz() * self.z()) - self.y() * operand.rx() * self.x()
-                + self.x() * operand.s() * self.z()
+                - self.y() * operand.rz() * self.y()
+                - self.x() * operand.rz() * self.x()
+                - self.z() * operand.ry() * self.y()
+                + self.z() * operand.rz() * self.z(),
+            self.x() * operand.s() * self.z()
+                - self.y() * operand.rx() * self.x()
                 - self.x() * operand.ry() * self.x()
-                - self.x() * operand.rx() * self.y()
-                - self.z() * operand.s() * self.x()
+                - self.z() * operand.ry() * self.z()
                 + self.y() * operand.ry() * self.y()
+                - self.z() * operand.s() * self.x()
                 - self.z() * operand.rz() * self.y()
-                - self.z() * operand.ry() * self.z(),
-            self.x() * operand.rx() * self.x() - self.y() * operand.ry() * self.x()
-                + self.z() * operand.rz() * self.x()
-                + self.x() * operand.rz() * self.z()
-                - self.x() * operand.ry() * self.y()
-                - self.z() * operand.s() * self.y()
+                - self.x() * operand.rx() * self.y()
+                - self.y() * operand.rz() * self.z(),
+            self.x() * operand.rz() * self.z() - self.y() * operand.ry() * self.x()
+                + self.x() * operand.rx() * self.x()
                 - self.y() * operand.rx() * self.y()
+                + self.z() * operand.rz() * self.x()
                 + self.y() * operand.s() * self.z()
-                - self.z() * operand.rx() * self.z(),
+                - self.z() * operand.rx() * self.z()
+                - self.z() * operand.s() * self.y()
+                - self.x() * operand.ry() * self.y(),
         )
     }
 }
@@ -3557,19 +3558,19 @@ impl<T: Float> Sandwich<Rotor<T>> for Unit<Vector<T>> {
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            -(operand.rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.ry(),
-            -(operand.ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.rz(),
-            operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.rz())
+                + T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.ry())
+                + T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.rx(),
         )
     }
 }
@@ -3580,23 +3581,23 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Vector<T> {
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s() * self.z() * self.z()
-                + self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
-            -(self.x() * self.x() * operand.as_inner().rz())
-                + -(self.y() * self.y() * operand.as_inner().rz())
-                + self.z() * self.z() * operand.as_inner().rz()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().ry(),
-            -(self.x() * self.x() * operand.as_inner().ry())
-                + self.y() * self.y() * operand.as_inner().ry()
-                + -(self.z() * self.z() * operand.as_inner().ry())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().rz(),
-            self.x() * self.x() * operand.as_inner().rx()
-                + -(self.y() * self.y() * operand.as_inner().rx())
-                + -(self.z() * self.z() * operand.as_inner().rx())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().ry()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rz(),
+                + operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.y() * self.z()
+                + -(operand.as_inner().rz() * self.x() * self.x())
+                + -(operand.as_inner().rz() * self.y() * self.y())
+                + T::TWO * operand.as_inner().rx() * self.x() * self.z()
+                + operand.as_inner().rz() * self.z() * self.z(),
+            -T::TWO * operand.as_inner().rx() * self.x() * self.y()
+                + -T::TWO * operand.as_inner().rz() * self.y() * self.z()
+                + -(operand.as_inner().ry() * self.x() * self.x())
+                + -(operand.as_inner().ry() * self.z() * self.z())
+                + operand.as_inner().ry() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.x() * self.y()
+                + -(operand.as_inner().rx() * self.y() * self.y())
+                + -(operand.as_inner().rx() * self.z() * self.z())
+                + T::TWO * operand.as_inner().rz() * self.x() * self.z()
+                + operand.as_inner().rx() * self.x() * self.x(),
         )
     }
 }
@@ -3607,19 +3608,19 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Vector<T>> {
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            -(operand.as_inner().rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().ry(),
-            -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().rz(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().rz())
+                + T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().ry())
+                + T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -3650,8 +3651,8 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Vector<T> {
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
             operand.as_inner().s() * self.z() * self.z()
-                + self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
+                + operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
         )
     }
 }
@@ -3669,9 +3670,9 @@ impl<T: Float> Sandwich<Trivector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * operand.ps() * self.x()
+            self.z() * operand.ps() * self.z()
                 + self.y() * operand.ps() * self.y()
-                + self.z() * operand.ps() * self.z(),
+                + self.x() * operand.ps() * self.x(),
         )
     }
 }
@@ -3689,9 +3690,9 @@ impl<T: Float> Sandwich<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * self.x() * operand.as_inner().ps()
-                + self.y() * self.y() * operand.as_inner().ps()
-                + self.z() * self.z() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.x() * self.x()
+                + operand.as_inner().ps() * self.y() * self.y()
+                + operand.as_inner().ps() * self.z() * self.z(),
         )
     }
 }
@@ -3709,26 +3710,26 @@ impl<T: Float> Sandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.z() * operand.z() * self.x()
+            -(self.z() * operand.x() * self.z())
+                + self.z() * operand.z() * self.x()
                 + self.x() * operand.z() * self.z()
                 + self.x() * operand.y() * self.y()
-                + self.y() * operand.y() * self.x()
                 + self.x() * operand.x() * self.x()
-                - self.z() * operand.x() * self.z()
-                - self.y() * operand.x() * self.y(),
-            self.y() * operand.y() * self.y() + self.y() * operand.z() * self.z()
-                - self.x() * operand.y() * self.x()
-                + self.z() * operand.z() * self.y()
-                - self.z() * operand.y() * self.z()
+                - self.y() * operand.x() * self.y()
+                + self.y() * operand.y() * self.x(),
+            -(self.z() * operand.y() * self.z())
                 + self.y() * operand.x() * self.x()
-                + self.x() * operand.x() * self.y(),
-            -(self.x() * operand.z() * self.x())
+                + self.y() * operand.y() * self.y()
+                + self.x() * operand.x() * self.y()
+                + self.y() * operand.z() * self.z()
+                + self.z() * operand.z() * self.y()
+                - self.x() * operand.y() * self.x(),
+            -(self.x() * operand.z() * self.x()) - self.y() * operand.z() * self.y()
                 + self.z() * operand.x() * self.x()
                 + self.z() * operand.y() * self.y()
                 + self.x() * operand.x() * self.z()
-                + self.z() * operand.z() * self.z()
                 + self.y() * operand.y() * self.z()
-                - self.y() * operand.z() * self.y(),
+                + self.z() * operand.z() * self.z(),
         )
     }
 }
@@ -3738,19 +3739,19 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
-                + -T::TWO * operand.x() * self.as_inner().z() * self.as_inner().z()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.y()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.z(),
+            -T::TWO * operand.x() * self.as_inner().z() * self.as_inner().z()
+                + -T::TWO * operand.x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.y() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.z() * self.as_inner().x() * self.as_inner().z()
+                + operand.x(),
             -(operand.y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.x()
-                + T::TWO * self.as_inner().y() * self.as_inner().z() * operand.z(),
+                + T::TWO * operand.x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.z() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.y() * self.as_inner().y() * self.as_inner().y(),
             -(operand.z())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.z()
-                + T::TWO * self.as_inner().x() * operand.x() * self.as_inner().z()
-                + T::TWO * self.as_inner().y() * operand.y() * self.as_inner().z(),
+                + T::TWO * operand.x() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.y() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.z() * self.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -3761,20 +3762,20 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Vector<T> {
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
             -(operand.as_inner().x() * self.z() * self.z())
-                + self.x() * self.x() * operand.as_inner().x()
-                + -(self.y() * self.y() * operand.as_inner().x())
-                + T::TWO * self.x() * self.y() * operand.as_inner().y()
-                + T::TWO * self.x() * self.z() * operand.as_inner().z(),
+                + -(operand.as_inner().x() * self.y() * self.y())
+                + T::TWO * operand.as_inner().y() * self.x() * self.y()
+                + T::TWO * operand.as_inner().z() * self.x() * self.z()
+                + operand.as_inner().x() * self.x() * self.x(),
             -(operand.as_inner().y() * self.z() * self.z())
-                + -(self.x() * self.x() * operand.as_inner().y())
-                + self.y() * self.y() * operand.as_inner().y()
-                + T::TWO * self.x() * self.y() * operand.as_inner().x()
-                + T::TWO * self.y() * self.z() * operand.as_inner().z(),
-            -(self.x() * self.x() * operand.as_inner().z())
-                + -(self.y() * self.y() * operand.as_inner().z())
-                + self.z() * self.z() * operand.as_inner().z()
-                + T::TWO * self.x() * operand.as_inner().x() * self.z()
-                + T::TWO * self.y() * operand.as_inner().y() * self.z(),
+                + -(operand.as_inner().y() * self.x() * self.x())
+                + T::TWO * operand.as_inner().x() * self.x() * self.y()
+                + T::TWO * operand.as_inner().z() * self.y() * self.z()
+                + operand.as_inner().y() * self.y() * self.y(),
+            -(operand.as_inner().z() * self.x() * self.x())
+                + -(operand.as_inner().z() * self.y() * self.y())
+                + T::TWO * operand.as_inner().x() * self.x() * self.z()
+                + T::TWO * operand.as_inner().y() * self.y() * self.z()
+                + operand.as_inner().z() * self.z() * self.z(),
         )
     }
 }
@@ -3784,19 +3785,19 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().z() * self.as_inner().z()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().y()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().z(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().z() * self.as_inner().z()
+                + -T::TWO * operand.as_inner().x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.as_inner().y() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.as_inner().z() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().x(),
             -(operand.as_inner().y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().x()
-                + T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().z(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.as_inner().z() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().y(),
             -(operand.as_inner().z())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().z()
-                + T::TWO * self.as_inner().x() * operand.as_inner().x() * self.as_inner().z()
-                + T::TWO * self.as_inner().y() * operand.as_inner().y() * self.as_inner().z(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.as_inner().z() * self.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -3806,25 +3807,24 @@ impl<T: Float> Antisandwich<Bivector<T>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.ry() * operand.rz() * self.ry())
+            self.rz() * operand.rx() * self.rx()
+                + self.ry() * operand.ry() * self.rz()
                 + self.rz() * operand.rz() * self.rz()
+                - self.ry() * operand.rz() * self.ry()
                 + self.rz() * operand.ry() * self.ry()
                 - self.rx() * operand.rz() * self.rx()
-                + self.rx() * operand.rx() * self.rz()
-                + self.ry() * operand.ry() * self.rz()
-                + self.rz() * operand.rx() * self.rx(),
-            -(self.rz() * operand.ry() * self.rz()) + self.rx() * operand.rx() * self.ry()
+                + self.rx() * operand.rx() * self.rz(),
+            self.ry() * operand.rz() * self.rz() + self.ry() * operand.rx() * self.rx()
                 - self.rx() * operand.ry() * self.rx()
                 + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rz() * self.rz()
-                + self.ry() * operand.rx() * self.rx()
+                + self.rx() * operand.rx() * self.ry()
+                - self.rz() * operand.ry() * self.rz()
                 + self.ry() * operand.ry() * self.ry(),
-            -(self.rz() * operand.rx() * self.rz())
+            -(self.rz() * operand.rx() * self.rz()) - self.ry() * operand.rx() * self.ry()
                 + self.rx() * operand.rz() * self.rz()
-                + self.rz() * operand.rz() * self.rx()
                 + self.rx() * operand.ry() * self.ry()
                 + self.rx() * operand.rx() * self.rx()
-                - self.ry() * operand.rx() * self.ry()
+                + self.rz() * operand.rz() * self.rx()
                 + self.ry() * operand.ry() * self.rx(),
         )
     }
@@ -3835,19 +3835,19 @@ impl<T: Float> Antisandwich<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.rz(),
             -(operand.ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -3857,21 +3857,21 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+            -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + operand.as_inner().rz() * self.rz() * self.rz(),
+            -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + operand.as_inner().ry() * self.ry() * self.ry(),
+            -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + operand.as_inner().rx() * self.rx() * self.rx(),
         )
     }
 }
@@ -3881,19 +3881,19 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.as_inner().rz(),
             -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.as_inner().rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -3903,40 +3903,41 @@ impl<T: Float> Antisandwich<Rotor<T>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.rz() * operand.s() * self.rz()
-                + self.ry() * operand.rx() * self.rz()
-                + self.ry() * operand.s() * self.ry()
-                + self.rx() * operand.s() * self.rx()
-                - self.ry() * operand.rz() * self.rx()
-                + self.rz() * operand.ry() * self.rx()
+            self.ry() * operand.s() * self.ry() + self.rx() * operand.s() * self.rx()
+                - self.rz() * operand.rx() * self.ry()
+                + self.rz() * operand.s() * self.rz()
                 + self.rx() * operand.rz() * self.ry()
                 - self.rx() * operand.ry() * self.rz()
-                - self.rz() * operand.rx() * self.ry(),
-            self.rx() * operand.rx() * self.rz() - self.ry() * operand.rz() * self.ry()
+                + self.ry() * operand.rx() * self.rz()
+                - self.ry() * operand.rz() * self.rx()
+                + self.rz() * operand.ry() * self.rx(),
+            self.rx() * operand.rx() * self.rz()
+                + self.rx() * operand.s() * self.ry()
                 + self.rz() * operand.rx() * self.rx()
                 + self.ry() * operand.ry() * self.rz()
-                + self.rz() * operand.ry() * self.ry()
                 + self.rz() * operand.rz() * self.rz()
+                + self.rz() * operand.ry() * self.ry()
                 - self.ry() * operand.s() * self.rx()
-                + self.rx() * operand.s() * self.ry()
+                - self.ry() * operand.rz() * self.ry()
                 - self.rx() * operand.rz() * self.rx(),
-            -(self.rz() * operand.ry() * self.rz())
-                + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                - self.rx() * operand.s() * self.rz()
-                + self.rz() * operand.s() * self.rx()
-                + self.ry() * operand.rz() * self.rz()
+            self.rz() * operand.s() * self.rx()
                 + self.ry() * operand.ry() * self.ry()
+                + self.rz() * operand.rz() * self.ry()
+                - self.rx() * operand.s() * self.rz()
+                + self.ry() * operand.rz() * self.rz()
+                - self.rz() * operand.ry() * self.rz()
+                + self.ry() * operand.rx() * self.rx()
                 - self.rx() * operand.ry() * self.rx()
                 + self.rx() * operand.rx() * self.ry(),
-            -(self.ry() * operand.rx() * self.ry()) + self.rz() * operand.rz() * self.rx()
+            self.rz() * operand.rz() * self.rx()
+                - self.ry() * operand.rx() * self.ry()
+                - self.rz() * operand.rx() * self.rz()
                 - self.rz() * operand.s() * self.ry()
                 + self.rx() * operand.ry() * self.ry()
-                + self.ry() * operand.ry() * self.rx()
+                + self.rx() * operand.rx() * self.rx()
                 + self.ry() * operand.s() * self.rz()
                 + self.rx() * operand.rz() * self.rz()
-                + self.rx() * operand.rx() * self.rx()
-                - self.rz() * operand.rx() * self.rz(),
+                + self.ry() * operand.ry() * self.rx(),
         )
     }
 }
@@ -3947,19 +3948,19 @@ impl<T: Float> Antisandwich<Rotor<T>> for Unit<Bivector<T>> {
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.rz(),
             -(operand.ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -3969,24 +3970,24 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx(),
-            self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+                + operand.as_inner().s() * self.rz() * self.rz(),
+            -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + operand.as_inner().rz() * self.rz() * self.rz(),
+            -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + operand.as_inner().ry() * self.ry() * self.ry(),
+            -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + operand.as_inner().rx() * self.rx() * self.rx(),
         )
     }
 }
@@ -3997,19 +3998,19 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + operand.as_inner().rz(),
             -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
             -(operand.as_inner().rx())
-                + T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -4039,9 +4040,9 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx(),
+                + operand.as_inner().s() * self.rz() * self.rz(),
         )
     }
 }
@@ -4059,9 +4060,9 @@ impl<T: Float> Antisandwich<Trivector<T>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.rz() * operand.ps() * self.rz()
-                + self.ry() * operand.ps() * self.ry()
-                + self.rx() * operand.ps() * self.rx(),
+            self.ry() * operand.ps() * self.ry()
+                + self.rx() * operand.ps() * self.rx()
+                + self.rz() * operand.ps() * self.rz(),
         )
     }
 }
@@ -4079,9 +4080,9 @@ impl<T: Float> Antisandwich<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.rz() * self.rz() * operand.as_inner().ps()
-                + self.ry() * self.ry() * operand.as_inner().ps()
-                + self.rx() * self.rx() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.rx() * self.rx()
+                + operand.as_inner().ps() * self.ry() * self.ry()
+                + operand.as_inner().ps() * self.rz() * self.rz(),
         )
     }
 }
@@ -4099,26 +4100,25 @@ impl<T: Float> Antisandwich<Vector<T>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.rz() * operand.x() * self.rz())
-                - self.rx() * operand.y() * self.ry()
-                - self.ry() * operand.x() * self.ry()
+            self.rz() * operand.z() * self.rx() - self.ry() * operand.y() * self.rx()
                 + self.rx() * operand.z() * self.rz()
+                - self.rx() * operand.y() * self.ry()
+                - self.rz() * operand.x() * self.rz()
                 + self.rx() * operand.x() * self.rx()
-                - self.ry() * operand.y() * self.rx()
-                + self.rz() * operand.z() * self.rx(),
-            -(self.ry() * operand.x() * self.rx()) + self.ry() * operand.y() * self.ry()
-                - self.rx() * operand.y() * self.rx()
-                - self.rz() * operand.z() * self.ry()
+                - self.ry() * operand.x() * self.ry(),
+            -(self.rx() * operand.x() * self.ry())
                 - self.rz() * operand.y() * self.rz()
-                - self.rx() * operand.x() * self.ry()
-                - self.ry() * operand.z() * self.rz(),
-            -(self.ry() * operand.z() * self.ry())
-                + self.rz() * operand.z() * self.rz()
+                - self.ry() * operand.z() * self.rz()
+                - self.rz() * operand.z() * self.ry()
+                - self.ry() * operand.x() * self.rx()
+                + self.ry() * operand.y() * self.ry()
+                - self.rx() * operand.y() * self.rx(),
+            -(self.rx() * operand.z() * self.rx()) - self.ry() * operand.z() * self.ry()
                 + self.rx() * operand.x() * self.rz()
                 + self.rz() * operand.x() * self.rx()
-                - self.ry() * operand.y() * self.rz()
                 - self.rz() * operand.y() * self.ry()
-                - self.rx() * operand.z() * self.rx(),
+                + self.rz() * operand.z() * self.rz()
+                - self.ry() * operand.y() * self.rz(),
         )
     }
 }
@@ -4128,19 +4128,19 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.x())
+            -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
+                + -(operand.x())
                 + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.z(),
-            -(operand.y())
-                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.z(),
-            operand.z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.z()
-                + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().ry(),
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz(),
+            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
+                + -(operand.y())
+                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry(),
+            -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.z(),
         )
     }
 }
@@ -4150,21 +4150,21 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x() * self.rz() * self.rz())
+            -T::TWO * operand.as_inner().y() * self.rx() * self.ry()
                 + -(operand.as_inner().x() * self.ry() * self.ry())
-                + operand.as_inner().x() * self.rx() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.ry() * self.rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().z(),
-            -(operand.as_inner().y() * self.rz() * self.rz())
-                + operand.as_inner().y() * self.ry() * self.ry()
+                + -(operand.as_inner().x() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().z() * self.rx() * self.rz()
+                + operand.as_inner().x() * self.rx() * self.rx(),
+            -T::TWO * operand.as_inner().x() * self.rx() * self.ry()
+                + -T::TWO * operand.as_inner().z() * self.ry() * self.rz()
                 + -(operand.as_inner().y() * self.rx() * self.rx())
-                + -T::TWO * operand.as_inner().x() * self.ry() * self.rx()
-                + -T::TWO * self.rz() * self.ry() * operand.as_inner().z(),
-            self.rz() * self.rz() * operand.as_inner().z()
-                + -(self.ry() * self.ry() * operand.as_inner().z())
-                + -(self.rx() * self.rx() * operand.as_inner().z())
-                + T::TWO * operand.as_inner().x() * self.rz() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.rz() * self.ry(),
+                + -(operand.as_inner().y() * self.rz() * self.rz())
+                + operand.as_inner().y() * self.ry() * self.ry(),
+            -T::TWO * operand.as_inner().y() * self.ry() * self.rz()
+                + -(operand.as_inner().z() * self.rx() * self.rx())
+                + -(operand.as_inner().z() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().x() * self.rx() * self.rz()
+                + operand.as_inner().z() * self.rz() * self.rz(),
         )
     }
 }
@@ -4174,19 +4174,19 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x())
+            -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
+                + -(operand.as_inner().x())
                 + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().z(),
-            -(operand.as_inner().y())
-                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().z(),
-            operand.as_inner().z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().z()
-                + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().ry(),
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
+                + -(operand.as_inner().y())
+                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry(),
+            -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.as_inner().z(),
         )
     }
 }
@@ -4196,41 +4196,40 @@ impl<T: Float> Antisandwich<Bivector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * operand.rx() * self.ry()
+            self.rz() * operand.ry() * self.ry() - self.rx() * operand.rz() * self.rx()
                 + self.rz() * operand.rx() * self.rx()
                 + self.ry() * operand.ry() * self.rz()
-                + self.ry() * operand.rx() * self.s()
-                - self.rx() * operand.rz() * self.rx()
-                - self.rx() * operand.ry() * self.s()
-                - self.ry() * operand.rz() * self.ry()
                 + self.s() * operand.rz() * self.s()
-                + self.rx() * operand.rx() * self.rz()
-                + self.rz() * operand.ry() * self.ry()
+                - self.ry() * operand.rz() * self.ry()
+                + self.s() * operand.rx() * self.ry()
                 + self.rz() * operand.rz() * self.rz()
-                - self.s() * operand.ry() * self.rx(),
-            self.s() * operand.ry() * self.s() - self.s() * operand.rx() * self.rz()
-                + self.rx() * operand.rx() * self.ry()
-                + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                - self.rz() * operand.rx() * self.s()
-                + self.ry() * operand.ry() * self.ry()
-                - self.rz() * operand.ry() * self.rz()
-                + self.ry() * operand.rz() * self.rz()
-                + self.rx() * operand.rz() * self.s()
+                - self.s() * operand.ry() * self.rx()
+                + self.ry() * operand.rx() * self.s()
+                - self.rx() * operand.ry() * self.s()
+                + self.rx() * operand.rx() * self.rz(),
+            self.s() * operand.ry() * self.s() + self.s() * operand.rz() * self.rx()
                 - self.rx() * operand.ry() * self.rx()
-                + self.s() * operand.rz() * self.rx(),
-            self.rz() * operand.ry() * self.s()
+                + self.ry() * operand.rz() * self.rz()
+                + self.rz() * operand.rz() * self.ry()
+                - self.rz() * operand.rx() * self.s()
+                - self.s() * operand.rx() * self.rz()
+                + self.ry() * operand.ry() * self.ry()
+                + self.ry() * operand.rx() * self.rx()
+                + self.rx() * operand.rx() * self.ry()
+                + self.rx() * operand.rz() * self.s()
+                - self.rz() * operand.ry() * self.rz(),
+            self.rx() * operand.ry() * self.ry()
                 + self.rx() * operand.rx() * self.rx()
-                + self.rx() * operand.ry() * self.ry()
-                + self.ry() * operand.ry() * self.rx()
-                - self.rz() * operand.rx() * self.rz()
+                + self.rz() * operand.rz() * self.rx()
                 - self.s() * operand.rz() * self.ry()
-                - self.ry() * operand.rx() * self.ry()
-                + self.rx() * operand.rz() * self.rz()
-                + self.s() * operand.rx() * self.s()
                 - self.ry() * operand.rz() * self.s()
+                + self.ry() * operand.ry() * self.rx()
+                + self.rx() * operand.rz() * self.rz()
                 + self.s() * operand.ry() * self.rz()
-                + self.rz() * operand.rz() * self.rx(),
+                + self.rz() * operand.ry() * self.s()
+                - self.rz() * operand.rx() * self.rz()
+                - self.ry() * operand.rx() * self.ry()
+                + self.s() * operand.rx() * self.s(),
         )
     }
 }
@@ -4240,27 +4239,27 @@ impl<T: Float> Antisandwich<Bivector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
-            operand.ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
-            operand.rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
+                + operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
+                + operand.ry(),
+            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + operand.rx(),
         )
     }
 }
@@ -4270,30 +4269,30 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().rz()
-                + self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.s() * self.ry() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rx() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().ry()
-                + -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + -T::TWO * self.s() * self.rz() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().rx()
-                + -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rz() * operand.as_inner().ry()
-                + -T::TWO * self.s() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().ry() * self.rx() * self.s()
+                + -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rx() * self.ry() * self.s()
+                + operand.as_inner().rz() * self.rz() * self.rz()
+                + operand.as_inner().rz() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rx() * self.rz() * self.s()
+                + -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.s()
+                + operand.as_inner().ry() * self.ry() * self.ry()
+                + operand.as_inner().ry() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rz() * self.ry() * self.s()
+                + -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.rz() * self.s()
+                + operand.as_inner().rx() * self.rx() * self.rx()
+                + operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -4303,27 +4302,27 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
+                + operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -4333,68 +4332,69 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            -(self.ry() * operand.rz() * self.rx()) + self.s() * operand.rz() * self.rz()
-                - self.rx() * operand.rx() * self.s()
-                + self.s() * operand.ry() * self.ry()
-                + self.rx() * operand.s() * self.rx()
+            self.s() * operand.ry() * self.ry()
+                + self.s() * operand.rz() * self.rz()
+                + self.s() * operand.rx() * self.rx()
                 + self.rx() * operand.rz() * self.ry()
-                - self.rz() * operand.rx() * self.ry()
+                - self.ry() * operand.rz() * self.rx()
+                - self.rz() * operand.rz() * self.s()
+                - self.rx() * operand.rx() * self.s()
+                + self.ry() * operand.rx() * self.rz()
                 + self.rz() * operand.ry() * self.rx()
                 + self.ry() * operand.s() * self.ry()
                 + self.rz() * operand.s() * self.rz()
-                + self.s() * operand.rx() * self.rx()
-                - self.rx() * operand.ry() * self.rz()
                 + self.s() * operand.s() * self.s()
-                - self.rz() * operand.rz() * self.s()
-                + self.ry() * operand.rx() * self.rz()
+                - self.rz() * operand.rx() * self.ry()
+                + self.rx() * operand.s() * self.rx()
+                - self.rx() * operand.ry() * self.rz()
                 - self.ry() * operand.ry() * self.s(),
-            self.rz() * operand.rz() * self.rz()
-                + self.rz() * operand.s() * self.s()
-                + self.s() * operand.rz() * self.s()
-                - self.ry() * operand.rz() * self.ry()
-                + self.ry() * operand.ry() * self.rz()
-                - self.rx() * operand.rz() * self.rx()
-                + self.rx() * operand.rx() * self.rz()
-                + self.rx() * operand.s() * self.ry()
-                + self.rz() * operand.ry() * self.ry()
+            -(self.s() * operand.ry() * self.rx()) + self.ry() * operand.rx() * self.s()
                 - self.s() * operand.s() * self.rz()
-                + self.rz() * operand.rx() * self.rx()
-                - self.s() * operand.ry() * self.rx()
-                + self.ry() * operand.rx() * self.s()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rz() * operand.rz() * self.rz()
+                - self.rx() * operand.rz() * self.rx()
                 - self.rx() * operand.ry() * self.s()
+                + self.rx() * operand.rx() * self.rz()
+                + self.rz() * operand.ry() * self.ry()
+                + self.s() * operand.rz() * self.s()
+                + self.rz() * operand.rx() * self.rx()
+                - self.ry() * operand.rz() * self.ry()
                 - self.ry() * operand.s() * self.rx()
+                + self.rz() * operand.s() * self.s()
+                + self.rx() * operand.s() * self.ry()
                 + self.s() * operand.rx() * self.ry(),
-            self.s() * operand.rz() * self.rx()
-                - self.s() * operand.rx() * self.rz()
-                - self.rz() * operand.rx() * self.s()
+            self.ry() * operand.rz() * self.rz()
                 + self.s() * operand.ry() * self.s()
-                - self.rz() * operand.ry() * self.rz()
-                + self.ry() * operand.s() * self.s()
-                - self.rx() * operand.ry() * self.rx()
-                - self.s() * operand.s() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                + self.ry() * operand.ry() * self.ry()
-                - self.rx() * operand.s() * self.rz()
-                + self.rx() * operand.rz() * self.s()
-                + self.rx() * operand.rx() * self.ry()
-                + self.rz() * operand.s() * self.rx()
                 + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rz() * self.rz(),
-            -(self.ry() * operand.rx() * self.ry()) - self.s() * operand.rz() * self.ry()
-                + self.rx() * operand.ry() * self.ry()
+                - self.rz() * operand.rx() * self.s()
+                + self.ry() * operand.ry() * self.ry()
+                + self.rx() * operand.rx() * self.ry()
+                + self.rx() * operand.rz() * self.s()
+                - self.s() * operand.s() * self.ry()
+                - self.rz() * operand.ry() * self.rz()
+                - self.rx() * operand.s() * self.rz()
+                + self.rz() * operand.s() * self.rx()
+                + self.ry() * operand.rx() * self.rx()
+                - self.s() * operand.rx() * self.rz()
+                + self.s() * operand.rz() * self.rx()
+                - self.rx() * operand.ry() * self.rx()
+                + self.ry() * operand.s() * self.s(),
+            -(self.ry() * operand.rx() * self.ry())
                 + self.s() * operand.ry() * self.rz()
-                + self.rz() * operand.ry() * self.s()
-                + self.s() * operand.rx() * self.s()
-                + self.rz() * operand.rz() * self.rx()
-                + self.ry() * operand.s() * self.rz()
-                + self.rx() * operand.s() * self.s()
-                - self.s() * operand.s() * self.rx()
+                + self.rx() * operand.ry() * self.ry()
                 + self.rx() * operand.rx() * self.rx()
-                + self.rx() * operand.rz() * self.rz()
+                + self.s() * operand.rx() * self.s()
                 - self.rz() * operand.s() * self.ry()
+                + self.ry() * operand.s() * self.rz()
+                - self.s() * operand.s() * self.rx()
+                - self.s() * operand.rz() * self.ry()
                 - self.rz() * operand.rx() * self.rz()
+                + self.rz() * operand.rz() * self.rx()
+                + self.rz() * operand.ry() * self.s()
                 - self.ry() * operand.rz() * self.s()
-                + self.ry() * operand.ry() * self.rx(),
+                + self.rx() * operand.rz() * self.rz()
+                + self.ry() * operand.ry() * self.rx()
+                + self.rx() * operand.s() * self.s(),
         )
     }
 }
@@ -4405,27 +4405,27 @@ impl<T: Float> Antisandwich<Rotor<T>> for Unit<Rotor<T>> {
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            operand.rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rx(),
-            operand.ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.rx(),
-            operand.rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.ry(),
+            -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
+                + operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
+                + operand.ry(),
+            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + operand.rx(),
         )
     }
 }
@@ -4435,34 +4435,34 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().rz()
-                + self.rz() * self.rz() * operand.as_inner().rz()
-                + -(self.ry() * self.ry() * operand.as_inner().rz())
-                + -(self.rx() * self.rx() * operand.as_inner().rz())
-                + T::TWO * self.s() * self.ry() * operand.as_inner().rx()
-                + -T::TWO * self.s() * self.rx() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().ry()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().ry()
-                + -(self.rz() * self.rz() * operand.as_inner().ry())
-                + self.ry() * self.ry() * operand.as_inner().ry()
-                + -(self.rx() * self.rx() * operand.as_inner().ry())
-                + -T::TWO * self.s() * self.rz() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().rx(),
-            self.s() * self.s() * operand.as_inner().rx()
-                + -(self.rz() * self.rz() * operand.as_inner().rx())
-                + -(self.ry() * self.ry() * operand.as_inner().rx())
-                + self.rx() * self.rx() * operand.as_inner().rx()
-                + T::TWO * self.s() * self.rz() * operand.as_inner().ry()
-                + -T::TWO * self.s() * self.ry() * operand.as_inner().rz()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().rz()
-                + T::TWO * self.ry() * self.rx() * operand.as_inner().ry(),
+                + operand.as_inner().s() * self.rz() * self.rz()
+                + operand.as_inner().s() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().ry() * self.rx() * self.s()
+                + -(operand.as_inner().rz() * self.rx() * self.rx())
+                + -(operand.as_inner().rz() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rx() * self.ry() * self.s()
+                + operand.as_inner().rz() * self.rz() * self.rz()
+                + operand.as_inner().rz() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rx() * self.rz() * self.s()
+                + -(operand.as_inner().ry() * self.rx() * self.rx())
+                + -(operand.as_inner().ry() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().rx() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.ry() * self.rz()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.s()
+                + operand.as_inner().ry() * self.ry() * self.ry()
+                + operand.as_inner().ry() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().rz() * self.ry() * self.s()
+                + -(operand.as_inner().rx() * self.ry() * self.ry())
+                + -(operand.as_inner().rx() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().ry() * self.rx() * self.ry()
+                + T::TWO * operand.as_inner().rz() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().ry() * self.rz() * self.s()
+                + operand.as_inner().rx() * self.rx() * self.rx()
+                + operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -4473,27 +4473,27 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            operand.as_inner().rz()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rz()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().rx(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().rz() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().rx()
-                + T::TWO * self.as_inner().s() * self.as_inner().rz() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().ry() * self.as_inner().rx() * operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
+                + operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().ry(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -4503,10 +4503,10 @@ impl<T: Float> Antisandwich<Scalar<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.rx() * operand.s() * self.rx()
-                + self.ry() * operand.s() * self.ry()
+            self.ry() * operand.s() * self.ry()
+                + self.s() * operand.s() * self.s()
                 + self.rz() * operand.s() * self.rz()
-                + self.s() * operand.s() * self.s(),
+                + self.rx() * operand.s() * self.rx(),
         )
     }
 }
@@ -4524,10 +4524,10 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            operand.as_inner().s() * self.rz() * self.rz()
+            operand.as_inner().s() * self.rx() * self.rx()
                 + operand.as_inner().s() * self.ry() * self.ry()
-                + operand.as_inner().s() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().s(),
+                + operand.as_inner().s() * self.rz() * self.rz()
+                + operand.as_inner().s() * self.s() * self.s(),
         )
     }
 }
@@ -4545,9 +4545,9 @@ impl<T: Float> Antisandwich<Trivector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.s() * operand.ps() * self.s()
-                + self.rx() * operand.ps() * self.rx()
+            self.rx() * operand.ps() * self.rx()
                 + self.rz() * operand.ps() * self.rz()
+                + self.s() * operand.ps() * self.s()
                 + self.ry() * operand.ps() * self.ry(),
         )
     }
@@ -4566,10 +4566,10 @@ impl<T: Float> Antisandwich<Unit<Trivector<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().ps()
-                + self.rz() * self.rz() * operand.as_inner().ps()
-                + self.ry() * self.ry() * operand.as_inner().ps()
-                + self.rx() * self.rx() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.rx() * self.rx()
+                + operand.as_inner().ps() * self.ry() * self.ry()
+                + operand.as_inner().ps() * self.rz() * self.rz()
+                + operand.as_inner().ps() * self.s() * self.s(),
         )
     }
 }
@@ -4587,40 +4587,42 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.rz() * operand.z() * self.rx() + self.rx() * operand.x() * self.rx()
-                - self.ry() * operand.z() * self.s()
-                - self.rx() * operand.y() * self.ry()
-                + self.rx() * operand.z() * self.rz()
-                - self.rz() * operand.x() * self.rz()
-                - self.ry() * operand.y() * self.rx()
-                + self.s() * operand.x() * self.s()
-                - self.s() * operand.y() * self.rz()
+            -(self.rz() * operand.x() * self.rz())
                 - self.s() * operand.z() * self.ry()
+                - self.ry() * operand.y() * self.rx()
+                - self.ry() * operand.z() * self.s()
+                + self.rx() * operand.z() * self.rz()
+                + self.rx() * operand.x() * self.rx()
                 - self.rz() * operand.y() * self.s()
-                - self.ry() * operand.x() * self.ry(),
-            -(self.s() * operand.z() * self.rx()) - self.rz() * operand.y() * self.rz()
-                + self.ry() * operand.y() * self.ry()
+                - self.rx() * operand.y() * self.ry()
+                + self.s() * operand.x() * self.s()
+                - self.ry() * operand.x() * self.ry()
+                + self.rz() * operand.z() * self.rx()
+                - self.s() * operand.y() * self.rz(),
+            -(self.rx() * operand.x() * self.ry())
+                - self.rz() * operand.z() * self.ry()
                 - self.ry() * operand.z() * self.rz()
-                + self.rz() * operand.x() * self.s()
+                + self.ry() * operand.y() * self.ry()
                 - self.rx() * operand.y() * self.rx()
-                - self.rx() * operand.x() * self.ry()
-                + self.s() * operand.x() * self.rz()
                 - self.rx() * operand.z() * self.s()
-                + self.s() * operand.y() * self.s()
                 - self.ry() * operand.x() * self.rx()
-                - self.rz() * operand.z() * self.ry(),
-            self.rx() * operand.y() * self.s()
+                - self.s() * operand.z() * self.rx()
+                + self.s() * operand.x() * self.rz()
+                + self.rz() * operand.x() * self.s()
+                + self.s() * operand.y() * self.s()
+                - self.rz() * operand.y() * self.rz(),
+            -(self.ry() * operand.y() * self.rz())
                 + self.s() * operand.z() * self.s()
-                + self.rz() * operand.z() * self.rz()
-                + self.s() * operand.x() * self.ry()
                 + self.rz() * operand.x() * self.rx()
-                - self.rz() * operand.y() * self.ry()
-                - self.ry() * operand.z() * self.ry()
                 + self.ry() * operand.x() * self.s()
+                + self.s() * operand.x() * self.ry()
+                - self.rz() * operand.y() * self.ry()
+                + self.rz() * operand.z() * self.rz()
+                - self.ry() * operand.z() * self.ry()
+                + self.rx() * operand.y() * self.s()
                 - self.rx() * operand.z() * self.rx()
-                + self.s() * operand.y() * self.rx()
-                - self.ry() * operand.y() * self.rz()
-                + self.rx() * operand.x() * self.rz(),
+                + self.rx() * operand.x() * self.rz()
+                + self.s() * operand.y() * self.rx(),
         )
     }
 }
@@ -4630,27 +4632,27 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
+            -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
                 + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rz()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * operand.y() * self.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.z()
-                + -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.z(),
-            operand.y()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().s()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.x(),
+            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().rx()
-                + T::TWO * self.as_inner().s() * operand.x() * self.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.z()
-                + -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.z(),
-            operand.z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.z()
-                + T::TWO * self.as_inner().s() * operand.x() * self.as_inner().ry()
-                + T::TWO * self.as_inner().s() * operand.y() * self.as_inner().rx()
-                + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().ry(),
+                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().s()
+                + operand.y(),
+            -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().s()
+                + operand.z(),
         )
     }
 }
@@ -4660,30 +4662,30 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x() * self.rz() * self.rz())
+            -T::TWO * operand.as_inner().y() * self.rx() * self.ry()
+                + -T::TWO * operand.as_inner().y() * self.rz() * self.s()
+                + -T::TWO * operand.as_inner().z() * self.ry() * self.s()
                 + -(operand.as_inner().x() * self.ry() * self.ry())
+                + -(operand.as_inner().x() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().z() * self.rx() * self.rz()
                 + operand.as_inner().x() * self.rx() * self.rx()
-                + self.s() * self.s() * operand.as_inner().x()
-                + -T::TWO * self.s() * operand.as_inner().y() * self.rz()
-                + -T::TWO * self.s() * self.ry() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().y() * self.ry() * self.rx()
-                + T::TWO * self.rz() * self.rx() * operand.as_inner().z(),
-            -(operand.as_inner().y() * self.rz() * self.rz())
-                + operand.as_inner().y() * self.ry() * self.ry()
+                + operand.as_inner().x() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().x() * self.rx() * self.ry()
+                + -T::TWO * operand.as_inner().z() * self.ry() * self.rz()
+                + -T::TWO * operand.as_inner().z() * self.rx() * self.s()
                 + -(operand.as_inner().y() * self.rx() * self.rx())
-                + self.s() * self.s() * operand.as_inner().y()
-                + T::TWO * self.s() * operand.as_inner().x() * self.rz()
-                + -T::TWO * self.s() * self.rx() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().x() * self.ry() * self.rx()
-                + -T::TWO * self.rz() * self.ry() * operand.as_inner().z(),
-            self.s() * self.s() * operand.as_inner().z()
-                + self.rz() * self.rz() * operand.as_inner().z()
-                + -(self.ry() * self.ry() * operand.as_inner().z())
-                + -(self.rx() * self.rx() * operand.as_inner().z())
-                + T::TWO * self.s() * operand.as_inner().x() * self.ry()
-                + T::TWO * self.s() * operand.as_inner().y() * self.rx()
-                + T::TWO * operand.as_inner().x() * self.rz() * self.rx()
-                + -T::TWO * operand.as_inner().y() * self.rz() * self.ry(),
+                + -(operand.as_inner().y() * self.rz() * self.rz())
+                + T::TWO * operand.as_inner().x() * self.rz() * self.s()
+                + operand.as_inner().y() * self.ry() * self.ry()
+                + operand.as_inner().y() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().y() * self.ry() * self.rz()
+                + -(operand.as_inner().z() * self.rx() * self.rx())
+                + -(operand.as_inner().z() * self.ry() * self.ry())
+                + T::TWO * operand.as_inner().x() * self.rx() * self.rz()
+                + T::TWO * operand.as_inner().x() * self.ry() * self.s()
+                + T::TWO * operand.as_inner().y() * self.rx() * self.s()
+                + operand.as_inner().z() * self.rz() * self.rz()
+                + operand.as_inner().z() * self.s() * self.s(),
         )
     }
 }
@@ -4693,27 +4695,27 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
+            -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rz()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * self.as_inner().s() * operand.as_inner().y() * self.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rx()
-                + T::TWO * self.as_inner().rz() * self.as_inner().rx() * operand.as_inner().z(),
-            operand.as_inner().y()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().s()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz()
+                + operand.as_inner().x(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().rx()
-                + T::TWO * self.as_inner().s() * operand.as_inner().x() * self.as_inner().rz()
-                + -T::TWO * self.as_inner().s() * self.as_inner().rx() * operand.as_inner().z()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().rx()
-                + -T::TWO * self.as_inner().rz() * self.as_inner().ry() * operand.as_inner().z(),
-            operand.as_inner().z()
-                + -T::TWO * self.as_inner().ry() * self.as_inner().ry() * operand.as_inner().z()
-                + -T::TWO * self.as_inner().rx() * self.as_inner().rx() * operand.as_inner().z()
-                + T::TWO * self.as_inner().s() * operand.as_inner().x() * self.as_inner().ry()
-                + T::TWO * self.as_inner().s() * operand.as_inner().y() * self.as_inner().rx()
-                + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().ry(),
+                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().s()
+                + operand.as_inner().y(),
+            -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rx()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().s()
+                + operand.as_inner().z(),
         )
     }
 }
@@ -4743,9 +4745,9 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().rz(),
-            self.s() * self.s() * operand.as_inner().ry(),
-            self.s() * self.s() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.s() * self.s(),
+            operand.as_inner().ry() * self.s() * self.s(),
+            operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -4788,10 +4790,10 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().rz(),
-            self.s() * self.s() * operand.as_inner().ry(),
-            self.s() * self.s() * operand.as_inner().rx(),
+            operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().rz() * self.s() * self.s(),
+            operand.as_inner().ry() * self.s() * self.s(),
+            operand.as_inner().rx() * self.s() * self.s(),
         )
     }
 }
@@ -4829,7 +4831,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4861,7 +4863,7 @@ impl<T: Float> Antisandwich<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * self.s() * operand.as_inner().ps())
+        Trivector::new_unchecked(operand.as_inner().ps() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4898,9 +4900,9 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().x(),
-            self.s() * self.s() * operand.as_inner().y(),
-            self.s() * self.s() * operand.as_inner().z(),
+            operand.as_inner().x() * self.s() * self.s(),
+            operand.as_inner().y() * self.s() * self.s(),
+            operand.as_inner().z() * self.s() * self.s(),
         )
     }
 }
@@ -4942,9 +4944,9 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * self.ps() * operand.as_inner().rz(),
-            self.ps() * self.ps() * operand.as_inner().ry(),
-            self.ps() * self.ps() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.ps() * self.ps(),
+            operand.as_inner().ry() * self.ps() * self.ps(),
+            operand.as_inner().rx() * self.ps() * self.ps(),
         )
     }
 }
@@ -4988,9 +4990,9 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Trivector<T> {
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s() * self.ps() * self.ps(),
-            self.ps() * self.ps() * operand.as_inner().rz(),
-            self.ps() * self.ps() * operand.as_inner().ry(),
-            self.ps() * self.ps() * operand.as_inner().rx(),
+            operand.as_inner().rz() * self.ps() * self.ps(),
+            operand.as_inner().ry() * self.ps() * self.ps(),
+            operand.as_inner().rx() * self.ps() * self.ps(),
         )
     }
 }
@@ -5060,7 +5062,7 @@ impl<T: Float> Antisandwich<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * self.ps() * operand.as_inner().ps())
+        Trivector::new_unchecked(operand.as_inner().ps() * self.ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -5099,7 +5101,7 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Trivector<T> {
         Vector::new_unchecked(
             operand.as_inner().x() * self.ps() * self.ps(),
             operand.as_inner().y() * self.ps() * self.ps(),
-            self.ps() * self.ps() * operand.as_inner().z(),
+            operand.as_inner().z() * self.ps() * self.ps(),
         )
     }
 }
@@ -5121,22 +5123,22 @@ impl<T: Float> Antisandwich<Bivector<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * operand.rz() * self.x()) - self.y() * operand.ry() * self.z()
+            -(self.y() * operand.rz() * self.y()) - self.y() * operand.ry() * self.z()
+                + self.x() * operand.rx() * self.z()
                 + self.z() * operand.rz() * self.z()
                 - self.z() * operand.ry() * self.y()
-                - self.y() * operand.rz() * self.y()
                 + self.z() * operand.rx() * self.x()
-                + self.x() * operand.rx() * self.z(),
-            self.y() * operand.ry() * self.y()
-                - self.z() * operand.ry() * self.z()
+                - self.x() * operand.rz() * self.x(),
+            -(self.z() * operand.rz() * self.y())
                 - self.x() * operand.ry() * self.x()
-                - self.y() * operand.rx() * self.x()
+                - self.y() * operand.rz() * self.z()
+                + self.y() * operand.ry() * self.y()
+                - self.z() * operand.ry() * self.z()
                 - self.x() * operand.rx() * self.y()
-                - self.z() * operand.rz() * self.y()
-                - self.y() * operand.rz() * self.z(),
-            -(self.x() * operand.ry() * self.y()) + self.x() * operand.rz() * self.z()
-                - self.y() * operand.ry() * self.x()
+                - self.y() * operand.rx() * self.x(),
+            -(self.y() * operand.ry() * self.x()) + self.x() * operand.rz() * self.z()
                 - self.y() * operand.rx() * self.y()
+                - self.x() * operand.ry() * self.y()
                 + self.z() * operand.rz() * self.x()
                 - self.z() * operand.rx() * self.z()
                 + self.x() * operand.rx() * self.x(),
@@ -5149,19 +5151,19 @@ impl<T: Float> Antisandwich<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(operand.rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.ry(),
-            -(operand.ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.rz(),
-            operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.rz())
+                + T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.ry())
+                + T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.rx(),
         )
     }
 }
@@ -5171,21 +5173,21 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * self.x() * operand.as_inner().rz())
-                + -(self.y() * self.y() * operand.as_inner().rz())
-                + self.z() * self.z() * operand.as_inner().rz()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().ry(),
-            -(self.x() * self.x() * operand.as_inner().ry())
-                + self.y() * self.y() * operand.as_inner().ry()
-                + -(self.z() * self.z() * operand.as_inner().ry())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().rz(),
-            self.x() * self.x() * operand.as_inner().rx()
-                + -(self.y() * self.y() * operand.as_inner().rx())
-                + -(self.z() * self.z() * operand.as_inner().rx())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().ry()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.y() * self.z()
+                + -(operand.as_inner().rz() * self.x() * self.x())
+                + -(operand.as_inner().rz() * self.y() * self.y())
+                + T::TWO * operand.as_inner().rx() * self.x() * self.z()
+                + operand.as_inner().rz() * self.z() * self.z(),
+            -T::TWO * operand.as_inner().rx() * self.x() * self.y()
+                + -T::TWO * operand.as_inner().rz() * self.y() * self.z()
+                + -(operand.as_inner().ry() * self.x() * self.x())
+                + -(operand.as_inner().ry() * self.z() * self.z())
+                + operand.as_inner().ry() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.x() * self.y()
+                + -(operand.as_inner().rx() * self.y() * self.y())
+                + -(operand.as_inner().rx() * self.z() * self.z())
+                + T::TWO * operand.as_inner().rz() * self.x() * self.z()
+                + operand.as_inner().rx() * self.x() * self.x(),
         )
     }
 }
@@ -5195,19 +5197,19 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(operand.as_inner().rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().ry(),
-            -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().rz(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().rz())
+                + T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().ry())
+                + T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -5217,40 +5219,41 @@ impl<T: Float> Antisandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.z() * operand.rx() * self.y()
-                + self.z() * operand.s() * self.z()
-                + self.x() * operand.s() * self.x()
+            self.x() * operand.s() * self.x()
                 - self.y() * operand.rx() * self.z()
-                - self.x() * operand.ry() * self.z()
-                + self.y() * operand.rz() * self.x()
-                + self.z() * operand.ry() * self.x()
                 - self.x() * operand.rz() * self.y()
-                + self.y() * operand.s() * self.y(),
-            self.x() * operand.rx() * self.z() + self.y() * operand.s() * self.x()
-                - self.y() * operand.rz() * self.y()
+                + self.z() * operand.ry() * self.x()
+                + self.y() * operand.s() * self.y()
+                + self.z() * operand.rx() * self.y()
+                + self.z() * operand.s() * self.z()
+                - self.x() * operand.ry() * self.z()
+                + self.y() * operand.rz() * self.x(),
+            self.z() * operand.rx() * self.x()
                 - self.x() * operand.rz() * self.x()
                 - self.y() * operand.ry() * self.z()
-                - self.z() * operand.ry() * self.y()
-                + self.z() * operand.rx() * self.x()
+                + self.z() * operand.rz() * self.z()
+                + self.y() * operand.s() * self.x()
                 - self.x() * operand.s() * self.y()
-                + self.z() * operand.rz() * self.z(),
-            -(self.y() * operand.rz() * self.z()) - self.y() * operand.rx() * self.x()
-                + self.z() * operand.s() * self.x()
-                - self.x() * operand.ry() * self.x()
-                - self.x() * operand.rx() * self.y()
+                - self.y() * operand.rz() * self.y()
+                + self.x() * operand.rx() * self.z()
+                - self.z() * operand.ry() * self.y(),
+            -(self.x() * operand.ry() * self.x()) - self.x() * operand.rx() * self.y()
+                + self.y() * operand.ry() * self.y()
                 - self.x() * operand.s() * self.z()
+                - self.y() * operand.rz() * self.z()
+                + self.z() * operand.s() * self.x()
                 - self.z() * operand.ry() * self.z()
                 - self.z() * operand.rz() * self.y()
-                + self.y() * operand.ry() * self.y(),
-            -(self.z() * operand.rx() * self.z())
-                + self.x() * operand.rz() * self.z()
-                + self.x() * operand.rx() * self.x()
-                - self.y() * operand.rx() * self.y()
-                - self.y() * operand.s() * self.z()
+                - self.y() * operand.rx() * self.x(),
+            -(self.y() * operand.rx() * self.y())
                 + self.z() * operand.s() * self.y()
-                + self.z() * operand.rz() * self.x()
+                + self.x() * operand.rx() * self.x()
                 - self.y() * operand.ry() * self.x()
-                - self.x() * operand.ry() * self.y(),
+                - self.x() * operand.ry() * self.y()
+                + self.x() * operand.rz() * self.z()
+                + self.z() * operand.rz() * self.x()
+                - self.z() * operand.rx() * self.z()
+                - self.y() * operand.s() * self.z(),
         )
     }
 }
@@ -5261,19 +5264,19 @@ impl<T: Float> Antisandwich<Rotor<T>> for Unit<Vector<T>> {
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.s(),
-            -(operand.rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.ry(),
-            -(operand.ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.rz(),
-            operand.rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.rz(),
+            -T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.rz())
+                + T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.ry())
+                + T::TWO * operand.ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.rx(),
         )
     }
 }
@@ -5284,23 +5287,23 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Vector<T> {
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s() * self.z() * self.z()
-                + self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
-            -(self.x() * self.x() * operand.as_inner().rz())
-                + -(self.y() * self.y() * operand.as_inner().rz())
-                + self.z() * self.z() * operand.as_inner().rz()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().ry(),
-            -(self.x() * self.x() * operand.as_inner().ry())
-                + self.y() * self.y() * operand.as_inner().ry()
-                + -(self.z() * self.z() * operand.as_inner().ry())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().rx()
-                + -T::TWO * self.y() * self.z() * operand.as_inner().rz(),
-            self.x() * self.x() * operand.as_inner().rx()
-                + -(self.y() * self.y() * operand.as_inner().rx())
-                + -(self.z() * self.z() * operand.as_inner().rx())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().ry()
-                + T::TWO * self.x() * self.z() * operand.as_inner().rz(),
+                + operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.y() * self.z()
+                + -(operand.as_inner().rz() * self.x() * self.x())
+                + -(operand.as_inner().rz() * self.y() * self.y())
+                + T::TWO * operand.as_inner().rx() * self.x() * self.z()
+                + operand.as_inner().rz() * self.z() * self.z(),
+            -T::TWO * operand.as_inner().rx() * self.x() * self.y()
+                + -T::TWO * operand.as_inner().rz() * self.y() * self.z()
+                + -(operand.as_inner().ry() * self.x() * self.x())
+                + -(operand.as_inner().ry() * self.z() * self.z())
+                + operand.as_inner().ry() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().ry() * self.x() * self.y()
+                + -(operand.as_inner().rx() * self.y() * self.y())
+                + -(operand.as_inner().rx() * self.z() * self.z())
+                + T::TWO * operand.as_inner().rz() * self.x() * self.z()
+                + operand.as_inner().rx() * self.x() * self.x(),
         )
     }
 }
@@ -5311,19 +5314,19 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Vector<T>> {
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
             operand.as_inner().s(),
-            -(operand.as_inner().rz())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rz()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().ry(),
-            -(operand.as_inner().ry())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().ry()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().rz(),
-            operand.as_inner().rx()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().rx()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().ry()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().rz(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().rz())
+                + T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().z() * self.as_inner().z(),
+            -T::TWO * operand.as_inner().rx() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rz() * self.as_inner().y() * self.as_inner().z()
+                + -(operand.as_inner().ry())
+                + T::TWO * operand.as_inner().ry() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.as_inner().ry() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().y() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().z() * self.as_inner().z()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().rx(),
         )
     }
 }
@@ -5334,8 +5337,8 @@ impl<T: Float> Antisandwich<Scalar<T>> for Vector<T> {
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
             self.z() * operand.s() * self.z()
-                + self.x() * operand.s() * self.x()
-                + self.y() * operand.s() * self.y(),
+                + self.y() * operand.s() * self.y()
+                + self.x() * operand.s() * self.x(),
         )
     }
 }
@@ -5354,8 +5357,8 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Vector<T> {
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
             operand.as_inner().s() * self.z() * self.z()
-                + self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
+                + operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
         )
     }
 }
@@ -5373,9 +5376,9 @@ impl<T: Float> Antisandwich<Trivector<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * operand.ps() * self.x()
-                + self.y() * operand.ps() * self.y()
-                + self.z() * operand.ps() * self.z(),
+            self.y() * operand.ps() * self.y()
+                + self.z() * operand.ps() * self.z()
+                + self.x() * operand.ps() * self.x(),
         )
     }
 }
@@ -5393,9 +5396,9 @@ impl<T: Float> Antisandwich<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * self.x() * operand.as_inner().ps()
-                + self.y() * self.y() * operand.as_inner().ps()
-                + self.z() * self.z() * operand.as_inner().ps(),
+            operand.as_inner().ps() * self.x() * self.x()
+                + operand.as_inner().ps() * self.y() * self.y()
+                + operand.as_inner().ps() * self.z() * self.z(),
         )
     }
 }
@@ -5413,25 +5416,27 @@ impl<T: Float> Antisandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * operand.y() * self.y() + self.x() * operand.x() * self.x()
-                - self.y() * operand.x() * self.y()
+            self.x() * operand.x() * self.x()
                 - self.z() * operand.x() * self.z()
+                - self.y() * operand.x() * self.y()
+                + self.x() * operand.y() * self.y()
                 + self.z() * operand.z() * self.x()
-                + self.x() * operand.z() * self.z()
-                + self.y() * operand.y() * self.x(),
-            -(self.x() * operand.y() * self.x())
+                + self.y() * operand.y() * self.x()
+                + self.x() * operand.z() * self.z(),
+            self.z() * operand.z() * self.y()
+                + self.y() * operand.x() * self.x()
+                + self.x() * operand.x() * self.y()
+                - self.x() * operand.y() * self.x()
                 + self.y() * operand.y() * self.y()
                 + self.y() * operand.z() * self.z()
-                - self.z() * operand.y() * self.z()
-                + self.z() * operand.z() * self.y()
-                + self.y() * operand.x() * self.x()
-                + self.x() * operand.x() * self.y(),
-            self.z() * operand.y() * self.y() + self.x() * operand.x() * self.z()
-                - self.y() * operand.z() * self.y()
-                + self.z() * operand.z() * self.z()
+                - self.z() * operand.y() * self.z(),
+            self.z() * operand.z() * self.z()
+                + self.z() * operand.x() * self.x()
+                + self.z() * operand.y() * self.y()
                 + self.y() * operand.y() * self.z()
+                + self.x() * operand.x() * self.z()
                 - self.x() * operand.z() * self.x()
-                + self.z() * operand.x() * self.x(),
+                - self.y() * operand.z() * self.y(),
         )
     }
 }
@@ -5441,19 +5446,19 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
-                + -T::TWO * operand.x() * self.as_inner().z() * self.as_inner().z()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.y()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.z(),
+            -T::TWO * operand.x() * self.as_inner().z() * self.as_inner().z()
+                + -T::TWO * operand.x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.y() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.z() * self.as_inner().x() * self.as_inner().z()
+                + operand.x(),
             -(operand.y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.x()
-                + T::TWO * self.as_inner().y() * self.as_inner().z() * operand.z(),
+                + T::TWO * operand.x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.z() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.y() * self.as_inner().y() * self.as_inner().y(),
             -(operand.z())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.z()
-                + T::TWO * self.as_inner().x() * operand.x() * self.as_inner().z()
-                + T::TWO * self.as_inner().y() * operand.y() * self.as_inner().z(),
+                + T::TWO * operand.x() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.y() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.z() * self.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -5464,20 +5469,20 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Vector<T> {
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
             -(operand.as_inner().x() * self.z() * self.z())
-                + self.x() * self.x() * operand.as_inner().x()
-                + -(self.y() * self.y() * operand.as_inner().x())
-                + T::TWO * self.x() * self.y() * operand.as_inner().y()
-                + T::TWO * self.x() * self.z() * operand.as_inner().z(),
+                + -(operand.as_inner().x() * self.y() * self.y())
+                + T::TWO * operand.as_inner().y() * self.x() * self.y()
+                + T::TWO * operand.as_inner().z() * self.x() * self.z()
+                + operand.as_inner().x() * self.x() * self.x(),
             -(operand.as_inner().y() * self.z() * self.z())
-                + -(self.x() * self.x() * operand.as_inner().y())
-                + self.y() * self.y() * operand.as_inner().y()
-                + T::TWO * self.x() * self.y() * operand.as_inner().x()
-                + T::TWO * self.y() * self.z() * operand.as_inner().z(),
-            -(self.x() * self.x() * operand.as_inner().z())
-                + -(self.y() * self.y() * operand.as_inner().z())
-                + self.z() * self.z() * operand.as_inner().z()
-                + T::TWO * self.x() * operand.as_inner().x() * self.z()
-                + T::TWO * self.y() * operand.as_inner().y() * self.z(),
+                + -(operand.as_inner().y() * self.x() * self.x())
+                + T::TWO * operand.as_inner().x() * self.x() * self.y()
+                + T::TWO * operand.as_inner().z() * self.y() * self.z()
+                + operand.as_inner().y() * self.y() * self.y(),
+            -(operand.as_inner().z() * self.x() * self.x())
+                + -(operand.as_inner().z() * self.y() * self.y())
+                + T::TWO * operand.as_inner().x() * self.x() * self.z()
+                + T::TWO * operand.as_inner().y() * self.y() * self.z()
+                + operand.as_inner().z() * self.z() * self.z(),
         )
     }
 }
@@ -5487,19 +5492,19 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().z() * self.as_inner().z()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().y()
-                + T::TWO * self.as_inner().x() * self.as_inner().z() * operand.as_inner().z(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().z() * self.as_inner().z()
+                + -T::TWO * operand.as_inner().x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.as_inner().y() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.as_inner().z() * self.as_inner().x() * self.as_inner().z()
+                + operand.as_inner().x(),
             -(operand.as_inner().y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().x()
-                + T::TWO * self.as_inner().y() * self.as_inner().z() * operand.as_inner().z(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.as_inner().z() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().y(),
             -(operand.as_inner().z())
-                + T::TWO * self.as_inner().z() * self.as_inner().z() * operand.as_inner().z()
-                + T::TWO * self.as_inner().x() * operand.as_inner().x() * self.as_inner().z()
-                + T::TWO * self.as_inner().y() * operand.as_inner().y() * self.as_inner().z(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().z()
+                + T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().z()
+                + T::TWO * operand.as_inner().z() * self.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -6215,26 +6220,27 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Bivector<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
             (self.rz() * operand.rz() * self.rz() - self.ry() * operand.rz() * self.ry()
-                + self.rz() * operand.ry() * self.ry()
                 + self.ry() * operand.ry() * self.rz()
-                + self.rx() * operand.rx() * self.rz()
+                + self.rz() * operand.rx() * self.rx()
+                + self.rz() * operand.ry() * self.ry()
                 - self.rx() * operand.rz() * self.rx()
-                + self.rz() * operand.rx() * self.rx())
+                + self.rx() * operand.rx() * self.rz())
                 * inv_norm_sq,
-            (self.rz() * operand.rz() * self.ry()
+            (self.ry() * operand.rx() * self.rx()
                 + self.ry() * operand.ry() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                + self.rx() * operand.rx() * self.ry()
-                - self.rx() * operand.ry() * self.rx()
                 + self.ry() * operand.rz() * self.rz()
-                - self.rz() * operand.ry() * self.rz())
+                - self.rz() * operand.ry() * self.rz()
+                + self.rx() * operand.rx() * self.ry()
+                + self.rz() * operand.rz() * self.ry()
+                - self.rx() * operand.ry() * self.rx())
                 * inv_norm_sq,
-            (self.rx() * operand.ry() * self.ry() + self.rx() * operand.rx() * self.rx()
+            (self.ry() * operand.ry() * self.rx()
                 - self.rz() * operand.rx() * self.rz()
-                + self.rx() * operand.rz() * self.rz()
+                - self.ry() * operand.rx() * self.ry()
                 + self.rz() * operand.rz() * self.rx()
-                + self.ry() * operand.ry() * self.rx()
-                - self.ry() * operand.rx() * self.ry())
+                + self.rx() * operand.rz() * self.rz()
+                + self.rx() * operand.ry() * self.ry()
+                + self.rx() * operand.rx() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -6250,43 +6256,45 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.rz() * operand.s() * self.rz()
-                + self.rz() * operand.rx() * self.ry()
+            (self.rz() * operand.rx() * self.ry()
                 + self.ry() * operand.s() * self.ry()
+                + self.rz() * operand.s() * self.rz()
                 + self.rx() * operand.s() * self.rx()
-                - self.rx() * operand.rz() * self.ry()
-                + self.ry() * operand.rz() * self.rx()
-                - self.rz() * operand.ry() * self.rx()
                 + self.rx() * operand.ry() * self.rz()
-                - self.ry() * operand.rx() * self.rz())
+                + self.ry() * operand.rz() * self.rx()
+                - self.ry() * operand.rx() * self.rz()
+                - self.rz() * operand.ry() * self.rx()
+                - self.rx() * operand.rz() * self.ry())
                 * inv_norm_sq,
-            (self.rz() * operand.rx() * self.rx() + self.ry() * operand.s() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                - self.rx() * operand.rz() * self.rx()
-                + self.rz() * operand.ry() * self.ry()
-                - self.rx() * operand.s() * self.ry()
+            (-(self.rx() * operand.rz() * self.rx())
+                + self.ry() * operand.s() * self.rx()
+                + self.rx() * operand.rx() * self.rz()
                 + self.rz() * operand.rz() * self.rz()
+                - self.ry() * operand.rz() * self.ry()
                 + self.ry() * operand.ry() * self.rz()
-                + self.rx() * operand.rx() * self.rz())
+                + self.rz() * operand.rx() * self.rx()
+                - self.rx() * operand.s() * self.ry()
+                + self.rz() * operand.ry() * self.ry())
                 * inv_norm_sq,
             (self.ry() * operand.rz() * self.rz()
-                + self.ry() * operand.rx() * self.rx()
-                + self.ry() * operand.ry() * self.ry()
                 + self.rx() * operand.s() * self.rz()
-                - self.rx() * operand.ry() * self.rx()
                 + self.rx() * operand.rx() * self.ry()
+                + self.ry() * operand.ry() * self.ry()
+                - self.rx() * operand.ry() * self.rx()
                 - self.rz() * operand.s() * self.rx()
+                - self.rz() * operand.ry() * self.rz()
                 + self.rz() * operand.rz() * self.ry()
-                - self.rz() * operand.ry() * self.rz())
+                + self.ry() * operand.rx() * self.rx())
                 * inv_norm_sq,
-            (-(self.rz() * operand.rx() * self.rz()) + self.ry() * operand.ry() * self.rx()
-                - self.ry() * operand.s() * self.rz()
-                + self.rx() * operand.rx() * self.rx()
-                + self.rx() * operand.rz() * self.rz()
+            (-(self.ry() * operand.s() * self.rz())
+                + self.ry() * operand.ry() * self.rx()
                 + self.rz() * operand.s() * self.ry()
+                + self.rz() * operand.rz() * self.rx()
                 - self.ry() * operand.rx() * self.ry()
+                + self.rx() * operand.rz() * self.rz()
+                - self.rz() * operand.rx() * self.rz()
                 + self.rx() * operand.ry() * self.ry()
-                + self.rz() * operand.rz() * self.rx())
+                + self.rx() * operand.rx() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -6302,9 +6310,9 @@ impl<T: Float> InverseSandwich<Scalar<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.rz() * operand.s() * self.rz()
-                + self.rx() * operand.s() * self.rx()
-                + self.ry() * operand.s() * self.ry())
+            (self.ry() * operand.s() * self.ry()
+                + self.rz() * operand.s() * self.rz()
+                + self.rx() * operand.s() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -6320,9 +6328,9 @@ impl<T: Float> InverseSandwich<Trivector<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.rx() * operand.ps() * self.rx()
-                + self.ry() * operand.ps() * self.ry()
-                + self.rz() * operand.ps() * self.rz())
+            (self.ry() * operand.ps() * self.ry()
+                + self.rz() * operand.ps() * self.rz()
+                + self.rx() * operand.ps() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -6339,25 +6347,24 @@ impl<T: Float> InverseSandwich<Vector<T>> for Bivector<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
             (-(self.ry() * operand.x() * self.ry()) - self.rz() * operand.x() * self.rz()
+                + self.rx() * operand.x() * self.rx()
+                - self.rx() * operand.y() * self.ry()
                 + self.rz() * operand.z() * self.rx()
                 - self.ry() * operand.y() * self.rx()
-                + self.rx() * operand.z() * self.rz()
-                + self.rx() * operand.x() * self.rx()
-                - self.rx() * operand.y() * self.ry())
+                + self.rx() * operand.z() * self.rz())
                 * inv_norm_sq,
-            (-(self.rx() * operand.y() * self.rx())
+            (-(self.ry() * operand.z() * self.rz())
                 - self.rx() * operand.x() * self.ry()
                 - self.rz() * operand.z() * self.ry()
-                - self.rz() * operand.y() * self.rz()
                 - self.ry() * operand.x() * self.rx()
-                + self.ry() * operand.y() * self.ry()
-                - self.ry() * operand.z() * self.rz())
+                - self.rx() * operand.y() * self.rx()
+                - self.rz() * operand.y() * self.rz()
+                + self.ry() * operand.y() * self.ry())
                 * inv_norm_sq,
-            (-(self.rx() * operand.z() * self.rx())
-                - self.rz() * operand.y() * self.ry()
-                - self.ry() * operand.y() * self.rz()
-                + self.rz() * operand.x() * self.rx()
+            (-(self.rz() * operand.y() * self.ry()) - self.ry() * operand.y() * self.rz()
                 + self.rx() * operand.x() * self.rz()
+                - self.rx() * operand.z() * self.rx()
+                + self.rz() * operand.x() * self.rx()
                 - self.ry() * operand.z() * self.ry()
                 + self.rz() * operand.z() * self.rz())
                 * inv_norm_sq,
@@ -6375,43 +6382,44 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (-(self.s() * operand.rx() * self.ry())
+            (self.s() * operand.rz() * self.s()
+                + self.ry() * operand.ry() * self.rz()
                 + self.rz() * operand.rx() * self.rx()
                 + self.rz() * operand.ry() * self.ry()
-                + self.s() * operand.rz() * self.s()
                 + self.rz() * operand.rz() * self.rz()
-                - self.ry() * operand.rz() * self.ry()
+                + self.s() * operand.ry() * self.rx()
                 - self.ry() * operand.rx() * self.s()
+                - self.ry() * operand.rz() * self.ry()
+                - self.rx() * operand.rz() * self.rx()
                 + self.rx() * operand.ry() * self.s()
                 + self.rx() * operand.rx() * self.rz()
-                + self.s() * operand.ry() * self.rx()
-                + self.ry() * operand.ry() * self.rz()
-                - self.rx() * operand.rz() * self.rx())
+                - self.s() * operand.rx() * self.ry())
                 * inv_norm_sq,
-            (-(self.s() * operand.rz() * self.rx())
-                - self.rz() * operand.ry() * self.rz()
-                - self.rx() * operand.ry() * self.rx()
-                + self.s() * operand.ry() * self.s()
-                + self.rx() * operand.rx() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                + self.s() * operand.rx() * self.rz()
-                + self.rz() * operand.rx() * self.s()
-                - self.rx() * operand.rz() * self.s()
+            (-(self.rz() * operand.ry() * self.rz())
+                + self.ry() * operand.ry() * self.ry()
                 + self.ry() * operand.rz() * self.rz()
+                - self.s() * operand.rz() * self.rx()
+                + self.s() * operand.ry() * self.s()
+                + self.ry() * operand.rx() * self.rx()
+                - self.rx() * operand.rz() * self.s()
+                + self.s() * operand.rx() * self.rz()
+                - self.rx() * operand.ry() * self.rx()
                 + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.ry() * self.ry())
+                + self.rz() * operand.rx() * self.s()
+                + self.rx() * operand.rx() * self.ry())
                 * inv_norm_sq,
-            (self.rx() * operand.rz() * self.rz() + self.ry() * operand.ry() * self.rx()
-                - self.ry() * operand.rx() * self.ry()
-                - self.rz() * operand.rx() * self.rz()
-                + self.rx() * operand.ry() * self.ry()
-                - self.rz() * operand.ry() * self.s()
-                + self.s() * operand.rx() * self.s()
+            (-(self.rz() * operand.rx() * self.rz())
                 + self.s() * operand.rz() * self.ry()
+                + self.rx() * operand.rz() * self.rz()
+                + self.ry() * operand.ry() * self.rx()
+                + self.s() * operand.rx() * self.s()
+                + self.rz() * operand.rz() * self.rx()
+                + self.rx() * operand.ry() * self.ry()
                 - self.s() * operand.ry() * self.rz()
-                + self.ry() * operand.rz() * self.s()
                 + self.rx() * operand.rx() * self.rx()
-                + self.rz() * operand.rz() * self.rx())
+                - self.rz() * operand.ry() * self.s()
+                + self.ry() * operand.rz() * self.s()
+                - self.ry() * operand.rx() * self.ry())
                 * inv_norm_sq,
         ))
     }
@@ -6427,71 +6435,72 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.s() * operand.rz() * self.rz()
-                + self.rz() * operand.rx() * self.ry()
-                + self.rz() * operand.s() * self.rz()
-                + self.s() * operand.ry() * self.ry()
-                + self.rx() * operand.s() * self.rx()
-                - self.rx() * operand.rz() * self.ry()
-                - self.rz() * operand.rz() * self.s()
-                + self.rx() * operand.ry() * self.rz()
-                - self.ry() * operand.ry() * self.s()
-                - self.rx() * operand.rx() * self.s()
-                - self.ry() * operand.rx() * self.rz()
-                + self.ry() * operand.s() * self.ry()
-                + self.ry() * operand.rz() * self.rx()
-                - self.rz() * operand.ry() * self.rx()
+            (self.rx() * operand.s() * self.rx() - self.rz() * operand.rz() * self.s()
                 + self.s() * operand.rx() * self.rx()
-                + self.s() * operand.s() * self.s())
+                + self.rz() * operand.rx() * self.ry()
+                - self.rz() * operand.ry() * self.rx()
+                + self.ry() * operand.rz() * self.rx()
+                - self.ry() * operand.ry() * self.s()
+                - self.rx() * operand.rz() * self.ry()
+                + self.s() * operand.ry() * self.ry()
+                - self.ry() * operand.rx() * self.rz()
+                + self.s() * operand.s() * self.s()
+                + self.s() * operand.rz() * self.rz()
+                + self.rz() * operand.s() * self.rz()
+                + self.ry() * operand.s() * self.ry()
+                + self.rx() * operand.ry() * self.rz()
+                - self.rx() * operand.rx() * self.s())
                 * inv_norm_sq,
-            (-(self.rx() * operand.s() * self.ry()) + self.ry() * operand.s() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                + self.rz() * operand.rz() * self.rz()
-                + self.s() * operand.ry() * self.rx()
-                + self.s() * operand.rz() * self.s()
-                - self.s() * operand.s() * self.rz()
-                - self.s() * operand.rx() * self.ry()
-                + self.ry() * operand.ry() * self.rz()
-                - self.ry() * operand.rx() * self.s()
-                + self.rz() * operand.ry() * self.ry()
-                + self.rx() * operand.ry() * self.s()
-                + self.rz() * operand.s() * self.s()
-                + self.rx() * operand.rx() * self.rz()
+            (-(self.s() * operand.rx() * self.ry())
                 + self.rz() * operand.rx() * self.rx()
+                + self.s() * operand.ry() * self.rx()
+                + self.rz() * operand.s() * self.s()
+                - self.ry() * operand.rz() * self.ry()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rx() * operand.ry() * self.s()
+                + self.rz() * operand.ry() * self.ry()
+                - self.s() * operand.s() * self.rz()
+                - self.rx() * operand.s() * self.ry()
+                + self.ry() * operand.s() * self.rx()
+                + self.rz() * operand.rz() * self.rz()
+                + self.rx() * operand.rx() * self.rz()
+                + self.s() * operand.rz() * self.s()
+                - self.ry() * operand.rx() * self.s()
                 - self.rx() * operand.rz() * self.rx())
                 * inv_norm_sq,
-            (self.ry() * operand.s() * self.s() - self.s() * operand.s() * self.ry()
-                + self.s() * operand.rx() * self.rz()
-                + self.rz() * operand.rz() * self.ry()
-                - self.rz() * operand.s() * self.rx()
-                - self.rx() * operand.ry() * self.rx()
-                + self.rx() * operand.rx() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                - self.rx() * operand.rz() * self.s()
-                + self.ry() * operand.ry() * self.ry()
+            (self.rz() * operand.rx() * self.s()
                 + self.s() * operand.ry() * self.s()
+                + self.rz() * operand.rz() * self.ry()
+                - self.s() * operand.rz() * self.rx()
+                + self.rx() * operand.s() * self.rz()
+                - self.rx() * operand.rz() * self.s()
+                - self.rx() * operand.ry() * self.rx()
+                + self.s() * operand.rx() * self.rz()
+                - self.s() * operand.s() * self.ry()
+                - self.rz() * operand.s() * self.rx()
+                + self.ry() * operand.ry() * self.ry()
+                + self.ry() * operand.rx() * self.rx()
+                + self.rx() * operand.rx() * self.ry()
                 - self.rz() * operand.ry() * self.rz()
                 + self.ry() * operand.rz() * self.rz()
-                - self.s() * operand.rz() * self.rx()
-                + self.rz() * operand.rx() * self.s()
-                + self.rx() * operand.s() * self.rz())
+                + self.ry() * operand.s() * self.s())
                 * inv_norm_sq,
-            (self.ry() * operand.ry() * self.rx()
-                - self.s() * operand.s() * self.rx()
-                - self.rz() * operand.ry() * self.s()
+            (self.rx() * operand.s() * self.s()
                 + self.rx() * operand.rz() * self.rz()
-                + self.ry() * operand.rz() * self.s()
-                + self.rz() * operand.s() * self.ry()
-                - self.ry() * operand.rx() * self.ry()
-                + self.rx() * operand.s() * self.s()
-                - self.s() * operand.ry() * self.rz()
-                + self.s() * operand.rx() * self.s()
                 + self.rx() * operand.ry() * self.ry()
+                + self.rz() * operand.rz() * self.rx()
+                - self.ry() * operand.rx() * self.ry()
+                + self.ry() * operand.ry() * self.rx()
+                - self.rz() * operand.ry() * self.s()
+                - self.s() * operand.s() * self.rx()
                 + self.s() * operand.rz() * self.ry()
-                - self.ry() * operand.s() * self.rz()
+                + self.ry() * operand.rz() * self.s()
                 - self.rz() * operand.rx() * self.rz()
+                - self.ry() * operand.s() * self.rz()
+                + self.rz() * operand.s() * self.ry()
                 + self.rx() * operand.rx() * self.rx()
-                + self.rz() * operand.rz() * self.rx())
+                + self.s() * operand.rx() * self.s()
+                - self.s() * operand.ry() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -6507,10 +6516,10 @@ impl<T: Float> InverseSandwich<Scalar<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.rz() * operand.s() * self.rz()
+            (self.ry() * operand.s() * self.ry()
+                + self.rx() * operand.s() * self.rx()
                 + self.s() * operand.s() * self.s()
-                + self.ry() * operand.s() * self.ry()
-                + self.rx() * operand.s() * self.rx())
+                + self.rz() * operand.s() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -6526,10 +6535,10 @@ impl<T: Float> InverseSandwich<Trivector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.s() * operand.ps() * self.s()
-                + self.ry() * operand.ps() * self.ry()
+            (self.ry() * operand.ps() * self.ry()
                 + self.rx() * operand.ps() * self.rx()
-                + self.rz() * operand.ps() * self.rz())
+                + self.rz() * operand.ps() * self.rz()
+                + self.s() * operand.ps() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -6545,42 +6554,42 @@ impl<T: Float> InverseSandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.rz() * operand.y() * self.s() - self.rx() * operand.y() * self.ry()
-                + self.rz() * operand.z() * self.rx()
-                + self.rx() * operand.z() * self.rz()
-                - self.rz() * operand.x() * self.rz()
-                + self.s() * operand.x() * self.s()
+            (self.s() * operand.y() * self.rz() - self.rz() * operand.x() * self.rz()
                 + self.s() * operand.z() * self.ry()
+                + self.s() * operand.x() * self.s()
+                + self.rz() * operand.y() * self.s()
+                - self.rx() * operand.y() * self.ry()
+                + self.rz() * operand.z() * self.rx()
                 - self.ry() * operand.x() * self.ry()
-                + self.s() * operand.y() * self.rz()
                 - self.ry() * operand.y() * self.rx()
-                + self.ry() * operand.z() * self.s()
-                + self.rx() * operand.x() * self.rx())
+                + self.rx() * operand.z() * self.rz()
+                + self.rx() * operand.x() * self.rx()
+                + self.ry() * operand.z() * self.s())
                 * inv_norm_sq,
-            (self.s() * operand.y() * self.s() - self.ry() * operand.x() * self.rx()
+            (self.s() * operand.z() * self.rx() + self.ry() * operand.y() * self.ry()
+                - self.rz() * operand.x() * self.s()
+                - self.ry() * operand.x() * self.rx()
+                + self.s() * operand.y() * self.s()
+                - self.ry() * operand.z() * self.rz()
+                - self.rx() * operand.x() * self.ry()
+                - self.rx() * operand.y() * self.rx()
                 + self.rx() * operand.z() * self.s()
                 - self.rz() * operand.y() * self.rz()
                 - self.rz() * operand.z() * self.ry()
-                - self.s() * operand.x() * self.rz()
-                - self.rz() * operand.x() * self.s()
-                + self.ry() * operand.y() * self.ry()
-                + self.s() * operand.z() * self.rx()
-                - self.ry() * operand.z() * self.rz()
-                - self.rx() * operand.x() * self.ry()
-                - self.rx() * operand.y() * self.rx())
+                - self.s() * operand.x() * self.rz())
                 * inv_norm_sq,
-            (self.s() * operand.z() * self.s()
-                - self.ry() * operand.x() * self.s()
-                - self.rx() * operand.y() * self.s()
-                - self.rx() * operand.z() * self.rx()
-                - self.ry() * operand.y() * self.rz()
+            (self.rz() * operand.x() * self.rx()
                 - self.rz() * operand.y() * self.ry()
-                - self.s() * operand.x() * self.ry()
-                - self.ry() * operand.z() * self.ry()
-                - self.s() * operand.y() * self.rx()
-                + self.rz() * operand.x() * self.rx()
+                - self.rx() * operand.z() * self.rx()
                 + self.rz() * operand.z() * self.rz()
-                + self.rx() * operand.x() * self.rz())
+                + self.s() * operand.z() * self.s()
+                - self.ry() * operand.z() * self.ry()
+                - self.ry() * operand.y() * self.rz()
+                + self.rx() * operand.x() * self.rz()
+                - self.rx() * operand.y() * self.s()
+                - self.s() * operand.x() * self.ry()
+                - self.ry() * operand.x() * self.s()
+                - self.s() * operand.y() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -6760,29 +6769,27 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (-(self.y() * operand.rz() * self.y())
-                - self.x() * operand.rz() * self.x()
-                - self.y() * operand.ry() * self.z()
-                + self.z() * operand.rz() * self.z()
-                - self.z() * operand.ry() * self.y()
+            (self.z() * operand.rz() * self.z() - self.z() * operand.ry() * self.y()
                 + self.z() * operand.rx() * self.x()
-                + self.x() * operand.rx() * self.z())
+                - self.y() * operand.rz() * self.y()
+                - self.x() * operand.rz() * self.x()
+                + self.x() * operand.rx() * self.z()
+                - self.y() * operand.ry() * self.z())
                 * inv_norm_sq,
-            (-(self.x() * operand.ry() * self.x())
-                - self.x() * operand.rx() * self.y()
-                - self.y() * operand.rz() * self.z()
+            (-(self.x() * operand.rx() * self.y())
+                - self.z() * operand.ry() * self.z()
+                - self.z() * operand.rz() * self.y()
+                - self.x() * operand.ry() * self.x()
                 + self.y() * operand.ry() * self.y()
                 - self.y() * operand.rx() * self.x()
-                - self.z() * operand.rz() * self.y()
-                - self.z() * operand.ry() * self.z())
+                - self.y() * operand.rz() * self.z())
                 * inv_norm_sq,
-            (self.z() * operand.rz() * self.x()
-                - self.x() * operand.ry() * self.y()
-                - self.z() * operand.rx() * self.z()
+            (-(self.y() * operand.rx() * self.y()) + self.x() * operand.rx() * self.x()
                 - self.y() * operand.ry() * self.x()
-                - self.y() * operand.rx() * self.y()
                 + self.x() * operand.rz() * self.z()
-                + self.x() * operand.rx() * self.x())
+                + self.z() * operand.rz() * self.x()
+                - self.x() * operand.ry() * self.y()
+                - self.z() * operand.rx() * self.z())
                 * inv_norm_sq,
         ))
     }
@@ -6798,43 +6805,42 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.x() * operand.s() * self.x()
-                + self.z() * operand.s() * self.z()
-                + self.x() * operand.rz() * self.y()
-                + self.x() * operand.ry() * self.z()
-                - self.y() * operand.rz() * self.x()
+            (self.y() * operand.s() * self.y() + self.x() * operand.rz() * self.y()
                 - self.z() * operand.ry() * self.x()
-                + self.y() * operand.rx() * self.z()
                 - self.z() * operand.rx() * self.y()
-                + self.y() * operand.s() * self.y())
+                + self.x() * operand.ry() * self.z()
+                + self.z() * operand.s() * self.z()
+                + self.y() * operand.rx() * self.z()
+                + self.x() * operand.s() * self.x()
+                - self.y() * operand.rz() * self.x())
                 * inv_norm_sq,
-            (-(self.y() * operand.s() * self.x())
-                - self.z() * operand.ry() * self.y()
-                - self.y() * operand.rz() * self.y()
-                + self.z() * operand.rz() * self.z()
-                - self.x() * operand.rz() * self.x()
-                + self.x() * operand.rx() * self.z()
+            (self.z() * operand.rz() * self.z()
                 + self.z() * operand.rx() * self.x()
+                + self.x() * operand.rx() * self.z()
+                - self.y() * operand.ry() * self.z()
+                - self.y() * operand.rz() * self.y()
+                - self.z() * operand.ry() * self.y()
                 + self.x() * operand.s() * self.y()
-                - self.y() * operand.ry() * self.z())
+                - self.x() * operand.rz() * self.x()
+                - self.y() * operand.s() * self.x())
                 * inv_norm_sq,
-            (-(self.z() * operand.s() * self.x()) - self.z() * operand.ry() * self.z()
+            (-(self.x() * operand.ry() * self.x()) - self.z() * operand.ry() * self.z()
                 + self.y() * operand.ry() * self.y()
-                - self.y() * operand.rz() * self.z()
-                - self.x() * operand.rx() * self.y()
                 - self.y() * operand.rx() * self.x()
-                - self.x() * operand.ry() * self.x()
+                - self.z() * operand.s() * self.x()
                 - self.z() * operand.rz() * self.y()
-                + self.x() * operand.s() * self.z())
+                - self.x() * operand.rx() * self.y()
+                + self.x() * operand.s() * self.z()
+                - self.y() * operand.rz() * self.z())
                 * inv_norm_sq,
-            (self.x() * operand.rx() * self.x() - self.z() * operand.s() * self.y()
+            (-(self.y() * operand.ry() * self.x()) - self.y() * operand.rx() * self.y()
                 + self.x() * operand.rz() * self.z()
                 - self.x() * operand.ry() * self.y()
-                - self.y() * operand.rx() * self.y()
-                - self.y() * operand.ry() * self.x()
-                + self.z() * operand.rz() * self.x()
                 - self.z() * operand.rx() * self.z()
-                + self.y() * operand.s() * self.z())
+                + self.y() * operand.s() * self.z()
+                - self.z() * operand.s() * self.y()
+                + self.z() * operand.rz() * self.x()
+                + self.x() * operand.rx() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -6850,9 +6856,9 @@ impl<T: Float> InverseSandwich<Scalar<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.y() * operand.s() * self.y()
+            (self.x() * operand.s() * self.x()
                 + self.z() * operand.s() * self.z()
-                + self.x() * operand.s() * self.x())
+                + self.y() * operand.s() * self.y())
                 * inv_norm_sq,
         ))
     }
@@ -6868,8 +6874,8 @@ impl<T: Float> InverseSandwich<Trivector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.x() * operand.ps() * self.x()
-                + self.z() * operand.ps() * self.z()
+            (self.z() * operand.ps() * self.z()
+                + self.x() * operand.ps() * self.x()
                 + self.y() * operand.ps() * self.y())
                 * inv_norm_sq,
         ))
@@ -6886,28 +6892,25 @@ impl<T: Float> InverseSandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.x() * operand.x() * self.x()
-                + self.x() * operand.y() * self.y()
-                + self.x() * operand.z() * self.z()
+            (self.y() * operand.y() * self.x() + self.z() * operand.z() * self.x()
                 - self.y() * operand.x() * self.y()
-                + self.y() * operand.y() * self.x()
                 - self.z() * operand.x() * self.z()
-                + self.z() * operand.z() * self.x())
+                + self.x() * operand.x() * self.x()
+                + self.x() * operand.y() * self.y()
+                + self.x() * operand.z() * self.z())
                 * inv_norm_sq,
-            (self.y() * operand.x() * self.x()
+            (self.y() * operand.x() * self.x() - self.z() * operand.y() * self.z()
+                + self.z() * operand.z() * self.y()
                 + self.y() * operand.y() * self.y()
                 + self.x() * operand.x() * self.y()
                 + self.y() * operand.z() * self.z()
-                - self.x() * operand.y() * self.x()
-                + self.z() * operand.z() * self.y()
-                - self.z() * operand.y() * self.z())
+                - self.x() * operand.y() * self.x())
                 * inv_norm_sq,
-            (self.x() * operand.x() * self.z()
-                - self.x() * operand.z() * self.x()
-                - self.y() * operand.z() * self.y()
+            (-(self.x() * operand.z() * self.x()) - self.y() * operand.z() * self.y()
                 + self.z() * operand.y() * self.y()
-                + self.z() * operand.x() * self.x()
                 + self.z() * operand.z() * self.z()
+                + self.x() * operand.x() * self.z()
+                + self.z() * operand.x() * self.x()
                 + self.y() * operand.y() * self.z())
                 * inv_norm_sq,
         ))
@@ -6924,28 +6927,27 @@ impl<T: Float> InverseAntisandwich<Bivector<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (self.rz() * operand.rz() * self.rz()
-                - self.rx() * operand.rz() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                + self.rz() * operand.rx() * self.rx()
+            (self.rx() * operand.rx() * self.rz()
                 + self.rz() * operand.ry() * self.ry()
                 + self.ry() * operand.ry() * self.rz()
-                + self.rx() * operand.rx() * self.rz())
+                - self.rx() * operand.rz() * self.rx()
+                + self.rz() * operand.rx() * self.rx()
+                + self.rz() * operand.rz() * self.rz()
+                - self.ry() * operand.rz() * self.ry())
                 * inv_norm_sq,
-            (self.ry() * operand.rz() * self.rz()
+            (self.ry() * operand.ry() * self.ry()
                 + self.ry() * operand.rx() * self.rx()
-                + self.rz() * operand.rz() * self.ry()
-                - self.rz() * operand.ry() * self.rz()
+                + self.ry() * operand.rz() * self.rz()
                 - self.rx() * operand.ry() * self.rx()
                 + self.rx() * operand.rx() * self.ry()
-                + self.ry() * operand.ry() * self.ry())
+                + self.rz() * operand.rz() * self.ry()
+                - self.rz() * operand.ry() * self.rz())
                 * inv_norm_sq,
-            (self.ry() * operand.ry() * self.rx()
-                + self.rx() * operand.ry() * self.ry()
+            (self.rx() * operand.ry() * self.ry() - self.ry() * operand.rx() * self.ry()
+                + self.ry() * operand.ry() * self.rx()
                 + self.rx() * operand.rx() * self.rx()
-                - self.rz() * operand.rx() * self.rz()
                 + self.rz() * operand.rz() * self.rx()
-                - self.ry() * operand.rx() * self.ry()
+                - self.rz() * operand.rx() * self.rz()
                 + self.rx() * operand.rz() * self.rz())
                 * inv_norm_sq,
         ))
@@ -6962,44 +6964,44 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.rz() * operand.ry() * self.rx()
-                + self.rx() * operand.rz() * self.ry()
-                + self.rz() * operand.s() * self.rz()
-                + self.ry() * operand.s() * self.ry()
-                - self.rz() * operand.rx() * self.ry()
-                + self.ry() * operand.rx() * self.rz()
-                - self.ry() * operand.rz() * self.rx()
+            (self.ry() * operand.rx() * self.rz()
                 + self.rx() * operand.s() * self.rx()
-                - self.rx() * operand.ry() * self.rz())
+                + self.rz() * operand.s() * self.rz()
+                + self.rz() * operand.ry() * self.rx()
+                - self.rz() * operand.rx() * self.ry()
+                - self.rx() * operand.ry() * self.rz()
+                + self.rx() * operand.rz() * self.ry()
+                - self.ry() * operand.rz() * self.rx()
+                + self.ry() * operand.s() * self.ry())
                 * inv_norm_sq,
-            (-(self.rx() * operand.rz() * self.rx())
+            (-(self.ry() * operand.s() * self.rx())
                 + self.rx() * operand.rx() * self.rz()
-                + self.rz() * operand.rz() * self.rz()
-                + self.ry() * operand.ry() * self.rz()
                 + self.rz() * operand.rx() * self.rx()
+                + self.rx() * operand.s() * self.ry()
+                + self.rz() * operand.rz() * self.rz()
                 - self.ry() * operand.rz() * self.ry()
                 + self.rz() * operand.ry() * self.ry()
-                + self.rx() * operand.s() * self.ry()
-                - self.ry() * operand.s() * self.rx())
+                - self.rx() * operand.rz() * self.rx()
+                + self.ry() * operand.ry() * self.rz())
                 * inv_norm_sq,
-            (self.rz() * operand.s() * self.rx()
+            (-(self.rz() * operand.ry() * self.rz())
                 + self.ry() * operand.rz() * self.rz()
-                + self.rz() * operand.rz() * self.ry()
-                - self.rz() * operand.ry() * self.rz()
-                - self.rx() * operand.s() * self.rz()
-                - self.rx() * operand.ry() * self.rx()
                 + self.ry() * operand.rx() * self.rx()
                 + self.ry() * operand.ry() * self.ry()
-                + self.rx() * operand.rx() * self.ry())
+                - self.rx() * operand.s() * self.rz()
+                + self.rz() * operand.rz() * self.ry()
+                + self.rx() * operand.rx() * self.ry()
+                + self.rz() * operand.s() * self.rx()
+                - self.rx() * operand.ry() * self.rx())
                 * inv_norm_sq,
-            (self.rz() * operand.rz() * self.rx() - self.rz() * operand.s() * self.ry()
+            (self.rx() * operand.ry() * self.ry() + self.rz() * operand.rz() * self.rx()
+                - self.rz() * operand.s() * self.ry()
+                - self.ry() * operand.rx() * self.ry()
                 + self.ry() * operand.s() * self.rz()
-                + self.rx() * operand.rx() * self.rx()
-                + self.rx() * operand.ry() * self.ry()
-                - self.rz() * operand.rx() * self.rz()
-                + self.ry() * operand.ry() * self.rx()
                 + self.rx() * operand.rz() * self.rz()
-                - self.ry() * operand.rx() * self.ry())
+                + self.rx() * operand.rx() * self.rx()
+                - self.rz() * operand.rx() * self.rz()
+                + self.ry() * operand.ry() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -7033,9 +7035,9 @@ impl<T: Float> InverseAntisandwich<Trivector<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.rz() * operand.ps() * self.rz()
-                + self.ry() * operand.ps() * self.ry()
-                + self.rx() * operand.ps() * self.rx())
+            (self.ry() * operand.ps() * self.ry()
+                + self.rx() * operand.ps() * self.rx()
+                + self.rz() * operand.ps() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -7051,28 +7053,28 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Bivector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.rx() * operand.x() * self.rx() - self.rx() * operand.y() * self.ry()
-                + self.rx() * operand.z() * self.rz()
+            (-(self.ry() * operand.y() * self.rx()) + self.rx() * operand.z() * self.rz()
+                - self.rx() * operand.y() * self.ry()
                 - self.ry() * operand.x() * self.ry()
-                - self.rz() * operand.x() * self.rz()
-                - self.ry() * operand.y() * self.rx()
-                + self.rz() * operand.z() * self.rx())
+                + self.rx() * operand.x() * self.rx()
+                + self.rz() * operand.z() * self.rx()
+                - self.rz() * operand.x() * self.rz())
                 * inv_norm_sq,
-            (-(self.ry() * operand.x() * self.rx())
-                - self.ry() * operand.z() * self.rz()
+            (-(self.rz() * operand.z() * self.ry())
                 - self.rx() * operand.y() * self.rx()
-                - self.rz() * operand.z() * self.ry()
-                + self.ry() * operand.y() * self.ry()
                 - self.rz() * operand.y() * self.rz()
+                - self.ry() * operand.x() * self.rx()
+                + self.ry() * operand.y() * self.ry()
+                - self.ry() * operand.z() * self.rz()
                 - self.rx() * operand.x() * self.ry())
                 * inv_norm_sq,
-            (-(self.rz() * operand.y() * self.ry())
-                + self.rz() * operand.x() * self.rx()
-                + self.rz() * operand.z() * self.rz()
+            (self.rz() * operand.z() * self.rz()
                 - self.ry() * operand.z() * self.ry()
-                + self.rx() * operand.x() * self.rz()
                 - self.rx() * operand.z() * self.rx()
-                - self.ry() * operand.y() * self.rz())
+                - self.rz() * operand.y() * self.ry()
+                + self.rz() * operand.x() * self.rx()
+                - self.ry() * operand.y() * self.rz()
+                + self.rx() * operand.x() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -7088,42 +7090,43 @@ impl<T: Float> InverseAntisandwich<Bivector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (self.s() * operand.rx() * self.ry() + self.ry() * operand.ry() * self.rz()
+            (-(self.s() * operand.ry() * self.rx())
+                + self.s() * operand.rz() * self.s()
+                + self.s() * operand.rx() * self.ry()
+                - self.ry() * operand.rz() * self.ry()
+                + self.ry() * operand.ry() * self.rz()
                 - self.rx() * operand.rz() * self.rx()
+                + self.rx() * operand.rx() * self.rz()
                 + self.rz() * operand.ry() * self.ry()
                 + self.rz() * operand.rx() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                + self.rz() * operand.rz() * self.rz()
                 + self.ry() * operand.rx() * self.s()
                 - self.rx() * operand.ry() * self.s()
-                - self.s() * operand.ry() * self.rx()
-                + self.s() * operand.rz() * self.s()
-                + self.rx() * operand.rx() * self.rz())
+                + self.rz() * operand.rz() * self.rz())
                 * inv_norm_sq,
-            (-(self.s() * operand.rx() * self.rz()) - self.rz() * operand.ry() * self.rz()
-                + self.ry() * operand.ry() * self.ry()
-                + self.rx() * operand.rx() * self.ry()
+            (self.ry() * operand.ry() * self.ry()
                 + self.s() * operand.rz() * self.rx()
-                - self.rz() * operand.rx() * self.s()
-                + self.ry() * operand.rx() * self.rx()
-                + self.rx() * operand.rz() * self.s()
                 + self.s() * operand.ry() * self.s()
+                - self.rz() * operand.ry() * self.rz()
+                - self.s() * operand.rx() * self.rz()
+                + self.ry() * operand.rz() * self.rz()
                 + self.rz() * operand.rz() * self.ry()
+                + self.ry() * operand.rx() * self.rx()
+                - self.rz() * operand.rx() * self.s()
+                + self.rx() * operand.rz() * self.s()
                 - self.rx() * operand.ry() * self.rx()
-                + self.ry() * operand.rz() * self.rz())
+                + self.rx() * operand.rx() * self.ry())
                 * inv_norm_sq,
-            (-(self.rz() * operand.rx() * self.rz())
-                + self.s() * operand.ry() * self.rz()
-                + self.ry() * operand.ry() * self.rx()
-                + self.rx() * operand.ry() * self.ry()
-                + self.rx() * operand.rx() * self.rx()
-                - self.s() * operand.rz() * self.ry()
+            (self.s() * operand.rx() * self.s() - self.ry() * operand.rx() * self.ry()
                 + self.rz() * operand.rz() * self.rx()
-                + self.rz() * operand.ry() * self.s()
-                - self.ry() * operand.rx() * self.ry()
                 + self.rx() * operand.rz() * self.rz()
-                + self.s() * operand.rx() * self.s()
-                - self.ry() * operand.rz() * self.s())
+                + self.ry() * operand.ry() * self.rx()
+                - self.ry() * operand.rz() * self.s()
+                + self.rx() * operand.rx() * self.rx()
+                + self.rz() * operand.ry() * self.s()
+                + self.s() * operand.ry() * self.rz()
+                + self.rx() * operand.ry() * self.ry()
+                - self.s() * operand.rz() * self.ry()
+                - self.rz() * operand.rx() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -7139,70 +7142,69 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.rx() * operand.s() * self.rx() + self.rz() * operand.ry() * self.rx()
-                - self.ry() * operand.ry() * self.s()
-                + self.s() * operand.rz() * self.rz()
-                + self.ry() * operand.rx() * self.rz()
+            (self.rx() * operand.s() * self.rx() + self.s() * operand.ry() * self.ry()
+                - self.rx() * operand.ry() * self.rz()
                 + self.rx() * operand.rz() * self.ry()
-                - self.rx() * operand.rx() * self.s()
-                + self.s() * operand.rx() * self.rx()
+                + self.ry() * operand.rx() * self.rz()
                 + self.ry() * operand.s() * self.ry()
                 - self.rz() * operand.rx() * self.ry()
-                + self.s() * operand.ry() * self.ry()
                 + self.rz() * operand.s() * self.rz()
+                + self.s() * operand.s() * self.s()
                 - self.rz() * operand.rz() * self.s()
+                + self.rz() * operand.ry() * self.rx()
+                - self.rx() * operand.rx() * self.s()
+                - self.ry() * operand.ry() * self.s()
+                + self.s() * operand.rz() * self.rz()
                 - self.ry() * operand.rz() * self.rx()
-                - self.rx() * operand.ry() * self.rz()
-                + self.s() * operand.s() * self.s())
+                + self.s() * operand.rx() * self.rx())
                 * inv_norm_sq,
-            (self.s() * operand.rz() * self.s() + self.rz() * operand.rx() * self.rx()
-                - self.ry() * operand.rz() * self.ry()
-                + self.rz() * operand.ry() * self.ry()
-                + self.ry() * operand.rx() * self.s()
-                + self.ry() * operand.ry() * self.rz()
-                - self.rx() * operand.rz() * self.rx()
-                + self.rz() * operand.s() * self.s()
-                + self.s() * operand.rx() * self.ry()
-                + self.rz() * operand.rz() * self.rz()
-                - self.rx() * operand.ry() * self.s()
-                - self.s() * operand.ry() * self.rx()
+            (self.rz() * operand.ry() * self.ry() + self.s() * operand.rx() * self.ry()
                 - self.s() * operand.s() * self.rz()
+                + self.s() * operand.rz() * self.s()
+                + self.ry() * operand.rx() * self.s()
+                + self.rz() * operand.rz() * self.rz()
+                - self.s() * operand.ry() * self.rx()
+                + self.rx() * operand.rx() * self.rz()
                 - self.ry() * operand.s() * self.rx()
+                - self.ry() * operand.rz() * self.ry()
+                - self.rx() * operand.rz() * self.rx()
+                - self.rx() * operand.ry() * self.s()
                 + self.rx() * operand.s() * self.ry()
-                + self.rx() * operand.rx() * self.rz())
+                + self.rz() * operand.s() * self.s()
+                + self.ry() * operand.ry() * self.rz()
+                + self.rz() * operand.rx() * self.rx())
                 * inv_norm_sq,
-            (self.rz() * operand.s() * self.rx()
-                + self.rx() * operand.rz() * self.s()
-                + self.s() * operand.rz() * self.rx()
+            (self.ry() * operand.rz() * self.rz() + self.rx() * operand.rz() * self.s()
                 - self.rz() * operand.rx() * self.s()
-                + self.ry() * operand.s() * self.s()
                 + self.rz() * operand.rz() * self.ry()
-                + self.ry() * operand.rz() * self.rz()
-                + self.ry() * operand.ry() * self.ry()
-                + self.ry() * operand.rx() * self.rx()
-                - self.s() * operand.s() * self.ry()
-                + self.s() * operand.ry() * self.s()
-                - self.rx() * operand.s() * self.rz()
-                + self.rx() * operand.rx() * self.ry()
-                - self.rz() * operand.ry() * self.rz()
                 - self.rx() * operand.ry() * self.rx()
-                - self.s() * operand.rx() * self.rz())
+                + self.rx() * operand.rx() * self.ry()
+                + self.ry() * operand.rx() * self.rx()
+                - self.rz() * operand.ry() * self.rz()
+                + self.ry() * operand.s() * self.s()
+                - self.s() * operand.rx() * self.rz()
+                + self.rz() * operand.s() * self.rx()
+                + self.ry() * operand.ry() * self.ry()
+                - self.rx() * operand.s() * self.rz()
+                - self.s() * operand.s() * self.ry()
+                + self.s() * operand.rz() * self.rx()
+                + self.s() * operand.ry() * self.s())
                 * inv_norm_sq,
-            (self.s() * operand.ry() * self.rz() + self.rx() * operand.rx() * self.rx()
-                - self.ry() * operand.rx() * self.ry()
+            (self.s() * operand.ry() * self.rz() + self.rx() * operand.rz() * self.rz()
                 - self.rz() * operand.rx() * self.rz()
-                + self.ry() * operand.s() * self.rz()
-                - self.s() * operand.s() * self.rx()
-                - self.rz() * operand.s() * self.ry()
-                + self.ry() * operand.ry() * self.rx()
-                + self.rz() * operand.rz() * self.rx()
-                + self.rx() * operand.rz() * self.rz()
+                + self.rx() * operand.rx() * self.rx()
                 + self.rx() * operand.ry() * self.ry()
-                + self.rx() * operand.s() * self.s()
-                + self.s() * operand.rx() * self.s()
                 - self.s() * operand.rz() * self.ry()
+                + self.s() * operand.rx() * self.s()
                 + self.rz() * operand.ry() * self.s()
-                - self.ry() * operand.rz() * self.s())
+                - self.ry() * operand.rz() * self.s()
+                + self.ry() * operand.s() * self.rz()
+                + self.ry() * operand.ry() * self.rx()
+                + self.rx() * operand.s() * self.s()
+                - self.s() * operand.s() * self.rx()
+                - self.ry() * operand.rx() * self.ry()
+                - self.rz() * operand.s() * self.ry()
+                + self.rz() * operand.rz() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -7220,8 +7222,8 @@ impl<T: Float> InverseAntisandwich<Scalar<T>> for Rotor<T> {
         Some(Scalar::new_unchecked(
             (self.ry() * operand.s() * self.ry()
                 + self.rx() * operand.s() * self.rx()
-                + self.rz() * operand.s() * self.rz()
-                + self.s() * operand.s() * self.s())
+                + self.s() * operand.s() * self.s()
+                + self.rz() * operand.s() * self.rz())
                 * inv_norm_sq,
         ))
     }
@@ -7237,10 +7239,10 @@ impl<T: Float> InverseAntisandwich<Trivector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.rx() * operand.ps() * self.rx()
-                + self.s() * operand.ps() * self.s()
+            (self.ry() * operand.ps() * self.ry()
                 + self.rz() * operand.ps() * self.rz()
-                + self.ry() * operand.ps() * self.ry())
+                + self.s() * operand.ps() * self.s()
+                + self.rx() * operand.ps() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -7256,43 +7258,42 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (-(self.s() * operand.z() * self.ry())
-                - self.s() * operand.y() * self.rz()
-                - self.rz() * operand.y() * self.s()
+            (-(self.rz() * operand.y() * self.s()) + self.rx() * operand.x() * self.rx()
                 - self.rx() * operand.y() * self.ry()
-                + self.rz() * operand.z() * self.rx()
-                + self.s() * operand.x() * self.s()
-                - self.ry() * operand.z() * self.s()
                 + self.rx() * operand.z() * self.rz()
-                + self.rx() * operand.x() * self.rx()
-                - self.rz() * operand.x() * self.rz()
+                - self.ry() * operand.z() * self.s()
                 - self.ry() * operand.x() * self.ry()
-                - self.ry() * operand.y() * self.rx())
+                - self.ry() * operand.y() * self.rx()
+                + self.s() * operand.x() * self.s()
+                - self.s() * operand.z() * self.ry()
+                - self.rz() * operand.x() * self.rz()
+                + self.rz() * operand.z() * self.rx()
+                - self.s() * operand.y() * self.rz())
                 * inv_norm_sq,
-            (self.s() * operand.y() * self.s()
-                - self.rz() * operand.y() * self.rz()
-                - self.rz() * operand.z() * self.ry()
+            (-(self.ry() * operand.x() * self.rx())
                 - self.rx() * operand.x() * self.ry()
-                + self.rz() * operand.x() * self.s()
-                + self.s() * operand.x() * self.rz()
-                - self.ry() * operand.x() * self.rx()
+                - self.ry() * operand.z() * self.rz()
+                + self.s() * operand.y() * self.s()
+                - self.rz() * operand.z() * self.ry()
                 - self.s() * operand.z() * self.rx()
-                + self.ry() * operand.y() * self.ry()
-                - self.rx() * operand.z() * self.s()
+                + self.s() * operand.x() * self.rz()
+                - self.rz() * operand.y() * self.rz()
+                + self.rz() * operand.x() * self.s()
                 - self.rx() * operand.y() * self.rx()
-                - self.ry() * operand.z() * self.rz())
+                + self.ry() * operand.y() * self.ry()
+                - self.rx() * operand.z() * self.s())
                 * inv_norm_sq,
-            (-(self.rx() * operand.z() * self.rx()) - self.rz() * operand.y() * self.ry()
-                + self.ry() * operand.x() * self.s()
-                + self.s() * operand.y() * self.rx()
-                + self.s() * operand.z() * self.s()
-                + self.s() * operand.x() * self.ry()
-                - self.ry() * operand.y() * self.rz()
-                - self.ry() * operand.z() * self.ry()
+            (self.rz() * operand.z() * self.rz() + self.s() * operand.z() * self.s()
+                - self.rz() * operand.y() * self.ry()
                 + self.rz() * operand.x() * self.rx()
-                + self.rz() * operand.z() * self.rz()
+                + self.s() * operand.y() * self.rx()
+                + self.ry() * operand.x() * self.s()
+                - self.ry() * operand.z() * self.ry()
+                - self.ry() * operand.y() * self.rz()
+                + self.s() * operand.x() * self.ry()
                 + self.rx() * operand.x() * self.rz()
-                + self.rx() * operand.y() * self.s())
+                + self.rx() * operand.y() * self.s()
+                - self.rx() * operand.z() * self.rx())
                 * inv_norm_sq,
         ))
     }
@@ -7472,25 +7473,24 @@ impl<T: Float> InverseAntisandwich<Bivector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (-(self.x() * operand.rz() * self.x())
-                + self.z() * operand.rz() * self.z()
-                + self.z() * operand.rx() * self.x()
-                - self.z() * operand.ry() * self.y()
+            (self.x() * operand.rx() * self.z() + self.z() * operand.rx() * self.x()
                 - self.y() * operand.rz() * self.y()
+                - self.x() * operand.rz() * self.x()
                 - self.y() * operand.ry() * self.z()
-                + self.x() * operand.rx() * self.z())
+                + self.z() * operand.rz() * self.z()
+                - self.z() * operand.ry() * self.y())
                 * inv_norm_sq,
             (self.y() * operand.ry() * self.y()
-                - self.z() * operand.ry() * self.z()
                 - self.y() * operand.rx() * self.x()
                 - self.x() * operand.rx() * self.y()
                 - self.y() * operand.rz() * self.z()
-                - self.x() * operand.ry() * self.x()
-                - self.z() * operand.rz() * self.y())
+                - self.z() * operand.ry() * self.z()
+                - self.z() * operand.rz() * self.y()
+                - self.x() * operand.ry() * self.x())
                 * inv_norm_sq,
-            (self.x() * operand.rx() * self.x() + self.x() * operand.rz() * self.z()
-                - self.y() * operand.ry() * self.x()
+            (-(self.y() * operand.ry() * self.x()) + self.x() * operand.rz() * self.z()
                 - self.y() * operand.rx() * self.y()
+                + self.x() * operand.rx() * self.x()
                 + self.z() * operand.rz() * self.x()
                 - self.z() * operand.rx() * self.z()
                 - self.x() * operand.ry() * self.y())
@@ -7509,44 +7509,42 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (-(self.y() * operand.rx() * self.z())
+            (self.z() * operand.ry() * self.x() + self.y() * operand.rz() * self.x()
                 - self.x() * operand.ry() * self.z()
                 - self.x() * operand.rz() * self.y()
                 + self.y() * operand.s() * self.y()
+                + self.x() * operand.s() * self.x()
                 + self.z() * operand.s() * self.z()
                 + self.z() * operand.rx() * self.y()
-                + self.z() * operand.ry() * self.x()
-                + self.y() * operand.rz() * self.x()
-                + self.x() * operand.s() * self.x())
+                - self.y() * operand.rx() * self.z())
                 * inv_norm_sq,
-            (-(self.y() * operand.rz() * self.y())
-                + self.z() * operand.rx() * self.x()
+            (-(self.x() * operand.rz() * self.x()) + self.y() * operand.s() * self.x()
+                - self.z() * operand.ry() * self.y()
+                - self.y() * operand.rz() * self.y()
                 + self.x() * operand.rx() * self.z()
-                + self.z() * operand.rz() * self.z()
                 - self.x() * operand.s() * self.y()
-                - self.y() * operand.ry() * self.z()
-                + self.y() * operand.s() * self.x()
-                - self.x() * operand.rz() * self.x()
-                - self.z() * operand.ry() * self.y())
+                + self.z() * operand.rz() * self.z()
+                + self.z() * operand.rx() * self.x()
+                - self.y() * operand.ry() * self.z())
                 * inv_norm_sq,
-            (-(self.z() * operand.ry() * self.z())
-                - self.x() * operand.ry() * self.x()
-                - self.x() * operand.s() * self.z()
-                - self.x() * operand.rx() * self.y()
+            (-(self.x() * operand.rx() * self.y())
                 - self.y() * operand.rz() * self.z()
-                - self.z() * operand.rz() * self.y()
                 - self.y() * operand.rx() * self.x()
                 + self.z() * operand.s() * self.x()
-                + self.y() * operand.ry() * self.y())
+                - self.z() * operand.rz() * self.y()
+                - self.x() * operand.s() * self.z()
+                - self.z() * operand.ry() * self.z()
+                + self.y() * operand.ry() * self.y()
+                - self.x() * operand.ry() * self.x())
                 * inv_norm_sq,
-            (self.x() * operand.rx() * self.x() - self.x() * operand.ry() * self.y()
-                + self.z() * operand.s() * self.y()
-                - self.y() * operand.s() * self.z()
-                - self.y() * operand.ry() * self.x()
-                - self.z() * operand.rx() * self.z()
+            (self.z() * operand.rz() * self.x() + self.z() * operand.s() * self.y()
                 - self.y() * operand.rx() * self.y()
+                - self.y() * operand.ry() * self.x()
+                - self.y() * operand.s() * self.z()
                 + self.x() * operand.rz() * self.z()
-                + self.z() * operand.rz() * self.x())
+                - self.z() * operand.rx() * self.z()
+                - self.x() * operand.ry() * self.y()
+                + self.x() * operand.rx() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -7563,8 +7561,8 @@ impl<T: Float> InverseAntisandwich<Scalar<T>> for Vector<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
             (self.y() * operand.s() * self.y()
-                + self.z() * operand.s() * self.z()
-                + self.x() * operand.s() * self.x())
+                + self.x() * operand.s() * self.x()
+                + self.z() * operand.s() * self.z())
                 * inv_norm_sq,
         ))
     }
@@ -7580,8 +7578,8 @@ impl<T: Float> InverseAntisandwich<Trivector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.z() * operand.ps() * self.z()
-                + self.x() * operand.ps() * self.x()
+            (self.x() * operand.ps() * self.x()
+                + self.z() * operand.ps() * self.z()
                 + self.y() * operand.ps() * self.y())
                 * inv_norm_sq,
         ))
@@ -7598,28 +7596,28 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.x() * operand.y() * self.y() + self.x() * operand.z() * self.z()
-                - self.y() * operand.x() * self.y()
-                - self.z() * operand.x() * self.z()
+            (self.y() * operand.y() * self.x() - self.z() * operand.x() * self.z()
                 + self.z() * operand.z() * self.x()
-                + self.y() * operand.y() * self.x()
+                + self.x() * operand.z() * self.z()
+                + self.x() * operand.y() * self.y()
+                - self.y() * operand.x() * self.y()
                 + self.x() * operand.x() * self.x())
                 * inv_norm_sq,
-            (-(self.x() * operand.y() * self.x())
-                + self.y() * operand.x() * self.x()
+            (self.y() * operand.x() * self.x()
                 + self.x() * operand.x() * self.y()
-                - self.z() * operand.y() * self.z()
                 + self.y() * operand.z() * self.z()
-                + self.z() * operand.z() * self.y()
-                + self.y() * operand.y() * self.y())
+                - self.x() * operand.y() * self.x()
+                - self.z() * operand.y() * self.z()
+                + self.y() * operand.y() * self.y()
+                + self.z() * operand.z() * self.y())
                 * inv_norm_sq,
-            (self.x() * operand.x() * self.z()
-                - self.x() * operand.z() * self.x()
-                - self.y() * operand.z() * self.y()
+            (self.z() * operand.y() * self.y()
                 + self.y() * operand.y() * self.z()
-                + self.z() * operand.x() * self.x()
-                + self.z() * operand.y() * self.y()
-                + self.z() * operand.z() * self.z())
+                + self.z() * operand.z() * self.z()
+                - self.x() * operand.z() * self.x()
+                + self.x() * operand.x() * self.z()
+                - self.y() * operand.z() * self.y()
+                + self.z() * operand.x() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -7769,9 +7767,9 @@ impl<T: Float> ScalarProduct<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().rz() * rhs.rz())
-            + -(self.as_inner().ry() * rhs.ry())
-            + -(self.as_inner().rx() * rhs.rx())
+        -(rhs.rx() * self.as_inner().rx())
+            + -(rhs.ry() * self.as_inner().ry())
+            + -(rhs.rz() * self.as_inner().rz())
     }
 }
 #[allow(unused_variables)]
@@ -7779,9 +7777,9 @@ impl<T: Float> ScalarProduct<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.rz() * rhs.as_inner().rz())
-            + -(self.ry() * rhs.as_inner().ry())
-            + -(self.rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.rx())
+            + -(rhs.as_inner().ry() * self.ry())
+            + -(rhs.as_inner().rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -7789,9 +7787,9 @@ impl<T: Float> ScalarProduct<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().rz() * rhs.as_inner().rz())
-            + -(self.as_inner().ry() * rhs.as_inner().ry())
-            + -(self.as_inner().rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.as_inner().rx())
+            + -(rhs.as_inner().ry() * self.as_inner().ry())
+            + -(rhs.as_inner().rz() * self.as_inner().rz())
     }
 }
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
@@ -7806,7 +7804,7 @@ impl<T: Float> ScalarProduct<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -7814,7 +7812,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -7822,7 +7820,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> ScalarProduct<Trivector<T>> for Trivector<T> {
@@ -7837,7 +7835,7 @@ impl<T: Float> ScalarProduct<Trivector<T>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Trivector<T>) -> T {
-        -(self.as_inner().ps() * rhs.ps())
+        -(rhs.ps() * self.as_inner().ps())
     }
 }
 #[allow(unused_variables)]
@@ -7845,7 +7843,7 @@ impl<T: Float> ScalarProduct<Unit<Trivector<T>>> for Trivector<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Trivector<T>>) -> T {
-        -(self.ps() * rhs.as_inner().ps())
+        -(rhs.as_inner().ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -7853,7 +7851,7 @@ impl<T: Float> ScalarProduct<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Trivector<T>>) -> T {
-        -(self.as_inner().ps() * rhs.as_inner().ps())
+        -(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
 impl<T: Float> ScalarProduct<Vector<T>> for Vector<T> {
@@ -7868,9 +7866,9 @@ impl<T: Float> ScalarProduct<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Vector<T>) -> T {
-        self.as_inner().x() * rhs.x()
-            + self.as_inner().y() * rhs.y()
-            + self.as_inner().z() * rhs.z()
+        rhs.x() * self.as_inner().x()
+            + rhs.y() * self.as_inner().y()
+            + rhs.z() * self.as_inner().z()
     }
 }
 #[allow(unused_variables)]
@@ -7878,9 +7876,9 @@ impl<T: Float> ScalarProduct<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.x() * rhs.as_inner().x()
-            + self.y() * rhs.as_inner().y()
-            + self.z() * rhs.as_inner().z()
+        rhs.as_inner().x() * self.x()
+            + rhs.as_inner().y() * self.y()
+            + rhs.as_inner().z() * self.z()
     }
 }
 #[allow(unused_variables)]
@@ -7888,16 +7886,16 @@ impl<T: Float> ScalarProduct<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.as_inner().x() * rhs.as_inner().x()
-            + self.as_inner().y() * rhs.as_inner().y()
-            + self.as_inner().z() * rhs.as_inner().z()
+        rhs.as_inner().x() * self.as_inner().x()
+            + rhs.as_inner().y() * self.as_inner().y()
+            + rhs.as_inner().z() * self.as_inner().z()
     }
 }
 impl<T: Float> BulkContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.rz() * rhs.rz() + self.ry() * rhs.ry() + self.rx() * rhs.rx())
+        Scalar::new_unchecked(rhs.rx() * self.rx() + rhs.ry() * self.ry() + rhs.rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -7906,9 +7904,9 @@ impl<T: Float> BulkContract<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().rz() * rhs.rz()
-                + self.as_inner().ry() * rhs.ry()
-                + self.as_inner().rx() * rhs.rx(),
+            rhs.rx() * self.as_inner().rx()
+                + rhs.ry() * self.as_inner().ry()
+                + rhs.rz() * self.as_inner().rz(),
         )
     }
 }
@@ -7918,9 +7916,9 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.rz() * rhs.as_inner().rz()
-                + self.ry() * rhs.as_inner().ry()
-                + self.rx() * rhs.as_inner().rx(),
+            rhs.as_inner().rx() * self.rx()
+                + rhs.as_inner().ry() * self.ry()
+                + rhs.as_inner().rz() * self.rz(),
         )
     }
 }
@@ -7930,9 +7928,9 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().rz() * rhs.as_inner().rz()
-                + self.as_inner().ry() * rhs.as_inner().ry()
-                + self.as_inner().rx() * rhs.as_inner().rx(),
+            rhs.as_inner().rx() * self.as_inner().rx()
+                + rhs.as_inner().ry() * self.as_inner().ry()
+                + rhs.as_inner().rz() * self.as_inner().rz(),
         )
     }
 }
@@ -7988,8 +7986,8 @@ impl<T: Float> BulkContract<Vector<T>> for Bivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(rhs.y() * self.rz()) + -(self.ry() * rhs.z()),
-            rhs.x() * self.rz() + -(self.rx() * rhs.z()),
+            -(rhs.y() * self.rz()) + -(rhs.z() * self.ry()),
+            -(rhs.z() * self.rx()) + rhs.x() * self.rz(),
             rhs.x() * self.ry() + rhs.y() * self.rx(),
         )
     }
@@ -8000,8 +7998,8 @@ impl<T: Float> BulkContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(rhs.y() * self.as_inner().rz()) + -(self.as_inner().ry() * rhs.z()),
-            rhs.x() * self.as_inner().rz() + -(self.as_inner().rx() * rhs.z()),
+            -(rhs.y() * self.as_inner().rz()) + -(rhs.z() * self.as_inner().ry()),
+            -(rhs.z() * self.as_inner().rx()) + rhs.x() * self.as_inner().rz(),
             rhs.x() * self.as_inner().ry() + rhs.y() * self.as_inner().rx(),
         )
     }
@@ -8012,8 +8010,8 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(rhs.as_inner().y() * self.rz()) + -(self.ry() * rhs.as_inner().z()),
-            rhs.as_inner().x() * self.rz() + -(self.rx() * rhs.as_inner().z()),
+            -(rhs.as_inner().y() * self.rz()) + -(rhs.as_inner().z() * self.ry()),
+            -(rhs.as_inner().z() * self.rx()) + rhs.as_inner().x() * self.rz(),
             rhs.as_inner().x() * self.ry() + rhs.as_inner().y() * self.rx(),
         )
     }
@@ -8025,9 +8023,9 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
             -(rhs.as_inner().y() * self.as_inner().rz())
-                + -(self.as_inner().ry() * rhs.as_inner().z()),
-            rhs.as_inner().x() * self.as_inner().rz()
-                + -(self.as_inner().rx() * rhs.as_inner().z()),
+                + -(rhs.as_inner().z() * self.as_inner().ry()),
+            -(rhs.as_inner().z() * self.as_inner().rx())
+                + rhs.as_inner().x() * self.as_inner().rz(),
             rhs.as_inner().x() * self.as_inner().ry() + rhs.as_inner().y() * self.as_inner().rx(),
         )
     }
@@ -8036,7 +8034,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8044,7 +8042,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -8052,7 +8050,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8060,7 +8058,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkContract<Bivector<T>> for Trivector<T> {
@@ -8068,9 +8066,9 @@ impl<T: Float> BulkContract<Bivector<T>> for Trivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.ps() * rhs.rx(),
-            -(self.ps() * rhs.ry()),
-            self.ps() * rhs.rz(),
+            rhs.rx() * self.ps(),
+            -(rhs.ry() * self.ps()),
+            rhs.rz() * self.ps(),
         )
     }
 }
@@ -8080,9 +8078,9 @@ impl<T: Float> BulkContract<Bivector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().ps() * rhs.rx(),
-            -(self.as_inner().ps() * rhs.ry()),
-            self.as_inner().ps() * rhs.rz(),
+            rhs.rx() * self.as_inner().ps(),
+            -(rhs.ry() * self.as_inner().ps()),
+            rhs.rz() * self.as_inner().ps(),
         )
     }
 }
@@ -8092,9 +8090,9 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.ps() * rhs.as_inner().rx(),
-            -(self.ps() * rhs.as_inner().ry()),
-            self.ps() * rhs.as_inner().rz(),
+            rhs.as_inner().rx() * self.ps(),
+            -(rhs.as_inner().ry() * self.ps()),
+            rhs.as_inner().rz() * self.ps(),
         )
     }
 }
@@ -8104,9 +8102,9 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().ps() * rhs.as_inner().rx(),
-            -(self.as_inner().ps() * rhs.as_inner().ry()),
-            self.as_inner().ps() * rhs.as_inner().rz(),
+            rhs.as_inner().rx() * self.as_inner().ps(),
+            -(rhs.as_inner().ry() * self.as_inner().ps()),
+            rhs.as_inner().rz() * self.as_inner().ps(),
         )
     }
 }
@@ -8145,7 +8143,7 @@ impl<T: Float> BulkContract<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.ps() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -8153,7 +8151,7 @@ impl<T: Float> BulkContract<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().ps() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.as_inner().ps())
     }
 }
 #[allow(unused_variables)]
@@ -8161,7 +8159,7 @@ impl<T: Float> BulkContract<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.ps() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -8169,7 +8167,7 @@ impl<T: Float> BulkContract<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().ps() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
 impl<T: Float> BulkContract<Vector<T>> for Trivector<T> {
@@ -8177,7 +8175,7 @@ impl<T: Float> BulkContract<Vector<T>> for Trivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.z(),
+            rhs.z() * self.ps(),
             -(rhs.y() * self.ps()),
             rhs.x() * self.ps(),
         )
@@ -8189,7 +8187,7 @@ impl<T: Float> BulkContract<Vector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.z(),
+            rhs.z() * self.as_inner().ps(),
             -(rhs.y() * self.as_inner().ps()),
             rhs.x() * self.as_inner().ps(),
         )
@@ -8201,7 +8199,7 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Trivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.ps(),
             -(rhs.as_inner().y() * self.ps()),
             rhs.as_inner().x() * self.ps(),
         )
@@ -8213,7 +8211,7 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().ps() * rhs.as_inner().z(),
+            rhs.as_inner().z() * self.as_inner().ps(),
             -(rhs.as_inner().y() * self.as_inner().ps()),
             rhs.as_inner().x() * self.as_inner().ps(),
         )
@@ -8223,7 +8221,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s(), rhs.s() * self.z())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y(), rhs.s() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -8232,8 +8230,8 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.s(),
-            self.as_inner().y() * rhs.s(),
+            rhs.s() * self.as_inner().x(),
+            rhs.s() * self.as_inner().y(),
             rhs.s() * self.as_inner().z(),
         )
     }
@@ -8244,8 +8242,8 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.as_inner().s(),
-            self.y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.x(),
+            rhs.as_inner().s() * self.y(),
             rhs.as_inner().s() * self.z(),
         )
     }
@@ -8256,8 +8254,8 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
             rhs.as_inner().s() * self.as_inner().z(),
         )
     }
@@ -8266,7 +8264,7 @@ impl<T: Float> BulkContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -8275,9 +8273,9 @@ impl<T: Float> BulkContract<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.x()
-                + self.as_inner().y() * rhs.y()
-                + self.as_inner().z() * rhs.z(),
+            rhs.x() * self.as_inner().x()
+                + rhs.y() * self.as_inner().y()
+                + rhs.z() * self.as_inner().z(),
         )
     }
 }
@@ -8287,9 +8285,9 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * rhs.as_inner().x()
-                + self.y() * rhs.as_inner().y()
-                + self.z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.x()
+                + rhs.as_inner().y() * self.y()
+                + rhs.as_inner().z() * self.z(),
         )
     }
 }
@@ -8299,9 +8297,9 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x()
-                + self.as_inner().y() * rhs.as_inner().y()
-                + self.as_inner().z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().x()
+                + rhs.as_inner().y() * self.as_inner().y()
+                + rhs.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -8310,7 +8308,7 @@ impl<T: Float> WeightContract<Bivector<T>> for Bivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
         )
     }
 }
@@ -8320,9 +8318,9 @@ impl<T: Float> WeightContract<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.rz())
-                + -(self.as_inner().ry() * rhs.ry())
-                + -(self.as_inner().rx() * rhs.rx()),
+            -(rhs.rx() * self.as_inner().rx())
+                + -(rhs.ry() * self.as_inner().ry())
+                + -(rhs.rz() * self.as_inner().rz()),
         )
     }
 }
@@ -8332,9 +8330,9 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.rz() * rhs.as_inner().rz())
-                + -(self.ry() * rhs.as_inner().ry())
-                + -(self.rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.rx())
+                + -(rhs.as_inner().ry() * self.ry())
+                + -(rhs.as_inner().rz() * self.rz()),
         )
     }
 }
@@ -8344,9 +8342,9 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().rz() * rhs.as_inner().rz())
-                + -(self.as_inner().ry() * rhs.as_inner().ry())
-                + -(self.as_inner().rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.as_inner().rx())
+                + -(rhs.as_inner().ry() * self.as_inner().ry())
+                + -(rhs.as_inner().rz() * self.as_inner().rz()),
         )
     }
 }
@@ -8402,8 +8400,8 @@ impl<T: Float> WeightContract<Vector<T>> for Bivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.y() * self.rz() + self.ry() * rhs.z(),
-            -(rhs.x() * self.rz()) + self.rx() * rhs.z(),
+            rhs.y() * self.rz() + rhs.z() * self.ry(),
+            -(rhs.x() * self.rz()) + rhs.z() * self.rx(),
             -(rhs.x() * self.ry()) + -(rhs.y() * self.rx()),
         )
     }
@@ -8414,8 +8412,8 @@ impl<T: Float> WeightContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.y() * self.as_inner().rz() + self.as_inner().ry() * rhs.z(),
-            -(rhs.x() * self.as_inner().rz()) + self.as_inner().rx() * rhs.z(),
+            rhs.y() * self.as_inner().rz() + rhs.z() * self.as_inner().ry(),
+            -(rhs.x() * self.as_inner().rz()) + rhs.z() * self.as_inner().rx(),
             -(rhs.x() * self.as_inner().ry()) + -(rhs.y() * self.as_inner().rx()),
         )
     }
@@ -8426,8 +8424,8 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.as_inner().y() * self.rz() + self.ry() * rhs.as_inner().z(),
-            -(rhs.as_inner().x() * self.rz()) + self.rx() * rhs.as_inner().z(),
+            rhs.as_inner().y() * self.rz() + rhs.as_inner().z() * self.ry(),
+            -(rhs.as_inner().x() * self.rz()) + rhs.as_inner().z() * self.rx(),
             -(rhs.as_inner().x() * self.ry()) + -(rhs.as_inner().y() * self.rx()),
         )
     }
@@ -8438,9 +8436,9 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            rhs.as_inner().y() * self.as_inner().rz() + self.as_inner().ry() * rhs.as_inner().z(),
+            rhs.as_inner().y() * self.as_inner().rz() + rhs.as_inner().z() * self.as_inner().ry(),
             -(rhs.as_inner().x() * self.as_inner().rz())
-                + self.as_inner().rx() * rhs.as_inner().z(),
+                + rhs.as_inner().z() * self.as_inner().rx(),
             -(rhs.as_inner().x() * self.as_inner().ry())
                 + -(rhs.as_inner().y() * self.as_inner().rx()),
         )
@@ -8450,7 +8448,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -8458,7 +8456,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -8466,7 +8464,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -8474,7 +8472,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightContract<Bivector<T>> for Trivector<T> {
@@ -8482,9 +8480,9 @@ impl<T: Float> WeightContract<Bivector<T>> for Trivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ps() * rhs.rx()),
-            self.ps() * rhs.ry(),
-            -(self.ps() * rhs.rz()),
+            -(rhs.rx() * self.ps()),
+            rhs.ry() * self.ps(),
+            -(rhs.rz() * self.ps()),
         )
     }
 }
@@ -8494,9 +8492,9 @@ impl<T: Float> WeightContract<Bivector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().ps() * rhs.rx()),
-            self.as_inner().ps() * rhs.ry(),
-            -(self.as_inner().ps() * rhs.rz()),
+            -(rhs.rx() * self.as_inner().ps()),
+            rhs.ry() * self.as_inner().ps(),
+            -(rhs.rz() * self.as_inner().ps()),
         )
     }
 }
@@ -8506,9 +8504,9 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Trivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.ps() * rhs.as_inner().rx()),
-            self.ps() * rhs.as_inner().ry(),
-            -(self.ps() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.ps()),
+            rhs.as_inner().ry() * self.ps(),
+            -(rhs.as_inner().rz() * self.ps()),
         )
     }
 }
@@ -8518,9 +8516,9 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().ps() * rhs.as_inner().rx()),
-            self.as_inner().ps() * rhs.as_inner().ry(),
-            -(self.as_inner().ps() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.as_inner().ps()),
+            rhs.as_inner().ry() * self.as_inner().ps(),
+            -(rhs.as_inner().rz() * self.as_inner().ps()),
         )
     }
 }
@@ -8559,7 +8557,7 @@ impl<T: Float> WeightContract<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -8567,7 +8565,7 @@ impl<T: Float> WeightContract<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.as_inner().ps()))
     }
 }
 #[allow(unused_variables)]
@@ -8575,7 +8573,7 @@ impl<T: Float> WeightContract<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -8583,7 +8581,7 @@ impl<T: Float> WeightContract<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().ps() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().ps()))
     }
 }
 impl<T: Float> WeightContract<Vector<T>> for Trivector<T> {
@@ -8591,7 +8589,7 @@ impl<T: Float> WeightContract<Vector<T>> for Trivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.ps() * rhs.z()),
+            -(rhs.z() * self.ps()),
             rhs.y() * self.ps(),
             -(rhs.x() * self.ps()),
         )
@@ -8603,7 +8601,7 @@ impl<T: Float> WeightContract<Vector<T>> for Unit<Trivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().ps() * rhs.z()),
+            -(rhs.z() * self.as_inner().ps()),
             rhs.y() * self.as_inner().ps(),
             -(rhs.x() * self.as_inner().ps()),
         )
@@ -8615,7 +8613,7 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Trivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.ps() * rhs.as_inner().z()),
+            -(rhs.as_inner().z() * self.ps()),
             rhs.as_inner().y() * self.ps(),
             -(rhs.as_inner().x() * self.ps()),
         )
@@ -8627,7 +8625,7 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Unit<Trivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().ps() * rhs.as_inner().z()),
+            -(rhs.as_inner().z() * self.as_inner().ps()),
             rhs.as_inner().y() * self.as_inner().ps(),
             -(rhs.as_inner().x() * self.as_inner().ps()),
         )
@@ -8638,8 +8636,8 @@ impl<T: Float> WeightContract<Scalar<T>> for Vector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.s()),
-            -(self.y() * rhs.s()),
+            -(rhs.s() * self.x()),
+            -(rhs.s() * self.y()),
             -(rhs.s() * self.z()),
         )
     }
@@ -8650,8 +8648,8 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.s()),
-            -(self.as_inner().y() * rhs.s()),
+            -(rhs.s() * self.as_inner().x()),
+            -(rhs.s() * self.as_inner().y()),
             -(rhs.s() * self.as_inner().z()),
         )
     }
@@ -8662,8 +8660,8 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.as_inner().s()),
-            -(self.y() * rhs.as_inner().s()),
+            -(rhs.as_inner().s() * self.x()),
+            -(rhs.as_inner().s() * self.y()),
             -(rhs.as_inner().s() * self.z()),
         )
     }
@@ -8674,8 +8672,8 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().s()),
-            -(self.as_inner().y() * rhs.as_inner().s()),
+            -(rhs.as_inner().s() * self.as_inner().x()),
+            -(rhs.as_inner().s() * self.as_inner().y()),
             -(rhs.as_inner().s() * self.as_inner().z()),
         )
     }
@@ -8684,7 +8682,7 @@ impl<T: Float> WeightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.x() * rhs.x()) + -(self.y() * rhs.y()) + -(self.z() * rhs.z()))
+        Scalar::new_unchecked(-(rhs.x() * self.x()) + -(rhs.y() * self.y()) + -(rhs.z() * self.z()))
     }
 }
 #[allow(unused_variables)]
@@ -8693,9 +8691,9 @@ impl<T: Float> WeightContract<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().x() * rhs.x())
-                + -(self.as_inner().y() * rhs.y())
-                + -(self.as_inner().z() * rhs.z()),
+            -(rhs.x() * self.as_inner().x())
+                + -(rhs.y() * self.as_inner().y())
+                + -(rhs.z() * self.as_inner().z()),
         )
     }
 }
@@ -8705,9 +8703,9 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.x() * rhs.as_inner().x())
-                + -(self.y() * rhs.as_inner().y())
-                + -(self.z() * rhs.as_inner().z()),
+            -(rhs.as_inner().x() * self.x())
+                + -(rhs.as_inner().y() * self.y())
+                + -(rhs.as_inner().z() * self.z()),
         )
     }
 }
@@ -8717,9 +8715,9 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().x())
-                + -(self.as_inner().y() * rhs.as_inner().y())
-                + -(self.as_inner().z() * rhs.as_inner().z()),
+            -(rhs.as_inner().x() * self.as_inner().x())
+                + -(rhs.as_inner().y() * self.as_inner().y())
+                + -(rhs.as_inner().z() * self.as_inner().z()),
         )
     }
 }
@@ -8727,7 +8725,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Bivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.rz() * rhs.rz() + self.ry() * rhs.ry() + self.rx() * rhs.rx())
+        Trivector::new_unchecked(rhs.rx() * self.rx() + rhs.ry() * self.ry() + rhs.rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -8736,9 +8734,9 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().rz() * rhs.rz()
-                + self.as_inner().ry() * rhs.ry()
-                + self.as_inner().rx() * rhs.rx(),
+            rhs.rx() * self.as_inner().rx()
+                + rhs.ry() * self.as_inner().ry()
+                + rhs.rz() * self.as_inner().rz(),
         )
     }
 }
@@ -8748,9 +8746,9 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.rz() * rhs.as_inner().rz()
-                + self.ry() * rhs.as_inner().ry()
-                + self.rx() * rhs.as_inner().rx(),
+            rhs.as_inner().rx() * self.rx()
+                + rhs.as_inner().ry() * self.ry()
+                + rhs.as_inner().rz() * self.rz(),
         )
     }
 }
@@ -8760,9 +8758,9 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().rz() * rhs.as_inner().rz()
-                + self.as_inner().ry() * rhs.as_inner().ry()
-                + self.as_inner().rx() * rhs.as_inner().rx(),
+            rhs.as_inner().rx() * self.as_inner().rx()
+                + rhs.as_inner().ry() * self.as_inner().ry()
+                + rhs.as_inner().rz() * self.as_inner().rz(),
         )
     }
 }
@@ -8771,9 +8769,9 @@ impl<T: Float> BulkExpand<Trivector<T>> for Bivector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * rhs.ps(),
-            self.ry() * rhs.ps(),
-            self.rx() * rhs.ps(),
+            rhs.ps() * self.rz(),
+            rhs.ps() * self.ry(),
+            rhs.ps() * self.rx(),
         )
     }
 }
@@ -8783,9 +8781,9 @@ impl<T: Float> BulkExpand<Trivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().rz() * rhs.ps(),
-            self.as_inner().ry() * rhs.ps(),
-            self.as_inner().rx() * rhs.ps(),
+            rhs.ps() * self.as_inner().rz(),
+            rhs.ps() * self.as_inner().ry(),
+            rhs.ps() * self.as_inner().rx(),
         )
     }
 }
@@ -8795,9 +8793,9 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.rz() * rhs.as_inner().ps(),
-            self.ry() * rhs.as_inner().ps(),
-            self.rx() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.rz(),
+            rhs.as_inner().ps() * self.ry(),
+            rhs.as_inner().ps() * self.rx(),
         )
     }
 }
@@ -8807,9 +8805,9 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().rz() * rhs.as_inner().ps(),
-            self.as_inner().ry() * rhs.as_inner().ps(),
-            self.as_inner().rx() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.as_inner().rz(),
+            rhs.as_inner().ps() * self.as_inner().ry(),
+            rhs.as_inner().ps() * self.as_inner().rx(),
         )
     }
 }
@@ -8818,9 +8816,9 @@ impl<T: Float> BulkExpand<Bivector<T>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * rhs.rx(),
-            -(self.s() * rhs.ry()),
-            self.s() * rhs.rz(),
+            rhs.rx() * self.s(),
+            -(rhs.ry() * self.s()),
+            rhs.rz() * self.s(),
         )
     }
 }
@@ -8830,9 +8828,9 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.rx(),
-            -(self.as_inner().s() * rhs.ry()),
-            self.as_inner().s() * rhs.rz(),
+            rhs.rx() * self.as_inner().s(),
+            -(rhs.ry() * self.as_inner().s()),
+            rhs.rz() * self.as_inner().s(),
         )
     }
 }
@@ -8842,9 +8840,9 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * rhs.as_inner().rx(),
-            -(self.s() * rhs.as_inner().ry()),
-            self.s() * rhs.as_inner().rz(),
+            rhs.as_inner().rx() * self.s(),
+            -(rhs.as_inner().ry() * self.s()),
+            rhs.as_inner().rz() * self.s(),
         )
     }
 }
@@ -8854,9 +8852,9 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().rx(),
-            -(self.as_inner().s() * rhs.as_inner().ry()),
-            self.as_inner().s() * rhs.as_inner().rz(),
+            rhs.as_inner().rx() * self.as_inner().s(),
+            -(rhs.as_inner().ry() * self.as_inner().s()),
+            rhs.as_inner().rz() * self.as_inner().s(),
         )
     }
 }
@@ -8864,7 +8862,7 @@ impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8872,7 +8870,7 @@ impl<T: Float> BulkExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.s())
+        Trivector::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -8880,7 +8878,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.s() * rhs.as_inner().s())
+        Trivector::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8888,14 +8886,14 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Trivector::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8903,7 +8901,7 @@ impl<T: Float> BulkExpand<Trivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.ps())
+        Scalar::new_unchecked(rhs.ps() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -8911,7 +8909,7 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -8919,7 +8917,7 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().ps())
+        Scalar::new_unchecked(rhs.as_inner().ps() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<Vector<T>> for Scalar<T> {
@@ -8927,9 +8925,9 @@ impl<T: Float> BulkExpand<Vector<T>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.z(),
-            -(self.s() * rhs.y()),
-            self.s() * rhs.x(),
+            rhs.z() * self.s(),
+            -(rhs.y() * self.s()),
+            rhs.x() * self.s(),
         )
     }
 }
@@ -8939,9 +8937,9 @@ impl<T: Float> BulkExpand<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.z(),
-            -(self.as_inner().s() * rhs.y()),
-            self.as_inner().s() * rhs.x(),
+            rhs.z() * self.as_inner().s(),
+            -(rhs.y() * self.as_inner().s()),
+            rhs.x() * self.as_inner().s(),
         )
     }
 }
@@ -8951,9 +8949,9 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.s() * rhs.as_inner().z(),
-            -(self.s() * rhs.as_inner().y()),
-            self.s() * rhs.as_inner().x(),
+            rhs.as_inner().z() * self.s(),
+            -(rhs.as_inner().y() * self.s()),
+            rhs.as_inner().x() * self.s(),
         )
     }
 }
@@ -8963,9 +8961,9 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().z(),
-            -(self.as_inner().s() * rhs.as_inner().y()),
-            self.as_inner().s() * rhs.as_inner().x(),
+            rhs.as_inner().z() * self.as_inner().s(),
+            -(rhs.as_inner().y() * self.as_inner().s()),
+            rhs.as_inner().x() * self.as_inner().s(),
         )
     }
 }
@@ -8973,7 +8971,7 @@ impl<T: Float> BulkExpand<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -8981,7 +8979,7 @@ impl<T: Float> BulkExpand<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().ps() * rhs.ps())
+        Trivector::new_unchecked(rhs.ps() * self.as_inner().ps())
     }
 }
 #[allow(unused_variables)]
@@ -8989,7 +8987,7 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.ps() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -8997,7 +8995,7 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(self.as_inner().ps() * rhs.as_inner().ps())
+        Trivector::new_unchecked(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
 impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
@@ -9005,9 +9003,9 @@ impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * rhs.ry()) + -(self.y() * rhs.rx()),
-            self.x() * rhs.rz() + -(self.z() * rhs.rx()),
-            self.y() * rhs.rz() + self.z() * rhs.ry(),
+            -(rhs.ry() * self.x()) + -(rhs.rx() * self.y()),
+            -(rhs.rx() * self.z()) + rhs.rz() * self.x(),
+            rhs.rz() * self.y() + rhs.ry() * self.z(),
         )
     }
 }
@@ -9017,9 +9015,9 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().x() * rhs.ry()) + -(self.as_inner().y() * rhs.rx()),
-            self.as_inner().x() * rhs.rz() + -(self.as_inner().z() * rhs.rx()),
-            self.as_inner().y() * rhs.rz() + self.as_inner().z() * rhs.ry(),
+            -(rhs.ry() * self.as_inner().x()) + -(rhs.rx() * self.as_inner().y()),
+            -(rhs.rx() * self.as_inner().z()) + rhs.rz() * self.as_inner().x(),
+            rhs.rz() * self.as_inner().y() + rhs.ry() * self.as_inner().z(),
         )
     }
 }
@@ -9029,9 +9027,9 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * rhs.as_inner().ry()) + -(self.y() * rhs.as_inner().rx()),
-            self.x() * rhs.as_inner().rz() + -(self.z() * rhs.as_inner().rx()),
-            self.y() * rhs.as_inner().rz() + self.z() * rhs.as_inner().ry(),
+            -(rhs.as_inner().ry() * self.x()) + -(rhs.as_inner().rx() * self.y()),
+            -(rhs.as_inner().rx() * self.z()) + rhs.as_inner().rz() * self.x(),
+            rhs.as_inner().rz() * self.y() + rhs.as_inner().ry() * self.z(),
         )
     }
 }
@@ -9041,11 +9039,11 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().ry())
-                + -(self.as_inner().y() * rhs.as_inner().rx()),
-            self.as_inner().x() * rhs.as_inner().rz()
-                + -(self.as_inner().z() * rhs.as_inner().rx()),
-            self.as_inner().y() * rhs.as_inner().rz() + self.as_inner().z() * rhs.as_inner().ry(),
+            -(rhs.as_inner().ry() * self.as_inner().x())
+                + -(rhs.as_inner().rx() * self.as_inner().y()),
+            -(rhs.as_inner().rx() * self.as_inner().z())
+                + rhs.as_inner().rz() * self.as_inner().x(),
+            rhs.as_inner().rz() * self.as_inner().y() + rhs.as_inner().ry() * self.as_inner().z(),
         )
     }
 }
@@ -9054,9 +9052,9 @@ impl<T: Float> BulkExpand<Trivector<T>> for Vector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.ps(),
-            self.y() * rhs.ps(),
-            self.z() * rhs.ps(),
+            rhs.ps() * self.x(),
+            rhs.ps() * self.y(),
+            rhs.ps() * self.z(),
         )
     }
 }
@@ -9066,9 +9064,9 @@ impl<T: Float> BulkExpand<Trivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.ps(),
-            self.as_inner().y() * rhs.ps(),
-            self.as_inner().z() * rhs.ps(),
+            rhs.ps() * self.as_inner().x(),
+            rhs.ps() * self.as_inner().y(),
+            rhs.ps() * self.as_inner().z(),
         )
     }
 }
@@ -9078,9 +9076,9 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * rhs.as_inner().ps(),
-            self.y() * rhs.as_inner().ps(),
-            self.z() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.x(),
+            rhs.as_inner().ps() * self.y(),
+            rhs.as_inner().ps() * self.z(),
         )
     }
 }
@@ -9090,9 +9088,9 @@ impl<T: Float> BulkExpand<Unit<Trivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().ps(),
-            self.as_inner().y() * rhs.as_inner().ps(),
-            self.as_inner().z() * rhs.as_inner().ps(),
+            rhs.as_inner().ps() * self.as_inner().x(),
+            rhs.as_inner().ps() * self.as_inner().y(),
+            rhs.as_inner().ps() * self.as_inner().z(),
         )
     }
 }
@@ -9100,7 +9098,7 @@ impl<T: Float> BulkExpand<Vector<T>> for Vector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z())
+        Trivector::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y() + rhs.z() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -9109,9 +9107,9 @@ impl<T: Float> BulkExpand<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().x() * rhs.x()
-                + self.as_inner().y() * rhs.y()
-                + self.as_inner().z() * rhs.z(),
+            rhs.x() * self.as_inner().x()
+                + rhs.y() * self.as_inner().y()
+                + rhs.z() * self.as_inner().z(),
         )
     }
 }
@@ -9121,9 +9119,9 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * rhs.as_inner().x()
-                + self.y() * rhs.as_inner().y()
-                + self.z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.x()
+                + rhs.as_inner().y() * self.y()
+                + rhs.as_inner().z() * self.z(),
         )
     }
 }
@@ -9133,9 +9131,9 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x()
-                + self.as_inner().y() * rhs.as_inner().y()
-                + self.as_inner().z() * rhs.as_inner().z(),
+            rhs.as_inner().x() * self.as_inner().x()
+                + rhs.as_inner().y() * self.as_inner().y()
+                + rhs.as_inner().z() * self.as_inner().z(),
         )
     }
 }
@@ -9144,7 +9142,7 @@ impl<T: Float> WeightExpand<Bivector<T>> for Bivector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.rz() * rhs.rz()) + -(self.ry() * rhs.ry()) + -(self.rx() * rhs.rx()),
+            -(rhs.rx() * self.rx()) + -(rhs.ry() * self.ry()) + -(rhs.rz() * self.rz()),
         )
     }
 }
@@ -9154,9 +9152,9 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.as_inner().rz() * rhs.rz())
-                + -(self.as_inner().ry() * rhs.ry())
-                + -(self.as_inner().rx() * rhs.rx()),
+            -(rhs.rx() * self.as_inner().rx())
+                + -(rhs.ry() * self.as_inner().ry())
+                + -(rhs.rz() * self.as_inner().rz()),
         )
     }
 }
@@ -9166,9 +9164,9 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Bivector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.rz() * rhs.as_inner().rz())
-                + -(self.ry() * rhs.as_inner().ry())
-                + -(self.rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.rx())
+                + -(rhs.as_inner().ry() * self.ry())
+                + -(rhs.as_inner().rz() * self.rz()),
         )
     }
 }
@@ -9178,9 +9176,9 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.as_inner().rz() * rhs.as_inner().rz())
-                + -(self.as_inner().ry() * rhs.as_inner().ry())
-                + -(self.as_inner().rx() * rhs.as_inner().rx()),
+            -(rhs.as_inner().rx() * self.as_inner().rx())
+                + -(rhs.as_inner().ry() * self.as_inner().ry())
+                + -(rhs.as_inner().rz() * self.as_inner().rz()),
         )
     }
 }
@@ -9189,9 +9187,9 @@ impl<T: Float> WeightExpand<Trivector<T>> for Bivector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.rz() * rhs.ps()),
-            -(self.ry() * rhs.ps()),
-            -(self.rx() * rhs.ps()),
+            -(rhs.ps() * self.rz()),
+            -(rhs.ps() * self.ry()),
+            -(rhs.ps() * self.rx()),
         )
     }
 }
@@ -9201,9 +9199,9 @@ impl<T: Float> WeightExpand<Trivector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().rz() * rhs.ps()),
-            -(self.as_inner().ry() * rhs.ps()),
-            -(self.as_inner().rx() * rhs.ps()),
+            -(rhs.ps() * self.as_inner().rz()),
+            -(rhs.ps() * self.as_inner().ry()),
+            -(rhs.ps() * self.as_inner().rx()),
         )
     }
 }
@@ -9213,9 +9211,9 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Bivector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.rz() * rhs.as_inner().ps()),
-            -(self.ry() * rhs.as_inner().ps()),
-            -(self.rx() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.rz()),
+            -(rhs.as_inner().ps() * self.ry()),
+            -(rhs.as_inner().ps() * self.rx()),
         )
     }
 }
@@ -9225,9 +9223,9 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().rz() * rhs.as_inner().ps()),
-            -(self.as_inner().ry() * rhs.as_inner().ps()),
-            -(self.as_inner().rx() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.as_inner().rz()),
+            -(rhs.as_inner().ps() * self.as_inner().ry()),
+            -(rhs.as_inner().ps() * self.as_inner().rx()),
         )
     }
 }
@@ -9236,9 +9234,9 @@ impl<T: Float> WeightExpand<Bivector<T>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.s() * rhs.rx()),
-            self.s() * rhs.ry(),
-            -(self.s() * rhs.rz()),
+            -(rhs.rx() * self.s()),
+            rhs.ry() * self.s(),
+            -(rhs.rz() * self.s()),
         )
     }
 }
@@ -9248,9 +9246,9 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().s() * rhs.rx()),
-            self.as_inner().s() * rhs.ry(),
-            -(self.as_inner().s() * rhs.rz()),
+            -(rhs.rx() * self.as_inner().s()),
+            rhs.ry() * self.as_inner().s(),
+            -(rhs.rz() * self.as_inner().s()),
         )
     }
 }
@@ -9260,9 +9258,9 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.s() * rhs.as_inner().rx()),
-            self.s() * rhs.as_inner().ry(),
-            -(self.s() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.s()),
+            rhs.as_inner().ry() * self.s(),
+            -(rhs.as_inner().rz() * self.s()),
         )
     }
 }
@@ -9272,9 +9270,9 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().s() * rhs.as_inner().rx()),
-            self.as_inner().s() * rhs.as_inner().ry(),
-            -(self.as_inner().s() * rhs.as_inner().rz()),
+            -(rhs.as_inner().rx() * self.as_inner().s()),
+            rhs.as_inner().ry() * self.as_inner().s(),
+            -(rhs.as_inner().rz() * self.as_inner().s()),
         )
     }
 }
@@ -9282,7 +9280,7 @@ impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.s() * rhs.s()))
+        Trivector::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -9290,7 +9288,7 @@ impl<T: Float> WeightExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        Trivector::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -9298,7 +9296,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        Trivector::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -9306,14 +9304,14 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        Trivector::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightExpand<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -9321,7 +9319,7 @@ impl<T: Float> WeightExpand<Trivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.ps()))
+        Scalar::new_unchecked(-(rhs.ps() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -9329,7 +9327,7 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -9337,7 +9335,7 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().ps()))
+        Scalar::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightExpand<Vector<T>> for Scalar<T> {
@@ -9345,9 +9343,9 @@ impl<T: Float> WeightExpand<Vector<T>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.s() * rhs.z()),
-            self.s() * rhs.y(),
-            -(self.s() * rhs.x()),
+            -(rhs.z() * self.s()),
+            rhs.y() * self.s(),
+            -(rhs.x() * self.s()),
         )
     }
 }
@@ -9357,9 +9355,9 @@ impl<T: Float> WeightExpand<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().s() * rhs.z()),
-            self.as_inner().s() * rhs.y(),
-            -(self.as_inner().s() * rhs.x()),
+            -(rhs.z() * self.as_inner().s()),
+            rhs.y() * self.as_inner().s(),
+            -(rhs.x() * self.as_inner().s()),
         )
     }
 }
@@ -9369,9 +9367,9 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.s() * rhs.as_inner().z()),
-            self.s() * rhs.as_inner().y(),
-            -(self.s() * rhs.as_inner().x()),
+            -(rhs.as_inner().z() * self.s()),
+            rhs.as_inner().y() * self.s(),
+            -(rhs.as_inner().x() * self.s()),
         )
     }
 }
@@ -9381,9 +9379,9 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().s() * rhs.as_inner().z()),
-            self.as_inner().s() * rhs.as_inner().y(),
-            -(self.as_inner().s() * rhs.as_inner().x()),
+            -(rhs.as_inner().z() * self.as_inner().s()),
+            rhs.as_inner().y() * self.as_inner().s(),
+            -(rhs.as_inner().x() * self.as_inner().s()),
         )
     }
 }
@@ -9391,7 +9389,7 @@ impl<T: Float> WeightExpand<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.ps() * rhs.ps()))
+        Trivector::new_unchecked(-(rhs.ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -9399,7 +9397,7 @@ impl<T: Float> WeightExpand<Trivector<T>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.as_inner().ps() * rhs.ps()))
+        Trivector::new_unchecked(-(rhs.ps() * self.as_inner().ps()))
     }
 }
 #[allow(unused_variables)]
@@ -9407,7 +9405,7 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.ps() * rhs.as_inner().ps()))
+        Trivector::new_unchecked(-(rhs.as_inner().ps() * self.ps()))
     }
 }
 #[allow(unused_variables)]
@@ -9415,7 +9413,7 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Output = Trivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Trivector<T> {
-        Trivector::new_unchecked(-(self.as_inner().ps() * rhs.as_inner().ps()))
+        Trivector::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().ps()))
     }
 }
 impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
@@ -9423,9 +9421,9 @@ impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.x() * rhs.ry() + self.y() * rhs.rx(),
-            -(self.x() * rhs.rz()) + self.z() * rhs.rx(),
-            -(self.y() * rhs.rz()) + -(self.z() * rhs.ry()),
+            rhs.ry() * self.x() + rhs.rx() * self.y(),
+            -(rhs.rz() * self.x()) + rhs.rx() * self.z(),
+            -(rhs.rz() * self.y()) + -(rhs.ry() * self.z()),
         )
     }
 }
@@ -9435,9 +9433,9 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.ry() + self.as_inner().y() * rhs.rx(),
-            -(self.as_inner().x() * rhs.rz()) + self.as_inner().z() * rhs.rx(),
-            -(self.as_inner().y() * rhs.rz()) + -(self.as_inner().z() * rhs.ry()),
+            rhs.ry() * self.as_inner().x() + rhs.rx() * self.as_inner().y(),
+            -(rhs.rz() * self.as_inner().x()) + rhs.rx() * self.as_inner().z(),
+            -(rhs.rz() * self.as_inner().y()) + -(rhs.ry() * self.as_inner().z()),
         )
     }
 }
@@ -9447,9 +9445,9 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.x() * rhs.as_inner().ry() + self.y() * rhs.as_inner().rx(),
-            -(self.x() * rhs.as_inner().rz()) + self.z() * rhs.as_inner().rx(),
-            -(self.y() * rhs.as_inner().rz()) + -(self.z() * rhs.as_inner().ry()),
+            rhs.as_inner().ry() * self.x() + rhs.as_inner().rx() * self.y(),
+            -(rhs.as_inner().rz() * self.x()) + rhs.as_inner().rx() * self.z(),
+            -(rhs.as_inner().rz() * self.y()) + -(rhs.as_inner().ry() * self.z()),
         )
     }
 }
@@ -9459,11 +9457,11 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().ry() + self.as_inner().y() * rhs.as_inner().rx(),
-            -(self.as_inner().x() * rhs.as_inner().rz())
-                + self.as_inner().z() * rhs.as_inner().rx(),
-            -(self.as_inner().y() * rhs.as_inner().rz())
-                + -(self.as_inner().z() * rhs.as_inner().ry()),
+            rhs.as_inner().ry() * self.as_inner().x() + rhs.as_inner().rx() * self.as_inner().y(),
+            -(rhs.as_inner().rz() * self.as_inner().x())
+                + rhs.as_inner().rx() * self.as_inner().z(),
+            -(rhs.as_inner().rz() * self.as_inner().y())
+                + -(rhs.as_inner().ry() * self.as_inner().z()),
         )
     }
 }
@@ -9472,9 +9470,9 @@ impl<T: Float> WeightExpand<Trivector<T>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.ps()),
-            -(self.y() * rhs.ps()),
-            -(self.z() * rhs.ps()),
+            -(rhs.ps() * self.x()),
+            -(rhs.ps() * self.y()),
+            -(rhs.ps() * self.z()),
         )
     }
 }
@@ -9484,9 +9482,9 @@ impl<T: Float> WeightExpand<Trivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Trivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.ps()),
-            -(self.as_inner().y() * rhs.ps()),
-            -(self.as_inner().z() * rhs.ps()),
+            -(rhs.ps() * self.as_inner().x()),
+            -(rhs.ps() * self.as_inner().y()),
+            -(rhs.ps() * self.as_inner().z()),
         )
     }
 }
@@ -9496,9 +9494,9 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.as_inner().ps()),
-            -(self.y() * rhs.as_inner().ps()),
-            -(self.z() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.x()),
+            -(rhs.as_inner().ps() * self.y()),
+            -(rhs.as_inner().ps() * self.z()),
         )
     }
 }
@@ -9508,9 +9506,9 @@ impl<T: Float> WeightExpand<Unit<Trivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Trivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().ps()),
-            -(self.as_inner().y() * rhs.as_inner().ps()),
-            -(self.as_inner().z() * rhs.as_inner().ps()),
+            -(rhs.as_inner().ps() * self.as_inner().x()),
+            -(rhs.as_inner().ps() * self.as_inner().y()),
+            -(rhs.as_inner().ps() * self.as_inner().z()),
         )
     }
 }
@@ -9519,7 +9517,7 @@ impl<T: Float> WeightExpand<Vector<T>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.x() * rhs.x()) + -(self.y() * rhs.y()) + -(self.z() * rhs.z()),
+            -(rhs.x() * self.x()) + -(rhs.y() * self.y()) + -(rhs.z() * self.z()),
         )
     }
 }
@@ -9529,9 +9527,9 @@ impl<T: Float> WeightExpand<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.as_inner().x() * rhs.x())
-                + -(self.as_inner().y() * rhs.y())
-                + -(self.as_inner().z() * rhs.z()),
+            -(rhs.x() * self.as_inner().x())
+                + -(rhs.y() * self.as_inner().y())
+                + -(rhs.z() * self.as_inner().z()),
         )
     }
 }
@@ -9541,9 +9539,9 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.x() * rhs.as_inner().x())
-                + -(self.y() * rhs.as_inner().y())
-                + -(self.z() * rhs.as_inner().z()),
+            -(rhs.as_inner().x() * self.x())
+                + -(rhs.as_inner().y() * self.y())
+                + -(rhs.as_inner().z() * self.z()),
         )
     }
 }
@@ -9553,9 +9551,9 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().x())
-                + -(self.as_inner().y() * rhs.as_inner().y())
-                + -(self.as_inner().z() * rhs.as_inner().z()),
+            -(rhs.as_inner().x() * self.as_inner().x())
+                + -(rhs.as_inner().y() * self.as_inner().y())
+                + -(rhs.as_inner().z() * self.as_inner().z()),
         )
     }
 }
@@ -9571,9 +9569,9 @@ impl<T: Float> Dot<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().rz() * rhs.rz())
-            + -(self.as_inner().ry() * rhs.ry())
-            + -(self.as_inner().rx() * rhs.rx())
+        -(rhs.rx() * self.as_inner().rx())
+            + -(rhs.ry() * self.as_inner().ry())
+            + -(rhs.rz() * self.as_inner().rz())
     }
 }
 #[allow(unused_variables)]
@@ -9581,9 +9579,9 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.rz() * rhs.as_inner().rz())
-            + -(self.ry() * rhs.as_inner().ry())
-            + -(self.rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.rx())
+            + -(rhs.as_inner().ry() * self.ry())
+            + -(rhs.as_inner().rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -9591,9 +9589,9 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().rz() * rhs.as_inner().rz())
-            + -(self.as_inner().ry() * rhs.as_inner().ry())
-            + -(self.as_inner().rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.as_inner().rx())
+            + -(rhs.as_inner().ry() * self.as_inner().ry())
+            + -(rhs.as_inner().rz() * self.as_inner().rz())
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Bivector<T> {
@@ -9608,9 +9606,9 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().rz() * rhs.rz())
-            + -(self.as_inner().ry() * rhs.ry())
-            + -(self.as_inner().rx() * rhs.rx())
+        -(rhs.rx() * self.as_inner().rx())
+            + -(rhs.ry() * self.as_inner().ry())
+            + -(rhs.rz() * self.as_inner().rz())
     }
 }
 #[allow(unused_variables)]
@@ -9618,9 +9616,9 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.rz() * rhs.as_inner().rz())
-            + -(self.ry() * rhs.as_inner().ry())
-            + -(self.rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.rx())
+            + -(rhs.as_inner().ry() * self.ry())
+            + -(rhs.as_inner().rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -9628,9 +9626,9 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().rz() * rhs.as_inner().rz())
-            + -(self.as_inner().ry() * rhs.as_inner().ry())
-            + -(self.as_inner().rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.as_inner().rx())
+            + -(rhs.as_inner().ry() * self.as_inner().ry())
+            + -(rhs.as_inner().rz() * self.as_inner().rz())
     }
 }
 impl<T: Float> Dot<Bivector<T>> for Rotor<T> {
@@ -9645,9 +9643,9 @@ impl<T: Float> Dot<Bivector<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().rz() * rhs.rz())
-            + -(self.as_inner().ry() * rhs.ry())
-            + -(self.as_inner().rx() * rhs.rx())
+        -(rhs.rx() * self.as_inner().rx())
+            + -(rhs.ry() * self.as_inner().ry())
+            + -(rhs.rz() * self.as_inner().rz())
     }
 }
 #[allow(unused_variables)]
@@ -9655,9 +9653,9 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.rz() * rhs.as_inner().rz())
-            + -(self.ry() * rhs.as_inner().ry())
-            + -(self.rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.rx())
+            + -(rhs.as_inner().ry() * self.ry())
+            + -(rhs.as_inner().rz() * self.rz())
     }
 }
 #[allow(unused_variables)]
@@ -9665,9 +9663,9 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().rz() * rhs.as_inner().rz())
-            + -(self.as_inner().ry() * rhs.as_inner().ry())
-            + -(self.as_inner().rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.as_inner().rx())
+            + -(rhs.as_inner().ry() * self.as_inner().ry())
+            + -(rhs.as_inner().rz() * self.as_inner().rz())
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Rotor<T> {
@@ -9682,10 +9680,10 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().s() * rhs.s()
-            + -(self.as_inner().rz() * rhs.rz())
-            + -(self.as_inner().ry() * rhs.ry())
-            + -(self.as_inner().rx() * rhs.rx())
+        -(rhs.rx() * self.as_inner().rx())
+            + -(rhs.ry() * self.as_inner().ry())
+            + -(rhs.rz() * self.as_inner().rz())
+            + rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -9693,10 +9691,10 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.s() * rhs.as_inner().s()
-            + -(self.rz() * rhs.as_inner().rz())
-            + -(self.ry() * rhs.as_inner().ry())
-            + -(self.rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.rx())
+            + -(rhs.as_inner().ry() * self.ry())
+            + -(rhs.as_inner().rz() * self.rz())
+            + rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -9704,10 +9702,10 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
-            + -(self.as_inner().rz() * rhs.as_inner().rz())
-            + -(self.as_inner().ry() * rhs.as_inner().ry())
-            + -(self.as_inner().rx() * rhs.as_inner().rx())
+        -(rhs.as_inner().rx() * self.as_inner().rx())
+            + -(rhs.as_inner().ry() * self.as_inner().ry())
+            + -(rhs.as_inner().rz() * self.as_inner().rz())
+            + rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Rotor<T> {
@@ -9722,7 +9720,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -9730,7 +9728,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -9738,7 +9736,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Scalar<T> {
@@ -9753,7 +9751,7 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -9761,7 +9759,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -9769,7 +9767,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Scalar<T> {
@@ -9784,7 +9782,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -9792,7 +9790,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -9800,7 +9798,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Trivector<T>> for Trivector<T> {
@@ -9815,7 +9813,7 @@ impl<T: Float> Dot<Trivector<T>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Trivector<T>) -> T {
-        -(self.as_inner().ps() * rhs.ps())
+        -(rhs.ps() * self.as_inner().ps())
     }
 }
 #[allow(unused_variables)]
@@ -9823,7 +9821,7 @@ impl<T: Float> Dot<Unit<Trivector<T>>> for Trivector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Trivector<T>>) -> T {
-        -(self.ps() * rhs.as_inner().ps())
+        -(rhs.as_inner().ps() * self.ps())
     }
 }
 #[allow(unused_variables)]
@@ -9831,7 +9829,7 @@ impl<T: Float> Dot<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Trivector<T>>) -> T {
-        -(self.as_inner().ps() * rhs.as_inner().ps())
+        -(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
 impl<T: Float> Dot<Vector<T>> for Vector<T> {
@@ -9846,9 +9844,9 @@ impl<T: Float> Dot<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Vector<T>) -> T {
-        self.as_inner().x() * rhs.x()
-            + self.as_inner().y() * rhs.y()
-            + self.as_inner().z() * rhs.z()
+        rhs.x() * self.as_inner().x()
+            + rhs.y() * self.as_inner().y()
+            + rhs.z() * self.as_inner().z()
     }
 }
 #[allow(unused_variables)]
@@ -9856,9 +9854,9 @@ impl<T: Float> Dot<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.x() * rhs.as_inner().x()
-            + self.y() * rhs.as_inner().y()
-            + self.z() * rhs.as_inner().z()
+        rhs.as_inner().x() * self.x()
+            + rhs.as_inner().y() * self.y()
+            + rhs.as_inner().z() * self.z()
     }
 }
 #[allow(unused_variables)]
@@ -9866,9 +9864,9 @@ impl<T: Float> Dot<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.as_inner().x() * rhs.as_inner().x()
-            + self.as_inner().y() * rhs.as_inner().y()
-            + self.as_inner().z() * rhs.as_inner().z()
+        rhs.as_inner().x() * self.as_inner().x()
+            + rhs.as_inner().y() * self.as_inner().y()
+            + rhs.as_inner().z() * self.as_inner().z()
     }
 }
 impl<T: Float> Antidot<Bivector<T>> for Bivector<T> {
@@ -9883,9 +9881,9 @@ impl<T: Float> Antidot<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Bivector<T>) -> T {
-        self.as_inner().rz() * rhs.rz()
-            + self.as_inner().ry() * rhs.ry()
-            + self.as_inner().rx() * rhs.rx()
+        rhs.rx() * self.as_inner().rx()
+            + rhs.ry() * self.as_inner().ry()
+            + rhs.rz() * self.as_inner().rz()
     }
 }
 #[allow(unused_variables)]
@@ -9893,9 +9891,9 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.rz() * rhs.as_inner().rz()
-            + self.ry() * rhs.as_inner().ry()
-            + self.rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.rx()
+            + rhs.as_inner().ry() * self.ry()
+            + rhs.as_inner().rz() * self.rz()
     }
 }
 #[allow(unused_variables)]
@@ -9903,9 +9901,9 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.as_inner().rz() * rhs.as_inner().rz()
-            + self.as_inner().ry() * rhs.as_inner().ry()
-            + self.as_inner().rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.as_inner().rx()
+            + rhs.as_inner().ry() * self.as_inner().ry()
+            + rhs.as_inner().rz() * self.as_inner().rz()
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Bivector<T> {
@@ -9920,9 +9918,9 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().rz() * rhs.rz()
-            + self.as_inner().ry() * rhs.ry()
-            + self.as_inner().rx() * rhs.rx()
+        rhs.rx() * self.as_inner().rx()
+            + rhs.ry() * self.as_inner().ry()
+            + rhs.rz() * self.as_inner().rz()
     }
 }
 #[allow(unused_variables)]
@@ -9930,9 +9928,9 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.rz() * rhs.as_inner().rz()
-            + self.ry() * rhs.as_inner().ry()
-            + self.rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.rx()
+            + rhs.as_inner().ry() * self.ry()
+            + rhs.as_inner().rz() * self.rz()
     }
 }
 #[allow(unused_variables)]
@@ -9940,9 +9938,9 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().rz() * rhs.as_inner().rz()
-            + self.as_inner().ry() * rhs.as_inner().ry()
-            + self.as_inner().rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.as_inner().rx()
+            + rhs.as_inner().ry() * self.as_inner().ry()
+            + rhs.as_inner().rz() * self.as_inner().rz()
     }
 }
 impl<T: Float> Antidot<Bivector<T>> for Rotor<T> {
@@ -9957,9 +9955,9 @@ impl<T: Float> Antidot<Bivector<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Bivector<T>) -> T {
-        self.as_inner().rz() * rhs.rz()
-            + self.as_inner().ry() * rhs.ry()
-            + self.as_inner().rx() * rhs.rx()
+        rhs.rx() * self.as_inner().rx()
+            + rhs.ry() * self.as_inner().ry()
+            + rhs.rz() * self.as_inner().rz()
     }
 }
 #[allow(unused_variables)]
@@ -9967,9 +9965,9 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.rz() * rhs.as_inner().rz()
-            + self.ry() * rhs.as_inner().ry()
-            + self.rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.rx()
+            + rhs.as_inner().ry() * self.ry()
+            + rhs.as_inner().rz() * self.rz()
     }
 }
 #[allow(unused_variables)]
@@ -9977,9 +9975,9 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.as_inner().rz() * rhs.as_inner().rz()
-            + self.as_inner().ry() * rhs.as_inner().ry()
-            + self.as_inner().rx() * rhs.as_inner().rx()
+        rhs.as_inner().rx() * self.as_inner().rx()
+            + rhs.as_inner().ry() * self.as_inner().ry()
+            + rhs.as_inner().rz() * self.as_inner().rz()
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Rotor<T> {
@@ -9994,10 +9992,10 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
-            + self.as_inner().rz() * rhs.rz()
-            + self.as_inner().ry() * rhs.ry()
-            + self.as_inner().rx() * rhs.rx()
+        -(rhs.s() * self.as_inner().s())
+            + rhs.rx() * self.as_inner().rx()
+            + rhs.ry() * self.as_inner().ry()
+            + rhs.rz() * self.as_inner().rz()
     }
 }
 #[allow(unused_variables)]
@@ -10005,10 +10003,10 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
-            + self.rz() * rhs.as_inner().rz()
-            + self.ry() * rhs.as_inner().ry()
-            + self.rx() * rhs.as_inner().rx()
+        -(rhs.as_inner().s() * self.s())
+            + rhs.as_inner().rx() * self.rx()
+            + rhs.as_inner().ry() * self.ry()
+            + rhs.as_inner().rz() * self.rz()
     }
 }
 #[allow(unused_variables)]
@@ -10016,10 +10014,10 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
-            + self.as_inner().rz() * rhs.as_inner().rz()
-            + self.as_inner().ry() * rhs.as_inner().ry()
-            + self.as_inner().rx() * rhs.as_inner().rx()
+        -(rhs.as_inner().s() * self.as_inner().s())
+            + rhs.as_inner().rx() * self.as_inner().rx()
+            + rhs.as_inner().ry() * self.as_inner().ry()
+            + rhs.as_inner().rz() * self.as_inner().rz()
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Rotor<T> {
@@ -10034,7 +10032,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -10042,7 +10040,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -10050,7 +10048,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Scalar<T> {
@@ -10065,7 +10063,7 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -10073,7 +10071,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -10081,7 +10079,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Scalar<T> {
@@ -10096,7 +10094,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -10104,7 +10102,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -10112,7 +10110,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Trivector<T>> for Trivector<T> {
@@ -10127,7 +10125,7 @@ impl<T: Float> Antidot<Trivector<T>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Trivector<T>) -> T {
-        self.as_inner().ps() * rhs.ps()
+        rhs.ps() * self.as_inner().ps()
     }
 }
 #[allow(unused_variables)]
@@ -10135,7 +10133,7 @@ impl<T: Float> Antidot<Unit<Trivector<T>>> for Trivector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Trivector<T>>) -> T {
-        self.ps() * rhs.as_inner().ps()
+        rhs.as_inner().ps() * self.ps()
     }
 }
 #[allow(unused_variables)]
@@ -10143,7 +10141,7 @@ impl<T: Float> Antidot<Unit<Trivector<T>>> for Unit<Trivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Trivector<T>>) -> T {
-        self.as_inner().ps() * rhs.as_inner().ps()
+        rhs.as_inner().ps() * self.as_inner().ps()
     }
 }
 impl<T: Float> Antidot<Vector<T>> for Vector<T> {
@@ -10158,9 +10156,9 @@ impl<T: Float> Antidot<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Vector<T>) -> T {
-        -(self.as_inner().x() * rhs.x())
-            + -(self.as_inner().y() * rhs.y())
-            + -(self.as_inner().z() * rhs.z())
+        -(rhs.x() * self.as_inner().x())
+            + -(rhs.y() * self.as_inner().y())
+            + -(rhs.z() * self.as_inner().z())
     }
 }
 #[allow(unused_variables)]
@@ -10168,9 +10166,9 @@ impl<T: Float> Antidot<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Vector<T>>) -> T {
-        -(self.x() * rhs.as_inner().x())
-            + -(self.y() * rhs.as_inner().y())
-            + -(self.z() * rhs.as_inner().z())
+        -(rhs.as_inner().x() * self.x())
+            + -(rhs.as_inner().y() * self.y())
+            + -(rhs.as_inner().z() * self.z())
     }
 }
 #[allow(unused_variables)]
@@ -10178,9 +10176,9 @@ impl<T: Float> Antidot<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Vector<T>>) -> T {
-        -(self.as_inner().x() * rhs.as_inner().x())
-            + -(self.as_inner().y() * rhs.as_inner().y())
-            + -(self.as_inner().z() * rhs.as_inner().z())
+        -(rhs.as_inner().x() * self.as_inner().x())
+            + -(rhs.as_inner().y() * self.as_inner().y())
+            + -(rhs.as_inner().z() * self.as_inner().z())
     }
 }
 impl<T: Float> Reverse for Bivector<T> {
@@ -10729,6 +10727,1691 @@ mod arbitrary_impls {
                     Vector::new_unchecked(T::from_f64(x0), T::from_f64(x1), T::from_f64(x2))
                 })
                 .boxed()
+        }
+    }
+}
+
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
+
+#[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
+mod verification_tests {
+    use super::*;
+    use crate::algebra::Multivector;
+    #[allow(unused_imports)]
+    use crate::norm::{DegenerateNormed, Normed};
+    use crate::signature::Euclidean3;
+    #[allow(unused_imports)]
+    use crate::wrappers::Unit;
+    use approx::relative_eq;
+    use proptest::prelude::*;
+
+    /// Relative epsilon for floating-point comparisons in verification tests.
+    /// Using relative comparison handles varying magnitudes better than absolute.
+    const REL_EPSILON: f64 = 1e-10;
+
+    proptest! {
+        #[test]
+        fn bivector_add_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_sub_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_neg_matches_multivector(a in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn rotor_add_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn rotor_sub_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn rotor_neg_matches_multivector(a in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn scalar_add_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_sub_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_neg_matches_multivector(a in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn trivector_add_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn trivector_sub_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn trivector_neg_matches_multivector(a in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn vector_add_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_sub_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_neg_matches_multivector(a in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_bivector_vector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_trivector_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_vector_bivector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_bivector_vector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_trivector_scalar_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_trivector_vector_bivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_bivector_vector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_scalar_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_trivector_scalar_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_trivector_vector_bivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_bivector_bivector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_bivector_trivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_bivector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_trivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_vector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_trivector_trivector_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_bivector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_trivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_vector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_bivector_bivector_trivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_bivector_trivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_bivector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_scalar_trivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_trivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_vector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_trivector_trivector_trivector_matches_multivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_bivector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_trivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Trivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_vector_trivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            let specialized_result: Trivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean3> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_trivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_trivector(a in any::<Trivector<f64>>(), b in any::<Trivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// Project idempotency with normalized target: project(project(a, unit_b), unit_b) == project(a, unit_b)
+        #[test]
+        fn project_idempotent_bivector_vector(a in any::<Bivector<f64>>(), unit_b in any::<Unit<Vector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.project(&mv_b);
+            let second = first.project(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Project idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Project idempotency with normalized target: project(project(a, unit_b), unit_b) == project(a, unit_b)
+        #[test]
+        fn project_idempotent_trivector_bivector(a in any::<Trivector<f64>>(), unit_b in any::<Unit<Bivector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.project(&mv_b);
+            let second = first.project(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Project idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Project idempotency with normalized target: project(project(a, unit_b), unit_b) == project(a, unit_b)
+        #[test]
+        fn project_idempotent_trivector_vector(a in any::<Trivector<f64>>(), unit_b in any::<Unit<Vector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.project(&mv_b);
+            let second = first.project(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Project idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Antiproject idempotency with normalized target: antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)
+        #[test]
+        fn antiproject_idempotent_bivector_trivector(a in any::<Bivector<f64>>(), unit_b in any::<Unit<Trivector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.antiproject(&mv_b);
+            let second = first.antiproject(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antiproject idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Antiproject idempotency with normalized target: antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)
+        #[test]
+        fn antiproject_idempotent_vector_bivector(a in any::<Vector<f64>>(), unit_b in any::<Unit<Bivector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.antiproject(&mv_b);
+            let second = first.antiproject(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antiproject idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Antiproject idempotency with normalized target: antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)
+        #[test]
+        fn antiproject_idempotent_vector_trivector(a in any::<Vector<f64>>(), unit_b in any::<Unit<Trivector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean3> = a.into();
+            let mv_b: Multivector<f64, Euclidean3> = unit_b.into_inner().into();
+
+            let first = mv_a.antiproject(&mv_b);
+            let second = first.antiproject(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antiproject idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Bivector>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_bivector_norm_matches_inner(u in any::<Unit<Bivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Bivector<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Bivector<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Bivector>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_bivector_norm_squared_matches_inner(u in any::<Unit<Bivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Bivector<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Bivector<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Rotor>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_rotor_norm_matches_inner(u in any::<Unit<Rotor<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Rotor<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Rotor<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Rotor>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_rotor_norm_squared_matches_inner(u in any::<Unit<Rotor<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Rotor<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Rotor<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Scalar>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_scalar_norm_matches_inner(u in any::<Unit<Scalar<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Scalar<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Scalar<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Scalar>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_scalar_norm_squared_matches_inner(u in any::<Unit<Scalar<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Scalar<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Scalar<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Trivector>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_trivector_norm_matches_inner(u in any::<Unit<Trivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Trivector<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Trivector<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Trivector>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_trivector_norm_squared_matches_inner(u in any::<Unit<Trivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Trivector<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Trivector<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Vector>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_vector_norm_matches_inner(u in any::<Unit<Vector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Vector<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Vector<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Vector>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_vector_norm_squared_matches_inner(u in any::<Unit<Vector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Vector<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Vector<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
         }
     }
 }

@@ -61,28 +61,28 @@ impl<T: Float> Mul<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.b()))
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Bivector<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.b() * rhs.b()), self.b() * rhs.s())
+        Rotor::new_unchecked(-(rhs.b() * self.b()), rhs.s() * self.b())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.b())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.b() * rhs.y(), -(self.b() * rhs.x()))
+        Vector::new_unchecked(rhs.y() * self.b(), -(rhs.x() * self.b()))
     }
 }
 impl<T: Float> Add for Rotor<T> {
@@ -131,7 +131,7 @@ impl<T: Float> Mul<Bivector<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Rotor<T> {
-        Rotor::new_unchecked(-(self.b() * rhs.b()), self.s() * rhs.b())
+        Rotor::new_unchecked(-(rhs.b() * self.b()), rhs.b() * self.s())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Rotor<T> {
@@ -139,8 +139,8 @@ impl<T: Float> Mul<Rotor<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * rhs.s() + self.s() * rhs.b(),
-            self.b() * rhs.b() + -(self.s() * rhs.s()),
+            rhs.s() * self.b() + rhs.b() * self.s(),
+            -(rhs.s() * self.s()) + rhs.b() * self.b(),
         )
     }
 }
@@ -148,7 +148,7 @@ impl<T: Float> Mul<Scalar<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Rotor<T> {
-        Rotor::new_unchecked(self.s() * rhs.s(), self.b() * rhs.s())
+        Rotor::new_unchecked(rhs.s() * self.s(), rhs.s() * self.b())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Rotor<T> {
@@ -156,8 +156,8 @@ impl<T: Float> Mul<Vector<T>> for Rotor<T> {
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.b() * rhs.x()) + -(self.s() * rhs.y()),
-            -(self.b() * rhs.y()) + self.s() * rhs.x(),
+            -(rhs.x() * self.b()) + -(rhs.y() * self.s()),
+            -(rhs.y() * self.b()) + rhs.x() * self.s(),
         )
     }
 }
@@ -207,28 +207,28 @@ impl<T: Float> Mul<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.s())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Rotor<T> {
-        Rotor::new_unchecked(self.s() * rhs.s(), self.s() * rhs.b())
+        Rotor::new_unchecked(rhs.s() * self.s(), rhs.b() * self.s())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s())
     }
 }
 impl<T: Float> Add for Vector<T> {
@@ -277,7 +277,7 @@ impl<T: Float> Mul<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.y() * rhs.b()), self.x() * rhs.b())
+        Vector::new_unchecked(-(rhs.b() * self.y()), rhs.b() * self.x())
     }
 }
 impl<T: Float> Mul<Rotor<T>> for Vector<T> {
@@ -285,8 +285,8 @@ impl<T: Float> Mul<Rotor<T>> for Vector<T> {
     #[inline]
     fn mul(self, rhs: Rotor<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.b()) + self.y() * rhs.s(),
-            -(self.x() * rhs.s()) + -(self.y() * rhs.b()),
+            -(rhs.b() * self.x()) + rhs.s() * self.y(),
+            -(rhs.s() * self.x()) + -(rhs.b() * self.y()),
         )
     }
 }
@@ -294,7 +294,7 @@ impl<T: Float> Mul<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 impl<T: Float> Mul<Vector<T>> for Vector<T> {
@@ -302,8 +302,8 @@ impl<T: Float> Mul<Vector<T>> for Vector<T> {
     #[inline]
     fn mul(self, rhs: Vector<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.x() * rhs.y() + -(self.y() * rhs.x()),
-            self.x() * rhs.x() + self.y() * rhs.y(),
+            -(rhs.x() * self.y()) + rhs.y() * self.x(),
+            rhs.x() * self.x() + rhs.y() * self.y(),
         )
     }
 }
@@ -311,7 +311,7 @@ impl<T: Float> Wedge<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -319,7 +319,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -327,7 +327,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -335,14 +335,14 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.as_inner().b())
     }
 }
 impl<T: Float> Wedge<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -350,7 +350,7 @@ impl<T: Float> Wedge<Bivector<T>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -358,7 +358,7 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -366,14 +366,14 @@ impl<T: Float> Wedge<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -381,7 +381,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -389,7 +389,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -397,14 +397,14 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -412,7 +412,7 @@ impl<T: Float> Wedge<Vector<T>> for Unit<Scalar<T>> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().s() * rhs.x(), self.as_inner().s() * rhs.y())
+        Vector::new_unchecked(rhs.x() * self.as_inner().s(), rhs.y() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -420,7 +420,7 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.as_inner().x(), self.s() * rhs.as_inner().y())
+        Vector::new_unchecked(rhs.as_inner().x() * self.s(), rhs.as_inner().y() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -429,8 +429,8 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().x(),
-            self.as_inner().s() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().s(),
+            rhs.as_inner().y() * self.as_inner().s(),
         )
     }
 }
@@ -438,7 +438,7 @@ impl<T: Float> Wedge<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -446,7 +446,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Vector<T>> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().x() * rhs.s(), self.as_inner().y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.as_inner().x(), rhs.s() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -454,7 +454,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.as_inner().s(), self.y() * rhs.as_inner().s())
+        Vector::new_unchecked(rhs.as_inner().s() * self.x(), rhs.as_inner().s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -463,8 +463,8 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
         )
     }
 }
@@ -472,7 +472,7 @@ impl<T: Float> Wedge<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.x() * rhs.y() + -(self.y() * rhs.x()))
+        Bivector::new_unchecked(-(rhs.x() * self.y()) + rhs.y() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -480,7 +480,7 @@ impl<T: Float> Wedge<Vector<T>> for Unit<Vector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().x() * rhs.y() + -(self.as_inner().y() * rhs.x()))
+        Bivector::new_unchecked(-(rhs.x() * self.as_inner().y()) + rhs.y() * self.as_inner().x())
     }
 }
 #[allow(unused_variables)]
@@ -488,7 +488,7 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.x() * rhs.as_inner().y() + -(self.y() * rhs.as_inner().x()))
+        Bivector::new_unchecked(-(rhs.as_inner().x() * self.y()) + rhs.as_inner().y() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -497,7 +497,7 @@ impl<T: Float> Wedge<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().y() + -(self.as_inner().y() * rhs.as_inner().x()),
+            -(rhs.as_inner().x() * self.as_inner().y()) + rhs.as_inner().y() * self.as_inner().x(),
         )
     }
 }
@@ -505,7 +505,7 @@ impl<T: Float> Antiwedge<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -513,7 +513,7 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -521,7 +521,7 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -529,14 +529,14 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> Antiwedge<Scalar<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -544,7 +544,7 @@ impl<T: Float> Antiwedge<Scalar<T>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().b() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -552,7 +552,7 @@ impl<T: Float> Antiwedge<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -560,14 +560,14 @@ impl<T: Float> Antiwedge<Unit<Scalar<T>>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().b() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().b())
     }
 }
 impl<T: Float> Antiwedge<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.b() * rhs.x()), -(self.b() * rhs.y()))
+        Vector::new_unchecked(-(rhs.x() * self.b()), -(rhs.y() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -576,8 +576,8 @@ impl<T: Float> Antiwedge<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().b() * rhs.x()),
-            -(self.as_inner().b() * rhs.y()),
+            -(rhs.x() * self.as_inner().b()),
+            -(rhs.y() * self.as_inner().b()),
         )
     }
 }
@@ -587,8 +587,8 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.b() * rhs.as_inner().x()),
-            -(self.b() * rhs.as_inner().y()),
+            -(rhs.as_inner().x() * self.b()),
+            -(rhs.as_inner().y() * self.b()),
         )
     }
 }
@@ -598,8 +598,8 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().b() * rhs.as_inner().x()),
-            -(self.as_inner().b() * rhs.as_inner().y()),
+            -(rhs.as_inner().x() * self.as_inner().b()),
+            -(rhs.as_inner().y() * self.as_inner().b()),
         )
     }
 }
@@ -607,7 +607,7 @@ impl<T: Float> Antiwedge<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -615,7 +615,7 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -623,7 +623,7 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -631,14 +631,14 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.as_inner().s())
     }
 }
 impl<T: Float> Antiwedge<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.x() * rhs.b()), -(self.y() * rhs.b()))
+        Vector::new_unchecked(-(rhs.b() * self.x()), -(rhs.b() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -647,8 +647,8 @@ impl<T: Float> Antiwedge<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.b()),
-            -(self.as_inner().y() * rhs.b()),
+            -(rhs.b() * self.as_inner().x()),
+            -(rhs.b() * self.as_inner().y()),
         )
     }
 }
@@ -658,8 +658,8 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.as_inner().b()),
-            -(self.y() * rhs.as_inner().b()),
+            -(rhs.as_inner().b() * self.x()),
+            -(rhs.as_inner().b() * self.y()),
         )
     }
 }
@@ -669,8 +669,8 @@ impl<T: Float> Antiwedge<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().b()),
-            -(self.as_inner().y() * rhs.as_inner().b()),
+            -(rhs.as_inner().b() * self.as_inner().x()),
+            -(rhs.as_inner().b() * self.as_inner().y()),
         )
     }
 }
@@ -678,7 +678,7 @@ impl<T: Float> Antiwedge<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.y() + -(self.y() * rhs.x()))
+        Scalar::new_unchecked(-(rhs.x() * self.y()) + rhs.y() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -686,7 +686,7 @@ impl<T: Float> Antiwedge<Vector<T>> for Unit<Vector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().x() * rhs.y() + -(self.as_inner().y() * rhs.x()))
+        Scalar::new_unchecked(-(rhs.x() * self.as_inner().y()) + rhs.y() * self.as_inner().x())
     }
 }
 #[allow(unused_variables)]
@@ -694,7 +694,7 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.as_inner().y() + -(self.y() * rhs.as_inner().x()))
+        Scalar::new_unchecked(-(rhs.as_inner().x() * self.y()) + rhs.as_inner().y() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -703,7 +703,7 @@ impl<T: Float> Antiwedge<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().y() + -(self.as_inner().y() * rhs.as_inner().x()),
+            -(rhs.as_inner().x() * self.as_inner().y()) + rhs.as_inner().y() * self.as_inner().x(),
         )
     }
 }
@@ -711,7 +711,7 @@ impl<T: Float> LeftContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -719,7 +719,7 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.as_inner().b()))
     }
 }
 #[allow(unused_variables)]
@@ -727,7 +727,7 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -735,14 +735,14 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.as_inner().b()))
     }
 }
 impl<T: Float> LeftContract<Bivector<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -750,7 +750,7 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -758,7 +758,7 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -766,14 +766,14 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -781,7 +781,7 @@ impl<T: Float> LeftContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -789,7 +789,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -797,14 +797,14 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.x(), self.s() * rhs.y())
+        Vector::new_unchecked(rhs.x() * self.s(), rhs.y() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -812,7 +812,7 @@ impl<T: Float> LeftContract<Vector<T>> for Unit<Scalar<T>> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().s() * rhs.x(), self.as_inner().s() * rhs.y())
+        Vector::new_unchecked(rhs.x() * self.as_inner().s(), rhs.y() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -820,7 +820,7 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.as_inner().x(), self.s() * rhs.as_inner().y())
+        Vector::new_unchecked(rhs.as_inner().x() * self.s(), rhs.as_inner().y() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -829,8 +829,8 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().x(),
-            self.as_inner().s() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().s(),
+            rhs.as_inner().y() * self.as_inner().s(),
         )
     }
 }
@@ -838,7 +838,7 @@ impl<T: Float> LeftContract<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.y() * rhs.b()), self.x() * rhs.b())
+        Vector::new_unchecked(-(rhs.b() * self.y()), rhs.b() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -847,8 +847,8 @@ impl<T: Float> LeftContract<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().y() * rhs.b()),
-            self.as_inner().x() * rhs.b(),
+            -(rhs.b() * self.as_inner().y()),
+            rhs.b() * self.as_inner().x(),
         )
     }
 }
@@ -858,8 +858,8 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.y() * rhs.as_inner().b()),
-            self.x() * rhs.as_inner().b(),
+            -(rhs.as_inner().b() * self.y()),
+            rhs.as_inner().b() * self.x(),
         )
     }
 }
@@ -869,8 +869,8 @@ impl<T: Float> LeftContract<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().y() * rhs.as_inner().b()),
-            self.as_inner().x() * rhs.as_inner().b(),
+            -(rhs.as_inner().b() * self.as_inner().y()),
+            rhs.as_inner().b() * self.as_inner().x(),
         )
     }
 }
@@ -878,7 +878,7 @@ impl<T: Float> LeftContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -886,7 +886,7 @@ impl<T: Float> LeftContract<Vector<T>> for Unit<Vector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -894,7 +894,7 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y())
+        Scalar::new_unchecked(rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -903,7 +903,7 @@ impl<T: Float> LeftContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn left_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -911,7 +911,7 @@ impl<T: Float> RightContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -919,7 +919,7 @@ impl<T: Float> RightContract<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.as_inner().b()))
     }
 }
 #[allow(unused_variables)]
@@ -927,7 +927,7 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -935,14 +935,14 @@ impl<T: Float> RightContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.as_inner().b()))
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -950,7 +950,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -958,7 +958,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -966,14 +966,14 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.as_inner().b())
     }
 }
 impl<T: Float> RightContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.b() * rhs.y(), -(self.b() * rhs.x()))
+        Vector::new_unchecked(rhs.y() * self.b(), -(rhs.x() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -982,8 +982,8 @@ impl<T: Float> RightContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().b() * rhs.y(),
-            -(self.as_inner().b() * rhs.x()),
+            rhs.y() * self.as_inner().b(),
+            -(rhs.x() * self.as_inner().b()),
         )
     }
 }
@@ -993,8 +993,8 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * rhs.as_inner().y(),
-            -(self.b() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.b(),
+            -(rhs.as_inner().x() * self.b()),
         )
     }
 }
@@ -1004,8 +1004,8 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().b() * rhs.as_inner().y(),
-            -(self.as_inner().b() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.as_inner().b(),
+            -(rhs.as_inner().x() * self.as_inner().b()),
         )
     }
 }
@@ -1013,7 +1013,7 @@ impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1021,7 +1021,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1029,7 +1029,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1037,14 +1037,14 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -1052,7 +1052,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Vector<T>> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().x() * rhs.s(), self.as_inner().y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.as_inner().x(), rhs.s() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -1060,7 +1060,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.as_inner().s(), self.y() * rhs.as_inner().s())
+        Vector::new_unchecked(rhs.as_inner().s() * self.x(), rhs.as_inner().s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -1069,8 +1069,8 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
         )
     }
 }
@@ -1078,7 +1078,7 @@ impl<T: Float> RightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -1086,7 +1086,7 @@ impl<T: Float> RightContract<Vector<T>> for Unit<Vector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -1094,7 +1094,7 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y())
+        Scalar::new_unchecked(rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -1103,7 +1103,7 @@ impl<T: Float> RightContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn right_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -1128,7 +1128,7 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * self.b() * operand.as_inner().b())
+        Bivector::new_unchecked(operand.as_inner().b() * self.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -1164,8 +1164,8 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s(),
-            self.b() * self.b() * operand.as_inner().b(),
+            operand.as_inner().s() * self.b() * self.b(),
+            operand.as_inner().b() * self.b() * self.b(),
         )
     }
 }
@@ -1198,7 +1198,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * self.b() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -1234,8 +1234,8 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.b() * self.b() * operand.as_inner().x()),
-            -(self.b() * self.b() * operand.as_inner().y()),
+            -(operand.as_inner().x() * self.b() * self.b()),
+            -(operand.as_inner().y() * self.b() * self.b()),
         )
     }
 }
@@ -1271,8 +1271,8 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.b() * self.b() * operand.as_inner().b()
-                + self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().b() * self.b() * self.b()
+                + operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -1290,12 +1290,12 @@ impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * operand.s() * self.s() - self.b() * operand.b() * self.s()
-                + self.b() * operand.s() * self.b()
-                + self.s() * operand.b() * self.b(),
-            self.b() * operand.b() * self.b() - self.s() * operand.s() * self.b()
-                + self.b() * operand.s() * self.s()
-                + self.s() * operand.b() * self.s(),
+            self.s() * operand.b() * self.b() + self.b() * operand.s() * self.b()
+                - self.b() * operand.b() * self.s()
+                + self.s() * operand.s() * self.s(),
+            self.s() * operand.b() * self.s() - self.s() * operand.s() * self.b()
+                + self.b() * operand.b() * self.b()
+                + self.b() * operand.s() * self.s(),
         )
     }
 }
@@ -1313,10 +1313,10 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s()
-                + self.s() * self.s() * operand.as_inner().s(),
-            self.b() * self.b() * operand.as_inner().b()
-                + self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().s() * self.b() * self.b()
+                + operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().b() * self.b() * self.b()
+                + operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -1333,7 +1333,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * operand.s() * self.b() + self.s() * operand.s() * self.s())
+        Scalar::new_unchecked(self.s() * operand.s() * self.s() + self.b() * operand.s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -1350,8 +1350,8 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s()
-                + self.s() * self.s() * operand.as_inner().s(),
+            operand.as_inner().s() * self.b() * self.b()
+                + operand.as_inner().s() * self.s() * self.s(),
         )
     }
 }
@@ -1373,8 +1373,8 @@ impl<T: Float> Sandwich<Vector<T>> for Rotor<T> {
                 + self.s() * operand.x() * self.s()
                 + self.b() * operand.y() * self.s(),
             -(self.b() * operand.y() * self.b())
-                - self.s() * operand.x() * self.b()
                 - self.b() * operand.x() * self.s()
+                - self.s() * operand.x() * self.b()
                 + self.s() * operand.y() * self.s(),
         )
     }
@@ -1386,11 +1386,11 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Rotor<T>> {
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
             -(operand.x())
-                + T::TWO * self.as_inner().s() * self.as_inner().s() * operand.x()
-                + T::TWO * self.as_inner().b() * self.as_inner().s() * operand.y(),
-            -(operand.y())
-                + T::TWO * self.as_inner().s() * self.as_inner().s() * operand.y()
-                + -T::TWO * self.as_inner().b() * self.as_inner().s() * operand.x(),
+                + T::TWO * operand.y() * self.as_inner().b() * self.as_inner().s()
+                + T::TWO * operand.x() * self.as_inner().s() * self.as_inner().s(),
+            -T::TWO * operand.x() * self.as_inner().b() * self.as_inner().s()
+                + -(operand.y())
+                + T::TWO * operand.y() * self.as_inner().s() * self.as_inner().s(),
         )
     }
 }
@@ -1400,12 +1400,12 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Rotor<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.b() * self.b() * operand.as_inner().x())
-                + self.s() * self.s() * operand.as_inner().x()
-                + T::TWO * self.b() * self.s() * operand.as_inner().y(),
-            -(self.b() * self.b() * operand.as_inner().y())
-                + self.s() * self.s() * operand.as_inner().y()
-                + -T::TWO * self.b() * self.s() * operand.as_inner().x(),
+            -(operand.as_inner().x() * self.b() * self.b())
+                + T::TWO * operand.as_inner().y() * self.b() * self.s()
+                + operand.as_inner().x() * self.s() * self.s(),
+            -T::TWO * operand.as_inner().x() * self.b() * self.s()
+                + -(operand.as_inner().y() * self.b() * self.b())
+                + operand.as_inner().y() * self.s() * self.s(),
         )
     }
 }
@@ -1416,11 +1416,11 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
             -(operand.as_inner().x())
-                + T::TWO * self.as_inner().s() * self.as_inner().s() * operand.as_inner().x()
-                + T::TWO * self.as_inner().b() * self.as_inner().s() * operand.as_inner().y(),
-            -(operand.as_inner().y())
-                + T::TWO * self.as_inner().s() * self.as_inner().s() * operand.as_inner().y()
-                + -T::TWO * self.as_inner().b() * self.as_inner().s() * operand.as_inner().x(),
+                + T::TWO * operand.as_inner().y() * self.as_inner().b() * self.as_inner().s()
+                + T::TWO * operand.as_inner().x() * self.as_inner().s() * self.as_inner().s(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().b() * self.as_inner().s()
+                + -(operand.as_inner().y())
+                + T::TWO * operand.as_inner().y() * self.as_inner().s() * self.as_inner().s(),
         )
     }
 }
@@ -1445,7 +1445,7 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * self.s() * operand.as_inner().b())
+        Bivector::new_unchecked(operand.as_inner().b() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1481,8 +1481,8 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -1515,7 +1515,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1551,8 +1551,8 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * self.s() * operand.as_inner().x(),
-            self.s() * self.s() * operand.as_inner().y(),
+            operand.as_inner().x() * self.s() * self.s(),
+            operand.as_inner().y() * self.s() * self.s(),
         )
     }
 }
@@ -1570,7 +1570,7 @@ impl<T: Float> Sandwich<Bivector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * operand.b() * self.x()) - self.y() * operand.b() * self.y(),
+            -(self.y() * operand.b() * self.y()) - self.x() * operand.b() * self.x(),
         )
     }
 }
@@ -1588,8 +1588,8 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * self.x() * operand.as_inner().b())
-                + -(self.y() * self.y() * operand.as_inner().b()),
+            -(operand.as_inner().b() * self.x() * self.x())
+                + -(operand.as_inner().b() * self.y() * self.y()),
         )
     }
 }
@@ -1607,11 +1607,13 @@ impl<T: Float> Sandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.y() * operand.s() * self.y() - self.y() * operand.b() * self.x()
+            self.x() * operand.b() * self.y()
+                + self.y() * operand.s() * self.y()
                 + self.x() * operand.s() * self.x()
-                + self.x() * operand.b() * self.y(),
-            -(self.y() * operand.b() * self.y()) + self.x() * operand.s() * self.y()
+                - self.y() * operand.b() * self.x(),
+            self.x() * operand.s() * self.y()
                 - self.x() * operand.b() * self.x()
+                - self.y() * operand.b() * self.y()
                 - self.y() * operand.s() * self.x(),
         )
     }
@@ -1630,10 +1632,10 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
-            -(self.x() * self.x() * operand.as_inner().b())
-                + -(self.y() * self.y() * operand.as_inner().b()),
+            operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
+            -(operand.as_inner().b() * self.x() * self.x())
+                + -(operand.as_inner().b() * self.y() * self.y()),
         )
     }
 }
@@ -1667,8 +1669,8 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
+            operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
         )
     }
 }
@@ -1686,13 +1688,12 @@ impl<T: Float> Sandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * operand.y() * self.y()
-                + self.x() * operand.x() * self.x()
+            self.x() * operand.y() * self.y() - self.y() * operand.x() * self.y()
                 + self.y() * operand.y() * self.x()
-                - self.y() * operand.x() * self.y(),
-            self.x() * operand.x() * self.y() - self.x() * operand.y() * self.x()
-                + self.y() * operand.x() * self.x()
-                + self.y() * operand.y() * self.y(),
+                + self.x() * operand.x() * self.x(),
+            self.y() * operand.x() * self.x() - self.x() * operand.y() * self.x()
+                + self.y() * operand.y() * self.y()
+                + self.x() * operand.x() * self.y(),
         )
     }
 }
@@ -1702,12 +1703,12 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.y(),
+            -T::TWO * operand.x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.y() * self.as_inner().x() * self.as_inner().y()
+                + operand.x(),
             -(operand.y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.x(),
+                + T::TWO * operand.x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.y() * self.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -1717,12 +1718,12 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.x() * self.x() * operand.as_inner().x()
-                + -(self.y() * self.y() * operand.as_inner().x())
-                + T::TWO * self.x() * self.y() * operand.as_inner().y(),
-            -(self.x() * self.x() * operand.as_inner().y())
-                + self.y() * self.y() * operand.as_inner().y()
-                + T::TWO * self.x() * self.y() * operand.as_inner().x(),
+            -(operand.as_inner().x() * self.y() * self.y())
+                + T::TWO * operand.as_inner().y() * self.x() * self.y()
+                + operand.as_inner().x() * self.x() * self.x(),
+            -(operand.as_inner().y() * self.x() * self.x())
+                + T::TWO * operand.as_inner().x() * self.x() * self.y()
+                + operand.as_inner().y() * self.y() * self.y(),
         )
     }
 }
@@ -1732,12 +1733,12 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().x()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().y(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().y() * self.as_inner().y()
+                + T::TWO * operand.as_inner().y() * self.as_inner().x() * self.as_inner().y()
+                + operand.as_inner().x(),
             -(operand.as_inner().y())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().y()
-                + T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().x(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().y()
+                + T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -1762,7 +1763,7 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * self.b() * operand.as_inner().b())
+        Bivector::new_unchecked(operand.as_inner().b() * self.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -1798,8 +1799,8 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s(),
-            self.b() * self.b() * operand.as_inner().b(),
+            operand.as_inner().s() * self.b() * self.b(),
+            operand.as_inner().b() * self.b() * self.b(),
         )
     }
 }
@@ -1832,7 +1833,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * self.b() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -1868,8 +1869,8 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * self.b() * operand.as_inner().x(),
-            self.b() * self.b() * operand.as_inner().y(),
+            operand.as_inner().x() * self.b() * self.b(),
+            operand.as_inner().y() * self.b() * self.b(),
         )
     }
 }
@@ -1905,8 +1906,8 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.b() * self.b() * operand.as_inner().b()
-                + self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().b() * self.b() * self.b()
+                + operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -1924,13 +1925,13 @@ impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * operand.s() * self.b() + self.s() * operand.s() * self.s()
+            self.s() * operand.b() * self.b() + self.s() * operand.s() * self.s()
                 - self.b() * operand.b() * self.s()
-                + self.s() * operand.b() * self.b(),
-            self.s() * operand.b() * self.s()
+                + self.b() * operand.s() * self.b(),
+            -(self.s() * operand.s() * self.b())
+                + self.s() * operand.b() * self.s()
                 + self.b() * operand.b() * self.b()
-                + self.b() * operand.s() * self.s()
-                - self.s() * operand.s() * self.b(),
+                + self.b() * operand.s() * self.s(),
         )
     }
 }
@@ -1948,10 +1949,10 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s()
-                + self.s() * self.s() * operand.as_inner().s(),
-            self.b() * self.b() * operand.as_inner().b()
-                + self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().s() * self.b() * self.b()
+                + operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().b() * self.b() * self.b()
+                + operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -1985,8 +1986,8 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.b() * self.b() * operand.as_inner().s()
-                + self.s() * self.s() * operand.as_inner().s(),
+            operand.as_inner().s() * self.b() * self.b()
+                + operand.as_inner().s() * self.s() * self.s(),
         )
     }
 }
@@ -2004,12 +2005,12 @@ impl<T: Float> Antisandwich<Vector<T>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * operand.x() * self.b() - self.s() * operand.x() * self.s()
-                + self.s() * operand.y() * self.b()
-                + self.b() * operand.y() * self.s(),
-            -(self.b() * operand.x() * self.s()) - self.s() * operand.y() * self.s()
-                + self.b() * operand.y() * self.b()
-                - self.s() * operand.x() * self.b(),
+            self.b() * operand.x() * self.b() + self.b() * operand.y() * self.s()
+                - self.s() * operand.x() * self.s()
+                + self.s() * operand.y() * self.b(),
+            -(self.b() * operand.x() * self.s()) + self.b() * operand.y() * self.b()
+                - self.s() * operand.x() * self.b()
+                - self.s() * operand.y() * self.s(),
         )
     }
 }
@@ -2019,12 +2020,12 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.x()
-                + -T::TWO * self.as_inner().s() * self.as_inner().s() * operand.x()
-                + T::TWO * self.as_inner().b() * self.as_inner().s() * operand.y(),
-            operand.y()
-                + -T::TWO * self.as_inner().s() * self.as_inner().s() * operand.y()
-                + -T::TWO * self.as_inner().b() * self.as_inner().s() * operand.x(),
+            -T::TWO * operand.x() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.y() * self.as_inner().b() * self.as_inner().s()
+                + operand.x(),
+            -T::TWO * operand.x() * self.as_inner().b() * self.as_inner().s()
+                + -T::TWO * operand.y() * self.as_inner().s() * self.as_inner().s()
+                + operand.y(),
         )
     }
 }
@@ -2034,12 +2035,12 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Rotor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * self.b() * operand.as_inner().x()
-                + -(self.s() * self.s() * operand.as_inner().x())
-                + T::TWO * self.b() * self.s() * operand.as_inner().y(),
-            self.b() * self.b() * operand.as_inner().y()
-                + -(self.s() * self.s() * operand.as_inner().y())
-                + -T::TWO * self.b() * self.s() * operand.as_inner().x(),
+            -(operand.as_inner().x() * self.s() * self.s())
+                + T::TWO * operand.as_inner().y() * self.b() * self.s()
+                + operand.as_inner().x() * self.b() * self.b(),
+            -T::TWO * operand.as_inner().x() * self.b() * self.s()
+                + -(operand.as_inner().y() * self.s() * self.s())
+                + operand.as_inner().y() * self.b() * self.b(),
         )
     }
 }
@@ -2049,12 +2050,12 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            operand.as_inner().x()
-                + -T::TWO * self.as_inner().s() * self.as_inner().s() * operand.as_inner().x()
-                + T::TWO * self.as_inner().b() * self.as_inner().s() * operand.as_inner().y(),
-            operand.as_inner().y()
-                + -T::TWO * self.as_inner().s() * self.as_inner().s() * operand.as_inner().y()
-                + -T::TWO * self.as_inner().b() * self.as_inner().s() * operand.as_inner().x(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.as_inner().y() * self.as_inner().b() * self.as_inner().s()
+                + operand.as_inner().x(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().b() * self.as_inner().s()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().s() * self.as_inner().s()
+                + operand.as_inner().y(),
         )
     }
 }
@@ -2079,7 +2080,7 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * self.s() * operand.as_inner().b())
+        Bivector::new_unchecked(operand.as_inner().b() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -2115,8 +2116,8 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.s() * self.s() * operand.as_inner().s(),
-            self.s() * self.s() * operand.as_inner().b(),
+            operand.as_inner().s() * self.s() * self.s(),
+            operand.as_inner().b() * self.s() * self.s(),
         )
     }
 }
@@ -2149,7 +2150,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -2185,8 +2186,8 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.s() * self.s() * operand.as_inner().x()),
-            -(self.s() * self.s() * operand.as_inner().y()),
+            -(operand.as_inner().x() * self.s() * self.s()),
+            -(operand.as_inner().y() * self.s() * self.s()),
         )
     }
 }
@@ -2222,8 +2223,8 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Bivector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.x() * self.x() * operand.as_inner().b())
-                + -(self.y() * self.y() * operand.as_inner().b()),
+            -(operand.as_inner().b() * self.x() * self.x())
+                + -(operand.as_inner().b() * self.y() * self.y()),
         )
     }
 }
@@ -2241,12 +2242,13 @@ impl<T: Float> Antisandwich<Rotor<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Rotor<T>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.x() * operand.s() * self.x() - self.x() * operand.b() * self.y()
-                + self.y() * operand.s() * self.y()
-                + self.y() * operand.b() * self.x(),
-            -(self.x() * operand.b() * self.x()) + self.y() * operand.s() * self.x()
-                - self.y() * operand.b() * self.y()
-                - self.x() * operand.s() * self.y(),
+            self.x() * operand.s() * self.x() + self.y() * operand.b() * self.x()
+                - self.x() * operand.b() * self.y()
+                + self.y() * operand.s() * self.y(),
+            -(self.y() * operand.b() * self.y())
+                - self.x() * operand.s() * self.y()
+                - self.x() * operand.b() * self.x()
+                + self.y() * operand.s() * self.x(),
         )
     }
 }
@@ -2264,10 +2266,10 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Rotor<T>>) -> Rotor<T> {
         Rotor::new_unchecked(
-            self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
-            -(self.x() * self.x() * operand.as_inner().b())
-                + -(self.y() * self.y() * operand.as_inner().b()),
+            operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
+            -(operand.as_inner().b() * self.x() * self.x())
+                + -(operand.as_inner().b() * self.y() * self.y()),
         )
     }
 }
@@ -2301,8 +2303,8 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.x() * self.x() * operand.as_inner().s()
-                + self.y() * self.y() * operand.as_inner().s(),
+            operand.as_inner().s() * self.x() * self.x()
+                + operand.as_inner().s() * self.y() * self.y(),
         )
     }
 }
@@ -2320,12 +2322,13 @@ impl<T: Float> Antisandwich<Vector<T>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * operand.x() * self.x()) - self.y() * operand.y() * self.x()
-                + self.y() * operand.x() * self.y()
-                - self.x() * operand.y() * self.y(),
-            -(self.y() * operand.y() * self.y()) - self.y() * operand.x() * self.x()
-                + self.x() * operand.y() * self.x()
-                - self.x() * operand.x() * self.y(),
+            -(self.x() * operand.x() * self.x())
+                - self.x() * operand.y() * self.y()
+                - self.y() * operand.y() * self.x()
+                + self.y() * operand.x() * self.y(),
+            -(self.x() * operand.x() * self.y()) + self.x() * operand.y() * self.x()
+                - self.y() * operand.x() * self.x()
+                - self.y() * operand.y() * self.y(),
         )
     }
 }
@@ -2335,12 +2338,12 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.x())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.x()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.y(),
-            operand.y()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.y()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.x(),
+            -T::TWO * operand.y() * self.as_inner().x() * self.as_inner().y()
+                + -(operand.x())
+                + T::TWO * operand.x() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.x() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.y() * self.as_inner().y() * self.as_inner().y()
+                + operand.y(),
         )
     }
 }
@@ -2350,12 +2353,12 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Vector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * self.x() * operand.as_inner().x())
-                + self.y() * self.y() * operand.as_inner().x()
-                + -T::TWO * self.x() * self.y() * operand.as_inner().y(),
-            self.x() * self.x() * operand.as_inner().y()
-                + -(self.y() * self.y() * operand.as_inner().y())
-                + -T::TWO * self.x() * self.y() * operand.as_inner().x(),
+            -T::TWO * operand.as_inner().y() * self.x() * self.y()
+                + -(operand.as_inner().x() * self.x() * self.x())
+                + operand.as_inner().x() * self.y() * self.y(),
+            -T::TWO * operand.as_inner().x() * self.x() * self.y()
+                + -(operand.as_inner().y() * self.y() * self.y())
+                + operand.as_inner().y() * self.x() * self.x(),
         )
     }
 }
@@ -2365,12 +2368,12 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(operand.as_inner().x())
-                + T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().x()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().y(),
-            operand.as_inner().y()
-                + -T::TWO * self.as_inner().y() * self.as_inner().y() * operand.as_inner().y()
-                + -T::TWO * self.as_inner().x() * self.as_inner().y() * operand.as_inner().x(),
+            -T::TWO * operand.as_inner().y() * self.as_inner().x() * self.as_inner().y()
+                + -(operand.as_inner().x())
+                + T::TWO * operand.as_inner().x() * self.as_inner().y() * self.as_inner().y(),
+            -T::TWO * operand.as_inner().x() * self.as_inner().x() * self.as_inner().y()
+                + -T::TWO * operand.as_inner().y() * self.as_inner().y() * self.as_inner().y()
+                + operand.as_inner().y(),
         )
     }
 }
@@ -2911,12 +2914,13 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Rotor<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
             (-(self.b() * operand.b() * self.s())
-                + self.s() * operand.b() * self.b()
+                + self.b() * operand.s() * self.b()
                 + self.s() * operand.s() * self.s()
-                + self.b() * operand.s() * self.b())
+                + self.s() * operand.b() * self.b())
                 * inv_norm_sq,
-            (self.b() * operand.b() * self.b() + self.s() * operand.b() * self.s()
-                - self.s() * operand.s() * self.b()
+            (-(self.s() * operand.s() * self.b())
+                + self.s() * operand.b() * self.s()
+                + self.b() * operand.b() * self.b()
                 + self.b() * operand.s() * self.s())
                 * inv_norm_sq,
         ))
@@ -2948,14 +2952,14 @@ impl<T: Float> InverseSandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.s() * operand.y() * self.b() - self.b() * operand.x() * self.b()
-                + self.b() * operand.y() * self.s()
-                + self.s() * operand.x() * self.s())
+            (-(self.b() * operand.x() * self.b())
+                + self.s() * operand.y() * self.b()
+                + self.s() * operand.x() * self.s()
+                + self.b() * operand.y() * self.s())
                 * inv_norm_sq,
-            (-(self.s() * operand.x() * self.b())
-                - self.b() * operand.y() * self.b()
-                - self.b() * operand.x() * self.s()
-                + self.s() * operand.y() * self.s())
+            (-(self.s() * operand.x() * self.b()) - self.b() * operand.y() * self.b()
+                + self.s() * operand.y() * self.s()
+                - self.b() * operand.x() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -3049,14 +3053,13 @@ impl<T: Float> InverseSandwich<Rotor<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.y() * operand.s() * self.y() + self.x() * operand.b() * self.y()
-                - self.y() * operand.b() * self.x()
-                + self.x() * operand.s() * self.x())
+            (self.y() * operand.s() * self.y() - self.y() * operand.b() * self.x()
+                + self.x() * operand.s() * self.x()
+                + self.x() * operand.b() * self.y())
                 * inv_norm_sq,
-            (self.x() * operand.s() * self.y()
-                - self.x() * operand.b() * self.x()
+            (-(self.y() * operand.s() * self.x()) + self.x() * operand.s() * self.y()
                 - self.y() * operand.b() * self.y()
-                - self.y() * operand.s() * self.x())
+                - self.x() * operand.b() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -3072,7 +3075,7 @@ impl<T: Float> InverseSandwich<Scalar<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y()) * inv_norm_sq,
+            (self.y() * operand.s() * self.y() + self.x() * operand.s() * self.x()) * inv_norm_sq,
         ))
     }
 }
@@ -3087,10 +3090,9 @@ impl<T: Float> InverseSandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.y() * operand.y() * self.x()
-                + self.x() * operand.y() * self.y()
-                + self.x() * operand.x() * self.x()
-                - self.y() * operand.x() * self.y())
+            (self.x() * operand.y() * self.y() + self.y() * operand.y() * self.x()
+                - self.y() * operand.x() * self.y()
+                + self.x() * operand.x() * self.x())
                 * inv_norm_sq,
             (self.y() * operand.x() * self.x() + self.x() * operand.x() * self.y()
                 - self.x() * operand.y() * self.x()
@@ -3187,14 +3189,14 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (self.s() * operand.s() * self.s() - self.b() * operand.b() * self.s()
+            (self.s() * operand.b() * self.b()
+                + self.s() * operand.s() * self.s()
                 + self.b() * operand.s() * self.b()
-                + self.s() * operand.b() * self.b())
+                - self.b() * operand.b() * self.s())
                 * inv_norm_sq,
-            (-(self.s() * operand.s() * self.b())
-                + self.b() * operand.s() * self.s()
+            (self.s() * operand.b() * self.s() - self.s() * operand.s() * self.b()
                 + self.b() * operand.b() * self.b()
-                + self.s() * operand.b() * self.s())
+                + self.b() * operand.s() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -3225,14 +3227,15 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Rotor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (self.s() * operand.y() * self.b()
-                + self.b() * operand.x() * self.b()
+            (-(self.s() * operand.x() * self.s())
+                + self.s() * operand.y() * self.b()
                 + self.b() * operand.y() * self.s()
-                - self.s() * operand.x() * self.s())
+                + self.b() * operand.x() * self.b())
                 * inv_norm_sq,
-            (-(self.s() * operand.y() * self.s()) + self.b() * operand.y() * self.b()
-                - self.b() * operand.x() * self.s()
-                - self.s() * operand.x() * self.b())
+            (self.b() * operand.y() * self.b()
+                - self.s() * operand.x() * self.b()
+                - self.s() * operand.y() * self.s()
+                - self.b() * operand.x() * self.s())
                 * inv_norm_sq,
         ))
     }
@@ -3326,15 +3329,14 @@ impl<T: Float> InverseAntisandwich<Rotor<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Rotor::new_unchecked(
-            (-(self.x() * operand.b() * self.y())
-                + self.y() * operand.s() * self.y()
-                + self.x() * operand.s() * self.x()
-                + self.y() * operand.b() * self.x())
+            (self.x() * operand.s() * self.x() + self.y() * operand.b() * self.x()
+                - self.x() * operand.b() * self.y()
+                + self.y() * operand.s() * self.y())
                 * inv_norm_sq,
-            (self.y() * operand.s() * self.x()
-                - self.x() * operand.s() * self.y()
+            (-(self.x() * operand.s() * self.y())
                 - self.x() * operand.b() * self.x()
-                - self.y() * operand.b() * self.y())
+                - self.y() * operand.b() * self.y()
+                + self.y() * operand.s() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -3365,15 +3367,14 @@ impl<T: Float> InverseAntisandwich<Vector<T>> for Vector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Vector::new_unchecked(
-            (-(self.x() * operand.y() * self.y())
+            (-(self.y() * operand.y() * self.x())
+                - self.x() * operand.y() * self.y()
                 - self.x() * operand.x() * self.x()
-                - self.y() * operand.y() * self.x()
                 + self.y() * operand.x() * self.y())
                 * inv_norm_sq,
-            (-(self.x() * operand.x() * self.y())
+            (-(self.x() * operand.x() * self.y()) + self.x() * operand.y() * self.x()
                 - self.y() * operand.y() * self.y()
-                - self.y() * operand.x() * self.x()
-                + self.x() * operand.y() * self.x())
+                - self.y() * operand.x() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -3502,7 +3503,7 @@ impl<T: Float> ScalarProduct<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().b() * rhs.b())
+        -(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -3510,7 +3511,7 @@ impl<T: Float> ScalarProduct<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3518,7 +3519,7 @@ impl<T: Float> ScalarProduct<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
@@ -3533,7 +3534,7 @@ impl<T: Float> ScalarProduct<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -3541,7 +3542,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -3549,7 +3550,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> ScalarProduct<Vector<T>> for Vector<T> {
@@ -3564,7 +3565,7 @@ impl<T: Float> ScalarProduct<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Vector<T>) -> T {
-        self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y()
+        rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y()
     }
 }
 #[allow(unused_variables)]
@@ -3572,7 +3573,7 @@ impl<T: Float> ScalarProduct<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y()
     }
 }
 #[allow(unused_variables)]
@@ -3580,14 +3581,14 @@ impl<T: Float> ScalarProduct<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y()
     }
 }
 impl<T: Float> BulkContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3595,7 +3596,7 @@ impl<T: Float> BulkContract<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().b() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -3603,7 +3604,7 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.b() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3611,14 +3612,14 @@ impl<T: Float> BulkContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().b() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3626,7 +3627,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -3634,7 +3635,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3642,14 +3643,14 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.as_inner().b())
     }
 }
 impl<T: Float> BulkContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.b() * rhs.y(), -(self.b() * rhs.x()))
+        Vector::new_unchecked(rhs.y() * self.b(), -(rhs.x() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -3658,8 +3659,8 @@ impl<T: Float> BulkContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().b() * rhs.y(),
-            -(self.as_inner().b() * rhs.x()),
+            rhs.y() * self.as_inner().b(),
+            -(rhs.x() * self.as_inner().b()),
         )
     }
 }
@@ -3669,8 +3670,8 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.b() * rhs.as_inner().y(),
-            -(self.b() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.b(),
+            -(rhs.as_inner().x() * self.b()),
         )
     }
 }
@@ -3680,8 +3681,8 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().b() * rhs.as_inner().y(),
-            -(self.as_inner().b() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.as_inner().b(),
+            -(rhs.as_inner().x() * self.as_inner().b()),
         )
     }
 }
@@ -3689,7 +3690,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -3697,7 +3698,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -3705,7 +3706,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -3713,14 +3714,14 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.x() * rhs.s()), -(self.y() * rhs.s()))
+        Vector::new_unchecked(-(rhs.s() * self.x()), -(rhs.s() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -3729,8 +3730,8 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.s()),
-            -(self.as_inner().y() * rhs.s()),
+            -(rhs.s() * self.as_inner().x()),
+            -(rhs.s() * self.as_inner().y()),
         )
     }
 }
@@ -3740,8 +3741,8 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Vector<T> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.as_inner().s()),
-            -(self.y() * rhs.as_inner().s()),
+            -(rhs.as_inner().s() * self.x()),
+            -(rhs.as_inner().s() * self.y()),
         )
     }
 }
@@ -3751,8 +3752,8 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().s()),
-            -(self.as_inner().y() * rhs.as_inner().s()),
+            -(rhs.as_inner().s() * self.as_inner().x()),
+            -(rhs.as_inner().s() * self.as_inner().y()),
         )
     }
 }
@@ -3760,7 +3761,7 @@ impl<T: Float> BulkContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -3768,7 +3769,7 @@ impl<T: Float> BulkContract<Vector<T>> for Unit<Vector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y())
+        Scalar::new_unchecked(rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -3776,7 +3777,7 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y())
+        Scalar::new_unchecked(rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -3785,7 +3786,7 @@ impl<T: Float> BulkContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -3793,7 +3794,7 @@ impl<T: Float> WeightContract<Bivector<T>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -3801,7 +3802,7 @@ impl<T: Float> WeightContract<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.as_inner().b()))
     }
 }
 #[allow(unused_variables)]
@@ -3809,7 +3810,7 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -3817,14 +3818,14 @@ impl<T: Float> WeightContract<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().b() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.as_inner().b()))
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.b() * rhs.s()))
+        Bivector::new_unchecked(-(rhs.s() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -3832,7 +3833,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().b() * rhs.s()))
+        Bivector::new_unchecked(-(rhs.s() * self.as_inner().b()))
     }
 }
 #[allow(unused_variables)]
@@ -3840,7 +3841,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.b() * rhs.as_inner().s()))
+        Bivector::new_unchecked(-(rhs.as_inner().s() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -3848,14 +3849,14 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().b() * rhs.as_inner().s()))
+        Bivector::new_unchecked(-(rhs.as_inner().s() * self.as_inner().b()))
     }
 }
 impl<T: Float> WeightContract<Vector<T>> for Bivector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.b() * rhs.y()), self.b() * rhs.x())
+        Vector::new_unchecked(-(rhs.y() * self.b()), rhs.x() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -3864,8 +3865,8 @@ impl<T: Float> WeightContract<Vector<T>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().b() * rhs.y()),
-            self.as_inner().b() * rhs.x(),
+            -(rhs.y() * self.as_inner().b()),
+            rhs.x() * self.as_inner().b(),
         )
     }
 }
@@ -3875,8 +3876,8 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Bivector<T> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.b() * rhs.as_inner().y()),
-            self.b() * rhs.as_inner().x(),
+            -(rhs.as_inner().y() * self.b()),
+            rhs.as_inner().x() * self.b(),
         )
     }
 }
@@ -3886,8 +3887,8 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Unit<Bivector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().b() * rhs.as_inner().y()),
-            self.as_inner().b() * rhs.as_inner().x(),
+            -(rhs.as_inner().y() * self.as_inner().b()),
+            rhs.as_inner().x() * self.as_inner().b(),
         )
     }
 }
@@ -3895,7 +3896,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -3903,7 +3904,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -3911,7 +3912,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -3919,14 +3920,14 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.s(), self.y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.x(), rhs.s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -3934,7 +3935,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Vector<T>> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().x() * rhs.s(), self.as_inner().y() * rhs.s())
+        Vector::new_unchecked(rhs.s() * self.as_inner().x(), rhs.s() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -3942,7 +3943,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.as_inner().s(), self.y() * rhs.as_inner().s())
+        Vector::new_unchecked(rhs.as_inner().s() * self.x(), rhs.as_inner().s() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -3951,8 +3952,8 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().s(),
-            self.as_inner().y() * rhs.as_inner().s(),
+            rhs.as_inner().s() * self.as_inner().x(),
+            rhs.as_inner().s() * self.as_inner().y(),
         )
     }
 }
@@ -3960,7 +3961,7 @@ impl<T: Float> WeightContract<Vector<T>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.x() * rhs.x()) + -(self.y() * rhs.y()))
+        Scalar::new_unchecked(-(rhs.x() * self.x()) + -(rhs.y() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -3968,7 +3969,7 @@ impl<T: Float> WeightContract<Vector<T>> for Unit<Vector<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Vector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().x() * rhs.x()) + -(self.as_inner().y() * rhs.y()))
+        Scalar::new_unchecked(-(rhs.x() * self.as_inner().x()) + -(rhs.y() * self.as_inner().y()))
     }
 }
 #[allow(unused_variables)]
@@ -3976,7 +3977,7 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Vector<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.x() * rhs.as_inner().x()) + -(self.y() * rhs.as_inner().y()))
+        Scalar::new_unchecked(-(rhs.as_inner().x() * self.x()) + -(rhs.as_inner().y() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -3985,8 +3986,8 @@ impl<T: Float> WeightContract<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Vector<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().x())
-                + -(self.as_inner().y() * rhs.as_inner().y()),
+            -(rhs.as_inner().x() * self.as_inner().x())
+                + -(rhs.as_inner().y() * self.as_inner().y()),
         )
     }
 }
@@ -3994,7 +3995,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -4002,7 +4003,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.b())
+        Bivector::new_unchecked(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -4010,7 +4011,7 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.b() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -4018,14 +4019,14 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().b() * rhs.as_inner().b())
+        Bivector::new_unchecked(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> BulkExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4033,7 +4034,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.b())
+        Scalar::new_unchecked(rhs.b() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -4041,7 +4042,7 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4049,14 +4050,14 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().b())
+        Scalar::new_unchecked(rhs.as_inner().b() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4064,7 +4065,7 @@ impl<T: Float> BulkExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.s())
+        Bivector::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -4072,7 +4073,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.s() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4080,14 +4081,14 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Bivector::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.s() * rhs.y()), self.s() * rhs.x())
+        Vector::new_unchecked(-(rhs.y() * self.s()), rhs.x() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4096,8 +4097,8 @@ impl<T: Float> BulkExpand<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().s() * rhs.y()),
-            self.as_inner().s() * rhs.x(),
+            -(rhs.y() * self.as_inner().s()),
+            rhs.x() * self.as_inner().s(),
         )
     }
 }
@@ -4107,8 +4108,8 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.s() * rhs.as_inner().y()),
-            self.s() * rhs.as_inner().x(),
+            -(rhs.as_inner().y() * self.s()),
+            rhs.as_inner().x() * self.s(),
         )
     }
 }
@@ -4118,8 +4119,8 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().s() * rhs.as_inner().y()),
-            self.as_inner().s() * rhs.as_inner().x(),
+            -(rhs.as_inner().y() * self.as_inner().s()),
+            rhs.as_inner().x() * self.as_inner().s(),
         )
     }
 }
@@ -4127,7 +4128,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.b(), self.y() * rhs.b())
+        Vector::new_unchecked(rhs.b() * self.x(), rhs.b() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -4135,7 +4136,7 @@ impl<T: Float> BulkExpand<Bivector<T>> for Unit<Vector<T>> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.as_inner().x() * rhs.b(), self.as_inner().y() * rhs.b())
+        Vector::new_unchecked(rhs.b() * self.as_inner().x(), rhs.b() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -4143,7 +4144,7 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
-        Vector::new_unchecked(self.x() * rhs.as_inner().b(), self.y() * rhs.as_inner().b())
+        Vector::new_unchecked(rhs.as_inner().b() * self.x(), rhs.as_inner().b() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -4152,8 +4153,8 @@ impl<T: Float> BulkExpand<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().b(),
-            self.as_inner().y() * rhs.as_inner().b(),
+            rhs.as_inner().b() * self.as_inner().x(),
+            rhs.as_inner().b() * self.as_inner().y(),
         )
     }
 }
@@ -4161,7 +4162,7 @@ impl<T: Float> BulkExpand<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.x() * rhs.x() + self.y() * rhs.y())
+        Bivector::new_unchecked(rhs.x() * self.x() + rhs.y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -4169,7 +4170,7 @@ impl<T: Float> BulkExpand<Vector<T>> for Unit<Vector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y())
+        Bivector::new_unchecked(rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y())
     }
 }
 #[allow(unused_variables)]
@@ -4177,7 +4178,7 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y())
+        Bivector::new_unchecked(rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y())
     }
 }
 #[allow(unused_variables)]
@@ -4186,7 +4187,7 @@ impl<T: Float> BulkExpand<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y(),
+            rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y(),
         )
     }
 }
@@ -4194,7 +4195,7 @@ impl<T: Float> WeightExpand<Bivector<T>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.b() * rhs.b()))
+        Bivector::new_unchecked(-(rhs.b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -4202,7 +4203,7 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().b() * rhs.b()))
+        Bivector::new_unchecked(-(rhs.b() * self.as_inner().b()))
     }
 }
 #[allow(unused_variables)]
@@ -4210,7 +4211,7 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Bivector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.b() * rhs.as_inner().b()))
+        Bivector::new_unchecked(-(rhs.as_inner().b() * self.b()))
     }
 }
 #[allow(unused_variables)]
@@ -4218,14 +4219,14 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().b() * rhs.as_inner().b()))
+        Bivector::new_unchecked(-(rhs.as_inner().b() * self.as_inner().b()))
     }
 }
 impl<T: Float> WeightExpand<Bivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -4233,7 +4234,7 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.b()))
+        Scalar::new_unchecked(-(rhs.b() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -4241,7 +4242,7 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -4249,14 +4250,14 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().b()))
+        Scalar::new_unchecked(-(rhs.as_inner().b() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.s() * rhs.s()))
+        Bivector::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -4264,7 +4265,7 @@ impl<T: Float> WeightExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        Bivector::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -4272,7 +4273,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        Bivector::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -4280,14 +4281,14 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        Bivector::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> WeightExpand<Vector<T>> for Scalar<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Vector<T> {
-        Vector::new_unchecked(self.s() * rhs.y(), -(self.s() * rhs.x()))
+        Vector::new_unchecked(rhs.y() * self.s(), -(rhs.x() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -4296,8 +4297,8 @@ impl<T: Float> WeightExpand<Vector<T>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.y(),
-            -(self.as_inner().s() * rhs.x()),
+            rhs.y() * self.as_inner().s(),
+            -(rhs.x() * self.as_inner().s()),
         )
     }
 }
@@ -4307,8 +4308,8 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Scalar<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.s() * rhs.as_inner().y(),
-            -(self.s() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.s(),
+            -(rhs.as_inner().x() * self.s()),
         )
     }
 }
@@ -4318,8 +4319,8 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Unit<Scalar<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            self.as_inner().s() * rhs.as_inner().y(),
-            -(self.as_inner().s() * rhs.as_inner().x()),
+            rhs.as_inner().y() * self.as_inner().s(),
+            -(rhs.as_inner().x() * self.as_inner().s()),
         )
     }
 }
@@ -4327,7 +4328,7 @@ impl<T: Float> WeightExpand<Bivector<T>> for Vector<T> {
     type Output = Vector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
-        Vector::new_unchecked(-(self.x() * rhs.b()), -(self.y() * rhs.b()))
+        Vector::new_unchecked(-(rhs.b() * self.x()), -(rhs.b() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -4336,8 +4337,8 @@ impl<T: Float> WeightExpand<Bivector<T>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Bivector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.b()),
-            -(self.as_inner().y() * rhs.b()),
+            -(rhs.b() * self.as_inner().x()),
+            -(rhs.b() * self.as_inner().y()),
         )
     }
 }
@@ -4347,8 +4348,8 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Vector<T> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.x() * rhs.as_inner().b()),
-            -(self.y() * rhs.as_inner().b()),
+            -(rhs.as_inner().b() * self.x()),
+            -(rhs.as_inner().b() * self.y()),
         )
     }
 }
@@ -4358,8 +4359,8 @@ impl<T: Float> WeightExpand<Unit<Bivector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Bivector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().b()),
-            -(self.as_inner().y() * rhs.as_inner().b()),
+            -(rhs.as_inner().b() * self.as_inner().x()),
+            -(rhs.as_inner().b() * self.as_inner().y()),
         )
     }
 }
@@ -4367,7 +4368,7 @@ impl<T: Float> WeightExpand<Vector<T>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.x() * rhs.x()) + -(self.y() * rhs.y()))
+        Bivector::new_unchecked(-(rhs.x() * self.x()) + -(rhs.y() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -4375,7 +4376,7 @@ impl<T: Float> WeightExpand<Vector<T>> for Unit<Vector<T>> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Vector<T>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.as_inner().x() * rhs.x()) + -(self.as_inner().y() * rhs.y()))
+        Bivector::new_unchecked(-(rhs.x() * self.as_inner().x()) + -(rhs.y() * self.as_inner().y()))
     }
 }
 #[allow(unused_variables)]
@@ -4383,7 +4384,7 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Vector<T> {
     type Output = Bivector<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
-        Bivector::new_unchecked(-(self.x() * rhs.as_inner().x()) + -(self.y() * rhs.as_inner().y()))
+        Bivector::new_unchecked(-(rhs.as_inner().x() * self.x()) + -(rhs.as_inner().y() * self.y()))
     }
 }
 #[allow(unused_variables)]
@@ -4392,8 +4393,8 @@ impl<T: Float> WeightExpand<Unit<Vector<T>>> for Unit<Vector<T>> {
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Vector<T>>) -> Bivector<T> {
         Bivector::new_unchecked(
-            -(self.as_inner().x() * rhs.as_inner().x())
-                + -(self.as_inner().y() * rhs.as_inner().y()),
+            -(rhs.as_inner().x() * self.as_inner().x())
+                + -(rhs.as_inner().y() * self.as_inner().y()),
         )
     }
 }
@@ -4409,7 +4410,7 @@ impl<T: Float> Dot<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().b() * rhs.b())
+        -(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -4417,7 +4418,7 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -4425,7 +4426,7 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Bivector<T> {
@@ -4440,7 +4441,7 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().b() * rhs.b())
+        -(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -4448,7 +4449,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -4456,7 +4457,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> Dot<Bivector<T>> for Rotor<T> {
@@ -4471,7 +4472,7 @@ impl<T: Float> Dot<Bivector<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Bivector<T>) -> T {
-        -(self.as_inner().b() * rhs.b())
+        -(rhs.b() * self.as_inner().b())
     }
 }
 #[allow(unused_variables)]
@@ -4479,7 +4480,7 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.b())
     }
 }
 #[allow(unused_variables)]
@@ -4487,7 +4488,7 @@ impl<T: Float> Dot<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        -(self.as_inner().b() * rhs.as_inner().b())
+        -(rhs.as_inner().b() * self.as_inner().b())
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Rotor<T> {
@@ -4502,7 +4503,7 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().b() * rhs.b()) + self.as_inner().s() * rhs.s()
+        -(rhs.b() * self.as_inner().b()) + rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -4510,7 +4511,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.b() * rhs.as_inner().b()) + self.s() * rhs.as_inner().s()
+        -(rhs.as_inner().b() * self.b()) + rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -4518,7 +4519,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().b() * rhs.as_inner().b()) + self.as_inner().s() * rhs.as_inner().s()
+        -(rhs.as_inner().b() * self.as_inner().b()) + rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Rotor<T> {
@@ -4533,7 +4534,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -4541,7 +4542,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -4549,7 +4550,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Rotor<T>> for Scalar<T> {
@@ -4564,7 +4565,7 @@ impl<T: Float> Dot<Rotor<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -4572,7 +4573,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -4580,7 +4581,7 @@ impl<T: Float> Dot<Unit<Rotor<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Scalar<T> {
@@ -4595,7 +4596,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -4603,7 +4604,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -4611,7 +4612,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Vector<T>> for Vector<T> {
@@ -4626,7 +4627,7 @@ impl<T: Float> Dot<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Vector<T>) -> T {
-        self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y()
+        rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y()
     }
 }
 #[allow(unused_variables)]
@@ -4634,7 +4635,7 @@ impl<T: Float> Dot<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y()
     }
 }
 #[allow(unused_variables)]
@@ -4642,7 +4643,7 @@ impl<T: Float> Dot<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y()
     }
 }
 impl<T: Float> Antidot<Bivector<T>> for Bivector<T> {
@@ -4657,7 +4658,7 @@ impl<T: Float> Antidot<Bivector<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Bivector<T>) -> T {
-        self.as_inner().b() * rhs.b()
+        rhs.b() * self.as_inner().b()
     }
 }
 #[allow(unused_variables)]
@@ -4665,7 +4666,7 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.b()
     }
 }
 #[allow(unused_variables)]
@@ -4673,7 +4674,7 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.as_inner().b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.as_inner().b()
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Bivector<T> {
@@ -4688,7 +4689,7 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().b() * rhs.b()
+        rhs.b() * self.as_inner().b()
     }
 }
 #[allow(unused_variables)]
@@ -4696,7 +4697,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Bivector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.b()
     }
 }
 #[allow(unused_variables)]
@@ -4704,7 +4705,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Bivector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.as_inner().b()
     }
 }
 impl<T: Float> Antidot<Bivector<T>> for Rotor<T> {
@@ -4719,7 +4720,7 @@ impl<T: Float> Antidot<Bivector<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Bivector<T>) -> T {
-        self.as_inner().b() * rhs.b()
+        rhs.b() * self.as_inner().b()
     }
 }
 #[allow(unused_variables)]
@@ -4727,7 +4728,7 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.b()
     }
 }
 #[allow(unused_variables)]
@@ -4735,7 +4736,7 @@ impl<T: Float> Antidot<Unit<Bivector<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Bivector<T>>) -> T {
-        self.as_inner().b() * rhs.as_inner().b()
+        rhs.as_inner().b() * self.as_inner().b()
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Rotor<T> {
@@ -4750,7 +4751,7 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        self.as_inner().b() * rhs.b() + -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s()) + rhs.b() * self.as_inner().b()
     }
 }
 #[allow(unused_variables)]
@@ -4758,7 +4759,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.b() * rhs.as_inner().b() + -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s()) + rhs.as_inner().b() * self.b()
     }
 }
 #[allow(unused_variables)]
@@ -4766,7 +4767,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        self.as_inner().b() * rhs.as_inner().b() + -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s()) + rhs.as_inner().b() * self.as_inner().b()
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Rotor<T> {
@@ -4781,7 +4782,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -4789,7 +4790,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Rotor<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4797,7 +4798,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Rotor<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Rotor<T>> for Scalar<T> {
@@ -4812,7 +4813,7 @@ impl<T: Float> Antidot<Rotor<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Rotor<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -4820,7 +4821,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4828,7 +4829,7 @@ impl<T: Float> Antidot<Unit<Rotor<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Rotor<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Scalar<T> {
@@ -4843,7 +4844,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -4851,7 +4852,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -4859,7 +4860,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Vector<T>> for Vector<T> {
@@ -4874,7 +4875,7 @@ impl<T: Float> Antidot<Vector<T>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Vector<T>) -> T {
-        self.as_inner().x() * rhs.x() + self.as_inner().y() * rhs.y()
+        rhs.x() * self.as_inner().x() + rhs.y() * self.as_inner().y()
     }
 }
 #[allow(unused_variables)]
@@ -4882,7 +4883,7 @@ impl<T: Float> Antidot<Unit<Vector<T>>> for Vector<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.x() * rhs.as_inner().x() + self.y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.x() + rhs.as_inner().y() * self.y()
     }
 }
 #[allow(unused_variables)]
@@ -4890,7 +4891,7 @@ impl<T: Float> Antidot<Unit<Vector<T>>> for Unit<Vector<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Vector<T>>) -> T {
-        self.as_inner().x() * rhs.as_inner().x() + self.as_inner().y() * rhs.as_inner().y()
+        rhs.as_inner().x() * self.as_inner().x() + rhs.as_inner().y() * self.as_inner().y()
     }
 }
 impl<T: Float> Reverse for Bivector<T> {
@@ -5308,6 +5309,1110 @@ mod arbitrary_impls {
             (-100.0f64..100.0, -100.0f64..100.0)
                 .prop_map(|(x0, x1)| Vector::new_unchecked(T::from_f64(x0), T::from_f64(x1)))
                 .boxed()
+        }
+    }
+}
+
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
+
+#[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
+mod verification_tests {
+    use super::*;
+    use crate::algebra::Multivector;
+    #[allow(unused_imports)]
+    use crate::norm::{DegenerateNormed, Normed};
+    use crate::signature::Euclidean2;
+    #[allow(unused_imports)]
+    use crate::wrappers::Unit;
+    use approx::relative_eq;
+    use proptest::prelude::*;
+
+    /// Relative epsilon for floating-point comparisons in verification tests.
+    /// Using relative comparison handles varying magnitudes better than absolute.
+    const REL_EPSILON: f64 = 1e-10;
+
+    proptest! {
+        #[test]
+        fn bivector_add_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_sub_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn bivector_neg_matches_multivector(a in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn rotor_add_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn rotor_sub_matches_multivector(a in any::<Rotor<f64>>(), b in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn rotor_neg_matches_multivector(a in any::<Rotor<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn scalar_add_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_sub_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_neg_matches_multivector(a in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn vector_add_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_sub_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn vector_neg_matches_multivector(a in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_bivector_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_bivector_scalar_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_scalar_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_bivector_vector_vector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_scalar_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_vector_vector_scalar_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_bivector_bivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_bivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_bivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_bivector_bivector_bivector_matches_multivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_bivector_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_scalar_bivector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_vector_vector_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_bivector_vector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Bivector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Vector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_vector_vector_bivector_matches_multivector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            let specialized_result: Bivector<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Euclidean2> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_bivector(a in any::<Bivector<f64>>(), b in any::<Bivector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_vector(a in any::<Vector<f64>>(), b in any::<Vector<f64>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// Project idempotency with normalized target: project(project(a, unit_b), unit_b) == project(a, unit_b)
+        #[test]
+        fn project_idempotent_bivector_vector(a in any::<Bivector<f64>>(), unit_b in any::<Unit<Vector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = unit_b.into_inner().into();
+
+            let first = mv_a.project(&mv_b);
+            let second = first.project(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Project idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Antiproject idempotency with normalized target: antiproject(antiproject(a, unit_b), unit_b) == antiproject(a, unit_b)
+        #[test]
+        fn antiproject_idempotent_vector_bivector(a in any::<Vector<f64>>(), unit_b in any::<Unit<Bivector<f64>>>()) {
+            let mv_a: Multivector<f64, Euclidean2> = a.into();
+            let mv_b: Multivector<f64, Euclidean2> = unit_b.into_inner().into();
+
+            let first = mv_a.antiproject(&mv_b);
+            let second = first.antiproject(&mv_b);
+
+            prop_assert!(
+                relative_eq!(first, second, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Antiproject idempotency failed: first={:?}, second={:?}",
+                first, second
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Bivector>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_bivector_norm_matches_inner(u in any::<Unit<Bivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Bivector<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Bivector<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Bivector>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_bivector_norm_squared_matches_inner(u in any::<Unit<Bivector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Bivector<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Bivector<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Rotor>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_rotor_norm_matches_inner(u in any::<Unit<Rotor<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Rotor<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Rotor<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Rotor>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_rotor_norm_squared_matches_inner(u in any::<Unit<Rotor<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Rotor<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Rotor<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Scalar>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_scalar_norm_matches_inner(u in any::<Unit<Scalar<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Scalar<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Scalar<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Scalar>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_scalar_norm_squared_matches_inner(u in any::<Unit<Scalar<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Scalar<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Scalar<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
+        }
+    }
+
+    proptest! {
+        /// Unit<Vector>.norm() should equal inner's norm (both are 1.0).
+        #[test]
+        fn unit_vector_norm_matches_inner(u in any::<Unit<Vector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_norm = <Vector<f64> as Normed>::norm(u.as_inner());
+            let wrapper_norm = <Unit<Vector<f64>> as Normed>::norm(&u);
+
+            prop_assert!(
+                relative_eq!(inner_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm should be 1.0, got {}", inner_norm
+            );
+            prop_assert!(
+                relative_eq!(wrapper_norm, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm should be 1.0, got {}", wrapper_norm
+            );
+            prop_assert!(
+                relative_eq!(inner_norm, wrapper_norm, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Norms should match: {} vs {}", inner_norm, wrapper_norm
+            );
+        }
+
+        /// Unit<Vector>.norm_squared() should equal inner's norm_squared (both are 1.0).
+        #[test]
+        fn unit_vector_norm_squared_matches_inner(u in any::<Unit<Vector<f64>>>()) {
+            // Use explicit trait syntax to specify the type
+            let inner_ns = <Vector<f64> as Normed>::norm_squared(u.as_inner());
+            let wrapper_ns = <Unit<Vector<f64>> as Normed>::norm_squared(&u);
+
+            prop_assert!(
+                relative_eq!(inner_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Inner norm_squared should be 1.0, got {}", inner_ns
+            );
+            prop_assert!(
+                relative_eq!(wrapper_ns, 1.0, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wrapper norm_squared should be 1.0, got {}", wrapper_ns
+            );
         }
     }
 }

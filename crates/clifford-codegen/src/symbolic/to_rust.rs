@@ -204,7 +204,9 @@ impl AtomToRust {
 
     /// Converts an addition to Rust, properly handling signs.
     fn convert_add(&self, add: symbolica::atom::AddView<'_>) -> TokenStream {
-        let terms: Vec<AtomView<'_>> = add.iter().collect();
+        let mut terms: Vec<AtomView<'_>> = add.iter().collect();
+        // Sort by string representation for deterministic output across runs
+        terms.sort_by_cached_key(|t| t.to_string());
 
         if terms.is_empty() {
             return quote! { T::zero() };
@@ -282,7 +284,9 @@ impl AtomToRust {
 
     /// Converts a multiplication to Rust.
     fn convert_mul(&self, mul: symbolica::atom::MulView<'_>) -> TokenStream {
-        let factors: Vec<AtomView<'_>> = mul.iter().collect();
+        let mut factors: Vec<AtomView<'_>> = mul.iter().collect();
+        // Sort by string representation for deterministic output across runs
+        factors.sort_by_cached_key(|f| f.to_string());
 
         if factors.is_empty() {
             return quote! { T::one() };
