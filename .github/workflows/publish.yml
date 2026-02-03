@@ -42,7 +42,19 @@ jobs:
           cargo clippy -p clifford -- -D warnings
           cargo test -p clifford
 
+      - name: Remove codegen feature for publishing
+        run: |
+          cd crates/clifford
+          # Remove codegen feature and build dependencies (not publishable)
+          sed -i '/^# Enable code generation/d' Cargo.toml
+          sed -i '/^codegen = /d' Cargo.toml
+          sed -i '/^clifford-codegen = /d' Cargo.toml
+          sed -i '/^proc-macro2 = /d' Cargo.toml
+          sed -i '/^quote = /d' Cargo.toml
+          echo "=== Modified Cargo.toml ==="
+          cat Cargo.toml
+
       - name: Publish to crates.io
-        run: cargo publish -p clifford
+        run: cargo publish -p clifford --allow-dirty
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
