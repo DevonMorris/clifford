@@ -14,13 +14,17 @@
 //! let spec = parse_spec(r#"
 //! [algebra]
 //! name = "test"
+//! complete = false
 //!
 //! [signature]
 //! positive = ["e1", "e2"]
 //!
 //! [types.Vector]
 //! grades = [1]
-//! fields = ["x", "y"]
+//! field_map = [
+//!   { name = "x", blade = "e1" },
+//!   { name = "y", blade = "e2" }
+//! ]
 //! "#).unwrap();
 //!
 //! let algebra = Algebra::euclidean(2);

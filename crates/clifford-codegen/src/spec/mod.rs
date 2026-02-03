@@ -25,11 +25,20 @@
 //!
 //! [types.Vector]
 //! grades = [1]                            # Which grades this type contains
-//! fields = ["x", "y", "z"]               # Field names
+//! field_map = [                           # Field-to-blade mappings
+//!   { name = "x", blade = "e1" },
+//!   { name = "y", blade = "e2" },
+//!   { name = "z", blade = "e3" }
+//! ]
 //!
 //! [types.Rotor]
 //! grades = [0, 2]
-//! fields = ["s", "xy", "xz", "yz"]
+//! field_map = [
+//!   { name = "s", blade = "s" },
+//!   { name = "xy", blade = "e12" },
+//!   { name = "xz", blade = "e13" },
+//!   { name = "yz", blade = "e23" }
+//! ]
 //! ```
 //!
 //! # Example
@@ -40,13 +49,17 @@
 //! let spec = parse_spec(r#"
 //! [algebra]
 //! name = "euclidean2"
+//! complete = false
 //!
 //! [signature]
 //! positive = ["e1", "e2"]
 //!
 //! [types.Vector]
 //! grades = [1]
-//! fields = ["x", "y"]
+//! field_map = [
+//!   { name = "x", blade = "e1" },
+//!   { name = "y", blade = "e2" }
+//! ]
 //! "#).unwrap();
 //!
 //! assert_eq!(spec.name, "euclidean2");
