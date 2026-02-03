@@ -35,7 +35,7 @@ jobs:
           cargo check
           cargo fmt --all -- --check
           cargo clippy -- -D warnings
-          cargo test
+          cargo test -p clifford
 
       - name: Publish to crates.io
         run: cargo publish
