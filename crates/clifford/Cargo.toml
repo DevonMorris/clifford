@@ -15,7 +15,6 @@ include = [
     "src/**/*.rs",
     "build.rs",
     "Cargo.toml",
-    "LICENSE",
 ]
 
 [lints]
