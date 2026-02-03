@@ -253,7 +253,7 @@ mod tests {
 
     #[test]
     fn generates_to_multivector() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
         let algebra = Algebra::euclidean(2);
         let generator = ConversionsGenerator::new(&spec, &algebra);
 
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn generates_from_multivector() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
         let algebra = Algebra::euclidean(2);
         let generator = ConversionsGenerator::new(&spec, &algebra);
 

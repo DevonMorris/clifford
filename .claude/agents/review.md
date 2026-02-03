@@ -132,7 +132,7 @@ For codegen changes, verify:
 
 ```bash
 # Verify algebras are in sync
-for toml in algebras/*.toml; do
+for toml in crates/clifford-codegen/algebras/*.toml; do
     cargo run --package clifford-codegen -- generate "$toml" --force
 done
 git diff --exit-code src/specialized/*/generated/

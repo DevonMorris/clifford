@@ -3,10 +3,10 @@
 //! This module provides pre-defined specifications for common algebras.
 
 /// 2D Euclidean algebra specification (TOML).
-pub const EUCLIDEAN2: &str = include_str!("../../../../algebras/euclidean2.toml");
+pub const EUCLIDEAN2: &str = include_str!("../../algebras/euclidean2.toml");
 
 /// 3D Euclidean algebra specification (TOML).
-pub const EUCLIDEAN3: &str = include_str!("../../../../algebras/euclidean3.toml");
+pub const EUCLIDEAN3: &str = include_str!("../../algebras/euclidean3.toml");
 
 #[cfg(test)]
 mod tests {

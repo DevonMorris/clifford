@@ -1003,7 +1003,7 @@ mod tests {
 
     #[test]
     fn generates_vector_type() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1021,7 +1021,7 @@ mod tests {
     #[test]
     fn field_order_is_canonical() {
         // Verify fields are ordered by grade, then by blade index
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let rotor_type = spec.types.iter().find(|t| t.name == "Rotor").unwrap();
 
         let field_order: Vec<&str> = rotor_type.fields.iter().map(|f| f.name.as_str()).collect();
@@ -1038,7 +1038,7 @@ mod tests {
         // Grade 2: sign = -1 (2*1/2 = 1, odd)
         // Grade 3: sign = -1 (3*2/2 = 3, odd)
 
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1056,7 +1056,7 @@ mod tests {
 
     #[test]
     fn generates_unit_elements_for_vector() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1072,7 +1072,7 @@ mod tests {
 
     #[test]
     fn no_unit_elements_for_rotor() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1089,7 +1089,7 @@ mod tests {
         // Currently no algebras define type aliases, so this test just verifies
         // the code generation completes without errors. Type alias generation
         // would be tested when an algebra with alias_of is added.
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
@@ -1102,7 +1102,7 @@ mod tests {
 
     #[test]
     fn generates_default_impl() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let generator = TypeGenerator::new(&spec, &algebra);
 
