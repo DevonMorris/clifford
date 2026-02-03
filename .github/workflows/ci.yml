@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SYMBOLICA_LICENSE: ${{ secrets.SYMBOLICA_LICENSE }}
 
 jobs:
   test:
@@ -20,7 +19,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: taiki-e/install-action@nextest
 
-      - run: cargo nextest run --features codegen,proptest-support,serde
+      - run: cargo nextest run --features proptest-support,serde
 
   test-nalgebra:
     name: Test nalgebra
@@ -32,7 +31,7 @@ jobs:
       - uses: taiki-e/install-action@nextest
 
       # Only test latest nalgebra version (API is stable across 0.32-0.34)
-      - run: cargo nextest run --no-default-features --features codegen,nalgebra-0_34,proptest-support
+      - run: cargo nextest run --no-default-features --features nalgebra-0_34,proptest-support
 
   fmt:
     name: Format
@@ -44,8 +43,6 @@ jobs:
           components: rustfmt
       - uses: Swatinem/rust-cache@v2
 
-      # Build to generate code before formatting
-      - run: cargo build -p clifford --features codegen
       - run: cargo fmt --all -- --check
 
   clippy:
@@ -59,13 +56,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Lint with serde and proptest (non-mutually-exclusive features)
-      - run: cargo clippy --features codegen,proptest-support,serde -- -D warnings
+      - run: cargo clippy --features proptest-support,serde -- -D warnings
       # Lint latest nalgebra version (API is stable across 0.32-0.34)
-      - run: cargo clippy --no-default-features --features codegen,nalgebra-0_34 -- -D warnings
+      - run: cargo clippy --no-default-features --features nalgebra-0_34 -- -D warnings
       # Verify rerun integration compiles
-      - run: cargo check --features codegen,rerun-0_28
+      - run: cargo check --features rerun-0_28
       # Verify benchmarks compile
-      - run: cargo check --features codegen --benches
+      - run: cargo check --benches
 
   doc:
     name: Documentation
@@ -76,7 +73,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Doc with nalgebra-0_34 (latest) plus other features (no default to avoid conflict)
-      - run: cargo doc --no-default-features --features codegen,proptest-support,serde,nalgebra-0_34 --no-deps
+      - run: cargo doc --no-default-features --features proptest-support,serde,nalgebra-0_34 --no-deps
 
   doctest:
     name: Doctests
@@ -87,7 +84,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # Run doctests for main crate
-      - run: cargo test -p clifford --features codegen --doc
+      - run: cargo test -p clifford --doc
 
   viz:
     name: Visualization
@@ -99,15 +96,12 @@ jobs:
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
 
-      # Generate clifford code first
-      - run: cargo build -p clifford --features codegen
       # Build for native (three-d)
       - run: cargo build -p clifford-viz --features three-d
       # Build for wasm
       - run: cargo build -p clifford-viz --target wasm32-unknown-unknown --features three-d
       # Run tests
       - run: cargo test -p clifford-viz --features three-d
-      # Clippy is handled by viz-clippy job
 
   deny:
     name: Cargo Deny

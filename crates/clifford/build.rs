@@ -1,60 +1,12 @@
 //! Build script for clifford.
 //!
 //! When the `codegen` feature is enabled, this regenerates all algebras from TOML specs.
-//! When `codegen` is disabled (default for crates.io users), it verifies generated files exist.
+//! When `codegen` is disabled (default), generated files are used from the repository.
 
 fn main() {
-    // Check if codegen feature is enabled
     #[cfg(feature = "codegen")]
     {
         regenerate_algebras();
-    }
-
-    #[cfg(not(feature = "codegen"))]
-    {
-        verify_generated_files_exist();
-    }
-}
-
-/// Verify that all generated files exist (for crates.io users without codegen).
-#[cfg(not(feature = "codegen"))]
-fn verify_generated_files_exist() {
-    use std::path::Path;
-
-    const GENERATED_DIRS: &[&str] = &[
-        "src/specialized/euclidean/dim2/generated",
-        "src/specialized/euclidean/dim3/generated",
-        "src/specialized/projective/dim2/generated",
-        "src/specialized/projective/dim3/generated",
-        "src/specialized/complex/generated",
-        "src/specialized/quaternion/generated",
-        "src/specialized/dual/generated",
-        "src/specialized/hyperbolic/generated",
-        "src/specialized/minkowski/dim2/generated",
-        "src/specialized/dualquat/generated",
-        "src/specialized/elliptic/dim2/generated",
-        "src/specialized/hyperbolic/dim2/generated",
-        "src/specialized/minkowski/dim3/generated",
-        "src/specialized/conformal/dim3/generated",
-        "src/specialized/conformal/dim2/generated",
-    ];
-
-    for dir in GENERATED_DIRS {
-        let types_path = Path::new(dir).join("types.rs");
-        if !types_path.exists() {
-            panic!(
-                "Generated file {} does not exist.\n\
-                 \n\
-                 If you're building from git, enable the `codegen` feature:\n\
-                 \n\
-                 cargo build --features codegen\n\
-                 \n\
-                 This requires a Symbolica license for development.\n\
-                 \n\
-                 If you're building from crates.io, this is a packaging bug - please report it.",
-                types_path.display()
-            );
-        }
     }
 }
 
