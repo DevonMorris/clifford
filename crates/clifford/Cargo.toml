@@ -10,6 +10,13 @@ categories = ["mathematics", "science"]
 repository = "https://github.com/DevonMorris/clifford"
 readme = "../../README.md"
 
+# Include generated code in published crate (even though gitignored)
+include = [
+    "src/**/*.rs",
+    "build.rs",
+    "Cargo.toml",
+]
+
 [lints]
 workspace = true
 
@@ -21,6 +28,8 @@ nalgebra-0_32 = ["dep:nalgebra-0-32"]
 nalgebra-0_33 = ["dep:nalgebra-0-33"]
 nalgebra-0_34 = ["dep:nalgebra-0-34"]
 rerun-0_28 = ["dep:rerun-0-28"]
+# Enable code generation (requires Symbolica license for development)
+codegen = ["dep:clifford-codegen", "dep:proc-macro2", "dep:quote"]
 
 [dependencies]
 approx = "0.5"
@@ -36,9 +45,9 @@ nalgebra-0-34 = { package = "nalgebra", version = "0.34", optional = true }
 rerun-0-28 = { package = "rerun", version = "0.28", optional = true, default-features = false, features = ["sdk"] }
 
 [build-dependencies]
-clifford-codegen = { path = "../clifford-codegen" }
-proc-macro2 = "1"
-quote = "1"
+clifford-codegen = { path = "../clifford-codegen", optional = true }
+proc-macro2 = { version = "1", optional = true }
+quote = { version = "1", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
