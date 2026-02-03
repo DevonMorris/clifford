@@ -47,7 +47,7 @@
 [algebra]
 complete = false
 name = "conformal2"
-module_path = "conformal/dim2"
+module_path = "conformal::dim2"
 description = "2D Conformal Geometric Algebra Cl(3,1,0)"
 
 [signature]

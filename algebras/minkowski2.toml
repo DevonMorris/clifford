@@ -12,7 +12,7 @@
 [algebra]
 complete = false
 name = "minkowski2"
-module_path = "minkowski/dim2"
+module_path = "minkowski::dim2"
 description = "Minkowski plane Cl(1,1,0)"
 
 [signature]

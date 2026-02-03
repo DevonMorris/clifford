@@ -81,10 +81,11 @@ impl<T: Float> Rotor<T> {
     ///
     /// ```
     /// use clifford::specialized::euclidean::dim2::{Rotor, Vector};
+    /// use clifford::ops::Transform;
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
-    /// // 90° counterclockwise rotation
+    /// // 90 deg counterclockwise rotation
     /// let r = Rotor::from_angle(FRAC_PI_2);
     /// let v = Vector::unit_x();
     /// let rotated = r.transform(&v);

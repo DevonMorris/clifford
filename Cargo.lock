@@ -1086,7 +1086,7 @@ checksum = "aaa6b4b263a5d737e9bf6b7c09b72c41a5480aec4d7219af827f6564e950b6a5"
 
 [[package]]
 name = "clifford"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "approx 0.5.1",
  "clifford-codegen",
@@ -1110,7 +1110,7 @@ dependencies = [
 
 [[package]]
 name = "clifford-codegen"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1126,7 +1126,7 @@ dependencies = [
 
 [[package]]
 name = "clifford-viz"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "approx 0.5.1",
  "clifford",

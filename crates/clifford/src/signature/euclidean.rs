@@ -201,7 +201,7 @@ impl Signature for Euclidean4 {
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl1_0_0, Signature};
 ///
 /// assert_eq!(Cl1_0_0::DIM, 1);
 /// assert_eq!(Cl1_0_0::num_blades(), 2);
@@ -249,7 +249,7 @@ pub type Hyperbolic1 = Cl1_0_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl0_1_0, Signature};
 ///
 /// assert_eq!(Cl0_1_0::DIM, 1);
 /// assert_eq!(Cl0_1_0::num_blades(), 2);
@@ -300,7 +300,7 @@ pub type Complex1 = Cl0_1_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl0_2_0, Signature};
 ///
 /// assert_eq!(Cl0_2_0::DIM, 2);
 /// assert_eq!(Cl0_2_0::num_blades(), 4);
@@ -353,12 +353,12 @@ pub type Quaternion2 = Cl0_2_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl1_1_0, Signature};
 ///
 /// assert_eq!(Cl1_1_0::DIM, 2);
 /// assert_eq!(Cl1_1_0::num_blades(), 4);
-/// assert_eq!(Cl1_1_0::metric(0), 1);   // e1² = +1
-/// assert_eq!(Cl1_1_0::metric(1), -1);  // e2² = -1
+/// assert_eq!(Cl1_1_0::metric(0), 1);   // e1^2 = +1
+/// assert_eq!(Cl1_1_0::metric(1), -1);  // e2^2 = -1
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Cl1_1_0;
@@ -421,13 +421,13 @@ pub type Minkowski2 = Cl1_1_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl2_1_0, Signature};
 ///
 /// assert_eq!(Cl2_1_0::DIM, 3);
 /// assert_eq!(Cl2_1_0::num_blades(), 8);
-/// assert_eq!(Cl2_1_0::metric(0), 1);   // e1² = +1
-/// assert_eq!(Cl2_1_0::metric(1), 1);   // e2² = +1
-/// assert_eq!(Cl2_1_0::metric(2), -1);  // e3² = -1
+/// assert_eq!(Cl2_1_0::metric(0), 1);   // e1^2 = +1
+/// assert_eq!(Cl2_1_0::metric(1), 1);   // e2^2 = +1
+/// assert_eq!(Cl2_1_0::metric(2), -1);  // e3^2 = -1
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Cl2_1_0;
@@ -487,14 +487,14 @@ pub type Hyperbolic2 = Cl2_1_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl3_1_0, Signature};
 ///
 /// assert_eq!(Cl3_1_0::DIM, 4);
 /// assert_eq!(Cl3_1_0::num_blades(), 16);
-/// assert_eq!(Cl3_1_0::metric(0), 1);   // e1² = +1
-/// assert_eq!(Cl3_1_0::metric(1), 1);   // e2² = +1
-/// assert_eq!(Cl3_1_0::metric(2), 1);   // e3² = +1
-/// assert_eq!(Cl3_1_0::metric(3), -1);  // e4² = -1
+/// assert_eq!(Cl3_1_0::metric(0), 1);   // e1^2 = +1
+/// assert_eq!(Cl3_1_0::metric(1), 1);   // e2^2 = +1
+/// assert_eq!(Cl3_1_0::metric(2), 1);   // e3^2 = +1
+/// assert_eq!(Cl3_1_0::metric(3), -1);  // e4^2 = -1
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Cl3_1_0;
@@ -545,7 +545,7 @@ pub type Minkowski3 = Cl3_1_0;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl0_0_1, Signature};
 ///
 /// assert_eq!(Cl0_0_1::DIM, 1);
 /// assert_eq!(Cl0_0_1::num_blades(), 2);
@@ -600,13 +600,13 @@ pub type Dual1 = Cl0_0_1;
 /// # Example
 ///
 /// ```
-/// use clifford::prelude::*;
+/// use clifford::signature::{Cl0_2_1, Signature};
 ///
 /// assert_eq!(Cl0_2_1::DIM, 3);
 /// assert_eq!(Cl0_2_1::num_blades(), 8);
-/// assert_eq!(Cl0_2_1::metric(0), -1);  // e1² = -1
-/// assert_eq!(Cl0_2_1::metric(1), -1);  // e2² = -1
-/// assert_eq!(Cl0_2_1::metric(2), 0);   // e3² = 0
+/// assert_eq!(Cl0_2_1::metric(0), -1);  // e1^2 = -1
+/// assert_eq!(Cl0_2_1::metric(1), -1);  // e2^2 = -1
+/// assert_eq!(Cl0_2_1::metric(2), 0);   // e3^2 = 0
 /// ```
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Cl0_2_1;
