@@ -37,7 +37,12 @@ jobs:
           cargo clippy -- -D warnings
           cargo test -p clifford
 
+      - name: Generate code for publishing
+        run: cargo build -p clifford --features codegen
+        env:
+          SYMBOLICA_LICENSE: ${{ secrets.SYMBOLICA_LICENSE }}
+
       - name: Publish to crates.io
-        run: cargo publish
+        run: cargo publish -p clifford
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

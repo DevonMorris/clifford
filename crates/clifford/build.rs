@@ -289,8 +289,9 @@ fn regenerate_algebras() {
         write_file(&conversions_path, &format_tokens(&conversions_content));
 
         log_debug!("  Generating traits.rs");
-        let (traits_content, _test_content) = traits_gen.generate_traits_file();
-        write_file(&traits_path, &format_tokens(&traits_content));
+        let (traits_content, test_content) = traits_gen.generate_traits_file();
+        let full_traits = format!("{}{}", format_tokens(&traits_content), test_content);
+        write_file(&traits_path, &full_traits);
 
         format_file(&mod_path);
         format_file(&types_path);
