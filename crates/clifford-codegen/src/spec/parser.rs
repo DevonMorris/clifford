@@ -37,12 +37,17 @@ const MAX_DIM: usize = 6;
 /// let spec = parse_spec(r#"
 /// [algebra]
 /// name = "euclidean2"
+/// complete = false
 ///
 /// [signature]
 /// positive = ["e1", "e2"]
 ///
 /// [types.Vector]
 /// grades = [1]
+/// field_map = [
+///   { name = "x", blade = "e1" },
+///   { name = "y", blade = "e2" }
+/// ]
 /// "#).unwrap();
 ///
 /// assert_eq!(spec.name, "euclidean2");

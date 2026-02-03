@@ -45,17 +45,23 @@ use crate::symbolic::{
 /// let spec = parse_spec(r#"
 /// [algebra]
 /// name = "euclidean2"
+/// complete = false
 ///
 /// [signature]
 /// positive = ["e1", "e2"]
 ///
 /// [types.Vector]
 /// grades = [1]
-/// fields = ["x", "y"]
+/// field_map = [
+///   { name = "x", blade = "e1" },
+///   { name = "y", blade = "e2" }
+/// ]
 ///
 /// [types.Bivector]
 /// grades = [2]
-/// fields = ["xy"]
+/// field_map = [
+///   { name = "xy", blade = "e12" }
+/// ]
 /// "#).unwrap();
 ///
 /// let algebra = Algebra::euclidean(2);
