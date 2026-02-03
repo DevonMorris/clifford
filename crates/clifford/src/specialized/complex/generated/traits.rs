@@ -63,7 +63,7 @@ impl<T: Float> Mul<Complex<T>> for Complex<T> {
     fn mul(self, rhs: Complex<T>) -> Complex<T> {
         Complex::new_unchecked(
             -(rhs.imag() * self.imag()) + rhs.real() * self.real(),
-            rhs.real() * self.imag() + rhs.imag() * self.real(),
+            rhs.imag() * self.real() + rhs.real() * self.imag(),
         )
     }
 }

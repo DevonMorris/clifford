@@ -73,15 +73,15 @@ impl<T: Float> Mul<Flector<T>> for Flector<T> {
     fn mul(self, rhs: Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
             -(rhs.d() * self.d()) + rhs.s() * self.s(),
-            rhs.s() * self.d() + rhs.d() * self.s(),
+            rhs.d() * self.s() + rhs.s() * self.d(),
             -(rhs.d() * self.ny())
-                + rhs.s() * self.nx()
+                + rhs.nx() * self.s()
                 + rhs.ny() * self.d()
-                + rhs.nx() * self.s(),
+                + rhs.s() * self.nx(),
             -(rhs.nx() * self.d())
-                + rhs.s() * self.ny()
                 + rhs.d() * self.nx()
-                + rhs.ny() * self.s(),
+                + rhs.ny() * self.s()
+                + rhs.s() * self.ny(),
         )
     }
 }
@@ -92,7 +92,7 @@ impl<T: Float> Mul<Line<T>> for Flector<T> {
         Flector::new_unchecked(
             -(rhs.d() * self.d()),
             rhs.d() * self.s(),
-            -(rhs.d() * self.ny()) + rhs.ny() * self.d() + rhs.nx() * self.s(),
+            -(rhs.d() * self.ny()) + rhs.nx() * self.s() + rhs.ny() * self.d(),
             -(rhs.nx() * self.d()) + rhs.d() * self.nx() + rhs.ny() * self.s(),
         )
     }
@@ -106,9 +106,9 @@ impl<T: Float> Mul<Motor<T>> for Flector<T> {
             -(rhs.ty() * self.d()) + rhs.tx() * self.s(),
             -(rhs.ps() * self.d())
                 + -(rhs.tx() * self.nx())
-                + rhs.ty() * self.ny()
-                + rhs.r() * self.s(),
-            rhs.r() * self.d() + rhs.ty() * self.nx() + rhs.tx() * self.ny() + rhs.ps() * self.s(),
+                + rhs.r() * self.s()
+                + rhs.ty() * self.ny(),
+            rhs.ps() * self.s() + rhs.r() * self.d() + rhs.tx() * self.ny() + rhs.ty() * self.nx(),
         )
     }
 }
@@ -117,10 +117,10 @@ impl<T: Float> Mul<Point<T>> for Flector<T> {
     #[inline]
     fn mul(self, rhs: Point<T>) -> Motor<T> {
         Motor::new_unchecked(
-            rhs.y() * self.d() + rhs.x() * self.s(),
+            rhs.x() * self.s() + rhs.y() * self.d(),
             -(rhs.x() * self.d()) + rhs.y() * self.s(),
-            -(rhs.y() * self.nx()) + rhs.x() * self.ny() + rhs.w() * self.s(),
-            rhs.x() * self.nx() + rhs.y() * self.ny() + rhs.w() * self.d(),
+            -(rhs.y() * self.nx()) + rhs.w() * self.s() + rhs.x() * self.ny(),
+            rhs.w() * self.d() + rhs.x() * self.nx() + rhs.y() * self.ny(),
         )
     }
 }
@@ -205,8 +205,8 @@ impl<T: Float> Mul<Flector<T>> for Line<T> {
         Flector::new_unchecked(
             -(rhs.d() * self.d()),
             rhs.s() * self.d(),
-            -(rhs.d() * self.ny()) + rhs.s() * self.nx() + rhs.ny() * self.d(),
-            -(rhs.nx() * self.d()) + rhs.s() * self.ny() + rhs.d() * self.nx(),
+            -(rhs.d() * self.ny()) + rhs.ny() * self.d() + rhs.s() * self.nx(),
+            -(rhs.nx() * self.d()) + rhs.d() * self.nx() + rhs.s() * self.ny(),
         )
     }
 }
@@ -230,7 +230,7 @@ impl<T: Float> Mul<Motor<T>> for Line<T> {
             rhs.tx() * self.d(),
             -(rhs.ty() * self.d()),
             -(rhs.ps() * self.d()) + -(rhs.tx() * self.nx()) + rhs.ty() * self.ny(),
-            rhs.r() * self.d() + rhs.ty() * self.nx() + rhs.tx() * self.ny(),
+            rhs.r() * self.d() + rhs.tx() * self.ny() + rhs.ty() * self.nx(),
         )
     }
 }
@@ -242,7 +242,7 @@ impl<T: Float> Mul<Point<T>> for Line<T> {
             rhs.y() * self.d(),
             -(rhs.x() * self.d()),
             -(rhs.y() * self.nx()) + rhs.x() * self.ny(),
-            rhs.x() * self.nx() + rhs.y() * self.ny() + rhs.w() * self.d(),
+            rhs.w() * self.d() + rhs.x() * self.nx() + rhs.y() * self.ny(),
         )
     }
 }
@@ -318,12 +318,12 @@ impl<T: Float> Mul<Flector<T>> for Motor<T> {
     fn mul(self, rhs: Flector<T>) -> Motor<T> {
         Motor::new_unchecked(
             -(rhs.d() * self.tx()) + rhs.s() * self.ty(),
-            rhs.s() * self.tx() + rhs.d() * self.ty(),
+            rhs.d() * self.ty() + rhs.s() * self.tx(),
             -(rhs.d() * self.ps())
                 + -(rhs.ny() * self.ty())
-                + rhs.s() * self.r()
-                + rhs.nx() * self.tx(),
-            rhs.s() * self.ps() + rhs.d() * self.r() + rhs.ny() * self.tx() + rhs.nx() * self.ty(),
+                + rhs.nx() * self.tx()
+                + rhs.s() * self.r(),
+            rhs.d() * self.r() + rhs.nx() * self.ty() + rhs.ny() * self.tx() + rhs.s() * self.ps(),
         )
     }
 }
@@ -335,7 +335,7 @@ impl<T: Float> Mul<Line<T>> for Motor<T> {
             -(rhs.d() * self.tx()),
             rhs.d() * self.ty(),
             -(rhs.d() * self.ps()) + -(rhs.ny() * self.ty()) + rhs.nx() * self.tx(),
-            rhs.d() * self.r() + rhs.ny() * self.tx() + rhs.nx() * self.ty(),
+            rhs.d() * self.r() + rhs.nx() * self.ty() + rhs.ny() * self.tx(),
         )
     }
 }
@@ -348,8 +348,8 @@ impl<T: Float> Mul<Motor<T>> for Motor<T> {
             -(rhs.ty() * self.tx()) + rhs.tx() * self.ty(),
             -(rhs.tx() * self.r())
                 + rhs.ps() * self.ty()
-                + rhs.ty() * self.ps()
-                + rhs.r() * self.tx(),
+                + rhs.r() * self.tx()
+                + rhs.ty() * self.ps(),
             -(rhs.r() * self.ty())
                 + rhs.ps() * self.tx()
                 + rhs.tx() * self.ps()
@@ -364,7 +364,7 @@ impl<T: Float> Mul<Point<T>> for Motor<T> {
         Flector::new_unchecked(
             rhs.x() * self.ty() + rhs.y() * self.tx(),
             -(rhs.x() * self.tx()) + rhs.y() * self.ty(),
-            -(rhs.y() * self.r()) + rhs.x() * self.ps() + rhs.w() * self.tx(),
+            -(rhs.y() * self.r()) + rhs.w() * self.tx() + rhs.x() * self.ps(),
             -(rhs.w() * self.ty()) + rhs.x() * self.r() + rhs.y() * self.ps(),
         )
     }
@@ -437,7 +437,7 @@ impl<T: Float> Mul<Flector<T>> for Point<T> {
         Motor::new_unchecked(
             -(rhs.d() * self.y()) + rhs.s() * self.x(),
             rhs.d() * self.x() + rhs.s() * self.y(),
-            -(rhs.ny() * self.x()) + rhs.s() * self.w() + rhs.nx() * self.y(),
+            -(rhs.ny() * self.x()) + rhs.nx() * self.y() + rhs.s() * self.w(),
             rhs.d() * self.w() + rhs.nx() * self.x() + rhs.ny() * self.y(),
         )
     }
@@ -459,10 +459,10 @@ impl<T: Float> Mul<Motor<T>> for Point<T> {
     #[inline]
     fn mul(self, rhs: Motor<T>) -> Flector<T> {
         Flector::new_unchecked(
-            rhs.ty() * self.x() + rhs.tx() * self.y(),
+            rhs.tx() * self.y() + rhs.ty() * self.x(),
             -(rhs.ty() * self.y()) + rhs.tx() * self.x(),
             -(rhs.tx() * self.w()) + rhs.ps() * self.x() + rhs.r() * self.y(),
-            -(rhs.r() * self.x()) + rhs.ty() * self.w() + rhs.ps() * self.y(),
+            -(rhs.r() * self.x()) + rhs.ps() * self.y() + rhs.ty() * self.w(),
         )
     }
 }
@@ -672,7 +672,7 @@ impl<T: Float> Wedge<Point<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
     fn wedge(&self, rhs: &Point<T>) -> Trivector<T> {
-        Trivector::new_unchecked(rhs.x() * self.nx() + rhs.y() * self.ny() + rhs.w() * self.d())
+        Trivector::new_unchecked(rhs.w() * self.d() + rhs.x() * self.nx() + rhs.y() * self.ny())
     }
 }
 #[allow(unused_variables)]
@@ -681,9 +681,9 @@ impl<T: Float> Wedge<Point<T>> for Unitized<Line<T>> {
     #[inline]
     fn wedge(&self, rhs: &Point<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.x() * self.as_inner().nx()
-                + rhs.y() * self.as_inner().ny()
-                + rhs.w() * self.as_inner().d(),
+            rhs.w() * self.as_inner().d()
+                + rhs.x() * self.as_inner().nx()
+                + rhs.y() * self.as_inner().ny(),
         )
     }
 }
@@ -693,9 +693,9 @@ impl<T: Float> Wedge<Unitized<Point<T>>> for Line<T> {
     #[inline]
     fn wedge(&self, rhs: &Unitized<Point<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.as_inner().x() * self.nx()
-                + rhs.as_inner().y() * self.ny()
-                + rhs.as_inner().w() * self.d(),
+            rhs.as_inner().w() * self.d()
+                + rhs.as_inner().x() * self.nx()
+                + rhs.as_inner().y() * self.ny(),
         )
     }
 }
@@ -705,9 +705,9 @@ impl<T: Float> Wedge<Unitized<Point<T>>> for Unitized<Line<T>> {
     #[inline]
     fn wedge(&self, rhs: &Unitized<Point<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            rhs.as_inner().x() * self.as_inner().nx()
-                + rhs.as_inner().y() * self.as_inner().ny()
-                + rhs.as_inner().w() * self.as_inner().d(),
+            rhs.as_inner().w() * self.as_inner().d()
+                + rhs.as_inner().x() * self.as_inner().nx()
+                + rhs.as_inner().y() * self.as_inner().ny(),
         )
     }
 }
@@ -1088,7 +1088,7 @@ impl<T: Float> Antiwedge<Point<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Point<T>) -> Scalar<T> {
-        Scalar::new_unchecked(rhs.x() * self.nx() + rhs.y() * self.ny() + rhs.w() * self.d())
+        Scalar::new_unchecked(rhs.w() * self.d() + rhs.x() * self.nx() + rhs.y() * self.ny())
     }
 }
 #[allow(unused_variables)]
@@ -1097,9 +1097,9 @@ impl<T: Float> Antiwedge<Point<T>> for Unitized<Line<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Point<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.x() * self.as_inner().nx()
-                + rhs.y() * self.as_inner().ny()
-                + rhs.w() * self.as_inner().d(),
+            rhs.w() * self.as_inner().d()
+                + rhs.x() * self.as_inner().nx()
+                + rhs.y() * self.as_inner().ny(),
         )
     }
 }
@@ -1109,9 +1109,9 @@ impl<T: Float> Antiwedge<Unitized<Point<T>>> for Line<T> {
     #[inline]
     fn antiwedge(&self, rhs: &Unitized<Point<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.as_inner().x() * self.nx()
-                + rhs.as_inner().y() * self.ny()
-                + rhs.as_inner().w() * self.d(),
+            rhs.as_inner().w() * self.d()
+                + rhs.as_inner().x() * self.nx()
+                + rhs.as_inner().y() * self.ny(),
         )
     }
 }
@@ -1121,9 +1121,9 @@ impl<T: Float> Antiwedge<Unitized<Point<T>>> for Unitized<Line<T>> {
     #[inline]
     fn antiwedge(&self, rhs: &Unitized<Point<T>>) -> Scalar<T> {
         Scalar::new_unchecked(
-            rhs.as_inner().x() * self.as_inner().nx()
-                + rhs.as_inner().y() * self.as_inner().ny()
-                + rhs.as_inner().w() * self.as_inner().d(),
+            rhs.as_inner().w() * self.as_inner().d()
+                + rhs.as_inner().x() * self.as_inner().nx()
+                + rhs.as_inner().y() * self.as_inner().ny(),
         )
     }
 }
@@ -2101,36 +2101,35 @@ impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.s() * operand.d() * self.d() + self.d() * operand.s() * self.d()
-                - self.d() * operand.d() * self.s()
-                + self.s() * operand.s() * self.s(),
-            self.d() * operand.s() * self.s()
+            self.d() * operand.s() * self.d() - self.d() * operand.d() * self.s()
+                + self.s() * operand.s() * self.s()
+                + self.s() * operand.d() * self.d(),
+            self.s() * operand.d() * self.s()
                 + self.d() * operand.d() * self.d()
-                + self.s() * operand.d() * self.s()
+                + self.d() * operand.s() * self.s()
                 - self.s() * operand.s() * self.d(),
-            self.s() * operand.ny() * self.d()
+            self.d() * operand.ny() * self.s() - self.ny() * operand.d() * self.s()
                 + self.s() * operand.nx() * self.s()
-                + self.ny() * operand.s() * self.d()
-                + self.nx() * operand.d() * self.d()
-                + self.d() * operand.ny() * self.s()
                 - self.s() * operand.s() * self.nx()
-                + self.d() * operand.d() * self.nx()
-                - self.ny() * operand.d() * self.s()
-                - self.s() * operand.d() * self.ny()
                 - self.d() * operand.nx() * self.d()
+                + self.s() * operand.ny() * self.d()
                 - self.d() * operand.s() * self.ny()
-                + self.nx() * operand.s() * self.s(),
-            -(-(self.d() * operand.d() * self.ny()) - self.ny() * operand.s() * self.s()
-                + self.nx() * operand.s() * self.d()
+                - self.s() * operand.d() * self.ny()
+                + self.nx() * operand.s() * self.s()
+                + self.nx() * operand.d() * self.d()
+                + self.ny() * operand.s() * self.d()
+                + self.d() * operand.d() * self.nx(),
+            -(-(self.d() * operand.d() * self.ny()) - self.nx() * operand.d() * self.s()
                 + self.d() * operand.ny() * self.d()
+                - self.ny() * operand.s() * self.s()
+                - self.d() * operand.s() * self.nx()
+                - self.ny() * operand.d() * self.d()
                 + self.s() * operand.s() * self.ny()
+                + self.nx() * operand.s() * self.d()
+                + self.s() * operand.nx() * self.d()
                 - self.s() * operand.ny() * self.s()
                 - self.s() * operand.d() * self.nx()
-                - self.nx() * operand.d() * self.s()
-                - self.d() * operand.s() * self.nx()
-                + self.d() * operand.nx() * self.s()
-                + self.s() * operand.nx() * self.d()
-                - self.ny() * operand.d() * self.d()),
+                + self.d() * operand.nx() * self.s()),
         )
     }
 }
@@ -2144,13 +2143,13 @@ impl<T: Float> Sandwich<Flector<T>> for Unitized<Flector<T>> {
                 + operand.s() * self.as_inner().s() * self.as_inner().s(),
             operand.d() * self.as_inner().d() * self.as_inner().d()
                 + operand.d() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.d() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.nx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.nx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.d() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.d() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.ny() * self.as_inner().d() * self.as_inner().s()
                 + operand.nx() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.ny() * self.as_inner().d() * self.as_inner().d())
+            -(operand.ny() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().s()
                 + T::TWO * operand.d() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.d() * self.as_inner().nx() * self.as_inner().s()
                 + operand.ny() * self.as_inner().s() * self.as_inner().s(),
@@ -2167,13 +2166,13 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Flector<T> {
                 + operand.as_inner().s() * self.s() * self.s(),
             operand.as_inner().d() * self.d() * self.d()
                 + operand.as_inner().d() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().d() * self.ny() * self.s()
-                + -(operand.as_inner().nx() * self.d() * self.d())
+            -(operand.as_inner().nx() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().d() * self.ny() * self.s()
                 + T::TWO * operand.as_inner().d() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().ny() * self.d() * self.s()
                 + operand.as_inner().nx() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().nx() * self.d() * self.s()
-                + -(operand.as_inner().ny() * self.d() * self.d())
+            -(operand.as_inner().ny() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().nx() * self.d() * self.s()
                 + T::TWO * operand.as_inner().d() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().d() * self.nx() * self.s()
                 + operand.as_inner().ny() * self.s() * self.s(),
@@ -2190,13 +2189,13 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Flector<T>> {
                 + operand.as_inner().s() * self.as_inner().s() * self.as_inner().s(),
             operand.as_inner().d() * self.as_inner().d() * self.as_inner().d()
                 + operand.as_inner().d() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().d() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.as_inner().nx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().nx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().d() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.as_inner().d() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().nx() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.as_inner().ny() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().ny() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().s()
                 + T::TWO * operand.as_inner().d() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().d() * self.as_inner().nx() * self.as_inner().s()
                 + operand.as_inner().ny() * self.as_inner().s() * self.as_inner().s(),
@@ -2210,21 +2209,20 @@ impl<T: Float> Sandwich<Line<T>> for Flector<T> {
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             self.s() * operand.d() * self.s() + self.d() * operand.d() * self.d(),
-            self.nx() * operand.d() * self.d()
-                - self.s() * operand.d() * self.ny()
-                - self.d() * operand.nx() * self.d()
+            self.s() * operand.nx() * self.s() - self.d() * operand.nx() * self.d()
+                + self.d() * operand.ny() * self.s()
                 - self.ny() * operand.d() * self.s()
-                + self.s() * operand.nx() * self.s()
-                + self.s() * operand.ny() * self.d()
+                - self.s() * operand.d() * self.ny()
+                + self.nx() * operand.d() * self.d()
                 + self.d() * operand.d() * self.nx()
-                + self.d() * operand.ny() * self.s(),
+                + self.s() * operand.ny() * self.d(),
             -(-(self.ny() * operand.d() * self.d()) - self.nx() * operand.d() * self.s()
                 + self.s() * operand.nx() * self.d()
-                - self.s() * operand.d() * self.nx()
+                - self.s() * operand.ny() * self.s()
                 - self.d() * operand.d() * self.ny()
-                + self.d() * operand.nx() * self.s()
                 + self.d() * operand.ny() * self.d()
-                - self.s() * operand.ny() * self.s()),
+                - self.s() * operand.d() * self.nx()
+                + self.d() * operand.nx() * self.s()),
         )
     }
 }
@@ -2236,13 +2234,13 @@ impl<T: Float> Sandwich<Line<T>> for Unitized<Flector<T>> {
         Line::new_unchecked(
             operand.d() * self.as_inner().d() * self.as_inner().d()
                 + operand.d() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.d() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.nx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.nx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.d() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.d() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.ny() * self.as_inner().d() * self.as_inner().s()
                 + operand.nx() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.ny() * self.as_inner().d() * self.as_inner().d())
+            -(operand.ny() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().s()
                 + T::TWO * operand.d() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.d() * self.as_inner().nx() * self.as_inner().s()
                 + operand.ny() * self.as_inner().s() * self.as_inner().s(),
@@ -2257,13 +2255,13 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Flector<T> {
         Line::new_unchecked(
             operand.as_inner().d() * self.d() * self.d()
                 + operand.as_inner().d() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().d() * self.ny() * self.s()
-                + -(operand.as_inner().nx() * self.d() * self.d())
+            -(operand.as_inner().nx() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().d() * self.ny() * self.s()
                 + T::TWO * operand.as_inner().d() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().ny() * self.d() * self.s()
                 + operand.as_inner().nx() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().nx() * self.d() * self.s()
-                + -(operand.as_inner().ny() * self.d() * self.d())
+            -(operand.as_inner().ny() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().nx() * self.d() * self.s()
                 + T::TWO * operand.as_inner().d() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().d() * self.nx() * self.s()
                 + operand.as_inner().ny() * self.s() * self.s(),
@@ -2278,13 +2276,13 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Flector<T>> {
         Line::new_unchecked(
             operand.as_inner().d() * self.as_inner().d() * self.as_inner().d()
                 + operand.as_inner().d() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().d() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.as_inner().nx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().nx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().d() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.as_inner().d() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().nx() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.as_inner().ny() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().ny() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().s()
                 + T::TWO * operand.as_inner().d() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().d() * self.as_inner().nx() * self.as_inner().s()
                 + operand.as_inner().ny() * self.as_inner().s() * self.as_inner().s(),
@@ -2297,34 +2295,35 @@ impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.s() * operand.ty() * self.s() + self.d() * operand.tx() * self.s()
-                - self.d() * operand.ty() * self.d()
-                + self.s() * operand.tx() * self.d(),
-            -(self.s() * operand.ty() * self.d()) + self.s() * operand.tx() * self.s()
-                - self.d() * operand.tx() * self.d()
-                - self.d() * operand.ty() * self.s(),
-            self.s() * operand.r() * self.s()
+            self.s() * operand.tx() * self.d() - self.d() * operand.ty() * self.d()
+                + self.s() * operand.ty() * self.s()
+                + self.d() * operand.tx() * self.s(),
+            -(self.d() * operand.ty() * self.s()) - self.d() * operand.tx() * self.d()
+                + self.s() * operand.tx() * self.s()
+                - self.s() * operand.ty() * self.d(),
+            -(self.d() * operand.ps() * self.s())
                 + self.ny() * operand.tx() * self.d()
-                + self.nx() * operand.ty() * self.d()
-                + self.d() * operand.tx() * self.ny()
-                + self.d() * operand.r() * self.d()
+                + self.s() * operand.r() * self.s()
                 - self.nx() * operand.tx() * self.s()
+                + self.s() * operand.ps() * self.d()
+                + self.ny() * operand.ty() * self.s()
+                + self.d() * operand.r() * self.d()
                 + self.d() * operand.ty() * self.nx()
                 - self.s() * operand.tx() * self.nx()
                 + self.s() * operand.ty() * self.ny()
-                - self.d() * operand.ps() * self.s()
-                + self.ny() * operand.ty() * self.s()
-                + self.s() * operand.ps() * self.d(),
-            self.nx() * operand.ty() * self.s() + self.d() * operand.ps() * self.d()
-                - self.s() * operand.ty() * self.nx()
+                + self.d() * operand.tx() * self.ny()
+                + self.nx() * operand.ty() * self.d(),
+            self.nx() * operand.tx() * self.d()
                 - self.ny() * operand.ty() * self.d()
-                + self.ny() * operand.tx() * self.s()
-                - self.s() * operand.r() * self.d()
-                + self.d() * operand.ty() * self.ny()
-                - self.s() * operand.tx() * self.ny()
-                + self.s() * operand.ps() * self.s()
                 - self.d() * operand.tx() * self.nx()
-                + self.nx() * operand.tx() * self.d()
+                + self.d() * operand.ty() * self.ny()
+                - self.s() * operand.r() * self.d()
+                - self.s() * operand.tx() * self.ny()
+                - self.s() * operand.ty() * self.nx()
+                + self.d() * operand.ps() * self.d()
+                + self.ny() * operand.tx() * self.s()
+                + self.s() * operand.ps() * self.s()
+                + self.nx() * operand.ty() * self.s()
                 + self.d() * operand.r() * self.s(),
         )
     }
@@ -2338,12 +2337,12 @@ impl<T: Float> Sandwich<Motor<T>> for Unitized<Flector<T>> {
             -(operand.ty() * self.as_inner().d() * self.as_inner().d())
                 + T::TWO * operand.tx() * self.as_inner().d() * self.as_inner().s()
                 + operand.ty() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.tx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.tx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().s()
                 + operand.tx() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().s()
-                + T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.tx() * self.as_inner().d() * self.as_inner().ny()
+                + T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.ty() * self.as_inner().ny() * self.as_inner().s()
                 + operand.r() * self.as_inner().d() * self.as_inner().d()
                 + operand.r() * self.as_inner().s() * self.as_inner().s(),
@@ -2361,12 +2360,12 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Flector<T> {
             -(operand.as_inner().ty() * self.d() * self.d())
                 + T::TWO * operand.as_inner().tx() * self.d() * self.s()
                 + operand.as_inner().ty() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().ty() * self.d() * self.s()
-                + -(operand.as_inner().tx() * self.d() * self.d())
+            -(operand.as_inner().tx() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().ty() * self.d() * self.s()
                 + operand.as_inner().tx() * self.s() * self.s(),
             -T::TWO * operand.as_inner().tx() * self.nx() * self.s()
-                + T::TWO * operand.as_inner().ty() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().tx() * self.d() * self.ny()
+                + T::TWO * operand.as_inner().ty() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().ty() * self.ny() * self.s()
                 + operand.as_inner().r() * self.d() * self.d()
                 + operand.as_inner().r() * self.s() * self.s(),
@@ -2384,12 +2383,12 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Flector<T>> {
             -(operand.as_inner().ty() * self.as_inner().d() * self.as_inner().d())
                 + T::TWO * operand.as_inner().tx() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().ty() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.as_inner().tx() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().tx() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().tx() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().s()
-                + T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().tx() * self.as_inner().d() * self.as_inner().ny()
+                + T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ty() * self.as_inner().ny() * self.as_inner().s()
                 + operand.as_inner().r() * self.as_inner().d() * self.as_inner().d()
                 + operand.as_inner().r() * self.as_inner().s() * self.as_inner().s(),
@@ -2405,22 +2404,22 @@ impl<T: Float> Sandwich<Point<T>> for Flector<T> {
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
             -(self.d() * operand.x() * self.d())
-                + self.s() * operand.y() * self.d()
                 + self.s() * operand.x() * self.s()
+                + self.s() * operand.y() * self.d()
                 + self.d() * operand.y() * self.s(),
-            -(self.s() * operand.x() * self.d()) - self.d() * operand.x() * self.s()
+            -(self.d() * operand.x() * self.s()) - self.s() * operand.x() * self.d()
                 + self.s() * operand.y() * self.s()
                 - self.d() * operand.y() * self.d(),
-            -(self.nx() * operand.y() * self.s())
-                + self.ny() * operand.y() * self.d()
+            self.d() * operand.w() * self.d()
                 + self.nx() * operand.x() * self.d()
-                + self.d() * operand.w() * self.d()
-                + self.d() * operand.y() * self.ny()
                 + self.s() * operand.w() * self.s()
-                + self.s() * operand.x() * self.ny()
+                - self.nx() * operand.y() * self.s()
+                + self.ny() * operand.y() * self.d()
+                - self.s() * operand.y() * self.nx()
                 + self.d() * operand.x() * self.nx()
-                + self.ny() * operand.x() * self.s()
-                - self.s() * operand.y() * self.nx(),
+                + self.s() * operand.x() * self.ny()
+                + self.d() * operand.y() * self.ny()
+                + self.ny() * operand.x() * self.s(),
         )
     }
 }
@@ -2433,13 +2432,13 @@ impl<T: Float> Sandwich<Point<T>> for Unitized<Flector<T>> {
             -(operand.x() * self.as_inner().d() * self.as_inner().d())
                 + T::TWO * operand.y() * self.as_inner().d() * self.as_inner().s()
                 + operand.x() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.x() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.y() * self.as_inner().d() * self.as_inner().d())
+            -(operand.y() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.x() * self.as_inner().d() * self.as_inner().s()
                 + operand.y() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().s()
                 + T::TWO * operand.x() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.y() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.x() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.y() * self.as_inner().d() * self.as_inner().ny()
                 + operand.w() * self.as_inner().d() * self.as_inner().d()
                 + operand.w() * self.as_inner().s() * self.as_inner().s(),
         )
@@ -2454,13 +2453,13 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Flector<T> {
             -(operand.as_inner().x() * self.d() * self.d())
                 + T::TWO * operand.as_inner().y() * self.d() * self.s()
                 + operand.as_inner().x() * self.s() * self.s(),
-            -T::TWO * operand.as_inner().x() * self.d() * self.s()
-                + -(operand.as_inner().y() * self.d() * self.d())
+            -(operand.as_inner().y() * self.d() * self.d())
+                + -T::TWO * operand.as_inner().x() * self.d() * self.s()
                 + operand.as_inner().y() * self.s() * self.s(),
             -T::TWO * operand.as_inner().y() * self.nx() * self.s()
                 + T::TWO * operand.as_inner().x() * self.d() * self.nx()
-                + T::TWO * operand.as_inner().y() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().x() * self.ny() * self.s()
+                + T::TWO * operand.as_inner().y() * self.d() * self.ny()
                 + operand.as_inner().w() * self.d() * self.d()
                 + operand.as_inner().w() * self.s() * self.s(),
         )
@@ -2475,13 +2474,13 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Flector<T>> {
             -(operand.as_inner().x() * self.as_inner().d() * self.as_inner().d())
                 + T::TWO * operand.as_inner().y() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().x() * self.as_inner().s() * self.as_inner().s(),
-            -T::TWO * operand.as_inner().x() * self.as_inner().d() * self.as_inner().s()
-                + -(operand.as_inner().y() * self.as_inner().d() * self.as_inner().d())
+            -(operand.as_inner().y() * self.as_inner().d() * self.as_inner().d())
+                + -T::TWO * operand.as_inner().x() * self.as_inner().d() * self.as_inner().s()
                 + operand.as_inner().y() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().x() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.as_inner().y() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().x() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.as_inner().y() * self.as_inner().d() * self.as_inner().ny()
                 + operand.as_inner().w() * self.as_inner().d() * self.as_inner().d()
                 + operand.as_inner().w() * self.as_inner().s() * self.as_inner().s(),
         )
@@ -2573,14 +2572,15 @@ impl<T: Float> Sandwich<Flector<T>> for Line<T> {
         Flector::new_unchecked(
             self.d() * operand.s() * self.d(),
             self.d() * operand.d() * self.d(),
-            -(self.d() * operand.s() * self.ny()) + self.ny() * operand.s() * self.d()
-                - self.d() * operand.nx() * self.d()
+            self.nx() * operand.d() * self.d() - self.d() * operand.nx() * self.d()
                 + self.d() * operand.d() * self.nx()
-                + self.nx() * operand.d() * self.d(),
-            -(-(self.d() * operand.s() * self.nx()) - self.d() * operand.d() * self.ny()
-                + self.d() * operand.ny() * self.d()
+                - self.d() * operand.s() * self.ny()
+                + self.ny() * operand.s() * self.d(),
+            -(self.nx() * operand.s() * self.d()
+                - self.d() * operand.d() * self.ny()
                 - self.ny() * operand.d() * self.d()
-                + self.nx() * operand.s() * self.d()),
+                - self.d() * operand.s() * self.nx()
+                + self.d() * operand.ny() * self.d()),
         )
     }
 }
@@ -2636,11 +2636,10 @@ impl<T: Float> Sandwich<Line<T>> for Line<T> {
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             self.d() * operand.d() * self.d(),
-            -(self.d() * operand.nx() * self.d())
-                + self.nx() * operand.d() * self.d()
-                + self.d() * operand.d() * self.nx(),
-            -(-(self.ny() * operand.d() * self.d()) - self.d() * operand.d() * self.ny()
-                + self.d() * operand.ny() * self.d()),
+            self.d() * operand.d() * self.nx() + self.nx() * operand.d() * self.d()
+                - self.d() * operand.nx() * self.d(),
+            -(-(self.ny() * operand.d() * self.d()) + self.d() * operand.ny() * self.d()
+                - self.d() * operand.d() * self.ny()),
         )
     }
 }
@@ -2695,13 +2694,14 @@ impl<T: Float> Sandwich<Motor<T>> for Line<T> {
             -(self.d() * operand.ty() * self.d()),
             -(self.d() * operand.tx() * self.d()),
             self.d() * operand.ty() * self.nx()
+                + self.nx() * operand.ty() * self.d()
                 + self.ny() * operand.tx() * self.d()
-                + self.d() * operand.r() * self.d()
                 + self.d() * operand.tx() * self.ny()
-                + self.nx() * operand.ty() * self.d(),
-            self.nx() * operand.tx() * self.d() + self.d() * operand.ps() * self.d()
+                + self.d() * operand.r() * self.d(),
+            self.d() * operand.ty() * self.ny()
+                + self.d() * operand.ps() * self.d()
+                + self.nx() * operand.tx() * self.d()
                 - self.d() * operand.tx() * self.nx()
-                + self.d() * operand.ty() * self.ny()
                 - self.ny() * operand.ty() * self.d(),
         )
     }
@@ -2714,8 +2714,8 @@ impl<T: Float> Sandwich<Motor<T>> for Unitized<Line<T>> {
         Motor::new_unchecked(
             -(operand.ty() * self.as_inner().d() * self.as_inner().d()),
             -(operand.tx() * self.as_inner().d() * self.as_inner().d()),
-            T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.tx() * self.as_inner().d() * self.as_inner().ny()
+            T::TWO * operand.tx() * self.as_inner().d() * self.as_inner().ny()
+                + T::TWO * operand.ty() * self.as_inner().d() * self.as_inner().nx()
                 + operand.r() * self.as_inner().d() * self.as_inner().d(),
             operand.ps() * self.as_inner().d() * self.as_inner().d(),
         )
@@ -2729,8 +2729,8 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Line<T> {
         Motor::new_unchecked(
             -(operand.as_inner().ty() * self.d() * self.d()),
             -(operand.as_inner().tx() * self.d() * self.d()),
-            T::TWO * operand.as_inner().ty() * self.d() * self.nx()
-                + T::TWO * operand.as_inner().tx() * self.d() * self.ny()
+            T::TWO * operand.as_inner().tx() * self.d() * self.ny()
+                + T::TWO * operand.as_inner().ty() * self.d() * self.nx()
                 + operand.as_inner().r() * self.d() * self.d(),
             operand.as_inner().ps() * self.d() * self.d(),
         )
@@ -2744,8 +2744,8 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Line<T>> {
         Motor::new_unchecked(
             -(operand.as_inner().ty() * self.as_inner().d() * self.as_inner().d()),
             -(operand.as_inner().tx() * self.as_inner().d() * self.as_inner().d()),
-            T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().d() * self.as_inner().ny()
+            T::TWO * operand.as_inner().tx() * self.as_inner().d() * self.as_inner().ny()
+                + T::TWO * operand.as_inner().ty() * self.as_inner().d() * self.as_inner().nx()
                 + operand.as_inner().r() * self.as_inner().d() * self.as_inner().d(),
             operand.as_inner().ps() * self.as_inner().d() * self.as_inner().d(),
         )
@@ -2759,10 +2759,10 @@ impl<T: Float> Sandwich<Point<T>> for Line<T> {
         Point::new_unchecked(
             -(self.d() * operand.x() * self.d()),
             -(self.d() * operand.y() * self.d()),
-            self.d() * operand.y() * self.ny()
-                + self.d() * operand.x() * self.nx()
+            self.d() * operand.x() * self.nx()
                 + self.nx() * operand.x() * self.d()
                 + self.d() * operand.w() * self.d()
+                + self.d() * operand.y() * self.ny()
                 + self.ny() * operand.y() * self.d(),
         )
     }
@@ -2882,34 +2882,35 @@ impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
             -(self.tx() * operand.d() * self.ty())
-                + self.ty() * operand.d() * self.tx()
                 + self.tx() * operand.s() * self.tx()
-                + self.ty() * operand.s() * self.ty(),
-            -(self.tx() * operand.d() * self.tx())
-                - self.ty() * operand.d() * self.ty()
+                + self.ty() * operand.s() * self.ty()
+                + self.ty() * operand.d() * self.tx(),
+            self.ty() * operand.s() * self.tx()
+                - self.tx() * operand.d() * self.tx()
                 - self.tx() * operand.s() * self.ty()
-                + self.ty() * operand.s() * self.tx(),
-            self.ty() * operand.ny() * self.tx() - self.tx() * operand.nx() * self.tx()
-                + self.tx() * operand.ny() * self.ty()
-                + self.ps() * operand.d() * self.tx()
-                + self.tx() * operand.d() * self.ps()
+                - self.ty() * operand.d() * self.ty(),
+            self.tx() * operand.d() * self.ps() - self.r() * operand.s() * self.tx()
                 + self.ty() * operand.nx() * self.ty()
-                - self.ty() * operand.s() * self.ps()
-                - self.r() * operand.s() * self.tx()
-                + self.ps() * operand.s() * self.ty()
                 + self.ty() * operand.d() * self.r()
+                + self.ty() * operand.ny() * self.tx()
                 + self.r() * operand.d() * self.ty()
-                + self.tx() * operand.s() * self.r(),
-            -(-(self.ps() * operand.s() * self.tx()) - self.ty() * operand.nx() * self.tx()
-                + self.ty() * operand.ny() * self.ty()
-                + self.ps() * operand.d() * self.ty()
-                + self.ty() * operand.s() * self.r()
-                - self.tx() * operand.d() * self.r()
-                - self.r() * operand.s() * self.ty()
-                - self.tx() * operand.nx() * self.ty()
+                - self.tx() * operand.nx() * self.tx()
+                + self.ps() * operand.s() * self.ty()
+                - self.ty() * operand.s() * self.ps()
+                + self.ps() * operand.d() * self.tx()
+                + self.tx() * operand.s() * self.r()
+                + self.tx() * operand.ny() * self.ty(),
+            -(-(self.r() * operand.d() * self.tx())
                 + self.tx() * operand.s() * self.ps()
-                - self.r() * operand.d() * self.tx()
                 + self.ty() * operand.d() * self.ps()
+                - self.tx() * operand.d() * self.r()
+                + self.ty() * operand.s() * self.r()
+                - self.r() * operand.s() * self.ty()
+                - self.ps() * operand.s() * self.tx()
+                + self.ps() * operand.d() * self.ty()
+                - self.ty() * operand.nx() * self.tx()
+                + self.ty() * operand.ny() * self.ty()
+                - self.tx() * operand.nx() * self.ty()
                 - self.tx() * operand.ny() * self.tx()),
         )
     }
@@ -2929,8 +2930,8 @@ impl<T: Float> Sandwich<Flector<T>> for Unitized<Motor<T>> {
                 + T::TWO * operand.d() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.ny() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.nx() * self.as_inner().ty() * self.as_inner().ty(),
-            -T::TWO * operand.d() * self.as_inner().ps() * self.as_inner().ty()
-                + -(operand.ny() * self.as_inner().ty() * self.as_inner().ty())
+            -(operand.ny() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.d() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.d() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.nx() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.ny() * self.as_inner().tx() * self.as_inner().tx(),
@@ -2952,8 +2953,8 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Motor<T> {
                 + T::TWO * operand.as_inner().d() * self.r() * self.ty()
                 + T::TWO * operand.as_inner().ny() * self.tx() * self.ty()
                 + operand.as_inner().nx() * self.ty() * self.ty(),
-            -T::TWO * operand.as_inner().d() * self.ps() * self.ty()
-                + -(operand.as_inner().ny() * self.ty() * self.ty())
+            -(operand.as_inner().ny() * self.ty() * self.ty())
+                + -T::TWO * operand.as_inner().d() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().d() * self.r() * self.tx()
                 + T::TWO * operand.as_inner().nx() * self.tx() * self.ty()
                 + operand.as_inner().ny() * self.tx() * self.tx(),
@@ -2975,8 +2976,8 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Motor<T>> {
                 + T::TWO * operand.as_inner().d() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().nx() * self.as_inner().ty() * self.as_inner().ty(),
-            -T::TWO * operand.as_inner().d() * self.as_inner().ps() * self.as_inner().ty()
-                + -(operand.as_inner().ny() * self.as_inner().ty() * self.as_inner().ty())
+            -(operand.as_inner().ny() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.as_inner().d() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().d() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().ny() * self.as_inner().tx() * self.as_inner().tx(),
@@ -2990,22 +2991,22 @@ impl<T: Float> Sandwich<Line<T>> for Motor<T> {
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             -(self.tx() * operand.d() * self.tx()) - self.ty() * operand.d() * self.ty(),
-            self.ty() * operand.d() * self.r()
-                + self.ty() * operand.ny() * self.tx()
+            self.ty() * operand.nx() * self.ty()
+                + self.ps() * operand.d() * self.tx()
+                + self.ty() * operand.d() * self.r()
                 + self.tx() * operand.d() * self.ps()
                 - self.tx() * operand.nx() * self.tx()
-                + self.ty() * operand.nx() * self.ty()
-                + self.r() * operand.d() * self.ty()
                 + self.tx() * operand.ny() * self.ty()
-                + self.ps() * operand.d() * self.tx(),
-            -(-(self.ty() * operand.nx() * self.tx())
-                - self.r() * operand.d() * self.tx()
-                - self.tx() * operand.d() * self.r()
-                + self.ty() * operand.d() * self.ps()
-                - self.tx() * operand.ny() * self.tx()
+                + self.r() * operand.d() * self.ty()
+                + self.ty() * operand.ny() * self.tx(),
+            -(-(self.r() * operand.d() * self.tx())
                 - self.tx() * operand.nx() * self.ty()
+                - self.tx() * operand.ny() * self.tx()
+                - self.tx() * operand.d() * self.r()
+                + self.ty() * operand.ny() * self.ty()
                 + self.ps() * operand.d() * self.ty()
-                + self.ty() * operand.ny() * self.ty()),
+                - self.ty() * operand.nx() * self.tx()
+                + self.ty() * operand.d() * self.ps()),
         )
     }
 }
@@ -3022,8 +3023,8 @@ impl<T: Float> Sandwich<Line<T>> for Unitized<Motor<T>> {
                 + T::TWO * operand.d() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.ny() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.nx() * self.as_inner().ty() * self.as_inner().ty(),
-            -T::TWO * operand.d() * self.as_inner().ps() * self.as_inner().ty()
-                + -(operand.ny() * self.as_inner().ty() * self.as_inner().ty())
+            -(operand.ny() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.d() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.d() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.nx() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.ny() * self.as_inner().tx() * self.as_inner().tx(),
@@ -3043,8 +3044,8 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Motor<T> {
                 + T::TWO * operand.as_inner().d() * self.r() * self.ty()
                 + T::TWO * operand.as_inner().ny() * self.tx() * self.ty()
                 + operand.as_inner().nx() * self.ty() * self.ty(),
-            -T::TWO * operand.as_inner().d() * self.ps() * self.ty()
-                + -(operand.as_inner().ny() * self.ty() * self.ty())
+            -(operand.as_inner().ny() * self.ty() * self.ty())
+                + -T::TWO * operand.as_inner().d() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().d() * self.r() * self.tx()
                 + T::TWO * operand.as_inner().nx() * self.tx() * self.ty()
                 + operand.as_inner().ny() * self.tx() * self.tx(),
@@ -3064,8 +3065,8 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Motor<T>> {
                 + T::TWO * operand.as_inner().d() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().nx() * self.as_inner().ty() * self.as_inner().ty(),
-            -T::TWO * operand.as_inner().d() * self.as_inner().ps() * self.as_inner().ty()
-                + -(operand.as_inner().ny() * self.as_inner().ty() * self.as_inner().ty())
+            -(operand.as_inner().ny() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.as_inner().d() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().d() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().ny() * self.as_inner().tx() * self.as_inner().tx(),
@@ -3078,34 +3079,36 @@ impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.tx() * operand.tx() * self.ty() + self.ty() * operand.ty() * self.ty()
-                - self.tx() * operand.ty() * self.tx()
-                + self.ty() * operand.tx() * self.tx(),
-            self.tx() * operand.tx() * self.tx() - self.ty() * operand.tx() * self.ty()
-                + self.ty() * operand.ty() * self.tx()
-                + self.tx() * operand.ty() * self.ty(),
-            self.ps() * operand.tx() * self.ty() + self.ty() * operand.ty() * self.r()
-                - self.tx() * operand.r() * self.tx()
-                - self.ty() * operand.r() * self.ty()
-                + self.r() * operand.tx() * self.tx()
-                - self.ty() * operand.ps() * self.tx()
-                + self.r() * operand.ty() * self.ty()
+            self.tx() * operand.tx() * self.ty()
+                + self.ty() * operand.tx() * self.tx()
+                + self.ty() * operand.ty() * self.ty()
+                - self.tx() * operand.ty() * self.tx(),
+            self.ty() * operand.ty() * self.tx() - self.ty() * operand.tx() * self.ty()
+                + self.tx() * operand.ty() * self.ty()
+                + self.tx() * operand.tx() * self.tx(),
+            -(self.ps() * operand.ty() * self.tx())
                 + self.tx() * operand.ps() * self.ty()
-                - self.tx() * operand.ty() * self.ps()
-                - self.ps() * operand.ty() * self.tx()
                 + self.ty() * operand.tx() * self.ps()
-                + self.tx() * operand.tx() * self.r(),
-            self.r() * operand.ty() * self.tx() - self.r() * operand.tx() * self.ty()
+                - self.tx() * operand.ty() * self.ps()
+                + self.r() * operand.tx() * self.tx()
+                + self.ps() * operand.tx() * self.ty()
+                + self.ty() * operand.ty() * self.r()
+                - self.ty() * operand.ps() * self.tx()
+                - self.ty() * operand.r() * self.ty()
+                - self.tx() * operand.r() * self.tx()
+                + self.tx() * operand.tx() * self.r()
+                + self.r() * operand.ty() * self.ty(),
+            -(self.ty() * operand.r() * self.tx()) - self.tx() * operand.ty() * self.r()
+                + self.r() * operand.ty() * self.tx()
                 + self.ps() * operand.ty() * self.ty()
-                + self.ps() * operand.tx() * self.tx()
-                + self.tx() * operand.r() * self.ty()
                 + self.ty() * operand.ps() * self.ty()
                 - self.ty() * operand.ty() * self.ps()
                 - self.tx() * operand.tx() * self.ps()
-                + self.tx() * operand.ps() * self.tx()
-                - self.tx() * operand.ty() * self.r()
                 + self.ty() * operand.tx() * self.r()
-                - self.ty() * operand.r() * self.tx(),
+                + self.ps() * operand.tx() * self.tx()
+                + self.tx() * operand.r() * self.ty()
+                + self.tx() * operand.ps() * self.tx()
+                - self.r() * operand.tx() * self.ty(),
         )
     }
 }
@@ -3121,9 +3124,9 @@ impl<T: Float> Sandwich<Motor<T>> for Unitized<Motor<T>> {
             -(operand.tx() * self.as_inner().ty() * self.as_inner().ty())
                 + T::TWO * operand.ty() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.tx() * self.as_inner().tx() * self.as_inner().tx(),
-            -T::TWO * operand.ty() * self.as_inner().ps() * self.as_inner().tx()
-                + -(operand.r() * self.as_inner().tx() * self.as_inner().tx())
+            -(operand.r() * self.as_inner().tx() * self.as_inner().tx())
                 + -(operand.r() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.ty() * self.as_inner().ps() * self.as_inner().tx()
                 + T::TWO * operand.tx() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.tx() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.ty() * self.as_inner().r() * self.as_inner().ty(),
@@ -3144,9 +3147,9 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Motor<T> {
             -(operand.as_inner().tx() * self.ty() * self.ty())
                 + T::TWO * operand.as_inner().ty() * self.tx() * self.ty()
                 + operand.as_inner().tx() * self.tx() * self.tx(),
-            -T::TWO * operand.as_inner().ty() * self.ps() * self.tx()
-                + -(operand.as_inner().r() * self.tx() * self.tx())
+            -(operand.as_inner().r() * self.tx() * self.tx())
                 + -(operand.as_inner().r() * self.ty() * self.ty())
+                + -T::TWO * operand.as_inner().ty() * self.ps() * self.tx()
                 + T::TWO * operand.as_inner().tx() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().tx() * self.r() * self.tx()
                 + T::TWO * operand.as_inner().ty() * self.r() * self.ty(),
@@ -3167,9 +3170,9 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Motor<T>> {
             -(operand.as_inner().tx() * self.as_inner().ty() * self.as_inner().ty())
                 + T::TWO * operand.as_inner().ty() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().tx() * self.as_inner().tx() * self.as_inner().tx(),
-            -T::TWO * operand.as_inner().ty() * self.as_inner().ps() * self.as_inner().tx()
-                + -(operand.as_inner().r() * self.as_inner().tx() * self.as_inner().tx())
+            -(operand.as_inner().r() * self.as_inner().tx() * self.as_inner().tx())
                 + -(operand.as_inner().r() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.as_inner().ty() * self.as_inner().ps() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().tx() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().tx() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().ty() * self.as_inner().r() * self.as_inner().ty(),
@@ -3184,22 +3187,21 @@ impl<T: Float> Sandwich<Point<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.tx() * operand.x() * self.tx())
-                + self.ty() * operand.y() * self.tx()
-                + self.ty() * operand.x() * self.ty()
-                + self.tx() * operand.y() * self.ty(),
-            self.tx() * operand.y() * self.tx() - self.ty() * operand.y() * self.ty()
-                + self.ty() * operand.x() * self.tx()
+            self.ty() * operand.x() * self.ty() - self.tx() * operand.x() * self.tx()
+                + self.tx() * operand.y() * self.ty()
+                + self.ty() * operand.y() * self.tx(),
+            self.tx() * operand.y() * self.tx() + self.ty() * operand.x() * self.tx()
+                - self.ty() * operand.y() * self.ty()
                 + self.tx() * operand.x() * self.ty(),
-            self.ty() * operand.x() * self.r() - self.tx() * operand.w() * self.tx()
-                + self.tx() * operand.y() * self.r()
-                + self.ps() * operand.y() * self.ty()
-                + self.r() * operand.y() * self.tx()
-                + self.r() * operand.x() * self.ty()
+            self.tx() * operand.y() * self.r() + self.ty() * operand.x() * self.r()
+                - self.tx() * operand.w() * self.tx()
+                - self.ps() * operand.x() * self.tx()
                 - self.ty() * operand.w() * self.ty()
-                - self.tx() * operand.x() * self.ps()
+                + self.r() * operand.y() * self.tx()
                 + self.ty() * operand.y() * self.ps()
-                - self.ps() * operand.x() * self.tx(),
+                + self.r() * operand.x() * self.ty()
+                + self.ps() * operand.y() * self.ty()
+                - self.tx() * operand.x() * self.ps(),
         )
     }
 }
@@ -3215,9 +3217,9 @@ impl<T: Float> Sandwich<Point<T>> for Unitized<Motor<T>> {
             -(operand.y() * self.as_inner().ty() * self.as_inner().ty())
                 + T::TWO * operand.x() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.y() * self.as_inner().tx() * self.as_inner().tx(),
-            -T::TWO * operand.x() * self.as_inner().ps() * self.as_inner().tx()
-                + -(operand.w() * self.as_inner().tx() * self.as_inner().tx())
+            -(operand.w() * self.as_inner().tx() * self.as_inner().tx())
                 + -(operand.w() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.x() * self.as_inner().ps() * self.as_inner().tx()
                 + T::TWO * operand.x() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.y() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.y() * self.as_inner().r() * self.as_inner().tx(),
@@ -3236,9 +3238,9 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Motor<T> {
             -(operand.as_inner().y() * self.ty() * self.ty())
                 + T::TWO * operand.as_inner().x() * self.tx() * self.ty()
                 + operand.as_inner().y() * self.tx() * self.tx(),
-            -T::TWO * operand.as_inner().x() * self.ps() * self.tx()
-                + -(operand.as_inner().w() * self.tx() * self.tx())
+            -(operand.as_inner().w() * self.tx() * self.tx())
                 + -(operand.as_inner().w() * self.ty() * self.ty())
+                + -T::TWO * operand.as_inner().x() * self.ps() * self.tx()
                 + T::TWO * operand.as_inner().x() * self.r() * self.ty()
                 + T::TWO * operand.as_inner().y() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().y() * self.r() * self.tx(),
@@ -3257,9 +3259,9 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Motor<T>> {
             -(operand.as_inner().y() * self.as_inner().ty() * self.as_inner().ty())
                 + T::TWO * operand.as_inner().x() * self.as_inner().tx() * self.as_inner().ty()
                 + operand.as_inner().y() * self.as_inner().tx() * self.as_inner().tx(),
-            -T::TWO * operand.as_inner().x() * self.as_inner().ps() * self.as_inner().tx()
-                + -(operand.as_inner().w() * self.as_inner().tx() * self.as_inner().tx())
+            -(operand.as_inner().w() * self.as_inner().tx() * self.as_inner().tx())
                 + -(operand.as_inner().w() * self.as_inner().ty() * self.as_inner().ty())
+                + -T::TWO * operand.as_inner().x() * self.as_inner().ps() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().x() * self.as_inner().r() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().y() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().y() * self.as_inner().r() * self.as_inner().tx(),
@@ -3272,7 +3274,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.ty() * operand.s() * self.ty() + self.tx() * operand.s() * self.tx(),
+            self.tx() * operand.s() * self.tx() + self.ty() * operand.s() * self.ty(),
         )
     }
 }
@@ -3309,7 +3311,7 @@ impl<T: Float> Sandwich<Trivector<T>> for Motor<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.ty() * operand.ps() * self.ty() + self.tx() * operand.ps() * self.tx(),
+            self.tx() * operand.ps() * self.tx() + self.ty() * operand.ps() * self.ty(),
         )
     }
 }
@@ -3352,28 +3354,27 @@ impl<T: Float> Sandwich<Flector<T>> for Point<T> {
     #[inline]
     fn sandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.y() * operand.s() * self.y()
-                + self.x() * operand.d() * self.y()
-                + self.x() * operand.s() * self.x()
-                - self.y() * operand.d() * self.x(),
-            -(self.y() * operand.d() * self.y()) + self.x() * operand.s() * self.y()
-                - self.x() * operand.d() * self.x()
+            self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y()
+                - self.y() * operand.d() * self.x()
+                + self.x() * operand.d() * self.y(),
+            -(self.x() * operand.d() * self.x()) - self.y() * operand.d() * self.y()
+                + self.x() * operand.s() * self.y()
                 - self.y() * operand.s() * self.x(),
-            self.x() * operand.d() * self.w()
+            self.y() * operand.ny() * self.x()
+                + self.w() * operand.d() * self.x()
+                + self.y() * operand.s() * self.w()
+                + self.x() * operand.d() * self.w()
+                + self.x() * operand.nx() * self.x()
                 - self.y() * operand.nx() * self.y()
                 - self.w() * operand.s() * self.y()
-                + self.w() * operand.d() * self.x()
-                + self.y() * operand.ny() * self.x()
-                + self.x() * operand.nx() * self.x()
-                + self.y() * operand.s() * self.w()
                 + self.x() * operand.ny() * self.y(),
-            -(-(self.y() * operand.nx() * self.x()) - self.w() * operand.d() * self.y()
-                + self.x() * operand.s() * self.w()
-                - self.y() * operand.d() * self.w()
+            -(self.x() * operand.s() * self.w() - self.x() * operand.nx() * self.y()
                 + self.x() * operand.ny() * self.x()
-                - self.x() * operand.nx() * self.y()
                 - self.w() * operand.s() * self.x()
-                - self.y() * operand.ny() * self.y()),
+                - self.y() * operand.d() * self.w()
+                - self.y() * operand.ny() * self.y()
+                - self.y() * operand.nx() * self.x()
+                - self.w() * operand.d() * self.y()),
         )
     }
 }
@@ -3392,8 +3393,8 @@ impl<T: Float> Sandwich<Flector<T>> for Unitized<Point<T>> {
                 + T::TWO * operand.ny() * self.as_inner().x() * self.as_inner().y()
                 + operand.nx() * self.as_inner().x() * self.as_inner().x(),
             -(operand.ny() * self.as_inner().x() * self.as_inner().x())
-                + T::TWO * operand.nx() * self.as_inner().x() * self.as_inner().y()
                 + T::TWO * operand.d() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.nx() * self.as_inner().x() * self.as_inner().y()
                 + operand.ny() * self.as_inner().y() * self.as_inner().y(),
         )
     }
@@ -3413,8 +3414,8 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Point<T> {
                 + T::TWO * operand.as_inner().ny() * self.x() * self.y()
                 + operand.as_inner().nx() * self.x() * self.x(),
             -(operand.as_inner().ny() * self.x() * self.x())
-                + T::TWO * operand.as_inner().nx() * self.x() * self.y()
                 + T::TWO * operand.as_inner().d() * self.w() * self.y()
+                + T::TWO * operand.as_inner().nx() * self.x() * self.y()
                 + operand.as_inner().ny() * self.y() * self.y(),
         )
     }
@@ -3434,8 +3435,8 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Point<T>> {
                 + T::TWO * operand.as_inner().ny() * self.as_inner().x() * self.as_inner().y()
                 + operand.as_inner().nx() * self.as_inner().x() * self.as_inner().x(),
             -(operand.as_inner().ny() * self.as_inner().x() * self.as_inner().x())
-                + T::TWO * operand.as_inner().nx() * self.as_inner().x() * self.as_inner().y()
                 + T::TWO * operand.as_inner().d() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.as_inner().nx() * self.as_inner().x() * self.as_inner().y()
                 + operand.as_inner().ny() * self.as_inner().y() * self.as_inner().y(),
         )
     }
@@ -3447,18 +3448,18 @@ impl<T: Float> Sandwich<Line<T>> for Point<T> {
     fn sandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             -(self.y() * operand.d() * self.y()) - self.x() * operand.d() * self.x(),
-            self.y() * operand.ny() * self.x()
-                + self.x() * operand.d() * self.w()
-                + self.x() * operand.nx() * self.x()
+            -(self.y() * operand.nx() * self.y())
+                + self.x() * operand.ny() * self.y()
+                + self.y() * operand.ny() * self.x()
                 + self.w() * operand.d() * self.x()
-                - self.y() * operand.nx() * self.y()
-                + self.x() * operand.ny() * self.y(),
-            -(-(self.y() * operand.d() * self.w())
-                - self.y() * operand.nx() * self.x()
+                + self.x() * operand.nx() * self.x()
+                + self.x() * operand.d() * self.w(),
+            -(-(self.y() * operand.nx() * self.x())
+                - self.y() * operand.ny() * self.y()
                 - self.w() * operand.d() * self.y()
+                - self.y() * operand.d() * self.w()
                 - self.x() * operand.nx() * self.y()
-                + self.x() * operand.ny() * self.x()
-                - self.y() * operand.ny() * self.y()),
+                + self.x() * operand.ny() * self.x()),
         )
     }
 }
@@ -3475,8 +3476,8 @@ impl<T: Float> Sandwich<Line<T>> for Unitized<Point<T>> {
                 + T::TWO * operand.ny() * self.as_inner().x() * self.as_inner().y()
                 + operand.nx() * self.as_inner().x() * self.as_inner().x(),
             -(operand.ny() * self.as_inner().x() * self.as_inner().x())
-                + T::TWO * operand.nx() * self.as_inner().x() * self.as_inner().y()
                 + T::TWO * operand.d() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.nx() * self.as_inner().x() * self.as_inner().y()
                 + operand.ny() * self.as_inner().y() * self.as_inner().y(),
         )
     }
@@ -3494,8 +3495,8 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Point<T> {
                 + T::TWO * operand.as_inner().ny() * self.x() * self.y()
                 + operand.as_inner().nx() * self.x() * self.x(),
             -(operand.as_inner().ny() * self.x() * self.x())
-                + T::TWO * operand.as_inner().nx() * self.x() * self.y()
                 + T::TWO * operand.as_inner().d() * self.w() * self.y()
+                + T::TWO * operand.as_inner().nx() * self.x() * self.y()
                 + operand.as_inner().ny() * self.y() * self.y(),
         )
     }
@@ -3513,8 +3514,8 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Point<T>> {
                 + T::TWO * operand.as_inner().ny() * self.as_inner().x() * self.as_inner().y()
                 + operand.as_inner().nx() * self.as_inner().x() * self.as_inner().x(),
             -(operand.as_inner().ny() * self.as_inner().x() * self.as_inner().x())
-                + T::TWO * operand.as_inner().nx() * self.as_inner().x() * self.as_inner().y()
                 + T::TWO * operand.as_inner().d() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.as_inner().nx() * self.as_inner().x() * self.as_inner().y()
                 + operand.as_inner().ny() * self.as_inner().y() * self.as_inner().y(),
         )
     }
@@ -3525,29 +3526,28 @@ impl<T: Float> Sandwich<Motor<T>> for Point<T> {
     #[inline]
     fn sandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.y() * operand.tx() * self.x() + self.x() * operand.ty() * self.x()
-                - self.y() * operand.ty() * self.y()
-                + self.x() * operand.tx() * self.y(),
+            self.x() * operand.tx() * self.y() - self.y() * operand.ty() * self.y()
+                + self.x() * operand.ty() * self.x()
+                + self.y() * operand.tx() * self.x(),
             -(self.x() * operand.tx() * self.x())
                 + self.x() * operand.ty() * self.y()
-                + self.y() * operand.tx() * self.y()
-                + self.y() * operand.ty() * self.x(),
-            -(self.x() * operand.r() * self.x())
-                + self.x() * operand.ty() * self.w()
-                + self.w() * operand.tx() * self.y()
-                - self.x() * operand.ps() * self.y()
-                + self.w() * operand.ty() * self.x()
-                - self.y() * operand.r() * self.y()
+                + self.y() * operand.ty() * self.x()
+                + self.y() * operand.tx() * self.y(),
+            self.w() * operand.tx() * self.y()
                 + self.y() * operand.tx() * self.w()
-                + self.y() * operand.ps() * self.x(),
-            -(self.w() * operand.tx() * self.x())
+                + self.x() * operand.ty() * self.w()
+                - self.x() * operand.ps() * self.y()
+                + self.y() * operand.ps() * self.x()
+                - self.x() * operand.r() * self.x()
+                + self.w() * operand.ty() * self.x()
+                - self.y() * operand.r() * self.y(),
+            -(self.y() * operand.ty() * self.w()) + self.x() * operand.ps() * self.x()
+                - self.x() * operand.r() * self.y()
                 + self.y() * operand.ps() * self.y()
                 + self.w() * operand.ty() * self.y()
+                - self.w() * operand.tx() * self.x()
                 + self.x() * operand.tx() * self.w()
-                - self.x() * operand.r() * self.y()
-                - self.y() * operand.ty() * self.w()
-                + self.y() * operand.r() * self.x()
-                + self.x() * operand.ps() * self.x(),
+                + self.y() * operand.r() * self.x(),
         )
     }
 }
@@ -3565,8 +3565,8 @@ impl<T: Float> Sandwich<Motor<T>> for Unitized<Point<T>> {
                 + operand.tx() * self.as_inner().y() * self.as_inner().y(),
             -(operand.r() * self.as_inner().x() * self.as_inner().x())
                 + -(operand.r() * self.as_inner().y() * self.as_inner().y())
-                + T::TWO * operand.ty() * self.as_inner().w() * self.as_inner().x()
-                + T::TWO * operand.tx() * self.as_inner().w() * self.as_inner().y(),
+                + T::TWO * operand.tx() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.ty() * self.as_inner().w() * self.as_inner().x(),
             operand.ps() * self.as_inner().x() * self.as_inner().x()
                 + operand.ps() * self.as_inner().y() * self.as_inner().y(),
         )
@@ -3586,8 +3586,8 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Point<T> {
                 + operand.as_inner().tx() * self.y() * self.y(),
             -(operand.as_inner().r() * self.x() * self.x())
                 + -(operand.as_inner().r() * self.y() * self.y())
-                + T::TWO * operand.as_inner().ty() * self.w() * self.x()
-                + T::TWO * operand.as_inner().tx() * self.w() * self.y(),
+                + T::TWO * operand.as_inner().tx() * self.w() * self.y()
+                + T::TWO * operand.as_inner().ty() * self.w() * self.x(),
             operand.as_inner().ps() * self.x() * self.x()
                 + operand.as_inner().ps() * self.y() * self.y(),
         )
@@ -3607,8 +3607,8 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Point<T>> {
                 + operand.as_inner().tx() * self.as_inner().y() * self.as_inner().y(),
             -(operand.as_inner().r() * self.as_inner().x() * self.as_inner().x())
                 + -(operand.as_inner().r() * self.as_inner().y() * self.as_inner().y())
-                + T::TWO * operand.as_inner().ty() * self.as_inner().w() * self.as_inner().x()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().w() * self.as_inner().y(),
+                + T::TWO * operand.as_inner().tx() * self.as_inner().w() * self.as_inner().y()
+                + T::TWO * operand.as_inner().ty() * self.as_inner().w() * self.as_inner().x(),
             operand.as_inner().ps() * self.as_inner().x() * self.as_inner().x()
                 + operand.as_inner().ps() * self.as_inner().y() * self.as_inner().y(),
         )
@@ -3620,19 +3620,19 @@ impl<T: Float> Sandwich<Point<T>> for Point<T> {
     #[inline]
     fn sandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            self.x() * operand.y() * self.y() - self.y() * operand.x() * self.y()
+            -(self.y() * operand.x() * self.y())
+                + self.x() * operand.y() * self.y()
                 + self.y() * operand.y() * self.x()
                 + self.x() * operand.x() * self.x(),
-            self.x() * operand.x() * self.y()
-                + self.y() * operand.y() * self.y()
-                + self.y() * operand.x() * self.x()
-                - self.x() * operand.y() * self.x(),
+            self.x() * operand.x() * self.y() + self.y() * operand.y() * self.y()
+                - self.x() * operand.y() * self.x()
+                + self.y() * operand.x() * self.x(),
             -(self.x() * operand.w() * self.x())
-                + self.y() * operand.y() * self.w()
-                + self.x() * operand.x() * self.w()
-                - self.y() * operand.w() * self.y()
+                + self.w() * operand.y() * self.y()
                 + self.w() * operand.x() * self.x()
-                + self.w() * operand.y() * self.y(),
+                + self.y() * operand.y() * self.w()
+                - self.y() * operand.w() * self.y()
+                + self.x() * operand.x() * self.w(),
         )
     }
 }
@@ -3698,7 +3698,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y())
+        Scalar::new_unchecked(self.y() * operand.s() * self.y() + self.x() * operand.s() * self.x())
     }
 }
 #[allow(unused_variables)]
@@ -3734,7 +3734,7 @@ impl<T: Float> Sandwich<Trivector<T>> for Point<T> {
     #[inline]
     fn sandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.x() * operand.ps() * self.x() + self.y() * operand.ps() * self.y(),
+            self.y() * operand.ps() * self.y() + self.x() * operand.ps() * self.x(),
         )
     }
 }
@@ -4197,37 +4197,35 @@ impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -(self.nx() * operand.nx() * self.s())
-                + self.d() * operand.nx() * self.ny()
-                + self.ny() * operand.d() * self.nx()
-                - self.d() * operand.ny() * self.nx()
-                + self.ny() * operand.s() * self.ny()
-                - self.ny() * operand.ny() * self.s()
-                + self.nx() * operand.ny() * self.d()
-                + self.s() * operand.nx() * self.nx()
-                + self.s() * operand.ny() * self.ny()
-                + self.nx() * operand.s() * self.nx()
+            -(self.ny() * operand.ny() * self.s()) + self.d() * operand.nx() * self.ny()
                 - self.ny() * operand.nx() * self.d()
-                - self.nx() * operand.d() * self.ny(),
-            self.nx() * operand.nx() * self.d()
-                + self.d() * operand.ny() * self.ny()
-                + self.ny() * operand.s() * self.nx()
-                + self.ny() * operand.ny() * self.d()
-                - self.s() * operand.nx() * self.ny()
+                - self.nx() * operand.nx() * self.s()
+                - self.nx() * operand.d() * self.ny()
+                + self.nx() * operand.ny() * self.d()
+                + self.ny() * operand.d() * self.nx()
+                + self.ny() * operand.s() * self.ny()
+                + self.nx() * operand.s() * self.nx()
+                + self.s() * operand.ny() * self.ny()
+                - self.d() * operand.ny() * self.nx()
+                + self.s() * operand.nx() * self.nx(),
+            -(self.nx() * operand.d() * self.nx()) + self.ny() * operand.ny() * self.d()
                 - self.nx() * operand.s() * self.ny()
-                + self.s() * operand.ny() * self.nx()
-                + self.d() * operand.nx() * self.nx()
-                + self.nx() * operand.ny() * self.s()
-                - self.nx() * operand.d() * self.nx()
+                + self.ny() * operand.s() * self.nx()
                 - self.ny() * operand.d() * self.ny()
-                - self.ny() * operand.nx() * self.s(),
+                - self.s() * operand.nx() * self.ny()
+                + self.d() * operand.nx() * self.nx()
+                + self.nx() * operand.nx() * self.d()
+                + self.s() * operand.ny() * self.nx()
+                + self.nx() * operand.ny() * self.s()
+                - self.ny() * operand.nx() * self.s()
+                + self.d() * operand.ny() * self.ny(),
             self.nx() * operand.nx() * self.nx()
-                + self.ny() * operand.ny() * self.nx()
                 + self.nx() * operand.ny() * self.ny()
+                + self.ny() * operand.ny() * self.nx()
                 - self.ny() * operand.nx() * self.ny(),
-            -(-(self.nx() * operand.nx() * self.ny())
+            -(-(self.ny() * operand.ny() * self.ny())
+                - self.nx() * operand.nx() * self.ny()
                 - self.ny() * operand.nx() * self.nx()
-                - self.ny() * operand.ny() * self.ny()
                 + self.nx() * operand.ny() * self.nx()),
         )
     }
@@ -4239,8 +4237,8 @@ impl<T: Float> Antisandwich<Flector<T>> for Unitized<Flector<T>> {
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
             operand.s(),
-            -T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.d())
+            -(operand.d())
+                + -T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.ny() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.ny() * self.as_inner().nx() * self.as_inner().s(),
@@ -4261,9 +4259,9 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Flector<T> {
         Flector::new_unchecked(
             operand.as_inner().s() * self.nx() * self.nx()
                 + operand.as_inner().s() * self.ny() * self.ny(),
-            -T::TWO * operand.as_inner().nx() * self.ny() * self.s()
-                + -(operand.as_inner().d() * self.nx() * self.nx())
+            -(operand.as_inner().d() * self.nx() * self.nx())
                 + -(operand.as_inner().d() * self.ny() * self.ny())
+                + -T::TWO * operand.as_inner().nx() * self.ny() * self.s()
                 + T::TWO * operand.as_inner().nx() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().ny() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().ny() * self.nx() * self.s(),
@@ -4283,8 +4281,8 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Flector<T>> {
     fn antisandwich(&self, operand: &Unitized<Flector<T>>) -> Flector<T> {
         Flector::new_unchecked(
             operand.as_inner().s(),
-            -T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.as_inner().d())
+            -(operand.as_inner().d())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().nx() * self.as_inner().s(),
@@ -4303,23 +4301,22 @@ impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            -(self.nx() * operand.d() * self.nx())
-                - self.ny() * operand.nx() * self.s()
-                - self.s() * operand.nx() * self.ny()
-                + self.s() * operand.ny() * self.nx()
-                + self.nx() * operand.ny() * self.s()
+            self.d() * operand.ny() * self.ny() - self.ny() * operand.d() * self.ny()
                 + self.d() * operand.nx() * self.nx()
-                + self.d() * operand.ny() * self.ny()
                 + self.nx() * operand.nx() * self.d()
-                - self.ny() * operand.d() * self.ny()
-                + self.ny() * operand.ny() * self.d(),
-            -(self.ny() * operand.nx() * self.ny())
-                + self.nx() * operand.ny() * self.ny()
-                + self.nx() * operand.nx() * self.nx()
-                + self.ny() * operand.ny() * self.nx(),
-            -(-(self.nx() * operand.nx() * self.ny()) - self.ny() * operand.ny() * self.ny()
-                + self.nx() * operand.ny() * self.nx()
-                - self.ny() * operand.nx() * self.nx()),
+                + self.s() * operand.ny() * self.nx()
+                - self.nx() * operand.d() * self.nx()
+                - self.s() * operand.nx() * self.ny()
+                + self.ny() * operand.ny() * self.d()
+                + self.nx() * operand.ny() * self.s()
+                - self.ny() * operand.nx() * self.s(),
+            self.ny() * operand.ny() * self.nx() + self.nx() * operand.nx() * self.nx()
+                - self.ny() * operand.nx() * self.ny()
+                + self.nx() * operand.ny() * self.ny(),
+            -(-(self.nx() * operand.nx() * self.ny())
+                - self.ny() * operand.nx() * self.nx()
+                - self.ny() * operand.ny() * self.ny()
+                + self.nx() * operand.ny() * self.nx()),
         )
     }
 }
@@ -4329,8 +4326,8 @@ impl<T: Float> Antisandwich<Line<T>> for Unitized<Flector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            -T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.d())
+            -(operand.d())
+                + -T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.nx() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.ny() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.ny() * self.as_inner().nx() * self.as_inner().s(),
@@ -4349,9 +4346,9 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Line<T>>) -> Line<T> {
         Line::new_unchecked(
-            -T::TWO * operand.as_inner().nx() * self.ny() * self.s()
-                + -(operand.as_inner().d() * self.nx() * self.nx())
+            -(operand.as_inner().d() * self.nx() * self.nx())
                 + -(operand.as_inner().d() * self.ny() * self.ny())
+                + -T::TWO * operand.as_inner().nx() * self.ny() * self.s()
                 + T::TWO * operand.as_inner().nx() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().ny() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().ny() * self.nx() * self.s(),
@@ -4370,8 +4367,8 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Flector<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Line<T>>) -> Line<T> {
         Line::new_unchecked(
-            -T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().s()
-                + -(operand.as_inner().d())
+            -(operand.as_inner().d())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().s()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().nx() * self.as_inner().s(),
@@ -4390,36 +4387,36 @@ impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.ny() * operand.ps() * self.d() - self.d() * operand.ps() * self.ny()
-                + self.s() * operand.ps() * self.nx()
-                - self.nx() * operand.ps() * self.s()
-                + self.nx() * operand.ty() * self.nx()
-                + self.nx() * operand.tx() * self.ny()
-                - self.ny() * operand.ty() * self.ny()
-                + self.ny() * operand.tx() * self.nx()
+            self.s() * operand.r() * self.ny() - self.d() * operand.ps() * self.ny()
+                + self.ny() * operand.ps() * self.d()
                 + self.d() * operand.r() * self.nx()
-                + self.s() * operand.r() * self.ny()
+                + self.nx() * operand.r() * self.d()
+                - self.ny() * operand.ty() * self.ny()
+                - self.nx() * operand.ps() * self.s()
+                + self.s() * operand.ps() * self.nx()
+                + self.ny() * operand.tx() * self.nx()
+                + self.nx() * operand.tx() * self.ny()
                 + self.ny() * operand.r() * self.s()
-                + self.nx() * operand.r() * self.d(),
+                + self.nx() * operand.ty() * self.nx(),
             self.s() * operand.ps() * self.ny()
-                + self.d() * operand.ps() * self.nx()
-                + self.ny() * operand.tx() * self.ny()
-                + self.nx() * operand.ty() * self.ny()
-                - self.nx() * operand.ps() * self.d()
-                + self.d() * operand.r() * self.ny()
-                - self.nx() * operand.tx() * self.nx()
                 + self.ny() * operand.ty() * self.nx()
-                - self.ny() * operand.ps() * self.s()
+                + self.d() * operand.ps() * self.nx()
+                + self.d() * operand.r() * self.ny()
+                - self.nx() * operand.ps() * self.d()
+                - self.s() * operand.r() * self.nx()
+                + self.ny() * operand.tx() * self.ny()
                 + self.ny() * operand.r() * self.d()
+                - self.ny() * operand.ps() * self.s()
+                - self.nx() * operand.tx() * self.nx()
                 - self.nx() * operand.r() * self.s()
-                - self.s() * operand.r() * self.nx(),
-            -(self.nx() * operand.r() * self.nx()) - self.ny() * operand.ps() * self.nx()
-                + self.nx() * operand.ps() * self.ny()
-                - self.ny() * operand.r() * self.ny(),
-            -(self.ny() * operand.r() * self.nx())
-                + self.nx() * operand.ps() * self.nx()
-                + self.ny() * operand.ps() * self.ny()
-                + self.nx() * operand.r() * self.ny(),
+                + self.nx() * operand.ty() * self.ny(),
+            -(self.ny() * operand.r() * self.ny())
+                - self.nx() * operand.r() * self.nx()
+                - self.ny() * operand.ps() * self.nx()
+                + self.nx() * operand.ps() * self.ny(),
+            self.ny() * operand.ps() * self.ny() + self.nx() * operand.r() * self.ny()
+                - self.ny() * operand.r() * self.nx()
+                + self.nx() * operand.ps() * self.nx(),
         )
     }
 }
@@ -4431,14 +4428,14 @@ impl<T: Float> Antisandwich<Motor<T>> for Unitized<Flector<T>> {
         Motor::new_unchecked(
             -T::TWO * operand.ty() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.r() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.r() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.ty(),
-            -T::TWO * operand.r() * self.as_inner().nx() * self.as_inner().s()
-                + -(operand.tx())
+            -(operand.tx())
+                + -T::TWO * operand.r() * self.as_inner().nx() * self.as_inner().s()
                 + T::TWO * operand.r() * self.as_inner().d() * self.as_inner().ny()
-                + T::TWO * operand.ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.tx() * self.as_inner().ny() * self.as_inner().ny(),
+                + T::TWO * operand.tx() * self.as_inner().ny() * self.as_inner().ny()
+                + T::TWO * operand.ty() * self.as_inner().nx() * self.as_inner().ny(),
             -(operand.r()),
             operand.ps(),
         )
@@ -4452,11 +4449,11 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Flector<T> {
         Motor::new_unchecked(
             -(operand.as_inner().ty() * self.ny() * self.ny())
                 + T::TWO * operand.as_inner().r() * self.d() * self.nx()
-                + T::TWO * operand.as_inner().tx() * self.nx() * self.ny()
                 + T::TWO * operand.as_inner().r() * self.ny() * self.s()
+                + T::TWO * operand.as_inner().tx() * self.nx() * self.ny()
                 + operand.as_inner().ty() * self.nx() * self.nx(),
-            -T::TWO * operand.as_inner().r() * self.nx() * self.s()
-                + -(operand.as_inner().tx() * self.nx() * self.nx())
+            -(operand.as_inner().tx() * self.nx() * self.nx())
+                + -T::TWO * operand.as_inner().r() * self.nx() * self.s()
                 + T::TWO * operand.as_inner().r() * self.d() * self.ny()
                 + T::TWO * operand.as_inner().ty() * self.nx() * self.ny()
                 + operand.as_inner().tx() * self.ny() * self.ny(),
@@ -4475,14 +4472,14 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Flector<T>> {
         Motor::new_unchecked(
             -T::TWO * operand.as_inner().ty() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().r() * self.as_inner().d() * self.as_inner().nx()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().r() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.as_inner().ty(),
-            -T::TWO * operand.as_inner().r() * self.as_inner().nx() * self.as_inner().s()
-                + -(operand.as_inner().tx())
+            -(operand.as_inner().tx())
+                + -T::TWO * operand.as_inner().r() * self.as_inner().nx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().r() * self.as_inner().d() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().ny() * self.as_inner().ny(),
+                + T::TWO * operand.as_inner().tx() * self.as_inner().ny() * self.as_inner().ny()
+                + T::TWO * operand.as_inner().ty() * self.as_inner().nx() * self.as_inner().ny(),
             -(operand.as_inner().r()),
             operand.as_inner().ps(),
         )
@@ -4494,22 +4491,21 @@ impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            self.nx() * operand.w() * self.d()
-                + self.s() * operand.w() * self.ny()
-                + self.nx() * operand.y() * self.ny()
+            self.s() * operand.w() * self.ny() - self.ny() * operand.x() * self.ny()
                 + self.ny() * operand.y() * self.nx()
-                + self.ny() * operand.w() * self.s()
                 + self.nx() * operand.x() * self.nx()
+                + self.nx() * operand.w() * self.d()
+                + self.ny() * operand.w() * self.s()
                 + self.d() * operand.w() * self.nx()
-                - self.ny() * operand.x() * self.ny(),
-            -(self.nx() * operand.y() * self.nx()) - self.nx() * operand.w() * self.s()
-                + self.ny() * operand.x() * self.nx()
-                + self.ny() * operand.w() * self.d()
+                + self.nx() * operand.y() * self.ny(),
+            -(self.nx() * operand.y() * self.nx()) + self.ny() * operand.w() * self.d()
                 - self.s() * operand.w() * self.nx()
-                + self.d() * operand.w() * self.ny()
+                + self.ny() * operand.x() * self.nx()
+                - self.nx() * operand.w() * self.s()
                 + self.ny() * operand.y() * self.ny()
+                + self.d() * operand.w() * self.ny()
                 + self.nx() * operand.x() * self.ny(),
-            -(self.nx() * operand.w() * self.nx()) - self.ny() * operand.w() * self.ny(),
+            -(self.ny() * operand.w() * self.ny()) - self.nx() * operand.w() * self.nx(),
         )
     }
 }
@@ -4520,15 +4516,15 @@ impl<T: Float> Antisandwich<Point<T>> for Unitized<Flector<T>> {
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
             -T::TWO * operand.x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.w() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.x(),
-            -T::TWO * operand.w() * self.as_inner().nx() * self.as_inner().s()
-                + -(operand.y())
+            -(operand.y())
+                + -T::TWO * operand.w() * self.as_inner().nx() * self.as_inner().s()
+                + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.x() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().ny(),
+                + T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.w()),
         )
     }
@@ -4540,14 +4536,14 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Flector<T> {
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
             -(operand.as_inner().x() * self.ny() * self.ny())
-                + T::TWO * operand.as_inner().y() * self.nx() * self.ny()
                 + T::TWO * operand.as_inner().w() * self.d() * self.nx()
                 + T::TWO * operand.as_inner().w() * self.ny() * self.s()
+                + T::TWO * operand.as_inner().y() * self.nx() * self.ny()
                 + operand.as_inner().x() * self.nx() * self.nx(),
-            -T::TWO * operand.as_inner().w() * self.nx() * self.s()
-                + -(operand.as_inner().y() * self.nx() * self.nx())
-                + T::TWO * operand.as_inner().x() * self.nx() * self.ny()
+            -(operand.as_inner().y() * self.nx() * self.nx())
+                + -T::TWO * operand.as_inner().w() * self.nx() * self.s()
                 + T::TWO * operand.as_inner().w() * self.d() * self.ny()
+                + T::TWO * operand.as_inner().x() * self.nx() * self.ny()
                 + operand.as_inner().y() * self.ny() * self.ny(),
             -(operand.as_inner().w() * self.nx() * self.nx())
                 + -(operand.as_inner().w() * self.ny() * self.ny()),
@@ -4561,15 +4557,15 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Flector<T>> {
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
             -T::TWO * operand.as_inner().x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().w() * self.as_inner().ny() * self.as_inner().s()
+                + T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.as_inner().x(),
-            -T::TWO * operand.as_inner().w() * self.as_inner().nx() * self.as_inner().s()
-                + -(operand.as_inner().y())
+            -(operand.as_inner().y())
+                + -T::TWO * operand.as_inner().w() * self.as_inner().nx() * self.as_inner().s()
+                + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().x() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().ny(),
+                + T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.as_inner().w()),
         )
     }
@@ -4580,7 +4576,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Flector<T> {
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.nx() * operand.s() * self.nx() + self.ny() * operand.s() * self.ny(),
+            self.ny() * operand.s() * self.ny() + self.nx() * operand.s() * self.nx(),
         )
     }
 }
@@ -4651,28 +4647,28 @@ impl<T: Float> Antisandwich<Flector<T>> for Line<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.d() * operand.nx() * self.ny()
-                + self.ny() * operand.s() * self.ny()
+            -(self.d() * operand.ny() * self.nx()) - self.ny() * operand.nx() * self.d()
                 + self.nx() * operand.s() * self.nx()
-                - self.d() * operand.ny() * self.nx()
-                - self.ny() * operand.nx() * self.d()
                 + self.ny() * operand.d() * self.nx()
+                + self.ny() * operand.s() * self.ny()
                 + self.nx() * operand.ny() * self.d()
+                + self.d() * operand.nx() * self.ny()
                 - self.nx() * operand.d() * self.ny(),
-            self.nx() * operand.nx() * self.d()
-                + self.ny() * operand.s() * self.nx()
+            -(self.nx() * operand.s() * self.ny())
                 + self.d() * operand.ny() * self.ny()
                 + self.d() * operand.nx() * self.nx()
-                - self.nx() * operand.s() * self.ny()
-                - self.ny() * operand.d() * self.ny()
                 - self.nx() * operand.d() * self.nx()
-                + self.ny() * operand.ny() * self.d(),
-            self.ny() * operand.ny() * self.nx() + self.nx() * operand.nx() * self.nx()
-                - self.ny() * operand.nx() * self.ny()
-                + self.nx() * operand.ny() * self.ny(),
-            -(-(self.nx() * operand.nx() * self.ny()) - self.ny() * operand.nx() * self.nx()
-                + self.nx() * operand.ny() * self.nx()
-                - self.ny() * operand.ny() * self.ny()),
+                + self.nx() * operand.nx() * self.d()
+                - self.ny() * operand.d() * self.ny()
+                + self.ny() * operand.ny() * self.d()
+                + self.ny() * operand.s() * self.nx(),
+            self.nx() * operand.nx() * self.nx() - self.ny() * operand.nx() * self.ny()
+                + self.nx() * operand.ny() * self.ny()
+                + self.ny() * operand.ny() * self.nx(),
+            -(-(self.ny() * operand.ny() * self.ny())
+                - self.ny() * operand.nx() * self.nx()
+                - self.nx() * operand.nx() * self.ny()
+                + self.nx() * operand.ny() * self.nx()),
         )
     }
 }
@@ -4741,18 +4737,17 @@ impl<T: Float> Antisandwich<Line<T>> for Line<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            self.d() * operand.nx() * self.nx() - self.nx() * operand.d() * self.nx()
-                + self.d() * operand.ny() * self.ny()
+            self.d() * operand.ny() * self.ny() - self.nx() * operand.d() * self.nx()
+                + self.nx() * operand.nx() * self.d()
+                + self.d() * operand.nx() * self.nx()
                 - self.ny() * operand.d() * self.ny()
-                + self.ny() * operand.ny() * self.d()
-                + self.nx() * operand.nx() * self.d(),
+                + self.ny() * operand.ny() * self.d(),
             self.ny() * operand.ny() * self.nx() - self.ny() * operand.nx() * self.ny()
                 + self.nx() * operand.ny() * self.ny()
                 + self.nx() * operand.nx() * self.nx(),
-            -(self.nx() * operand.ny() * self.nx()
-                - self.ny() * operand.nx() * self.nx()
-                - self.nx() * operand.nx() * self.ny()
-                - self.ny() * operand.ny() * self.ny()),
+            -(-(self.ny() * operand.ny() * self.ny()) - self.ny() * operand.nx() * self.nx()
+                + self.nx() * operand.ny() * self.nx()
+                - self.nx() * operand.nx() * self.ny()),
         )
     }
 }
@@ -4817,27 +4812,27 @@ impl<T: Float> Antisandwich<Motor<T>> for Line<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            self.d() * operand.r() * self.nx() + self.nx() * operand.ty() * self.nx()
-                - self.d() * operand.ps() * self.ny()
-                + self.nx() * operand.tx() * self.ny()
-                + self.ny() * operand.ps() * self.d()
+            -(self.d() * operand.ps() * self.ny()) + self.nx() * operand.tx() * self.ny()
                 - self.ny() * operand.ty() * self.ny()
                 + self.ny() * operand.tx() * self.nx()
-                + self.nx() * operand.r() * self.d(),
-            self.ny() * operand.tx() * self.ny() + self.ny() * operand.ty() * self.nx()
-                - self.nx() * operand.tx() * self.nx()
+                + self.nx() * operand.ty() * self.nx()
+                + self.nx() * operand.r() * self.d()
+                + self.d() * operand.r() * self.nx()
+                + self.ny() * operand.ps() * self.d(),
+            -(self.nx() * operand.ps() * self.d())
                 + self.ny() * operand.r() * self.d()
+                + self.ny() * operand.tx() * self.ny()
+                - self.nx() * operand.tx() * self.nx()
+                + self.d() * operand.r() * self.ny()
+                + self.ny() * operand.ty() * self.nx()
                 + self.nx() * operand.ty() * self.ny()
-                + self.d() * operand.ps() * self.nx()
-                - self.nx() * operand.ps() * self.d()
-                + self.d() * operand.r() * self.ny(),
+                + self.d() * operand.ps() * self.nx(),
             -(self.ny() * operand.ps() * self.nx()) + self.nx() * operand.ps() * self.ny()
                 - self.nx() * operand.r() * self.nx()
                 - self.ny() * operand.r() * self.ny(),
-            -(self.ny() * operand.r() * self.nx())
-                + self.nx() * operand.ps() * self.nx()
-                + self.ny() * operand.ps() * self.ny()
-                + self.nx() * operand.r() * self.ny(),
+            self.ny() * operand.ps() * self.ny() + self.nx() * operand.r() * self.ny()
+                - self.ny() * operand.r() * self.nx()
+                + self.nx() * operand.ps() * self.nx(),
         )
     }
 }
@@ -4853,8 +4848,8 @@ impl<T: Float> Antisandwich<Motor<T>> for Unitized<Line<T>> {
                 + operand.ty(),
             -(operand.tx())
                 + T::TWO * operand.r() * self.as_inner().d() * self.as_inner().ny()
-                + T::TWO * operand.ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.tx() * self.as_inner().ny() * self.as_inner().ny(),
+                + T::TWO * operand.tx() * self.as_inner().ny() * self.as_inner().ny()
+                + T::TWO * operand.ty() * self.as_inner().nx() * self.as_inner().ny(),
             -(operand.r()),
             operand.ps(),
         )
@@ -4893,8 +4888,8 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Line<T>> {
                 + operand.as_inner().ty(),
             -(operand.as_inner().tx())
                 + T::TWO * operand.as_inner().r() * self.as_inner().d() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().ny() * self.as_inner().ny(),
+                + T::TWO * operand.as_inner().tx() * self.as_inner().ny() * self.as_inner().ny()
+                + T::TWO * operand.as_inner().ty() * self.as_inner().nx() * self.as_inner().ny(),
             -(operand.as_inner().r()),
             operand.as_inner().ps(),
         )
@@ -4906,16 +4901,18 @@ impl<T: Float> Antisandwich<Point<T>> for Line<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            self.nx() * operand.w() * self.d() - self.ny() * operand.x() * self.ny()
-                + self.nx() * operand.y() * self.ny()
-                + self.d() * operand.w() * self.nx()
+            self.d() * operand.w() * self.nx()
                 + self.nx() * operand.x() * self.nx()
-                + self.ny() * operand.y() * self.nx(),
-            self.ny() * operand.x() * self.nx() + self.ny() * operand.y() * self.ny()
-                - self.nx() * operand.y() * self.nx()
+                + self.nx() * operand.y() * self.ny()
+                + self.nx() * operand.w() * self.d()
+                + self.ny() * operand.y() * self.nx()
+                - self.ny() * operand.x() * self.ny(),
+            self.nx() * operand.x() * self.ny()
                 + self.d() * operand.w() * self.ny()
                 + self.ny() * operand.w() * self.d()
-                + self.nx() * operand.x() * self.ny(),
+                + self.ny() * operand.y() * self.ny()
+                + self.ny() * operand.x() * self.nx()
+                - self.nx() * operand.y() * self.nx(),
             -(self.nx() * operand.w() * self.nx()) - self.ny() * operand.w() * self.ny(),
         )
     }
@@ -4927,13 +4924,13 @@ impl<T: Float> Antisandwich<Point<T>> for Unitized<Line<T>> {
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
             -T::TWO * operand.x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().nx()
+                + T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.x(),
             -(operand.y())
+                + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.x() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.w() * self.as_inner().d() * self.as_inner().ny(),
+                + T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.w()),
         )
     }
@@ -4945,12 +4942,12 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Line<T> {
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
             -(operand.as_inner().x() * self.ny() * self.ny())
-                + T::TWO * operand.as_inner().y() * self.nx() * self.ny()
                 + T::TWO * operand.as_inner().w() * self.d() * self.nx()
+                + T::TWO * operand.as_inner().y() * self.nx() * self.ny()
                 + operand.as_inner().x() * self.nx() * self.nx(),
             -(operand.as_inner().y() * self.nx() * self.nx())
-                + T::TWO * operand.as_inner().x() * self.nx() * self.ny()
                 + T::TWO * operand.as_inner().w() * self.d() * self.ny()
+                + T::TWO * operand.as_inner().x() * self.nx() * self.ny()
                 + operand.as_inner().y() * self.ny() * self.ny(),
             -(operand.as_inner().w() * self.nx() * self.nx())
                 + -(operand.as_inner().w() * self.ny() * self.ny()),
@@ -4964,13 +4961,13 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Line<T>> {
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
             -T::TWO * operand.as_inner().x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.as_inner().x(),
             -(operand.as_inner().y())
+                + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().x() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().w() * self.as_inner().d() * self.as_inner().ny(),
+                + T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.as_inner().w()),
         )
     }
@@ -4981,7 +4978,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Line<T> {
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.nx() * operand.s() * self.nx() + self.ny() * operand.s() * self.ny(),
+            self.ny() * operand.s() * self.ny() + self.nx() * operand.s() * self.nx(),
         )
     }
 }
@@ -5052,38 +5049,36 @@ impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.r() * operand.s() * self.r()
-                + self.r() * operand.nx() * self.tx()
-                + self.ty() * operand.ny() * self.r()
-                - self.r() * operand.ny() * self.ty()
-                - self.ps() * operand.nx() * self.ty()
-                + self.tx() * operand.ny() * self.ps()
-                + self.ty() * operand.nx() * self.ps()
-                - self.tx() * operand.nx() * self.r()
-                + self.r() * operand.d() * self.ps()
+            -(self.ps() * operand.nx() * self.ty()) - self.ps() * operand.ny() * self.tx()
                 + self.ps() * operand.s() * self.ps()
+                + self.ty() * operand.ny() * self.r()
+                + self.r() * operand.s() * self.r()
+                - self.r() * operand.ny() * self.ty()
+                + self.ty() * operand.nx() * self.ps()
+                + self.r() * operand.nx() * self.tx()
                 - self.ps() * operand.d() * self.r()
-                - self.ps() * operand.ny() * self.tx(),
-            self.r() * operand.nx() * self.ty()
-                + self.r() * operand.d() * self.r()
-                + self.ps() * operand.d() * self.ps()
-                + self.r() * operand.ny() * self.tx()
-                + self.ty() * operand.nx() * self.r()
-                - self.r() * operand.s() * self.ps()
-                - self.ty() * operand.ny() * self.ps()
-                + self.tx() * operand.ny() * self.r()
-                + self.tx() * operand.nx() * self.ps()
-                - self.ps() * operand.ny() * self.ty()
+                + self.r() * operand.d() * self.ps()
+                - self.tx() * operand.nx() * self.r()
+                + self.tx() * operand.ny() * self.ps(),
+            self.ps() * operand.d() * self.ps()
+                + self.ps() * operand.s() * self.r()
                 + self.ps() * operand.nx() * self.tx()
-                + self.ps() * operand.s() * self.r(),
-            self.ps() * operand.ny() * self.r()
+                - self.ps() * operand.ny() * self.ty()
+                - self.ty() * operand.ny() * self.ps()
+                - self.r() * operand.s() * self.ps()
+                + self.tx() * operand.nx() * self.ps()
+                + self.r() * operand.d() * self.r()
+                + self.r() * operand.nx() * self.ty()
+                + self.ty() * operand.nx() * self.r()
+                + self.tx() * operand.ny() * self.r()
+                + self.r() * operand.ny() * self.tx(),
+            -(self.r() * operand.nx() * self.r())
+                + self.ps() * operand.ny() * self.r()
                 + self.ps() * operand.nx() * self.ps()
-                + self.r() * operand.ny() * self.ps()
-                - self.r() * operand.nx() * self.r(),
-            -(self.r() * operand.nx() * self.ps()
-                + self.r() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.r()
-                - self.ps() * operand.ny() * self.ps()),
+                + self.r() * operand.ny() * self.ps(),
+            -(self.r() * operand.nx() * self.ps() + self.ps() * operand.nx() * self.r()
+                - self.ps() * operand.ny() * self.ps()
+                + self.r() * operand.ny() * self.r()),
         )
     }
 }
@@ -5096,8 +5091,8 @@ impl<T: Float> Antisandwich<Flector<T>> for Unitized<Motor<T>> {
             operand.s(),
             -T::TWO * operand.ny() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.nx() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.ny() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.nx() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.ny() * self.as_inner().r() * self.as_inner().tx()
                 + operand.d(),
             -T::TWO * operand.nx() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.ny() * self.as_inner().ps() * self.as_inner().r()
@@ -5118,15 +5113,15 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Motor<T> {
                 + operand.as_inner().s() * self.r() * self.r(),
             -T::TWO * operand.as_inner().ny() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().nx() * self.ps() * self.tx()
-                + T::TWO * operand.as_inner().ny() * self.r() * self.tx()
                 + T::TWO * operand.as_inner().nx() * self.r() * self.ty()
+                + T::TWO * operand.as_inner().ny() * self.r() * self.tx()
                 + operand.as_inner().d() * self.ps() * self.ps()
                 + operand.as_inner().d() * self.r() * self.r(),
             -(operand.as_inner().nx() * self.r() * self.r())
                 + T::TWO * operand.as_inner().ny() * self.ps() * self.r()
                 + operand.as_inner().nx() * self.ps() * self.ps(),
-            -T::TWO * operand.as_inner().nx() * self.ps() * self.r()
-                + -(operand.as_inner().ny() * self.r() * self.r())
+            -(operand.as_inner().ny() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().nx() * self.ps() * self.r()
                 + operand.as_inner().ny() * self.ps() * self.ps(),
         )
     }
@@ -5140,8 +5135,8 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Motor<T>> {
             operand.as_inner().s(),
             -T::TWO * operand.as_inner().ny() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.as_inner().ny() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.as_inner().ny() * self.as_inner().r() * self.as_inner().tx()
                 + operand.as_inner().d(),
             -T::TWO * operand.as_inner().nx() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().ps() * self.as_inner().r()
@@ -5158,24 +5153,23 @@ impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            -(self.ps() * operand.ny() * self.ty())
-                + self.r() * operand.ny() * self.tx()
+            self.ps() * operand.d() * self.ps() - self.ty() * operand.ny() * self.ps()
+                + self.tx() * operand.nx() * self.ps()
+                + self.tx() * operand.ny() * self.r()
                 + self.ty() * operand.nx() * self.r()
-                - self.ty() * operand.ny() * self.ps()
                 + self.r() * operand.nx() * self.ty()
                 + self.ps() * operand.nx() * self.tx()
-                + self.tx() * operand.ny() * self.r()
                 + self.r() * operand.d() * self.r()
-                + self.ps() * operand.d() * self.ps()
-                + self.tx() * operand.nx() * self.ps(),
-            -(self.r() * operand.nx() * self.r())
-                + self.r() * operand.ny() * self.ps()
+                - self.ps() * operand.ny() * self.ty()
+                + self.r() * operand.ny() * self.tx(),
+            self.ps() * operand.nx() * self.ps()
                 + self.ps() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.ps(),
+                + self.r() * operand.ny() * self.ps()
+                - self.r() * operand.nx() * self.r(),
             -(-(self.ps() * operand.ny() * self.ps())
+                + self.r() * operand.nx() * self.ps()
                 + self.r() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.r()
-                + self.r() * operand.nx() * self.ps()),
+                + self.ps() * operand.nx() * self.r()),
         )
     }
 }
@@ -5187,8 +5181,8 @@ impl<T: Float> Antisandwich<Line<T>> for Unitized<Motor<T>> {
         Line::new_unchecked(
             -T::TWO * operand.ny() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.nx() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.ny() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.nx() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.ny() * self.as_inner().r() * self.as_inner().tx()
                 + operand.d(),
             -T::TWO * operand.nx() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.ny() * self.as_inner().ps() * self.as_inner().r()
@@ -5207,15 +5201,15 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Motor<T> {
         Line::new_unchecked(
             -T::TWO * operand.as_inner().ny() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().nx() * self.ps() * self.tx()
-                + T::TWO * operand.as_inner().ny() * self.r() * self.tx()
                 + T::TWO * operand.as_inner().nx() * self.r() * self.ty()
+                + T::TWO * operand.as_inner().ny() * self.r() * self.tx()
                 + operand.as_inner().d() * self.ps() * self.ps()
                 + operand.as_inner().d() * self.r() * self.r(),
             -(operand.as_inner().nx() * self.r() * self.r())
                 + T::TWO * operand.as_inner().ny() * self.ps() * self.r()
                 + operand.as_inner().nx() * self.ps() * self.ps(),
-            -T::TWO * operand.as_inner().nx() * self.ps() * self.r()
-                + -(operand.as_inner().ny() * self.r() * self.r())
+            -(operand.as_inner().ny() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().nx() * self.ps() * self.r()
                 + operand.as_inner().ny() * self.ps() * self.ps(),
         )
     }
@@ -5228,8 +5222,8 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Motor<T>> {
         Line::new_unchecked(
             -T::TWO * operand.as_inner().ny() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.as_inner().ny() * self.as_inner().r() * self.as_inner().tx()
                 + T::TWO * operand.as_inner().nx() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.as_inner().ny() * self.as_inner().r() * self.as_inner().tx()
                 + operand.as_inner().d(),
             -T::TWO * operand.as_inner().nx() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.as_inner().ny() * self.as_inner().ps() * self.as_inner().r()
@@ -5246,33 +5240,34 @@ impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(self.tx() * operand.r() * self.ps()) + self.tx() * operand.ps() * self.r()
-                - self.r() * operand.ty() * self.r()
-                + self.r() * operand.r() * self.ty()
-                - self.r() * operand.ps() * self.tx()
-                + self.ty() * operand.r() * self.r()
+            self.ps() * operand.tx() * self.r() - self.ps() * operand.ps() * self.ty()
                 + self.ps() * operand.ty() * self.ps()
+                + self.ty() * operand.ps() * self.ps()
+                + self.r() * operand.r() * self.ty()
                 - self.ps() * operand.r() * self.tx()
-                - self.ps() * operand.ps() * self.ty()
+                - self.r() * operand.ps() * self.tx()
                 + self.r() * operand.tx() * self.ps()
-                + self.ps() * operand.tx() * self.r()
-                + self.ty() * operand.ps() * self.ps(),
-            self.r() * operand.r() * self.tx()
-                + self.ps() * operand.tx() * self.ps()
-                + self.ty() * operand.r() * self.ps()
+                - self.tx() * operand.r() * self.ps()
+                + self.ty() * operand.r() * self.r()
+                + self.tx() * operand.ps() * self.r()
+                - self.r() * operand.ty() * self.r(),
+            self.tx() * operand.r() * self.r() + self.ty() * operand.r() * self.ps()
                 - self.r() * operand.ty() * self.ps()
-                - self.ps() * operand.ty() * self.r()
-                - self.ps() * operand.ps() * self.tx()
-                - self.r() * operand.tx() * self.r()
-                - self.ty() * operand.ps() * self.r()
-                + self.ps() * operand.r() * self.ty()
+                + self.r() * operand.r() * self.tx()
                 + self.r() * operand.ps() * self.ty()
-                + self.tx() * operand.r() * self.r()
-                + self.tx() * operand.ps() * self.ps(),
-            self.r() * operand.r() * self.r() - self.ps() * operand.ps() * self.r()
+                + self.tx() * operand.ps() * self.ps()
+                - self.r() * operand.tx() * self.r()
+                - self.ps() * operand.ty() * self.r()
+                + self.ps() * operand.tx() * self.ps()
+                + self.ps() * operand.r() * self.ty()
+                - self.ty() * operand.ps() * self.r()
+                - self.ps() * operand.ps() * self.tx(),
+            self.r() * operand.r() * self.r()
+                + self.r() * operand.ps() * self.ps()
                 + self.ps() * operand.r() * self.ps()
-                + self.r() * operand.ps() * self.ps(),
-            self.ps() * operand.r() * self.r() - self.r() * operand.r() * self.ps()
+                - self.ps() * operand.ps() * self.r(),
+            -(self.r() * operand.r() * self.ps())
+                + self.ps() * operand.r() * self.r()
                 + self.ps() * operand.ps() * self.ps()
                 + self.r() * operand.ps() * self.r(),
         )
@@ -5286,11 +5281,11 @@ impl<T: Float> Antisandwich<Motor<T>> for Unitized<Motor<T>> {
         Motor::new_unchecked(
             -T::TWO * operand.r() * self.as_inner().ps() * self.as_inner().tx()
                 + -T::TWO * operand.ty() * self.as_inner().r() * self.as_inner().r()
-                + T::TWO * operand.tx() * self.as_inner().ps() * self.as_inner().r()
                 + T::TWO * operand.r() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.tx() * self.as_inner().ps() * self.as_inner().r()
                 + operand.ty(),
-            -T::TWO * operand.ty() * self.as_inner().ps() * self.as_inner().r()
-                + -T::TWO * operand.tx() * self.as_inner().r() * self.as_inner().r()
+            -T::TWO * operand.tx() * self.as_inner().r() * self.as_inner().r()
+                + -T::TWO * operand.ty() * self.as_inner().ps() * self.as_inner().r()
                 + T::TWO * operand.r() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.r() * self.as_inner().r() * self.as_inner().tx()
                 + operand.tx(),
@@ -5305,20 +5300,20 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Motor<T>>) -> Motor<T> {
         Motor::new_unchecked(
-            -T::TWO * operand.as_inner().r() * self.ps() * self.tx()
-                + -(operand.as_inner().ty() * self.r() * self.r())
-                + T::TWO * operand.as_inner().tx() * self.ps() * self.r()
+            -(operand.as_inner().ty() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().r() * self.ps() * self.tx()
                 + T::TWO * operand.as_inner().r() * self.r() * self.ty()
+                + T::TWO * operand.as_inner().tx() * self.ps() * self.r()
                 + operand.as_inner().ty() * self.ps() * self.ps(),
-            -T::TWO * operand.as_inner().ty() * self.ps() * self.r()
-                + -(operand.as_inner().tx() * self.r() * self.r())
+            -(operand.as_inner().tx() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().ty() * self.ps() * self.r()
                 + T::TWO * operand.as_inner().r() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().r() * self.r() * self.tx()
                 + operand.as_inner().tx() * self.ps() * self.ps(),
             operand.as_inner().r() * self.ps() * self.ps()
                 + operand.as_inner().r() * self.r() * self.r(),
-            operand.as_inner().ps() * self.r() * self.r()
-                + operand.as_inner().ps() * self.ps() * self.ps(),
+            operand.as_inner().ps() * self.ps() * self.ps()
+                + operand.as_inner().ps() * self.r() * self.r(),
         )
     }
 }
@@ -5330,11 +5325,11 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Motor<T>> {
         Motor::new_unchecked(
             -T::TWO * operand.as_inner().r() * self.as_inner().ps() * self.as_inner().tx()
                 + -T::TWO * operand.as_inner().ty() * self.as_inner().r() * self.as_inner().r()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().ps() * self.as_inner().r()
                 + T::TWO * operand.as_inner().r() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.as_inner().tx() * self.as_inner().ps() * self.as_inner().r()
                 + operand.as_inner().ty(),
-            -T::TWO * operand.as_inner().ty() * self.as_inner().ps() * self.as_inner().r()
-                + -T::TWO * operand.as_inner().tx() * self.as_inner().r() * self.as_inner().r()
+            -T::TWO * operand.as_inner().tx() * self.as_inner().r() * self.as_inner().r()
+                + -T::TWO * operand.as_inner().ty() * self.as_inner().ps() * self.as_inner().r()
                 + T::TWO * operand.as_inner().r() * self.as_inner().ps() * self.as_inner().ty()
                 + T::TWO * operand.as_inner().r() * self.as_inner().r() * self.as_inner().tx()
                 + operand.as_inner().tx(),
@@ -5349,23 +5344,21 @@ impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.ps() * operand.w() * self.tx())
-                + self.ps() * operand.y() * self.r()
+            -(self.ps() * operand.w() * self.tx()) - self.r() * operand.x() * self.r()
                 + self.ty() * operand.w() * self.r()
-                - self.tx() * operand.w() * self.ps()
-                - self.r() * operand.x() * self.r()
-                + self.r() * operand.y() * self.ps()
+                + self.ps() * operand.x() * self.ps()
+                + self.ps() * operand.y() * self.r()
                 + self.r() * operand.w() * self.ty()
-                + self.ps() * operand.x() * self.ps(),
-            self.tx() * operand.w() * self.r()
-                + self.ty() * operand.w() * self.ps()
-                + self.ps() * operand.w() * self.ty()
-                + self.ps() * operand.y() * self.ps()
+                - self.tx() * operand.w() * self.ps()
+                + self.r() * operand.y() * self.ps(),
+            self.tx() * operand.w() * self.r() + self.r() * operand.w() * self.tx()
                 - self.r() * operand.y() * self.r()
                 - self.r() * operand.x() * self.ps()
                 - self.ps() * operand.x() * self.r()
-                + self.r() * operand.w() * self.tx(),
-            self.r() * operand.w() * self.r() + self.ps() * operand.w() * self.ps(),
+                + self.ps() * operand.y() * self.ps()
+                + self.ps() * operand.w() * self.ty()
+                + self.ty() * operand.w() * self.ps(),
+            self.ps() * operand.w() * self.ps() + self.r() * operand.w() * self.r(),
         )
     }
 }
@@ -5375,10 +5368,10 @@ impl<T: Float> Antisandwich<Point<T>> for Unitized<Motor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -T::TWO * operand.x() * self.as_inner().r() * self.as_inner().r()
-                + -T::TWO * operand.w() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.y() * self.as_inner().ps() * self.as_inner().r()
+            -T::TWO * operand.w() * self.as_inner().ps() * self.as_inner().tx()
+                + -T::TWO * operand.x() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.w() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.y() * self.as_inner().ps() * self.as_inner().r()
                 + operand.x(),
             -T::TWO * operand.x() * self.as_inner().ps() * self.as_inner().r()
                 + -T::TWO * operand.y() * self.as_inner().r() * self.as_inner().r()
@@ -5395,13 +5388,13 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
-            -T::TWO * operand.as_inner().w() * self.ps() * self.tx()
-                + -(operand.as_inner().x() * self.r() * self.r())
-                + T::TWO * operand.as_inner().y() * self.ps() * self.r()
+            -(operand.as_inner().x() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().w() * self.ps() * self.tx()
                 + T::TWO * operand.as_inner().w() * self.r() * self.ty()
+                + T::TWO * operand.as_inner().y() * self.ps() * self.r()
                 + operand.as_inner().x() * self.ps() * self.ps(),
-            -T::TWO * operand.as_inner().x() * self.ps() * self.r()
-                + -(operand.as_inner().y() * self.r() * self.r())
+            -(operand.as_inner().y() * self.r() * self.r())
+                + -T::TWO * operand.as_inner().x() * self.ps() * self.r()
                 + T::TWO * operand.as_inner().w() * self.ps() * self.ty()
                 + T::TWO * operand.as_inner().w() * self.r() * self.tx()
                 + operand.as_inner().y() * self.ps() * self.ps(),
@@ -5416,10 +5409,10 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Motor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
-            -T::TWO * operand.as_inner().x() * self.as_inner().r() * self.as_inner().r()
-                + -T::TWO * operand.as_inner().w() * self.as_inner().ps() * self.as_inner().tx()
-                + T::TWO * operand.as_inner().y() * self.as_inner().ps() * self.as_inner().r()
+            -T::TWO * operand.as_inner().w() * self.as_inner().ps() * self.as_inner().tx()
+                + -T::TWO * operand.as_inner().x() * self.as_inner().r() * self.as_inner().r()
                 + T::TWO * operand.as_inner().w() * self.as_inner().r() * self.as_inner().ty()
+                + T::TWO * operand.as_inner().y() * self.as_inner().ps() * self.as_inner().r()
                 + operand.as_inner().x(),
             -T::TWO * operand.as_inner().x() * self.as_inner().ps() * self.as_inner().r()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().r() * self.as_inner().r()
@@ -5436,7 +5429,7 @@ impl<T: Float> Antisandwich<Scalar<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            self.r() * operand.s() * self.r() + self.ps() * operand.s() * self.ps(),
+            self.ps() * operand.s() * self.ps() + self.r() * operand.s() * self.r(),
         )
     }
 }
@@ -5470,7 +5463,7 @@ impl<T: Float> Antisandwich<Trivector<T>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Trivector<T>) -> Trivector<T> {
         Trivector::new_unchecked(
-            self.ps() * operand.ps() * self.ps() + self.r() * operand.ps() * self.r(),
+            self.r() * operand.ps() * self.r() + self.ps() * operand.ps() * self.ps(),
         )
     }
 }
@@ -5488,8 +5481,8 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Motor<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Trivector<T>>) -> Trivector<T> {
         Trivector::new_unchecked(
-            operand.as_inner().ps() * self.r() * self.r()
-                + operand.as_inner().ps() * self.ps() * self.ps(),
+            operand.as_inner().ps() * self.ps() * self.ps()
+                + operand.as_inner().ps() * self.r() * self.r(),
         )
     }
 }
@@ -5507,15 +5500,15 @@ impl<T: Float> Antisandwich<Flector<T>> for Point<T> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            self.w() * operand.nx() * self.y() - self.w() * operand.ny() * self.x()
+            self.x() * operand.ny() * self.w() - self.y() * operand.nx() * self.w()
                 + self.w() * operand.s() * self.w()
-                - self.y() * operand.nx() * self.w()
-                + self.x() * operand.ny() * self.w(),
-            self.w() * operand.d() * self.w()
-                + self.w() * operand.nx() * self.x()
+                + self.w() * operand.nx() * self.y()
+                - self.w() * operand.ny() * self.x(),
+            self.x() * operand.nx() * self.w()
+                + self.w() * operand.d() * self.w()
+                + self.y() * operand.ny() * self.w()
                 + self.w() * operand.ny() * self.y()
-                + self.x() * operand.nx() * self.w()
-                + self.y() * operand.ny() * self.w(),
+                + self.w() * operand.nx() * self.x(),
             -(self.w() * operand.nx() * self.w()),
             -(self.w() * operand.ny() * self.w()),
         )
@@ -5572,11 +5565,11 @@ impl<T: Float> Antisandwich<Line<T>> for Point<T> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            self.w() * operand.nx() * self.x()
+            self.y() * operand.ny() * self.w()
+                + self.w() * operand.nx() * self.x()
                 + self.w() * operand.ny() * self.y()
                 + self.x() * operand.nx() * self.w()
-                + self.w() * operand.d() * self.w()
-                + self.y() * operand.ny() * self.w(),
+                + self.w() * operand.d() * self.w(),
             -(self.w() * operand.nx() * self.w()),
             -(self.w() * operand.ny() * self.w()),
         )
@@ -5630,15 +5623,16 @@ impl<T: Float> Antisandwich<Motor<T>> for Point<T> {
     #[inline]
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
-            -(self.w() * operand.ps() * self.y()) + self.y() * operand.ps() * self.w()
-                - self.w() * operand.ty() * self.w()
+            self.y() * operand.ps() * self.w()
                 + self.x() * operand.r() * self.w()
-                + self.w() * operand.r() * self.x(),
-            self.w() * operand.ps() * self.x()
-                + self.w() * operand.r() * self.y()
+                + self.w() * operand.r() * self.x()
+                - self.w() * operand.ps() * self.y()
+                - self.w() * operand.ty() * self.w(),
+            self.w() * operand.r() * self.y()
+                + self.w() * operand.ps() * self.x()
                 + self.y() * operand.r() * self.w()
-                - self.w() * operand.tx() * self.w()
-                - self.x() * operand.ps() * self.w(),
+                - self.x() * operand.ps() * self.w()
+                - self.w() * operand.tx() * self.w(),
             self.w() * operand.r() * self.w(),
             self.w() * operand.ps() * self.w(),
         )
@@ -5693,10 +5687,9 @@ impl<T: Float> Antisandwich<Point<T>> for Point<T> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.w() * operand.x() * self.w())
-                + self.w() * operand.w() * self.x()
-                + self.x() * operand.w() * self.w(),
-            self.y() * operand.w() * self.w() + self.w() * operand.w() * self.y()
+            self.x() * operand.w() * self.w() - self.w() * operand.x() * self.w()
+                + self.w() * operand.w() * self.x(),
+            self.w() * operand.w() * self.y() + self.y() * operand.w() * self.w()
                 - self.w() * operand.y() * self.w(),
             self.w() * operand.w() * self.w(),
         )
@@ -7267,34 +7260,35 @@ impl<T: Float> InverseSandwich<Flector<T>> for Flector<T> {
                 - self.d() * operand.d() * self.s()
                 + self.s() * operand.s() * self.s())
                 * inv_norm_sq,
-            (self.d() * operand.s() * self.s()
+            (-(self.s() * operand.s() * self.d())
                 + self.s() * operand.d() * self.s()
-                + self.d() * operand.d() * self.d()
-                - self.s() * operand.s() * self.d())
+                + self.d() * operand.s() * self.s()
+                + self.d() * operand.d() * self.d())
                 * inv_norm_sq,
-            (self.d() * operand.ny() * self.s() + self.d() * operand.d() * self.nx()
+            (-(self.ny() * operand.d() * self.s()) - self.s() * operand.d() * self.ny()
+                + self.ny() * operand.s() * self.d()
+                - self.d() * operand.s() * self.ny()
+                + self.s() * operand.ny() * self.d()
+                + self.d() * operand.d() * self.nx()
+                + self.s() * operand.nx() * self.s()
+                - self.s() * operand.s() * self.nx()
+                + self.d() * operand.ny() * self.s()
                 - self.d() * operand.nx() * self.d()
                 + self.nx() * operand.s() * self.s()
-                + self.nx() * operand.d() * self.d()
-                + self.ny() * operand.s() * self.d()
-                - self.ny() * operand.d() * self.s()
-                - self.s() * operand.s() * self.nx()
-                + self.s() * operand.nx() * self.s()
-                - self.d() * operand.s() * self.ny()
-                - self.s() * operand.d() * self.ny()
-                + self.s() * operand.ny() * self.d())
+                + self.nx() * operand.d() * self.d())
                 * inv_norm_sq,
-            (-(self.d() * operand.nx() * self.s() - self.d() * operand.d() * self.ny()
-                + self.s() * operand.nx() * self.d()
-                + self.d() * operand.ny() * self.d()
-                + self.s() * operand.s() * self.ny()
-                - self.ny() * operand.s() * self.s()
-                - self.s() * operand.d() * self.nx()
+            (-(self.s() * operand.nx() * self.d()
+                - self.d() * operand.d() * self.ny()
                 - self.nx() * operand.d() * self.s()
-                - self.d() * operand.s() * self.nx()
-                + self.nx() * operand.s() * self.d()
+                - self.s() * operand.d() * self.nx()
+                + self.d() * operand.nx() * self.s()
                 - self.ny() * operand.d() * self.d()
-                - self.s() * operand.ny() * self.s()))
+                - self.s() * operand.ny() * self.s()
+                + self.nx() * operand.s() * self.d()
+                + self.d() * operand.ny() * self.d()
+                - self.ny() * operand.s() * self.s()
+                + self.s() * operand.s() * self.ny()
+                - self.d() * operand.s() * self.nx()))
                 * inv_norm_sq,
         ))
     }
@@ -7310,22 +7304,23 @@ impl<T: Float> InverseSandwich<Line<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
-            (self.d() * operand.d() * self.d() + self.s() * operand.d() * self.s()) * inv_norm_sq,
-            (-(self.s() * operand.d() * self.ny()) + self.s() * operand.nx() * self.s()
-                - self.d() * operand.nx() * self.d()
-                + self.d() * operand.ny() * self.s()
-                + self.d() * operand.d() * self.nx()
+            (self.s() * operand.d() * self.s() + self.d() * operand.d() * self.d()) * inv_norm_sq,
+            (self.nx() * operand.d() * self.d() - self.s() * operand.d() * self.ny()
                 + self.s() * operand.ny() * self.d()
                 - self.ny() * operand.d() * self.s()
-                + self.nx() * operand.d() * self.d())
+                - self.d() * operand.nx() * self.d()
+                + self.d() * operand.d() * self.nx()
+                + self.d() * operand.ny() * self.s()
+                + self.s() * operand.nx() * self.s())
                 * inv_norm_sq,
-            (-(-(self.s() * operand.ny() * self.s()) - self.s() * operand.d() * self.nx()
+            (-(-(self.ny() * operand.d() * self.d())
+                - self.s() * operand.d() * self.nx()
+                - self.s() * operand.ny() * self.s()
+                - self.d() * operand.d() * self.ny()
                 + self.d() * operand.ny() * self.d()
                 - self.nx() * operand.d() * self.s()
-                + self.d() * operand.nx() * self.s()
-                - self.d() * operand.d() * self.ny()
                 + self.s() * operand.nx() * self.d()
-                - self.ny() * operand.d() * self.d()))
+                + self.d() * operand.nx() * self.s()))
                 * inv_norm_sq,
         ))
     }
@@ -7341,39 +7336,40 @@ impl<T: Float> InverseSandwich<Motor<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.s() * operand.ty() * self.s() + self.s() * operand.tx() * self.d()
-                - self.d() * operand.ty() * self.d()
-                + self.d() * operand.tx() * self.s())
+            (-(self.d() * operand.ty() * self.d())
+                + self.s() * operand.tx() * self.d()
+                + self.d() * operand.tx() * self.s()
+                + self.s() * operand.ty() * self.s())
                 * inv_norm_sq,
-            (-(self.d() * operand.tx() * self.d())
+            (self.s() * operand.tx() * self.s()
                 - self.d() * operand.ty() * self.s()
                 - self.s() * operand.ty() * self.d()
-                + self.s() * operand.tx() * self.s())
+                - self.d() * operand.tx() * self.d())
                 * inv_norm_sq,
-            (-(self.nx() * operand.tx() * self.s())
+            (-(self.d() * operand.ps() * self.s()) - self.nx() * operand.tx() * self.s()
+                + self.s() * operand.r() * self.s()
+                + self.d() * operand.r() * self.d()
+                - self.s() * operand.tx() * self.nx()
+                + self.s() * operand.ps() * self.d()
+                + self.nx() * operand.ty() * self.d()
+                + self.s() * operand.ty() * self.ny()
                 + self.ny() * operand.ty() * self.s()
                 + self.ny() * operand.tx() * self.d()
-                - self.s() * operand.tx() * self.nx()
-                - self.d() * operand.ps() * self.s()
-                + self.nx() * operand.ty() * self.d()
-                + self.d() * operand.r() * self.d()
                 + self.d() * operand.tx() * self.ny()
-                + self.s() * operand.ps() * self.d()
-                + self.s() * operand.ty() * self.ny()
-                + self.s() * operand.r() * self.s()
                 + self.d() * operand.ty() * self.nx())
                 * inv_norm_sq,
-            (-(self.ny() * operand.ty() * self.d()) - self.s() * operand.ty() * self.nx()
-                + self.ny() * operand.tx() * self.s()
-                - self.d() * operand.tx() * self.nx()
-                - self.s() * operand.r() * self.d()
-                + self.d() * operand.ty() * self.ny()
-                + self.nx() * operand.ty() * self.s()
-                + self.nx() * operand.tx() * self.d()
+            (self.nx() * operand.ty() * self.s()
                 + self.d() * operand.r() * self.s()
+                + self.nx() * operand.tx() * self.d()
+                + self.ny() * operand.tx() * self.s()
+                - self.ny() * operand.ty() * self.d()
+                - self.s() * operand.ty() * self.nx()
                 - self.s() * operand.tx() * self.ny()
                 + self.s() * operand.ps() * self.s()
-                + self.d() * operand.ps() * self.d())
+                + self.d() * operand.ty() * self.ny()
+                + self.d() * operand.ps() * self.d()
+                - self.s() * operand.r() * self.d()
+                - self.d() * operand.tx() * self.nx())
                 * inv_norm_sq,
         ))
     }
@@ -7389,24 +7385,24 @@ impl<T: Float> InverseSandwich<Point<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.s() * operand.x() * self.s() + self.d() * operand.y() * self.s()
+            (self.s() * operand.y() * self.d() + self.d() * operand.y() * self.s()
                 - self.d() * operand.x() * self.d()
-                + self.s() * operand.y() * self.d())
+                + self.s() * operand.x() * self.s())
                 * inv_norm_sq,
-            (self.s() * operand.y() * self.s()
-                - self.s() * operand.x() * self.d()
-                - self.d() * operand.y() * self.d()
-                - self.d() * operand.x() * self.s())
+            (-(self.d() * operand.y() * self.d()) - self.d() * operand.x() * self.s()
+                + self.s() * operand.y() * self.s()
+                - self.s() * operand.x() * self.d())
                 * inv_norm_sq,
-            (self.ny() * operand.x() * self.s() - self.nx() * operand.y() * self.s()
-                + self.s() * operand.w() * self.s()
-                + self.ny() * operand.y() * self.d()
-                + self.s() * operand.x() * self.ny()
-                + self.d() * operand.w() * self.d()
+            (-(self.s() * operand.y() * self.nx())
                 + self.d() * operand.y() * self.ny()
-                - self.s() * operand.y() * self.nx()
+                + self.s() * operand.w() * self.s()
                 + self.d() * operand.x() * self.nx()
-                + self.nx() * operand.x() * self.d())
+                + self.ny() * operand.x() * self.s()
+                + self.nx() * operand.x() * self.d()
+                + self.d() * operand.w() * self.d()
+                - self.nx() * operand.y() * self.s()
+                + self.ny() * operand.y() * self.d()
+                + self.s() * operand.x() * self.ny())
                 * inv_norm_sq,
         ))
     }
@@ -7454,16 +7450,16 @@ impl<T: Float> InverseSandwich<Flector<T>> for Line<T> {
         Some(Flector::new_unchecked(
             (self.d() * operand.s() * self.d()) * inv_norm_sq,
             (self.d() * operand.d() * self.d()) * inv_norm_sq,
-            (self.nx() * operand.d() * self.d()
-                - self.d() * operand.s() * self.ny()
-                - self.d() * operand.nx() * self.d()
+            (-(self.d() * operand.s() * self.ny()) - self.d() * operand.nx() * self.d()
                 + self.ny() * operand.s() * self.d()
+                + self.nx() * operand.d() * self.d()
                 + self.d() * operand.d() * self.nx())
                 * inv_norm_sq,
-            (-(self.nx() * operand.s() * self.d() - self.ny() * operand.d() * self.d()
-                + self.d() * operand.ny() * self.d()
+            (-(-(self.ny() * operand.d() * self.d())
                 - self.d() * operand.s() * self.nx()
-                - self.d() * operand.d() * self.ny()))
+                - self.d() * operand.d() * self.ny()
+                + self.d() * operand.ny() * self.d()
+                + self.nx() * operand.s() * self.d()))
                 * inv_norm_sq,
         ))
     }
@@ -7480,12 +7476,11 @@ impl<T: Float> InverseSandwich<Line<T>> for Line<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
             (self.d() * operand.d() * self.d()) * inv_norm_sq,
-            (self.d() * operand.d() * self.nx() - self.d() * operand.nx() * self.d()
-                + self.nx() * operand.d() * self.d())
+            (self.nx() * operand.d() * self.d() + self.d() * operand.d() * self.nx()
+                - self.d() * operand.nx() * self.d())
                 * inv_norm_sq,
-            (-(self.d() * operand.ny() * self.d()
-                - self.ny() * operand.d() * self.d()
-                - self.d() * operand.d() * self.ny()))
+            (-(-(self.d() * operand.d() * self.ny()) + self.d() * operand.ny() * self.d()
+                - self.ny() * operand.d() * self.d()))
                 * inv_norm_sq,
         ))
     }
@@ -7503,17 +7498,17 @@ impl<T: Float> InverseSandwich<Motor<T>> for Line<T> {
         Some(Motor::new_unchecked(
             (-(self.d() * operand.ty() * self.d())) * inv_norm_sq,
             (-(self.d() * operand.tx() * self.d())) * inv_norm_sq,
-            (self.d() * operand.tx() * self.ny()
-                + self.d() * operand.r() * self.d()
+            (self.d() * operand.ty() * self.nx()
                 + self.ny() * operand.tx() * self.d()
-                + self.d() * operand.ty() * self.nx()
-                + self.nx() * operand.ty() * self.d())
+                + self.nx() * operand.ty() * self.d()
+                + self.d() * operand.r() * self.d()
+                + self.d() * operand.tx() * self.ny())
                 * inv_norm_sq,
-            (self.nx() * operand.tx() * self.d()
-                - self.d() * operand.tx() * self.nx()
+            (-(self.d() * operand.tx() * self.nx())
+                + self.d() * operand.ty() * self.ny()
+                + self.nx() * operand.tx() * self.d()
                 - self.ny() * operand.ty() * self.d()
-                + self.d() * operand.ps() * self.d()
-                + self.d() * operand.ty() * self.ny())
+                + self.d() * operand.ps() * self.d())
                 * inv_norm_sq,
         ))
     }
@@ -7532,10 +7527,10 @@ impl<T: Float> InverseSandwich<Point<T>> for Line<T> {
             (-(self.d() * operand.x() * self.d())) * inv_norm_sq,
             (-(self.d() * operand.y() * self.d())) * inv_norm_sq,
             (self.ny() * operand.y() * self.d()
+                + self.nx() * operand.x() * self.d()
                 + self.d() * operand.w() * self.d()
                 + self.d() * operand.x() * self.nx()
-                + self.d() * operand.y() * self.ny()
-                + self.nx() * operand.x() * self.d())
+                + self.d() * operand.y() * self.ny())
                 * inv_norm_sq,
         ))
     }
@@ -7581,8 +7576,7 @@ impl<T: Float> InverseSandwich<Flector<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (-(self.tx() * operand.d() * self.ty())
-                + self.tx() * operand.s() * self.tx()
+            (self.tx() * operand.s() * self.tx() - self.tx() * operand.d() * self.ty()
                 + self.ty() * operand.d() * self.tx()
                 + self.ty() * operand.s() * self.ty())
                 * inv_norm_sq,
@@ -7591,30 +7585,30 @@ impl<T: Float> InverseSandwich<Flector<T>> for Motor<T> {
                 - self.tx() * operand.s() * self.ty()
                 + self.ty() * operand.s() * self.tx())
                 * inv_norm_sq,
-            (self.r() * operand.d() * self.ty() + self.ps() * operand.d() * self.tx()
-                - self.tx() * operand.nx() * self.tx()
-                + self.ty() * operand.d() * self.r()
+            (self.ps() * operand.d() * self.tx()
                 + self.tx() * operand.s() * self.r()
-                + self.tx() * operand.d() * self.ps()
-                + self.tx() * operand.ny() * self.ty()
-                + self.ps() * operand.s() * self.ty()
-                - self.ty() * operand.s() * self.ps()
                 + self.ty() * operand.ny() * self.tx()
+                + self.ty() * operand.nx() * self.ty()
+                + self.tx() * operand.ny() * self.ty()
                 - self.r() * operand.s() * self.tx()
-                + self.ty() * operand.nx() * self.ty())
+                + self.ps() * operand.s() * self.ty()
+                + self.r() * operand.d() * self.ty()
+                + self.tx() * operand.d() * self.ps()
+                - self.ty() * operand.s() * self.ps()
+                + self.ty() * operand.d() * self.r()
+                - self.tx() * operand.nx() * self.tx())
                 * inv_norm_sq,
-            (-(-(self.r() * operand.d() * self.tx())
-                + self.ps() * operand.d() * self.ty()
-                + self.ty() * operand.d() * self.ps()
+            (-(self.ty() * operand.d() * self.ps() - self.r() * operand.s() * self.ty()
                 + self.ty() * operand.s() * self.r()
-                - self.ty() * operand.nx() * self.tx()
-                - self.ps() * operand.s() * self.tx()
+                - self.tx() * operand.d() * self.r()
+                - self.tx() * operand.nx() * self.ty()
                 + self.ty() * operand.ny() * self.ty()
                 + self.tx() * operand.s() * self.ps()
-                - self.tx() * operand.nx() * self.ty()
-                - self.tx() * operand.d() * self.r()
+                - self.ps() * operand.s() * self.tx()
+                + self.ps() * operand.d() * self.ty()
                 - self.tx() * operand.ny() * self.tx()
-                - self.r() * operand.s() * self.ty()))
+                - self.r() * operand.d() * self.tx()
+                - self.ty() * operand.nx() * self.tx()))
                 * inv_norm_sq,
         ))
     }
@@ -7632,23 +7626,22 @@ impl<T: Float> InverseSandwich<Line<T>> for Motor<T> {
         Some(Line::new_unchecked(
             (-(self.ty() * operand.d() * self.ty()) - self.tx() * operand.d() * self.tx())
                 * inv_norm_sq,
-            (self.ty() * operand.ny() * self.tx()
-                + self.ps() * operand.d() * self.tx()
-                + self.ty() * operand.d() * self.r()
-                - self.tx() * operand.nx() * self.tx()
-                + self.ty() * operand.nx() * self.ty()
+            (self.ty() * operand.d() * self.r() - self.tx() * operand.nx() * self.tx()
                 + self.tx() * operand.ny() * self.ty()
                 + self.r() * operand.d() * self.ty()
-                + self.tx() * operand.d() * self.ps())
+                + self.ps() * operand.d() * self.tx()
+                + self.tx() * operand.d() * self.ps()
+                + self.ty() * operand.nx() * self.ty()
+                + self.ty() * operand.ny() * self.tx())
                 * inv_norm_sq,
-            (-(-(self.tx() * operand.ny() * self.tx())
-                + self.ps() * operand.d() * self.ty()
-                + self.ty() * operand.ny() * self.ty()
-                - self.tx() * operand.d() * self.r()
-                - self.ty() * operand.nx() * self.tx()
-                - self.tx() * operand.nx() * self.ty()
+            (-(self.ty() * operand.d() * self.ps()
                 - self.r() * operand.d() * self.tx()
-                + self.ty() * operand.d() * self.ps()))
+                - self.tx() * operand.nx() * self.ty()
+                + self.ps() * operand.d() * self.ty()
+                - self.ty() * operand.nx() * self.tx()
+                - self.tx() * operand.ny() * self.tx()
+                + self.ty() * operand.ny() * self.ty()
+                - self.tx() * operand.d() * self.r()))
                 * inv_norm_sq,
         ))
     }
@@ -7664,39 +7657,39 @@ impl<T: Float> InverseSandwich<Motor<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.ty() * operand.ty() * self.ty()
+            (self.ty() * operand.tx() * self.tx() - self.tx() * operand.ty() * self.tx()
                 + self.tx() * operand.tx() * self.ty()
-                + self.ty() * operand.tx() * self.tx()
-                - self.tx() * operand.ty() * self.tx())
+                + self.ty() * operand.ty() * self.ty())
                 * inv_norm_sq,
-            (self.ty() * operand.ty() * self.tx() + self.tx() * operand.ty() * self.ty()
-                - self.ty() * operand.tx() * self.ty()
-                + self.tx() * operand.tx() * self.tx())
+            (-(self.ty() * operand.tx() * self.ty())
+                + self.ty() * operand.ty() * self.tx()
+                + self.tx() * operand.tx() * self.tx()
+                + self.tx() * operand.ty() * self.ty())
                 * inv_norm_sq,
-            (self.ps() * operand.tx() * self.ty()
-                - self.tx() * operand.ty() * self.ps()
-                - self.ps() * operand.ty() * self.tx()
-                - self.ty() * operand.r() * self.ty()
-                + self.tx() * operand.tx() * self.r()
-                - self.tx() * operand.r() * self.tx()
-                - self.ty() * operand.ps() * self.tx()
-                + self.tx() * operand.ps() * self.ty()
-                + self.r() * operand.tx() * self.tx()
+            (self.ty() * operand.ty() * self.r() - self.ty() * operand.ps() * self.tx()
                 + self.r() * operand.ty() * self.ty()
-                + self.ty() * operand.ty() * self.r()
-                + self.ty() * operand.tx() * self.ps())
+                + self.tx() * operand.tx() * self.r()
+                + self.r() * operand.tx() * self.tx()
+                - self.ps() * operand.ty() * self.tx()
+                + self.tx() * operand.ps() * self.ty()
+                + self.ty() * operand.tx() * self.ps()
+                - self.ty() * operand.r() * self.ty()
+                - self.tx() * operand.ty() * self.ps()
+                + self.ps() * operand.tx() * self.ty()
+                - self.tx() * operand.r() * self.tx())
                 * inv_norm_sq,
-            (self.tx() * operand.ps() * self.tx() - self.ty() * operand.ty() * self.ps()
-                + self.tx() * operand.r() * self.ty()
+            (self.ps() * operand.ty() * self.ty()
                 - self.tx() * operand.ty() * self.r()
-                + self.ps() * operand.tx() * self.tx()
-                + self.ty() * operand.ps() * self.ty()
-                + self.ps() * operand.ty() * self.ty()
-                - self.ty() * operand.r() * self.tx()
-                + self.ty() * operand.tx() * self.r()
                 - self.tx() * operand.tx() * self.ps()
-                - self.r() * operand.tx() * self.ty()
-                + self.r() * operand.ty() * self.tx())
+                + self.ty() * operand.ps() * self.ty()
+                - self.ty() * operand.r() * self.tx()
+                + self.ps() * operand.tx() * self.tx()
+                + self.ty() * operand.tx() * self.r()
+                + self.tx() * operand.r() * self.ty()
+                + self.r() * operand.ty() * self.tx()
+                - self.ty() * operand.ty() * self.ps()
+                + self.tx() * operand.ps() * self.tx()
+                - self.r() * operand.tx() * self.ty())
                 * inv_norm_sq,
         ))
     }
@@ -7712,25 +7705,25 @@ impl<T: Float> InverseSandwich<Point<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.ty() * operand.y() * self.tx() + self.ty() * operand.x() * self.ty()
-                - self.tx() * operand.x() * self.tx()
-                + self.tx() * operand.y() * self.ty())
+            (-(self.tx() * operand.x() * self.tx())
+                + self.tx() * operand.y() * self.ty()
+                + self.ty() * operand.x() * self.ty()
+                + self.ty() * operand.y() * self.tx())
                 * inv_norm_sq,
             (-(self.ty() * operand.y() * self.ty())
+                + self.tx() * operand.y() * self.tx()
                 + self.ty() * operand.x() * self.tx()
-                + self.tx() * operand.x() * self.ty()
-                + self.tx() * operand.y() * self.tx())
+                + self.tx() * operand.x() * self.ty())
                 * inv_norm_sq,
-            (-(self.ty() * operand.w() * self.ty())
-                + self.r() * operand.y() * self.tx()
-                + self.r() * operand.x() * self.ty()
-                - self.ps() * operand.x() * self.tx()
-                - self.tx() * operand.w() * self.tx()
+            (self.ty() * operand.x() * self.r() + self.r() * operand.x() * self.ty()
+                - self.tx() * operand.x() * self.ps()
+                - self.ty() * operand.w() * self.ty()
                 + self.ps() * operand.y() * self.ty()
                 + self.ty() * operand.y() * self.ps()
-                + self.ty() * operand.x() * self.r()
                 + self.tx() * operand.y() * self.r()
-                - self.tx() * operand.x() * self.ps())
+                - self.tx() * operand.w() * self.tx()
+                - self.ps() * operand.x() * self.tx()
+                + self.r() * operand.y() * self.tx())
                 * inv_norm_sq,
         ))
     }
@@ -7778,31 +7771,31 @@ impl<T: Float> InverseSandwich<Flector<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (self.x() * operand.d() * self.y() + self.x() * operand.s() * self.x()
-                - self.y() * operand.d() * self.x()
-                + self.y() * operand.s() * self.y())
+            (self.x() * operand.s() * self.x()
+                + self.x() * operand.d() * self.y()
+                + self.y() * operand.s() * self.y()
+                - self.y() * operand.d() * self.x())
                 * inv_norm_sq,
             (-(self.y() * operand.d() * self.y()) + self.x() * operand.s() * self.y()
                 - self.y() * operand.s() * self.x()
                 - self.x() * operand.d() * self.x())
                 * inv_norm_sq,
-            (self.x() * operand.ny() * self.y()
-                + self.x() * operand.nx() * self.x()
-                + self.y() * operand.ny() * self.x()
-                + self.y() * operand.s() * self.w()
-                + self.w() * operand.d() * self.x()
-                + self.x() * operand.d() * self.w()
+            (self.w() * operand.d() * self.x() + self.x() * operand.nx() * self.x()
                 - self.y() * operand.nx() * self.y()
-                - self.w() * operand.s() * self.y())
+                + self.x() * operand.ny() * self.y()
+                + self.x() * operand.d() * self.w()
+                - self.w() * operand.s() * self.y()
+                + self.y() * operand.ny() * self.x()
+                + self.y() * operand.s() * self.w())
                 * inv_norm_sq,
-            (-(-(self.y() * operand.d() * self.w())
-                - self.w() * operand.d() * self.y()
-                - self.x() * operand.nx() * self.y()
+            (-(self.x() * operand.s() * self.w()
                 - self.w() * operand.s() * self.x()
-                + self.x() * operand.ny() * self.x()
-                - self.y() * operand.nx() * self.x()
                 - self.y() * operand.ny() * self.y()
-                + self.x() * operand.s() * self.w()))
+                - self.x() * operand.nx() * self.y()
+                - self.w() * operand.d() * self.y()
+                + self.x() * operand.ny() * self.x()
+                - self.y() * operand.d() * self.w()
+                - self.y() * operand.nx() * self.x()))
                 * inv_norm_sq,
         ))
     }
@@ -7818,20 +7811,19 @@ impl<T: Float> InverseSandwich<Line<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
-            (-(self.y() * operand.d() * self.y()) - self.x() * operand.d() * self.x())
+            (-(self.x() * operand.d() * self.x()) - self.y() * operand.d() * self.y())
                 * inv_norm_sq,
-            (self.w() * operand.d() * self.x()
-                + self.x() * operand.ny() * self.y()
-                + self.y() * operand.ny() * self.x()
+            (self.x() * operand.nx() * self.x() - self.y() * operand.nx() * self.y()
                 + self.x() * operand.d() * self.w()
-                + self.x() * operand.nx() * self.x()
-                - self.y() * operand.nx() * self.y())
+                + self.y() * operand.ny() * self.x()
+                + self.w() * operand.d() * self.x()
+                + self.x() * operand.ny() * self.y())
                 * inv_norm_sq,
             (-(-(self.x() * operand.nx() * self.y())
-                - self.w() * operand.d() * self.y()
-                - self.y() * operand.d() * self.w()
                 - self.y() * operand.nx() * self.x()
                 - self.y() * operand.ny() * self.y()
+                - self.y() * operand.d() * self.w()
+                - self.w() * operand.d() * self.y()
                 + self.x() * operand.ny() * self.x()))
                 * inv_norm_sq,
         ))
@@ -7848,32 +7840,29 @@ impl<T: Float> InverseSandwich<Motor<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.x() * operand.ty() * self.x()
-                + self.x() * operand.tx() * self.y()
-                + self.y() * operand.tx() * self.x()
-                - self.y() * operand.ty() * self.y())
+            (self.y() * operand.tx() * self.x() + self.x() * operand.ty() * self.x()
+                - self.y() * operand.ty() * self.y()
+                + self.x() * operand.tx() * self.y())
                 * inv_norm_sq,
-            (self.y() * operand.ty() * self.x()
-                + self.y() * operand.tx() * self.y()
-                + self.x() * operand.ty() * self.y()
-                - self.x() * operand.tx() * self.x())
+            (self.x() * operand.ty() * self.y() + self.y() * operand.tx() * self.y()
+                - self.x() * operand.tx() * self.x()
+                + self.y() * operand.ty() * self.x())
                 * inv_norm_sq,
-            (-(self.x() * operand.ps() * self.y())
-                + self.y() * operand.tx() * self.w()
-                + self.w() * operand.tx() * self.y()
-                - self.y() * operand.r() * self.y()
+            (self.w() * operand.tx() * self.y() + self.y() * operand.tx() * self.w()
+                - self.x() * operand.ps() * self.y()
                 - self.x() * operand.r() * self.x()
-                + self.y() * operand.ps() * self.x()
                 + self.w() * operand.ty() * self.x()
-                + self.x() * operand.ty() * self.w())
+                + self.x() * operand.ty() * self.w()
+                + self.y() * operand.ps() * self.x()
+                - self.y() * operand.r() * self.y())
                 * inv_norm_sq,
-            (self.y() * operand.r() * self.x() - self.w() * operand.tx() * self.x()
-                + self.x() * operand.ps() * self.x()
-                - self.x() * operand.r() * self.y()
-                + self.y() * operand.ps() * self.y()
-                + self.w() * operand.ty() * self.y()
+            (self.x() * operand.tx() * self.w() + self.x() * operand.ps() * self.x()
                 - self.y() * operand.ty() * self.w()
-                + self.x() * operand.tx() * self.w())
+                - self.x() * operand.r() * self.y()
+                - self.w() * operand.tx() * self.x()
+                + self.w() * operand.ty() * self.y()
+                + self.y() * operand.ps() * self.y()
+                + self.y() * operand.r() * self.x())
                 * inv_norm_sq,
         ))
     }
@@ -7889,22 +7878,21 @@ impl<T: Float> InverseSandwich<Point<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.x() * operand.x() * self.x()
-                + self.x() * operand.y() * self.y()
+            (self.x() * operand.y() * self.y()
                 + self.y() * operand.y() * self.x()
+                + self.x() * operand.x() * self.x()
                 - self.y() * operand.x() * self.y())
                 * inv_norm_sq,
-            (self.y() * operand.x() * self.x()
-                + self.x() * operand.x() * self.y()
-                + self.y() * operand.y() * self.y()
-                - self.x() * operand.y() * self.x())
+            (self.x() * operand.x() * self.y() + self.y() * operand.x() * self.x()
+                - self.x() * operand.y() * self.x()
+                + self.y() * operand.y() * self.y())
                 * inv_norm_sq,
-            (-(self.x() * operand.w() * self.x())
-                + self.w() * operand.x() * self.x()
-                + self.w() * operand.y() * self.y()
+            (-(self.y() * operand.w() * self.y())
                 + self.y() * operand.y() * self.w()
                 + self.x() * operand.x() * self.w()
-                - self.y() * operand.w() * self.y())
+                - self.x() * operand.w() * self.x()
+                + self.w() * operand.x() * self.x()
+                + self.w() * operand.y() * self.y())
                 * inv_norm_sq,
         ))
     }
@@ -7920,7 +7908,7 @@ impl<T: Float> InverseSandwich<Scalar<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Scalar::new_unchecked(
-            (self.y() * operand.s() * self.y() + self.x() * operand.s() * self.x()) * inv_norm_sq,
+            (self.x() * operand.s() * self.x() + self.y() * operand.s() * self.y()) * inv_norm_sq,
         ))
     }
 }
@@ -8146,38 +8134,39 @@ impl<T: Float> InverseAntisandwich<Flector<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (self.ny() * operand.s() * self.ny() - self.d() * operand.ny() * self.nx()
-                + self.ny() * operand.d() * self.nx()
+            (self.d() * operand.nx() * self.ny()
                 - self.nx() * operand.d() * self.ny()
+                - self.d() * operand.ny() * self.nx()
+                + self.nx() * operand.ny() * self.d()
+                + self.ny() * operand.s() * self.ny()
+                - self.ny() * operand.ny() * self.s()
+                - self.nx() * operand.nx() * self.s()
+                + self.s() * operand.ny() * self.ny()
+                + self.nx() * operand.s() * self.nx()
                 + self.s() * operand.nx() * self.nx()
                 - self.ny() * operand.nx() * self.d()
-                + self.s() * operand.ny() * self.ny()
-                + self.d() * operand.nx() * self.ny()
-                + self.nx() * operand.s() * self.nx()
-                - self.ny() * operand.ny() * self.s()
-                + self.nx() * operand.ny() * self.d()
-                - self.nx() * operand.nx() * self.s())
+                + self.ny() * operand.d() * self.nx())
                 * inv_norm_sq,
-            (-(self.nx() * operand.s() * self.ny()) + self.d() * operand.ny() * self.ny()
-                - self.nx() * operand.d() * self.nx()
-                + self.ny() * operand.s() * self.nx()
-                + self.d() * operand.nx() * self.nx()
-                + self.s() * operand.ny() * self.nx()
-                - self.s() * operand.nx() * self.ny()
-                + self.nx() * operand.ny() * self.s()
+            (-(self.nx() * operand.d() * self.nx()) - self.s() * operand.nx() * self.ny()
+                + self.d() * operand.ny() * self.ny()
                 + self.nx() * operand.nx() * self.d()
-                - self.ny() * operand.d() * self.ny()
+                + self.nx() * operand.ny() * self.s()
+                + self.s() * operand.ny() * self.nx()
+                + self.ny() * operand.s() * self.nx()
+                - self.ny() * operand.nx() * self.s()
                 + self.ny() * operand.ny() * self.d()
-                - self.ny() * operand.nx() * self.s())
+                - self.nx() * operand.s() * self.ny()
+                + self.d() * operand.nx() * self.nx()
+                - self.ny() * operand.d() * self.ny())
                 * inv_norm_sq,
-            (self.nx() * operand.ny() * self.ny()
-                + self.ny() * operand.ny() * self.nx()
-                + self.nx() * operand.nx() * self.nx()
-                - self.ny() * operand.nx() * self.ny())
+            (self.nx() * operand.nx() * self.nx() + self.nx() * operand.ny() * self.ny()
+                - self.ny() * operand.nx() * self.ny()
+                + self.ny() * operand.ny() * self.nx())
                 * inv_norm_sq,
-            (-(-(self.nx() * operand.nx() * self.ny()) + self.nx() * operand.ny() * self.nx()
-                - self.ny() * operand.nx() * self.nx()
-                - self.ny() * operand.ny() * self.ny()))
+            (-(self.nx() * operand.ny() * self.nx()
+                - self.ny() * operand.ny() * self.ny()
+                - self.nx() * operand.nx() * self.ny()
+                - self.ny() * operand.nx() * self.nx()))
                 * inv_norm_sq,
         ))
     }
@@ -8193,25 +8182,24 @@ impl<T: Float> InverseAntisandwich<Line<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
-            (-(self.s() * operand.nx() * self.ny())
-                + self.nx() * operand.nx() * self.d()
-                + self.s() * operand.ny() * self.nx()
-                + self.d() * operand.nx() * self.nx()
+            (self.s() * operand.ny() * self.nx() + self.nx() * operand.ny() * self.s()
                 - self.nx() * operand.d() * self.nx()
-                - self.ny() * operand.d() * self.ny()
-                + self.nx() * operand.ny() * self.s()
-                + self.ny() * operand.ny() * self.d()
+                + self.d() * operand.nx() * self.nx()
                 - self.ny() * operand.nx() * self.s()
-                + self.d() * operand.ny() * self.ny())
+                - self.s() * operand.nx() * self.ny()
+                - self.ny() * operand.d() * self.ny()
+                + self.d() * operand.ny() * self.ny()
+                + self.nx() * operand.nx() * self.d()
+                + self.ny() * operand.ny() * self.d())
                 * inv_norm_sq,
-            (-(self.ny() * operand.nx() * self.ny())
-                + self.nx() * operand.ny() * self.ny()
-                + self.nx() * operand.nx() * self.nx()
-                + self.ny() * operand.ny() * self.nx())
+            (self.nx() * operand.nx() * self.nx() - self.ny() * operand.nx() * self.ny()
+                + self.ny() * operand.ny() * self.nx()
+                + self.nx() * operand.ny() * self.ny())
                 * inv_norm_sq,
-            (-(-(self.ny() * operand.nx() * self.nx()) + self.nx() * operand.ny() * self.nx()
-                - self.ny() * operand.ny() * self.ny()
-                - self.nx() * operand.nx() * self.ny()))
+            (-(self.nx() * operand.ny() * self.nx()
+                - self.nx() * operand.nx() * self.ny()
+                - self.ny() * operand.nx() * self.nx()
+                - self.ny() * operand.ny() * self.ny()))
                 * inv_norm_sq,
         ))
     }
@@ -8227,39 +8215,39 @@ impl<T: Float> InverseAntisandwich<Motor<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.ny() * operand.r() * self.s()
-                + self.s() * operand.ps() * self.nx()
+            (self.s() * operand.ps() * self.nx()
+                + self.s() * operand.r() * self.ny()
+                + self.ny() * operand.r() * self.s()
                 + self.nx() * operand.tx() * self.ny()
+                + self.nx() * operand.r() * self.d()
+                - self.d() * operand.ps() * self.ny()
                 - self.nx() * operand.ps() * self.s()
+                + self.nx() * operand.ty() * self.nx()
                 - self.ny() * operand.ty() * self.ny()
                 + self.ny() * operand.tx() * self.nx()
-                - self.d() * operand.ps() * self.ny()
                 + self.ny() * operand.ps() * self.d()
-                + self.nx() * operand.ty() * self.nx()
-                + self.d() * operand.r() * self.nx()
-                + self.nx() * operand.r() * self.d()
-                + self.s() * operand.r() * self.ny())
+                + self.d() * operand.r() * self.nx())
                 * inv_norm_sq,
-            (self.s() * operand.ps() * self.ny() - self.nx() * operand.ps() * self.d()
-                + self.ny() * operand.ty() * self.nx()
-                + self.ny() * operand.r() * self.d()
+            (self.s() * operand.ps() * self.ny()
+                + self.nx() * operand.ty() * self.ny()
+                + self.ny() * operand.tx() * self.ny()
                 + self.d() * operand.ps() * self.nx()
-                - self.nx() * operand.tx() * self.nx()
-                - self.ny() * operand.ps() * self.s()
-                - self.s() * operand.r() * self.nx()
                 + self.d() * operand.r() * self.ny()
                 - self.nx() * operand.r() * self.s()
-                + self.ny() * operand.tx() * self.ny()
-                + self.nx() * operand.ty() * self.ny())
+                - self.ny() * operand.ps() * self.s()
+                + self.ny() * operand.ty() * self.nx()
+                - self.nx() * operand.ps() * self.d()
+                + self.ny() * operand.r() * self.d()
+                - self.s() * operand.r() * self.nx()
+                - self.nx() * operand.tx() * self.nx())
                 * inv_norm_sq,
-            (-(self.ny() * operand.r() * self.ny()) + self.nx() * operand.ps() * self.ny()
-                - self.ny() * operand.ps() * self.nx()
-                - self.nx() * operand.r() * self.nx())
+            (-(self.nx() * operand.r() * self.nx()) - self.ny() * operand.ps() * self.nx()
+                + self.nx() * operand.ps() * self.ny()
+                - self.ny() * operand.r() * self.ny())
                 * inv_norm_sq,
-            (self.nx() * operand.r() * self.ny()
+            (self.nx() * operand.r() * self.ny() - self.ny() * operand.r() * self.nx()
                 + self.ny() * operand.ps() * self.ny()
-                + self.nx() * operand.ps() * self.nx()
-                - self.ny() * operand.r() * self.nx())
+                + self.nx() * operand.ps() * self.nx())
                 * inv_norm_sq,
         ))
     }
@@ -8275,20 +8263,20 @@ impl<T: Float> InverseAntisandwich<Point<T>> for Flector<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.ny() * operand.w() * self.s() + self.nx() * operand.x() * self.nx()
+            (self.nx() * operand.x() * self.nx() + self.d() * operand.w() * self.nx()
                 - self.ny() * operand.x() * self.ny()
-                + self.nx() * operand.w() * self.d()
-                + self.s() * operand.w() * self.ny()
                 + self.nx() * operand.y() * self.ny()
-                + self.d() * operand.w() * self.nx()
-                + self.ny() * operand.y() * self.nx())
+                + self.ny() * operand.y() * self.nx()
+                + self.ny() * operand.w() * self.s()
+                + self.s() * operand.w() * self.ny()
+                + self.nx() * operand.w() * self.d())
                 * inv_norm_sq,
-            (self.ny() * operand.y() * self.ny() - self.nx() * operand.w() * self.s()
-                + self.nx() * operand.x() * self.ny()
+            (self.d() * operand.w() * self.ny() - self.nx() * operand.w() * self.s()
                 + self.ny() * operand.x() * self.nx()
-                - self.nx() * operand.y() * self.nx()
-                + self.d() * operand.w() * self.ny()
                 - self.s() * operand.w() * self.nx()
+                + self.nx() * operand.x() * self.ny()
+                + self.ny() * operand.y() * self.ny()
+                - self.nx() * operand.y() * self.nx()
                 + self.ny() * operand.w() * self.d())
                 * inv_norm_sq,
             (-(self.nx() * operand.w() * self.nx()) - self.ny() * operand.w() * self.ny())
@@ -8339,31 +8327,30 @@ impl<T: Float> InverseAntisandwich<Flector<T>> for Line<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (self.nx() * operand.ny() * self.d() - self.nx() * operand.d() * self.ny()
-                + self.d() * operand.nx() * self.ny()
-                - self.ny() * operand.nx() * self.d()
+            (self.ny() * operand.s() * self.ny() + self.d() * operand.nx() * self.ny()
+                - self.nx() * operand.d() * self.ny()
                 + self.nx() * operand.s() * self.nx()
+                - self.ny() * operand.nx() * self.d()
                 - self.d() * operand.ny() * self.nx()
                 + self.ny() * operand.d() * self.nx()
-                + self.ny() * operand.s() * self.ny())
+                + self.nx() * operand.ny() * self.d())
                 * inv_norm_sq,
-            (self.nx() * operand.nx() * self.d()
+            (self.ny() * operand.ny() * self.d() + self.d() * operand.ny() * self.ny()
                 - self.nx() * operand.d() * self.nx()
-                - self.ny() * operand.d() * self.ny()
-                + self.d() * operand.ny() * self.ny()
+                + self.nx() * operand.nx() * self.d()
+                + self.ny() * operand.s() * self.nx()
                 + self.d() * operand.nx() * self.nx()
-                + self.ny() * operand.ny() * self.d()
-                - self.nx() * operand.s() * self.ny()
-                + self.ny() * operand.s() * self.nx())
+                - self.ny() * operand.d() * self.ny()
+                - self.nx() * operand.s() * self.ny())
                 * inv_norm_sq,
-            (self.nx() * operand.ny() * self.ny() + self.nx() * operand.nx() * self.nx()
-                - self.ny() * operand.nx() * self.ny()
+            (-(self.ny() * operand.nx() * self.ny())
+                + self.nx() * operand.nx() * self.nx()
+                + self.nx() * operand.ny() * self.ny()
                 + self.ny() * operand.ny() * self.nx())
                 * inv_norm_sq,
-            (-(-(self.nx() * operand.nx() * self.ny())
-                - self.ny() * operand.ny() * self.ny()
+            (-(-(self.nx() * operand.nx() * self.ny()) + self.nx() * operand.ny() * self.nx()
                 - self.ny() * operand.nx() * self.nx()
-                + self.nx() * operand.ny() * self.nx()))
+                - self.ny() * operand.ny() * self.ny()))
                 * inv_norm_sq,
         ))
     }
@@ -8379,21 +8366,20 @@ impl<T: Float> InverseAntisandwich<Line<T>> for Line<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
-            (self.d() * operand.nx() * self.nx()
+            (self.nx() * operand.nx() * self.d() - self.nx() * operand.d() * self.nx()
+                + self.d() * operand.nx() * self.nx()
                 + self.d() * operand.ny() * self.ny()
-                + self.ny() * operand.ny() * self.d()
-                + self.nx() * operand.nx() * self.d()
-                - self.nx() * operand.d() * self.nx()
-                - self.ny() * operand.d() * self.ny())
+                - self.ny() * operand.d() * self.ny()
+                + self.ny() * operand.ny() * self.d())
                 * inv_norm_sq,
-            (self.nx() * operand.nx() * self.nx()
-                + self.nx() * operand.ny() * self.ny()
-                + self.ny() * operand.ny() * self.nx()
-                - self.ny() * operand.nx() * self.ny())
+            (self.nx() * operand.ny() * self.ny() - self.ny() * operand.nx() * self.ny()
+                + self.nx() * operand.nx() * self.nx()
+                + self.ny() * operand.ny() * self.nx())
                 * inv_norm_sq,
-            (-(-(self.ny() * operand.ny() * self.ny()) + self.nx() * operand.ny() * self.nx()
-                - self.nx() * operand.nx() * self.ny()
-                - self.ny() * operand.nx() * self.nx()))
+            (-(self.nx() * operand.ny() * self.nx()
+                - self.ny() * operand.ny() * self.ny()
+                - self.ny() * operand.nx() * self.nx()
+                - self.nx() * operand.nx() * self.ny()))
                 * inv_norm_sq,
         ))
     }
@@ -8410,30 +8396,31 @@ impl<T: Float> InverseAntisandwich<Motor<T>> for Line<T> {
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
             (-(self.d() * operand.ps() * self.ny())
+                + self.d() * operand.r() * self.nx()
+                + self.ny() * operand.ps() * self.d()
+                + self.nx() * operand.tx() * self.ny()
                 + self.nx() * operand.r() * self.d()
                 + self.ny() * operand.tx() * self.nx()
-                + self.ny() * operand.ps() * self.d()
-                + self.nx() * operand.ty() * self.nx()
-                + self.d() * operand.r() * self.nx()
-                + self.nx() * operand.tx() * self.ny()
-                - self.ny() * operand.ty() * self.ny())
+                - self.ny() * operand.ty() * self.ny()
+                + self.nx() * operand.ty() * self.nx())
                 * inv_norm_sq,
-            (self.nx() * operand.ty() * self.ny() - self.nx() * operand.ps() * self.d()
-                + self.d() * operand.ps() * self.nx()
+            (-(self.nx() * operand.ps() * self.d())
                 + self.ny() * operand.r() * self.d()
-                + self.ny() * operand.tx() * self.ny()
                 + self.d() * operand.r() * self.ny()
+                + self.ny() * operand.ty() * self.nx()
                 - self.nx() * operand.tx() * self.nx()
-                + self.ny() * operand.ty() * self.nx())
+                + self.ny() * operand.tx() * self.ny()
+                + self.nx() * operand.ty() * self.ny()
+                + self.d() * operand.ps() * self.nx())
                 * inv_norm_sq,
-            (self.nx() * operand.ps() * self.ny()
-                - self.ny() * operand.ps() * self.nx()
-                - self.nx() * operand.r() * self.nx()
-                - self.ny() * operand.r() * self.ny())
+            (-(self.ny() * operand.r() * self.ny()) - self.nx() * operand.r() * self.nx()
+                + self.nx() * operand.ps() * self.ny()
+                - self.ny() * operand.ps() * self.nx())
                 * inv_norm_sq,
-            (self.nx() * operand.r() * self.ny() + self.nx() * operand.ps() * self.nx()
-                - self.ny() * operand.r() * self.nx()
-                + self.ny() * operand.ps() * self.ny())
+            (self.nx() * operand.r() * self.ny()
+                + self.ny() * operand.ps() * self.ny()
+                + self.nx() * operand.ps() * self.nx()
+                - self.ny() * operand.r() * self.nx())
                 * inv_norm_sq,
         ))
     }
@@ -8449,18 +8436,18 @@ impl<T: Float> InverseAntisandwich<Point<T>> for Line<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.nx() * operand.w() * self.d()
-                + self.nx() * operand.x() * self.nx()
-                + self.ny() * operand.y() * self.nx()
-                + self.d() * operand.w() * self.nx()
+            (self.nx() * operand.y() * self.ny() + self.d() * operand.w() * self.nx()
                 - self.ny() * operand.x() * self.ny()
-                + self.nx() * operand.y() * self.ny())
+                + self.nx() * operand.w() * self.d()
+                + self.ny() * operand.y() * self.nx()
+                + self.nx() * operand.x() * self.nx())
                 * inv_norm_sq,
-            (self.nx() * operand.x() * self.ny() - self.nx() * operand.y() * self.nx()
-                + self.ny() * operand.x() * self.nx()
+            (self.ny() * operand.x() * self.nx()
                 + self.ny() * operand.w() * self.d()
                 + self.d() * operand.w() * self.ny()
-                + self.ny() * operand.y() * self.ny())
+                + self.nx() * operand.x() * self.ny()
+                + self.ny() * operand.y() * self.ny()
+                - self.nx() * operand.y() * self.nx())
                 * inv_norm_sq,
             (-(self.nx() * operand.w() * self.nx()) - self.ny() * operand.w() * self.ny())
                 * inv_norm_sq,
@@ -8494,7 +8481,7 @@ impl<T: Float> InverseAntisandwich<Trivector<T>> for Line<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.nx() * operand.ps() * self.nx() + self.ny() * operand.ps() * self.ny())
+            (self.ny() * operand.ps() * self.ny() + self.nx() * operand.ps() * self.nx())
                 * inv_norm_sq,
         ))
     }
@@ -8510,38 +8497,39 @@ impl<T: Float> InverseAntisandwich<Flector<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (self.r() * operand.s() * self.r() + self.ty() * operand.nx() * self.ps()
-                - self.r() * operand.ny() * self.ty()
-                + self.ps() * operand.s() * self.ps()
-                + self.r() * operand.nx() * self.tx()
-                + self.r() * operand.d() * self.ps()
-                - self.tx() * operand.nx() * self.r()
-                - self.ps() * operand.d() * self.r()
+            (-(self.ps() * operand.d() * self.r())
                 + self.ty() * operand.ny() * self.r()
+                + self.r() * operand.nx() * self.tx()
+                - self.tx() * operand.nx() * self.r()
                 - self.ps() * operand.nx() * self.ty()
+                + self.r() * operand.s() * self.r()
+                + self.ty() * operand.nx() * self.ps()
+                + self.tx() * operand.ny() * self.ps()
                 - self.ps() * operand.ny() * self.tx()
-                + self.tx() * operand.ny() * self.ps())
+                - self.r() * operand.ny() * self.ty()
+                + self.r() * operand.d() * self.ps()
+                + self.ps() * operand.s() * self.ps())
                 * inv_norm_sq,
-            (-(self.r() * operand.s() * self.ps()) + self.tx() * operand.ny() * self.r()
-                - self.ty() * operand.ny() * self.ps()
+            (self.ps() * operand.s() * self.r()
                 + self.r() * operand.ny() * self.tx()
                 + self.r() * operand.nx() * self.ty()
                 + self.ty() * operand.nx() * self.r()
-                + self.ps() * operand.s() * self.r()
-                + self.ps() * operand.nx() * self.tx()
-                + self.ps() * operand.d() * self.ps()
+                + self.tx() * operand.nx() * self.ps()
                 - self.ps() * operand.ny() * self.ty()
                 + self.r() * operand.d() * self.r()
-                + self.tx() * operand.nx() * self.ps())
+                + self.ps() * operand.d() * self.ps()
+                + self.tx() * operand.ny() * self.r()
+                - self.r() * operand.s() * self.ps()
+                + self.ps() * operand.nx() * self.tx()
+                - self.ty() * operand.ny() * self.ps())
                 * inv_norm_sq,
             (self.ps() * operand.nx() * self.ps() - self.r() * operand.nx() * self.r()
-                + self.ps() * operand.ny() * self.r()
-                + self.r() * operand.ny() * self.ps())
+                + self.r() * operand.ny() * self.ps()
+                + self.ps() * operand.ny() * self.r())
                 * inv_norm_sq,
-            (-(self.r() * operand.ny() * self.r()
-                + self.r() * operand.nx() * self.ps()
+            (-(self.r() * operand.nx() * self.ps() - self.ps() * operand.ny() * self.ps()
                 + self.ps() * operand.nx() * self.r()
-                - self.ps() * operand.ny() * self.ps()))
+                + self.r() * operand.ny() * self.r()))
                 * inv_norm_sq,
         ))
     }
@@ -8557,26 +8545,24 @@ impl<T: Float> InverseAntisandwich<Line<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Line::new_unchecked(
-            (self.tx() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.tx()
-                + self.r() * operand.ny() * self.tx()
-                - self.ty() * operand.ny() * self.ps()
-                + self.r() * operand.nx() * self.ty()
+            (-(self.ty() * operand.ny() * self.ps())
                 + self.r() * operand.d() * self.r()
                 + self.tx() * operand.nx() * self.ps()
-                + self.ty() * operand.nx() * self.r()
+                + self.tx() * operand.ny() * self.r()
                 - self.ps() * operand.ny() * self.ty()
-                + self.ps() * operand.d() * self.ps())
+                + self.r() * operand.ny() * self.tx()
+                + self.ty() * operand.nx() * self.r()
+                + self.ps() * operand.d() * self.ps()
+                + self.r() * operand.nx() * self.ty()
+                + self.ps() * operand.nx() * self.tx())
                 * inv_norm_sq,
-            (-(self.r() * operand.nx() * self.r())
-                + self.ps() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.ps()
-                + self.r() * operand.ny() * self.ps())
+            (self.ps() * operand.ny() * self.r() - self.r() * operand.nx() * self.r()
+                + self.r() * operand.ny() * self.ps()
+                + self.ps() * operand.nx() * self.ps())
                 * inv_norm_sq,
-            (-(self.r() * operand.ny() * self.r()
-                + self.ps() * operand.nx() * self.r()
-                + self.r() * operand.nx() * self.ps()
-                - self.ps() * operand.ny() * self.ps()))
+            (-(self.ps() * operand.nx() * self.r() + self.r() * operand.ny() * self.r()
+                - self.ps() * operand.ny() * self.ps()
+                + self.r() * operand.nx() * self.ps()))
                 * inv_norm_sq,
         ))
     }
@@ -8592,39 +8578,40 @@ impl<T: Float> InverseAntisandwich<Motor<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.ps() * operand.ty() * self.ps() + self.ty() * operand.r() * self.r()
+            (-(self.ps() * operand.r() * self.tx())
                 - self.ps() * operand.ps() * self.ty()
-                + self.ty() * operand.ps() * self.ps()
                 - self.tx() * operand.r() * self.ps()
-                + self.r() * operand.tx() * self.ps()
                 + self.tx() * operand.ps() * self.r()
-                - self.r() * operand.ps() * self.tx()
-                - self.r() * operand.ty() * self.r()
+                + self.r() * operand.tx() * self.ps()
                 + self.r() * operand.r() * self.ty()
                 + self.ps() * operand.tx() * self.r()
-                - self.ps() * operand.r() * self.tx())
+                - self.r() * operand.ty() * self.r()
+                - self.r() * operand.ps() * self.tx()
+                + self.ps() * operand.ty() * self.ps()
+                + self.ty() * operand.ps() * self.ps()
+                + self.ty() * operand.r() * self.r())
                 * inv_norm_sq,
-            (-(self.r() * operand.tx() * self.r()) + self.r() * operand.ps() * self.ty()
-                - self.ty() * operand.ps() * self.r()
+            (self.ty() * operand.r() * self.ps()
                 - self.r() * operand.ty() * self.ps()
-                + self.tx() * operand.r() * self.r()
-                + self.ty() * operand.r() * self.ps()
+                - self.r() * operand.tx() * self.r()
                 + self.tx() * operand.ps() * self.ps()
+                - self.ty() * operand.ps() * self.r()
                 - self.ps() * operand.ty() * self.r()
+                + self.r() * operand.r() * self.tx()
                 + self.ps() * operand.tx() * self.ps()
                 - self.ps() * operand.ps() * self.tx()
-                + self.r() * operand.r() * self.tx()
-                + self.ps() * operand.r() * self.ty())
+                + self.tx() * operand.r() * self.r()
+                + self.ps() * operand.r() * self.ty()
+                + self.r() * operand.ps() * self.ty())
                 * inv_norm_sq,
-            (self.r() * operand.ps() * self.ps()
-                + self.r() * operand.r() * self.r()
-                + self.ps() * operand.r() * self.ps()
-                - self.ps() * operand.ps() * self.r())
+            (self.r() * operand.r() * self.r() + self.r() * operand.ps() * self.ps()
+                - self.ps() * operand.ps() * self.r()
+                + self.ps() * operand.r() * self.ps())
                 * inv_norm_sq,
-            (self.ps() * operand.r() * self.r()
-                + self.r() * operand.ps() * self.r()
+            (-(self.r() * operand.r() * self.ps())
                 + self.ps() * operand.ps() * self.ps()
-                - self.r() * operand.r() * self.ps())
+                + self.r() * operand.ps() * self.r()
+                + self.ps() * operand.r() * self.r())
                 * inv_norm_sq,
         ))
     }
@@ -8640,21 +8627,22 @@ impl<T: Float> InverseAntisandwich<Point<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.ps() * operand.y() * self.r() + self.ty() * operand.w() * self.r()
-                - self.r() * operand.x() * self.r()
-                + self.r() * operand.y() * self.ps()
-                - self.ps() * operand.w() * self.tx()
+            (self.r() * operand.y() * self.ps()
+                + self.ps() * operand.y() * self.r()
+                + self.ps() * operand.x() * self.ps()
+                + self.ty() * operand.w() * self.r()
                 - self.tx() * operand.w() * self.ps()
-                + self.r() * operand.w() * self.ty()
-                + self.ps() * operand.x() * self.ps())
+                - self.r() * operand.x() * self.r()
+                - self.ps() * operand.w() * self.tx()
+                + self.r() * operand.w() * self.ty())
                 * inv_norm_sq,
-            (self.ps() * operand.w() * self.ty() - self.r() * operand.y() * self.r()
+            (self.r() * operand.w() * self.tx() - self.ps() * operand.x() * self.r()
                 + self.tx() * operand.w() * self.r()
                 - self.r() * operand.x() * self.ps()
-                - self.ps() * operand.x() * self.r()
+                - self.r() * operand.y() * self.r()
                 + self.ps() * operand.y() * self.ps()
-                + self.ty() * operand.w() * self.ps()
-                + self.r() * operand.w() * self.tx())
+                + self.ps() * operand.w() * self.ty()
+                + self.ty() * operand.w() * self.ps())
                 * inv_norm_sq,
             (self.ps() * operand.w() * self.ps() + self.r() * operand.w() * self.r()) * inv_norm_sq,
         ))
@@ -8686,7 +8674,7 @@ impl<T: Float> InverseAntisandwich<Trivector<T>> for Motor<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Trivector::new_unchecked(
-            (self.ps() * operand.ps() * self.ps() + self.r() * operand.ps() * self.r())
+            (self.r() * operand.ps() * self.r() + self.ps() * operand.ps() * self.ps())
                 * inv_norm_sq,
         ))
     }
@@ -8702,16 +8690,16 @@ impl<T: Float> InverseAntisandwich<Flector<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Flector::new_unchecked(
-            (self.w() * operand.nx() * self.y() - self.w() * operand.ny() * self.x()
+            (-(self.w() * operand.ny() * self.x()) + self.w() * operand.nx() * self.y()
+                - self.y() * operand.nx() * self.w()
                 + self.w() * operand.s() * self.w()
-                + self.x() * operand.ny() * self.w()
-                - self.y() * operand.nx() * self.w())
+                + self.x() * operand.ny() * self.w())
                 * inv_norm_sq,
-            (self.w() * operand.nx() * self.x()
+            (self.w() * operand.ny() * self.y()
                 + self.y() * operand.ny() * self.w()
                 + self.x() * operand.nx() * self.w()
                 + self.w() * operand.d() * self.w()
-                + self.w() * operand.ny() * self.y())
+                + self.w() * operand.nx() * self.x())
                 * inv_norm_sq,
             (-(self.w() * operand.nx() * self.w())) * inv_norm_sq,
             (-(self.w() * operand.ny() * self.w())) * inv_norm_sq,
@@ -8731,8 +8719,8 @@ impl<T: Float> InverseAntisandwich<Line<T>> for Point<T> {
         Some(Line::new_unchecked(
             (self.w() * operand.nx() * self.x()
                 + self.w() * operand.ny() * self.y()
-                + self.y() * operand.ny() * self.w()
                 + self.x() * operand.nx() * self.w()
+                + self.y() * operand.ny() * self.w()
                 + self.w() * operand.d() * self.w())
                 * inv_norm_sq,
             (-(self.w() * operand.nx() * self.w())) * inv_norm_sq,
@@ -8751,15 +8739,16 @@ impl<T: Float> InverseAntisandwich<Motor<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Motor::new_unchecked(
-            (self.x() * operand.r() * self.w() - self.w() * operand.ty() * self.w()
-                + self.w() * operand.r() * self.x()
+            (self.w() * operand.r() * self.x()
+                + self.x() * operand.r() * self.w()
                 + self.y() * operand.ps() * self.w()
+                - self.w() * operand.ty() * self.w()
                 - self.w() * operand.ps() * self.y())
                 * inv_norm_sq,
-            (-(self.w() * operand.tx() * self.w()) + self.w() * operand.r() * self.y()
-                - self.x() * operand.ps() * self.w()
-                + self.w() * operand.ps() * self.x()
-                + self.y() * operand.r() * self.w())
+            (-(self.x() * operand.ps() * self.w()) + self.y() * operand.r() * self.w()
+                - self.w() * operand.tx() * self.w()
+                + self.w() * operand.r() * self.y()
+                + self.w() * operand.ps() * self.x())
                 * inv_norm_sq,
             (self.w() * operand.r() * self.w()) * inv_norm_sq,
             (self.w() * operand.ps() * self.w()) * inv_norm_sq,
@@ -8777,11 +8766,13 @@ impl<T: Float> InverseAntisandwich<Point<T>> for Point<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Point::new_unchecked(
-            (self.x() * operand.w() * self.w() - self.w() * operand.x() * self.w()
-                + self.w() * operand.w() * self.x())
+            (-(self.w() * operand.x() * self.w())
+                + self.w() * operand.w() * self.x()
+                + self.x() * operand.w() * self.w())
                 * inv_norm_sq,
-            (self.y() * operand.w() * self.w() - self.w() * operand.y() * self.w()
-                + self.w() * operand.w() * self.y())
+            (-(self.w() * operand.y() * self.w())
+                + self.w() * operand.w() * self.y()
+                + self.y() * operand.w() * self.w())
                 * inv_norm_sq,
             (self.w() * operand.w() * self.w()) * inv_norm_sq,
         ))
@@ -10666,7 +10657,7 @@ impl<T: Float> Dot<Motor<T>> for Unitized<Point<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Motor<T>) -> T {
-        rhs.ty() * self.as_inner().x() + rhs.tx() * self.as_inner().y()
+        rhs.tx() * self.as_inner().y() + rhs.ty() * self.as_inner().x()
     }
 }
 #[allow(unused_variables)]
@@ -10674,7 +10665,7 @@ impl<T: Float> Dot<Unitized<Motor<T>>> for Point<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unitized<Motor<T>>) -> T {
-        rhs.as_inner().ty() * self.x() + rhs.as_inner().tx() * self.y()
+        rhs.as_inner().tx() * self.y() + rhs.as_inner().ty() * self.x()
     }
 }
 #[allow(unused_variables)]
@@ -10682,7 +10673,7 @@ impl<T: Float> Dot<Unitized<Motor<T>>> for Unitized<Point<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unitized<Motor<T>>) -> T {
-        rhs.as_inner().ty() * self.as_inner().x() + rhs.as_inner().tx() * self.as_inner().y()
+        rhs.as_inner().tx() * self.as_inner().y() + rhs.as_inner().ty() * self.as_inner().x()
     }
 }
 impl<T: Float> Dot<Point<T>> for Point<T> {
@@ -11126,7 +11117,7 @@ impl<T: Float> Project<Line<T>> for Line<T> {
         Line::new_unchecked(
             -(self.nx() * target.nx() * target.d()) - self.ny() * target.ny() * target.d(),
             -(self.ny() * target.ny() * target.nx()) - self.nx() * target.nx() * target.nx(),
-            -(self.ny() * target.ny() * target.ny()) - self.nx() * target.nx() * target.ny(),
+            -(self.nx() * target.nx() * target.ny()) - self.ny() * target.ny() * target.ny(),
         )
     }
 }
@@ -11188,8 +11179,8 @@ impl<T: Float> Project<Line<T>> for Point<T> {
     #[inline]
     fn project(&self, target: &Line<T>) -> Point<T> {
         Point::new_unchecked(
-            -(self.x() * target.ny() * target.ny()) + self.w() * target.nx() * target.d()
-                - self.y() * target.nx() * target.ny(),
+            -(self.y() * target.nx() * target.ny()) + self.w() * target.nx() * target.d()
+                - self.x() * target.ny() * target.ny(),
             -(self.x() * target.ny() * target.nx())
                 - self.y() * target.nx() * target.nx()
                 - self.w() * target.ny() * target.d(),
@@ -11316,8 +11307,8 @@ impl<T: Float> Antiproject<Line<T>> for Line<T> {
     fn antiproject(&self, target: &Line<T>) -> Line<T> {
         Line::new_unchecked(
             -(self.ny() * target.ny() * target.d()) - self.nx() * target.nx() * target.d(),
-            -(self.nx() * target.nx() * target.nx()) - self.ny() * target.ny() * target.nx(),
-            -(self.ny() * target.ny() * target.ny()) - self.nx() * target.nx() * target.ny(),
+            -(self.ny() * target.ny() * target.nx()) - self.nx() * target.nx() * target.nx(),
+            -(self.nx() * target.nx() * target.ny()) - self.ny() * target.ny() * target.ny(),
         )
     }
 }

@@ -133,7 +133,7 @@ impl<T: Float> Mul<Hyperbolic<T>> for Hyperbolic<T> {
     fn mul(self, rhs: Hyperbolic<T>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
             rhs.hyp() * self.hyp() + rhs.real() * self.real(),
-            rhs.real() * self.hyp() + rhs.hyp() * self.real(),
+            rhs.hyp() * self.real() + rhs.real() * self.hyp(),
         )
     }
 }

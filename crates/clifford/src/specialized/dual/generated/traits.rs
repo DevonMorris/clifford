@@ -63,7 +63,7 @@ impl<T: Float> Mul<Dual<T>> for Dual<T> {
     fn mul(self, rhs: Dual<T>) -> Dual<T> {
         Dual::new_unchecked(
             rhs.real() * self.real(),
-            rhs.real() * self.dual() + rhs.dual() * self.real(),
+            rhs.dual() * self.real() + rhs.real() * self.dual(),
         )
     }
 }

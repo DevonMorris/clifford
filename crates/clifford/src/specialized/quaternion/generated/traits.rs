@@ -145,7 +145,7 @@ impl<T: Float> Mul<Quaternion<T>> for Imaginary<T> {
     fn mul(self, rhs: Quaternion<T>) -> Quaternion<T> {
         Quaternion::new_unchecked(
             -(rhs.i() * self.i()) + -(rhs.j() * self.j()),
-            rhs.w() * self.i() + rhs.k() * self.j(),
+            rhs.k() * self.j() + rhs.w() * self.i(),
             -(rhs.k() * self.i()) + rhs.w() * self.j(),
             -(rhs.i() * self.j()) + rhs.j() * self.i(),
         )
@@ -243,9 +243,9 @@ impl<T: Float> Mul<Quaternion<T>> for Quaternion<T> {
                 + -(rhs.j() * self.j())
                 + -(rhs.k() * self.k())
                 + rhs.w() * self.w(),
-            -(rhs.j() * self.k()) + rhs.w() * self.i() + rhs.k() * self.j() + rhs.i() * self.w(),
-            -(rhs.k() * self.i()) + rhs.i() * self.k() + rhs.w() * self.j() + rhs.j() * self.w(),
-            -(rhs.i() * self.j()) + rhs.w() * self.k() + rhs.j() * self.i() + rhs.k() * self.w(),
+            -(rhs.j() * self.k()) + rhs.i() * self.w() + rhs.k() * self.j() + rhs.w() * self.i(),
+            -(rhs.k() * self.i()) + rhs.i() * self.k() + rhs.j() * self.w() + rhs.w() * self.j(),
+            -(rhs.i() * self.j()) + rhs.j() * self.i() + rhs.k() * self.w() + rhs.w() * self.k(),
         )
     }
 }
@@ -1293,7 +1293,7 @@ impl<T: Float> Sandwich<Bivector<T>> for Imaginary<T> {
     #[inline]
     fn sandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.j() * operand.k() * self.j() + self.i() * operand.k() * self.i(),
+            self.i() * operand.k() * self.i() + self.j() * operand.k() * self.j(),
         )
     }
 }
@@ -1330,12 +1330,13 @@ impl<T: Float> Sandwich<Imaginary<T>> for Imaginary<T> {
     #[inline]
     fn sandwich(&self, operand: &Imaginary<T>) -> Imaginary<T> {
         Imaginary::new_unchecked(
-            -(self.j() * operand.j() * self.i()) - self.i() * operand.i() * self.i()
-                + self.j() * operand.i() * self.j()
-                - self.i() * operand.j() * self.j(),
-            -(self.i() * operand.i() * self.j()) - self.j() * operand.i() * self.i()
-                + self.i() * operand.j() * self.i()
-                - self.j() * operand.j() * self.j(),
+            -(self.j() * operand.j() * self.i())
+                - self.i() * operand.i() * self.i()
+                - self.i() * operand.j() * self.j()
+                + self.j() * operand.i() * self.j(),
+            -(self.j() * operand.j() * self.j()) + self.i() * operand.j() * self.i()
+                - self.i() * operand.i() * self.j()
+                - self.j() * operand.i() * self.i(),
         )
     }
 }
@@ -1345,8 +1346,8 @@ impl<T: Float> Sandwich<Imaginary<T>> for Unit<Imaginary<T>> {
     #[inline]
     fn sandwich(&self, operand: &Imaginary<T>) -> Imaginary<T> {
         Imaginary::new_unchecked(
-            -T::TWO * operand.j() * self.as_inner().i() * self.as_inner().j()
-                + -(operand.i())
+            -(operand.i())
+                + -T::TWO * operand.j() * self.as_inner().i() * self.as_inner().j()
                 + T::TWO * operand.i() * self.as_inner().j() * self.as_inner().j(),
             -T::TWO * operand.i() * self.as_inner().i() * self.as_inner().j()
                 + -T::TWO * operand.j() * self.as_inner().j() * self.as_inner().j()
@@ -1360,11 +1361,11 @@ impl<T: Float> Sandwich<Unit<Imaginary<T>>> for Imaginary<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Imaginary<T>>) -> Imaginary<T> {
         Imaginary::new_unchecked(
-            -T::TWO * operand.as_inner().j() * self.i() * self.j()
-                + -(operand.as_inner().i() * self.i() * self.i())
+            -(operand.as_inner().i() * self.i() * self.i())
+                + -T::TWO * operand.as_inner().j() * self.i() * self.j()
                 + operand.as_inner().i() * self.j() * self.j(),
-            -T::TWO * operand.as_inner().i() * self.i() * self.j()
-                + -(operand.as_inner().j() * self.j() * self.j())
+            -(operand.as_inner().j() * self.j() * self.j())
+                + -T::TWO * operand.as_inner().i() * self.i() * self.j()
                 + operand.as_inner().j() * self.i() * self.i(),
         )
     }
@@ -1375,8 +1376,8 @@ impl<T: Float> Sandwich<Unit<Imaginary<T>>> for Unit<Imaginary<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Imaginary<T>>) -> Imaginary<T> {
         Imaginary::new_unchecked(
-            -T::TWO * operand.as_inner().j() * self.as_inner().i() * self.as_inner().j()
-                + -(operand.as_inner().i())
+            -(operand.as_inner().i())
+                + -T::TWO * operand.as_inner().j() * self.as_inner().i() * self.as_inner().j()
                 + T::TWO * operand.as_inner().i() * self.as_inner().j() * self.as_inner().j(),
             -T::TWO * operand.as_inner().i() * self.as_inner().i() * self.as_inner().j()
                 + -T::TWO * operand.as_inner().j() * self.as_inner().j() * self.as_inner().j()
@@ -1390,19 +1391,19 @@ impl<T: Float> Sandwich<Quaternion<T>> for Imaginary<T> {
     #[inline]
     fn sandwich(&self, operand: &Quaternion<T>) -> Quaternion<T> {
         Quaternion::new_unchecked(
-            -(self.i() * operand.w() * self.i()) - self.j() * operand.w() * self.j()
-                + self.i() * operand.k() * self.j()
-                - self.j() * operand.k() * self.i(),
-            -(self.i() * operand.i() * self.i()) + self.j() * operand.i() * self.j()
-                - self.j() * operand.j() * self.i()
-                - self.i() * operand.j() * self.j(),
-            -(self.i() * operand.i() * self.j())
+            -(self.j() * operand.w() * self.j())
+                - self.j() * operand.k() * self.i()
+                - self.i() * operand.w() * self.i()
+                + self.i() * operand.k() * self.j(),
+            -(self.i() * operand.j() * self.j()) - self.j() * operand.j() * self.i()
+                + self.j() * operand.i() * self.j()
+                - self.i() * operand.i() * self.i(),
+            self.i() * operand.j() * self.i()
                 - self.j() * operand.i() * self.i()
                 - self.j() * operand.j() * self.j()
-                + self.i() * operand.j() * self.i(),
-            -(self.j() * operand.w() * self.i())
+                - self.i() * operand.i() * self.j(),
+            self.i() * operand.w() * self.j() - self.j() * operand.w() * self.i()
                 + self.j() * operand.k() * self.j()
-                + self.i() * operand.w() * self.j()
                 + self.i() * operand.k() * self.i(),
         )
     }
@@ -1414,8 +1415,8 @@ impl<T: Float> Sandwich<Quaternion<T>> for Unit<Imaginary<T>> {
     fn sandwich(&self, operand: &Quaternion<T>) -> Quaternion<T> {
         Quaternion::new_unchecked(
             -(operand.w()),
-            -T::TWO * operand.j() * self.as_inner().i() * self.as_inner().j()
-                + -(operand.i())
+            -(operand.i())
+                + -T::TWO * operand.j() * self.as_inner().i() * self.as_inner().j()
                 + T::TWO * operand.i() * self.as_inner().j() * self.as_inner().j(),
             -T::TWO * operand.i() * self.as_inner().i() * self.as_inner().j()
                 + -T::TWO * operand.j() * self.as_inner().j() * self.as_inner().j()
@@ -1432,11 +1433,11 @@ impl<T: Float> Sandwich<Unit<Quaternion<T>>> for Imaginary<T> {
         Quaternion::new_unchecked(
             -(operand.as_inner().w() * self.i() * self.i())
                 + -(operand.as_inner().w() * self.j() * self.j()),
-            -T::TWO * operand.as_inner().j() * self.i() * self.j()
-                + -(operand.as_inner().i() * self.i() * self.i())
+            -(operand.as_inner().i() * self.i() * self.i())
+                + -T::TWO * operand.as_inner().j() * self.i() * self.j()
                 + operand.as_inner().i() * self.j() * self.j(),
-            -T::TWO * operand.as_inner().i() * self.i() * self.j()
-                + -(operand.as_inner().j() * self.j() * self.j())
+            -(operand.as_inner().j() * self.j() * self.j())
+                + -T::TWO * operand.as_inner().i() * self.i() * self.j()
                 + operand.as_inner().j() * self.i() * self.i(),
             operand.as_inner().k() * self.i() * self.i()
                 + operand.as_inner().k() * self.j() * self.j(),
@@ -1450,8 +1451,8 @@ impl<T: Float> Sandwich<Unit<Quaternion<T>>> for Unit<Imaginary<T>> {
     fn sandwich(&self, operand: &Unit<Quaternion<T>>) -> Quaternion<T> {
         Quaternion::new_unchecked(
             -(operand.as_inner().w()),
-            -T::TWO * operand.as_inner().j() * self.as_inner().i() * self.as_inner().j()
-                + -(operand.as_inner().i())
+            -(operand.as_inner().i())
+                + -T::TWO * operand.as_inner().j() * self.as_inner().i() * self.as_inner().j()
                 + T::TWO * operand.as_inner().i() * self.as_inner().j() * self.as_inner().j(),
             -T::TWO * operand.as_inner().i() * self.as_inner().i() * self.as_inner().j()
                 + -T::TWO * operand.as_inner().j() * self.as_inner().j() * self.as_inner().j()
@@ -1466,7 +1467,7 @@ impl<T: Float> Sandwich<Scalar<T>> for Imaginary<T> {
     #[inline]
     fn sandwich(&self, operand: &Scalar<T>) -> Scalar<T> {
         Scalar::new_unchecked(
-            -(self.j() * operand.s() * self.j()) - self.i() * operand.s() * self.i(),
+            -(self.i() * operand.s() * self.i()) - self.j() * operand.s() * self.j(),
         )
     }
 }
@@ -1801,7 +1802,7 @@ impl<T: Float> Antisandwich<Bivector<T>> for Imaginary<T> {
     #[inline]
     fn antisandwich(&self, operand: &Bivector<T>) -> Bivector<T> {
         Bivector::new_unchecked(
-            self.j() * operand.k() * self.j() + self.i() * operand.k() * self.i(),
+            self.i() * operand.k() * self.i() + self.j() * operand.k() * self.j(),
         )
     }
 }
@@ -1838,13 +1839,13 @@ impl<T: Float> Antisandwich<Imaginary<T>> for Imaginary<T> {
     #[inline]
     fn antisandwich(&self, operand: &Imaginary<T>) -> Imaginary<T> {
         Imaginary::new_unchecked(
-            self.i() * operand.i() * self.i() + self.i() * operand.j() * self.j()
-                - self.j() * operand.i() * self.j()
-                + self.j() * operand.j() * self.i(),
-            self.j() * operand.i() * self.i()
+            self.j() * operand.j() * self.i() - self.j() * operand.i() * self.j()
+                + self.i() * operand.i() * self.i()
+                + self.i() * operand.j() * self.j(),
+            -(self.i() * operand.j() * self.i())
+                + self.j() * operand.i() * self.i()
                 + self.i() * operand.i() * self.j()
-                + self.j() * operand.j() * self.j()
-                - self.i() * operand.j() * self.i(),
+                + self.j() * operand.j() * self.j(),
         )
     }
 }
@@ -1903,17 +1904,15 @@ impl<T: Float> Antisandwich<Quaternion<T>> for Imaginary<T> {
                 - self.i() * operand.w() * self.i()
                 - self.j() * operand.w() * self.j()
                 + self.j() * operand.k() * self.i(),
-            self.i() * operand.i() * self.i()
-                + self.i() * operand.j() * self.j()
-                + self.j() * operand.j() * self.i()
-                - self.j() * operand.i() * self.j(),
-            self.j() * operand.j() * self.j() - self.i() * operand.j() * self.i()
-                + self.i() * operand.i() * self.j()
+            self.j() * operand.j() * self.i() + self.i() * operand.i() * self.i()
+                - self.j() * operand.i() * self.j()
+                + self.i() * operand.j() * self.j(),
+            self.i() * operand.i() * self.j() - self.i() * operand.j() * self.i()
+                + self.j() * operand.j() * self.j()
                 + self.j() * operand.i() * self.i(),
-            -(self.i() * operand.w() * self.j())
-                + self.j() * operand.k() * self.j()
-                + self.j() * operand.w() * self.i()
-                + self.i() * operand.k() * self.i(),
+            self.j() * operand.k() * self.j() - self.i() * operand.w() * self.j()
+                + self.i() * operand.k() * self.i()
+                + self.j() * operand.w() * self.i(),
         )
     }
 }
@@ -2567,7 +2566,7 @@ impl<T: Float> InverseSandwich<Bivector<T>> for Imaginary<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Bivector::new_unchecked(
-            (self.j() * operand.k() * self.j() + self.i() * operand.k() * self.i()) * inv_norm_sq,
+            (self.i() * operand.k() * self.i() + self.j() * operand.k() * self.j()) * inv_norm_sq,
         ))
     }
 }
@@ -2582,13 +2581,12 @@ impl<T: Float> InverseSandwich<Imaginary<T>> for Imaginary<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Imaginary::new_unchecked(
-            (-(self.i() * operand.j() * self.j())
-                - self.i() * operand.i() * self.i()
+            (-(self.i() * operand.i() * self.i())
+                - self.i() * operand.j() * self.j()
                 - self.j() * operand.j() * self.i()
                 + self.j() * operand.i() * self.j())
                 * inv_norm_sq,
-            (self.i() * operand.j() * self.i()
-                - self.j() * operand.j() * self.j()
+            (-(self.j() * operand.j() * self.j()) + self.i() * operand.j() * self.i()
                 - self.i() * operand.i() * self.j()
                 - self.j() * operand.i() * self.i())
                 * inv_norm_sq,
@@ -2606,18 +2604,19 @@ impl<T: Float> InverseSandwich<Quaternion<T>> for Imaginary<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Quaternion::new_unchecked(
-            (-(self.i() * operand.w() * self.i())
-                - self.j() * operand.w() * self.j()
-                - self.j() * operand.k() * self.i()
-                + self.i() * operand.k() * self.j())
+            (-(self.j() * operand.w() * self.j()) + self.i() * operand.k() * self.j()
+                - self.i() * operand.w() * self.i()
+                - self.j() * operand.k() * self.i())
                 * inv_norm_sq,
-            (-(self.i() * operand.j() * self.j()) + self.j() * operand.i() * self.j()
-                - self.i() * operand.i() * self.i()
-                - self.j() * operand.j() * self.i())
+            (-(self.i() * operand.i() * self.i())
+                - self.j() * operand.j() * self.i()
+                - self.i() * operand.j() * self.j()
+                + self.j() * operand.i() * self.j())
                 * inv_norm_sq,
-            (-(self.j() * operand.j() * self.j()) - self.i() * operand.i() * self.j()
-                + self.i() * operand.j() * self.i()
-                - self.j() * operand.i() * self.i())
+            (-(self.j() * operand.j() * self.j())
+                - self.i() * operand.i() * self.j()
+                - self.j() * operand.i() * self.i()
+                + self.i() * operand.j() * self.i())
                 * inv_norm_sq,
             (self.i() * operand.w() * self.j() + self.i() * operand.k() * self.i()
                 - self.j() * operand.w() * self.i()
@@ -2796,9 +2795,10 @@ impl<T: Float> InverseAntisandwich<Imaginary<T>> for Imaginary<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Imaginary::new_unchecked(
-            (self.j() * operand.j() * self.i() - self.j() * operand.i() * self.j()
+            (-(self.j() * operand.i() * self.j())
                 + self.i() * operand.i() * self.i()
-                + self.i() * operand.j() * self.j())
+                + self.i() * operand.j() * self.j()
+                + self.j() * operand.j() * self.i())
                 * inv_norm_sq,
             (self.j() * operand.j() * self.j() - self.i() * operand.j() * self.i()
                 + self.j() * operand.i() * self.i()
@@ -2818,22 +2818,23 @@ impl<T: Float> InverseAntisandwich<Quaternion<T>> for Imaginary<T> {
         }
         let inv_norm_sq = T::one() / norm_sq;
         Some(Quaternion::new_unchecked(
-            (-(self.i() * operand.w() * self.i()) + self.j() * operand.k() * self.i()
-                - self.j() * operand.w() * self.j()
-                - self.i() * operand.k() * self.j())
+            (-(self.i() * operand.k() * self.j()) + self.j() * operand.k() * self.i()
+                - self.i() * operand.w() * self.i()
+                - self.j() * operand.w() * self.j())
                 * inv_norm_sq,
-            (self.i() * operand.i() * self.i() + self.i() * operand.j() * self.j()
-                - self.j() * operand.i() * self.j()
-                + self.j() * operand.j() * self.i())
+            (self.i() * operand.i() * self.i()
+                + self.j() * operand.j() * self.i()
+                + self.i() * operand.j() * self.j()
+                - self.j() * operand.i() * self.j())
                 * inv_norm_sq,
-            (-(self.i() * operand.j() * self.i())
-                + self.j() * operand.j() * self.j()
+            (self.j() * operand.j() * self.j()
                 + self.i() * operand.i() * self.j()
-                + self.j() * operand.i() * self.i())
+                + self.j() * operand.i() * self.i()
+                - self.i() * operand.j() * self.i())
                 * inv_norm_sq,
-            (self.j() * operand.w() * self.i() + self.j() * operand.k() * self.j()
-                - self.i() * operand.w() * self.j()
-                + self.i() * operand.k() * self.i())
+            (self.j() * operand.w() * self.i() - self.i() * operand.w() * self.j()
+                + self.i() * operand.k() * self.i()
+                + self.j() * operand.k() * self.j())
                 * inv_norm_sq,
         ))
     }
