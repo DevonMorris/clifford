@@ -551,12 +551,23 @@ fn render_educational_content(ui: &mut egui::Ui, content: &EducationalContent) {
 /// Open an external URL in a new tab.
 ///
 /// In WASM, egui hyperlinks don't always work with three-d's canvas,
-/// so we use web_sys to open URLs directly.
+/// so we create an anchor element and click it. This works better on
+/// mobile browsers which block window.open() when not triggered directly
+/// by a user gesture.
 fn open_external_url(url: &str) {
     #[cfg(target_arch = "wasm32")]
     {
+        use wasm_bindgen::JsCast;
         if let Some(window) = web_sys::window() {
-            let _ = window.open_with_url_and_target(url, "_blank");
+            if let Some(document) = window.document() {
+                if let Ok(anchor) = document.create_element("a") {
+                    let anchor: web_sys::HtmlAnchorElement = anchor.unchecked_into();
+                    anchor.set_href(url);
+                    anchor.set_target("_blank");
+                    anchor.set_rel("noopener noreferrer");
+                    anchor.click();
+                }
+            }
         }
     }
 

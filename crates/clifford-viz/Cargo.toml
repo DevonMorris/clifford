@@ -32,7 +32,7 @@ three-d = { version = "0.18", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
-web-sys = { version = "0.3", features = ["Window", "Location"] }
+web-sys = { version = "0.3", features = ["Document", "Element", "HtmlAnchorElement", "Location", "Window"] }
 getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [dev-dependencies]
