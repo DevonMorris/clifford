@@ -43,7 +43,7 @@ jobs:
           cargo test -p clifford
 
       - name: Publish clifford-codegen to crates.io
-        run: cargo publish -p clifford-codegen
+        run: cargo publish -p clifford-codegen || echo "clifford-codegen may already be published, continuing..."
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
