@@ -172,15 +172,23 @@ impl<T: Float> Point<T> {
     }
 
     /// Euclidean distance to another finite point.
+    ///
+    /// Note: Returns infinity or NaN if either point is ideal (at infinity).
     pub fn distance(&self, other: &Point<T>) -> T {
         self.distance_squared(other).sqrt()
     }
 
     /// Squared Euclidean distance.
+    ///
+    /// Correctly handles non-unitized points by normalizing to Cartesian
+    /// coordinates before computing the distance.
+    ///
+    /// Note: Returns infinity or NaN if either point is ideal (at infinity).
     pub fn distance_squared(&self, other: &Point<T>) -> T {
-        let dx = self.x() - other.x();
-        let dy = self.y() - other.y();
-        let dz = self.z() - other.z();
+        // Normalize to Cartesian coordinates for correct distance with any weight
+        let dx = self.x() / self.w() - other.x() / other.w();
+        let dy = self.y() / self.w() - other.y() / other.w();
+        let dz = self.z() / self.w() - other.z() / other.w();
         dx * dx + dy * dy + dz * dz
     }
 
@@ -863,27 +871,6 @@ impl<T: Float> Motor<T> {
             -sin_a * d.y(),                               // ry (e24) = -e42 - rotation velocity y
             -sin_a * d.z(),                               // rz (e34) = -e43 - rotation velocity z
             cos_a,                                        // ps = cos(θ/2) (identity part)
-        )
-    }
-
-    /// Inverse motor.
-    ///
-    /// Uses the weight norm squared (rotation part: e01² + e02² + e03² + e0123²)
-    /// for proper inversion. For a unit motor, this equals 1.
-    pub fn inverse(&self) -> Self {
-        use crate::norm::DegenerateNormed;
-        let wn_sq = self.weight_norm_squared();
-        let rev = self.reverse();
-        // new_unchecked signature: (s, bz, by, tx, bx, ty, tz, ps)
-        Self::new_unchecked(
-            rev.s() / wn_sq,
-            rev.tz() / wn_sq,
-            rev.ty() / wn_sq,
-            rev.tx() / wn_sq,
-            rev.rx() / wn_sq,
-            rev.ry() / wn_sq,
-            rev.rz() / wn_sq,
-            rev.ps() / wn_sq,
         )
     }
 

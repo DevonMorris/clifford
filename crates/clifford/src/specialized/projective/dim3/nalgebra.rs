@@ -433,6 +433,7 @@ mod tests {
             p in any::<UnitizedPoint<f64>>(),
         ) {
             // Inverse with clifford
+            use crate::ops::VersorInverse;
             let inv_ga = m.as_inner().inverse();
             let result_ga = inv_ga.transform(p.as_inner());
 

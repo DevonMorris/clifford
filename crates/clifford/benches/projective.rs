@@ -15,7 +15,7 @@
 use std::f64::consts::FRAC_PI_4;
 use std::hint::black_box;
 
-use clifford::ops::{Meet, Transform, Wedge};
+use clifford::ops::{Meet, Transform, VersorInverse, Wedge};
 use clifford::specialized::projective::dim3;
 use criterion::{Criterion, criterion_group, criterion_main};
 

@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-02
+
+### Added
+
+#### Code Generation System
+- **clifford-codegen**: Full-featured code generation tool for geometric algebras (#51)
+  - Define algebras declaratively via TOML specification files
+  - Automatic generation of types, traits, products, and conversions
+  - Groebner basis constraint simplification for wrapper types (#87)
+  - Semantic field names based on geometric meaning, not blade indices (#70)
+  - Auto-regeneration on every build via cargo build script (#69)
+  - Project and Antiproject traits for geometric projections (#73)
+  - Interior products with RGA duality laws (#59)
+
+#### New Algebras (15 total)
+All algebras defined declaratively via codegen TOML specs:
+- **Complex numbers** Cl(0,1,0): Real and imaginary components (#75)
+- **Dual numbers** Cl(0,0,1): Real and infinitesimal components (#76)
+- **Hyperbolic numbers** Cl(1,0,0): Split-complex numbers (#74)
+- **Quaternions** Cl(0,2,0): 3D rotation algebra (#79)
+- **Dual quaternions** Cl(0,2,1): Rigid body transformations (#81)
+- **2D Minkowski** Cl(1,1,0): 1+1 spacetime (#80)
+- **3D Minkowski** Cl(3,1,0): 3+1 spacetime (#84)
+- **2D Hyperbolic** Cl(2,1,0): Hyperbolic plane geometry (#83)
+- **2D Elliptic** Cl(3,0,0): Elliptic projective geometry (#82)
+- **2D Conformal GA** Cl(3,1,0): Circles, inversions, Mobius transforms (#95)
+- **3D Conformal GA** Cl(4,1,0): Spheres, circles, conformal transforms (#86)
+
+#### Visualization Crate (clifford-viz)
+- **New crate**: Interactive visualization demos at clifford-rs.dev (#93)
+- **2D rendering**: egui/eframe integration with dark/light theme support
+- **3D rendering**: three-d backend for native and WASM (#124, #127)
+- **WASM deployment**: Live demos at https://clifford-rs.dev (#105)
+- **Mobile support**: Responsive design for all screen sizes (#111, #112)
+
+##### Visualization Demos
+- **Euclidean 2D**: Rotor rotation with angle interpolation (#94)
+- **Euclidean 3D**: Quaternion-based 3D rotations (#127)
+- **Projective 2D**: Interactive point/line/motor manipulations (#99)
+- **Projective 3D**: 3D rigid transformations and robot arm demo (#101, #128)
+- **Conformal 2D**: Circle inversion, Mobius transforms, circle from 3 points (#104, #108, #119)
+- **Conformal 3D**: 3D conformal transformations (#130)
+- **Complex/Dual**: Number system visualizations (#116)
+
+#### Infrastructure
+- **Workspace restructure**: Main crate moved to crates/clifford (#91)
+- **Build performance**: Symbolica compile time reduced from 313s to 43s (#92)
+- **CI improvements**: Cache generated code to avoid rebuild conflicts (#97)
+- **Visual testing**: Property-based visual invariant testing (#102)
+
+### Changed
+- Migrated euclidean and projective types to use codegen (#53, #54, #56)
+- Extension methods now prefer generated traits over manual implementations (#71, #72)
+- Product traits use method-based API for ergonomics (#62)
+- Versor `inverse()` is now provided by the `VersorInverse` trait (alongside `try_inverse()`), removing bespoke implementations from extensions
+
+### Fixed
+- Point::distance_squared now correctly handles non-unitized homogeneous points
+- Clippy compliance for all targets including tests
+- Orthonormal basis conventions for 2D CGA (#115)
+- Rotation direction in euclidean algebras (#68)
+- Infinite line clipping in visualization (#103)
+
 ## [0.1.0] - 2026-01-11
 
 ### Added

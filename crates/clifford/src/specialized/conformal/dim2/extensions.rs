@@ -627,27 +627,6 @@ impl<T: Float> Motor<T> {
     pub fn compose(&self, other: Self) -> Self {
         other * *self
     }
-
-    /// Returns the inverse motor.
-    ///
-    /// For a versor V, the inverse is V† / |V|².
-    pub fn inverse(&self) -> Self {
-        let rev = self.reverse();
-        let norm_sq = self.norm_squared();
-        if norm_sq.abs() < T::epsilon() {
-            return *self;
-        }
-        Self::new_unchecked(
-            rev.s() / norm_sq,
-            rev.m() / norm_sq,
-            rev.e1ep() / norm_sq,
-            rev.e2ep() / norm_sq,
-            rev.e1em() / norm_sq,
-            rev.e2em() / norm_sq,
-            rev.epem() / norm_sq,
-            rev.ps() / norm_sq,
-        )
-    }
 }
 
 // ============================================================================

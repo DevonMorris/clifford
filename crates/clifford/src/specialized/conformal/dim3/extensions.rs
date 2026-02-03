@@ -709,35 +709,6 @@ impl<T: Float> Motor<T> {
             T::zero(), // sw
         )
     }
-
-    /// Returns the inverse motor.
-    ///
-    /// For a versor V, the inverse is V_rev / |V|^2.
-    pub fn inverse(&self) -> Self {
-        let rev = self.reverse();
-        let norm_sq = self.norm_squared();
-        if norm_sq.abs() < T::epsilon() {
-            return *self;
-        }
-        Self::new_unchecked(
-            rev.s() / norm_sq,
-            rev.mx() / norm_sq,
-            rev.my() / norm_sq,
-            rev.mz() / norm_sq,
-            rev.vx() / norm_sq,
-            rev.vy() / norm_sq,
-            rev.vz() / norm_sq,
-            rev.px() / norm_sq,
-            rev.py() / norm_sq,
-            rev.pz() / norm_sq,
-            rev.pw() / norm_sq,
-            rev.u() / norm_sq,
-            rev.sx() / norm_sq,
-            rev.sy() / norm_sq,
-            rev.sz() / norm_sq,
-            rev.sw() / norm_sq,
-        )
-    }
 }
 
 #[cfg(test)]
@@ -1051,8 +1022,7 @@ mod tests {
         // Test circles
         println!("\n--- CIRCLES ---");
 
-        fn analyze_circle(
-            name: &str,
+        struct CircleParams {
             cx: f64,
             cy: f64,
             cz: f64,
@@ -1060,7 +1030,18 @@ mod tests {
             nx: f64,
             ny: f64,
             nz: f64,
-        ) {
+        }
+
+        fn analyze_circle(name: &str, p: CircleParams) {
+            let CircleParams {
+                cx,
+                cy,
+                cz,
+                r,
+                nx,
+                ny,
+                nz,
+            } = p;
             // Create circle in plane with given normal, centered at (cx, cy, cz)
             // Use three points: center + r*perp1, center + r*perp2, center - r*perp1
             let (px, py, pz) = if nx.abs() < 0.9 {
@@ -1155,13 +1136,57 @@ mod tests {
         }
 
         // Unit circle in xy-plane at origin
-        analyze_circle("C1", 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+        analyze_circle(
+            "C1",
+            CircleParams {
+                cx: 0.0,
+                cy: 0.0,
+                cz: 0.0,
+                r: 1.0,
+                nx: 0.0,
+                ny: 0.0,
+                nz: 1.0,
+            },
+        );
         // Circle at (1,2,0) in xy-plane
-        analyze_circle("C2", 1.0, 2.0, 0.0, 1.0, 0.0, 0.0, 1.0);
+        analyze_circle(
+            "C2",
+            CircleParams {
+                cx: 1.0,
+                cy: 2.0,
+                cz: 0.0,
+                r: 1.0,
+                nx: 0.0,
+                ny: 0.0,
+                nz: 1.0,
+            },
+        );
         // Circle at origin in xz-plane
-        analyze_circle("C3", 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0);
+        analyze_circle(
+            "C3",
+            CircleParams {
+                cx: 0.0,
+                cy: 0.0,
+                cz: 0.0,
+                r: 1.0,
+                nx: 0.0,
+                ny: 1.0,
+                nz: 0.0,
+            },
+        );
         // Circle at (1,1,1) with z-normal
-        analyze_circle("C4", 1.0, 1.0, 1.0, 2.0, 0.0, 0.0, 1.0);
+        analyze_circle(
+            "C4",
+            CircleParams {
+                cx: 1.0,
+                cy: 1.0,
+                cz: 1.0,
+                r: 2.0,
+                nx: 0.0,
+                ny: 0.0,
+                nz: 1.0,
+            },
+        );
     }
 
     // =========================================================================
