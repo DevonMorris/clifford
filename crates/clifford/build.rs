@@ -106,7 +106,11 @@ fn regenerate_algebras() {
     }
 
     impl AlgebraConfig {
-        const fn new(name: &'static str, toml_path: &'static str, output_dir: &'static str) -> Self {
+        const fn new(
+            name: &'static str,
+            toml_path: &'static str,
+            output_dir: &'static str,
+        ) -> Self {
             Self {
                 name,
                 toml_path,
@@ -234,11 +238,7 @@ fn regenerate_algebras() {
             .status();
 
         if let Err(e) = status {
-            eprintln!(
-                "Warning: rustfmt failed for {}: {}",
-                path.display(),
-                e
-            );
+            eprintln!("Warning: rustfmt failed for {}: {}", path.display(), e);
         }
     }
 
@@ -299,7 +299,11 @@ fn regenerate_algebras() {
         format_file(&traits_path);
 
         let elapsed = start.elapsed();
-        log_debug!("  Completed {} in {:.2}ms", config.name, elapsed.as_secs_f64() * 1000.0);
+        log_debug!(
+            "  Completed {} in {:.2}ms",
+            config.name,
+            elapsed.as_secs_f64() * 1000.0
+        );
     }
 
     // Main codegen logic
