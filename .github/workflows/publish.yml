@@ -42,7 +42,15 @@ jobs:
           cargo clippy -p clifford -- -D warnings
           cargo test -p clifford
 
-      - name: Publish to crates.io
+      - name: Publish clifford-codegen to crates.io
+        run: cargo publish -p clifford-codegen
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for crates.io to index clifford-codegen
+        run: sleep 30
+
+      - name: Publish clifford to crates.io
         run: cargo publish -p clifford
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
