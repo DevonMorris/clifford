@@ -111,10 +111,10 @@ assert!(relative_eq!(a, b, epsilon = 1e-10, max_relative = 1e-10));
 
 ```bash
 # Generate for one algebra
-cargo run --package clifford-codegen -- generate algebras/projective3.toml --force
+cargo run --package clifford-codegen -- generate crates/clifford-codegen/algebras/projective3.toml --force
 
 # Regenerate all algebras
-for toml in algebras/*.toml; do
+for toml in crates/clifford-codegen/algebras/*.toml; do
     cargo run --package clifford-codegen -- generate "$toml" --force
 done
 
@@ -238,7 +238,7 @@ When adding a new product or unary operation to codegen, you must:
 
 5. **Regenerate all algebras**
    ```bash
-   for toml in algebras/*.toml; do
+   for toml in crates/clifford-codegen/algebras/*.toml; do
        cargo run --package clifford-codegen -- generate "$toml" --force
    done
    ```

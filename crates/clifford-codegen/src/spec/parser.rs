@@ -1224,7 +1224,7 @@ mod tests {
 
     #[test]
     fn products_are_inferred_euclidean3() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
 
         // All product types should be inferred
         assert!(
@@ -1243,7 +1243,7 @@ mod tests {
 
     #[test]
     fn blade_indices_are_canonical_euclidean2() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean2.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean2.toml")).unwrap();
 
         for ty in &spec.types {
             assert!(
@@ -1257,7 +1257,7 @@ mod tests {
 
     #[test]
     fn blade_indices_are_canonical_euclidean3() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
 
         for ty in &spec.types {
             assert!(

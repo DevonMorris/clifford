@@ -5440,7 +5440,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_add_impl() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5453,7 +5453,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_sub_impl() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5466,7 +5466,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_neg_impl() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5479,7 +5479,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_scalar_mul() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5495,7 +5495,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_geometric_mul() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5512,7 +5512,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_wedge() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5530,7 +5530,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_approx_impls() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);
@@ -5545,7 +5545,7 @@ mod tests {
 
     #[test]
     fn symbolica_generates_arbitrary_impls() {
-        let spec = parse_spec(include_str!("../../../../algebras/euclidean3.toml")).unwrap();
+        let spec = parse_spec(include_str!("../../algebras/euclidean3.toml")).unwrap();
         let algebra = Algebra::euclidean(3);
         let table = ProductTable::new(&algebra);
         let generator = TraitsGenerator::new(&spec, &algebra, table);

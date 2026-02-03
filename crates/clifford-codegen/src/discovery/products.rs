@@ -1072,53 +1072,53 @@ mod tests {
         let algebras = [
             (
                 "euclidean2",
-                include_str!("../../../../algebras/euclidean2.toml"),
+                include_str!("../../algebras/euclidean2.toml"),
             ),
             (
                 "euclidean3",
-                include_str!("../../../../algebras/euclidean3.toml"),
+                include_str!("../../algebras/euclidean3.toml"),
             ),
             (
                 "projective2",
-                include_str!("../../../../algebras/projective2.toml"),
+                include_str!("../../algebras/projective2.toml"),
             ),
             (
                 "projective3",
-                include_str!("../../../../algebras/projective3.toml"),
+                include_str!("../../algebras/projective3.toml"),
             ),
             (
                 "conformal3",
-                include_str!("../../../../algebras/conformal3.toml"),
+                include_str!("../../algebras/conformal3.toml"),
             ),
             (
                 "quaternion",
-                include_str!("../../../../algebras/quaternion.toml"),
+                include_str!("../../algebras/quaternion.toml"),
             ),
             (
                 "dualquat",
-                include_str!("../../../../algebras/dualquat.toml"),
+                include_str!("../../algebras/dualquat.toml"),
             ),
-            ("complex", include_str!("../../../../algebras/complex.toml")),
-            ("dual", include_str!("../../../../algebras/dual.toml")),
+            ("complex", include_str!("../../algebras/complex.toml")),
+            ("dual", include_str!("../../algebras/dual.toml")),
             (
                 "hyperbolic",
-                include_str!("../../../../algebras/hyperbolic.toml"),
+                include_str!("../../algebras/hyperbolic.toml"),
             ),
             (
                 "minkowski2",
-                include_str!("../../../../algebras/minkowski2.toml"),
+                include_str!("../../algebras/minkowski2.toml"),
             ),
             (
                 "minkowski3",
-                include_str!("../../../../algebras/minkowski3.toml"),
+                include_str!("../../algebras/minkowski3.toml"),
             ),
             (
                 "elliptic2",
-                include_str!("../../../../algebras/elliptic2.toml"),
+                include_str!("../../algebras/elliptic2.toml"),
             ),
             (
                 "hyperbolic2",
-                include_str!("../../../../algebras/hyperbolic2.toml"),
+                include_str!("../../algebras/hyperbolic2.toml"),
             ),
         ];
 

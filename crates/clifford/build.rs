@@ -80,78 +80,78 @@ fn regenerate_algebras() {
     const ALGEBRAS: &[AlgebraConfig] = &[
         AlgebraConfig::new(
             "euclidean2",
-            "../../algebras/euclidean2.toml",
+            "../clifford-codegen/algebras/euclidean2.toml",
             "src/specialized/euclidean/dim2/generated",
         ),
         AlgebraConfig::new(
             "euclidean3",
-            "../../algebras/euclidean3.toml",
+            "../clifford-codegen/algebras/euclidean3.toml",
             "src/specialized/euclidean/dim3/generated",
         ),
         AlgebraConfig::new(
             "projective2",
-            "../../algebras/projective2.toml",
+            "../clifford-codegen/algebras/projective2.toml",
             "src/specialized/projective/dim2/generated",
         ),
         AlgebraConfig::new(
             "projective3",
-            "../../algebras/projective3.toml",
+            "../clifford-codegen/algebras/projective3.toml",
             "src/specialized/projective/dim3/generated",
         ),
         AlgebraConfig::new(
             "complex",
-            "../../algebras/complex.toml",
+            "../clifford-codegen/algebras/complex.toml",
             "src/specialized/complex/generated",
         ),
         AlgebraConfig::new(
             "quaternion",
-            "../../algebras/quaternion.toml",
+            "../clifford-codegen/algebras/quaternion.toml",
             "src/specialized/quaternion/generated",
         ),
         AlgebraConfig::new(
             "dual",
-            "../../algebras/dual.toml",
+            "../clifford-codegen/algebras/dual.toml",
             "src/specialized/dual/generated",
         ),
         AlgebraConfig::new(
             "hyperbolic",
-            "../../algebras/hyperbolic.toml",
+            "../clifford-codegen/algebras/hyperbolic.toml",
             "src/specialized/hyperbolic/generated",
         ),
         AlgebraConfig::new(
             "minkowski2",
-            "../../algebras/minkowski2.toml",
+            "../clifford-codegen/algebras/minkowski2.toml",
             "src/specialized/minkowski/dim2/generated",
         ),
         AlgebraConfig::new(
             "dualquat",
-            "../../algebras/dualquat.toml",
+            "../clifford-codegen/algebras/dualquat.toml",
             "src/specialized/dualquat/generated",
         ),
         AlgebraConfig::new(
             "elliptic2",
-            "../../algebras/elliptic2.toml",
+            "../clifford-codegen/algebras/elliptic2.toml",
             "src/specialized/elliptic/dim2/generated",
         ),
         AlgebraConfig::new(
             "hyperbolic2",
-            "../../algebras/hyperbolic2.toml",
+            "../clifford-codegen/algebras/hyperbolic2.toml",
             "src/specialized/hyperbolic/dim2/generated",
         ),
         AlgebraConfig::new(
             "minkowski3",
-            "../../algebras/minkowski3.toml",
+            "../clifford-codegen/algebras/minkowski3.toml",
             "src/specialized/minkowski/dim3/generated",
         ),
         AlgebraConfig::new(
             "conformal3",
-            "../../algebras/conformal3.toml",
+            "../clifford-codegen/algebras/conformal3.toml",
             "src/specialized/conformal/dim3/generated",
         )
         .with_no_groebner(),
         AlgebraConfig::new(
             "conformal2",
-            "../../algebras/conformal2.toml",
+            "../clifford-codegen/algebras/conformal2.toml",
             "src/specialized/conformal/dim2/generated",
         )
         .with_no_groebner(),
