@@ -125,17 +125,6 @@ impl<T: Float> Rotor<T> {
         Self::from_angle(angle)
     }
 
-    /// Returns the inverse rotor: `R⁻¹ = R̃ / |R|²`.
-    ///
-    /// For unit rotors, this is equivalent to the reverse.
-    #[inline]
-    pub fn inverse(&self) -> Self {
-        let norm_sq = self.norm_squared();
-        let rev = self.reverse();
-        // Use new_unchecked since inverse preserves unit constraint
-        Self::new_unchecked(rev.s() / norm_sq, rev.b() / norm_sq)
-    }
-
     /// Composes two rotations: `R₂ ∘ R₁ = R₂ R₁`.
     ///
     /// The result applies `self` first, then `other`.

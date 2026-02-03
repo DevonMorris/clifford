@@ -695,6 +695,21 @@ pub trait VersorInverse {
     fn try_inverse(&self) -> Option<Self>
     where
         Self: Sized;
+
+    /// Computes the versor inverse.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the versor has zero norm and is thus not invertible.
+    /// Use [`try_inverse`](Self::try_inverse) for a non-panicking version.
+    #[inline]
+    fn inverse(&self) -> Self
+    where
+        Self: Sized,
+    {
+        self.try_inverse()
+            .expect("cannot invert versor with zero norm")
+    }
 }
 
 // ============================================================================

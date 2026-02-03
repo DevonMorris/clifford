@@ -278,24 +278,6 @@ impl<T: Float> Motor<T> {
         from_origin.compose(&rotation.compose(&to_origin))
     }
 
-    /// Inverse motor.
-    ///
-    /// For a unit motor, the inverse is the antireverse.
-    pub fn inverse(&self) -> Self {
-        use crate::norm::DegenerateNormed;
-        let norm_sq = self.weight_norm_squared();
-        if norm_sq < T::epsilon() {
-            return *self;
-        }
-        let rev = self.antireverse();
-        Self::new(
-            rev.ty() / norm_sq,
-            rev.tx() / norm_sq,
-            rev.r() / norm_sq,
-            rev.ps() / norm_sq,
-        )
-    }
-
     /// Extract rotation angle.
     pub fn rotation_angle(&self) -> T {
         let cos_half = self.ps().min(T::one()).max(-T::one());
