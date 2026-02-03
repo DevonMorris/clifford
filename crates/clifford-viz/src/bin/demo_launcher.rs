@@ -170,24 +170,34 @@ fn run_demo<T: VisualizationApp + Default + 'static>(title: &str) {
 /// State for the menu screen.
 struct MenuState {
     logo_texture: Option<egui::TextureHandle>,
+    logo_load_attempted: bool,
 }
 
 impl MenuState {
     fn new() -> Self {
-        Self { logo_texture: None }
+        Self {
+            logo_texture: None,
+            logo_load_attempted: false,
+        }
     }
 
-    fn get_logo(&mut self, ctx: &egui::Context) -> &egui::TextureHandle {
-        self.logo_texture.get_or_insert_with(|| {
+    fn get_logo(&mut self, ctx: &egui::Context) -> Option<&egui::TextureHandle> {
+        if !self.logo_load_attempted {
+            self.logo_load_attempted = true;
             let image_bytes = include_bytes!("../../clifford.png");
-            let image = image::load_from_memory(image_bytes)
-                .expect("Failed to load logo")
-                .to_rgba8();
-            let size = [image.width() as usize, image.height() as usize];
-            let pixels = image.into_raw();
-            let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
-            ctx.load_texture("clifford-logo", color_image, egui::TextureOptions::LINEAR)
-        })
+            if let Ok(image) = image::load_from_memory(image_bytes) {
+                let image = image.to_rgba8();
+                let size = [image.width() as usize, image.height() as usize];
+                let pixels = image.into_raw();
+                let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
+                self.logo_texture = Some(ctx.load_texture(
+                    "clifford-logo",
+                    color_image,
+                    egui::TextureOptions::LINEAR,
+                ));
+            }
+        }
+        self.logo_texture.as_ref()
     }
 }
 
@@ -371,7 +381,7 @@ fn render_menu_ui(ctx: &egui::Context, state: &mut MenuState) {
     let is_mobile = use_mobile_layout(ctx);
     let sp = if is_mobile { 1.0 } else { 1.5 };
 
-    // Get logo texture
+    // Get logo texture (may fail on some platforms)
     let logo = state.get_logo(ctx);
     let logo_size = if is_mobile {
         egui::vec2(80.0, 80.0)
@@ -384,9 +394,11 @@ fn render_menu_ui(ctx: &egui::Context, state: &mut MenuState) {
             ui.vertical_centered(|ui| {
                 ui.add_space(24.0 * sp);
 
-                // Logo
-                ui.add(egui::Image::new(logo).fit_to_exact_size(logo_size));
-                ui.add_space(8.0 * sp);
+                // Logo (only show if loaded successfully)
+                if let Some(logo) = logo {
+                    ui.add(egui::Image::new(logo).fit_to_exact_size(logo_size));
+                    ui.add_space(8.0 * sp);
+                }
 
                 // Title
                 ui.heading(egui::RichText::new("Clifford").strong());
