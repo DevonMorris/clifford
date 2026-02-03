@@ -61,14 +61,14 @@ impl<T: Float> Mul<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.j())
     }
 }
 impl<T: Float> Mul<Hyperbolic<T>> for HypUnit<T> {
     type Output = Hyperbolic<T>;
     #[inline]
     fn mul(self, rhs: Hyperbolic<T>) -> Hyperbolic<T> {
-        Hyperbolic::new_unchecked(self.j() * rhs.hyp(), rhs.real() * self.j())
+        Hyperbolic::new_unchecked(rhs.hyp() * self.j(), rhs.real() * self.j())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for HypUnit<T> {
@@ -124,7 +124,7 @@ impl<T: Float> Mul<HypUnit<T>> for Hyperbolic<T> {
     type Output = Hyperbolic<T>;
     #[inline]
     fn mul(self, rhs: HypUnit<T>) -> Hyperbolic<T> {
-        Hyperbolic::new_unchecked(rhs.j() * self.hyp(), self.real() * rhs.j())
+        Hyperbolic::new_unchecked(rhs.j() * self.hyp(), rhs.j() * self.real())
     }
 }
 impl<T: Float> Mul<Hyperbolic<T>> for Hyperbolic<T> {
@@ -132,8 +132,8 @@ impl<T: Float> Mul<Hyperbolic<T>> for Hyperbolic<T> {
     #[inline]
     fn mul(self, rhs: Hyperbolic<T>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
-            self.real() * rhs.real() + self.hyp() * rhs.hyp(),
-            self.real() * rhs.hyp() + rhs.real() * self.hyp(),
+            rhs.hyp() * self.hyp() + rhs.real() * self.real(),
+            rhs.hyp() * self.real() + rhs.real() * self.hyp(),
         )
     }
 }
@@ -190,21 +190,21 @@ impl<T: Float> Mul<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn mul(self, rhs: HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.s())
     }
 }
 impl<T: Float> Mul<Hyperbolic<T>> for Scalar<T> {
     type Output = Hyperbolic<T>;
     #[inline]
     fn mul(self, rhs: Hyperbolic<T>) -> Hyperbolic<T> {
-        Hyperbolic::new_unchecked(self.s() * rhs.real(), self.s() * rhs.hyp())
+        Hyperbolic::new_unchecked(rhs.real() * self.s(), rhs.hyp() * self.s())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for HypUnit<T> {
@@ -242,7 +242,7 @@ impl<T: Float> Wedge<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -250,7 +250,7 @@ impl<T: Float> Wedge<HypUnit<T>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -258,7 +258,7 @@ impl<T: Float> Wedge<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -266,14 +266,14 @@ impl<T: Float> Wedge<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -281,7 +281,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -289,7 +289,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -297,14 +297,14 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antiwedge<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -312,7 +312,7 @@ impl<T: Float> Antiwedge<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -320,7 +320,7 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -328,7 +328,7 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> Antiwedge<Scalar<T>> for HypUnit<T> {
@@ -366,7 +366,7 @@ impl<T: Float> Antiwedge<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -374,7 +374,7 @@ impl<T: Float> Antiwedge<HypUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -382,7 +382,7 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -390,14 +390,14 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -405,7 +405,7 @@ impl<T: Float> LeftContract<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -413,7 +413,7 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -421,14 +421,14 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> LeftContract<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -436,7 +436,7 @@ impl<T: Float> LeftContract<HypUnit<T>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -444,7 +444,7 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -452,14 +452,14 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -467,7 +467,7 @@ impl<T: Float> LeftContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -475,7 +475,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -483,14 +483,14 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> RightContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -498,7 +498,7 @@ impl<T: Float> RightContract<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -506,7 +506,7 @@ impl<T: Float> RightContract<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -514,7 +514,7 @@ impl<T: Float> RightContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for HypUnit<T> {
@@ -552,7 +552,7 @@ impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -560,7 +560,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -568,7 +568,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -576,7 +576,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -600,7 +600,7 @@ impl<T: Float> Sandwich<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * self.j() * operand.as_inner().j())
+        HypUnit::new_unchecked(operand.as_inner().j() * self.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -637,7 +637,7 @@ impl<T: Float> Sandwich<Unit<Hyperbolic<T>>> for HypUnit<T> {
     fn sandwich(&self, operand: &Unit<Hyperbolic<T>>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
             operand.as_inner().real() * self.j() * self.j(),
-            self.j() * self.j() * operand.as_inner().hyp(),
+            operand.as_inner().hyp() * self.j() * self.j(),
         )
     }
 }
@@ -702,7 +702,7 @@ impl<T: Float> Sandwich<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * self.s() * operand.as_inner().j())
+        HypUnit::new_unchecked(operand.as_inner().j() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -738,8 +738,8 @@ impl<T: Float> Sandwich<Unit<Hyperbolic<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Hyperbolic<T>>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
-            self.s() * self.s() * operand.as_inner().real(),
-            self.s() * self.s() * operand.as_inner().hyp(),
+            operand.as_inner().real() * self.s() * self.s(),
+            operand.as_inner().hyp() * self.s() * self.s(),
         )
     }
 }
@@ -772,7 +772,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -804,7 +804,7 @@ impl<T: Float> Antisandwich<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * self.j() * operand.as_inner().j())
+        HypUnit::new_unchecked(operand.as_inner().j() * self.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -841,7 +841,7 @@ impl<T: Float> Antisandwich<Unit<Hyperbolic<T>>> for HypUnit<T> {
     fn antisandwich(&self, operand: &Unit<Hyperbolic<T>>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
             operand.as_inner().real() * self.j() * self.j(),
-            self.j() * self.j() * operand.as_inner().hyp(),
+            operand.as_inner().hyp() * self.j() * self.j(),
         )
     }
 }
@@ -906,7 +906,7 @@ impl<T: Float> Antisandwich<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * self.s() * operand.as_inner().j())
+        HypUnit::new_unchecked(operand.as_inner().j() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -942,8 +942,8 @@ impl<T: Float> Antisandwich<Unit<Hyperbolic<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Hyperbolic<T>>) -> Hyperbolic<T> {
         Hyperbolic::new_unchecked(
-            self.s() * self.s() * operand.as_inner().real(),
-            self.s() * self.s() * operand.as_inner().hyp(),
+            operand.as_inner().real() * self.s() * self.s(),
+            operand.as_inner().hyp() * self.s() * self.s(),
         )
     }
 }
@@ -976,7 +976,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1379,7 +1379,7 @@ impl<T: Float> ScalarProduct<HypUnit<T>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &HypUnit<T>) -> T {
-        self.as_inner().j() * rhs.j()
+        rhs.j() * self.as_inner().j()
     }
 }
 #[allow(unused_variables)]
@@ -1387,7 +1387,7 @@ impl<T: Float> ScalarProduct<Unit<HypUnit<T>>> for HypUnit<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.j()
     }
 }
 #[allow(unused_variables)]
@@ -1395,7 +1395,7 @@ impl<T: Float> ScalarProduct<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.as_inner().j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.as_inner().j()
     }
 }
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
@@ -1410,7 +1410,7 @@ impl<T: Float> ScalarProduct<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -1418,7 +1418,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -1426,14 +1426,14 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> BulkContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1441,7 +1441,7 @@ impl<T: Float> BulkContract<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -1449,7 +1449,7 @@ impl<T: Float> BulkContract<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1457,7 +1457,7 @@ impl<T: Float> BulkContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for HypUnit<T> {
@@ -1495,7 +1495,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1503,7 +1503,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1511,7 +1511,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1519,14 +1519,14 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1534,7 +1534,7 @@ impl<T: Float> WeightContract<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -1542,7 +1542,7 @@ impl<T: Float> WeightContract<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1550,7 +1550,7 @@ impl<T: Float> WeightContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for HypUnit<T> {
@@ -1588,7 +1588,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1596,7 +1596,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1604,7 +1604,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1612,14 +1612,14 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1627,7 +1627,7 @@ impl<T: Float> BulkExpand<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -1635,7 +1635,7 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1643,14 +1643,14 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> BulkExpand<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1658,7 +1658,7 @@ impl<T: Float> BulkExpand<HypUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1666,7 +1666,7 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1674,14 +1674,14 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.s())
+        HypUnit::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1689,7 +1689,7 @@ impl<T: Float> BulkExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.s())
+        HypUnit::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1697,7 +1697,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.as_inner().s())
+        HypUnit::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1705,14 +1705,14 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightExpand<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1720,7 +1720,7 @@ impl<T: Float> WeightExpand<HypUnit<T>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &HypUnit<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.j())
+        HypUnit::new_unchecked(rhs.j() * self.as_inner().j())
     }
 }
 #[allow(unused_variables)]
@@ -1728,7 +1728,7 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.j())
     }
 }
 #[allow(unused_variables)]
@@ -1736,14 +1736,14 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<HypUnit<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().j() * rhs.as_inner().j())
+        HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
 impl<T: Float> WeightExpand<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1751,7 +1751,7 @@ impl<T: Float> WeightExpand<HypUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &HypUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.j())
+        Scalar::new_unchecked(rhs.j() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1759,7 +1759,7 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1767,14 +1767,14 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<HypUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().j())
+        Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.s())
+        HypUnit::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1782,7 +1782,7 @@ impl<T: Float> WeightExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.s())
+        HypUnit::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1790,7 +1790,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.s() * rhs.as_inner().s())
+        HypUnit::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1798,7 +1798,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = HypUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> HypUnit<T> {
-        HypUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Dot<HypUnit<T>> for HypUnit<T> {
@@ -1813,7 +1813,7 @@ impl<T: Float> Dot<HypUnit<T>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &HypUnit<T>) -> T {
-        self.as_inner().j() * rhs.j()
+        rhs.j() * self.as_inner().j()
     }
 }
 #[allow(unused_variables)]
@@ -1821,7 +1821,7 @@ impl<T: Float> Dot<Unit<HypUnit<T>>> for HypUnit<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.j()
     }
 }
 #[allow(unused_variables)]
@@ -1829,7 +1829,7 @@ impl<T: Float> Dot<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.as_inner().j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.as_inner().j()
     }
 }
 impl<T: Float> Dot<Hyperbolic<T>> for HypUnit<T> {
@@ -1844,7 +1844,7 @@ impl<T: Float> Dot<Hyperbolic<T>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().j() * rhs.hyp()
+        rhs.hyp() * self.as_inner().j()
     }
 }
 #[allow(unused_variables)]
@@ -1852,7 +1852,7 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for HypUnit<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.j() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.j()
     }
 }
 #[allow(unused_variables)]
@@ -1860,7 +1860,7 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().j() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.as_inner().j()
     }
 }
 impl<T: Float> Dot<HypUnit<T>> for Hyperbolic<T> {
@@ -1906,7 +1906,7 @@ impl<T: Float> Dot<Hyperbolic<T>> for Unit<Hyperbolic<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().real() * rhs.real() + self.as_inner().hyp() * rhs.hyp()
+        rhs.hyp() * self.as_inner().hyp() + rhs.real() * self.as_inner().real()
     }
 }
 #[allow(unused_variables)]
@@ -1914,7 +1914,7 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for Hyperbolic<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.real() * rhs.as_inner().real() + self.hyp() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.hyp() + rhs.as_inner().real() * self.real()
     }
 }
 #[allow(unused_variables)]
@@ -1922,8 +1922,8 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for Unit<Hyperbolic<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().real() * rhs.as_inner().real()
-            + self.as_inner().hyp() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.as_inner().hyp()
+            + rhs.as_inner().real() * self.as_inner().real()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Hyperbolic<T> {
@@ -1969,7 +1969,7 @@ impl<T: Float> Dot<Hyperbolic<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().s() * rhs.real()
+        rhs.real() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -1977,7 +1977,7 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -1985,7 +1985,7 @@ impl<T: Float> Dot<Unit<Hyperbolic<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Scalar<T> {
@@ -2000,7 +2000,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -2008,7 +2008,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -2016,7 +2016,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Antidot<HypUnit<T>> for HypUnit<T> {
@@ -2031,7 +2031,7 @@ impl<T: Float> Antidot<HypUnit<T>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &HypUnit<T>) -> T {
-        self.as_inner().j() * rhs.j()
+        rhs.j() * self.as_inner().j()
     }
 }
 #[allow(unused_variables)]
@@ -2039,7 +2039,7 @@ impl<T: Float> Antidot<Unit<HypUnit<T>>> for HypUnit<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.j()
     }
 }
 #[allow(unused_variables)]
@@ -2047,7 +2047,7 @@ impl<T: Float> Antidot<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<HypUnit<T>>) -> T {
-        self.as_inner().j() * rhs.as_inner().j()
+        rhs.as_inner().j() * self.as_inner().j()
     }
 }
 impl<T: Float> Antidot<Hyperbolic<T>> for HypUnit<T> {
@@ -2062,7 +2062,7 @@ impl<T: Float> Antidot<Hyperbolic<T>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().j() * rhs.hyp()
+        rhs.hyp() * self.as_inner().j()
     }
 }
 #[allow(unused_variables)]
@@ -2070,7 +2070,7 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for HypUnit<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.j() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.j()
     }
 }
 #[allow(unused_variables)]
@@ -2078,7 +2078,7 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for Unit<HypUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().j() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.as_inner().j()
     }
 }
 impl<T: Float> Antidot<HypUnit<T>> for Hyperbolic<T> {
@@ -2124,7 +2124,7 @@ impl<T: Float> Antidot<Hyperbolic<T>> for Unit<Hyperbolic<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().real() * rhs.real() + self.as_inner().hyp() * rhs.hyp()
+        rhs.hyp() * self.as_inner().hyp() + rhs.real() * self.as_inner().real()
     }
 }
 #[allow(unused_variables)]
@@ -2132,7 +2132,7 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for Hyperbolic<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.real() * rhs.as_inner().real() + self.hyp() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.hyp() + rhs.as_inner().real() * self.real()
     }
 }
 #[allow(unused_variables)]
@@ -2140,8 +2140,8 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for Unit<Hyperbolic<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().real() * rhs.as_inner().real()
-            + self.as_inner().hyp() * rhs.as_inner().hyp()
+        rhs.as_inner().hyp() * self.as_inner().hyp()
+            + rhs.as_inner().real() * self.as_inner().real()
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Hyperbolic<T> {
@@ -2187,7 +2187,7 @@ impl<T: Float> Antidot<Hyperbolic<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Hyperbolic<T>) -> T {
-        self.as_inner().s() * rhs.real()
+        rhs.real() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -2195,7 +2195,7 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -2203,7 +2203,7 @@ impl<T: Float> Antidot<Unit<Hyperbolic<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Hyperbolic<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.as_inner().s()
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Scalar<T> {
@@ -2218,7 +2218,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -2226,7 +2226,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -2234,7 +2234,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Reverse for HypUnit<T> {
@@ -2536,6 +2536,540 @@ mod arbitrary_impls {
             (-100.0f64..100.0)
                 .prop_map(|x0| Scalar::new_unchecked(T::from_f64(x0)))
                 .boxed()
+        }
+    }
+}
+
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
+
+#[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
+mod verification_tests {
+    use super::*;
+    use crate::algebra::Multivector;
+    #[allow(unused_imports)]
+    use crate::norm::{DegenerateNormed, Normed};
+    use crate::signature::Cl1_0_0;
+    #[allow(unused_imports)]
+    use crate::wrappers::Unit;
+    use approx::relative_eq;
+    use proptest::prelude::*;
+
+    /// Relative epsilon for floating-point comparisons in verification tests.
+    /// Using relative comparison handles varying magnitudes better than absolute.
+    const REL_EPSILON: f64 = 1e-10;
+
+    proptest! {
+        #[test]
+        fn hypunit_add_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn hypunit_sub_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn hypunit_neg_matches_multivector(a in any::<HypUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn hyperbolic_add_matches_multivector(a in any::<Hyperbolic<f64>>(), b in any::<Hyperbolic<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn hyperbolic_sub_matches_multivector(a in any::<Hyperbolic<f64>>(), b in any::<Hyperbolic<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn hyperbolic_neg_matches_multivector(a in any::<Hyperbolic<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn scalar_add_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_sub_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_neg_matches_multivector(a in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_hypunit_scalar_hypunit_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_hypunit_hypunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_hypunit_hypunit_scalar_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_hypunit_scalar_hypunit_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_hypunit_hypunit_scalar_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_hypunit_scalar_hypunit_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_hypunit_hypunit_hypunit_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_hypunit_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_hypunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_hypunit_hypunit_hypunit_matches_multivector(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_hypunit_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<HypUnit<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_scalar_hypunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            let specialized_result: HypUnit<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl1_0_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_hypunit(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_hypunit(a in any::<HypUnit<f64>>(), b in any::<HypUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl1_0_0> = a.into();
+            let mv_b: Multivector<f64, Cl1_0_0> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
         }
     }
 }

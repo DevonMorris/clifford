@@ -277,6 +277,8 @@ impl SymbolicProduct {
         if terms.is_empty() {
             Atom::num(0)
         } else {
+            // Sort terms by string representation for deterministic output
+            terms.sort_by_cached_key(|t| t.to_string());
             terms.into_iter().reduce(|acc, t| acc + t).unwrap()
         }
     }
@@ -348,6 +350,8 @@ impl SymbolicProduct {
             // Return symbolic zero
             Atom::num(0)
         } else {
+            // Sort terms by string representation for deterministic output
+            terms.sort_by_cached_key(|t| t.to_string());
             // Sum all terms
             terms.into_iter().reduce(|acc, t| acc + t).unwrap()
         }

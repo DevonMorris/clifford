@@ -109,3 +109,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
+
+  verify-generated:
+    name: Verify Generated Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Regenerate algebra code
+        run: cargo build -p clifford --features codegen
+        env:
+          SYMBOLICA_LICENSE: ${{ secrets.SYMBOLICA_LICENSE }}
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain crates/clifford/src/specialized/*/generated/ crates/clifford/src/specialized/*/*/generated/)" ]; then
+            echo "ERROR: Generated files are out of sync with codegen!"
+            echo ""
+            echo "The following files differ:"
+            git status --porcelain crates/clifford/src/specialized/*/generated/ crates/clifford/src/specialized/*/*/generated/
+            echo ""
+            echo "To fix: run 'cargo build -p clifford --features codegen' and commit the changes."
+            exit 1
+          fi
+          echo "Generated files are up to date."

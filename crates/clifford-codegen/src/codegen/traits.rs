@@ -839,7 +839,7 @@ impl<'a> TraitsGenerator<'a> {
         }
 
         // Filter out zero coefficients and collect non-zero terms
-        let terms: Vec<_> = term_map
+        let mut terms: Vec<_> = term_map
             .into_iter()
             .filter(|(_, coeff)| *coeff != 0)
             .collect();
@@ -847,6 +847,9 @@ impl<'a> TraitsGenerator<'a> {
         if terms.is_empty() {
             return quote! { T::zero() };
         }
+
+        // Sort for deterministic output
+        terms.sort_by(|a, b| a.0.cmp(&b.0));
 
         let mut expr_parts: Vec<TokenStream> = Vec::new();
         for (i, ((v1, x, v2), coeff)) in terms.iter().enumerate() {
@@ -1018,7 +1021,7 @@ impl<'a> TraitsGenerator<'a> {
         }
 
         // Filter out zero coefficients and collect non-zero terms
-        let terms: Vec<_> = term_map
+        let mut terms: Vec<_> = term_map
             .into_iter()
             .filter(|(_, coeff)| *coeff != 0)
             .collect();
@@ -1026,6 +1029,9 @@ impl<'a> TraitsGenerator<'a> {
         if terms.is_empty() {
             return quote! { T::zero() };
         }
+
+        // Sort for deterministic output
+        terms.sort_by(|a, b| a.0.cmp(&b.0));
 
         let rhs_ident = format_ident!("{}", rhs_name);
         let mut expr_parts: Vec<TokenStream> = Vec::new();

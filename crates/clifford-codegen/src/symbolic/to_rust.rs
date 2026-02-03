@@ -210,20 +210,24 @@ impl AtomToRust {
             return quote! { T::zero() };
         }
 
-        // Convert first term
-        let first = &terms[0];
-        let (first_neg, first_expr) = self.extract_negation(*first);
+        // Convert all terms to (is_negative, token_stream) pairs first
+        let mut converted: Vec<(bool, TokenStream)> = terms
+            .iter()
+            .map(|term| self.extract_negation(*term))
+            .collect();
 
+        // Sort by the final Rust code string for deterministic output
+        converted.sort_by_cached_key(|(_, tokens)| tokens.to_string());
+
+        // Build the result from sorted terms
+        let (first_neg, first_expr) = converted.remove(0);
         let mut result = if first_neg {
             quote! { -(#first_expr) }
         } else {
             first_expr
         };
 
-        // Add remaining terms with proper sign handling
-        for term in &terms[1..] {
-            let (is_neg, term_expr) = self.extract_negation(*term);
-
+        for (is_neg, term_expr) in converted {
             if is_neg {
                 result = quote! { #result - #term_expr };
             } else {
@@ -296,9 +300,12 @@ impl AtomToRust {
             return coeff.unwrap_or_else(|| quote! { T::one() });
         }
 
-        // Convert remaining factors
-        let factor_exprs: Vec<TokenStream> =
+        // Convert remaining factors to TokenStreams
+        let mut factor_exprs: Vec<TokenStream> =
             remaining.iter().map(|f| self.convert_view(*f)).collect();
+
+        // Sort by final Rust code string for deterministic output
+        factor_exprs.sort_by_cached_key(|tokens| tokens.to_string());
 
         // Build product
         let product = if factor_exprs.len() == 1 {

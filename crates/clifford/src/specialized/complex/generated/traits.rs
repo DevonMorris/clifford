@@ -62,8 +62,8 @@ impl<T: Float> Mul<Complex<T>> for Complex<T> {
     #[inline]
     fn mul(self, rhs: Complex<T>) -> Complex<T> {
         Complex::new_unchecked(
-            self.real() * rhs.real() + -(self.imag() * rhs.imag()),
-            self.real() * rhs.imag() + self.imag() * rhs.real(),
+            -(rhs.imag() * self.imag()) + rhs.real() * self.real(),
+            rhs.imag() * self.real() + rhs.real() * self.imag(),
         )
     }
 }
@@ -71,7 +71,7 @@ impl<T: Float> Mul<ImagUnit<T>> for Complex<T> {
     type Output = Complex<T>;
     #[inline]
     fn mul(self, rhs: ImagUnit<T>) -> Complex<T> {
-        Complex::new_unchecked(-(self.imag() * rhs.i()), self.real() * rhs.i())
+        Complex::new_unchecked(-(rhs.i() * self.imag()), rhs.i() * self.real())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Complex<T> {
@@ -127,14 +127,14 @@ impl<T: Float> Mul<Complex<T>> for ImagUnit<T> {
     type Output = Complex<T>;
     #[inline]
     fn mul(self, rhs: Complex<T>) -> Complex<T> {
-        Complex::new_unchecked(-(self.i() * rhs.imag()), self.i() * rhs.real())
+        Complex::new_unchecked(-(rhs.imag() * self.i()), rhs.real() * self.i())
     }
 }
 impl<T: Float> Mul<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.i()))
     }
 }
 impl<T: Float> Mul<Scalar<T>> for ImagUnit<T> {
@@ -190,21 +190,21 @@ impl<T: Float> Mul<Complex<T>> for Scalar<T> {
     type Output = Complex<T>;
     #[inline]
     fn mul(self, rhs: Complex<T>) -> Complex<T> {
-        Complex::new_unchecked(self.s() * rhs.real(), self.s() * rhs.imag())
+        Complex::new_unchecked(rhs.real() * self.s(), rhs.imag() * self.s())
     }
 }
 impl<T: Float> Mul<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn mul(self, rhs: ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.s())
     }
 }
 impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn mul(self, rhs: Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for ImagUnit<T> {
@@ -242,7 +242,7 @@ impl<T: Float> Wedge<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -250,7 +250,7 @@ impl<T: Float> Wedge<ImagUnit<T>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -258,7 +258,7 @@ impl<T: Float> Wedge<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -266,14 +266,14 @@ impl<T: Float> Wedge<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -281,7 +281,7 @@ impl<T: Float> Wedge<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -289,7 +289,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -297,14 +297,14 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn wedge(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Antiwedge<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.i() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -312,7 +312,7 @@ impl<T: Float> Antiwedge<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().i() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -320,7 +320,7 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.i() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -328,7 +328,7 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().i() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
 impl<T: Float> Antiwedge<Scalar<T>> for ImagUnit<T> {
@@ -366,7 +366,7 @@ impl<T: Float> Antiwedge<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -374,7 +374,7 @@ impl<T: Float> Antiwedge<ImagUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -382,7 +382,7 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -390,14 +390,14 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn antiwedge(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -405,7 +405,7 @@ impl<T: Float> LeftContract<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.as_inner().i()))
     }
 }
 #[allow(unused_variables)]
@@ -413,7 +413,7 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -421,14 +421,14 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
 impl<T: Float> LeftContract<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -436,7 +436,7 @@ impl<T: Float> LeftContract<ImagUnit<T>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -444,7 +444,7 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -452,14 +452,14 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -467,7 +467,7 @@ impl<T: Float> LeftContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -475,7 +475,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -483,14 +483,14 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn left_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> RightContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -498,7 +498,7 @@ impl<T: Float> RightContract<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.as_inner().i()))
     }
 }
 #[allow(unused_variables)]
@@ -506,7 +506,7 @@ impl<T: Float> RightContract<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -514,7 +514,7 @@ impl<T: Float> RightContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
 impl<T: Float> RightContract<Scalar<T>> for ImagUnit<T> {
@@ -552,7 +552,7 @@ impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -560,7 +560,7 @@ impl<T: Float> RightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -568,7 +568,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -576,7 +576,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn right_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -604,8 +604,8 @@ impl<T: Float> Sandwich<Unit<Complex<T>>> for ImagUnit<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Complex<T>>) -> Complex<T> {
         Complex::new_unchecked(
-            -(self.i() * self.i() * operand.as_inner().real()),
-            -(self.i() * self.i() * operand.as_inner().imag()),
+            -(operand.as_inner().real() * self.i() * self.i()),
+            -(operand.as_inner().imag() * self.i() * self.i()),
         )
     }
 }
@@ -638,7 +638,7 @@ impl<T: Float> Sandwich<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.i() * self.i() * operand.as_inner().i()))
+        ImagUnit::new_unchecked(-(operand.as_inner().i() * self.i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -706,8 +706,8 @@ impl<T: Float> Sandwich<Unit<Complex<T>>> for Scalar<T> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Complex<T>>) -> Complex<T> {
         Complex::new_unchecked(
-            self.s() * self.s() * operand.as_inner().real(),
-            self.s() * self.s() * operand.as_inner().imag(),
+            operand.as_inner().real() * self.s() * self.s(),
+            operand.as_inner().imag() * self.s() * self.s(),
         )
     }
 }
@@ -740,7 +740,7 @@ impl<T: Float> Sandwich<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * self.s() * operand.as_inner().i())
+        ImagUnit::new_unchecked(operand.as_inner().i() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -772,7 +772,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn sandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * self.s() * operand.as_inner().s())
+        Scalar::new_unchecked(operand.as_inner().s() * self.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -808,8 +808,8 @@ impl<T: Float> Antisandwich<Unit<Complex<T>>> for ImagUnit<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Complex<T>>) -> Complex<T> {
         Complex::new_unchecked(
-            self.i() * self.i() * operand.as_inner().real(),
-            self.i() * self.i() * operand.as_inner().imag(),
+            operand.as_inner().real() * self.i() * self.i(),
+            operand.as_inner().imag() * self.i() * self.i(),
         )
     }
 }
@@ -842,7 +842,7 @@ impl<T: Float> Antisandwich<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.i() * self.i() * operand.as_inner().i())
+        ImagUnit::new_unchecked(operand.as_inner().i() * self.i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -910,8 +910,8 @@ impl<T: Float> Antisandwich<Unit<Complex<T>>> for Scalar<T> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Complex<T>>) -> Complex<T> {
         Complex::new_unchecked(
-            -(self.s() * self.s() * operand.as_inner().real()),
-            -(self.s() * self.s() * operand.as_inner().imag()),
+            -(operand.as_inner().real() * self.s() * self.s()),
+            -(operand.as_inner().imag() * self.s() * self.s()),
         )
     }
 }
@@ -944,7 +944,7 @@ impl<T: Float> Antisandwich<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.s() * self.s() * operand.as_inner().i()))
+        ImagUnit::new_unchecked(-(operand.as_inner().i() * self.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -976,7 +976,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn antisandwich(&self, operand: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * self.s() * operand.as_inner().s()))
+        Scalar::new_unchecked(-(operand.as_inner().s() * self.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1379,7 +1379,7 @@ impl<T: Float> ScalarProduct<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &ImagUnit<T>) -> T {
-        -(self.as_inner().i() * rhs.i())
+        -(rhs.i() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -1387,7 +1387,7 @@ impl<T: Float> ScalarProduct<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.i() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1395,7 +1395,7 @@ impl<T: Float> ScalarProduct<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.as_inner().i() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.as_inner().i())
     }
 }
 impl<T: Float> ScalarProduct<Scalar<T>> for Scalar<T> {
@@ -1410,7 +1410,7 @@ impl<T: Float> ScalarProduct<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -1418,7 +1418,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -1426,14 +1426,14 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn scalar_product(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> BulkContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -1441,7 +1441,7 @@ impl<T: Float> BulkContract<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.as_inner().i()))
     }
 }
 #[allow(unused_variables)]
@@ -1449,7 +1449,7 @@ impl<T: Float> BulkContract<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -1457,7 +1457,7 @@ impl<T: Float> BulkContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().i() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
 impl<T: Float> BulkContract<Scalar<T>> for ImagUnit<T> {
@@ -1495,7 +1495,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1503,7 +1503,7 @@ impl<T: Float> BulkContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.s())
+        Scalar::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1511,7 +1511,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1519,14 +1519,14 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.i() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1534,7 +1534,7 @@ impl<T: Float> WeightContract<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().i() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -1542,7 +1542,7 @@ impl<T: Float> WeightContract<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.i() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1550,7 +1550,7 @@ impl<T: Float> WeightContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().i() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
 impl<T: Float> WeightContract<Scalar<T>> for ImagUnit<T> {
@@ -1588,7 +1588,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1596,7 +1596,7 @@ impl<T: Float> WeightContract<Scalar<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Scalar<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        Scalar::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -1604,7 +1604,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1612,14 +1612,14 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_contract(&self, rhs: &Unit<Scalar<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        Scalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> BulkExpand<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.i() * rhs.i()))
+        ImagUnit::new_unchecked(-(rhs.i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -1627,7 +1627,7 @@ impl<T: Float> BulkExpand<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.as_inner().i() * rhs.i()))
+        ImagUnit::new_unchecked(-(rhs.i() * self.as_inner().i()))
     }
 }
 #[allow(unused_variables)]
@@ -1635,7 +1635,7 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.i() * rhs.as_inner().i()))
+        ImagUnit::new_unchecked(-(rhs.as_inner().i() * self.i()))
     }
 }
 #[allow(unused_variables)]
@@ -1643,14 +1643,14 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.as_inner().i() * rhs.as_inner().i()))
+        ImagUnit::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
 impl<T: Float> BulkExpand<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1658,7 +1658,7 @@ impl<T: Float> BulkExpand<ImagUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.i()))
+        Scalar::new_unchecked(-(rhs.i() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -1666,7 +1666,7 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.s() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1674,14 +1674,14 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(-(self.as_inner().s() * rhs.as_inner().i()))
+        Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().s()))
     }
 }
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.s())
+        ImagUnit::new_unchecked(rhs.s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1689,7 +1689,7 @@ impl<T: Float> BulkExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Scalar<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.s())
+        ImagUnit::new_unchecked(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1697,7 +1697,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.s() * rhs.as_inner().s())
+        ImagUnit::new_unchecked(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1705,14 +1705,14 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn bulk_expand(&self, rhs: &Unit<Scalar<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().s() * rhs.as_inner().s())
+        ImagUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightExpand<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.i() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1720,7 +1720,7 @@ impl<T: Float> WeightExpand<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &ImagUnit<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().i() * rhs.i())
+        ImagUnit::new_unchecked(rhs.i() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -1728,7 +1728,7 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.i() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1736,14 +1736,14 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<ImagUnit<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(self.as_inner().i() * rhs.as_inner().i())
+        ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
 impl<T: Float> WeightExpand<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1751,7 +1751,7 @@ impl<T: Float> WeightExpand<ImagUnit<T>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &ImagUnit<T>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.i())
+        Scalar::new_unchecked(rhs.i() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -1759,7 +1759,7 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.s() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -1767,14 +1767,14 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
     type Output = Scalar<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<ImagUnit<T>>) -> Scalar<T> {
-        Scalar::new_unchecked(self.as_inner().s() * rhs.as_inner().i())
+        Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.s() * rhs.s()))
+        ImagUnit::new_unchecked(-(rhs.s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1782,7 +1782,7 @@ impl<T: Float> WeightExpand<Scalar<T>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Scalar<T>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.as_inner().s() * rhs.s()))
+        ImagUnit::new_unchecked(-(rhs.s() * self.as_inner().s()))
     }
 }
 #[allow(unused_variables)]
@@ -1790,7 +1790,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.s() * rhs.as_inner().s()))
+        ImagUnit::new_unchecked(-(rhs.as_inner().s() * self.s()))
     }
 }
 #[allow(unused_variables)]
@@ -1798,7 +1798,7 @@ impl<T: Float> WeightExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Output = ImagUnit<T>;
     #[inline]
     fn weight_expand(&self, rhs: &Unit<Scalar<T>>) -> ImagUnit<T> {
-        ImagUnit::new_unchecked(-(self.as_inner().s() * rhs.as_inner().s()))
+        ImagUnit::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
 impl<T: Float> Dot<Complex<T>> for Complex<T> {
@@ -1813,7 +1813,7 @@ impl<T: Float> Dot<Complex<T>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Complex<T>) -> T {
-        self.as_inner().real() * rhs.real() + -(self.as_inner().imag() * rhs.imag())
+        -(rhs.imag() * self.as_inner().imag()) + rhs.real() * self.as_inner().real()
     }
 }
 #[allow(unused_variables)]
@@ -1821,7 +1821,7 @@ impl<T: Float> Dot<Unit<Complex<T>>> for Complex<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.real() * rhs.as_inner().real() + -(self.imag() * rhs.as_inner().imag())
+        -(rhs.as_inner().imag() * self.imag()) + rhs.as_inner().real() * self.real()
     }
 }
 #[allow(unused_variables)]
@@ -1829,8 +1829,8 @@ impl<T: Float> Dot<Unit<Complex<T>>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.as_inner().real() * rhs.as_inner().real()
-            + -(self.as_inner().imag() * rhs.as_inner().imag())
+        -(rhs.as_inner().imag() * self.as_inner().imag())
+            + rhs.as_inner().real() * self.as_inner().real()
     }
 }
 impl<T: Float> Dot<ImagUnit<T>> for Complex<T> {
@@ -1845,7 +1845,7 @@ impl<T: Float> Dot<ImagUnit<T>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &ImagUnit<T>) -> T {
-        -(self.as_inner().imag() * rhs.i())
+        -(rhs.i() * self.as_inner().imag())
     }
 }
 #[allow(unused_variables)]
@@ -1853,7 +1853,7 @@ impl<T: Float> Dot<Unit<ImagUnit<T>>> for Complex<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.imag() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.imag())
     }
 }
 #[allow(unused_variables)]
@@ -1861,7 +1861,7 @@ impl<T: Float> Dot<Unit<ImagUnit<T>>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.as_inner().imag() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.as_inner().imag())
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Complex<T> {
@@ -1907,7 +1907,7 @@ impl<T: Float> Dot<Complex<T>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Complex<T>) -> T {
-        -(self.as_inner().i() * rhs.imag())
+        -(rhs.imag() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -1915,7 +1915,7 @@ impl<T: Float> Dot<Unit<Complex<T>>> for ImagUnit<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.i() * rhs.as_inner().imag())
+        -(rhs.as_inner().imag() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1923,7 +1923,7 @@ impl<T: Float> Dot<Unit<Complex<T>>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.as_inner().i() * rhs.as_inner().imag())
+        -(rhs.as_inner().imag() * self.as_inner().i())
     }
 }
 impl<T: Float> Dot<ImagUnit<T>> for ImagUnit<T> {
@@ -1938,7 +1938,7 @@ impl<T: Float> Dot<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &ImagUnit<T>) -> T {
-        -(self.as_inner().i() * rhs.i())
+        -(rhs.i() * self.as_inner().i())
     }
 }
 #[allow(unused_variables)]
@@ -1946,7 +1946,7 @@ impl<T: Float> Dot<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.i() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.i())
     }
 }
 #[allow(unused_variables)]
@@ -1954,7 +1954,7 @@ impl<T: Float> Dot<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        -(self.as_inner().i() * rhs.as_inner().i())
+        -(rhs.as_inner().i() * self.as_inner().i())
     }
 }
 impl<T: Float> Dot<Complex<T>> for Scalar<T> {
@@ -1969,7 +1969,7 @@ impl<T: Float> Dot<Complex<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Complex<T>) -> T {
-        self.as_inner().s() * rhs.real()
+        rhs.real() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -1977,7 +1977,7 @@ impl<T: Float> Dot<Unit<Complex<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -1985,7 +1985,7 @@ impl<T: Float> Dot<Unit<Complex<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().real()
+        rhs.as_inner().real() * self.as_inner().s()
     }
 }
 impl<T: Float> Dot<Scalar<T>> for Scalar<T> {
@@ -2000,7 +2000,7 @@ impl<T: Float> Dot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Scalar<T>) -> T {
-        self.as_inner().s() * rhs.s()
+        rhs.s() * self.as_inner().s()
     }
 }
 #[allow(unused_variables)]
@@ -2008,7 +2008,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.s()
     }
 }
 #[allow(unused_variables)]
@@ -2016,7 +2016,7 @@ impl<T: Float> Dot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn dot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        self.as_inner().s() * rhs.as_inner().s()
+        rhs.as_inner().s() * self.as_inner().s()
     }
 }
 impl<T: Float> Antidot<Complex<T>> for Complex<T> {
@@ -2031,7 +2031,7 @@ impl<T: Float> Antidot<Complex<T>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Complex<T>) -> T {
-        -(self.as_inner().real() * rhs.real()) + self.as_inner().imag() * rhs.imag()
+        -(rhs.real() * self.as_inner().real()) + rhs.imag() * self.as_inner().imag()
     }
 }
 #[allow(unused_variables)]
@@ -2039,7 +2039,7 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for Complex<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.real() * rhs.as_inner().real()) + self.imag() * rhs.as_inner().imag()
+        -(rhs.as_inner().real() * self.real()) + rhs.as_inner().imag() * self.imag()
     }
 }
 #[allow(unused_variables)]
@@ -2047,8 +2047,8 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.as_inner().real() * rhs.as_inner().real())
-            + self.as_inner().imag() * rhs.as_inner().imag()
+        -(rhs.as_inner().real() * self.as_inner().real())
+            + rhs.as_inner().imag() * self.as_inner().imag()
     }
 }
 impl<T: Float> Antidot<ImagUnit<T>> for Complex<T> {
@@ -2063,7 +2063,7 @@ impl<T: Float> Antidot<ImagUnit<T>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &ImagUnit<T>) -> T {
-        self.as_inner().imag() * rhs.i()
+        rhs.i() * self.as_inner().imag()
     }
 }
 #[allow(unused_variables)]
@@ -2071,7 +2071,7 @@ impl<T: Float> Antidot<Unit<ImagUnit<T>>> for Complex<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        self.imag() * rhs.as_inner().i()
+        rhs.as_inner().i() * self.imag()
     }
 }
 #[allow(unused_variables)]
@@ -2079,7 +2079,7 @@ impl<T: Float> Antidot<Unit<ImagUnit<T>>> for Unit<Complex<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        self.as_inner().imag() * rhs.as_inner().i()
+        rhs.as_inner().i() * self.as_inner().imag()
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Complex<T> {
@@ -2125,7 +2125,7 @@ impl<T: Float> Antidot<Complex<T>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Complex<T>) -> T {
-        self.as_inner().i() * rhs.imag()
+        rhs.imag() * self.as_inner().i()
     }
 }
 #[allow(unused_variables)]
@@ -2133,7 +2133,7 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for ImagUnit<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.i() * rhs.as_inner().imag()
+        rhs.as_inner().imag() * self.i()
     }
 }
 #[allow(unused_variables)]
@@ -2141,7 +2141,7 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        self.as_inner().i() * rhs.as_inner().imag()
+        rhs.as_inner().imag() * self.as_inner().i()
     }
 }
 impl<T: Float> Antidot<ImagUnit<T>> for ImagUnit<T> {
@@ -2156,7 +2156,7 @@ impl<T: Float> Antidot<ImagUnit<T>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &ImagUnit<T>) -> T {
-        self.as_inner().i() * rhs.i()
+        rhs.i() * self.as_inner().i()
     }
 }
 #[allow(unused_variables)]
@@ -2164,7 +2164,7 @@ impl<T: Float> Antidot<Unit<ImagUnit<T>>> for ImagUnit<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        self.i() * rhs.as_inner().i()
+        rhs.as_inner().i() * self.i()
     }
 }
 #[allow(unused_variables)]
@@ -2172,7 +2172,7 @@ impl<T: Float> Antidot<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<ImagUnit<T>>) -> T {
-        self.as_inner().i() * rhs.as_inner().i()
+        rhs.as_inner().i() * self.as_inner().i()
     }
 }
 impl<T: Float> Antidot<Complex<T>> for Scalar<T> {
@@ -2187,7 +2187,7 @@ impl<T: Float> Antidot<Complex<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Complex<T>) -> T {
-        -(self.as_inner().s() * rhs.real())
+        -(rhs.real() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -2195,7 +2195,7 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.s() * rhs.as_inner().real())
+        -(rhs.as_inner().real() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -2203,7 +2203,7 @@ impl<T: Float> Antidot<Unit<Complex<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Complex<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().real())
+        -(rhs.as_inner().real() * self.as_inner().s())
     }
 }
 impl<T: Float> Antidot<Scalar<T>> for Scalar<T> {
@@ -2218,7 +2218,7 @@ impl<T: Float> Antidot<Scalar<T>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Scalar<T>) -> T {
-        -(self.as_inner().s() * rhs.s())
+        -(rhs.s() * self.as_inner().s())
     }
 }
 #[allow(unused_variables)]
@@ -2226,7 +2226,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Scalar<T> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.s())
     }
 }
 #[allow(unused_variables)]
@@ -2234,7 +2234,7 @@ impl<T: Float> Antidot<Unit<Scalar<T>>> for Unit<Scalar<T>> {
     type Scalar = T;
     #[inline]
     fn antidot(&self, rhs: &Unit<Scalar<T>>) -> T {
-        -(self.as_inner().s() * rhs.as_inner().s())
+        -(rhs.as_inner().s() * self.as_inner().s())
     }
 }
 impl<T: Float> Reverse for Complex<T> {
@@ -2538,6 +2538,540 @@ mod arbitrary_impls {
             (-100.0f64..100.0)
                 .prop_map(|x0| Scalar::new_unchecked(T::from_f64(x0)))
                 .boxed()
+        }
+    }
+}
+
+// ============================================================
+// Verification Tests (compare against Multivector)
+// ============================================================
+
+#[cfg(test)]
+#[allow(clippy::missing_docs_in_private_items)]
+mod verification_tests {
+    use super::*;
+    use crate::algebra::Multivector;
+    #[allow(unused_imports)]
+    use crate::norm::{DegenerateNormed, Normed};
+    use crate::signature::Cl0_1_0;
+    #[allow(unused_imports)]
+    use crate::wrappers::Unit;
+    use approx::relative_eq;
+    use proptest::prelude::*;
+
+    /// Relative epsilon for floating-point comparisons in verification tests.
+    /// Using relative comparison handles varying magnitudes better than absolute.
+    const REL_EPSILON: f64 = 1e-10;
+
+    proptest! {
+        #[test]
+        fn complex_add_matches_multivector(a in any::<Complex<f64>>(), b in any::<Complex<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn complex_sub_matches_multivector(a in any::<Complex<f64>>(), b in any::<Complex<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn complex_neg_matches_multivector(a in any::<Complex<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn imagunit_add_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn imagunit_sub_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn imagunit_neg_matches_multivector(a in any::<ImagUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn scalar_add_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a + b;
+            let generic_result = mv_a + mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Add mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_sub_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result = a - b;
+            let generic_result = mv_a - mv_b;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Sub mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+
+        #[test]
+        fn scalar_neg_matches_multivector(a in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+
+            let specialized_result = -a;
+            let generic_result = -mv_a;
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Neg mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_imagunit_scalar_imagunit_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_imagunit_imagunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn wedge_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::Wedge;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.wedge(&b);
+            let generic_result = mv_a.exterior(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Wedge product mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_imagunit_imagunit_scalar_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_imagunit_scalar_imagunit_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_contract(&b);
+            let generic_result = mv_a.bulk_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_imagunit_imagunit_scalar_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_imagunit_scalar_imagunit_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_contraction_scalar_scalar_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightContract;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_contract(&b);
+            let generic_result = mv_a.weight_contraction(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight contraction mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_imagunit_imagunit_imagunit_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_imagunit_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn bulk_expansion_scalar_scalar_imagunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::BulkExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.bulk_expand(&b);
+            let generic_result = mv_a.bulk_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Bulk expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_imagunit_imagunit_imagunit_matches_multivector(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_imagunit_scalar_matches_multivector(a in any::<Scalar<f64>>(), b in any::<ImagUnit<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: Scalar<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        #[test]
+        fn weight_expansion_scalar_scalar_imagunit_matches_multivector(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            use crate::ops::WeightExpand;
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            let specialized_result: ImagUnit<f64> = a.weight_expand(&b);
+            let generic_result = mv_a.weight_expansion(&mv_b);
+
+            let specialized_mv: Multivector<f64, Cl0_1_0> = specialized_result.into();
+            prop_assert!(
+                relative_eq!(specialized_mv, generic_result, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "Weight expansion mismatch: specialized={:?}, generic={:?}",
+                specialized_mv, generic_result
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_imagunit(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_imagunit(a in any::<ImagUnit<f64>>(), b in any::<ImagUnit<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+    }
+
+    proptest! {
+        /// De Morgan: complement(a * b) = complement(a) ⋇ complement(b)
+        #[test]
+        fn de_morgan_geometric_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            // LHS: complement(a * b)
+            let lhs = (mv_a * mv_b).complement();
+
+            // RHS: complement(a) ⋇ complement(b)
+            let rhs = mv_a.complement().antiproduct(&mv_b.complement());
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (geometric) failed: complement(a*b)={:?}, complement(a)⋇complement(b)={:?}",
+                lhs, rhs
+            );
+        }
+
+        /// De Morgan: complement(a ⋇ b) = complement(a) * complement(b)
+        #[test]
+        fn de_morgan_antiproduct_scalar(a in any::<Scalar<f64>>(), b in any::<Scalar<f64>>()) {
+            let mv_a: Multivector<f64, Cl0_1_0> = a.into();
+            let mv_b: Multivector<f64, Cl0_1_0> = b.into();
+
+            // LHS: complement(a ⋇ b)
+            let lhs = mv_a.antiproduct(&mv_b).complement();
+
+            // RHS: complement(a) * complement(b)
+            let rhs = mv_a.complement() * mv_b.complement();
+
+            prop_assert!(
+                relative_eq!(lhs, rhs, epsilon = REL_EPSILON, max_relative = REL_EPSILON),
+                "De Morgan (antiproduct) failed: complement(a⋇b)={:?}, complement(a)*complement(b)={:?}",
+                lhs, rhs
+            );
         }
     }
 }
