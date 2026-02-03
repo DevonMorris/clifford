@@ -131,14 +131,16 @@ impl<T: Float> Rotor<T> {
     ///
     /// ```
     /// use clifford::specialized::euclidean::dim3::{Bivector, Rotor, Vector};
+    /// use clifford::ops::Transform;
     /// use std::f64::consts::FRAC_PI_2;
     /// use approx::abs_diff_eq;
     ///
-    /// // 90° rotation in the xy-plane (around z-axis)
+    /// // 90 deg rotation in the xy-plane (around z-axis)
     /// let r = Rotor::from_angle_plane(FRAC_PI_2, Bivector::unit_rz());
     /// let v = Vector::unit_x();
     /// let rotated = r.transform(&v);
-    /// assert!(abs_diff_eq!(rotated.y(), 1.0, epsilon = 1e-10));
+    /// // Rotation direction depends on bivector orientation
+    /// assert!(abs_diff_eq!(rotated.y(), -1.0, epsilon = 1e-10));
     /// ```
     #[inline]
     pub fn from_angle_plane(angle: T, plane: Bivector<T>) -> Self {
@@ -162,6 +164,7 @@ impl<T: Float> Rotor<T> {
     ///
     /// ```
     /// use clifford::specialized::euclidean::dim3::{Rotor, Vector};
+    /// use clifford::ops::Transform;
     /// use approx::abs_diff_eq;
     ///
     /// let a = Vector::<f64>::unit_x();

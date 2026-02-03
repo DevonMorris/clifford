@@ -109,6 +109,7 @@
 //!
 //! ```
 //! use clifford::specialized::projective::dim3::{Point, Line, Motor};
+//! use clifford::ops::Join;
 //! use std::f64::consts::FRAC_PI_2;
 //! use approx::abs_diff_eq;
 //!

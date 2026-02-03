@@ -243,10 +243,10 @@ impl<T: Float> Complex<T> {
     ///
     /// let z = Complex::new(0.0, 1.0); // i
     /// let result = z.sqrt();
-    /// // sqrt(i) = (1 + i) / sqrt(2)
-    /// let expected = 0.5_f64.sqrt();
-    /// assert_relative_eq!(result.real(), expected + expected, epsilon = 1e-10);
-    /// // Actually sqrt(i) = (1/sqrt(2)) + i*(1/sqrt(2))
+    /// // sqrt(i) = (1 + i) / sqrt(2) = 1/sqrt(2) + i/sqrt(2)
+    /// let expected = std::f64::consts::FRAC_1_SQRT_2;
+    /// assert_relative_eq!(result.real(), expected, epsilon = 1e-10);
+    /// assert_relative_eq!(result.imag(), expected, epsilon = 1e-10);
     /// ```
     #[inline]
     pub fn sqrt(&self) -> Self {

@@ -5,7 +5,7 @@
 [algebra]
 complete = false
 name = "conformal3"
-module_path = "conformal/dim3"
+module_path = "conformal::dim3"
 description = "3D Conformal Geometric Algebra Cl(4,1,0)"
 
 [signature]
