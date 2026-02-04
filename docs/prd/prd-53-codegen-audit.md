@@ -273,23 +273,23 @@ inverse_sandwich_targets = ["T"] # OPTIONAL: For non-versor types that support i
 
 ### Schema Implementation Approach
 
+> **Note**: TOML has no native schema language. While JSON Schema can be used with tools like Taplo,
+> we prefer documentation + enhanced CLI validation to avoid maintaining a separate schema format.
+
 **Phase 1: Document Existing Behavior** (Effort: 2-3 days)
 1. Create `docs/toml-schema.md` with complete field reference
 2. Document all validation rules from `parser.rs`
 3. Document all defaults from `raw.rs`
 4. Add examples for each field
 
-**Phase 2: JSON Schema** (Effort: 3-4 days)
-1. Create `schemas/algebra.schema.json` for IDE support
-2. Enables: autocompletion, validation, hover documentation
-3. Add to VS Code settings for `.toml` files in `algebras/`
+**Phase 2: Enhanced `validate` CLI Command** (Effort: 3-4 days)
+1. Expand existing `validate` subcommand with comprehensive checks
+2. Validate all fields against documented schema rules
+3. Report all issues with helpful, actionable messages
+4. Suggest fixes for common problems (e.g., "Missing [norm] section, add: primary_involution = \"reverse\"")
+5. Add `--strict` mode that fails on warnings (missing optional sections, etc.)
 
-**Phase 3: Runtime Validation** (Effort: 2-3 days)
-1. Add `validate` subcommand to CLI
-2. Reports all issues with helpful messages
-3. Suggests fixes for common problems
-
-**Phase 4: Migration Tool** (Effort: 1-2 days)
+**Phase 3: Migration Tool** (Effort: 1-2 days)
 1. Add `migrate` subcommand
 2. Updates old specs to current schema
 3. Adds missing sections with correct defaults
@@ -324,14 +324,13 @@ inverse_sandwich_targets = ["T"] # OPTIONAL: For non-versor types that support i
 | Clean up unused imports in generated code | 2h | traits.rs |
 | Fix clippy warnings at source | 2h | table.rs, traits.rs |
 
-### Phase 4: TOML Schema (Week 3-4)
+### Phase 4: TOML Schema & Validation (Week 3-4)
 
 | Task | Effort | Files |
 |------|--------|-------|
 | Write schema documentation | 16h | docs/toml-schema.md |
-| Create JSON Schema | 12h | schemas/algebra.schema.json |
-| Add `validate` CLI command | 8h | main.rs, new module |
-| Add `migrate` CLI command | 6h | main.rs, new module |
+| Enhance `validate` CLI command | 12h | main.rs, spec/validate.rs |
+| Add `migrate` CLI command | 6h | main.rs, spec/migrate.rs |
 
 ### Phase 5: File Reorganization (Week 4-5)
 
@@ -363,23 +362,25 @@ inverse_sandwich_targets = ["T"] # OPTIONAL: For non-versor types that support i
 | Code deduplication | 10 hours | P1 |
 | Warning suppression removal | 12 hours | P1 |
 | TOML schema documentation | 16 hours | P1 |
-| JSON Schema + tooling | 26 hours | P2 |
+| Enhanced validate CLI | 12 hours | P1 |
+| Migrate CLI command | 6 hours | P2 |
 | File reorganization | 15 hours | P2 |
 | TOML standardization | 10 hours | P2 |
-| **Total** | **97 hours** | - |
+| **Total** | **89 hours** | - |
 
 ### Recommended Phasing
 
-**Sprint 1 (P0 + P1 Critical)**: 30 hours
+**Sprint 1 (P0 + P1 Critical)**: 46 hours
 - Critical fixes
 - Code deduplication
 - TOML schema documentation
+- Enhanced validate CLI
 
 **Sprint 2 (P1 Remaining)**: 12 hours
 - Warning suppression removal
 
-**Sprint 3 (P2)**: 55 hours
-- JSON Schema + tooling
+**Sprint 3 (P2)**: 31 hours
+- Migrate CLI command
 - File reorganization
 - TOML standardization
 
@@ -424,11 +425,12 @@ inverse_sandwich_targets = ["T"] # OPTIONAL: For non-versor types that support i
 1. **Zero `#[allow(...)]` suppressions** in codegen crate
 2. **No dead conditional branches** (identical if/else)
 3. **All algebras have explicit `[norm]` section**
-4. **TOML schema documented** with JSON Schema for IDE support
-5. **No code duplication** > 20 lines
-6. **traits.rs split** into logical modules (< 1500 lines each)
-7. **All TODO comments** resolved or tracked in PRDs
-8. **Consistent TOML field naming** documented and enforced
+4. **TOML schema documented** in `docs/toml-schema.md`
+5. **Enhanced `validate` CLI** catches all schema violations with helpful messages
+6. **No code duplication** > 20 lines
+7. **traits.rs split** into logical modules (< 1500 lines each)
+8. **All TODO comments** resolved or tracked in PRDs
+9. **Consistent TOML field naming** documented and enforced
 
 ---
 
