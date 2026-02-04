@@ -2551,11 +2551,11 @@ mod arbitrary_impls {
 mod verification_tests {
     use super::*;
     use crate::algebra::Multivector;
-    #[allow(unused_imports)]
-    use crate::norm::{DegenerateNormed, Normed};
     use crate::signature::Cl0_1_0;
     #[allow(unused_imports)]
-    use crate::wrappers::Unit;
+    use crate::wrappers::{Unit};
+    #[allow(unused_imports)]
+    use crate::norm::{Normed, DegenerateNormed};
     use approx::relative_eq;
     use proptest::prelude::*;
 

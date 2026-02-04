@@ -2544,20 +2544,20 @@ impl<T: Float> Sandwich<Bivector<T>> for Unit<Rotor<T>> {
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.rz(),
-            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.ry())
                 + -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.ry(),
-            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.rx())
                 + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
-                + operand.rx(),
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s(),
         )
     }
 }
@@ -2607,20 +2607,20 @@ impl<T: Float> Sandwich<Unit<Bivector<T>>> for Unit<Rotor<T>> {
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.as_inner().rz(),
-            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().ry())
                 + -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.as_inner().ry(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.as_inner().rx())
                 + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
-                + operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s(),
         )
     }
 }
@@ -2709,20 +2709,20 @@ impl<T: Float> Sandwich<Rotor<T>> for Unit<Rotor<T>> {
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.rz(),
-            -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.ry())
                 + -T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.ry(),
-            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.rx())
                 + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
-                + operand.rx(),
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s(),
         )
     }
 }
@@ -2777,20 +2777,20 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.as_inner().rz(),
-            -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().ry())
                 + -T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.as_inner().ry(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.as_inner().rx())
                 + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
-                + operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s(),
         )
     }
 }
@@ -2927,20 +2927,20 @@ impl<T: Float> Sandwich<Vector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.x())
                 + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.x() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().s()
-                + operand.x(),
-            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().s(),
+            -(operand.y())
+                + -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
                 + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
-                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().s()
-                + operand.y(),
+                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.y() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().s(),
             -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().s()
                 + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().s()
                 + -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
@@ -2990,20 +2990,20 @@ impl<T: Float> Sandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn sandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().x())
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().x() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz()
-                + T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().s()
-                + operand.as_inner().x(),
-            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().s(),
+            -(operand.as_inner().y())
+                + -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
-                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().s()
-                + operand.as_inner().y(),
+                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().y() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().s(),
             -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().s()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().s()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
@@ -4247,20 +4247,20 @@ impl<T: Float> Antisandwich<Bivector<T>> for Unit<Rotor<T>> {
                 + T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.rz(),
-            -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.ry())
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.ry(),
-            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.rx())
                 + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.rx(),
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -4310,20 +4310,20 @@ impl<T: Float> Antisandwich<Unit<Bivector<T>>> for Unit<Rotor<T>> {
                 + T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.as_inner().rz(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().ry())
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.as_inner().ry(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.as_inner().rx())
                 + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -4412,20 +4412,20 @@ impl<T: Float> Antisandwich<Rotor<T>> for Unit<Rotor<T>> {
                 + T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.rz(),
-            -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.ry())
+                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.ry() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.ry(),
-            -T::TWO * operand.rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.rx())
                 + -T::TWO * operand.rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.ry() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.rx(),
+                + T::TWO * operand.rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -4480,20 +4480,20 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
                 + T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().rz()
                 + operand.as_inner().rz(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().ry())
+                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().ry() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz()
-                + operand.as_inner().ry(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().rx() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().rz(),
+            -(operand.as_inner().rx())
                 + -T::TWO * operand.as_inner().rz() * self.as_inner().ry() * self.as_inner().s()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().rx() * self.as_inner().s() * self.as_inner().s()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rx() * self.as_inner().ry()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().rz() * self.as_inner().s()
-                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().rz() * self.as_inner().rx() * self.as_inner().rz(),
         )
     }
 }
@@ -4630,20 +4630,20 @@ impl<T: Float> Antisandwich<Vector<T>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Vector<T>) -> Vector<T> {
         Vector::new_unchecked(
-            -T::TWO * operand.x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.x())
                 + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().s()
                 + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().s()
-                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.x(),
-            -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
-                + -T::TWO * operand.y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.y() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.x() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rz(),
+            -(operand.y())
+                + -T::TWO * operand.x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().s()
                 + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().rz()
                 + T::TWO * operand.x() * self.as_inner().rz() * self.as_inner().s()
-                + operand.y(),
+                + T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.y() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.y() * self.as_inner().ry() * self.as_inner().rz()
                 + -T::TWO * operand.z() * self.as_inner().rx() * self.as_inner().rx()
                 + -T::TWO * operand.z() * self.as_inner().ry() * self.as_inner().ry()
@@ -4693,20 +4693,20 @@ impl<T: Float> Antisandwich<Unit<Vector<T>>> for Unit<Rotor<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unit<Vector<T>>) -> Vector<T> {
         Vector::new_unchecked(
-            -T::TWO * operand.as_inner().x() * self.as_inner().ry() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().rz()
+            -(operand.as_inner().x())
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().s()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().s()
-                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz()
-                + operand.as_inner().x(),
-            -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rx() * self.as_inner().rx()
-                + -T::TWO * operand.as_inner().y() * self.as_inner().rz() * self.as_inner().rz()
+                + T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().rx()
+                + T::TWO * operand.as_inner().x() * self.as_inner().s() * self.as_inner().s()
+                + T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rz(),
+            -(operand.as_inner().y())
+                + -T::TWO * operand.as_inner().x() * self.as_inner().rx() * self.as_inner().ry()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().s()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().rz()
                 + T::TWO * operand.as_inner().x() * self.as_inner().rz() * self.as_inner().s()
-                + operand.as_inner().y(),
+                + T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().ry()
+                + T::TWO * operand.as_inner().y() * self.as_inner().s() * self.as_inner().s(),
             -T::TWO * operand.as_inner().y() * self.as_inner().ry() * self.as_inner().rz()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().rx() * self.as_inner().rx()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().ry() * self.as_inner().ry()
@@ -10736,11 +10736,11 @@ mod arbitrary_impls {
 mod verification_tests {
     use super::*;
     use crate::algebra::Multivector;
-    #[allow(unused_imports)]
-    use crate::norm::{DegenerateNormed, Normed};
     use crate::signature::Euclidean3;
     #[allow(unused_imports)]
-    use crate::wrappers::Unit;
+    use crate::wrappers::{Unit};
+    #[allow(unused_imports)]
+    use crate::norm::{Normed, DegenerateNormed};
     use approx::relative_eq;
     use proptest::prelude::*;
 

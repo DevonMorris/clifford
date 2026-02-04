@@ -18557,40 +18557,40 @@ impl<T: Float> Antisandwich<Flector<T>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Flector<T>) -> Flector<T> {
         Flector::new_unchecked(
-            -T::TWO * operand.pw() * self.as_inner().dist() * self.as_inner().nx()
-                + -T::TWO * operand.px() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.px() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.px())
+                + -T::TWO * operand.pw() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.py() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.pz() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.px(),
+                + T::TWO * operand.px() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.pz() * self.as_inner().nx() * self.as_inner().nz(),
             -(operand.py())
                 + -T::TWO * operand.px() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.pz() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.pw() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.py() * self.as_inner().ny() * self.as_inner().ny(),
-            -(operand.pz())
-                + -T::TWO * operand.pw() * self.as_inner().dist() * self.as_inner().nz()
+            -T::TWO * operand.pw() * self.as_inner().dist() * self.as_inner().nz()
                 + -T::TWO * operand.py() * self.as_inner().ny() * self.as_inner().nz()
+                + -T::TWO * operand.pz() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.pz() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.px() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.pz() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.pz(),
             -(operand.pw()),
             -T::TWO * operand.nx() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.ny() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().dist() * self.as_inner().nz()
                 + operand.dist(),
-            -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nz()
+            -(operand.nz())
+                + -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nz()
                 + -T::TWO * operand.ny() * self.as_inner().ny() * self.as_inner().nz()
-                + -T::TWO * operand.nz() * self.as_inner().nz() * self.as_inner().nz()
-                + operand.nz(),
+                + T::TWO * operand.nz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.nz() * self.as_inner().ny() * self.as_inner().ny(),
             -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.ny() * self.as_inner().ny() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.ny(),
-            -(operand.nx())
+            -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO * operand.ny() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.nx() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.nx(),
         )
     }
 }
@@ -18651,40 +18651,40 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Flector<T>>) -> Flector<T> {
         Flector::new_unchecked(
-            -T::TWO * operand.as_inner().pw() * self.as_inner().dist() * self.as_inner().nx()
-                + -T::TWO * operand.as_inner().px() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.as_inner().px() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.as_inner().px())
+                + -T::TWO * operand.as_inner().pw() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().py() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().pz() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.as_inner().px(),
+                + T::TWO * operand.as_inner().px() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().pz() * self.as_inner().nx() * self.as_inner().nz(),
             -(operand.as_inner().py())
                 + -T::TWO * operand.as_inner().px() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().pz() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().pw() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().py() * self.as_inner().ny() * self.as_inner().ny(),
-            -(operand.as_inner().pz())
-                + -T::TWO * operand.as_inner().pw() * self.as_inner().dist() * self.as_inner().nz()
+            -T::TWO * operand.as_inner().pw() * self.as_inner().dist() * self.as_inner().nz()
                 + -T::TWO * operand.as_inner().py() * self.as_inner().ny() * self.as_inner().nz()
+                + -T::TWO * operand.as_inner().pz() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.as_inner().pz() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().px() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().pz() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.as_inner().pz(),
             -(operand.as_inner().pw()),
             -T::TWO * operand.as_inner().nx() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().dist() * self.as_inner().nz()
                 + operand.as_inner().dist(),
-            -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nz()
+            -(operand.as_inner().nz())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nz()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().ny() * self.as_inner().nz()
-                + -T::TWO * operand.as_inner().nz() * self.as_inner().nz() * self.as_inner().nz()
-                + operand.as_inner().nz(),
+                + T::TWO * operand.as_inner().nz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().nz() * self.as_inner().ny() * self.as_inner().ny(),
             -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().ny() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.as_inner().ny(),
-            -(operand.as_inner().nx())
+            -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().nx() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.as_inner().nx(),
         )
     }
 }
@@ -18756,38 +18756,38 @@ impl<T: Float> Antisandwich<Line<T>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Line<T>) -> Line<T> {
         Line::new_unchecked(
-            -(operand.moment_z())
-                + -T::TWO * operand.dir_x() * self.as_inner().dist() * self.as_inner().ny()
+            -T::TWO * operand.dir_x() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO * operand.dir_y() * self.as_inner().dist() * self.as_inner().nx()
+                + -T::TWO * operand.moment_z() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.moment_z() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.moment_x() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.moment_y() * self.as_inner().ny() * self.as_inner().nz()
-                + T::TWO * operand.moment_z() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.moment_z(),
             -(operand.moment_y())
                 + -T::TWO * operand.dir_z() * self.as_inner().dist() * self.as_inner().nx()
                 + T::TWO * operand.dir_x() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.moment_x() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.moment_y() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.moment_z() * self.as_inner().ny() * self.as_inner().nz(),
-            -(operand.dir_x())
+            -T::TWO * operand.dir_x() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO * operand.dir_z() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.dir_x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.dir_x() * self.as_inner().nz() * self.as_inner().nz()
-                + T::TWO * operand.dir_y() * self.as_inner().nx() * self.as_inner().ny(),
-            -T::TWO * operand.moment_x() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.moment_x() * self.as_inner().nz() * self.as_inner().nz()
+                + T::TWO * operand.dir_y() * self.as_inner().nx() * self.as_inner().ny()
+                + operand.dir_x(),
+            -(operand.moment_x())
                 + T::TWO * operand.dir_y() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.dir_z() * self.as_inner().dist() * self.as_inner().ny()
+                + T::TWO * operand.moment_x() * self.as_inner().nx() * self.as_inner().nx()
                 + T::TWO * operand.moment_y() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.moment_z() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.moment_x(),
+                + T::TWO * operand.moment_z() * self.as_inner().nx() * self.as_inner().nz(),
             -T::TWO * operand.dir_y() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.dir_x() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.dir_z() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.dir_y(),
-            -T::TWO * operand.dir_x() * self.as_inner().nx() * self.as_inner().nz()
-                + -T::TWO * operand.dir_z() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.dir_z())
+                + -T::TWO * operand.dir_x() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.dir_y() * self.as_inner().ny() * self.as_inner().nz()
-                + operand.dir_z(),
+                + T::TWO * operand.dir_z() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.dir_z() * self.as_inner().ny() * self.as_inner().ny(),
         )
     }
 }
@@ -18842,15 +18842,19 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Line<T>>) -> Line<T> {
         Line::new_unchecked(
-            -(operand.as_inner().moment_z())
-                + -T::TWO
-                    * operand.as_inner().dir_x()
-                    * self.as_inner().dist()
-                    * self.as_inner().ny()
+            -T::TWO * operand.as_inner().dir_x() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO
                     * operand.as_inner().dir_y()
                     * self.as_inner().dist()
                     * self.as_inner().nx()
+                + -T::TWO
+                    * operand.as_inner().moment_z()
+                    * self.as_inner().nx()
+                    * self.as_inner().nx()
+                + -T::TWO
+                    * operand.as_inner().moment_z()
+                    * self.as_inner().ny()
+                    * self.as_inner().ny()
                 + T::TWO
                     * operand.as_inner().moment_x()
                     * self.as_inner().nx()
@@ -18859,10 +18863,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Plane<T>> {
                     * operand.as_inner().moment_y()
                     * self.as_inner().ny()
                     * self.as_inner().nz()
-                + T::TWO
-                    * operand.as_inner().moment_z()
-                    * self.as_inner().nz()
-                    * self.as_inner().nz(),
+                + operand.as_inner().moment_z(),
             -(operand.as_inner().moment_y())
                 + -T::TWO
                     * operand.as_inner().dir_z()
@@ -18884,19 +18885,14 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Plane<T>> {
                     * operand.as_inner().moment_z()
                     * self.as_inner().ny()
                     * self.as_inner().nz(),
-            -(operand.as_inner().dir_x())
+            -T::TWO * operand.as_inner().dir_x() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO
                     * operand.as_inner().dir_z()
                     * self.as_inner().nx()
                     * self.as_inner().nz()
-                + T::TWO * operand.as_inner().dir_x() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().dir_x() * self.as_inner().nz() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().dir_y() * self.as_inner().nx() * self.as_inner().ny(),
-            -T::TWO * operand.as_inner().moment_x() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO
-                    * operand.as_inner().moment_x()
-                    * self.as_inner().nz()
-                    * self.as_inner().nz()
+                + T::TWO * operand.as_inner().dir_y() * self.as_inner().nx() * self.as_inner().ny()
+                + operand.as_inner().dir_x(),
+            -(operand.as_inner().moment_x())
                 + T::TWO
                     * operand.as_inner().dir_y()
                     * self.as_inner().dist()
@@ -18906,25 +18902,29 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Plane<T>> {
                     * self.as_inner().dist()
                     * self.as_inner().ny()
                 + T::TWO
+                    * operand.as_inner().moment_x()
+                    * self.as_inner().nx()
+                    * self.as_inner().nx()
+                + T::TWO
                     * operand.as_inner().moment_y()
                     * self.as_inner().nx()
                     * self.as_inner().ny()
                 + T::TWO
                     * operand.as_inner().moment_z()
                     * self.as_inner().nx()
-                    * self.as_inner().nz()
-                + operand.as_inner().moment_x(),
+                    * self.as_inner().nz(),
             -T::TWO * operand.as_inner().dir_y() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().dir_x() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().dir_z() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.as_inner().dir_y(),
-            -T::TWO * operand.as_inner().dir_x() * self.as_inner().nx() * self.as_inner().nz()
+            -(operand.as_inner().dir_z())
                 + -T::TWO
-                    * operand.as_inner().dir_z()
-                    * self.as_inner().nz()
+                    * operand.as_inner().dir_x()
+                    * self.as_inner().nx()
                     * self.as_inner().nz()
                 + T::TWO * operand.as_inner().dir_y() * self.as_inner().ny() * self.as_inner().nz()
-                + operand.as_inner().dir_z(),
+                + T::TWO * operand.as_inner().dir_z() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().dir_z() * self.as_inner().ny() * self.as_inner().ny(),
         )
     }
 }
@@ -19038,38 +19038,38 @@ impl<T: Float> Antisandwich<Motor<T>> for Unitized<Plane<T>> {
     fn antisandwich(&self, operand: &Motor<T>) -> Motor<T> {
         Motor::new_unchecked(
             operand.s(),
-            -(operand.tz())
-                + -T::TWO * operand.ry() * self.as_inner().dist() * self.as_inner().nx()
+            -T::TWO * operand.ry() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.tx() * self.as_inner().dist() * self.as_inner().ny()
+                + -T::TWO * operand.tz() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.tz() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.rx() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.ty() * self.as_inner().ny() * self.as_inner().nz()
-                + T::TWO * operand.tz() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.tz(),
             -(operand.ty())
                 + -T::TWO * operand.rz() * self.as_inner().dist() * self.as_inner().nx()
                 + T::TWO * operand.rx() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.tx() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.ty() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.tz() * self.as_inner().ny() * self.as_inner().nz(),
-            -(operand.tx())
-                + -T::TWO * operand.rz() * self.as_inner().nx() * self.as_inner().nz()
+            -T::TWO * operand.rz() * self.as_inner().nx() * self.as_inner().nz()
+                + -T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().nx()
                 + T::TWO * operand.ry() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.tx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.tx() * self.as_inner().nz() * self.as_inner().nz(),
-            -T::TWO * operand.rx() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.rx() * self.as_inner().nz() * self.as_inner().nz()
+                + operand.tx(),
+            -(operand.rx())
+                + T::TWO * operand.rx() * self.as_inner().nx() * self.as_inner().nx()
                 + T::TWO * operand.ry() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.rz() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.tz() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.rx(),
+                + T::TWO * operand.tz() * self.as_inner().nx() * self.as_inner().nz(),
             -T::TWO * operand.ry() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.rz() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.ry(),
-            -T::TWO * operand.rz() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.rz())
                 + -T::TWO * operand.tx() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.ry() * self.as_inner().ny() * self.as_inner().nz()
-                + operand.rz(),
+                + T::TWO * operand.rz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.rz() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.ps()),
         )
     }
@@ -19132,38 +19132,38 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Plane<T>> {
     fn antisandwich(&self, operand: &Unitized<Motor<T>>) -> Motor<T> {
         Motor::new_unchecked(
             operand.as_inner().s(),
-            -(operand.as_inner().tz())
-                + -T::TWO * operand.as_inner().ry() * self.as_inner().dist() * self.as_inner().nx()
+            -T::TWO * operand.as_inner().ry() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().tx() * self.as_inner().dist() * self.as_inner().ny()
+                + -T::TWO * operand.as_inner().tz() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.as_inner().tz() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().ty() * self.as_inner().ny() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().tz() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.as_inner().tz(),
             -(operand.as_inner().ty())
                 + -T::TWO * operand.as_inner().rz() * self.as_inner().dist() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().rx() * self.as_inner().nx() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().tx() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().ty() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().tz() * self.as_inner().ny() * self.as_inner().nz(),
-            -(operand.as_inner().tx())
-                + -T::TWO * operand.as_inner().rz() * self.as_inner().nx() * self.as_inner().nz()
+            -T::TWO * operand.as_inner().rz() * self.as_inner().nx() * self.as_inner().nz()
+                + -T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().tx() * self.as_inner().nz() * self.as_inner().nz(),
-            -T::TWO * operand.as_inner().rx() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.as_inner().rx() * self.as_inner().nz() * self.as_inner().nz()
+                + operand.as_inner().tx(),
+            -(operand.as_inner().rx())
+                + T::TWO * operand.as_inner().rx() * self.as_inner().nx() * self.as_inner().nx()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().dist() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().ty() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().tz() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.as_inner().rx(),
+                + T::TWO * operand.as_inner().tz() * self.as_inner().nx() * self.as_inner().nz(),
             -T::TWO * operand.as_inner().ry() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().rz() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().ny()
                 + operand.as_inner().ry(),
-            -T::TWO * operand.as_inner().rz() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.as_inner().rz())
                 + -T::TWO * operand.as_inner().tx() * self.as_inner().nx() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().ry() * self.as_inner().ny() * self.as_inner().nz()
-                + operand.as_inner().rz(),
+                + T::TWO * operand.as_inner().rz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().rz() * self.as_inner().ny() * self.as_inner().ny(),
             -(operand.as_inner().ps()),
         )
     }
@@ -19215,19 +19215,19 @@ impl<T: Float> Antisandwich<Plane<T>> for Unitized<Plane<T>> {
                 + -T::TWO * operand.ny() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().dist() * self.as_inner().nz()
                 + operand.dist(),
-            -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nz()
+            -(operand.nz())
+                + -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nz()
                 + -T::TWO * operand.ny() * self.as_inner().ny() * self.as_inner().nz()
-                + -T::TWO * operand.nz() * self.as_inner().nz() * self.as_inner().nz()
-                + operand.nz(),
+                + T::TWO * operand.nz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.nz() * self.as_inner().ny() * self.as_inner().ny(),
             -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.ny() * self.as_inner().ny() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.ny(),
-            -(operand.nx())
+            -T::TWO * operand.nx() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO * operand.ny() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.nz() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.nx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.nx() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.nx(),
         )
     }
 }
@@ -19271,19 +19271,19 @@ impl<T: Float> Antisandwich<Unitized<Plane<T>>> for Unitized<Plane<T>> {
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().dist() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().dist() * self.as_inner().nz()
                 + operand.as_inner().dist(),
-            -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nz()
+            -(operand.as_inner().nz())
+                + -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nz()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().ny() * self.as_inner().nz()
-                + -T::TWO * operand.as_inner().nz() * self.as_inner().nz() * self.as_inner().nz()
-                + operand.as_inner().nz(),
+                + T::TWO * operand.as_inner().nz() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().nz() * self.as_inner().ny() * self.as_inner().ny(),
             -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().ny() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().ny() * self.as_inner().nz()
                 + operand.as_inner().ny(),
-            -(operand.as_inner().nx())
+            -T::TWO * operand.as_inner().nx() * self.as_inner().nx() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().ny() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().nz() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().nx() * self.as_inner().ny() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().nx() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.as_inner().nx(),
         )
     }
 }
@@ -19330,22 +19330,22 @@ impl<T: Float> Antisandwich<Point<T>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Point<T>) -> Point<T> {
         Point::new_unchecked(
-            -T::TWO * operand.w() * self.as_inner().dist() * self.as_inner().nx()
-                + -T::TWO * operand.x() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.x() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.x())
+                + -T::TWO * operand.w() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.y() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.z() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.x(),
+                + T::TWO * operand.x() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.z() * self.as_inner().nx() * self.as_inner().nz(),
             -(operand.y())
                 + -T::TWO * operand.x() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.z() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.w() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().ny(),
-            -(operand.z())
-                + -T::TWO * operand.w() * self.as_inner().dist() * self.as_inner().nz()
+            -T::TWO * operand.w() * self.as_inner().dist() * self.as_inner().nz()
                 + -T::TWO * operand.y() * self.as_inner().ny() * self.as_inner().nz()
+                + -T::TWO * operand.z() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.z() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.x() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.z() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.z(),
             -(operand.w()),
         )
     }
@@ -19386,22 +19386,22 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Plane<T>> {
     #[inline]
     fn antisandwich(&self, operand: &Unitized<Point<T>>) -> Point<T> {
         Point::new_unchecked(
-            -T::TWO * operand.as_inner().w() * self.as_inner().dist() * self.as_inner().nx()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().ny() * self.as_inner().ny()
-                + -T::TWO * operand.as_inner().x() * self.as_inner().nz() * self.as_inner().nz()
+            -(operand.as_inner().x())
+                + -T::TWO * operand.as_inner().w() * self.as_inner().dist() * self.as_inner().nx()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().nx() * self.as_inner().ny()
-                + T::TWO * operand.as_inner().z() * self.as_inner().nx() * self.as_inner().nz()
-                + operand.as_inner().x(),
+                + T::TWO * operand.as_inner().x() * self.as_inner().nx() * self.as_inner().nx()
+                + T::TWO * operand.as_inner().z() * self.as_inner().nx() * self.as_inner().nz(),
             -(operand.as_inner().y())
                 + -T::TWO * operand.as_inner().x() * self.as_inner().nx() * self.as_inner().ny()
                 + -T::TWO * operand.as_inner().z() * self.as_inner().ny() * self.as_inner().nz()
                 + T::TWO * operand.as_inner().w() * self.as_inner().dist() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().ny(),
-            -(operand.as_inner().z())
-                + -T::TWO * operand.as_inner().w() * self.as_inner().dist() * self.as_inner().nz()
+            -T::TWO * operand.as_inner().w() * self.as_inner().dist() * self.as_inner().nz()
                 + -T::TWO * operand.as_inner().y() * self.as_inner().ny() * self.as_inner().nz()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().nx() * self.as_inner().nx()
+                + -T::TWO * operand.as_inner().z() * self.as_inner().ny() * self.as_inner().ny()
                 + T::TWO * operand.as_inner().x() * self.as_inner().nx() * self.as_inner().nz()
-                + T::TWO * operand.as_inner().z() * self.as_inner().nz() * self.as_inner().nz(),
+                + operand.as_inner().z(),
             -(operand.as_inner().w()),
         )
     }
@@ -34154,7 +34154,7 @@ mod arbitrary_impls {
                         T::from_f64(x4),
                         T::from_f64(x5),
                         T::from_f64(x6),
-                        T::from_f64((x6 * x1 - x2 * x5 + x3 * x4) / (x0)),
+                        T::from_f64((x1 * x6 - x2 * x5 + x3 * x4) / (x0)),
                     )
                 })
                 .boxed()
@@ -34212,7 +34212,7 @@ mod arbitrary_impls {
                         T::from_f64(x4),
                         T::from_f64(x5),
                         T::from_f64(x6),
-                        T::from_f64((x6 * x1 - x5 * x2 + x4 * x3) / (x0)),
+                        T::from_f64((x1 * x6 - x2 * x5 + x3 * x4) / (x0)),
                     )
                 })
                 .boxed()
@@ -34289,11 +34289,11 @@ mod arbitrary_impls {
 mod verification_tests {
     use super::*;
     use crate::algebra::Multivector;
-    #[allow(unused_imports)]
-    use crate::norm::{DegenerateNormed, Normed};
     use crate::signature::Projective3;
     #[allow(unused_imports)]
-    use crate::wrappers::{Bulk, Unit, Unitized};
+    use crate::wrappers::{Unit, Unitized, Bulk};
+    #[allow(unused_imports)]
+    use crate::norm::{Normed, DegenerateNormed};
     use approx::relative_eq;
     use proptest::prelude::*;
 
