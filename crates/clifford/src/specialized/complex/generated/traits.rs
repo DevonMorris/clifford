@@ -207,6 +207,7 @@ impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
         Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`ImagUnit`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -238,6 +239,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().i())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`ImagUnit`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -269,6 +271,7 @@ impl<T: Float> Wedge<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -300,6 +303,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`ImagUnit`] and [`ImagUnit`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -331,6 +335,7 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`ImagUnit`] and [`Scalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Scalar<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -362,6 +367,7 @@ impl<T: Float> Antiwedge<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().i())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Scalar`] and [`ImagUnit`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -393,6 +399,7 @@ impl<T: Float> Antiwedge<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`ImagUnit`] into [`ImagUnit`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -424,6 +431,7 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`ImagUnit`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -455,6 +463,7 @@ impl<T: Float> LeftContract<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Scalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -486,6 +495,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Right contraction of [`ImagUnit`] by [`ImagUnit`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -517,6 +527,7 @@ impl<T: Float> RightContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
+#[doc = "Right contraction of [`ImagUnit`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -548,6 +559,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().i())
     }
 }
+#[doc = "Right contraction of [`Scalar`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -579,6 +591,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`ImagUnit`] x [`Complex`] x rev([`ImagUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Complex<T>> for ImagUnit<T> {
     type Output = Complex<T>;
@@ -617,6 +630,7 @@ impl<T: Float> Sandwich<Unit<Complex<T>>> for Unit<ImagUnit<T>> {
         Complex::new_unchecked(-(operand.as_inner().real()), -(operand.as_inner().imag()))
     }
 }
+#[doc = "Sandwich product: [`ImagUnit`] x [`ImagUnit`] x rev([`ImagUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
@@ -649,6 +663,7 @@ impl<T: Float> Sandwich<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(-(operand.as_inner().i()))
     }
 }
+#[doc = "Sandwich product: [`ImagUnit`] x [`Scalar`] x rev([`ImagUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
@@ -681,6 +696,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(-(operand.as_inner().s()))
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Complex`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Complex<T>> for Scalar<T> {
     type Output = Complex<T>;
@@ -719,6 +735,7 @@ impl<T: Float> Sandwich<Unit<Complex<T>>> for Unit<Scalar<T>> {
         Complex::new_unchecked(operand.as_inner().real(), operand.as_inner().imag())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`ImagUnit`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
@@ -751,6 +768,7 @@ impl<T: Float> Sandwich<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         ImagUnit::new_unchecked(operand.as_inner().i())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Scalar`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -783,6 +801,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`ImagUnit`] x [`Complex`] x antirev([`ImagUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Complex<T>> for ImagUnit<T> {
     type Output = Complex<T>;
@@ -821,6 +840,7 @@ impl<T: Float> Antisandwich<Unit<Complex<T>>> for Unit<ImagUnit<T>> {
         Complex::new_unchecked(operand.as_inner().real(), operand.as_inner().imag())
     }
 }
+#[doc = "Antisandwich product: [`ImagUnit`] x [`ImagUnit`] x antirev([`ImagUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
@@ -853,6 +873,7 @@ impl<T: Float> Antisandwich<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(operand.as_inner().i())
     }
 }
+#[doc = "Antisandwich product: [`ImagUnit`] x [`Scalar`] x antirev([`ImagUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
@@ -885,6 +906,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Complex`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Complex<T>> for Scalar<T> {
     type Output = Complex<T>;
@@ -923,6 +945,7 @@ impl<T: Float> Antisandwich<Unit<Complex<T>>> for Unit<Scalar<T>> {
         Complex::new_unchecked(-(operand.as_inner().real()), -(operand.as_inner().imag()))
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`ImagUnit`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
@@ -955,6 +978,7 @@ impl<T: Float> Antisandwich<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         ImagUnit::new_unchecked(-(operand.as_inner().i()))
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Scalar`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -987,6 +1011,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(-(operand.as_inner().s()))
     }
 }
+#[doc = "Transform a [`Complex`] using this [`ImagUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Complex<T>> for ImagUnit<T> {
     type Output = Complex<T>;
     #[inline]
@@ -1015,6 +1040,7 @@ impl<T: Float> Transform<Unit<Complex<T>>> for Unit<ImagUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`ImagUnit`] using this [`ImagUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1043,6 +1069,7 @@ impl<T: Float> Transform<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`ImagUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1071,6 +1098,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Complex`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Complex<T>> for Scalar<T> {
     type Output = Complex<T>;
     #[inline]
@@ -1099,6 +1127,7 @@ impl<T: Float> Transform<Unit<Complex<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`ImagUnit`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<ImagUnit<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1127,6 +1156,7 @@ impl<T: Float> Transform<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1429,6 +1459,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         rhs.as_inner().s() * self.as_inner().s()
     }
 }
+#[doc = "Bulk contraction of [`ImagUnit`] with [`ImagUnit`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1460,6 +1491,7 @@ impl<T: Float> BulkContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
+#[doc = "Bulk contraction of [`ImagUnit`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1491,6 +1523,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().i())
     }
 }
+#[doc = "Bulk contraction of [`Scalar`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1522,6 +1555,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight contraction of [`ImagUnit`] with [`ImagUnit`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<ImagUnit<T>> for ImagUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1553,6 +1587,7 @@ impl<T: Float> WeightContract<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
+#[doc = "Weight contraction of [`ImagUnit`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1584,6 +1619,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(-(rhs.as_inner().s() * self.as_inner().i()))
     }
 }
+#[doc = "Weight contraction of [`Scalar`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1615,6 +1651,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
+#[doc = "Bulk expansion of [`ImagUnit`] with [`ImagUnit`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1646,6 +1683,7 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(-(rhs.as_inner().i() * self.as_inner().i()))
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`ImagUnit`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1677,6 +1715,7 @@ impl<T: Float> BulkExpand<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().i() * self.as_inner().s()))
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Scalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1708,6 +1747,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight expansion of [`ImagUnit`] with [`ImagUnit`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<ImagUnit<T>> for ImagUnit<T> {
     type Output = ImagUnit<T>;
     #[inline]
@@ -1739,6 +1779,7 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for Unit<ImagUnit<T>> {
         ImagUnit::new_unchecked(rhs.as_inner().i() * self.as_inner().i())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`ImagUnit`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<ImagUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1770,6 +1811,7 @@ impl<T: Float> WeightExpand<Unit<ImagUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().i() * self.as_inner().s())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Scalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = ImagUnit<T>;
     #[inline]

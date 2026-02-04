@@ -2278,7 +2278,17 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Wedge (exterior/outer) product of [`{}`] and [`{}`].\n\n\
+             The wedge product `a ^ b` computes the outer product, which represents\n\
+             the oriented subspace spanned by both operands. The result grade is the\n\
+             sum of the input grades (or zero if they share common factors).",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> Wedge<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -2309,7 +2319,17 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Antiwedge (regressive/meet) product of [`{}`] and [`{}`].\n\n\
+             The antiwedge product `a v b` computes the meet of two subspaces,\n\
+             returning the largest subspace contained in both. In projective geometry,\n\
+             this finds intersections (e.g., where two planes meet to form a line).",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> Antiwedge<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -2566,7 +2586,17 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Left contraction of [`{}`] into [`{}`].\n\n\
+             The left contraction `a _| b` projects `a` onto `b`, returning the\n\
+             component of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n\
+             (or zero if grade(a) > grade(b)).",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> LeftContract<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -2597,7 +2627,17 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Right contraction of [`{}`] by [`{}`].\n\n\
+             The right contraction `a |_ b` projects `b` onto `a`, returning the\n\
+             component of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n\
+             (or zero if grade(b) > grade(a)).",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> RightContract<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -2624,9 +2664,19 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Sandwich product: [`{}`] x [`{}`] x rev([`{}`]).\n\n\
+             The sandwich product `v x a x rev(v)` applies the transformation\n\
+             represented by the versor `v` to the operand `a`. For rotors, this\n\
+             performs rotation; for motors, it performs rigid body transformation.",
+            versor.name, operand.name, versor.name
+        );
+
         // For sandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[doc = #doc]
             #[allow(unused_variables)]
             impl<T: Float> Sandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
@@ -2654,9 +2704,19 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Antisandwich product: [`{}`] x [`{}`] x antirev([`{}`]).\n\n\
+             The antisandwich product `v x a x antirev(v)` is the dual of the\n\
+             sandwich product, used in Projective GA for transforming dual objects\n\
+             (planes, ideal points). Motors use antisandwich for plane transforms.",
+            versor.name, operand.name, versor.name
+        );
+
         // For antisandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
         quote! {
+            #[doc = #doc]
             #[allow(unused_variables)]
             impl<T: Float> Antisandwich<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
@@ -3017,7 +3077,23 @@ impl<'a> TraitsGenerator<'a> {
             quote! { self.sandwich(operand) }
         };
 
+        // Generate documentation
+        let product_name = if is_degenerate {
+            "antisandwich"
+        } else {
+            "sandwich"
+        };
+        let doc = format!(
+            "Transform a [`{}`] using this [`{}`].\n\n\
+             Applies the geometric transformation represented by this versor.\n\
+             For rotors, this performs rotation. For motors, this performs rigid\n\
+             body transformation (rotation + translation). Internally uses the\n\
+             {} product.",
+            operand.name, versor.name, product_name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> Transform<#operand_name<T>> for #versor_name<T> {
                 type Output = #operand_name<T>;
 
@@ -3236,7 +3312,16 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Bulk contraction of [`{}`] with [`{}`].\n\n\
+             The bulk contraction extracts the Euclidean (non-degenerate) component\n\
+             of the interior product. In PGA, this isolates the finite/spatial part.",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> BulkContract<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -3267,7 +3352,16 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Weight contraction of [`{}`] with [`{}`].\n\n\
+             The weight contraction extracts the degenerate/ideal component of the\n\
+             interior product. In PGA, this measures the 'weight' or projective part.",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> WeightContract<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -3298,7 +3392,16 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Bulk expansion of [`{}`] with [`{}`].\n\n\
+             The bulk expansion is the dual of bulk contraction, extracting the\n\
+             Euclidean component of the exterior product complement.",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> BulkExpand<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 
@@ -3329,7 +3432,16 @@ impl<'a> TraitsGenerator<'a> {
         // Generate constructor call
         let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
+        // Generate documentation
+        let doc = format!(
+            "Weight expansion of [`{}`] with [`{}`].\n\n\
+             The weight expansion is the dual of weight contraction, extracting the\n\
+             degenerate/ideal component of the exterior product complement.",
+            a.name, b.name
+        );
+
         quote! {
+            #[doc = #doc]
             impl<T: Float> WeightExpand<#b_name<T>> for #a_name<T> {
                 type Output = #out_name<T>;
 

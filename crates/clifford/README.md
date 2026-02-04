@@ -36,19 +36,24 @@ If you work with **robotics**, **computer graphics**, **physics simulations**, o
 
 ## Features
 
+- **15 Specialized Algebras**: Complex, Dual, Quaternion, Dual Quaternion, 2D/3D Euclidean, 2D/3D Projective (PGA), 2D/3D Conformal (CGA), 2D/3D Minkowski, 2D Elliptic, Hyperbolic
 - **Projective Geometric Algebra (PGA)** for rigid body transforms (points, lines, planes, motors)
+- **Conformal Geometric Algebra (CGA)** for circles, spheres, and conformal transformations
+- **Code Generation System** (`clifford-codegen`) for deriving optimized algebraic operations
 - **Optimized 2D/3D types** with zero-cost abstractions
+- **Interior Products and Projections** for computing orthogonal components
 - **Seamless nalgebra integration** for existing codebases
-- **Rerun visualization** for debugging and education
+- **Rerun visualization** (`clifford-viz`) for debugging and education
 - **Generic over float types** (f32, f64)
 - **Compile-time dimension checking**
 - **Property-tested correctness** with proptest
+- **WASM support** for browser-based applications
 
 ## Installation
 
 ```toml
 [dependencies]
-clifford = "0.1"
+clifford = "0.3"
 ```
 
 ## Quick Start
@@ -152,12 +157,32 @@ This shows an animated bivector (parallelogram) with its Hodge dual vector, demo
 
 ## Module Structure
 
+### Specialized Algebras
+
+| Module | Signature | Description |
+|--------|-----------|-------------|
+| [`specialized::complex`](https://docs.rs/clifford/latest/clifford/specialized/complex/) | Cl(0,1) | Complex numbers (i^2 = -1) |
+| [`specialized::dual`](https://docs.rs/clifford/latest/clifford/specialized/dual/) | Cl(0,0,1) | Dual numbers (epsilon^2 = 0) for automatic differentiation |
+| [`specialized::quaternion`](https://docs.rs/clifford/latest/clifford/specialized/quaternion/) | Cl(0,2) | Quaternions for 3D rotations |
+| [`specialized::dualquat`](https://docs.rs/clifford/latest/clifford/specialized/dualquat/) | - | Dual quaternions for rigid transforms |
+| [`specialized::euclidean::dim2`](https://docs.rs/clifford/latest/clifford/specialized/euclidean/dim2/) | Cl(2,0) | 2D Euclidean: Vector, Bivector, Rotor |
+| [`specialized::euclidean::dim3`](https://docs.rs/clifford/latest/clifford/specialized/euclidean/dim3/) | Cl(3,0) | 3D Euclidean: Vector, Bivector, Trivector, Rotor |
+| [`specialized::projective::dim2`](https://docs.rs/clifford/latest/clifford/specialized/projective/dim2/) | Cl(2,0,1) | 2D PGA: Point, Line, Motor |
+| [`specialized::projective::dim3`](https://docs.rs/clifford/latest/clifford/specialized/projective/dim3/) | Cl(3,0,1) | 3D PGA: Point, Line, Plane, Motor, Flector |
+| [`specialized::conformal::dim2`](https://docs.rs/clifford/latest/clifford/specialized/conformal/dim2/) | Cl(3,1) | 2D CGA: Points, circles, conformal transforms |
+| [`specialized::conformal::dim3`](https://docs.rs/clifford/latest/clifford/specialized/conformal/dim3/) | Cl(4,1) | 3D CGA: Points, spheres, circles, conformal transforms |
+| [`specialized::minkowski::dim2`](https://docs.rs/clifford/latest/clifford/specialized/minkowski/dim2/) | Cl(1,1) | 2D Minkowski spacetime |
+| [`specialized::minkowski::dim3`](https://docs.rs/clifford/latest/clifford/specialized/minkowski/dim3/) | Cl(1,2) | 3D Minkowski spacetime |
+| [`specialized::elliptic::dim2`](https://docs.rs/clifford/latest/clifford/specialized/elliptic/dim2/) | Cl(2,0) + positive curvature | 2D elliptic/spherical geometry |
+| [`specialized::hyperbolic`](https://docs.rs/clifford/latest/clifford/specialized/hyperbolic/) | - | Hyperbolic numbers (j^2 = +1) |
+
+### Core Infrastructure
+
 | Module | Description |
 |--------|-------------|
-| [`specialized::euclidean`](https://docs.rs/clifford/latest/clifford/specialized/euclidean/) | Optimized 2D/3D Euclidean types (Vector, Bivector, Rotor) |
-| [`specialized::projective`](https://docs.rs/clifford/latest/clifford/specialized/projective/) | PGA types for rigid transforms (Point, Line, Plane, Motor) |
 | [`algebra`](https://docs.rs/clifford/latest/clifford/algebra/) | Generic multivector for any metric signature |
 | [`signature`](https://docs.rs/clifford/latest/clifford/signature/) | Metric signatures (Euclidean, Minkowski, etc.) |
+| [`ops`](https://docs.rs/clifford/latest/clifford/ops/) | Algebraic operations (Wedge, Antiwedge, Sandwich, Transform, etc.) |
 
 ## Cargo Features
 

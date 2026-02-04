@@ -668,6 +668,7 @@ impl<T: Float> Mul<Scalar<T>> for Trivector<T> {
         Trivector::new_unchecked(rhs.s() * self.ps())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Line`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -711,6 +712,7 @@ impl<T: Float> Wedge<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Line`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -746,6 +748,7 @@ impl<T: Float> Wedge<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Line`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Line<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -789,6 +792,7 @@ impl<T: Float> Wedge<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -836,6 +840,7 @@ impl<T: Float> Wedge<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -871,6 +876,7 @@ impl<T: Float> Wedge<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Line`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -906,6 +912,7 @@ impl<T: Float> Wedge<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -941,6 +948,7 @@ impl<T: Float> Wedge<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -972,6 +980,7 @@ impl<T: Float> Wedge<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Trivector`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -1003,6 +1012,7 @@ impl<T: Float> Wedge<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Trivector`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -1034,6 +1044,7 @@ impl<T: Float> Wedge<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -1084,6 +1095,7 @@ impl<T: Float> Antiwedge<Unitized<Line<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Point`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Point<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1127,6 +1139,7 @@ impl<T: Float> Antiwedge<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Trivector`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Trivector<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -1174,6 +1187,7 @@ impl<T: Float> Antiwedge<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Point`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1217,6 +1231,7 @@ impl<T: Float> Antiwedge<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Point`] and [`Trivector`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Trivector<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1264,6 +1279,7 @@ impl<T: Float> Antiwedge<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Scalar`] and [`Trivector`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1295,6 +1311,7 @@ impl<T: Float> Antiwedge<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Trivector`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Trivector<T> {
     type Output = Line<T>;
     #[inline]
@@ -1342,6 +1359,7 @@ impl<T: Float> Antiwedge<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Trivector`] and [`Point`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Point<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
@@ -1389,6 +1407,7 @@ impl<T: Float> Antiwedge<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Trivector`] and [`Scalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Scalar<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1420,6 +1439,7 @@ impl<T: Float> Antiwedge<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Trivector`] and [`Trivector`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -1451,6 +1471,7 @@ impl<T: Float> Antiwedge<Unitized<Trivector<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(rhs.as_inner().ps() * self.as_inner().ps())
     }
 }
+#[doc = "Left contraction of [`Line`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1482,6 +1503,7 @@ impl<T: Float> LeftContract<Unitized<Line<T>>> for Unitized<Line<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().d() * self.as_inner().d()))
     }
 }
+#[doc = "Left contraction of [`Line`] into [`Trivector`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Trivector<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -1517,6 +1539,7 @@ impl<T: Float> LeftContract<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1565,6 +1588,7 @@ impl<T: Float> LeftContract<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Point`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1598,6 +1622,7 @@ impl<T: Float> LeftContract<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Trivector`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Trivector<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -1641,6 +1666,7 @@ impl<T: Float> LeftContract<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -1676,6 +1702,7 @@ impl<T: Float> LeftContract<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Point`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -1711,6 +1738,7 @@ impl<T: Float> LeftContract<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Scalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1742,6 +1770,7 @@ impl<T: Float> LeftContract<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Trivector`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -1773,6 +1802,7 @@ impl<T: Float> LeftContract<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Line`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1804,6 +1834,7 @@ impl<T: Float> RightContract<Unitized<Line<T>>> for Unitized<Line<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().d() * self.as_inner().d()))
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -1852,6 +1883,7 @@ impl<T: Float> RightContract<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -1887,6 +1919,7 @@ impl<T: Float> RightContract<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Right contraction of [`Point`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1920,6 +1953,7 @@ impl<T: Float> RightContract<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Point`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1955,6 +1989,7 @@ impl<T: Float> RightContract<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Right contraction of [`Scalar`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1986,6 +2021,7 @@ impl<T: Float> RightContract<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Right contraction of [`Trivector`] by [`Line`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
@@ -2021,6 +2057,7 @@ impl<T: Float> RightContract<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Trivector`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Trivector<T> {
     type Output = Line<T>;
     #[inline]
@@ -2064,6 +2101,7 @@ impl<T: Float> RightContract<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Trivector`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -2095,6 +2133,7 @@ impl<T: Float> RightContract<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Flector`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Flector<T> {
     type Output = Flector<T>;
@@ -2204,6 +2243,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Line`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Flector<T> {
     type Output = Line<T>;
@@ -2292,6 +2332,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Motor`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Flector<T> {
     type Output = Motor<T>;
@@ -2399,6 +2440,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Point`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Flector<T> {
     type Output = Point<T>;
@@ -2489,6 +2531,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Scalar`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Flector<T> {
     type Output = Scalar<T>;
@@ -2524,6 +2567,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Flector<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Flector`] x [`Trivector`] x rev([`Flector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Flector<T> {
     type Output = Trivector<T>;
@@ -2567,6 +2611,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Flector`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Line<T> {
     type Output = Flector<T>;
@@ -2632,6 +2677,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Line`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Line<T> {
     type Output = Line<T>;
@@ -2688,6 +2734,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Motor`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Line<T> {
     type Output = Motor<T>;
@@ -2753,6 +2800,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Point`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Line<T> {
     type Output = Point<T>;
@@ -2811,6 +2859,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Scalar`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
@@ -2843,6 +2892,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Trivector`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Line<T> {
     type Output = Trivector<T>;
@@ -2877,6 +2927,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Flector`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Motor<T> {
     type Output = Flector<T>;
@@ -2987,6 +3038,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Line`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Motor<T> {
     type Output = Line<T>;
@@ -3076,6 +3128,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Motor`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Motor<T> {
     type Output = Motor<T>;
@@ -3182,6 +3235,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Point`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Motor<T> {
     type Output = Point<T>;
@@ -3272,6 +3326,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Scalar`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Motor<T> {
     type Output = Scalar<T>;
@@ -3309,6 +3364,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Motor<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Motor`] x [`Trivector`] x rev([`Motor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Motor<T> {
     type Output = Trivector<T>;
@@ -3352,6 +3408,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Flector`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Point<T> {
     type Output = Flector<T>;
@@ -3445,6 +3502,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Line`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Point<T> {
     type Output = Line<T>;
@@ -3523,6 +3581,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Motor`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Point<T> {
     type Output = Motor<T>;
@@ -3618,6 +3677,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Point`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Point<T> {
     type Output = Point<T>;
@@ -3695,6 +3755,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Scalar`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
@@ -3730,6 +3791,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Trivector`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Point<T> {
     type Output = Trivector<T>;
@@ -3773,6 +3835,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Flector`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Scalar<T> {
     type Output = Flector<T>;
@@ -3815,6 +3878,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Scalar<T>> {
         Flector::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Line`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Scalar<T> {
     type Output = Line<T>;
@@ -3855,6 +3919,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Motor`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Scalar<T> {
     type Output = Motor<T>;
@@ -3897,6 +3962,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Scalar<T>> {
         Motor::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Point`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Scalar<T> {
     type Output = Point<T>;
@@ -3937,6 +4003,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Scalar`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -3969,6 +4036,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Trivector`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
@@ -4001,6 +4069,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Flector`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Flector<T>> for Trivector<T> {
     type Output = Flector<T>;
@@ -4033,6 +4102,7 @@ impl<T: Float> Sandwich<Unitized<Flector<T>>> for Unitized<Trivector<T>> {
         Flector::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Line`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Trivector<T> {
     type Output = Line<T>;
@@ -4065,6 +4135,7 @@ impl<T: Float> Sandwich<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Motor`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Motor<T>> for Trivector<T> {
     type Output = Motor<T>;
@@ -4097,6 +4168,7 @@ impl<T: Float> Sandwich<Unitized<Motor<T>>> for Unitized<Trivector<T>> {
         Motor::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Point`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Trivector<T> {
     type Output = Point<T>;
@@ -4129,6 +4201,7 @@ impl<T: Float> Sandwich<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Scalar`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Trivector<T> {
     type Output = Scalar<T>;
@@ -4161,6 +4234,7 @@ impl<T: Float> Sandwich<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Sandwich product: [`Trivector`] x [`Trivector`] x rev([`Trivector`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
@@ -4193,6 +4267,7 @@ impl<T: Float> Sandwich<Unitized<Trivector<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Flector`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Flector<T> {
     type Output = Flector<T>;
@@ -4296,6 +4371,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Line`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Flector<T> {
     type Output = Line<T>;
@@ -4381,6 +4457,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Motor`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Flector<T> {
     type Output = Motor<T>;
@@ -4485,6 +4562,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Point`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Flector<T> {
     type Output = Point<T>;
@@ -4571,6 +4649,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Flector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Scalar`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Flector<T> {
     type Output = Scalar<T>;
@@ -4605,6 +4684,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Flector<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Flector`] x [`Trivector`] x antirev([`Flector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Flector<T> {
     type Output = Trivector<T>;
@@ -4642,6 +4722,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Flector<T>> {
         Trivector::new_unchecked(operand.as_inner().ps())
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Flector`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Line<T> {
     type Output = Flector<T>;
@@ -4731,6 +4812,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Line`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Line<T> {
     type Output = Line<T>;
@@ -4806,6 +4888,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Motor`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Line<T> {
     type Output = Motor<T>;
@@ -4897,6 +4980,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Point`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Line<T> {
     type Output = Point<T>;
@@ -4973,6 +5057,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Scalar`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
@@ -5007,6 +5092,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Trivector`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Line<T> {
     type Output = Trivector<T>;
@@ -5044,6 +5130,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         Trivector::new_unchecked(operand.as_inner().ps())
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Flector`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Motor<T> {
     type Output = Flector<T>;
@@ -5147,6 +5234,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Line`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Motor<T> {
     type Output = Line<T>;
@@ -5232,6 +5320,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Motor`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Motor<T> {
     type Output = Motor<T>;
@@ -5337,6 +5426,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Point`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Motor<T> {
     type Output = Point<T>;
@@ -5423,6 +5513,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Motor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Scalar`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Motor<T> {
     type Output = Scalar<T>;
@@ -5457,6 +5548,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Motor<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Motor`] x [`Trivector`] x antirev([`Motor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Motor<T> {
     type Output = Trivector<T>;
@@ -5494,6 +5586,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Motor<T>> {
         Trivector::new_unchecked(operand.as_inner().ps())
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Flector`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Point<T> {
     type Output = Flector<T>;
@@ -5559,6 +5652,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Line`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Point<T> {
     type Output = Line<T>;
@@ -5617,6 +5711,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Motor`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Point<T> {
     type Output = Motor<T>;
@@ -5679,6 +5774,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Point`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Point<T> {
     type Output = Point<T>;
@@ -5733,6 +5829,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Scalar`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
@@ -5765,6 +5862,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Trivector`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Point<T> {
     type Output = Trivector<T>;
@@ -5797,6 +5895,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         Trivector::new_unchecked(operand.as_inner().ps())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Flector`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Scalar<T> {
     type Output = Flector<T>;
@@ -5829,6 +5928,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Scalar<T>> {
         Flector::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Line`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Scalar<T> {
     type Output = Line<T>;
@@ -5861,6 +5961,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Motor`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Scalar<T> {
     type Output = Motor<T>;
@@ -5893,6 +5994,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Scalar<T>> {
         Motor::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Point`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Scalar<T> {
     type Output = Point<T>;
@@ -5925,6 +6027,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Scalar`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -5957,6 +6060,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Trivector`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
@@ -5989,6 +6093,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Flector`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Flector<T>> for Trivector<T> {
     type Output = Flector<T>;
@@ -6036,6 +6141,7 @@ impl<T: Float> Antisandwich<Unitized<Flector<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Line`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Trivector<T> {
     type Output = Line<T>;
@@ -6080,6 +6186,7 @@ impl<T: Float> Antisandwich<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Motor`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Motor<T>> for Trivector<T> {
     type Output = Motor<T>;
@@ -6127,6 +6234,7 @@ impl<T: Float> Antisandwich<Unitized<Motor<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Point`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Trivector<T> {
     type Output = Point<T>;
@@ -6171,6 +6279,7 @@ impl<T: Float> Antisandwich<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Scalar`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Trivector<T> {
     type Output = Scalar<T>;
@@ -6203,6 +6312,7 @@ impl<T: Float> Antisandwich<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Antisandwich product: [`Trivector`] x [`Trivector`] x antirev([`Trivector`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
@@ -6235,6 +6345,7 @@ impl<T: Float> Antisandwich<Unitized<Trivector<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(operand.as_inner().ps())
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Flector<T> {
     type Output = Flector<T>;
     #[inline]
@@ -6263,6 +6374,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Flector<T> {
     type Output = Line<T>;
     #[inline]
@@ -6291,6 +6403,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Flector<T> {
     type Output = Motor<T>;
     #[inline]
@@ -6319,6 +6432,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Flector<T> {
     type Output = Point<T>;
     #[inline]
@@ -6347,6 +6461,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Flector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -6375,6 +6490,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Flector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Flector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -6403,6 +6519,7 @@ impl<T: Float> Transform<Unitized<Trivector<T>>> for Unitized<Flector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Line<T> {
     type Output = Flector<T>;
     #[inline]
@@ -6431,6 +6548,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -6459,6 +6577,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Line<T> {
     type Output = Motor<T>;
     #[inline]
@@ -6487,6 +6606,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -6515,6 +6635,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -6543,6 +6664,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -6571,6 +6693,7 @@ impl<T: Float> Transform<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Motor<T> {
     type Output = Flector<T>;
     #[inline]
@@ -6599,6 +6722,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Motor<T> {
     type Output = Line<T>;
     #[inline]
@@ -6627,6 +6751,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Motor<T> {
     type Output = Motor<T>;
     #[inline]
@@ -6655,6 +6780,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Motor<T> {
     type Output = Point<T>;
     #[inline]
@@ -6683,6 +6809,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Motor<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -6711,6 +6838,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Motor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Motor<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -6739,6 +6867,7 @@ impl<T: Float> Transform<Unitized<Trivector<T>>> for Unitized<Motor<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Point<T> {
     type Output = Flector<T>;
     #[inline]
@@ -6767,6 +6896,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -6795,6 +6925,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Point<T> {
     type Output = Motor<T>;
     #[inline]
@@ -6823,6 +6954,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -6851,6 +6983,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -6879,6 +7012,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -6907,6 +7041,7 @@ impl<T: Float> Transform<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Scalar<T> {
     type Output = Flector<T>;
     #[inline]
@@ -6935,6 +7070,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -6963,6 +7099,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Scalar<T> {
     type Output = Motor<T>;
     #[inline]
@@ -6991,6 +7128,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -7019,6 +7157,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -7047,6 +7186,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -7075,6 +7215,7 @@ impl<T: Float> Transform<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Flector`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Flector<T>> for Trivector<T> {
     type Output = Flector<T>;
     #[inline]
@@ -7103,6 +7244,7 @@ impl<T: Float> Transform<Unitized<Flector<T>>> for Unitized<Trivector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Line<T>> for Trivector<T> {
     type Output = Line<T>;
     #[inline]
@@ -7131,6 +7273,7 @@ impl<T: Float> Transform<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Motor`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Motor<T>> for Trivector<T> {
     type Output = Motor<T>;
     #[inline]
@@ -7159,6 +7302,7 @@ impl<T: Float> Transform<Unitized<Motor<T>>> for Unitized<Trivector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Point<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
@@ -7187,6 +7331,7 @@ impl<T: Float> Transform<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -7215,6 +7360,7 @@ impl<T: Float> Transform<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         self.antisandwich(operand)
     }
 }
+#[doc = "Transform a [`Trivector`] using this [`Trivector`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nantisandwich product."]
 impl<T: Float> Transform<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -9335,6 +9481,7 @@ impl<T: Float> ScalarProduct<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         T::zero()
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Line`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9366,6 +9513,7 @@ impl<T: Float> BulkContract<Unitized<Line<T>>> for Unitized<Line<T>> {
         Scalar::new_unchecked(rhs.as_inner().d() * self.as_inner().d())
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -9414,6 +9562,7 @@ impl<T: Float> BulkContract<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -9449,6 +9598,7 @@ impl<T: Float> BulkContract<Unitized<Scalar<T>>> for Unitized<Line<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Bulk contraction of [`Point`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9482,6 +9632,7 @@ impl<T: Float> BulkContract<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Point`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -9517,6 +9668,7 @@ impl<T: Float> BulkContract<Unitized<Scalar<T>>> for Unitized<Point<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Bulk contraction of [`Scalar`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9548,6 +9700,7 @@ impl<T: Float> BulkContract<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Bulk contraction of [`Trivector`] with [`Line`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
@@ -9583,6 +9736,7 @@ impl<T: Float> BulkContract<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Trivector`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Trivector<T> {
     type Output = Line<T>;
     #[inline]
@@ -9626,6 +9780,7 @@ impl<T: Float> BulkContract<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Trivector`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -9657,6 +9812,7 @@ impl<T: Float> BulkContract<Unitized<Scalar<T>>> for Unitized<Trivector<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Weight contraction of [`Line`] with [`Line`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9695,6 +9851,7 @@ impl<T: Float> WeightContract<Unitized<Line<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Line`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -9738,6 +9895,7 @@ impl<T: Float> WeightContract<Unitized<Point<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Point`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9769,6 +9927,7 @@ impl<T: Float> WeightContract<Unitized<Point<T>>> for Unitized<Point<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().w() * self.as_inner().w()))
     }
 }
+#[doc = "Weight contraction of [`Trivector`] with [`Line`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Line<T>> for Trivector<T> {
     type Output = Point<T>;
     #[inline]
@@ -9812,6 +9971,7 @@ impl<T: Float> WeightContract<Unitized<Line<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Trivector`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Trivector<T> {
     type Output = Line<T>;
     #[inline]
@@ -9847,6 +10007,7 @@ impl<T: Float> WeightContract<Unitized<Point<T>>> for Unitized<Trivector<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Trivector`] with [`Trivector`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Trivector<T>> for Trivector<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9878,6 +10039,7 @@ impl<T: Float> WeightContract<Unitized<Trivector<T>>> for Unitized<Trivector<T>>
         Scalar::new_unchecked(-(rhs.as_inner().ps() * self.as_inner().ps()))
     }
 }
+#[doc = "Bulk expansion of [`Line`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -9909,6 +10071,7 @@ impl<T: Float> BulkExpand<Unitized<Line<T>>> for Unitized<Line<T>> {
         Trivector::new_unchecked(rhs.as_inner().d() * self.as_inner().d())
     }
 }
+#[doc = "Bulk expansion of [`Point`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -9952,6 +10115,7 @@ impl<T: Float> BulkExpand<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Point`] with [`Point`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Point<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -9985,6 +10149,7 @@ impl<T: Float> BulkExpand<Unitized<Point<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -10016,6 +10181,7 @@ impl<T: Float> BulkExpand<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Point`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -10051,6 +10217,7 @@ impl<T: Float> BulkExpand<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Scalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -10082,6 +10249,7 @@ impl<T: Float> BulkExpand<Unitized<Scalar<T>>> for Unitized<Scalar<T>> {
         Trivector::new_unchecked(T::zero())
     }
 }
+#[doc = "Weight expansion of [`Line`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Line<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -10120,6 +10288,7 @@ impl<T: Float> WeightExpand<Unitized<Line<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Line`] with [`Trivector`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Trivector<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -10167,6 +10336,7 @@ impl<T: Float> WeightExpand<Unitized<Trivector<T>>> for Unitized<Line<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -10215,6 +10385,7 @@ impl<T: Float> WeightExpand<Unitized<Line<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Point`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Point<T>> for Point<T> {
     type Output = Trivector<T>;
     #[inline]
@@ -10246,6 +10417,7 @@ impl<T: Float> WeightExpand<Unitized<Point<T>>> for Unitized<Point<T>> {
         Trivector::new_unchecked(-(rhs.as_inner().w() * self.as_inner().w()))
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Trivector`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Trivector<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -10293,6 +10465,7 @@ impl<T: Float> WeightExpand<Unitized<Trivector<T>>> for Unitized<Point<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -10328,6 +10501,7 @@ impl<T: Float> WeightExpand<Unitized<Line<T>>> for Unitized<Scalar<T>> {
         Point::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Point`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Point<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -10359,6 +10533,7 @@ impl<T: Float> WeightExpand<Unitized<Point<T>>> for Unitized<Scalar<T>> {
         Line::new_unchecked(T::zero(), T::zero(), T::zero())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Trivector`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Trivector<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -10390,6 +10565,7 @@ impl<T: Float> WeightExpand<Unitized<Trivector<T>>> for Unitized<Scalar<T>> {
         Scalar::new_unchecked(T::zero())
     }
 }
+#[doc = "Weight expansion of [`Trivector`] with [`Trivector`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Trivector<T>> for Trivector<T> {
     type Output = Trivector<T>;
     #[inline]
