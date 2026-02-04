@@ -447,6 +447,7 @@ impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
         Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Line`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -492,6 +493,7 @@ impl<T: Float> Wedge<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Line`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -539,6 +541,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Line`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Line<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -584,6 +587,7 @@ impl<T: Float> Wedge<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -631,6 +635,7 @@ impl<T: Float> Wedge<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Point`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -674,6 +679,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Pseudoscalar`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -705,6 +711,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().s() * self.as_inner().xyz())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Line`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -752,6 +759,7 @@ impl<T: Float> Wedge<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Point`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -795,6 +803,7 @@ impl<T: Float> Wedge<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Pseudoscalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Pseudoscalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -826,6 +835,7 @@ impl<T: Float> Wedge<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -857,6 +867,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -907,6 +918,7 @@ impl<T: Float> Antiwedge<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Point`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Point<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -950,6 +962,7 @@ impl<T: Float> Antiwedge<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Line`] and [`Pseudoscalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Pseudoscalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -997,6 +1010,7 @@ impl<T: Float> Antiwedge<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Point`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1040,6 +1054,7 @@ impl<T: Float> Antiwedge<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Point`] and [`Pseudoscalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Pseudoscalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1087,6 +1102,7 @@ impl<T: Float> Antiwedge<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Pseudoscalar`] and [`Line`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Line<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -1134,6 +1150,7 @@ impl<T: Float> Antiwedge<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Pseudoscalar`] and [`Point`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Point<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -1181,6 +1198,7 @@ impl<T: Float> Antiwedge<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Pseudoscalar`] and [`Pseudoscalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -1212,6 +1230,7 @@ impl<T: Float> Antiwedge<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().xyz())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Pseudoscalar`] and [`Scalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Scalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1243,6 +1262,7 @@ impl<T: Float> Antiwedge<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().xyz())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Scalar`] and [`Pseudoscalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Pseudoscalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1274,6 +1294,7 @@ impl<T: Float> Antiwedge<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`Line`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1319,6 +1340,7 @@ impl<T: Float> LeftContract<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Line`] into [`Pseudoscalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Pseudoscalar<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -1366,6 +1388,7 @@ impl<T: Float> LeftContract<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1415,6 +1438,7 @@ impl<T: Float> LeftContract<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Point`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1458,6 +1482,7 @@ impl<T: Float> LeftContract<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Point`] into [`Pseudoscalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Pseudoscalar<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -1505,6 +1530,7 @@ impl<T: Float> LeftContract<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Pseudoscalar`] into [`Pseudoscalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1536,6 +1562,7 @@ impl<T: Float> LeftContract<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().xyz() * self.as_inner().xyz()))
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Line`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -1583,6 +1610,7 @@ impl<T: Float> LeftContract<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Point`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -1626,6 +1654,7 @@ impl<T: Float> LeftContract<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Pseudoscalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Pseudoscalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -1657,6 +1686,7 @@ impl<T: Float> LeftContract<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Scalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1688,6 +1718,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Line`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1733,6 +1764,7 @@ impl<T: Float> RightContract<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -1782,6 +1814,7 @@ impl<T: Float> RightContract<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Line`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -1829,6 +1862,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Point`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1872,6 +1906,7 @@ impl<T: Float> RightContract<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Point`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -1915,6 +1950,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Pseudoscalar`] by [`Line`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Line<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -1962,6 +1998,7 @@ impl<T: Float> RightContract<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Pseudoscalar`] by [`Point`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Point<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -2009,6 +2046,7 @@ impl<T: Float> RightContract<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Right contraction of [`Pseudoscalar`] by [`Pseudoscalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -2040,6 +2078,7 @@ impl<T: Float> RightContract<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().xyz() * self.as_inner().xyz()))
     }
 }
+#[doc = "Right contraction of [`Pseudoscalar`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -2071,6 +2110,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().s() * self.as_inner().xyz())
     }
 }
+#[doc = "Right contraction of [`Scalar`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -2102,6 +2142,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Line`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Line<T> {
     type Output = Line<T>;
@@ -2198,6 +2239,7 @@ impl<T: Float> Sandwich<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Point`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Line<T> {
     type Output = Point<T>;
@@ -2294,6 +2336,7 @@ impl<T: Float> Sandwich<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Pseudoscalar`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Pseudoscalar<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
@@ -2334,6 +2377,7 @@ impl<T: Float> Sandwich<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Rotor`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Rotor<T>> for Line<T> {
     type Output = Rotor<T>;
@@ -2449,6 +2493,7 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Line`] x [`Scalar`] x rev([`Line`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
@@ -2489,6 +2534,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Line<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Line`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Point<T> {
     type Output = Line<T>;
@@ -2585,6 +2631,7 @@ impl<T: Float> Sandwich<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Point`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Point<T> {
     type Output = Point<T>;
@@ -2681,6 +2728,7 @@ impl<T: Float> Sandwich<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Pseudoscalar`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Pseudoscalar<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
@@ -2721,6 +2769,7 @@ impl<T: Float> Sandwich<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Rotor`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Rotor<T>> for Point<T> {
     type Output = Rotor<T>;
@@ -2837,6 +2886,7 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Point`] x [`Scalar`] x rev([`Point`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
@@ -2877,6 +2927,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Point<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`Pseudoscalar`] x [`Line`] x rev([`Pseudoscalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
@@ -2921,6 +2972,7 @@ impl<T: Float> Sandwich<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Pseudoscalar`] x [`Point`] x rev([`Pseudoscalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
@@ -2965,6 +3017,7 @@ impl<T: Float> Sandwich<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Pseudoscalar`] x [`Pseudoscalar`] x rev([`Pseudoscalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
@@ -2997,6 +3050,7 @@ impl<T: Float> Sandwich<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Sandwich product: [`Pseudoscalar`] x [`Rotor`] x rev([`Pseudoscalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Rotor<T>> for Pseudoscalar<T> {
     type Output = Rotor<T>;
@@ -3044,6 +3098,7 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Pseudoscalar`] x [`Scalar`] x rev([`Pseudoscalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
@@ -3076,6 +3131,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`Rotor`] x [`Line`] x rev([`Rotor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Rotor<T> {
     type Output = Line<T>;
@@ -3212,6 +3268,7 @@ impl<T: Float> Sandwich<Unit<Line<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Rotor`] x [`Point`] x rev([`Rotor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Rotor<T> {
     type Output = Point<T>;
@@ -3349,6 +3406,7 @@ impl<T: Float> Sandwich<Unit<Point<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Rotor`] x [`Pseudoscalar`] x rev([`Rotor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Pseudoscalar<T>> for Rotor<T> {
     type Output = Pseudoscalar<T>;
@@ -3391,6 +3449,7 @@ impl<T: Float> Sandwich<Unit<Pseudoscalar<T>>> for Unit<Rotor<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Sandwich product: [`Rotor`] x [`Rotor`] x rev([`Rotor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Rotor<T>> for Rotor<T> {
     type Output = Rotor<T>;
@@ -3561,6 +3620,7 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Rotor`] x [`Scalar`] x rev([`Rotor`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
@@ -3603,6 +3663,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Rotor<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Line`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Line<T>> for Scalar<T> {
     type Output = Line<T>;
@@ -3647,6 +3708,7 @@ impl<T: Float> Sandwich<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Point`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Point<T>> for Scalar<T> {
     type Output = Point<T>;
@@ -3691,6 +3753,7 @@ impl<T: Float> Sandwich<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Pseudoscalar`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Pseudoscalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
@@ -3723,6 +3786,7 @@ impl<T: Float> Sandwich<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Rotor`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
@@ -3770,6 +3834,7 @@ impl<T: Float> Sandwich<Unit<Rotor<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Scalar`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -3802,6 +3867,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Line`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Line<T> {
     type Output = Line<T>;
@@ -3898,6 +3964,7 @@ impl<T: Float> Antisandwich<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Point`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Line<T> {
     type Output = Point<T>;
@@ -3994,6 +4061,7 @@ impl<T: Float> Antisandwich<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Pseudoscalar`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Pseudoscalar<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
@@ -4034,6 +4102,7 @@ impl<T: Float> Antisandwich<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Rotor`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Rotor<T>> for Line<T> {
     type Output = Rotor<T>;
@@ -4149,6 +4218,7 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Line`] x [`Scalar`] x antirev([`Line`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
@@ -4189,6 +4259,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Line<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Line`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Point<T> {
     type Output = Line<T>;
@@ -4285,6 +4356,7 @@ impl<T: Float> Antisandwich<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Point`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Point<T> {
     type Output = Point<T>;
@@ -4381,6 +4453,7 @@ impl<T: Float> Antisandwich<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Pseudoscalar`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Pseudoscalar<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
@@ -4421,6 +4494,7 @@ impl<T: Float> Antisandwich<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Rotor`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Rotor<T>> for Point<T> {
     type Output = Rotor<T>;
@@ -4537,6 +4611,7 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Point`] x [`Scalar`] x antirev([`Point`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
@@ -4577,6 +4652,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Point<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Pseudoscalar`] x [`Line`] x antirev([`Pseudoscalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
@@ -4621,6 +4697,7 @@ impl<T: Float> Antisandwich<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Pseudoscalar`] x [`Point`] x antirev([`Pseudoscalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
@@ -4665,6 +4742,7 @@ impl<T: Float> Antisandwich<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Pseudoscalar`] x [`Pseudoscalar`] x antirev([`Pseudoscalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
@@ -4697,6 +4775,7 @@ impl<T: Float> Antisandwich<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Antisandwich product: [`Pseudoscalar`] x [`Rotor`] x antirev([`Pseudoscalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Rotor<T>> for Pseudoscalar<T> {
     type Output = Rotor<T>;
@@ -4744,6 +4823,7 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Pseudoscalar`] x [`Scalar`] x antirev([`Pseudoscalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
@@ -4776,6 +4856,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Rotor`] x [`Line`] x antirev([`Rotor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Rotor<T> {
     type Output = Line<T>;
@@ -4912,6 +4993,7 @@ impl<T: Float> Antisandwich<Unit<Line<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Rotor`] x [`Point`] x antirev([`Rotor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Rotor<T> {
     type Output = Point<T>;
@@ -5049,6 +5131,7 @@ impl<T: Float> Antisandwich<Unit<Point<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Rotor`] x [`Pseudoscalar`] x antirev([`Rotor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Pseudoscalar<T>> for Rotor<T> {
     type Output = Pseudoscalar<T>;
@@ -5091,6 +5174,7 @@ impl<T: Float> Antisandwich<Unit<Pseudoscalar<T>>> for Unit<Rotor<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Antisandwich product: [`Rotor`] x [`Rotor`] x antirev([`Rotor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Rotor<T>> for Rotor<T> {
     type Output = Rotor<T>;
@@ -5261,6 +5345,7 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Rotor<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Rotor`] x [`Scalar`] x antirev([`Rotor`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
@@ -5303,6 +5388,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Rotor<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Line`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Line<T>> for Scalar<T> {
     type Output = Line<T>;
@@ -5347,6 +5433,7 @@ impl<T: Float> Antisandwich<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Point`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Point<T>> for Scalar<T> {
     type Output = Point<T>;
@@ -5391,6 +5478,7 @@ impl<T: Float> Antisandwich<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Pseudoscalar`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Pseudoscalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
@@ -5423,6 +5511,7 @@ impl<T: Float> Antisandwich<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Pseudoscalar::new_unchecked(operand.as_inner().xyz())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Rotor`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
@@ -5470,6 +5559,7 @@ impl<T: Float> Antisandwich<Unit<Rotor<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Scalar`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -5502,6 +5592,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Transform a [`Line`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Line<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -5530,6 +5621,7 @@ impl<T: Float> Transform<Unit<Line<T>>> for Unit<Line<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -5558,6 +5650,7 @@ impl<T: Float> Transform<Unit<Point<T>>> for Unit<Line<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Pseudoscalar`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Pseudoscalar<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -5586,6 +5679,7 @@ impl<T: Float> Transform<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Rotor`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Rotor<T>> for Line<T> {
     type Output = Rotor<T>;
     #[inline]
@@ -5614,6 +5708,7 @@ impl<T: Float> Transform<Unit<Rotor<T>>> for Unit<Line<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Line`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -5642,6 +5737,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<Line<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -5670,6 +5766,7 @@ impl<T: Float> Transform<Unit<Line<T>>> for Unit<Point<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Point<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -5698,6 +5795,7 @@ impl<T: Float> Transform<Unit<Point<T>>> for Unit<Point<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Pseudoscalar`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Pseudoscalar<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -5726,6 +5824,7 @@ impl<T: Float> Transform<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Rotor`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Rotor<T>> for Point<T> {
     type Output = Rotor<T>;
     #[inline]
@@ -5754,6 +5853,7 @@ impl<T: Float> Transform<Unit<Rotor<T>>> for Unit<Point<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Point`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -5782,6 +5882,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<Point<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Pseudoscalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Line<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -5810,6 +5911,7 @@ impl<T: Float> Transform<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Pseudoscalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Point<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -5838,6 +5940,7 @@ impl<T: Float> Transform<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Pseudoscalar`] using this [`Pseudoscalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -5866,6 +5969,7 @@ impl<T: Float> Transform<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Rotor`] using this [`Pseudoscalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Rotor<T>> for Pseudoscalar<T> {
     type Output = Rotor<T>;
     #[inline]
@@ -5894,6 +5998,7 @@ impl<T: Float> Transform<Unit<Rotor<T>>> for Unit<Pseudoscalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Pseudoscalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -5922,6 +6027,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Rotor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Line<T>> for Rotor<T> {
     type Output = Line<T>;
     #[inline]
@@ -5950,6 +6056,7 @@ impl<T: Float> Transform<Unit<Line<T>>> for Unit<Rotor<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Rotor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Point<T>> for Rotor<T> {
     type Output = Point<T>;
     #[inline]
@@ -5978,6 +6085,7 @@ impl<T: Float> Transform<Unit<Point<T>>> for Unit<Rotor<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Pseudoscalar`] using this [`Rotor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Pseudoscalar<T>> for Rotor<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -6006,6 +6114,7 @@ impl<T: Float> Transform<Unit<Pseudoscalar<T>>> for Unit<Rotor<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Rotor`] using this [`Rotor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Rotor<T>> for Rotor<T> {
     type Output = Rotor<T>;
     #[inline]
@@ -6034,6 +6143,7 @@ impl<T: Float> Transform<Unit<Rotor<T>>> for Unit<Rotor<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Rotor`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Rotor<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -6062,6 +6172,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<Rotor<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Line`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Line<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -6090,6 +6201,7 @@ impl<T: Float> Transform<Unit<Line<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Point`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Point<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -6118,6 +6230,7 @@ impl<T: Float> Transform<Unit<Point<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Pseudoscalar`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Pseudoscalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -6146,6 +6259,7 @@ impl<T: Float> Transform<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Rotor`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Rotor<T>> for Scalar<T> {
     type Output = Rotor<T>;
     #[inline]
@@ -6174,6 +6288,7 @@ impl<T: Float> Transform<Unit<Rotor<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -7879,6 +7994,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         rhs.as_inner().s() * self.as_inner().s()
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Line`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -7922,6 +8038,7 @@ impl<T: Float> BulkContract<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -7971,6 +8088,7 @@ impl<T: Float> BulkContract<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Line`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -8018,6 +8136,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Point`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8061,6 +8180,7 @@ impl<T: Float> BulkContract<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Point`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -8104,6 +8224,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Pseudoscalar`] with [`Line`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Line<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -8151,6 +8272,7 @@ impl<T: Float> BulkContract<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Pseudoscalar`] with [`Point`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Point<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -8198,6 +8320,7 @@ impl<T: Float> BulkContract<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Bulk contraction of [`Pseudoscalar`] with [`Pseudoscalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8229,6 +8352,7 @@ impl<T: Float> BulkContract<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().xyz())
     }
 }
+#[doc = "Bulk contraction of [`Pseudoscalar`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -8260,6 +8384,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().s() * self.as_inner().xyz())
     }
 }
+#[doc = "Bulk contraction of [`Scalar`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8291,6 +8416,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight contraction of [`Line`] with [`Line`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Line<T>> for Line<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8336,6 +8462,7 @@ impl<T: Float> WeightContract<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Line`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Line<T> {
     type Output = Point<T>;
     #[inline]
@@ -8385,6 +8512,7 @@ impl<T: Float> WeightContract<Unit<Point<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Line`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -8432,6 +8560,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Point`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Point<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8475,6 +8604,7 @@ impl<T: Float> WeightContract<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Point`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -8522,6 +8652,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Pseudoscalar`] with [`Line`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Line<T>> for Pseudoscalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -8569,6 +8700,7 @@ impl<T: Float> WeightContract<Unit<Line<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Pseudoscalar`] with [`Point`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Point<T>> for Pseudoscalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -8616,6 +8748,7 @@ impl<T: Float> WeightContract<Unit<Point<T>>> for Unit<Pseudoscalar<T>> {
         )
     }
 }
+#[doc = "Weight contraction of [`Pseudoscalar`] with [`Pseudoscalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8647,6 +8780,7 @@ impl<T: Float> WeightContract<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().xyz() * self.as_inner().xyz()))
     }
 }
+#[doc = "Weight contraction of [`Pseudoscalar`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -8678,6 +8812,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().xyz()))
     }
 }
+#[doc = "Weight contraction of [`Scalar`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -8709,6 +8844,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().s() * self.as_inner().s()))
     }
 }
+#[doc = "Bulk expansion of [`Line`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -8754,6 +8890,7 @@ impl<T: Float> BulkExpand<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Line`] with [`Pseudoscalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Pseudoscalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -8801,6 +8938,7 @@ impl<T: Float> BulkExpand<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Point`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -8850,6 +8988,7 @@ impl<T: Float> BulkExpand<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Point`] with [`Point`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Point<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -8893,6 +9032,7 @@ impl<T: Float> BulkExpand<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Point`] with [`Pseudoscalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Pseudoscalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -8940,6 +9080,7 @@ impl<T: Float> BulkExpand<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Pseudoscalar`] with [`Pseudoscalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -8971,6 +9112,7 @@ impl<T: Float> BulkExpand<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().xyz())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Line`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -9018,6 +9160,7 @@ impl<T: Float> BulkExpand<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Point`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Point<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -9065,6 +9208,7 @@ impl<T: Float> BulkExpand<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Pseudoscalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Pseudoscalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9096,6 +9240,7 @@ impl<T: Float> BulkExpand<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().xyz() * self.as_inner().s())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Scalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -9127,6 +9272,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Pseudoscalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight expansion of [`Line`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Line<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -9172,6 +9318,7 @@ impl<T: Float> WeightExpand<Unit<Line<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Line`] with [`Pseudoscalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Pseudoscalar<T>> for Line<T> {
     type Output = Line<T>;
     #[inline]
@@ -9219,6 +9366,7 @@ impl<T: Float> WeightExpand<Unit<Pseudoscalar<T>>> for Unit<Line<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Point<T> {
     type Output = Line<T>;
     #[inline]
@@ -9268,6 +9416,7 @@ impl<T: Float> WeightExpand<Unit<Line<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Point`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Point<T>> for Point<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -9313,6 +9462,7 @@ impl<T: Float> WeightExpand<Unit<Point<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Point`] with [`Pseudoscalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Pseudoscalar<T>> for Point<T> {
     type Output = Point<T>;
     #[inline]
@@ -9360,6 +9510,7 @@ impl<T: Float> WeightExpand<Unit<Pseudoscalar<T>>> for Unit<Point<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Pseudoscalar`] with [`Pseudoscalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Pseudoscalar<T>> for Pseudoscalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]
@@ -9391,6 +9542,7 @@ impl<T: Float> WeightExpand<Unit<Pseudoscalar<T>>> for Unit<Pseudoscalar<T>> {
         Pseudoscalar::new_unchecked(-(rhs.as_inner().xyz() * self.as_inner().xyz()))
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Line`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Line<T>> for Scalar<T> {
     type Output = Point<T>;
     #[inline]
@@ -9438,6 +9590,7 @@ impl<T: Float> WeightExpand<Unit<Line<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Point`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Point<T>> for Scalar<T> {
     type Output = Line<T>;
     #[inline]
@@ -9485,6 +9638,7 @@ impl<T: Float> WeightExpand<Unit<Point<T>>> for Unit<Scalar<T>> {
         )
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Pseudoscalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Pseudoscalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -9516,6 +9670,7 @@ impl<T: Float> WeightExpand<Unit<Pseudoscalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(-(rhs.as_inner().xyz() * self.as_inner().s()))
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Scalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = Pseudoscalar<T>;
     #[inline]

@@ -207,6 +207,7 @@ impl<T: Float> Mul<Scalar<T>> for Scalar<T> {
         Scalar::new_unchecked(rhs.s() * self.s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`HypUnit`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -238,6 +239,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().j())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`HypUnit`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -269,6 +271,7 @@ impl<T: Float> Wedge<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
+#[doc = "Wedge (exterior/outer) product of [`Scalar`] and [`Scalar`].\n\nThe wedge product `a ^ b` computes the outer product, which represents\nthe oriented subspace spanned by both operands. The result grade is the\nsum of the input grades (or zero if they share common factors)."]
 impl<T: Float> Wedge<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -300,6 +303,7 @@ impl<T: Float> Wedge<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`HypUnit`] and [`HypUnit`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -331,6 +335,7 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`HypUnit`] and [`Scalar`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<Scalar<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -362,6 +367,7 @@ impl<T: Float> Antiwedge<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().j())
     }
 }
+#[doc = "Antiwedge (regressive/meet) product of [`Scalar`] and [`HypUnit`].\n\nThe antiwedge product `a v b` computes the meet of two subspaces,\nreturning the largest subspace contained in both. In projective geometry,\nthis finds intersections (e.g., where two planes meet to form a line)."]
 impl<T: Float> Antiwedge<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -393,6 +399,7 @@ impl<T: Float> Antiwedge<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`HypUnit`] into [`HypUnit`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -424,6 +431,7 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`HypUnit`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -455,6 +463,7 @@ impl<T: Float> LeftContract<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
+#[doc = "Left contraction of [`Scalar`] into [`Scalar`].\n\nThe left contraction `a _| b` projects `a` onto `b`, returning the\ncomponent of `b` orthogonal to `a`. The result grade is grade(b) - grade(a)\n(or zero if grade(a) > grade(b))."]
 impl<T: Float> LeftContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -486,6 +495,7 @@ impl<T: Float> LeftContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Right contraction of [`HypUnit`] by [`HypUnit`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -517,6 +527,7 @@ impl<T: Float> RightContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Right contraction of [`HypUnit`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -548,6 +559,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().j())
     }
 }
+#[doc = "Right contraction of [`Scalar`] by [`Scalar`].\n\nThe right contraction `a |_ b` projects `b` onto `a`, returning the\ncomponent of `a` orthogonal to `b`. The result grade is grade(a) - grade(b)\n(or zero if grade(b) > grade(a))."]
 impl<T: Float> RightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -579,6 +591,7 @@ impl<T: Float> RightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Sandwich product: [`HypUnit`] x [`HypUnit`] x rev([`HypUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
@@ -611,6 +624,7 @@ impl<T: Float> Sandwich<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(-(operand.as_inner().j()))
     }
 }
+#[doc = "Sandwich product: [`HypUnit`] x [`Hyperbolic`] x rev([`HypUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Hyperbolic<T>> for HypUnit<T> {
     type Output = Hyperbolic<T>;
@@ -649,6 +663,7 @@ impl<T: Float> Sandwich<Unit<Hyperbolic<T>>> for Unit<HypUnit<T>> {
         Hyperbolic::new_unchecked(-(operand.as_inner().real()), -(operand.as_inner().hyp()))
     }
 }
+#[doc = "Sandwich product: [`HypUnit`] x [`Scalar`] x rev([`HypUnit`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for HypUnit<T> {
     type Output = Scalar<T>;
@@ -681,6 +696,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(-(operand.as_inner().s()))
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`HypUnit`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
@@ -713,6 +729,7 @@ impl<T: Float> Sandwich<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         HypUnit::new_unchecked(operand.as_inner().j())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Hyperbolic`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Hyperbolic<T>> for Scalar<T> {
     type Output = Hyperbolic<T>;
@@ -751,6 +768,7 @@ impl<T: Float> Sandwich<Unit<Hyperbolic<T>>> for Unit<Scalar<T>> {
         Hyperbolic::new_unchecked(operand.as_inner().real(), operand.as_inner().hyp())
     }
 }
+#[doc = "Sandwich product: [`Scalar`] x [`Scalar`] x rev([`Scalar`]).\n\nThe sandwich product `v x a x rev(v)` applies the transformation\nrepresented by the versor `v` to the operand `a`. For rotors, this\nperforms rotation; for motors, it performs rigid body transformation."]
 #[allow(unused_variables)]
 impl<T: Float> Sandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -783,6 +801,7 @@ impl<T: Float> Sandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Antisandwich product: [`HypUnit`] x [`HypUnit`] x antirev([`HypUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
@@ -815,6 +834,7 @@ impl<T: Float> Antisandwich<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(-(operand.as_inner().j()))
     }
 }
+#[doc = "Antisandwich product: [`HypUnit`] x [`Hyperbolic`] x antirev([`HypUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Hyperbolic<T>> for HypUnit<T> {
     type Output = Hyperbolic<T>;
@@ -853,6 +873,7 @@ impl<T: Float> Antisandwich<Unit<Hyperbolic<T>>> for Unit<HypUnit<T>> {
         Hyperbolic::new_unchecked(-(operand.as_inner().real()), -(operand.as_inner().hyp()))
     }
 }
+#[doc = "Antisandwich product: [`HypUnit`] x [`Scalar`] x antirev([`HypUnit`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for HypUnit<T> {
     type Output = Scalar<T>;
@@ -885,6 +906,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(-(operand.as_inner().s()))
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`HypUnit`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
@@ -917,6 +939,7 @@ impl<T: Float> Antisandwich<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         HypUnit::new_unchecked(operand.as_inner().j())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Hyperbolic`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Hyperbolic<T>> for Scalar<T> {
     type Output = Hyperbolic<T>;
@@ -955,6 +978,7 @@ impl<T: Float> Antisandwich<Unit<Hyperbolic<T>>> for Unit<Scalar<T>> {
         Hyperbolic::new_unchecked(operand.as_inner().real(), operand.as_inner().hyp())
     }
 }
+#[doc = "Antisandwich product: [`Scalar`] x [`Scalar`] x antirev([`Scalar`]).\n\nThe antisandwich product `v x a x antirev(v)` is the dual of the\nsandwich product, used in Projective GA for transforming dual objects\n(planes, ideal points). Motors use antisandwich for plane transforms."]
 #[allow(unused_variables)]
 impl<T: Float> Antisandwich<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
@@ -987,6 +1011,7 @@ impl<T: Float> Antisandwich<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(operand.as_inner().s())
     }
 }
+#[doc = "Transform a [`HypUnit`] using this [`HypUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1015,6 +1040,7 @@ impl<T: Float> Transform<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Hyperbolic`] using this [`HypUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Hyperbolic<T>> for HypUnit<T> {
     type Output = Hyperbolic<T>;
     #[inline]
@@ -1043,6 +1069,7 @@ impl<T: Float> Transform<Unit<Hyperbolic<T>>> for Unit<HypUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`HypUnit`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1071,6 +1098,7 @@ impl<T: Float> Transform<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`HypUnit`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<HypUnit<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1099,6 +1127,7 @@ impl<T: Float> Transform<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Hyperbolic`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Hyperbolic<T>> for Scalar<T> {
     type Output = Hyperbolic<T>;
     #[inline]
@@ -1127,6 +1156,7 @@ impl<T: Float> Transform<Unit<Hyperbolic<T>>> for Unit<Scalar<T>> {
         self.sandwich(operand)
     }
 }
+#[doc = "Transform a [`Scalar`] using this [`Scalar`].\n\nApplies the geometric transformation represented by this versor.\nFor rotors, this performs rotation. For motors, this performs rigid\nbody transformation (rotation + translation). Internally uses the\nsandwich product."]
 impl<T: Float> Transform<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1429,6 +1459,7 @@ impl<T: Float> ScalarProduct<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         rhs.as_inner().s() * self.as_inner().s()
     }
 }
+#[doc = "Bulk contraction of [`HypUnit`] with [`HypUnit`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1460,6 +1491,7 @@ impl<T: Float> BulkContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Bulk contraction of [`HypUnit`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1491,6 +1523,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().j())
     }
 }
+#[doc = "Bulk contraction of [`Scalar`] with [`Scalar`].\n\nThe bulk contraction extracts the Euclidean (non-degenerate) component\nof the interior product. In PGA, this isolates the finite/spatial part."]
 impl<T: Float> BulkContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1522,6 +1555,7 @@ impl<T: Float> BulkContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight contraction of [`HypUnit`] with [`HypUnit`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<HypUnit<T>> for HypUnit<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1553,6 +1587,7 @@ impl<T: Float> WeightContract<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Weight contraction of [`HypUnit`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1584,6 +1619,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().j())
     }
 }
+#[doc = "Weight contraction of [`Scalar`] with [`Scalar`].\n\nThe weight contraction extracts the degenerate/ideal component of the\ninterior product. In PGA, this measures the 'weight' or projective part."]
 impl<T: Float> WeightContract<Scalar<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1615,6 +1651,7 @@ impl<T: Float> WeightContract<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Bulk expansion of [`HypUnit`] with [`HypUnit`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1646,6 +1683,7 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`HypUnit`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1677,6 +1715,7 @@ impl<T: Float> BulkExpand<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
+#[doc = "Bulk expansion of [`Scalar`] with [`Scalar`].\n\nThe bulk expansion is the dual of bulk contraction, extracting the\nEuclidean component of the exterior product complement."]
 impl<T: Float> BulkExpand<Scalar<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1708,6 +1747,7 @@ impl<T: Float> BulkExpand<Unit<Scalar<T>>> for Unit<Scalar<T>> {
         HypUnit::new_unchecked(rhs.as_inner().s() * self.as_inner().s())
     }
 }
+#[doc = "Weight expansion of [`HypUnit`] with [`HypUnit`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<HypUnit<T>> for HypUnit<T> {
     type Output = HypUnit<T>;
     #[inline]
@@ -1739,6 +1779,7 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for Unit<HypUnit<T>> {
         HypUnit::new_unchecked(rhs.as_inner().j() * self.as_inner().j())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`HypUnit`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<HypUnit<T>> for Scalar<T> {
     type Output = Scalar<T>;
     #[inline]
@@ -1770,6 +1811,7 @@ impl<T: Float> WeightExpand<Unit<HypUnit<T>>> for Unit<Scalar<T>> {
         Scalar::new_unchecked(rhs.as_inner().j() * self.as_inner().s())
     }
 }
+#[doc = "Weight expansion of [`Scalar`] with [`Scalar`].\n\nThe weight expansion is the dual of weight contraction, extracting the\ndegenerate/ideal component of the exterior product complement."]
 impl<T: Float> WeightExpand<Scalar<T>> for Scalar<T> {
     type Output = HypUnit<T>;
     #[inline]
