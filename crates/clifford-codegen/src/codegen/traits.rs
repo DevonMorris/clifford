@@ -21,9 +21,8 @@ pub enum WrapperPosition {
 }
 
 use crate::symbolic::{
-    AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
-    GroebnerSimplifier, ProductConstraintCollector, ProductKind as SymbolicProductKind,
-    SolutionType, SymbolicProduct,
+    AtomToRust, ConstraintDeriver, ConstraintSolver, ExpressionSimplifier, GroebnerSimplifier,
+    ProductConstraintCollector, ProductKind as SymbolicProductKind, SolutionType, SymbolicProduct,
 };
 
 /// Generates trait implementations for algebra types.
@@ -250,17 +249,16 @@ impl<'a> TraitsGenerator<'a> {
     }
 
     /// Generates operators for a single type.
-    #[allow(clippy::vec_init_then_push)]
     fn generate_ops_for_type(&self, ty: &TypeSpec) -> Vec<TokenStream> {
-        let mut impls = Vec::new();
-
-        // Same-type operations
-        impls.push(self.generate_add(ty));
-        impls.push(self.generate_sub(ty));
-        impls.push(self.generate_neg(ty));
-        impls.push(self.generate_scalar_mul(ty));
-        impls.push(self.generate_scalar_mul_reverse_f32(ty));
-        impls.push(self.generate_scalar_mul_reverse_f64(ty));
+        // Same-type operations (always generated)
+        let mut impls = vec![
+            self.generate_add(ty),
+            self.generate_sub(ty),
+            self.generate_neg(ty),
+            self.generate_scalar_mul(ty),
+            self.generate_scalar_mul_reverse_f32(ty),
+            self.generate_scalar_mul_reverse_f64(ty),
+        ];
 
         // Cross-type operations (geometric product) - only for explicit products
         for entry in &self.spec.products.geometric {
@@ -519,9 +517,6 @@ impl<'a> TraitsGenerator<'a> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
         let expr_simplifier = ExpressionSimplifier::new();
 
-        // Create constraint simplifier for input type constraints
-        let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["self", "rhs"]);
-
         // Create Groebner simplifier for constraint-based reduction (with wrapper constraints)
         let groebner_simplifier =
             self.create_groebner_simplifier_with_wrappers(type_a, wrapper_a, type_b, wrapper_b);
@@ -547,14 +542,12 @@ impl<'a> TraitsGenerator<'a> {
         let converter =
             AtomToRust::new_with_wrappers(&[type_a, type_b], &["self", "rhs"], &wrapped_prefixes);
 
-        // Apply constraint substitution, simplify, and convert each field expression
+        // Apply simplification and convert each field expression
         symbolic_fields
             .iter()
             .map(|field| {
-                // First apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
-                let with_constraints = constraint_simplifier.apply(&field.expression);
-                // Then simplify (expand and collect like terms)
-                let simplified = expr_simplifier.simplify(&with_constraints);
+                // Simplify (expand and collect like terms)
+                let simplified = expr_simplifier.simplify(&field.expression);
                 // Apply Groebner reduction for constrained types
                 let reduced = groebner_simplifier.reduce_atom(&simplified);
                 converter.convert(&reduced)
@@ -653,10 +646,6 @@ impl<'a> TraitsGenerator<'a> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
         let expr_simplifier = ExpressionSimplifier::new();
 
-        // Create constraint simplifier for input type constraints
-        let constraint_simplifier =
-            ConstraintSimplifier::new(&[versor, operand], &["self", "operand"]);
-
         // Create Groebner simplifier with wrapper constraints
         let groebner_simplifier = self.create_groebner_simplifier_for_sandwich(
             versor,
@@ -698,10 +687,8 @@ impl<'a> TraitsGenerator<'a> {
         symbolic_fields
             .iter()
             .map(|field| {
-                // Apply constraint substitutions
-                let with_constraints = constraint_simplifier.apply(&field.expression);
                 // Simplify (expand and collect)
-                let simplified = expr_simplifier.simplify(&with_constraints);
+                let simplified = expr_simplifier.simplify(&field.expression);
                 // Apply Groebner reduction
                 let reduced = groebner_simplifier.reduce_atom(&simplified);
                 converter.convert(&reduced)
@@ -717,22 +704,10 @@ impl<'a> TraitsGenerator<'a> {
         versor: &TypeSpec,
         operand: &TypeSpec,
     ) -> Vec<TokenStream> {
-        operand
-            .fields
-            .iter()
-            .map(|field| {
-                let expr = self.compute_sandwich_field(versor, operand, field.blade_index, false);
-                // Apply output field sign for non-canonical blade ordering
-                if field.sign < 0 {
-                    quote! { -(#expr) }
-                } else {
-                    expr
-                }
-            })
-            .collect()
+        self.compute_sandwich_expressions_impl(versor, operand, false)
     }
 
-    /// Computes antisandwich product expressions: v ⊛ x ⊛ antirev(v).
+    /// Computes antisandwich product expressions: v * x * antirev(v).
     ///
     /// Returns TokenStream expressions for each field of the output type.
     fn compute_antisandwich_expressions(
@@ -740,11 +715,29 @@ impl<'a> TraitsGenerator<'a> {
         versor: &TypeSpec,
         operand: &TypeSpec,
     ) -> Vec<TokenStream> {
+        self.compute_sandwich_expressions_impl(versor, operand, true)
+    }
+
+    /// Implementation for both sandwich and antisandwich expressions.
+    ///
+    /// When `use_antiproduct` is false, computes v × x × rev(v) (sandwich).
+    /// When `use_antiproduct` is true, computes v * x * antirev(v) (antisandwich).
+    fn compute_sandwich_expressions_impl(
+        &self,
+        versor: &TypeSpec,
+        operand: &TypeSpec,
+        use_antiproduct: bool,
+    ) -> Vec<TokenStream> {
         operand
             .fields
             .iter()
             .map(|field| {
-                let expr = self.compute_sandwich_field(versor, operand, field.blade_index, true);
+                let expr = self.compute_sandwich_field(
+                    versor,
+                    operand,
+                    field.blade_index,
+                    use_antiproduct,
+                );
                 // Apply output field sign for non-canonical blade ordering
                 if field.sign < 0 {
                     quote! { -(#expr) }
@@ -922,73 +915,60 @@ impl<'a> TraitsGenerator<'a> {
 
     /// Computes a single projection field expression.
     ///
-    /// For multi-blade types, the projection `B ∨ (A ∧ B☆)` expands to:
-    /// `Σ_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k ∨ (a_i ∧ b_j☆))`
+    /// For multi-blade types, the projection `B v (A ^ B*)` expands to:
+    /// `sum_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k v (a_i ^ b_j*))`
     fn compute_project_field(
         &self,
         source: &TypeSpec,
         target: &TypeSpec,
         result_blade: usize,
     ) -> TokenStream {
-        // Collect terms: for each combination a_i, b_j (dual), b_k (antiwedge)
-        let mut term_map: std::collections::HashMap<(String, String, String), i8> =
-            std::collections::HashMap::new();
-
-        for field_a in &source.fields {
-            for field_b_dual in &target.fields {
-                for field_b_anti in &target.fields {
-                    let a_blade = field_a.blade_index;
-                    let b_dual_blade = field_b_dual.blade_index;
-                    let b_anti_blade = field_b_anti.blade_index;
-
-                    // Compute b_k ∨ (a_i ∧ b_j☆)
-                    let (sign, result) =
-                        self.table
-                            .project_triple(a_blade, b_dual_blade, b_anti_blade);
-                    if sign == 0 {
-                        continue;
-                    }
-
-                    if result == result_blade {
-                        let key = (
-                            field_a.name.clone(),
-                            field_b_dual.name.clone(),
-                            field_b_anti.name.clone(),
-                        );
-                        *term_map.entry(key).or_insert(0) += sign;
-                    }
-                }
-            }
-        }
-
-        self.triple_term_map_to_tokens(term_map, "target")
+        self.compute_projection_field_impl(source, target, result_blade, false)
     }
 
     /// Computes a single antiprojection field expression.
     ///
-    /// For multi-blade types, the antiprojection `B ∧ (A ∨ B☆)` expands to:
-    /// `Σ_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k ∧ (a_i ∨ b_j☆))`
+    /// For multi-blade types, the antiprojection `B ^ (A v B*)` expands to:
+    /// `sum_{i,j,k} coeff_a_i * coeff_b_j * coeff_b_k * (b_k ^ (a_i v b_j*))`
     fn compute_antiproject_field(
         &self,
         source: &TypeSpec,
         target: &TypeSpec,
         result_blade: usize,
     ) -> TokenStream {
-        // Collect terms: for each combination a_i, b_j (dual), b_k (wedge)
+        self.compute_projection_field_impl(source, target, result_blade, true)
+    }
+
+    /// Implementation for both projection and antiprojection field computation.
+    ///
+    /// When `use_antiproject` is false, computes b_k v (a_i ^ b_j*) (projection).
+    /// When `use_antiproject` is true, computes b_k ^ (a_i v b_j*) (antiprojection).
+    fn compute_projection_field_impl(
+        &self,
+        source: &TypeSpec,
+        target: &TypeSpec,
+        result_blade: usize,
+        use_antiproject: bool,
+    ) -> TokenStream {
         let mut term_map: std::collections::HashMap<(String, String, String), i8> =
             std::collections::HashMap::new();
 
         for field_a in &source.fields {
             for field_b_dual in &target.fields {
-                for field_b_wedge in &target.fields {
+                for field_b_outer in &target.fields {
                     let a_blade = field_a.blade_index;
                     let b_dual_blade = field_b_dual.blade_index;
-                    let b_wedge_blade = field_b_wedge.blade_index;
+                    let b_outer_blade = field_b_outer.blade_index;
 
-                    // Compute b_k ∧ (a_i ∨ b_j☆)
-                    let (sign, result) =
+                    // Compute the projection or antiprojection triple
+                    let (sign, result) = if use_antiproject {
                         self.table
-                            .antiproject_triple(a_blade, b_dual_blade, b_wedge_blade);
+                            .antiproject_triple(a_blade, b_dual_blade, b_outer_blade)
+                    } else {
+                        self.table
+                            .project_triple(a_blade, b_dual_blade, b_outer_blade)
+                    };
+
                     if sign == 0 {
                         continue;
                     }
@@ -997,7 +977,7 @@ impl<'a> TraitsGenerator<'a> {
                         let key = (
                             field_a.name.clone(),
                             field_b_dual.name.clone(),
-                            field_b_wedge.name.clone(),
+                            field_b_outer.name.clone(),
                         );
                         *term_map.entry(key).or_insert(0) += sign;
                     }
@@ -2296,11 +2276,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::Wedge);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Wedge<#b_name<T>> for #a_name<T> {
@@ -2331,11 +2307,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::Antiwedge);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Antiwedge<#b_name<T>> for #a_name<T> {
@@ -2379,11 +2351,7 @@ impl<'a> TraitsGenerator<'a> {
             .compute_product_expressions_with_wrappers(a, wrapper_a, b, wrapper_b, output, kind);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         // Generate the appropriate trait impl based on wrapper position
         // Note: #[allow(unused_variables)] is needed because wrapper constraints can
@@ -2596,11 +2564,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::LeftContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> LeftContract<#b_name<T>> for #a_name<T> {
@@ -2631,11 +2595,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::RightContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> RightContract<#b_name<T>> for #a_name<T> {
@@ -2662,11 +2622,7 @@ impl<'a> TraitsGenerator<'a> {
         let field_exprs = self.compute_sandwich_expressions(versor, operand);
 
         // Generate constructor call
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         // For sandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
@@ -2696,11 +2652,7 @@ impl<'a> TraitsGenerator<'a> {
         let field_exprs = self.compute_antisandwich_expressions(versor, operand);
 
         // Generate constructor call
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         // For antisandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
@@ -2860,11 +2812,7 @@ impl<'a> TraitsGenerator<'a> {
             false, // sandwich uses geometric product
         );
 
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         match wrapper_pos {
             WrapperPosition::Lhs => {
@@ -2940,11 +2888,7 @@ impl<'a> TraitsGenerator<'a> {
             true, // antisandwich uses antiproduct
         );
 
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         match wrapper_pos {
             WrapperPosition::Lhs => {
@@ -3290,11 +3234,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> BulkContract<#b_name<T>> for #a_name<T> {
@@ -3325,11 +3265,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> WeightContract<#b_name<T>> for #a_name<T> {
@@ -3360,11 +3296,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkExpansion);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> BulkExpand<#b_name<T>> for #a_name<T> {
@@ -3395,11 +3327,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightExpansion);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> WeightExpand<#b_name<T>> for #a_name<T> {

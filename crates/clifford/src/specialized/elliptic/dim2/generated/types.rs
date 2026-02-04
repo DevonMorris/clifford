@@ -70,14 +70,16 @@ impl<T: Float> Line<T> {
     pub fn unit_yz() -> Self {
         Self::new_unchecked(T::zero(), T::zero(), T::one())
     }
-    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r" Returns the squared Euclidean norm (sum of squared coefficients)."]
     #[doc = r""]
-    #[doc = r" This is the sum of squares of all components."]
+    #[doc = r" This computes the coefficient-space Euclidean norm, not the"]
+    #[doc = r" metric-aware geometric algebra norm. Components with zero metric"]
+    #[doc = r" (degenerate bases) are excluded."]
     #[inline]
     pub fn norm_squared(&self) -> T {
         self.xy * self.xy + self.xz * self.xz + self.yz * self.yz
     }
-    #[doc = r" Returns the Euclidean norm."]
+    #[doc = r" Returns the Euclidean norm (square root of sum of squared coefficients)."]
     #[inline]
     pub fn norm(&self) -> T {
         self.norm_squared().sqrt()
@@ -204,14 +206,16 @@ impl<T: Float> Point<T> {
     pub fn unit_z() -> Self {
         Self::new_unchecked(T::zero(), T::zero(), T::one())
     }
-    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r" Returns the squared Euclidean norm (sum of squared coefficients)."]
     #[doc = r""]
-    #[doc = r" This is the sum of squares of all components."]
+    #[doc = r" This computes the coefficient-space Euclidean norm, not the"]
+    #[doc = r" metric-aware geometric algebra norm. Components with zero metric"]
+    #[doc = r" (degenerate bases) are excluded."]
     #[inline]
     pub fn norm_squared(&self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
-    #[doc = r" Returns the Euclidean norm."]
+    #[doc = r" Returns the Euclidean norm (square root of sum of squared coefficients)."]
     #[inline]
     pub fn norm(&self) -> T {
         self.norm_squared().sqrt()
@@ -314,14 +318,16 @@ impl<T: Float> Pseudoscalar<T> {
     pub fn unit_xyz() -> Self {
         Self::new_unchecked(T::one())
     }
-    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r" Returns the squared Euclidean norm (sum of squared coefficients)."]
     #[doc = r""]
-    #[doc = r" This is the sum of squares of all components."]
+    #[doc = r" This computes the coefficient-space Euclidean norm, not the"]
+    #[doc = r" metric-aware geometric algebra norm. Components with zero metric"]
+    #[doc = r" (degenerate bases) are excluded."]
     #[inline]
     pub fn norm_squared(&self) -> T {
         self.xyz * self.xyz
     }
-    #[doc = r" Returns the Euclidean norm."]
+    #[doc = r" Returns the Euclidean norm (square root of sum of squared coefficients)."]
     #[inline]
     pub fn norm(&self) -> T {
         self.norm_squared().sqrt()
@@ -440,14 +446,16 @@ impl<T: Float> Rotor<T> {
     pub fn zero() -> Self {
         Self::new_unchecked(T::zero(), T::zero(), T::zero(), T::zero())
     }
-    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r" Returns the squared Euclidean norm (sum of squared coefficients)."]
     #[doc = r""]
-    #[doc = r" This is the sum of squares of all components."]
+    #[doc = r" This computes the coefficient-space Euclidean norm, not the"]
+    #[doc = r" metric-aware geometric algebra norm. Components with zero metric"]
+    #[doc = r" (degenerate bases) are excluded."]
     #[inline]
     pub fn norm_squared(&self) -> T {
         self.s * self.s + self.xy * self.xy + self.xz * self.xz + self.yz * self.yz
     }
-    #[doc = r" Returns the Euclidean norm."]
+    #[doc = r" Returns the Euclidean norm (square root of sum of squared coefficients)."]
     #[inline]
     pub fn norm(&self) -> T {
         self.norm_squared().sqrt()
@@ -550,14 +558,16 @@ impl<T: Float> Scalar<T> {
     pub fn unit_s() -> Self {
         Self::new_unchecked(T::one())
     }
-    #[doc = r" Returns the squared Euclidean norm."]
+    #[doc = r" Returns the squared Euclidean norm (sum of squared coefficients)."]
     #[doc = r""]
-    #[doc = r" This is the sum of squares of all components."]
+    #[doc = r" This computes the coefficient-space Euclidean norm, not the"]
+    #[doc = r" metric-aware geometric algebra norm. Components with zero metric"]
+    #[doc = r" (degenerate bases) are excluded."]
     #[inline]
     pub fn norm_squared(&self) -> T {
         self.s * self.s
     }
-    #[doc = r" Returns the Euclidean norm."]
+    #[doc = r" Returns the Euclidean norm (square root of sum of squared coefficients)."]
     #[inline]
     pub fn norm(&self) -> T {
         self.norm_squared().sqrt()

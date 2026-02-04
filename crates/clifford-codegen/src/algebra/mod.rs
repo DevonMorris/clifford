@@ -67,5 +67,5 @@ pub use grade::{
 };
 pub use sign::basis_product;
 pub use signature::Algebra;
-pub use table::ProductTable;
+pub use table::{ProductContribution, ProductContributions, ProductTable};
 pub use versor::{VersorInfo, VersorParity, versor_parity};

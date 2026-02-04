@@ -666,38 +666,50 @@ impl<'a> TypeGenerator<'a> {
 
         let constructor = quote! { new_unchecked };
 
-        // Compute norm squared based on metric signature.
-        // For each blade, we need to consider the metric.
-        // For now, this uses Euclidean norm (sum of squares).
-        // TODO: Handle non-Euclidean metrics properly (e.g., for CGA, PGA).
+        // Compute Euclidean norm squared (sum of squares of all coefficients).
+        // This is the coefficient-space norm, not the metric-aware GA norm.
+        //
+        // Note: Components with zero metric (degenerate bases like e0 in PGA)
+        // are excluded since they don't contribute meaningfully to the norm.
+        //
+        // For a proper metric-aware norm, use the involution-based computation:
+        // x * involute(x), where involute is determined by the [norm] section.
         let squared_terms: Vec<TokenStream> = ty
             .fields
             .iter()
-            .map(|field| {
+            .filter_map(|field| {
                 let name = format_ident!("{}", field.name);
                 let blade = Blade::from_index(field.blade_index);
                 let metric = self.blade_metric(blade);
 
-                if metric >= 0 {
-                    quote! { self.#name * self.#name }
+                // Skip degenerate (zero metric) components
+                if metric == 0 {
+                    None
                 } else {
-                    // Negative metric: subtract instead of add
-                    // Note: we still compute the absolute value for norm purposes
-                    quote! { self.#name * self.#name }
+                    Some(quote! { self.#name * self.#name })
                 }
             })
             .collect();
 
+        // Handle the edge case where all components have zero metric
+        let norm_squared_body = if squared_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#squared_terms)+* }
+        };
+
         quote! {
-            /// Returns the squared Euclidean norm.
+            /// Returns the squared Euclidean norm (sum of squared coefficients).
             ///
-            /// This is the sum of squares of all components.
+            /// This computes the coefficient-space Euclidean norm, not the
+            /// metric-aware geometric algebra norm. Components with zero metric
+            /// (degenerate bases) are excluded.
             #[inline]
             pub fn norm_squared(&self) -> T {
-                #(#squared_terms)+*
+                #norm_squared_body
             }
 
-            /// Returns the Euclidean norm.
+            /// Returns the Euclidean norm (square root of sum of squared coefficients).
             #[inline]
             pub fn norm(&self) -> T {
                 self.norm_squared().sqrt()
