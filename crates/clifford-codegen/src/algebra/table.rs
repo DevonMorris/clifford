@@ -6,6 +6,13 @@
 
 use super::signature::Algebra;
 
+/// A single product contribution: (sign, left_blade_index, right_blade_index).
+pub type ProductContribution = (i8, usize, usize);
+
+/// Result of collecting all product contributions grouped by output blade.
+/// Each entry is (output_blade_index, contributions_to_that_blade).
+pub type ProductContributions = Vec<(usize, Vec<ProductContribution>)>;
+
 /// Precomputed product table for a geometric algebra.
 ///
 /// Stores the sign and result blade for all pairs of basis blades.
@@ -211,12 +218,11 @@ impl ProductTable {
     ///
     /// Vector of (blade_index, contributions) pairs, sorted by blade index.
     /// Each contribution is (sign, a_blade, b_blade).
-    #[allow(clippy::type_complexity)]
     pub fn all_products(
         &self,
         a_blades: &[usize],
         b_blades: &[usize],
-    ) -> Vec<(usize, Vec<(i8, usize, usize)>)> {
+    ) -> ProductContributions {
         use std::collections::BTreeMap;
 
         let mut result_map: BTreeMap<usize, Vec<(i8, usize, usize)>> = BTreeMap::new();

@@ -7,6 +7,9 @@ use proc_macro2::TokenStream;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
+/// The Rust edition used for formatting generated code.
+const RUST_EDITION: &str = "2024";
+
 /// Formats a token stream using rustfmt.
 ///
 /// Returns the formatted code as a string. If rustfmt is not available
@@ -35,7 +38,7 @@ pub fn format_tokens(tokens: &TokenStream) -> String {
 /// Returns `None` if rustfmt is not available or fails.
 fn format_code(code: &str) -> Option<String> {
     let mut child = Command::new("rustfmt")
-        .arg("--edition=2024")
+        .arg(format!("--edition={}", RUST_EDITION))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
