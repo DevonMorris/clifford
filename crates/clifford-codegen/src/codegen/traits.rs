@@ -732,8 +732,12 @@ impl<'a> TraitsGenerator<'a> {
             .fields
             .iter()
             .map(|field| {
-                let expr =
-                    self.compute_sandwich_field(versor, operand, field.blade_index, use_antiproduct);
+                let expr = self.compute_sandwich_field(
+                    versor,
+                    operand,
+                    field.blade_index,
+                    use_antiproduct,
+                );
                 // Apply output field sign for non-canonical blade ordering
                 if field.sign < 0 {
                     quote! { -(#expr) }

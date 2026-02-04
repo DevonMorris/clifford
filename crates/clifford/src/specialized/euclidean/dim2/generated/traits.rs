@@ -5324,11 +5324,11 @@ mod arbitrary_impls {
 mod verification_tests {
     use super::*;
     use crate::algebra::Multivector;
+    #[allow(unused_imports)]
+    use crate::norm::{DegenerateNormed, Normed};
     use crate::signature::Euclidean2;
     #[allow(unused_imports)]
-    use crate::wrappers::{Unit};
-    #[allow(unused_imports)]
-    use crate::norm::{Normed, DegenerateNormed};
+    use crate::wrappers::Unit;
     use approx::relative_eq;
     use proptest::prelude::*;
 

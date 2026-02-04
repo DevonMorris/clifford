@@ -218,11 +218,7 @@ impl ProductTable {
     ///
     /// Vector of (blade_index, contributions) pairs, sorted by blade index.
     /// Each contribution is (sign, a_blade, b_blade).
-    pub fn all_products(
-        &self,
-        a_blades: &[usize],
-        b_blades: &[usize],
-    ) -> ProductContributions {
+    pub fn all_products(&self, a_blades: &[usize], b_blades: &[usize]) -> ProductContributions {
         use std::collections::BTreeMap;
 
         let mut result_map: BTreeMap<usize, Vec<(i8, usize, usize)>> = BTreeMap::new();
