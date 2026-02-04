@@ -11,7 +11,6 @@
 //! - [`ConstraintParser`]: Parse constraint expressions from strings
 //! - [`SymbolicProduct`]: Compute symbolic product outputs
 //! - [`ConstraintVerifier`]: Verify that outputs satisfy constraints
-//! - [`ConstraintSimplifier`]: Apply type constraints to simplify expressions
 //!
 //! # Example
 //!
@@ -28,7 +27,6 @@
 //! ```
 
 mod constraint_derive;
-mod constraint_simplify;
 mod groebner;
 mod parser;
 mod product;
@@ -38,7 +36,6 @@ mod to_rust;
 mod verify;
 
 pub use constraint_derive::{ConstraintDeriver, DerivedConstraint};
-pub use constraint_simplify::ConstraintSimplifier;
 pub use groebner::{
     GroebnerCache, GroebnerSimplifier, ProductConstraintCollector, ReductionResult,
 };

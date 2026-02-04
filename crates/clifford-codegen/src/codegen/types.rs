@@ -667,40 +667,68 @@ impl<'a> TypeGenerator<'a> {
         let constructor = quote! { new_unchecked };
 
         // Compute norm squared based on metric signature.
-        // For each blade, we need to consider the metric.
-        // For now, this uses Euclidean norm (sum of squares).
-        // TODO: Handle non-Euclidean metrics properly (e.g., for CGA, PGA).
+        // For each blade, we consider the metric sign:
+        // - Positive metric (+1): add the squared component
+        // - Negative metric (-1): subtract the squared component
+        // - Zero metric (0): skip (degenerate components don't contribute)
+        //
+        // For Euclidean algebras, this gives the standard sum of squares.
+        // For pseudo-Euclidean algebras (Minkowski, etc.), this gives the
+        // proper spacetime interval.
         let squared_terms: Vec<TokenStream> = ty
             .fields
             .iter()
-            .map(|field| {
+            .filter_map(|field| {
                 let name = format_ident!("{}", field.name);
                 let blade = Blade::from_index(field.blade_index);
                 let metric = self.blade_metric(blade);
 
-                if metric >= 0 {
-                    quote! { self.#name * self.#name }
-                } else {
-                    // Negative metric: subtract instead of add
-                    // Note: we still compute the absolute value for norm purposes
-                    quote! { self.#name * self.#name }
+                match metric.cmp(&0) {
+                    std::cmp::Ordering::Greater => {
+                        // Positive metric: add the squared term
+                        Some(quote! { self.#name * self.#name })
+                    }
+                    std::cmp::Ordering::Less => {
+                        // Negative metric: subtract the squared term
+                        Some(quote! { -self.#name * self.#name })
+                    }
+                    std::cmp::Ordering::Equal => {
+                        // Zero metric (degenerate): no contribution to norm
+                        None
+                    }
                 }
             })
             .collect();
 
+        // Handle the edge case where all components have zero metric
+        let norm_squared_body = if squared_terms.is_empty() {
+            quote! { T::zero() }
+        } else {
+            quote! { #(#squared_terms)+* }
+        };
+
         quote! {
-            /// Returns the squared Euclidean norm.
+            /// Returns the squared norm using the algebra's metric.
             ///
-            /// This is the sum of squares of all components.
+            /// For Euclidean algebras, this is the sum of squares.
+            /// For pseudo-Euclidean algebras (Minkowski, etc.), components with
+            /// negative metric are subtracted, giving the proper spacetime interval.
+            /// Components with zero metric (degenerate bases) do not contribute.
+            ///
+            /// Note: For pseudo-Euclidean algebras, this may return negative values
+            /// for spacelike elements.
             #[inline]
             pub fn norm_squared(&self) -> T {
-                #(#squared_terms)+*
+                #norm_squared_body
             }
 
-            /// Returns the Euclidean norm.
+            /// Returns the norm (square root of the absolute value of norm_squared).
+            ///
+            /// For pseudo-Euclidean algebras where norm_squared can be negative,
+            /// this returns the square root of the absolute value.
             #[inline]
             pub fn norm(&self) -> T {
-                self.norm_squared().sqrt()
+                self.norm_squared().abs().sqrt()
             }
 
             /// Attempts to normalize this element.

@@ -11,6 +11,10 @@ positive = ["e1", "e2"]
 negative = []
 zero = []
 
+[norm]
+# Euclidean algebras use reverse for norm: x * reverse(x) = |x|^2
+primary_involution = "reverse"
+
 # ============================================================
 # Types
 # ============================================================

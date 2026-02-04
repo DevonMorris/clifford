@@ -19,6 +19,10 @@ positive = ["e1", "e2", "e3"]
 negative = []
 zero = ["e0"]
 
+[norm]
+# Projective algebras use reverse for norm: x * reverse(x) = |x|^2
+primary_involution = "reverse"
+
 # Note: Internal basis ordering is [e1, e2, e3, e0] with indices [0, 1, 2, 3].
 # In blade notation, we use 1-based indices, so:
 # - e1 → internal index 0

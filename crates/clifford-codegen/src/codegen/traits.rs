@@ -21,9 +21,8 @@ pub enum WrapperPosition {
 }
 
 use crate::symbolic::{
-    AtomToRust, ConstraintDeriver, ConstraintSimplifier, ConstraintSolver, ExpressionSimplifier,
-    GroebnerSimplifier, ProductConstraintCollector, ProductKind as SymbolicProductKind,
-    SolutionType, SymbolicProduct,
+    AtomToRust, ConstraintDeriver, ConstraintSolver, ExpressionSimplifier, GroebnerSimplifier,
+    ProductConstraintCollector, ProductKind as SymbolicProductKind, SolutionType, SymbolicProduct,
 };
 
 /// Generates trait implementations for algebra types.
@@ -519,9 +518,6 @@ impl<'a> TraitsGenerator<'a> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
         let expr_simplifier = ExpressionSimplifier::new();
 
-        // Create constraint simplifier for input type constraints
-        let constraint_simplifier = ConstraintSimplifier::new(&[type_a, type_b], &["self", "rhs"]);
-
         // Create Groebner simplifier for constraint-based reduction (with wrapper constraints)
         let groebner_simplifier =
             self.create_groebner_simplifier_with_wrappers(type_a, wrapper_a, type_b, wrapper_b);
@@ -547,14 +543,12 @@ impl<'a> TraitsGenerator<'a> {
         let converter =
             AtomToRust::new_with_wrappers(&[type_a, type_b], &["self", "rhs"], &wrapped_prefixes);
 
-        // Apply constraint substitution, simplify, and convert each field expression
+        // Apply simplification and convert each field expression
         symbolic_fields
             .iter()
             .map(|field| {
-                // First apply constraint substitutions (e.g., s*s + xy*xy + ... = 1)
-                let with_constraints = constraint_simplifier.apply(&field.expression);
-                // Then simplify (expand and collect like terms)
-                let simplified = expr_simplifier.simplify(&with_constraints);
+                // Simplify (expand and collect like terms)
+                let simplified = expr_simplifier.simplify(&field.expression);
                 // Apply Groebner reduction for constrained types
                 let reduced = groebner_simplifier.reduce_atom(&simplified);
                 converter.convert(&reduced)
@@ -653,10 +647,6 @@ impl<'a> TraitsGenerator<'a> {
         let symbolic_product = SymbolicProduct::new(self.algebra);
         let expr_simplifier = ExpressionSimplifier::new();
 
-        // Create constraint simplifier for input type constraints
-        let constraint_simplifier =
-            ConstraintSimplifier::new(&[versor, operand], &["self", "operand"]);
-
         // Create Groebner simplifier with wrapper constraints
         let groebner_simplifier = self.create_groebner_simplifier_for_sandwich(
             versor,
@@ -698,10 +688,8 @@ impl<'a> TraitsGenerator<'a> {
         symbolic_fields
             .iter()
             .map(|field| {
-                // Apply constraint substitutions
-                let with_constraints = constraint_simplifier.apply(&field.expression);
                 // Simplify (expand and collect)
-                let simplified = expr_simplifier.simplify(&with_constraints);
+                let simplified = expr_simplifier.simplify(&field.expression);
                 // Apply Groebner reduction
                 let reduced = groebner_simplifier.reduce_atom(&simplified);
                 converter.convert(&reduced)
@@ -2296,11 +2284,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::Wedge);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Wedge<#b_name<T>> for #a_name<T> {
@@ -2331,11 +2315,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::Antiwedge);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> Antiwedge<#b_name<T>> for #a_name<T> {
@@ -2379,11 +2359,7 @@ impl<'a> TraitsGenerator<'a> {
             .compute_product_expressions_with_wrappers(a, wrapper_a, b, wrapper_b, output, kind);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         // Generate the appropriate trait impl based on wrapper position
         // Note: #[allow(unused_variables)] is needed because wrapper constraints can
@@ -2596,11 +2572,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::LeftContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> LeftContract<#b_name<T>> for #a_name<T> {
@@ -2631,11 +2603,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::RightContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> RightContract<#b_name<T>> for #a_name<T> {
@@ -2662,11 +2630,7 @@ impl<'a> TraitsGenerator<'a> {
         let field_exprs = self.compute_sandwich_expressions(versor, operand);
 
         // Generate constructor call
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         // For sandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
@@ -2696,11 +2660,7 @@ impl<'a> TraitsGenerator<'a> {
         let field_exprs = self.compute_antisandwich_expressions(versor, operand);
 
         // Generate constructor call
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         // For antisandwich, output is typically same type as operand
         // Allow unused variables for trivial sandwich products (e.g., Scalar on anything)
@@ -2860,11 +2820,7 @@ impl<'a> TraitsGenerator<'a> {
             false, // sandwich uses geometric product
         );
 
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         match wrapper_pos {
             WrapperPosition::Lhs => {
@@ -2940,11 +2896,7 @@ impl<'a> TraitsGenerator<'a> {
             true, // antisandwich uses antiproduct
         );
 
-        let constructor_call = if operand.versor.is_some() {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #operand_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #operand_name::new_unchecked(#(#field_exprs),*) };
 
         match wrapper_pos {
             WrapperPosition::Lhs => {
@@ -3290,11 +3242,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> BulkContract<#b_name<T>> for #a_name<T> {
@@ -3325,11 +3273,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightContraction);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> WeightContract<#b_name<T>> for #a_name<T> {
@@ -3360,11 +3304,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::BulkExpansion);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> BulkExpand<#b_name<T>> for #a_name<T> {
@@ -3395,11 +3335,7 @@ impl<'a> TraitsGenerator<'a> {
             self.compute_product_expressions(a, b, output, SymbolicProductKind::WeightExpansion);
 
         // Generate constructor call
-        let constructor_call = if output.versor.is_some() {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        } else {
-            quote! { #out_name::new_unchecked(#(#field_exprs),*) }
-        };
+        let constructor_call = quote! { #out_name::new_unchecked(#(#field_exprs),*) };
 
         quote! {
             impl<T: Float> WeightExpand<#b_name<T>> for #a_name<T> {
