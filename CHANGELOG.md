@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-04
+
+### Added
+
+#### Documentation Improvements
+- Comprehensive module documentation for all specialized algebras
+- Enhanced Minkowski algebra docs with spacetime geometry explanation
+- Generated trait implementations now include doc comments explaining:
+  - Wedge (exterior) product with geometric meaning
+  - Antiwedge (regressive/meet) product for subspace intersections
+  - Sandwich and antisandwich products for transformations
+  - Left/right contractions with grade semantics
+  - Bulk/weight contractions and expansions for PGA interior products
+  - Transform trait with automatic sandwich/antisandwich selection
+- Updated README with complete list of 15 specialized algebras
+- Module structure tables with metric signatures
+- PRD status updates for completed Conformal GA implementations
+
+### Changed
+- Codegen now generates doc comments for all trait implementations
+- README installation instructions updated to version 0.3
+
+### Fixed
+- PRD-6 (3D CGA) and PRD-50 (2D CGA) status updated from Draft to Complete
+
 ## [0.2.0] - 2026-02-02
 
 ### Added

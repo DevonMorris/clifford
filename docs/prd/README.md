@@ -26,7 +26,8 @@ Implementation plan for the Clifford Geometric Algebra library.
 | PRD | Status | Description |
 |-----|--------|-------------|
 | [PRD-5](prd-5-pga.md) | **Complete** | Projective GA (points, lines, planes, motors) |
-| [PRD-6](prd-6-cga.md) | Draft | Conformal GA |
+| [PRD-6](prd-6-cga.md) | **Complete** | 3D Conformal GA Cl(4,1,0) |
+| [PRD-50](prd-50-conformal2.md) | **Complete** | 2D Conformal GA Cl(3,1,0) |
 | [PRD-32](prd-32-complex-numbers.md) | **Complete** | Complex numbers Cl(0,1,0) |
 | [PRD-33](prd-33-dual-numbers.md) | **Complete** | Dual numbers Cl(0,0,1) |
 | [PRD-36](prd-36-quaternions.md) | **Complete** | Quaternions Cl(0,2,0) |
@@ -97,6 +98,8 @@ The following algebras are implemented via code generation:
 | Euclidean 3D | Cl(3,0,0) | `euclidean::dim3` | 3D vectors, bivectors, rotors |
 | Projective 2D | Cl(2,0,1) | `projective::dim2` | 2D PGA: points, lines, motors |
 | Projective 3D | Cl(3,0,1) | `projective::dim3` | 3D PGA: points, lines, planes, motors |
+| Conformal 2D | Cl(3,1,0) | `conformal::dim2` | 2D CGA: points, circles, conformal transforms |
+| Conformal 3D | Cl(4,1,0) | `conformal::dim3` | 3D CGA: points, spheres, circles |
 | Complex | Cl(0,1,0) | `complex` | Complex numbers |
 | Dual | Cl(0,0,1) | `dual` | Dual numbers (autodiff) |
 | Quaternion | Cl(0,2,0) | `quaternion` | Quaternions |
@@ -104,7 +107,7 @@ The following algebras are implemented via code generation:
 | Hyperbolic 2D | Cl(2,1,0) | `hyperbolic::dim2` | 2D hyperbolic plane |
 | Elliptic 2D | Cl(3,0,0) | `elliptic::dim2` | 2D elliptic geometry |
 | Minkowski 2D | Cl(1,1,0) | `minkowski::dim2` | Minkowski plane |
-| Minkowski 3D | Cl(3,1,0) | `minkowski::dim3` | 3+1 spacetime |
+| Minkowski 3D | Cl(1,2,0) | `minkowski::dim3` | 3D spacetime (1 time + 2 space) |
 | Dual Quaternion | Cl(0,2,1) | `dualquat` | Dual quaternions |
 
 ## Verification
